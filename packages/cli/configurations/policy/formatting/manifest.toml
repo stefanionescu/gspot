@@ -124,7 +124,7 @@ header = false
 
 [configs.stub]
 path = ".prettierrc.json"
-body = "{target_json}"
+template = "prettier.json.tmpl"
 
 [[configs]]
 template = "prettierignore.tmpl"

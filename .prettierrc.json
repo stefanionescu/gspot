@@ -1,1 +1,11 @@
-"./.gspot/config/prettier.json"
+{
+    "tabWidth": 4,
+    "useTabs": false,
+    "printWidth": 120,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true,
+    "endOfLine": "lf",
+    "arrowParens": "always",
+    "embeddedLanguageFormatting": "off"
+}

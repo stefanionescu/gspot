@@ -64,6 +64,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     );
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     await Bun.write(join(directory.path, '.gspot/config/prettier.json'), generated.get('.gspot/config/prettier.json')!);
+    await Bun.write(join(directory.path, '.prettierrc.json'), generated.get('.prettierrc.json')!);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const native = await prettier.resolveConfig(path, {
@@ -72,6 +73,12 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     });
     expect(editor?.tabWidth).toBe(2);
     expect(native?.tabWidth).toBe(2);
+    const root = await prettier.resolveConfig(path, {
+        config: join(directory.path, '.prettierrc.json'),
+        editorconfig: false,
+        useCache: false,
+    });
+    expect(root?.tabWidth).toBe(2);
     const source = await Bun.file(path).text();
     expect(await prettier.format(source, { ...editor, filepath: path })).toBe('parent:\n  child: value\n');
     expect(await prettier.format(source, { ...native, filepath: path })).toBe('parent:\n  child: value\n');
