@@ -38,8 +38,9 @@ Journal conversion retains original bytes, modes, and interrupted operations. It
 records before retiring the old journal. In-repository hooks share repository ownership; Git-internal
 hooks use the resolved Git directory; external destinations have destination-local state and locking.
 The old nested `.gspot/.gspot` directory is gone from this checkout. Native entry points were explicitly
-adopted with recovery copies, then regenerated through `apply`. Prettier's root JSON pointer resolves to
-the same settings as CLI configuration. Bun's field-preserving writer retains unrelated fields and
+adopted with recovery copies, then regenerated through `apply`. The root Prettier configuration
+and the CLI configuration use the same template, with selectors relative to each output location.
+The Bun field-preserving writer retains unrelated fields and
 stricter release ages. Initialization carries root and scoped Bun safeguards into editable policy.
 
 Command registration and orchestration share command owners. Initialization and doctor have private
@@ -720,6 +721,16 @@ reports 6,030 findings. This scoped run is separate from the historical 5,710-fi
 and the five staged dependency errors; final repository and staged acceptance remain open.
 
 ### Configuration carryover
+
+The root Prettier configuration is rendered from the existing template relative to its own
+location. Importing the internal JSON file as a string made Prettier resolve override selectors
+from the root and miss directory overrides. The installed formatter acceptance now passes all
+32 assertions, covering direct configuration, editor discovery, corrections, future files,
+nested scope exclusions, and EditorConfig Checker. Normal private-tool acquisition completed;
+no host checker or skipped download substituted for installation. Owner-driven root `apply`
+updates `.prettierrc.json`; repeated preview has no drift or notes. Schema freshness passes.
+The broader formatter adoption, preservation, and override batch passes 23 tests with 469
+assertions. The broader carryover and frozen-candidate gates remain open.
 
 Disabled-rule destinations now come from the owning `tools.takeover.check` declarations.
 The global tool-to-check table is removed. Manifest validation rejects missing destinations
@@ -1793,6 +1804,13 @@ unverified.
 
 ### Session observations and parsing
 
+Fresh source verification from base `18cb3c54ddb2188ae0665cc4395879701dad5f85` passes
+54 tests with 456 assertions across SQL parsing, SQL naming, migration history, scoped engines,
+process execution, and failure classification. This includes resolved tRPC imports and nested
+boundaries, malformed-input refusal, shared SQL observations, original positions, synthetic-name
+exclusion, and corrections. The installed SQL consumer also passes through normal acquisition.
+These focused results do not establish the complete observation or performance matrix.
+
 September 24 shared-source repair: execution owns source-byte observations and replaces them
 for each run and after fixes. Engines, structural indexes, cache hashes, and suppression
 filtering share those bytes. Reads from isolated generation directories remain fresh, and
@@ -1965,14 +1983,20 @@ Xcode execution and complete build isolation remain open.
 
 ### Isolated generators and builds
 
+The current JavaScript native regression reproduces an execution failure when the
+generated compiler configuration has managed read-only permissions. The compiler owner
+makes only its disposable configuration copy writable before restricting the file list.
+The original bytes and mode remain unchanged. All three JavaScript native selection
+cases pass with 31 assertions, including defect locations, corrected inputs, inherited
+options, and deepest-scope isolation.
+
 Local cleanup evidence: configured site and OpenAPI commands use the existing dependency’s shell
 syntax parser in the settings owner to produce literal arguments. Operators and expansions are
 rejected explicitly. Both generators execute with empty and quoted arguments. The site test also
 uses a script filename containing spaces. Existing temporary-copy preservation tests pass.
 The Next.js text-based success bypass is deleted.
 
-Expanded audit cleanup: static-site and OpenAPI configured commands split strings on spaces.
-Delete that parsing in the existing owners and verify quoted paths and empty arguments survive.
+The earlier space-splitting audit finding is resolved by the parser repair above.
 No alternate command field or shell framework is required.
 
 Open. Complete isolated generation and build checks without modifying authored or untracked working-tree files. Swift incremental compilation is locally implemented; native Xcode reuse and complete build isolation remain open.
@@ -2863,7 +2887,7 @@ Acceptance: [K-96](10-hooks-ci-runners.md#acceptance-k-96), [K-276](10-hooks-ci-
 
 ### Behavioral acceptance quality
 
-The current native development run completes 345 tests: 343 pass, with failures in the
+An earlier native development run completed 345 tests: 343 passed, with failures in the
 Supabase correction fixture and simple-git-hooks runner restoration. The Supabase test now
 opens fresh observations after edits and passes both cases with seven assertions. The real
 hook failure is repaired in the ownership owner and passes its 60-assertion clone journey.
@@ -2875,12 +2899,12 @@ that run passed, but later manifest-loading failures invalidate the run as full-
 The restriction is repaired and covered by the focused Docker tests above. Restart the full
 source suite after the functional batch is complete.
 
-The latest routine source run passes 1,354 tests with 6,224 assertions across 145 files.
+An earlier routine source run passed 1,354 tests with 6,224 assertions across 145 files.
 It includes the Xcode, JavaScript scope, stage-selection, filesystem observation, and initial
 editor-schema repairs. Later manifest-kind validation and security-pack repairs have focused
 results recorded under their owning groups and require the final full rerun.
 
-The latest September 24 source acceptance run finishes with 276 passes, 38 failures, and
+An earlier September 24 source acceptance run finished with 276 passes, 38 failures, and
 2,809 assertions across 81 files in 1,446.61 seconds. This supersedes the earlier
 281-pass, 32-failure aggregate. Every failure block reports the EditorConfig Checker
 v3.4.0 release lookup returning GitHub HTTP 403 after earlier successful acquisitions.
@@ -2893,7 +2917,8 @@ The focused scope, XCTest, and Deno batch passes 28 tests with 214 assertions, a
 batch passes eight tests with 54 assertions. Deno succeeds under the pinned mise environment;
 the direct tests-directory login shell had selected Homebrew Deno 2.9.7 instead of 2.6.6.
 The native npm wrapper installation also remains blocked by the same GitHub rate limit.
-These runs precede the completed candidate and do not close the full native or source gates.
+The current continuation results are recorded under [Candidate gate](#candidate-gate).
+These runs precede candidate completion and do not close the full native or source gates.
 
 September 24 repair verification supersedes the recorded SQL, HTML, spelling-message, and
 clean-SVG fixture failures for these focused journeys. All four corrected SQL, HTML,
@@ -3182,9 +3207,9 @@ Open. Complete frozen-candidate artifact validation, installed CLI acceptance, l
 provenance/signing verification, and native execution on supported platforms. All seven targets
 build locally, but cross-compilation does not establish that each target runs.
 
-The latest sequential source and release results are recorded under
-[Behavioral acceptance quality](#behavioral-acceptance-quality). Release passes seven cases with
-278 assertions and fails the installed CLI consumer when EditorConfig Checker v3.4.0 receives
+The current sequential source and release results are recorded under
+[Candidate gate](#candidate-gate). Release passes eight cases with
+281 assertions and fails the installed CLI consumer when EditorConfig Checker v3.4.0 receives
 GitHub HTTP 403. Locked Python installation completes first. No host executable, download bypass,
 or weakened assertion substitutes for the required installed-tool probe.
 
@@ -3287,9 +3312,18 @@ reusable CI workflow, as required by the pinned Zizmor audit. The previous refer
 reported `self-repository`; the corrected file passes Zizmor 1.30.1 offline. The existing
 manual trigger and `GSPOT_CI_ENABLED` condition remain in place. No remote workflow ran.
 See the [upstream audit contract](https://docs.zizmor.sh/audits/#self-repository).
-Actionlint 1.7.12 rejects that valid self-repository reference as `workflow-call`. Its
-current published release still lacks this syntax. This tool compatibility conflict
-remains unresolved; the Zizmor pass does not establish complete workflow acceptance.
+The Actionlint adapter translates self-repository references in disposable copies and adds
+an empty Git marker there so the native parser validates reusable-workflow inputs and missing
+files. Scalar aliases resolve to their anchored source before translation. Plain, quoted,
+escaped, literal, and folded forms retain source positions. The source repository remains
+unchanged. The configuration declares exit 1 for findings; native fatal exits remain execution
+errors under the [pinned native contract](https://github.com/rhysd/actionlint/blob/v1.7.12/command.go).
+
+The focused native suite passes 13 cases with 68 assertions. Three controlled-process cases
+pass 20 assertions for cleanup after success, findings, and fatal exit, including preserved
+bytes and read-only modes. A source CLI run checks all three authored workflows and exits 0.
+These results replace the unresolved parser-conflict disposition; frozen-candidate acceptance
+and remote CI evidence remain open. CI remains paused.
 
 Local deletion: `tests/ci-affected.ts` and its forwarding mise task are removed. The authored
 workflow validates the event base and invokes the existing push-object protocol directly, with
@@ -3408,6 +3442,62 @@ Local packaging and deployment-definition correctness remain open work, not defe
 constraints. CI remains paused. No publication or reference-repository mutation is authorized.
 
 ## Candidate gate
+
+Current continuation evidence starts from clean revision
+`18cb3c54ddb2188ae0665cc4395879701dad5f85`. These are diagnostic and focused results,
+not a frozen candidate. The JavaScript permissions repair postdates the broad runs and
+release artifacts below, so affected acceptance and artifacts require another run.
+
+- Routine unit and integration execution passed 1,402 tests with 6,535 assertions.
+  Both declared Bun replacements, `tests/unit` and `tests/coverage`, executed successfully
+  through the CLI. Workspace, tests, and documentation type checks and schema freshness
+  passed before the subsequent JavaScript repair.
+- Source acceptance passed 281 cases and failed 33, with 2,873 assertions across 81 files.
+  Each failed case stopped at EditorConfig Checker acquisition: its npm wrapper received
+  GitHub API HTTP 403 rate-limit responses while acquiring native version 3.4.0.
+  These failures remain incomplete, including the cold and warm performance case.
+  Earlier focused formatter acceptance passed 23 cases with 469 assertions through
+  normal private installation before the quota was exhausted.
+- Native package-manager acceptance passed eight cases with 438 assertions. This covers
+  authenticated registries for npm, Bun, pnpm, and the tested Yarn version, plus three
+  Python installation and lock-recovery cases. The remaining npm case using the `none`
+  runner failed at the same EditorConfig Checker acquisition boundary. That matrix used
+  Yarn Classic 1.22.22. A separate normal npm acquisition of modern Yarn 4.9.2 followed by
+  the same authenticated-registry journey passed with 62 assertions, covering both families.
+- The subsequent complete native suite passed 360 cases and failed one, with 3,240
+  assertions across 31 files. Its sole failure is EditorConfig Checker acquisition in the
+  npm `none` runner journey. The JavaScript permissions repair, real hook-manager clones,
+  native parser and fixer diagnostics, scoped security packs, and snapshot isolation passed.
+- All seven CLI targets and the plugin built. Release acceptance passed eight cases and
+  failed the installed CLI consumer at the same acquisition boundary, with 281 assertions.
+  Embedded resources, host-binary independence, and installed plugin exports and
+  declarations passed. Publication dry runs packed all eight npm packages successfully.
+  No public package was uploaded.
+- The site build produced 319 pages and its link and fragment checks passed. These results
+  do not replace visual, keyboard, zoom, contrast, or reduced-motion acceptance.
+- Source doctor reported all 54 tools ready, and repeated source application reported no
+  drift. Existing local tools do not satisfy fresh acquisition requirements.
+- The first full binary check exited 2 on a read-only JavaScript configuration in a
+  disposable workspace. The focused repair is recorded under isolated generators and
+  builds. No passing complete candidate check, manual check, or final staged check is
+  established by this continuation. The diagnostic source retry completed with 116 passing
+  records, 22 finding records, 11 skipped records, and one execution error. It reported
+  9,114 findings. JavaScript checking and the routine test check passed; Pinact failed at
+  the GitHub API quota boundary. Source formatting and this ledger changed during that
+  run, so it is an inventory rather than unchanged-candidate evidence.
+- The disposable-index staged inventory exited 1 with 637 findings, 32 passing records,
+  12 finding records, and four skipped records. It produced no execution errors. The real
+  index remained byte-identical, with SHA-256
+  `9506ee90c81f4f4ae857f3fbea203e9b4c5f5ad67e3f0fc51e3dd2ad292711e6`.
+  This is diagnostic evidence for the current changes, not the final staged acceptance
+  gate. Workspace and test type checks, schema freshness, and diff whitespace checks
+  passed after the JavaScript repair.
+
+The user requested continued local work without a token. Required acquisition failures
+remain open; host tools and skipped downloads are not substitutes. The native mixed
+plist diagnostic audit also remains open: a malformed file and an inaccessible or missing
+file can share exit 1, so native execution failures require classification beyond the
+presence of one finding on an existing file.
 
 Complete the behavior groups before application adoption. Their order reflects dependencies.
 
