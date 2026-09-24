@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { ruleDiff } from '#cli/emit/rule-diff.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
 
 test('Gixy previews retain final root selectors and keep plugin options outside the rule lists', () => {
     const file: GeneratedFile = {
@@ -94,7 +94,9 @@ test('Vale comparison combines style selections and keeps rule overrides in thei
             { path: '*.BasedOnStyles', added: ['Example'], removed: [], changed: [] },
         ],
     });
-    expect(ruleDiff(file, '[*\n')).toStrictEqual({ ruleError: 'Rule comparison failed: Unclosed Vale section on line 1.' });
+    expect(ruleDiff(file, '[*\n')).toStrictEqual({
+        ruleError: 'Rule comparison failed: Unclosed Vale section on line 1.',
+    });
 });
 
 test('SQLFluff comparison names excluded rules and changed rule options while ignoring list order', () => {
@@ -139,7 +141,9 @@ test('SQLFluff comparison preserves case-sensitive options and resolves inherite
         kind: 'config',
         readOnly: true,
     };
-    expect(ruleDiff(file, '[DEFAULT]\nflag = TRUE\nlimit = 1.0\n[sqlfluff:rules:example]\nName = VALUE\n')).toStrictEqual({
+    expect(
+        ruleDiff(file, '[DEFAULT]\nflag = TRUE\nlimit = 1.0\n[sqlfluff:rules:example]\nName = VALUE\n'),
+    ).toStrictEqual({
         rules: [],
     });
     expect(ruleDiff(file, file.content.replace('Name', 'name'))).toStrictEqual({

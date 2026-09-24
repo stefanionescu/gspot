@@ -2,7 +2,7 @@ import { main } from '#cli/program.ts';
 import { describe, expect, test } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { configureOutput } from '#cli/output/messages.ts';
 
 const report: RunReport = {

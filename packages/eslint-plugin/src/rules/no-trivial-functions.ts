@@ -1,6 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
 const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
@@ -44,7 +43,7 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline unnecessary functions. Required external APIs need a narrow suppression with a reason.',
         },
-        schema: [optionsSchema({ maxStatements: positiveInteger })],
+        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 } })],
         messages: {
             trivial:
                 'This function has {{count}} executable statements, at most {{max}}. Inline it or explain its required API with a narrow suppression.',

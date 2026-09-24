@@ -1,41 +1,27 @@
 import { isAbsolute, join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
-import { TOOL_DEADLINE } from '#cli/run/settings.ts';
-import type { MergedView } from '#cli/types/policy.ts';
+import type { Session } from '#cli/run/session.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { ToolOutputError } from '#cli/run/parse-output.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import type { CheckResult, Finding } from '#cli/types/reports.ts';
-import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
+import type { CheckResult, Finding } from '#cli/output/schema.ts';
+import type { ToolPin } from '#cli/configurations/read-manifests.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
+import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
+import type { Substitutions, ToolInvocation } from '#cli/run/command-expansion.ts';
 import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/run/broken-tool.ts';
 import { commandConfigurations, perFileCommands, substitute, substituteValue } from '#cli/run/command-expansion.ts';
 
-import type {
-    EngineInput,
-    PlannedCheck,
-    PreparedCommand,
-    Session,
-    Substitutions,
-    ToolInvocation,
-} from '#cli/types/execution.ts';
 /** What one tool run accumulates across its spawns. */
 type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 
-const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 const FILES_PLACEHOLDER = '{files}';
-const MILLISECONDS = 1000;
-/**
- * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
- * @param view
- */
-export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
-    return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
-}
 function firstLine(result: SpawnResult, placeholder: string): string {
     const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
     return (
@@ -294,37 +280,6 @@ export async function runToolCheck(
     return result;
 }
 /**
- * Runs a tool command with the shared output environment and configured deadline.
- * @param view the policy view whose limits apply
- * @param command the expanded argument vector
- * @param prepared the command directory and expanded environment
- * @param cancelSignal cancellation for the command session
- * @returns the completed process result
- */
-export async function runToolCommand(
-    view: Pick<MergedView, 'limit'> | undefined,
-    command: string[],
-    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'>,
-    cancelSignal?: AbortSignal,
-): Promise<SpawnResult> {
-    if (cancelSignal?.aborted === true)
-        return {
-            code: 1,
-            stdout: '',
-            stderr: 'The command was canceled.',
-            missing: false,
-            duration: 0,
-            isCanceled: true,
-        };
-    const seconds = toolDeadlineSeconds(view);
-    return run(command, {
-        ...prepared,
-        env: { ...TOOL_ENV, ...prepared.env },
-        timeoutMs: seconds * MILLISECONDS,
-        ...(cancelSignal === undefined ? {} : { cancelSignal }),
-    });
-}
-/**
  * Run an adapter command through the shared execution boundaries.
  * @param input the check and its command session
  * @param command the executable name and arguments
@@ -368,3 +323,11 @@ function adapterTool(
     }
     return { path: probe.path, env };
 }
+
+export type PreparedCommand = {
+    root: string;
+    cwd: string;
+    argv: string[];
+    commands: ToolInvocation[];
+    env: Record<string, string>;
+};

@@ -1,15 +1,14 @@
-import type { SourceObservations } from '#cli/types/repository.ts';
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { CheckResult } from '#cli/types/reports.ts';
-import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
-import type { CacheKeyInput } from '#cli/types/execution.ts';
+import type { CheckResult } from '#cli/output/schema.ts';
+import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 const CACHE_FORMAT = 5;
@@ -158,3 +157,12 @@ export function pruneCache(root: string): void {
         reportStorageFailure(join(root, CACHE_DIRECTORY), error);
     }
 }
+
+export type CacheKeyInput = {
+    check: string;
+    scope: string;
+    toolVersion: string;
+    configurationHash: string;
+    files: { path: string; hash: string }[];
+    extra?: string;
+};

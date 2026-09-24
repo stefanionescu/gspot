@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
-import type { TakeoverPlan } from '#cli/types/ownership.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 
 test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {

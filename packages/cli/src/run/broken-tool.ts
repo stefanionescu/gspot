@@ -1,11 +1,11 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
-import type { PlannedCheck } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
-import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
+import type { CheckSpec, OutputFormat } from '#cli/configurations/schema.ts';
 
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
 const FILELESS_FORMATS = new Set(['lines', 'none']);
@@ -19,7 +19,9 @@ function isFileNamed(output: OutputFormat | undefined): boolean {
 
 function isOnDisk(file: string, roots: string[]): boolean {
     if (file === '') return false;
-    return roots.some((root) => (statSync(isAbsolute(file) ? file : join(root, file), { throwIfNoEntry: false }) !== undefined));
+    return roots.some(
+        (root) => statSync(isAbsolute(file) ? file : join(root, file), { throwIfNoEntry: false }) !== undefined,
+    );
 }
 
 /**
@@ -108,7 +110,9 @@ export function checkedFindings(planned: PlannedCheck, result: SpawnResult, root
     const isTypos = spec.output?.format === 'typos-json';
     const isMarkdownlint = spec.output?.format === 'markdownlint-json';
     const broken =
-        (result.code !== 0 && spec.findings_exit_codes !== undefined && !spec.findings_exit_codes.includes(result.code)) ||
+        (result.code !== 0 &&
+            spec.findings_exit_codes !== undefined &&
+            !spec.findings_exit_codes.includes(result.code)) ||
         (isTypos && result.code !== 0 && result.code !== TYPOS_FINDINGS) ||
         (isMarkdownlint && result.code !== 0 && result.code !== 1) ||
         hasToolError(spec, result);

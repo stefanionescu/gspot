@@ -1,7 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 import { statementCount } from '#plugin/rules/no-trivial-functions.ts';
-import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({
     name: 'no-trivial-files',
@@ -16,7 +15,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
             why: 'A file needs substantial behavior or a meaningful owned schema.',
             fix: 'Move unnecessary wrappers and aliases to their owner. Keep substantial implementations and schemas together.',
         },
-        schema: [optionsSchema({ maxStatements: positiveInteger })],
+        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 } })],
         messages: {
             trivial:
                 'This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.',

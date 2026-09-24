@@ -1,4 +1,5 @@
 import { openSession } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { Argument, type Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { coverageReport } from '#cli/run/coverage.ts';
@@ -9,8 +10,8 @@ import { settingRows } from '#cli/policy/settings-list.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import type { CommandResult, Session } from '#cli/types/execution.ts';
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;

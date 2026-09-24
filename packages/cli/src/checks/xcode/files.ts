@@ -1,8 +1,8 @@
 // What the xcode checks share: the tracked files by ending, their text, and the finding shape.
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 
 /**
  * The tracked source files whose path ends one of the given ways.

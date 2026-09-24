@@ -1,16 +1,9 @@
-// The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
-import type { Manifest } from '#cli/types/configurations.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
+// The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { PolicyScopeLayer, ExposedSettings } from '#cli/policy/settings.ts';
 import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';
-
-import type {
-    MergedView,
-    FormatSettings,
-    IgnoreEntry,
-    Policy,
-    PolicyScopeLayer,
-    ExposedSettings,
-} from '#cli/types/policy.ts';
+import type { FormatSettings, IgnoreEntry, Policy } from '#cli/policy/normalize.ts';
 
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);
@@ -134,3 +127,16 @@ export function mergeForScope(
         extra: (name) => extraOf(toolTables(policy, scope, name)),
     };
 }
+
+export type MergedView = {
+    scope: string;
+    configurations: string[];
+    settings: Record<string, unknown>;
+    reasons: Record<string, string>;
+    format: FormatSettings;
+    limit: (key: string, language?: string) => number | undefined;
+    tool: (name: string) => Record<string, unknown>;
+    ignoresFor: (check: string) => IgnoreEntry[];
+    rulesOff: (check: string) => string[];
+    extra: (name: string) => Record<string, unknown> | undefined;
+};

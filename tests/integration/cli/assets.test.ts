@@ -2,20 +2,24 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync } from 'node:fs';
+import { readFileSync, symlinkSync, copyFileSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';
 const SOURCES = [
     'packages/cli/package.json',
-    'packages/cli/src/parsers/grammars.ts',
     'packages/cli/src/platform/assets.ts',
     'packages/cli/src/platform/paths.ts',
     'packages/cli/src/platform/environment.ts',
     'packages/cli/src/repository/hooks.ts',
 ];
 const CONFIGURATION = '[configuration]\nname = "bash"\n';
-const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
+const PROBE = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
+for (const name of GRAMMAR_NAMES) {
+    if (!WebAssembly.validate(await Bun.file(grammarPath(name)).arrayBuffer())) throw new Error(name);
+}
+try { grammarPath('undeclared.wasm'); throw new Error('Undeclared asset was accepted.'); }
+catch (error) { if (!String(error).includes('No grammar is called')) throw error; }
 console.log(JSON.stringify({ text: readAsset('packages/cli/configurations/language/bash/manifest.toml'), files: listAssets('packages/cli/configurations') }));
 `;
 
@@ -29,9 +33,11 @@ describe('development assets', () => {
             ...sources,
             [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: CONFIGURATION,
             [`${CHECKOUT}/probe.ts`]: PROBE,
+            [`${CHECKOUT}/packages/cli/vendor/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
+        copyFileSync(join(ROOT, 'packages/cli/vendor/swift.wasm'), join(cwd, 'packages/cli/vendor/swift.wasm'));
         const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'probe.ts')], {
             cwd,
             stdout: 'pipe',

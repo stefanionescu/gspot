@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { claimedByClaims, isClaimed, pathMatcher } from '#cli/configurations/claims.ts';
 import { detectConfigurations, shebangInterpreter, unknownLanguages } from '#cli/configurations/detect.ts';

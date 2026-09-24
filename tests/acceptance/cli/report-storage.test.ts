@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 
 import {
     chmodSync,
@@ -161,7 +161,7 @@ test.each(['before', 'after'])('an interrupted report %s publication recovers on
     expect(first.code, first.stdout + first.stderr).toBe(1);
     const previous = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
     writeFileSync(join(sandbox.path, 'source.txt'), 'corrected\n');
-    const boundary = join(import.meta.dir, '../../../packages/cli/src/filesystem/confined.ts');
+    const boundary = join(import.meta.dir, '../../../packages/cli/src/platform/filesystem.ts');
     const cli = join(import.meta.dir, '../../../packages/cli/src/main.ts');
     const program = `
 import { mock } from 'bun:test';

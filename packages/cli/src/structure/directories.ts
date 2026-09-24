@@ -1,6 +1,5 @@
 // The directory tree as the tracked file list sees it, for the folder analyses.
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { DirectoryEntry } from '#cli/types/structure.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 /**
  * The directory of a path, '' at the root.
@@ -59,3 +58,6 @@ export function directoryTree(files: TrackedFile[]): Map<string, DirectoryEntry[
         ]),
     );
 }
+
+/** An entry a directory holds, as the tracked file list sees it. */
+export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };

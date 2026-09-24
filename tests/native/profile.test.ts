@@ -11,7 +11,7 @@ import { exportedProfile } from '#cli/profile/export.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { applyUninstall, planUninstall } from '#cli/commands/uninstall/command.ts';
+import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
@@ -236,7 +236,9 @@ test('profile publication recovers an interrupted write through the lifecycle jo
             'Profile publication interrupted',
         );
         expect(await Bun.file(path).exists()).toBe(false);
-        expect(readOwnership(directory.path).pending?.map((entry) => entry.path)).toStrictEqual(['shared.profile.toml']);
+        expect(readOwnership(directory.path).pending?.map((entry) => entry.path)).toStrictEqual([
+            'shared.profile.toml',
+        ]);
     } finally {
         failed.mockRestore();
     }

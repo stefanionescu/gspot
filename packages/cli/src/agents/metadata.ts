@@ -1,6 +1,6 @@
 // The front matter of a rule file: layer, configuration and title, and whether they agree with the path and the H1.
 import { RULE_LAYERS } from '#cli/agents/terms.ts';
-import type { RuleFinding, FrontMatter } from '#cli/types/agents.ts';
+import type { RuleFinding } from '#cli/agents/lint.ts';
 
 // A guide names one configuration or none.
 const CONFIGURATION_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
@@ -82,3 +82,6 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
         findings.push({ file: path, line: 4, message: `title '${matter.title}' does not equal the H1 '${heading}'` });
     return findings;
 }
+
+/** The front matter of a rule file. */
+export type FrontMatter = { layer: string; configuration: string; title: string; fields: Record<string, string> };

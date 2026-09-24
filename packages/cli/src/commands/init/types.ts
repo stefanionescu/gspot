@@ -1,15 +1,16 @@
-import type { Policy } from '#cli/types/policy.ts';
-import type { Profile } from '#cli/types/profiles.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { Manifest, Proposal } from '#cli/types/configurations.ts';
-import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
-
-import type {
-    CarriedConfiguration,
-    CarriedFormatter,
-    ConfigurationReason,
-    TakeoverPlan,
-} from '#cli/types/ownership.ts';
+import type { Profile } from '#cli/profile/read.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { Repository } from '#cli/repository/tree.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import type { Proposal } from '#cli/configurations/detect.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { CarriedConfiguration, CarriedFormatter } from '#cli/lifecycle/carry.ts';
 
 export type InitOptions = {
     cwd: string;
@@ -69,7 +70,7 @@ export type InitPlanInputs = {
     everySelected: Manifest[];
     how: Map<string, ConfigurationReason>;
     answers: InitAnswers;
-    runnerTasks?: import('#cli/schemas/runners.ts').RunnerTaskNames;
+    runnerTasks?: import('#cli/policy/runner.ts').RunnerTaskNames;
     carried: CarriedConfiguration;
     policyLines: number;
     /** Instruction destinations resolved from the final proposed policy. */

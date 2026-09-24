@@ -1,8 +1,7 @@
-import type { FileDeclaration } from '#cli/types/policy.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 // Every tracked path has one nature: source, generated, vendored, binary.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { Attribute, NatureVerdict } from '#cli/types/repository.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileDeclaration } from '#cli/policy/normalize.ts';
 
 import {
     GENERATED_BANNERS,
@@ -149,3 +148,22 @@ export const DEPENDENCY_FOLDERS = [
     'DerivedData',
     '.build',
 ];
+
+// What is in the tree: files, natures, tags, scopes, and the tooling init finds.
+
+export type Nature = 'source' | 'generated' | 'vendored' | 'binary';
+
+export type TrackedFile = {
+    path: string;
+    prefix: Buffer;
+    nature: Nature;
+    natureSource?: string;
+    tags: string[];
+    executable: boolean;
+    size: number;
+    producedBy?: string;
+};
+
+export type Attribute = { matcher: (path: string) => boolean; attributes: string[] };
+
+export type NatureVerdict = { nature: Nature; source: string; producedBy?: string };

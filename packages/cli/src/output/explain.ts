@@ -1,16 +1,17 @@
 // Explain a check, tool rule, configuration, setting, or file path.
 import { explainPath } from '#cli/output/file.ts';
 import { nearMatches } from '#cli/policy/near.ts';
+import type { Session } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { probeTool } from '#cli/tools/tool-probe.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Session } from '#cli/types/execution.ts';
 import { repositoryCheckSpec } from '#cli/run/plan.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import type { ResolvedSetting } from '#cli/types/policy.ts';
+import type { ResolvedSetting } from '#cli/policy/settings.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
+import type { ListingRow } from '#cli/configurations/listing.ts';
+import type { SettingSpec } from '#cli/configurations/schema.ts';
 import { allChecks, toRow } from '#cli/configurations/listing.ts';
-import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;

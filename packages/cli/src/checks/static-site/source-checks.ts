@@ -1,10 +1,10 @@
 // The checks that read the source of a static site: assets nobody references, images that still compress, the manifest, and the headers file.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 
 const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
 const ASSET_FOLDER = /(?:^|\/)assets\//u;
@@ -96,7 +96,14 @@ export function webManifest(input: EngineInput): Finding[] {
                 : [finding(input, file.path, 'name', 'The manifest has no name.')];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
-            .filter((src) => !src.startsWith('http') && !(statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) !== undefined))
+            .filter(
+                (src) =>
+                    !src.startsWith('http') &&
+                    !(
+                        statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) !==
+                        undefined
+                    ),
+            )
             .map((src) => finding(input, file.path, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];
     });

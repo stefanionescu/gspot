@@ -7,7 +7,7 @@ import { toolsPath } from '#tests/support/cli/tools.ts';
 // The hook gspot installs runs the staged checks on commit.
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
+import { pushReportSchema, reportSchema } from '#cli/output/schema.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 describe('the gspot hook', () => {

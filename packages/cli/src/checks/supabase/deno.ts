@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({
@@ -23,7 +23,7 @@ const CHECK_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
 
 function denoFileArguments(root: string, folder: string): string[] {
     const path = join(root, folder, 'deno.json');
-    return (statSync(path, { throwIfNoEntry: false }) !== undefined) ? ['--config', path] : [];
+    return statSync(path, { throwIfNoEntry: false }) !== undefined ? ['--config', path] : [];
 }
 
 function relative(root: string, locator: string): string {
@@ -63,7 +63,7 @@ function firstError(input: EngineInput, folder: string, stderr: string): Finding
 async function typed(input: EngineInput, folder: string): Promise<Finding[]> {
     const entry = ['index.ts', 'index.tsx']
         .map((name) => join(input.root, folder, name))
-        .find((path) => (statSync(path, { throwIfNoEntry: false }) !== undefined));
+        .find((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     if (entry === undefined) return [];
     const argv = ['deno', 'check', '--quiet', ...denoFileArguments(input.root, folder), entry];
     const result = await runCheckCommand(input, argv, { cwd: join(input.root, input.scope) });

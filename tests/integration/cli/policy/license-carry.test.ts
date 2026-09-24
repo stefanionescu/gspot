@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { mkdirSync, symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { proposeText } from '#cli/policy/propose.ts';
-import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { mkdirSync, symlinkSync } from 'node:fs';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { proposeText } from '#cli/policy/propose.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'license-checker-rseidelsohn', path: '.license-checker.json', carries: 'licenses' as const }],

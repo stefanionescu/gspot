@@ -1,8 +1,9 @@
 // Scripts under the architecture roots declare their boundary and their sources. Searched: shellcheck source=; it resolves, it does not require.
 import { posix } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { Analysis, ScriptFile, ScriptIndex, StructureContext } from '#cli/types/structure.ts';
+import type { ScriptFile, ScriptIndex } from '#cli/structure/parser.ts';
+import type { Analysis, StructureContext } from '#cli/structure/engine.ts';
 
 import {
     BOUNDARY_HEADER,

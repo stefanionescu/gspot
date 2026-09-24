@@ -10,9 +10,9 @@ import { parseProfile } from '#cli/profile/read.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { MISE_MIN_VERSION, miseTasks, pinnedTwice } from '#cli/emit/runner-tasks.ts';
 

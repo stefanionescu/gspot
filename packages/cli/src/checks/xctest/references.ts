@@ -1,7 +1,7 @@
-import type { Finding } from '#cli/types/reports.ts';
-import { xcodeFinding } from '#cli/checks/xcode/files.ts';
+import type { Finding } from '#cli/output/schema.ts';
 // Snapshot references belong to a semantic Swift test file beside their configured layout.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 function escapePattern(text: string): string {
     return text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);

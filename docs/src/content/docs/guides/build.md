@@ -82,8 +82,8 @@ Run [installed-package verification](#validate-packages-locally) separately from
 The publisher prepares packages in disposable directories. Run source acceptance and release
 verification sequentially so each suite owns its registry and tool installation workload.
 
-Regenerate the editor schema with `mise run generate:schema`. Check freshness with
-`mise run generate:schema -- --check`. The docs build copies the schema into the site.
+The documentation build generates the editor schema from the runtime policy schema and
+publishes it at `/schema/gspot.schema.json`.
 See the [documentation conventions](https://github.com/stefanionescu/gspot/blob/main/docs/README.md)
 for example, reference, and link validation.
 
@@ -102,15 +102,15 @@ names, npm identities, and libc selection. macOS builds run `codesign` when buil
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
 The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-upstream records in `packages/cli/scripts/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
+upstream records in `packages/cli/vendor/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
 the Swift grammar provenance and Bun runtime notices. Missing grammars, mismatched grammar
 hashes, and unrecorded license notices fail the build.
 
 ## Regenerate the Swift grammar
 
 The checked-in grammar is built from a pinned upstream commit. Its source, compiler versions,
-and SHA-256 are recorded in `packages/cli/grammars/swift.json`. Its upstream license is
-`packages/cli/grammars/swift.LICENSE`.
+and SHA-256 are recorded in `packages/cli/vendor/swift.json`. Its upstream license is
+`packages/cli/vendor/swift.LICENSE`.
 
 Start Docker, then use mise 2026.8.8 or newer to run the pinned tree-sitter CLI:
 

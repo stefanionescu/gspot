@@ -1,8 +1,7 @@
-// Imports grouped and sorted by statement shape and length: one-line imports first, multi-line second, each by length.
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema } from '#plugin/rules/options.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+// Imports grouped and sorted by statement shape and length: one-line imports first, multi-line second, each by length.
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 const BLANK = /^\s*$/u;
 const SPACES = /\s+/gu;

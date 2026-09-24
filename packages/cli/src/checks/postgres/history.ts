@@ -1,5 +1,5 @@
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 // The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.

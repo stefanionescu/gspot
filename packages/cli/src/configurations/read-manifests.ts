@@ -4,8 +4,8 @@ import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { configurationName } from '#cli/run/scope-paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { manifestSchema, INSTALLER_KEYS } from '#cli/schemas/manifests.ts';
-import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
+import { manifestSchema, INSTALLER_KEYS } from '#cli/configurations/schema.ts';
+import type { SettingSpec, RawCheck, RawManifest, RawTool, CheckSpec } from '#cli/configurations/schema.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 
@@ -282,3 +282,36 @@ export function configurationManifests(): Map<string, Manifest> {
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }
+
+type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
+
+export type ConfigurationHeader = Omit<RawManifest['configuration'], 'check_references'> & {
+    check_references?: RawManifest['configuration']['check_references'];
+};
+
+export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> & Partial<Omit<NpmInstallerDefinition, 'name'>>;
+
+export type ToolPin = {
+    name: string;
+    kind?: 'binary' | 'library';
+    version?: string;
+    floor?: string;
+    provider?: 'host';
+    windows: boolean;
+    version_command?: string[];
+    version_exit_code?: number;
+    version_regex?: string;
+    suppression?: NonNullable<RawTool['suppression']>;
+    takeover?: NonNullable<RawTool['takeover']>;
+    query_packs?: NonNullable<RawTool['query_packs']>;
+    env?: Record<string, string>;
+    installers: Record<string, InstallerPin>;
+};
+
+export type Manifest = Omit<RawManifest, 'configuration' | 'tools' | 'checks' | 'settings'> & {
+    configuration: ConfigurationHeader;
+    tools: ToolPin[];
+    checks: CheckSpec[];
+    settings: SettingSpec[];
+    dir: string;
+};

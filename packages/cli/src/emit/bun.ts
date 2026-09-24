@@ -1,6 +1,6 @@
-import type { Session } from '#cli/types/execution.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { ConfigurationOutput } from '#cli/types/generation.ts';
+import type { Session } from '#cli/run/session.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/emit/targets.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.

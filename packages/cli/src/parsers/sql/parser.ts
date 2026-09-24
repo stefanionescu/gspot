@@ -1,6 +1,5 @@
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
 
-import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
 import type { PgModule, SqlParse, SqlTree } from '#cli/parsers/sql/types.ts';
@@ -11,8 +10,7 @@ const state: { module: Promise<PgModule> | undefined } = { module: undefined };
 
 async function pgModule(): Promise<PgModule> {
     if (state.module !== undefined) return state.module;
-    const factory = createModule as (options: { wasmBinary: Uint8Array }) => Promise<PgModule>;
-    state.module = factory({ wasmBinary: readFileSync(grammarPath('libpg-query.wasm')) });
+    state.module = createModule({ locateFile: () => grammarPath('libpg-query.wasm') });
     return state.module;
 }
 
@@ -58,8 +56,9 @@ export async function parseSql(text: string): Promise<SqlParse> {
  */
 export async function parsePlpgsql(text: string): Promise<unknown> {
     const module = await pgModule();
-    const query = module._malloc(module.lengthBytesUTF8(text) + 1);
-    module.stringToUTF8(text, query, module.lengthBytesUTF8(text) + 1);
+    const size = module.lengthBytesUTF8(text) + 1;
+    const query = module._malloc(size);
+    module.stringToUTF8(text, query, size);
     const result = module._wasm_parse_plpgsql(query);
     try {
         const value = module.UTF8ToString(result);

@@ -5,17 +5,16 @@ import { dirname, join, relative } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { miseHome } from '#cli/platform/environment.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { installHint } from '#cli/tools/install-hints.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
-import type { ToolProbe, ToolContext } from '#cli/types/tools.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read-policy.ts';
-import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import type { Manifest, ToolPin } from '#cli/configurations/read-manifests.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };
@@ -45,7 +44,7 @@ function candidates(root: string, roots: string[], name: string, privateKind?: '
         for (const path of directories.flatMap((dir) => names.map((file) => join(dir, file)))) {
             const local = relative(root, path).replaceAll('\\', '/');
             if (!local.startsWith('.gspot/')) {
-                if ((statSync(path, { throwIfNoEntry: false }) !== undefined)) found.push(path);
+                if (statSync(path, { throwIfNoEntry: false }) !== undefined) found.push(path);
                 continue;
             }
             try {
@@ -62,7 +61,12 @@ function candidates(root: string, roots: string[], name: string, privateKind?: '
     const onPath = Bun.which(name);
     if (onPath !== null) found.push(onPath);
     const miseBin = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
-    return [...found, ...names.map((file) => join(miseBin, file)).filter((path) => (statSync(path, { throwIfNoEntry: false }) !== undefined))];
+    return [
+        ...found,
+        ...names
+            .map((file) => join(miseBin, file))
+            .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined),
+    ];
 }
 
 // The version a package.json above the real file of an npm tool holds, for the package the pin names.
@@ -78,7 +82,7 @@ function packageVersion(root: string, path: string, name: string | undefined): s
             if (managed && !local.startsWith('.gspot/')) return undefined;
             const text =
                 files === undefined
-                    ? (statSync(manifest, { throwIfNoEntry: false }) !== undefined)
+                    ? statSync(manifest, { throwIfNoEntry: false }) !== undefined
                         ? readFileSync(manifest, 'utf8')
                         : undefined
                     : files.read(local)?.bytes.toString('utf8');
@@ -99,7 +103,7 @@ function miseVersion(path: string, tool: ToolPin): string | undefined {
     const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
     if (!path.startsWith(join(home, 'shims'))) return undefined;
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
-    return (statSync(installed, { throwIfNoEntry: false }) !== undefined) ? npm.version : undefined;
+    return statSync(installed, { throwIfNoEntry: false }) !== undefined ? npm.version : undefined;
 }
 
 // What the tool prints about its version, with no color codes: their numbers read as a version.
@@ -293,3 +297,23 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
     }
     return { name, provider: 'host', windows: true, installers: {} };
 }
+
+type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
+
+export type ToolProbe = {
+    name: string;
+    state: ToolState;
+    want?: string;
+    found?: string;
+    path?: string;
+    hint?: string;
+    note?: string;
+    floor?: string;
+};
+
+export type ToolContext = {
+    root: string;
+    cwd?: string;
+    probes: Map<string, ToolProbe>;
+    policyFiles?: import('#cli/policy/read-policy.ts').PolicyFiles;
+};

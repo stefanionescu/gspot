@@ -4,10 +4,10 @@ import { rmSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;

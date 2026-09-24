@@ -1,9 +1,9 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { licenseRequest, licenseResponse } from '#cli/schemas/evaluation.ts';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { z } from 'zod';
+import { pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { licenseRequest, licenseResponse } from '#cli/evaluation/protocol.ts';
 
 const reportSchema = z.record(
     z.string(),

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { runToolCommand } from '#cli/tools/command.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { locateTool, probeTool } from '#cli/tools/tool-probe.ts';
+import type { ToolPin } from '#cli/configurations/read-manifests.ts';
 import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
@@ -27,25 +27,28 @@ function command(name: string, version: string, npm?: string): ToolPin {
 }
 
 describe('the tool probe', () => {
-    test.skipIf(process.platform === 'win32')('version probes and tool execution prefer helpers from the selected installation', async () => {
-        await using sandbox = await testdir();
-        const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
-        await createFileTree(sandbox.path, {
-            'node_modules/.bin/teller': launcher,
-            'node_modules/.bin/companion': `#!${process.execPath}\nconsole.log('3.8.1');\n`,
-            'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
-        });
-        for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
-            chmodSync(join(sandbox.path, path), RUNS);
-        const env = { PATH: join(sandbox.path, 'unrelated') };
-        const tool = { ...command('teller', '3.8.1'), env };
-        const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
-        expect(observed).toMatchObject({ state: 'ok', found: '3.8.1' });
-        const executed = await runToolCommand(undefined, [observed.path!], { cwd: sandbox.path, env });
-        expect(executed.code).toBe(0);
-        expect(executed.stdout.trim()).toBe('3.8.1');
-        expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
-    });
+    test.skipIf(process.platform === 'win32')(
+        'version probes and tool execution prefer helpers from the selected installation',
+        async () => {
+            await using sandbox = await testdir();
+            const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
+            await createFileTree(sandbox.path, {
+                'node_modules/.bin/teller': launcher,
+                'node_modules/.bin/companion': `#!${process.execPath}\nconsole.log('3.8.1');\n`,
+                'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
+            });
+            for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
+                chmodSync(join(sandbox.path, path), RUNS);
+            const env = { PATH: join(sandbox.path, 'unrelated') };
+            const tool = { ...command('teller', '3.8.1'), env };
+            const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+            expect(observed).toMatchObject({ state: 'ok', found: '3.8.1' });
+            const executed = await runToolCommand(undefined, [observed.path!], { cwd: sandbox.path, env });
+            expect(executed.code).toBe(0);
+            expect(executed.stdout.trim()).toBe('3.8.1');
+            expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
+        },
+    );
 
     test('an active PATH executable wins over an unrelated mise shim', async () => {
         await using sandbox = await testdir();

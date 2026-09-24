@@ -5,6 +5,39 @@ recorded execution establish only the behavior they actually cover. Cleanup is a
 expansion and repository lint cleanup follow it. Recorded local passes do not establish that
 the implementation, documentation, or tests are free of unnecessary complexity.
 
+## Current handoff
+
+The ownership cleanup is uncommitted. Its changes and verification are recorded under
+[September 24 feature ownership cleanup](#september-24-feature-ownership-cleanup). No commit,
+push, public publication, deployment, or CI activation occurred in this continuation.
+
+The prior implementation and evidence were committed and pushed to `origin/main` through
+`49d30520`. The user explicitly authorized `--no-verify` for that commit and push operation.
+The four commits record Actionlint self-repository validation, root Prettier override
+resolution, JavaScript read-only configuration isolation, and their verification evidence.
+That operation did not establish passing repository checks or authorize publication,
+deployment, CI activation, or changes to reference repositories.
+
+Use [Candidate gate](#candidate-gate) for the latest execution totals and their limitations.
+Use [Grouped dispositions](#grouped-dispositions) for the remaining requirements. Earlier
+dated continuations and retained evidence are historical when newer results supersede them.
+
+The 29 open behavior groups are not 29 confirmed missing features. They include partially
+implemented requirements, unresolved defects, and incomplete verification. The full
+acceptance-to-implementation audit is unfinished, so this record does not yet identify every
+remaining code change. Do not interpret an open acceptance ID as proof that its implementation
+is absent, or a passing suite as proof that every contract is covered.
+
+The next work still includes the native plist execution-error audit, acquisition-blocked
+consumer journeys, and the full cold/warm performance matrix. Complete per-example and
+applicable site acceptance, reconcile each open contract with implementation and evidence,
+then finish repository findings and validate one unchanged candidate. The latest diagnostic
+full check reported 9,114 findings and a Pinact quota error; the staged inventory reported
+637 findings. Neither result is a passing gate. Rebuild artifacts affected by the subsequent
+JavaScript repair before release acceptance. Screen-reader acceptance is excluded by the
+user's instruction; unavailable native-platform execution and external release/adoption
+evidence remain separately deferred.
+
 The September 23 source, test, support, and content reading is complete. Test consolidation,
 configuration grouping, the Astro/Starlight redesign, and the local visual matrix are implemented.
 Current verification and remaining failures are consolidated under
@@ -17,7 +50,192 @@ Complete per-example execution, download-blocked journeys, and
 unavailable native-platform evidence remain open. The Sweet spot continuation below records
 the SQLFluff lifecycle repair and the current rendered verification.
 Updating architecture does not close those product requirements. The cleanup continuation below
-records the latest local results and supersedes earlier aggregate totals for this work.
+records earlier local results; the candidate gate contains the latest continuation totals.
+
+## September 24 feature ownership cleanup
+
+This continuation supersedes the script, schema, grammar, and central-type layout descriptions
+below. It preserves the earlier uncommitted simplification and current-layout-only recovery.
+
+The release owner builds binaries with Bun's API, passes compiler metadata directly to notice
+assembly, signs macOS output, and stages packages. Swift rebuilding stays separate because it
+requires Docker. Vendor data contains the pinned Swift WASM, license, provenance, and supplemental
+notices. Nine unused local parser copies are removed. Declared assets resolve from locked packages
+or the retained Swift file. Undeclared filenames cannot select arbitrary vendor files.
+
+The isolated-binary parser journey exposed an existing SQL loader defect: the pinned libpg-query
+factory ignores `wasmBinary`, so it tried to read the WASM from the deleted build checkout.
+The parser supplies its declared asset through the supported `locateFile` hook. Its ambient
+factory declaration describes that hook and the actual parser module, removing the cast.
+The cold-process concurrency test checks independent valid and invalid parse results rather
+than counting calls to a filesystem spy that did not intercept the upstream loader.
+
+The documentation endpoint generates the public editor schema from policy validation. The URL,
+identifier, and configuration language are unchanged. The documentation link check also compares
+the emitted JSON with the runtime schema. The checked-in generated schema, generator CLI, freshness
+check, and generation task are removed. Font-license publication remains in the build hook.
+
+The ownership audit covers the authored TypeScript and JavaScript import graph, including type
+imports, exports, and literal dynamic imports. Knip checks package entry points and exports.
+Reference generation, configuration loading, and emitted configuration tests cover generated
+references. The following dispositions record the feature review rather than treating moves as
+proof of behavior.
+
+| Owner                                      | Disposition                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commands and output                        | Command results belong to their printing boundary. Doctor shapes belong to diagnosis. Report shapes are inferred beside report validation. Registration, flags, identities, and exit classification remain.                                                                                               |
+| Policy and profiles                        | Policy and profile schemas belong to their features. Normalized reason, scope, and default shapes remain distinct. Validated manifest fields use schema-derived types. Repository-only profile exclusions remain.                                                                                         |
+| Configuration catalog and emission         | Manifest validation belongs to configuration loading. Template, formatting, hooks, drift, and proposal contracts belong to their emitters. Managed configuration is regenerated through apply.                                                                                                            |
+| Evaluation and foreign adoption            | Requests and responses remain an independent evaluation protocol. Legacy ESLint contracts belong to ESLint evaluation. Selector translation, module registration, unsupported-input preservation, and subprocess isolation remain.                                                                        |
+| Lifecycle and filesystem                   | Journal schemas and contracts belong to ownership. Filesystem snapshots and confinement contracts belong to filesystem operations. Recorded hashes, bytes, modes, pending recovery, link checks, and edited-file preservation remain.                                                                     |
+| Execution                                  | Session, planning, caching, correction, and command-expansion contracts belong to those operations. A one-result filter replaces batch arrays and temporary wrapper objects. Counted failures, cached statuses, ignore accounting, and reproduction commands remain.                                      |
+| Installation and detection                 | Package-manager validation belongs to tooling. Shared tool execution no longer imports the check runner. Installation computes its selected manifest set once. Registry credentials remain in memory; locked inputs and publication checks remain.                                                        |
+| Parsers and analysis                       | Parser assets have one declared registry. Procedural SQL computes its UTF-8 allocation size once. Tree copies, disposal, SQL allocation release, and diagnostic positions remain. Small domain-specific finding constructors stay local.                                                                  |
+| Naming, structure, prose, and agent guides | Extraction and analysis contracts live with their behavior. The guide lint entry runs only as the main module. Configuration-specific policies, both strictness levels, and structural enforcement remain.                                                                                                |
+| Standalone plugin                          | Shared strict-object option construction belongs to rule definition. Option fields belong to individual rules. Barrel export discovery scans export text once. Independent exports, thresholds, selectors, aliases, required fields, defaults, and unknown-option rejection remain.                       |
+| Release and launcher                       | One platform manifest feeds compilation, publication, and launch selection. The launcher retains argument, signal, startup-error, and exit behavior. No forwarding modules or public features are added.                                                                                                  |
+| Tests and documentation                    | Generator-CLI cases and obsolete compiler-process fixtures are removed. Distinct preservation and failure cases remain. Clean-checkout resolution covers declared WASM files and rejects undeclared files. The isolated binary journey exercises seven parser source formats after deleting its checkout. |
+
+Duplicate-body review retained plugin/CLI directory logic because the plugin must remain independent.
+Local object guards and finding constructors remain with their different domains. Python and Swift
+statement analyses retain their separate parse contracts and diagnostics. Test Git fixtures remain
+with their distinct staged, impact, history, and native-snapshot journeys. Small transformations that
+filter, normalize, render, or classify data are retained; they are not forwarding modules.
+
+Read-only comparisons used Nx `59b35fba7327`, Turborepo `1dead3cc9d42`, Yap Swift application
+`381c400053d0`, and Yap text inference `6e82120e978b`. Nx keeps generator schemas with their
+implementations. Turborepo separates release platform data from launcher delivery. Yap Swift keeps
+call-context mapping in the call feature; Yap inference passes explicit session state to session
+operations. These comparisons support feature ownership and explicit boundaries. No reference
+repository, dependency, framework, or CI workflow was changed.
+
+Verification recorded for this continuation:
+
+- Workspace, test, and documentation TypeScript checks pass. The initial unit/integration and
+  coverage runs each passed 1,402 tests with 6,540 assertions. The final routine and coverage
+  checks also pass after the SQL repair. Focused execution checks passed 169 tests with 933
+  assertions; SQL parser checks passed 10 tests with 30 assertions.
+- The documentation build produced 319 pages. Built links, fragments, and public-schema parity
+  pass. All seven CLI targets and both plugin formats build. CLI and plugin publication dry runs
+  pass. The pinned Docker/tree-sitter Swift rebuild exactly matches the retained WASM, license,
+  and provenance. No package was published to a public registry.
+- Native verification passed 360 tests and failed one because Deno is newer than the required
+  pin. Source acceptance passed 235 tests, failed 76, and reported one setup error. Installed
+  typos, shfmt, SwiftLint, CodeQL, Deno, TruffleHog, and Hadolint versions differ from their pins.
+  EditorConfig Checker acquisition returned GitHub HTTP 403. These are failed verification,
+  including the acquisition-blocked performance and adoption journeys.
+- Release acceptance passed six tests and failed two, with 250 assertions. The installed plugin
+  works in both module formats and enforces both levels. The binary initializes formatting and
+  parses seven source formats after deletion of its isolated build checkout. Installed package
+  identity, notice content, and launcher cancellation checks completed before EditorConfig
+  Checker acquisition failed. The other failure is the shfmt version mismatch.
+- Doctor exits zero. Two repeated apply operations each left 147 files unchanged, with no writes
+  or removals. The following dry run reports no drift. Obsolete unowned files remain preserved.
+- Knip reports no unused files, exports, dependencies, or unresolved imports. The authored
+  TypeScript/JavaScript graph has no missing imports, runtime cycles, or plugin-to-CLI imports.
+  Type-only backreferences remain between feature operations and their colocated contracts;
+  this result does not claim an acyclic type graph. Vendor asset, license, provenance, and
+  supplemental-notice bytes match their previous tracked versions.
+- The manual repository gate exits two: coverage, external links, and CodeQL pass, while the CLI
+  Semgrep registry check exits three. The final full gate reports 8,983 findings and a Pinact
+  GitHub API rate-limit error, with exit two. Its routine suite and all scoped type checks pass.
+  The repository gate remains failed; unrelated lint cleanup is outside this task.
+  Native execution of the other six build targets remains deferred.
+- The disposable-index staged check covers 456 changed paths and exits 1 with
+  6,694 findings. It does not change the real index, whose SHA-256 remains
+  `e53a7631e80d58b9ab388d56b9fde68f85bfe2f202b598f9e4c50f3ffe776ebd`.
+  The disposable index is removed. This result paragraph was added after that check.
+  Final whitespace and abandoned-path checks pass.
+
+## September 24 architecture simplification
+
+This continuation supersedes the ownership-conversion promise below. Current journals alone
+establish ownership. Preview and mutation do not discover or convert obsolete journals, merge
+old records, acquire old writer locks, or remove old recovery directories. Obsolete files remain
+unowned data. Current-layout hook restoration covers repository, nested configured-root,
+Git-internal, and external destinations. Existing interrupted-write, damaged-backup, later-edit,
+and byte/mode restoration tests remain. Conversion-only cases are removed; preservation tests
+exercise obsolete data without assigning ownership to it. Foreign ESLint adoption is unchanged.
+
+Package-manager identity validation belongs to the runner schema. Tooling owns detection and
+npm/Python requirement selection; emission renders that validated state. Session creation no
+longer imports emission for package-manager selection. Installation checks Python requirements
+without rendering a generated project. Shared suppression observations belong to execution
+contracts. Planning selects checks and files without executable callbacks; execution selects
+the check implementation. The uninstall, commit-message, and locale owners have no single-file
+subdirectories. Confined filesystem operations and reserved state paths belong to the platform
+boundary. Marker and installer constants live beside their behavioral owners; old modules and
+forwarding exports are removed. The npm launcher retains its direct implementation.
+
+Read-only comparison covered Nx command registration and run orchestration, the Turborepo
+platform launcher, Yap Swift application call orchestration, and Yap text-inference session
+orchestration. The useful distinctions are command selection versus execution, feature-owned
+operations, and explicit external boundaries. No framework, compatibility fallback, or directory
+hierarchy was copied. None of the four reference repositories was modified.
+
+The import scan includes static imports, type imports, exports, and literal dynamic imports.
+The initial temporary scanner incorrectly reported no cycles. Its corrected traversal identifies
+existing type cycles, including the output explanation contract. Moving the package-manager
+schema removes the execution-type dependency on package-manager implementation. The standalone
+plugin imports no CLI implementation. This scan does not establish a complete line-by-line
+review of every authored source and test, and that requested review remains incomplete.
+
+Initial focused verification passed 187 tests with 1,237 assertions across lifecycle ownership
+and execution. Workspace, test, and documentation type checks and schema freshness passed after
+the dispatcher correction. The routine coverage run passed 1,401 tests and failed one generated
+documentation source link that still constructed the old uninstall path. Correcting the source
+owner passed 65 selected documentation, execution, and runner tests. Ownership verification
+passed 62 tests with 392 assertions.
+
+The native run passed 356 tests and failed five. Four exposed an execution regression: unknown
+built-in analyses were rejected after another command started. Execution resolves every selected
+implementation before commands or fixers run. A correction also preserves the tool runner's
+command argument when executing staged files. All 135 focused execution tests then passed with
+925 assertions, including all four early-rejection cases. The remaining native failure is a
+Deno installation newer than its required pin. No pin or download bypass was applied. Native
+npm, Bun, pnpm, Yarn, Python, and hook-manager cases passed.
+
+Source acceptance finished with 243 passes, 68 failures, and one suite initialization error
+across 81 files. Failures report newer-than-pinned tools or the EditorConfig Checker GitHub
+release download returning HTTP 403. The 5,000-file performance journey stopped at that download
+and establishes no cold/warm timing result. Passing cases include legacy ESLint adoption,
+unsupported-input preservation, nested formatter settings, and current apply/uninstall recovery.
+The final locale and ownership run passed 82 tests with 521 assertions. The subsequent workspace
+type check, 319-page documentation build, and built-site links passed. All seven CLI targets and
+both plugin module formats built successfully. Native execution of non-host targets remains
+deferred. Installed release acceptance passed seven tests and failed two. Plugin modules,
+declarations, both levels, and embedded resources after removal of an isolated build checkout
+passed. The installed-consumer journey stopped at the EditorConfig Checker HTTP 403 after
+executing SIGINT and SIGTERM cancellation checks. The planted compiled-binary case stopped at
+the shfmt version mismatch. CLI/platform and plugin publication dry runs passed without uploads.
+The full repository gate exits 2 with 9,085 findings and a Pinact GitHub rate-limit error.
+Its routine unit/integration test check passes on the final implementation. The manual gate's
+coverage test passes, but that gate exits 2 because the CLI scope's Semgrep registry check exits
+3 without further diagnostics. That failure remains unresolved. Doctor exits 0. Two actual
+apply runs each leave 147 files unchanged, with no writes or removals; the following preview
+reports zero drift.
+
+An isolated process check of the packaged launcher passes missing-package and missing-binary
+errors, startup failure, exact argument forwarding, and child exit-code forwarding. SIGINT,
+SIGTERM, and SIGHUP forwarding terminate both processes. The real installed-consumer signal
+checks also ran before its acquisition failure. The refreshed runtime graph covers 662 authored
+TypeScript/JavaScript files and 2,188 edges, with no missing imports, runtime cycles, or plugin
+imports of CLI implementation. Existing type-only cycles remain outside those results. The
+complete authored line-by-line audit remains unfinished; this continuation does not claim the
+entire simplification plan is complete. No rules were weakened, acquisitions bypassed, or
+reference repositories changed. No commit, push, public publication, deployment, or CI activation
+was performed.
+
+The first disposable-index gate exits 1 with 3,106 findings and no execution errors. Review
+identified import ordering and two duplicate imports introduced by the moves. The existing
+import-layout fixer corrected the affected files, and the duplicate imports were merged.
+Subsequent workspace/test type checks and 184 execution tests passed with 1,147 assertions.
+All seven CLI targets and the plugin were rebuilt. The repository's real Git index remains
+unchanged; the staged verification uses and removes its own disposable index. The final staged
+gate exits 1 with 3,062 findings across 67 checks and no execution errors. Import-layout findings
+from the moves are gone. Existing duplicate imports in the program and tracked-file owners remain
+part of the unrelated lint backlog. The final diff has no whitespace errors. This final ledger
+update records the staged result and was written after that check.
 
 ## September 24 generated files, code ownership, and website
 
@@ -593,7 +811,7 @@ Locally implemented IDs: K-298. Frozen-candidate and native-platform acceptance 
 
 Former unnamed cleanup entries: 10.
 
-Source and retained evidence: [packages/cli/src/filesystem/confined.ts](../packages/cli/src/filesystem/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
+Source and retained evidence: [packages/cli/src/platform/filesystem.ts](../packages/cli/src/platform/filesystem.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
 
 Repository inventory filters excluded and private lifecycle paths before observing links.
 Installed dependency links are inventoried without reading external targets; external authored
@@ -1225,7 +1443,7 @@ Open acceptance IDs: K-147, K-238, K-51, K-88, K-215, K-224, K-48.
 
 Locally implemented IDs: K-222, K-228.
 
-Source and retained evidence: [packages/cli/src/schemas/policy.ts](../packages/cli/src/schemas/policy.ts), [tests/native/policy/takeover.test.ts](../tests/native/policy/takeover.test.ts).
+Source and retained evidence: [packages/cli/src/policy/schema.ts](../packages/cli/src/policy/schema.ts), [tests/native/policy/takeover.test.ts](../tests/native/policy/takeover.test.ts).
 
 Acceptance: [K-51](03-configuration.md#acceptance-k-51), [K-88](03-configuration.md#acceptance-k-88), [K-48](03-configuration.md#acceptance-k-48), [K-215](03-configuration.md#acceptance-k-215), [K-222](03-configuration.md#acceptance-k-222), [K-238](03-configuration.md#acceptance-k-238), [K-147](03-configuration.md#acceptance-k-147), [K-116](03-configuration.md#acceptance-k-116).
 
@@ -2534,7 +2752,7 @@ Locally implemented IDs: K-119, K-255.
 
 Former unnamed cleanup entries: 20, 25, 26, 27.
 
-Source and retained evidence: [packages/cli/src/schemas/manifests.ts](../packages/cli/src/schemas/manifests.ts), [tests/unit/cli/configurations/select.test.ts](../tests/unit/cli/configurations/select.test.ts).
+Source and retained evidence: [packages/cli/src/configurations/schema.ts](../packages/cli/src/configurations/schema.ts), [tests/unit/cli/configurations/select.test.ts](../tests/unit/cli/configurations/select.test.ts).
 
 Acceptance: [K-79](04-configurations.md#acceptance-k-79), [K-39](04-configurations.md#acceptance-k-39), [K-38](04-configurations.md#acceptance-k-38), [K-197](04-configurations.md#acceptance-k-197), [K-105](04-configurations.md#acceptance-k-105), [K-55](12-repository-layout.md#acceptance-k-55), [K-99](04-configurations.md#acceptance-k-99), [K-104](04-configurations.md#acceptance-k-104), [K-119](04-configurations.md#acceptance-k-119), [K-255](04-configurations.md#acceptance-k-255).
 
@@ -3231,7 +3449,7 @@ Open acceptance IDs: K-164, K-145, K-121, K-244, K-245, K-280.
 
 Former unnamed cleanup entries: 40.
 
-Source and retained evidence: [packages/cli/scripts/publish.ts](../packages/cli/scripts/publish.ts), [tests/release/install.test.ts](../tests/release/install.test.ts).
+Source and retained evidence: [packages/cli/release/publish.ts](../packages/cli/release/publish.ts), [tests/release/install.test.ts](../tests/release/install.test.ts).
 
 Acceptance: [K-164](11-toolchain.md#acceptance-k-164), [K-280](11-toolchain.md#acceptance-k-280).
 
@@ -3244,7 +3462,7 @@ the platform. Historical successful Windows tests do not establish current behav
 
 Open acceptance IDs: K-263.
 
-Source and retained evidence: [packages/cli/src/filesystem/confined.ts](../packages/cli/src/filesystem/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
+Source and retained evidence: [packages/cli/src/platform/filesystem.ts](../packages/cli/src/platform/filesystem.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
 
 Acceptance: [K-263](11-toolchain.md#acceptance-k-263).
 
@@ -3375,7 +3593,8 @@ The required source-checkout `gspot check --staged` failed before running checks
 reported `ENOENT` for `docs/node_modules/zod` inside its temporary Git revision tree.
 This was a failed historical staged gate. Later snapshot and workspace-link repairs have
 their own evidence; this failure does not override them or establish a current pass.
-No commit or push is authorized during active cleanup. Keep CI paused.
+That documentation pass did not authorize commits or pushes. The later explicitly authorized
+commit and push are recorded in the current handoff. Keep CI paused.
 
 ## Historical and deferred evidence
 
@@ -3667,10 +3886,10 @@ backlog completion are accepted. The staged gate does not include the all-level 
 so its success does not establish a clean self-lint run. Unsupported adoption cases above remain
 explicit limitations, not successful conversions.
 
-The former path-specific Zizmor exception is removed from authored policy. The Actionlint and
-Zizmor workflow conflict remains unresolved. CI remains paused,
-hooks remain enabled, and no commit, publication, deployment, or reference-repository change was
-performed.
+The former path-specific Zizmor exception was removed from authored policy. The Actionlint and
+Zizmor workflow conflict was unresolved in that earlier pass. The subsequent Actionlint repair
+and its native evidence are recorded under [Repository CI definitions](#repository-ci-definitions).
+No commit, publication, deployment, or reference-repository change was performed in that pass.
 
 ## Documentation and packaging layout cleanup
 
@@ -3686,7 +3905,7 @@ release verification live in `docs/scripts/`. Rule metadata and shared option sc
 plugin rules under `packages/eslint-plugin/src/rules/`; their types stay with those definitions.
 
 The root project license remains the single authored copy. Plugin builds include it only under
-`dist/`. `packages/cli/scripts/notices.json` consolidates the eight supplemental package notice records
+`dist/`. `packages/cli/vendor/notices.json` consolidates the eight supplemental package notice records
 with their original text and provenance. The root license archive is removed. Binary packaging
 still assembles notices for bundled dependencies, the grammar, and the runtime.
 
@@ -3880,7 +4099,7 @@ The following owners have additional implementation and regression evidence:
 | Scoped plugin configuration     | `configurations/language/javascript/eslint.config.js.tmpl`         | Root and nested JavaScript files execute actual ESLint configuration at both levels without the obsolete structural-rule option.                                                     | Complete framework parity and the enforcement ledger.                                                 |
 | ESLint process results          | JavaScript and TypeScript manifests, `run/parse-output.ts`         | Crash text inside linted source stays a finding result. Malformed output fails explicitly. Empty results and paths with Windows separators or sibling root prefixes parse correctly. | Complete other parsers, process execution, revision selection, and caching.                           |
 
-The current workspace suite passes 858 tests with 3,715 assertions across 132 files. Reported
+That earlier workspace suite passed 858 tests with 3,715 assertions across 132 files. Reported
 coverage is 67.17% of functions and 73.83% of lines, including fixture files in the denominator.
 This run includes the Python installation and subprocess changes. Workspace
 and documentation type checks pass. The plugin builds. The documentation build produces 310
@@ -3897,10 +4116,10 @@ Release tests ran with `GSPOT_RELEASE_TEST=1` against an isolated local registry
 with 415 assertions. The installed-consumer journey imports EditorConfig, formats future files,
 and restores original configuration bytes and modes on uninstall. It hides the checkout
 EditorConfig WASM asset during initialization to verify that the executable embeds its parser.
-Independent ESM, CommonJS, and type consumers pass. The current rerun includes the Python
+Independent ESM, CommonJS, and type consumers passed. That rerun included the Python
 and subprocess fixes. No public publication ran.
 
-The current built candidate's repository-wide `check --no-cache` run finishes in 109 seconds
+That earlier built candidate's repository-wide `check --no-cache` run finished in 109 seconds
 with 109 check records and 5,710 findings: 77 records pass, 26 fail, and six delegate coverage
 to another check. No record reports a missing tool or execution error. The largest result is
 4,240 CLI TypeScript ESLint findings. This supersedes the preceding 5,689-finding inventory;
@@ -3939,7 +4158,7 @@ Candidate acceptance remains blocked by repository-owned defects and incomplete 
   active originals. Complete importer-ledger and candidate acceptance remain open.
 - Source and compiled builds now emit the same gspot mise pin. The source runner tests pass.
   A rebuilt candidate and apply idempotency remain required.
-- The current built-candidate manual-stage gate passes all six check records: external
+- The earlier built-candidate manual-stage gate passed all six check records: external
   documentation links, CodeQL, and Semgrep registry checks across four scopes. This does not
   clear the separate source-rule findings in the full repository gate.
 - The retained candidate doctor run found all pinned tools but returned zero despite missing

@@ -5,12 +5,12 @@ import { tmpdir } from 'node:os';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { statSync, mkdtempSync, rmSync } from 'node:fs';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
 
 export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];

@@ -5,7 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { CheckResult } from '#cli/types/reports.ts';
+import type { CheckResult } from '#cli/output/schema.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
     await using sandbox = await testdir();

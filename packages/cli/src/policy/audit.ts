@@ -1,12 +1,14 @@
-import { settingValueSchemas } from '#cli/schemas/policy.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 // Every written key checked against the surface: unknown keys, loosenings without a reason, extra keys with a slot.
 import { shippedPolicy } from '#cli/naming/policy.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
+import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
+import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
+import type { ExposedSettings, WrittenValue } from '#cli/policy/settings.ts';
 import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
-import type { ExposedSettings, PathSegment, Policy, PolicyProblem, WrittenValue } from '#cli/types/policy.ts';
 
 const LIMITS_PREFIX = 'limits.';
 

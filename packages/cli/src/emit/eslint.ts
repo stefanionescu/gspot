@@ -1,6 +1,7 @@
-import type { EslintRuleBlock } from '#cli/types/generation.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { EslintSettings } from '#cli/policy/schema.ts';
 import { pathExpressions } from '#cli/configurations/claims.ts';
-import type { EslintSettings, Policy } from '#cli/types/policy.ts';
+import type { PathExpressions } from '#cli/repository/patterns.ts';
 
 /**
  * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
@@ -34,3 +35,5 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     );
     return [...base, ...overrides, ...ignores];
 }
+
+export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };

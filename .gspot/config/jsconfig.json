@@ -23,9 +23,8 @@
         "../../**/coverage/**",
         "../../**/.build/**",
         "../../**/DerivedData/**",
-        "../../packages/cli/schemas/gspot.schema.json",
-        "../../packages/cli/grammars/swift.wasm",
-        "../../packages/cli/grammars/swift.LICENSE",
-        "../../packages/cli/scripts/notices.json"
+        "../../packages/cli/vendor/swift.wasm",
+        "../../packages/cli/vendor/swift.LICENSE",
+        "../../packages/cli/vendor/notices.json"
     ]
 }

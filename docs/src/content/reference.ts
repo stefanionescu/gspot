@@ -11,8 +11,9 @@ import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
 import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
 import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
+import type { Manifest } from '@gspot/cli/src/configurations/read-manifests.ts';
+import type { CheckSpec, SettingSpec } from '@gspot/cli/src/configurations/schema.ts';
 import { configurationManifests } from '@gspot/cli/src/configurations/read-manifests.ts';
-import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/types/configurations.ts';
 
 /**
  * Label generated documentation with its version, source owner, and source attribution.
@@ -24,7 +25,7 @@ import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/types/conf
 export function referenceHeader(
     title: string,
     description: string,
-    owner = 'packages/cli/src/schemas/policy.ts',
+    owner = 'packages/cli/src/policy/schema.ts',
 ): string {
     const source = `https://github.com/stefanionescu/gspot/blob/${sourceRevision}/${owner}`;
     return `---\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\neditUrl: ${JSON.stringify(source)}\n---\n\ngspot ${packageManifest.version} · [Source definition](${source})\n\n`;
@@ -131,7 +132,7 @@ function commandPage(command: Command, name: string): string {
     const owner =
         rootCommand === 'completion'
             ? 'output/completion.ts'
-            : ['init', 'doctor', 'uninstall'].includes(rootCommand)
+            : ['init', 'doctor'].includes(rootCommand)
               ? `commands/${rootCommand}/command.ts`
               : ['add', 'remove'].includes(rootCommand)
                 ? 'commands/configurations.ts'

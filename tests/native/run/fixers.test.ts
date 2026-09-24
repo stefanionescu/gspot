@@ -6,12 +6,14 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { explain } from '#cli/output/explain.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { RunOptions } from '#cli/run/execute.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import type { Session, PlannedCheck, RunOptions } from '#cli/types/execution.ts';
 
 import {
     copyFileSync,

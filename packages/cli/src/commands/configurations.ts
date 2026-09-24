@@ -3,16 +3,16 @@ import { nearMatches } from '#cli/policy/near.ts';
 import { openSession } from '#cli/run/session.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Mutation } from '#cli/types/policy.ts';
+import type { Mutation } from '#cli/policy/write.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { installTools } from '#cli/tools/install-tools.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { requireChain } from '#cli/configurations/select.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 // gspot add and gspot remove: the configuration list of the root or of one scope.
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 

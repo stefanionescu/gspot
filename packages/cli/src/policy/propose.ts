@@ -1,10 +1,12 @@
 // The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
-import { SCHEMA_LINE } from '#cli/emit/markers.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
-import type { TomlTable, Proposal } from '#cli/types/policy.ts';
-import type { CarriedConfiguration } from '#cli/types/ownership.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import type { RawPolicy } from '#cli/policy/schema.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { CarriedFormatter, CarriedConfiguration } from '#cli/lifecycle/carry.ts';
+
+const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -161,3 +163,19 @@ export function proposeText(proposal: Proposal): string {
     }
     return `${PREFACE}${bodyText(document)}`;
 }
+
+export type Proposal = {
+    profileTables?: TomlTable;
+    configurations: string[];
+    scopes: { path: string; configurations: string[] }[];
+    carried: CarriedConfiguration;
+    hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
+    ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
+    rules: boolean;
+    runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
+    runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
+    formatter?: CarriedFormatter;
+    /** The Xcode project and scheme init found, for the tools.xcode table. */
+    xcode?: { scope: string; project: string; scheme?: string };
+    commitScopes?: string[];
+};

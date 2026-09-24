@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';

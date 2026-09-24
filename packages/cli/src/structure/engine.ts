@@ -1,15 +1,17 @@
+import type { Finding } from '#cli/output/schema.ts';
 import { countFindings } from '#cli/structure/counts.ts';
+import type { ScriptIndex } from '#cli/structure/parser.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Engine, EngineInput } from '#cli/run/engines.ts';
 import { DOCUMENT_EXTENSIONS } from '#cli/structure/patterns.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
-import type { Engine, EngineInput } from '#cli/types/execution.ts';
 import { docComment } from '#cli/structure/analyses/doc-comment.ts';
 import { fileLength } from '#cli/structure/analyses/file/length.ts';
 import { folderNames } from '#cli/structure/analyses/folder-names.ts';
 import { scriptEmbeds } from '#cli/structure/analyses/scripts/embeds.ts';
 import { scriptSafety } from '#cli/structure/analyses/scripts/safety.ts';
-import type { Analysis, StructureContext } from '#cli/types/structure.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { privatePrefix } from '#cli/structure/analyses/private/prefix.ts';
 import { deadParameters } from '#cli/structure/analyses/dead-parameters.ts';
 import { functionLength } from '#cli/structure/analyses/function-length.ts';
@@ -98,3 +100,26 @@ export function resolveStructure(spec: CheckSpec): Engine {
         return analysis(context, () => scriptIndex(input, scriptFiles));
     };
 }
+
+/** What every analysis receives. */
+export type StructureContext = {
+    input: EngineInput;
+    /** The files this check runs over. */
+    files: TrackedFile[];
+    /** A limit by its `[limits]` key, read for the file's language. */
+    limit: (key: string, language?: string) => number | undefined;
+    /** A `[tools.bash]` text slot, or the fallback. */
+    bashText: (slot: string, otherwise: string) => string;
+    /** A `[tools.bash]` list slot, empty when unset. */
+    bashList: (slot: string) => string[];
+    /** A `[tools.bash]` slot as written. */
+    bashSetting: (slot: string) => unknown;
+    /** A finding for this check. */
+    report: (file: string, line: number, rule: string, message: string) => Finding;
+};
+
+/** One analysis: a function over the context that returns findings. */
+export type Analysis = (
+    context: StructureContext,
+    scripts: () => Promise<ScriptIndex>,
+) => Finding[] | Promise<Finding[]>;

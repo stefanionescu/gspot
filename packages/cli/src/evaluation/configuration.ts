@@ -2,11 +2,11 @@ import type { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import type { MergedView } from '#cli/types/policy.ts';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isEmbedded, readAsset } from '#cli/platform/assets.ts';
-import type { configurationRequest } from '#cli/schemas/evaluation.ts';
+import type { configurationRequest } from '#cli/evaluation/protocol.ts';
 
 /**
  * Evaluate authored configuration with captured logs and a separate structured result.

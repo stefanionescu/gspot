@@ -1,4 +1,4 @@
-import type { CheckResult } from '#cli/types/reports.ts';
+import type { CheckResult } from '#cli/output/schema.ts';
 
 /**
  * Print completed check states without mixing progress into machine-readable output.

@@ -1,8 +1,9 @@
 import { stringify } from 'yaml';
 // GitHub workflows and GitLab includes share installation and exact-object selection.
 import { headerFor } from '#cli/emit/templates.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
 import { releaseTargets } from '#cli/platform/release-targets.ts';
-import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
@@ -292,3 +293,13 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     });
     return { path, content: `${headerFor(path, shape.version)}${content}`, readOnly: true, kind: 'workflow' };
 }
+
+export type WorkflowShape = {
+    version: string;
+    run?: NonNullable<Policy['ci']>['run'];
+    sarif?: NonNullable<Policy['ci']>['sarif'];
+    platforms: string[];
+    /** The Swift scope path, or undefined when no scope selects swift. */
+    swiftScope: string | undefined;
+    isMise: boolean;
+};

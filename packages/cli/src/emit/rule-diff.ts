@@ -2,14 +2,15 @@ import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { gixyRules } from '#cli/emit/gixy-rules.ts';
 import { valeRules } from '#cli/emit/vale-rules.ts';
-import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
+import type { DriftEntry } from '#cli/emit/drift.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
 import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/json-format.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { javascriptRules } from '#cli/emit/javascript-rules.ts';
 import { swiftformatRules } from '#cli/emit/swiftformat-rules.ts';
 import { parse as parseJson, type ParseError } from 'jsonc-parser';
 import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
-import type { DriftEntry, GeneratedFile } from '#cli/types/generation.ts';
 
 function document(path: string, text: string): unknown {
     if (baseName(path) === 'gixy.cfg') return gixyRules(text);

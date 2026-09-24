@@ -1,4 +1,4 @@
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 // Sibling entries sharing a name prefix at or above the limit. Searched: ls-lint, eslint-plugin-unicorn; neither compares siblings.
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/structure/patterns.ts';

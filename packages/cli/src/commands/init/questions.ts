@@ -1,12 +1,12 @@
 import { readGitSetting } from '#cli/platform/spawn.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { CarriedFormatter } from '#cli/types/ownership.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
+import type { CarriedFormatter } from '#cli/lifecycle/carry.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { FormatSettings, Policy } from '#cli/types/policy.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import { askChoice, askConfirmation, askMany } from '#cli/output/prompts.ts';
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/commands/init/types.ts';

@@ -2,13 +2,13 @@
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import type { EngineInput, EngineOutcome } from '#cli/types/execution.ts';
+import type { EngineInput, EngineOutcome } from '#cli/run/engines.ts';
 
 const MAIN_FILE = 'nginx.conf';
 const DEFAULT_IMAGE = 'nginx:stable-alpine';

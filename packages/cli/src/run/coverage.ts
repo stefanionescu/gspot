@@ -1,11 +1,11 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { CoverageReport } from '#cli/types/reports.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-// Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { ScopeSelection, Session } from '#cli/run/session.ts';
 import { claimedInputs, configuredChecks } from '#cli/run/plan.ts';
-import type { ScopeSelection, Session } from '#cli/types/execution.ts';
+import type { CoverageReport } from '#cli/commands/doctor/report.ts';
+// Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
 
 const CORE_KINDS = new Set(['format', 'syntax', 'style', 'types']);

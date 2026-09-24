@@ -8,7 +8,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/policy/propose.ts';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
-import type { ExistingTooling } from '#cli/types/repository.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
 const tooling: ExistingTooling = {
@@ -79,7 +79,10 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
     };
     const carried = await collectCarried(sandbox.path, discovered, new Set(['css']), []);
     expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['theme[1]/.stylelintrc.json', 'other/.stylelintrc.json']);
+    expect(carried.removed.map(({ path }) => path)).toStrictEqual([
+        'theme[1]/.stylelintrc.json',
+        'other/.stylelintrc.json',
+    ]);
     expect(carried.tools.get('stylelint')?.settings).toStrictEqual({});
     expect(carried.observed.has('theme[1]/base.json')).toBe(true);
     const samples = [

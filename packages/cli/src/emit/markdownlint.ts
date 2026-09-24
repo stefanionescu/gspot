@@ -1,4 +1,4 @@
-import type { MergedView } from '#cli/types/policy.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
 
 /**
  * Share effective Markdown rules between native editor and structured CLI configurations.

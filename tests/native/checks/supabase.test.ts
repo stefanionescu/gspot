@@ -4,11 +4,12 @@ import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
-import type { EngineInput, Session } from '#cli/types/execution.ts';
 import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
@@ -41,7 +42,9 @@ test('Supabase configurations and function discovery stay within nested project 
     writeFileSync(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
     expect(await projectValid(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
-    await rejects(storagePolicies(input(await openSession(sandbox.path), 'apps/api', 'supabase/config')), { message: /Cannot inspect storage policies/u });
+    await rejects(storagePolicies(input(await openSession(sandbox.path), 'apps/api', 'supabase/config')), {
+        message: /Cannot inspect storage policies/u,
+    });
 });
 
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {

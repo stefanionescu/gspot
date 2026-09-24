@@ -76,31 +76,20 @@ function starSource(rest: string): string | undefined {
     return end === -1 ? undefined : quoted.slice(1, end);
 }
 
-function namesInText(content: string): Set<string> {
+function exportsOf(path: string, visited = new Set<string>()): Set<string> {
+    if (visited.has(path)) return new Set();
+    visited.add(path);
+    const content = readFileSync(path, 'utf8');
     const names = new Set<string>();
     for (const rest of content.split('export ').slice(1)) {
         const declared = nameAfterKeyword(rest);
         if (declared !== undefined) names.add(declared);
         for (const name of namesInBraces(rest)) names.add(name);
-    }
-    return names;
-}
-
-function exportsOf(path: string, visited = new Set<string>()): Set<string> {
-    if (visited.has(path)) return new Set();
-    visited.add(path);
-    const content = readFileSync(path, 'utf8');
-    const names = namesInText(content);
-    const sources = content
-        .split('export ')
-        .slice(1)
-        .map((rest) => starSource(rest))
-        .filter((source) => source !== undefined);
-    for (const source of sources) {
+        const source = starSource(rest);
+        if (source === undefined) continue;
         const resolved = moduleFile(path, source);
         if (resolved === undefined) continue;
-        const nested = exportsOf(resolved, new Set(visited));
-        for (const name of nested) names.add(name);
+        for (const name of exportsOf(resolved, new Set(visited))) names.add(name);
     }
     return names;
 }
@@ -115,15 +104,16 @@ function declaredNames(declaration: TSESTree.ExportNamedDeclaration['declaration
     return [];
 }
 
-function specifierNames(statement: TSESTree.ExportNamedDeclaration): string[] {
-    return statement.specifiers.map((specifier) =>
-        specifier.exported.type === AST_NODE_TYPES.Identifier ? specifier.exported.name : specifier.exported.value,
-    );
-}
-
 function namesOf(file: string, statement: TSESTree.Statement): string[] {
     if (statement.type === AST_NODE_TYPES.ExportNamedDeclaration)
-        return [...declaredNames(statement.declaration), ...specifierNames(statement)];
+        return [
+            ...declaredNames(statement.declaration),
+            ...statement.specifiers.map((specifier) =>
+                specifier.exported.type === AST_NODE_TYPES.Identifier
+                    ? specifier.exported.name
+                    : specifier.exported.value,
+            ),
+        ];
     if (statement.type !== AST_NODE_TYPES.ExportAllDeclaration || typeof statement.source.value !== 'string') return [];
     const resolved = moduleFile(file, statement.source.value);
     return resolved === undefined ? [] : [...exportsOf(resolved)];

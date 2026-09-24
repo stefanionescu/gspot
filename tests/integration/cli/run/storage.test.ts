@@ -4,14 +4,14 @@ import * as cache from '#cli/run/cache.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { readCached } from '#cli/run/cache.ts';
 import { executeRun } from '#cli/run/execute.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { rejects, throws } from 'node:assert/strict';
-import type { Stage } from '#cli/types/configurations.ts';
+import { reportSchema } from '#cli/output/schema.ts';
+import type { Stage } from '#cli/configurations/schema.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
 
 async function sessionFor(root: string, status: number, stage: Stage = 'commit') {
     const session = await openSession(root);
@@ -217,7 +217,10 @@ test('a dry run does not create cache, report, or ownership files', async () => 
     });
     const before = fs.readdirSync(sandbox.path, { recursive: true });
     const outcome = await executeRun(await sessionFor(sandbox.path, 0), {
-        stage: 'commit', skips: [], fix: false, isDryRun: true,
+        stage: 'commit',
+        skips: [],
+        fix: false,
+        isDryRun: true,
     });
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]?.status).toBe('ok');
@@ -273,36 +276,50 @@ format = "none"
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
-    ['xcode/asset-catalogs', 'App/Assets.xcassets/Logo.imageset/Contents.json', '{"images":[{"filename":"logo.png"}]}\n'],
-] as const)('a failed resource read is an execution error for %s; malformed JSON remains a finding', async (check, path, content) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
-        [path]: content,
-        'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
-        'App/Home.swift': 'let logo = Image("Logo")\n',
-    });
-    const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], only: [check], fix: false, isDryRun: false, noCache: true };
-    const target = join(sandbox.path, path);
-    fs.rmSync(target);
-    fs.mkdirSync(target);
-    const unreadable = await executeRun(session, options);
-    expect(unreadable.report.exitCode).toBe(2);
-    expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
-    expect(unreadable.report.checks[0]?.note).toContain('EISDIR');
-    expect(fs.statSync(target).isDirectory()).toBe(true);
-    fs.rmSync(target, { recursive: true });
-    fs.writeFileSync(target, '{');
-    const malformed = await executeRun(session, options);
-    expect(malformed.report.exitCode).toBe(1);
-    expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'parse' }]);
-    expect(fs.readFileSync(target, 'utf8')).toBe('{');
-    fs.writeFileSync(target, content);
-    const corrected = await executeRun(session, options);
-    expect(corrected.report.exitCode).toBe(0);
-    expect(fs.readFileSync(target, 'utf8')).toBe(content);
-});
+    [
+        'xcode/asset-catalogs',
+        'App/Assets.xcassets/Logo.imageset/Contents.json',
+        '{"images":[{"filename":"logo.png"}]}\n',
+    ],
+] as const)(
+    'a failed resource read is an execution error for %s; malformed JSON remains a finding',
+    async (check, path, content) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
+            [path]: content,
+            'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
+            'App/Home.swift': 'let logo = Image("Logo")\n',
+        });
+        const session = await openSession(sandbox.path);
+        const options = {
+            stage: 'commit' as const,
+            skips: [],
+            only: [check],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+        };
+        const target = join(sandbox.path, path);
+        fs.rmSync(target);
+        fs.mkdirSync(target);
+        const unreadable = await executeRun(session, options);
+        expect(unreadable.report.exitCode).toBe(2);
+        expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
+        expect(unreadable.report.checks[0]?.note).toContain('EISDIR');
+        expect(fs.statSync(target).isDirectory()).toBe(true);
+        fs.rmSync(target, { recursive: true });
+        fs.writeFileSync(target, '{');
+        const malformed = await executeRun(session, options);
+        expect(malformed.report.exitCode).toBe(1);
+        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'parse' }]);
+        expect(fs.readFileSync(target, 'utf8')).toBe('{');
+        fs.writeFileSync(target, content);
+        const corrected = await executeRun(session, options);
+        expect(corrected.report.exitCode).toBe(0);
+        expect(fs.readFileSync(target, 'utf8')).toBe(content);
+    },
+);
 
 test('a denied asset existence observation is an execution error and a genuinely missing image is a finding', async () => {
     await using sandbox = await testdir();
@@ -316,7 +333,14 @@ test('a denied asset existence observation is an execution error and a genuinely
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], only: ['xcode/asset-catalogs'], fix: false, isDryRun: false, noCache: true };
+    const options = {
+        stage: 'commit' as const,
+        skips: [],
+        only: ['xcode/asset-catalogs'],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+    };
     const target = join(sandbox.path, image);
     const original = fs.statSync;
     const observation = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {

@@ -1,8 +1,8 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
+// The migrations of a repository: where they live, their versions, and their parsed statements.
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
-// The migrations of a repository: where they live, their versions, and their parsed statements.
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 
 const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();

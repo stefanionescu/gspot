@@ -1,31 +1,33 @@
 import { posix } from 'node:path';
 import { styleFiles } from '#cli/prose/vale.ts';
 import { bunConfiguration } from '#cli/emit/bun.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
-import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
 import { toolPackages } from '#cli/emit/tool-packages.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import { mutationTarget } from '#cli/filesystem/confined.ts';
+import type { TemplateInputs } from '#cli/emit/templates.ts';
+import { mutationTarget } from '#cli/platform/filesystem.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/json-format.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
+import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
+import type { ScopeSelection, Session } from '#cli/run/session.ts';
 import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { miseTasks, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
-import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
 import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { emitTarget, eta, templateInputs } from '#cli/emit/templates.ts';
 import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
-import type { MergedView, EditorconfigAdoption } from '#cli/types/policy.ts';
 import { claimedByClaims, pathMatcher } from '#cli/configurations/claims.ts';
-import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
-import type { EmitContext, GeneratedFile, GeneratedProposal, TemplateInputs } from '#cli/types/generation.ts';
 
 const JSON_INDENT = 4;
 
@@ -372,3 +374,40 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
     validateProposal(out);
     return out;
 }
+
+export type GeneratedFile = {
+    rulesPath?: string[];
+    path: string;
+    content: string;
+    readOnly: boolean;
+    executable?: boolean;
+    observed?: FileSnapshot;
+    kind: 'lock' | 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
+    configuration?: string;
+};
+
+export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
+
+export type MergeOutput = {
+    path: string;
+    content: string;
+    keys: string[];
+    target: string;
+    stub: ConfigurationTarget['stub'] & object;
+};
+
+export type ConfigurationOutput = {
+    path: string;
+    format: 'json' | 'yaml' | 'toml';
+    changes: { path: (string | number)[]; value: unknown }[];
+};
+
+export type GeneratedProposal = {
+    notes: string[];
+    files: GeneratedFile[];
+    blocks: BlockOutput[];
+    merges: MergeOutput[];
+    configurations: ConfigurationOutput[];
+};
+
+export type EmitContext = { session: Session; selection: ScopeSelection; manifest: Manifest };

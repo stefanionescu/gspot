@@ -2,7 +2,9 @@
 
 // The Emscripten factory inside the libpg-query package, which ships no types for it.
 declare module 'libpg-query/wasm/libpg-query.js' {
-    const createModule: (options: { wasmBinary: Uint8Array }) => Promise<unknown>;
+    const createModule: (options: {
+        locateFile: () => string;
+    }) => Promise<import('#cli/parsers/sql/types.ts').PgModule>;
     export default createModule;
 }
 

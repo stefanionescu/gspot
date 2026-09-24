@@ -1,10 +1,9 @@
 import { dirname, relative } from 'node:path';
+import type { Session } from '#cli/run/session.ts';
 import { compact } from '#cli/policy/normalize.ts';
-import type { Session } from '#cli/types/execution.ts';
 import { expandedPaths } from '#cli/configurations/claims.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { FormatSettings, Policy } from '#cli/types/policy.ts';
-import type { EditorconfigOverride, ScopedFormat } from '#cli/types/generation.ts';
+import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
 
 type NativeOverride<Options> = {
     files: string | string[];
@@ -187,3 +186,7 @@ export function editorconfigOverrides(session: Session): EditorconfigOverride[] 
         });
     });
 }
+
+export type ScopedFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
+
+export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };

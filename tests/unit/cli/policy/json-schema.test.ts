@@ -1,10 +1,10 @@
 import { stringify } from 'smol-toml';
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, test } from 'bun:test';
-import { policySchema } from '#cli/schemas/policy.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
+import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 
 test.each([
     {

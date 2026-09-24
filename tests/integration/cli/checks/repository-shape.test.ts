@@ -2,16 +2,18 @@ import { describe, expect, test } from 'bun:test';
 // The repository-shape integrity analyses: suppressions, policy patterns, large files and configuration purity.
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
-import type { EngineInput, Session } from '#cli/types/execution.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
+import type { NamingSettings, Policy } from '#cli/policy/normalize.ts';
 import { readAttributes } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
-import type { MergedView, NamingSettings, Policy } from '#cli/types/policy.ts';
 
 function tracked(path: string, size = 1): TrackedFile {
     return { path, prefix: Buffer.alloc(0), nature: 'source', tags: ['text'], executable: false, size };

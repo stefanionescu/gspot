@@ -1,6 +1,7 @@
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 // The list explain <configuration> and the docs generator read.
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import type { ListingRow, CheckSpec, Manifest } from '#cli/types/configurations.ts';
 
 const FORMAT_PREFIX = 'format.';
 
@@ -52,3 +53,17 @@ export function shippedFormat(): Record<string, unknown> {
             .map((setting) => [setting.name.slice(FORMAT_PREFIX.length), setting.default]),
     );
 }
+
+export type ListingRow = {
+    name: string;
+    kind: string;
+    title: string;
+    description: string;
+    requires: string[];
+    tools: string[];
+    checks: { check: string; stage: string }[];
+    settings: string[];
+    rules: string[];
+    default: boolean;
+    proposed: boolean;
+};

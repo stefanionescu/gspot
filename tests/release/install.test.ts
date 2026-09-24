@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { run } from '#cli/platform/spawn.ts';
 import { describe, expect, test } from 'bun:test';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { releaseTargets } from '#cli/platform/release-targets.ts';
 // Installs built packages from an isolated registry and checks a fresh consumer.
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -68,7 +68,7 @@ describe('the installed consumer', () => {
                     'dist',
                     'packages/npm',
                     'packages/cli/package.json',
-                    'packages/cli/scripts/publish.ts',
+                    'packages/cli/release/publish.ts',
                     'packages/cli/src/platform/release-targets.ts',
                     'tsconfig.json',
                 ]) {
@@ -286,7 +286,9 @@ describe('the installed consumer', () => {
                 expect(checked.code, checked.stdout + checked.stderr).toBe(1);
                 const report = reportSchema.parse(JSON.parse(checked.stdout));
                 expect(report.exitCode).toBe(1);
-                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
+                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
+                    report,
+                );
                 const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8'));
                 expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
                 const quality = JSON.parse(
@@ -419,7 +421,9 @@ describe('the installed consumer', () => {
                     string,
                     { Check: string; Line: number; Message: string }[]
                 >;
-                expect(alerts['vocabulary.md']?.map(({ Check, Line, Message }) => ({ Check, Line, Message }))).toStrictEqual([
+                expect(
+                    alerts['vocabulary.md']?.map(({ Check, Line, Message }) => ({ Check, Line, Message })),
+                ).toStrictEqual([
                     { Check: 'Vale.Terms', Line: 1, Message: "Use 'TypeScript' instead of 'typescript'." },
                     { Check: 'Vale.Terms', Line: 1, Message: "Use 'NebulaKit' instead of 'nebulakit'." },
                 ]);

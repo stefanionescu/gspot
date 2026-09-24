@@ -11,8 +11,12 @@ describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {
         const linter = new Linter({ configType: 'flat' });
         const config: object[] = [{ plugins: { gspot: plugin }, rules: { 'gspot/no-client-environment': 'error' } }];
-        expect<unknown>(linter.verify(clientExample.broken, config, { filename: 'search.js' })).toStrictEqual(clientExample.findings);
-        expect(linter.verify(clientExample.corrected, config, { filename: 'search.js' })).toStrictEqual(clientExample.clean);
+        expect<unknown>(linter.verify(clientExample.broken, config, { filename: 'search.js' })).toStrictEqual(
+            clientExample.findings,
+        );
+        expect(linter.verify(clientExample.corrected, config, { filename: 'search.js' })).toStrictEqual(
+            clientExample.clean,
+        );
     });
 
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {
@@ -101,3 +105,13 @@ test.each(['recommended', 'all'] as const)(
         expect(corrected).toStrictEqual([]);
     },
 );
+
+test.each(
+    Object.entries(plugin.rules).filter(([, rule]) => Array.isArray(rule.meta.schema) && rule.meta.schema.length > 0),
+)('%s rejects unknown options before analyzing source', (name) => {
+    const linter = new Linter({ configType: 'flat' });
+    const config: object[] = [
+        { plugins: { gspot: plugin }, rules: { [`gspot/${name}`]: ['error', { unexpected: true }] } },
+    ];
+    expect(() => linter.verify('const value = 1;', config, { filename: 'example.js' })).toThrow(/unexpected/u);
+});

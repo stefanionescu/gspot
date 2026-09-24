@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import type { HookName } from '#cli/emit/hooks.ts';
+import type { Session } from '#cli/run/session.ts';
 import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import type { Session } from '#cli/types/execution.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { ConfinedRoot } from '#cli/types/filesystem.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { GeneratedProposal } from '#cli/emit/targets.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookBody, hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
-import type { GeneratedProposal, HookName } from '#cli/types/generation.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
 const DIRECTORY = '.gspot/integrations/simple-git-hooks';

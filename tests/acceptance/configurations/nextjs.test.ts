@@ -3,10 +3,10 @@ import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
-import type { TakeoverPlan } from '#cli/types/ownership.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
 import { chmodSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

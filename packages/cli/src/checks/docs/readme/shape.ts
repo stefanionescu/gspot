@@ -3,10 +3,10 @@ import { statSync } from 'node:fs';
 // The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 
 type ShapeProblem = [number, string, string];
 
@@ -76,19 +76,21 @@ export function readmeShape(input: EngineInput): Finding[] {
         .filter(
             (file) =>
                 (file.path === 'README.md' || file.path.endsWith('/README.md')) &&
-                (statSync(join(input.root, file.path), { throwIfNoEntry: false }) !== undefined),
+                statSync(join(input.root, file.path), { throwIfNoEntry: false }) !== undefined,
         )
         .flatMap((file) =>
-            shapeProblems(readSource(input.root, file.path, input.observations).toString('utf8'), threshold, roots.has(file.path)).map(
-                ([line, rule, text]) => ({
-                    check: input.spec.name,
-                    file: file.path,
-                    line,
-                    rule,
-                    message: text,
-                    fixable: false,
-                }),
-            ),
+            shapeProblems(
+                readSource(input.root, file.path, input.observations).toString('utf8'),
+                threshold,
+                roots.has(file.path),
+            ).map(([line, rule, text]) => ({
+                check: input.spec.name,
+                file: file.path,
+                line,
+                rule,
+                message: text,
+                fixable: false,
+            })),
         );
 }
 

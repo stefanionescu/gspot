@@ -1,9 +1,8 @@
 // The four shipped direction rules: types import only types; runtime never imports tests or harness; tests and harness reach runtime only through contracts or types; config and env never import runtime.
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { aliasMap, optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, importFile, staticString } from '#plugin/files.ts';
 
 const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
@@ -73,15 +72,15 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         schema: [
             optionsSchema({
                 roles: optionsSchema({
-                    types: stringList,
-                    tests: stringList,
-                    harness: stringList,
-                    config: stringList,
-                    env: stringList,
-                    runtime: stringList,
+                    types: { type: 'array', items: { type: 'string' } },
+                    tests: { type: 'array', items: { type: 'string' } },
+                    harness: { type: 'array', items: { type: 'string' } },
+                    config: { type: 'array', items: { type: 'string' } },
+                    env: { type: 'array', items: { type: 'string' } },
+                    runtime: { type: 'array', items: { type: 'string' } },
                 }),
-                aliases: aliasMap,
-                contracts: stringList,
+                aliases: { type: 'object', additionalProperties: { type: 'string' } },
+                contracts: { type: 'array', items: { type: 'string' } },
                 scope: { type: 'string' },
             }),
         ],

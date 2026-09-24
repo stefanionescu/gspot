@@ -1,6 +1,6 @@
 // Identifiers a Swift file declares, by category, through tree-sitter. An extension declares no type of its own.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/types/naming.ts';
+import type { ExtractSink, Identifier } from '#cli/naming/extract.ts';
 
 const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
 const FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];

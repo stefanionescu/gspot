@@ -5,7 +5,7 @@ import { openSession } from '#cli/run/session.ts';
 import { applyAll } from '#cli/lifecycle/apply.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { gitignoreBlock, applyBlock } from '#cli/emit/managed-blocks.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/read-manifests.ts';
 

@@ -42,3 +42,5 @@ export function configurationSection(
     }
     return { text, parsed: value };
 }
+
+export type TomlTable = Record<string, unknown>;

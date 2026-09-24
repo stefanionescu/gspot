@@ -1,7 +1,6 @@
 // A file that is not a test, sitting beside test files.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
 const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
@@ -22,9 +21,9 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         schema: [
             optionsSchema({
                 testPattern: { type: 'string' },
-                testDirectories: stringList,
+                testDirectories: { type: 'array', items: { type: 'string' } },
                 harnessDirectory: { type: 'string' },
-                excluded: stringList,
+                excluded: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: { misplaced: '{{name}} is not a test but sits beside tests. Move it to {{harness}}.' },

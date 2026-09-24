@@ -1,6 +1,6 @@
 // Identifiers a TypeScript or JavaScript file declares, by category, through tree-sitter. Object literal keys are not declarations.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/types/naming.ts';
+import type { ExtractSink, Identifier } from '#cli/naming/extract.ts';
 
 const FUNCTION_NODES = ['function_declaration', 'generator_function_declaration', 'function_expression'];
 const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'];

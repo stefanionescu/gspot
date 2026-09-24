@@ -1,17 +1,18 @@
-import type { Proposal } from '#cli/types/policy.ts';
+import type { Proposal } from '#cli/policy/propose.ts';
 import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
-import type { ScopeEntry } from '#cli/types/repository.ts';
-import { pythonPins } from '#cli/emit/tool-environment.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import type { RunnerTaskNames } from '#cli/schemas/runners.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { RunnerTaskNames } from '#cli/policy/runner.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import type { CarriedConfiguration, TakeoverPlan } from '#cli/types/ownership.ts';
+import type { CarriedConfiguration } from '#cli/lifecycle/carry.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import { pythonPins, npmPins } from '#cli/tools/tool-installation.ts';
 // The proposal init writes and the plan it prints: what is written, removed, carried, changed, and stops running.
 import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
-import { MISE_CONFIG_PATH, misePins, npmPins, pinnedTwice, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import { MISE_CONFIG_PATH, misePins, pinnedTwice, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
 
 function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
     const rows = [...carried.tools].flatMap(([tool, entries]) => {

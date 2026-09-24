@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';

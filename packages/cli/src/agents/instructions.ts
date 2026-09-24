@@ -1,7 +1,6 @@
-import type { RuleFile } from '#cli/types/agents.ts';
-import type { Session } from '#cli/types/execution.ts';
+import type { Session } from '#cli/run/session.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {
     agent: 'How to work here',
@@ -80,3 +79,7 @@ export function agentFiles(root: string, configured: string[] = []): string[] {
     if (files.stat('.cursor')?.isDirectory() === true) detected.push('.cursor/rules/gspot.mdc');
     return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }
+
+// Type aliases of the rules modules.
+
+export type RuleFile = { source: string; target: string; layer: string; configuration: string; title: string };

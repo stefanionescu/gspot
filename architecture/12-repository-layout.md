@@ -22,7 +22,7 @@ and reading. Both use the existing confinement boundary; neither changes the sel
 ## Ownership
 
 gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
-compatibility aliases, Changesets, or release-PR promises. Local ownership conversion preserves recovery records when storage moves. Configurations live at
+compatibility aliases, Changesets, or release-PR promises. Configurations live at
 `packages/cli/configurations/<kind>/<name>`; the data/configuration configuration and its public check prefix are `configs`.
 
 The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
@@ -92,33 +92,36 @@ publication. It uses filesystem confinement and lifecycle ownership for reposito
 and restoration remain lifecycle operations. Vale package assembly stays with prose because it
 combines the shipped styles with the selected external style packages.
 
-Shared SQL parsing and Tree-sitter loading belong to parsers. Grammar names belong to the loader;
+Shared SQL parsing and Tree-sitter loading belong to parsers. Grammar names belong to the asset boundary;
 language-specific identifier extraction and analysis remain in naming and checks. Agent-guide
 assembly and validation are distinct from executable checks. Their internal owner name does not
 change the public rules configuration or the embedded rules asset paths. Repository discovery
 owns file classification. The suppression check owns its directive constant.
 
 Platform provides process execution, environment access, paths, embedded assets, and release
-targets. The launcher target manifest remains the single source for release platforms. Shared tool observations belong to `types/tools.ts`; doctor consumes those observations in its report.
+targets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
 
-CLI development entry points live in `packages/cli/scripts/`. Build and compile preserve the
-ignored package build directory and the embedded configuration-evaluator asset key. Grammar
-assets retain their provenance. Notice generation reads the actual bundled module inputs and
-embedded assets, rather than collecting unrelated workspace dependencies. Package metadata stays
-at the package root. Script callers, task definitions, release fixtures, and generated policy
-use the development entry points directly.
+CLI release operations live in `packages/cli/release/`. The binary builder uses Bun's build API
+and passes dependency metadata directly to notice generation. It preserves the ignored build
+directory, embedded evaluator asset key, EditorConfig WASM integration, and platform signing.
+Swift grammar rebuilding requires Docker. Its pinned WASM, license, provenance, and supplemental
+dependency notices live in `packages/cli/vendor/`. Other parser assets resolve from locked packages.
+The asset boundary declares every supported parser and rejects undeclared filenames.
 
 These boundaries use the entry/command separation and development-script ownership inspected
 in Nx revision `59b35fba73` and Turborepo revision `1dead3cc9d`. They retain Bun, mise, and the
 existing packages without introducing a task framework or compatibility modules.
 
-Shared TypeScript contracts belong to `src/types/`, grouped by domain. Runtime validators belong
-to `src/schemas/` and do not import commands or execution implementations. Tool-configuration
-evaluation belongs to `evaluation/`; its request validators do not import the evaluators.
+Types and runtime validators live with their feature owners. Filesystem and process operations
+own their boundary contracts. Policy, manifest, profile, journal, and report schemas sit with their
+features. Evaluation request and response schemas form a shared protocol independent of the
+evaluators. Command and check-output validation remain shared boundaries used by both policy
+and configuration manifests. Emitter shapes belong to the corresponding emitters. Tool command
+execution serves checking, installation, and detection without importing the check runner.
+
 Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initialization planning,
 questions, and selection belong to `commands/init/`. Shared coverage analysis belongs to execution,
-and its text rendering belongs to output. Direct imports include type and dynamic dependencies;
-reusable modules do not import command modules.
+and its text rendering belongs to output. Direct imports include type and dynamic dependencies.
 
 ## Native configuration and packaging
 
@@ -134,9 +137,9 @@ The authored configuration adds `.mise/gspot/` to PATH so hooks and tasks run re
 source. Root `mise.toml` owns development runtimes and checkout settings. Keep each identical tool pin in one owner. Duplicate-pin
 detection parses only `[tools]` with smol-toml, so task and environment keys cannot become pins.
 
-Repository choices remain in TOML. The generated CLI-package schema provides
-[Taplo editor assistance](https://taplo.tamasfe.dev/configuration/using-schemas.html).
-The website build copies that schema into output; a second tracked copy serves no purpose.
+Repository choices remain in TOML. The documentation schema endpoint generates
+[Taplo editor assistance](https://taplo.tamasfe.dev/configuration/using-schemas.html) directly from
+the runtime policy schema. The repository editor directive uses the public schema URL.
 
 Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in `tests/bunfig.toml`.
 Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain explicit.
@@ -157,8 +160,8 @@ files `.commitlintrc.json`, `.gitleaks.toml`, `.markdownlint-cli2.jsonc`, `.semg
 `.shellcheckrc`, `.taplo.toml`, `.yamllint.yml`, `osv-scanner.toml`, and `typos.toml`.
 Retained EditorConfig, Prettier, and ESLint entry points continue serving editors; ownership
 records, rather than generated-looking headers, govern replacement. Agent instructions and
-Git attributes retain their authored content outside managed blocks. The policy schema owns
-`packages/cli/schemas/gspot.schema.json`; the site build publishes its copy. Native filenames remain stable.
+Git attributes retain their authored content outside managed blocks. The policy schema feeds the documentation endpoint at `/schema/gspot.schema.json`.
+The documentation build validates its emitted JSON against the runtime schema. Native filenames remain stable.
 
 Generated tool configuration and bundled tool rules live under `.gspot/config/`, with scope paths
 mirrored below it. Agent guides remain under `.gspot/rules/`. Ownership journals, writer locks,
@@ -170,12 +173,12 @@ and caches are ignored.
 
 Hooks inside the configured repository share its ownership journal. Git-internal hooks use state
 under the resolved Git directory. External destinations keep their state and writer lock inside
-the hook destination. Conversion reads recorded ownership, copies and verifies recovery bytes,
-preserves modes and pending operations, and removes the old journal after publication succeeds.
+the hook destination. Only the current journal establishes ownership. Obsolete journals and
+recovery layouts remain unowned data and are not converted or deleted.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
 including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,
-embedded grammars, and Bun; `packages/cli/scripts/notices.json` owns pinned supplemental text and provenance.
+embedded grammars, and Bun; `packages/cli/vendor/notices.json` owns pinned supplemental text and provenance.
 The plugin leaves dependencies external and does not copy unrelated CLI notices. Native
 packaging does not assemble licenses for a compiled binary, so the small build-owned notice
 assembler remains. Do not replace it with a scanner of the entire dependency tree.

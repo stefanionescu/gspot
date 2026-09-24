@@ -1,19 +1,22 @@
-import type { SourceObservations } from '#cli/types/repository.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { IgnoreEntry } from '#cli/types/policy.ts';
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
+import type { IgnoreEntry } from '#cli/policy/normalize.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { IgnoreUse, InlineIgnore } from '#cli/types/execution.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 
-import {
-    COMMENT_OPENERS,
-    COMMENT_STYLE_BY_EXTENSION,
-    HTML_COMMENT_CLOSE,
-    INLINE_IGNORE,
-    REASON_INTRODUCER,
-} from '#cli/emit/markers.ts';
+// The comment forms of an inline ignore. `marker` finds the comment and captures the check id; the
+// reason is what follows `--` in the rest of the comment.
+const INLINE_IGNORE: Record<string, RegExp> = {
+    slash: /\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
+    hash: /# ?gspot-ignore +([a-z0-9/-]+)/u,
+    dash: /-- ?gspot-ignore +([a-z0-9/-]+)/u,
+    html: /<!-- ?gspot-ignore +([a-z0-9/-]+)/u,
+};
+
+const REASON_INTRODUCER = '--';
+const HTML_COMMENT_CLOSE = '-->';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
@@ -51,6 +54,39 @@ function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnor
     const reason = reasonIn(line.slice(match.index + match[0].length));
     return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
 }
+
+export const COMMENT_STYLE_BY_EXTENSION: Record<string, keyof typeof INLINE_IGNORE> = {
+    '.ts': 'slash',
+    '.tsx': 'slash',
+    '.js': 'slash',
+    '.mjs': 'slash',
+    '.cjs': 'slash',
+    '.jsx': 'slash',
+    '.swift': 'slash',
+    '.css': 'slash',
+    '.scss': 'slash',
+    '.py': 'hash',
+    '.sh': 'hash',
+    '.bash': 'hash',
+    '.zsh': 'hash',
+    '.toml': 'hash',
+    '.yml': 'hash',
+    '.yaml': 'hash',
+    '.rb': 'hash',
+    '.sql': 'dash',
+    '.pgsql': 'dash',
+    '.psql': 'dash',
+    '.md': 'html',
+    '.html': 'html',
+    '.htm': 'html',
+};
+
+export const COMMENT_OPENERS: Record<string, string[]> = {
+    slash: ['//', '/*'],
+    hash: ['#'],
+    dash: ['--'],
+    html: ['<!--'],
+};
 
 /**
  * Splits findings into kept and ignored, counting how many each entry matched.
@@ -103,3 +139,7 @@ export function applyInlineIgnores(observations: SourceObservations, findings: F
             inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
     );
 }
+
+export type IgnoreUse = { entry: IgnoreEntry; matched: number };
+
+export type InlineIgnore = { line: number; check: string; reason?: string };

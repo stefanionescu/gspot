@@ -1,14 +1,12 @@
-import type { SourceObservations } from '#cli/types/repository.ts';
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore, { type Ignore } from 'ignore';
 import { dirname, join, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { RawEntry } from '#cli/types/repository.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/repository/patterns.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import { openConfinedRoot, LIFECYCLE_PRIVATE_PATH } from '#cli/platform/filesystem.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
@@ -147,7 +145,7 @@ export function findRoot(start: string, markers = ['gspot.toml']): string {
     if (gitRoot === undefined && !isOutsideGit(directory))
         throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = directory;
-    while (!markers.some((marker) => (statSync(join(current, marker), { throwIfNoEntry: false }) !== undefined))) {
+    while (!markers.some((marker) => statSync(join(current, marker), { throwIfNoEntry: false }) !== undefined)) {
         if (current === gitRoot) return gitRoot;
         const parent = dirname(current);
         if (parent === current) return directory;
@@ -272,3 +270,5 @@ export function readSource(root: string, path: string, observations?: SourceObse
         files.close();
     }
 }
+
+export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };

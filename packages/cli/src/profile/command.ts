@@ -4,8 +4,8 @@ import { parseProfile } from '#cli/profile/read.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
-import { mutationTarget } from '#cli/filesystem/confined.ts';
+import { mutationTarget } from '#cli/platform/filesystem.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 import { withLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 /**

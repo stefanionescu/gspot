@@ -3,7 +3,7 @@ import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { invokingHook } from '#cli/platform/environment.ts';
-import type { RunReport, CheckResult, Finding } from '#cli/types/reports.ts';
+import type { RunReport, CheckResult, Finding } from '#cli/output/schema.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;

@@ -3,10 +3,10 @@ import { realpathSync } from 'node:fs';
 import { parseJson } from '#cli/output/json.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { isAbsolute, relative, resolve } from 'node:path';
-import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
+import type { CheckSpec, OutputFormat } from '#cli/configurations/schema.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };

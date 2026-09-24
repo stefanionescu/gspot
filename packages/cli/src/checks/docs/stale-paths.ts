@@ -2,10 +2,10 @@
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 
@@ -32,7 +32,9 @@ function knownPaths(input: EngineInput): Set<string> {
 
 function miseTasks(input: EngineInput, file: string): string[] {
     try {
-        const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as { tasks?: Record<string, unknown> };
+        const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as {
+            tasks?: Record<string, unknown>;
+        };
         return Object.keys(parsed.tasks ?? {});
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];

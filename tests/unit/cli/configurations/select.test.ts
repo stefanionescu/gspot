@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { parseManifest, configurationManifests, validateManifests } from '#cli/configurations/read-manifests.ts';
 
 function manifest(configurationName: string, requires: string[] = []): Manifest {

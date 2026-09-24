@@ -1,7 +1,7 @@
 import { functionAt } from '#cli/structure/parser.ts';
 // Multi-line ssh blocks: named, documented, inside a function. Searched: shellcheck; it does not read intent.
-import type { Analysis, ScriptFile } from '#cli/types/structure.ts';
-
+import type { Analysis } from '#cli/structure/engine.ts';
+import type { ScriptFile } from '#cli/structure/parser.ts';
 import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#cli/structure/patterns.ts';
 
 function unescapedQuotes(text: string, quote: string): number {

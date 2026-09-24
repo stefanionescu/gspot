@@ -1,9 +1,9 @@
 import { basename, dirname, join } from 'node:path';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { LifecycleOwner } from '#cli/types/ownership.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
-import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
 
 /**
  * Publish an isolated native installation through the shared ownership journal.

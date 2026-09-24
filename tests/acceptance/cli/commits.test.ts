@@ -5,7 +5,7 @@ import { chmodSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
-import { pushReportSchema } from '#cli/schemas/reports.ts';
+import { pushReportSchema } from '#cli/output/schema.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.

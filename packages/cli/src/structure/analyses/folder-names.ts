@@ -1,4 +1,4 @@
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 import { directoryOf } from '#cli/structure/directories.ts';
 // A folder named after a container word or a language. Searched: ls-lint; it checks case, not meaning.
 import { pathMatcher } from '#cli/configurations/claims.ts';

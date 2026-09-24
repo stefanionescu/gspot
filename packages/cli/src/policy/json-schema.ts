@@ -1,8 +1,7 @@
 // gspot.schema.json from the zod schema, published with each release and submitted to SchemaStore.
 import { z } from 'zod';
+import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { policySchema, settingValueSchemas } from '#cli/schemas/policy.ts';
-import type { SchemaNode } from '#cli/types/policy.ts';
 
 const JSON_INDENT = 4;
 
@@ -30,13 +29,14 @@ function toolSettings(schema: SchemaNode): void {
             if (root !== 'tools' || tool === undefined) continue;
             const value = settingValueSchemas[spec.kind];
             const leaf = z.toJSONSchema(z.union([value, z.strictObject({ value, reason: z.string().optional() })]));
-            let table = tools.properties[tool] ??= structuredClone(fallback);
+            let table = (tools.properties[tool] ??= structuredClone(fallback));
             for (const [index, segment] of segments.entries()) {
                 table.properties ??= {};
                 table.additionalProperties = false;
-                table = table.properties[segment] ??= index === segments.length - 1
-                    ? leaf as SchemaNode
-                    : { type: 'object', properties: {}, additionalProperties: false };
+                table = table.properties[segment] ??=
+                    index === segments.length - 1
+                        ? (leaf as SchemaNode)
+                        : { type: 'object', properties: {}, additionalProperties: false };
             }
         }
     }
@@ -82,3 +82,12 @@ export function knownKeysAt(path: (string | number)[]): string[] {
 export function policyJsonSchemaText(): string {
     return `${JSON.stringify(policyJsonSchema(), null, JSON_INDENT)}\n`;
 }
+
+/** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
+export type SchemaNode = {
+    type?: string;
+    properties?: Record<string, SchemaNode>;
+    items?: SchemaNode;
+    additionalProperties?: SchemaNode | boolean;
+    anyOf?: SchemaNode[];
+};

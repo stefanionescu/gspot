@@ -1,8 +1,8 @@
 // The parsed Swift files of one run, and the functions they declare.
 import type { Node } from 'web-tree-sitter';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';
 
 function modifiersOf(node: Node): Node[] {
@@ -31,7 +31,9 @@ export function visibilityOf(node: Node): string {
  * @param input the engine input
  * @returns the sources
  */
-export async function swiftSources(input: Pick<EngineInput, 'root' | 'files' | 'observations' | 'resources'>): Promise<SwiftSource[]> {
+export async function swiftSources(
+    input: Pick<EngineInput, 'root' | 'files' | 'observations' | 'resources'>,
+): Promise<SwiftSource[]> {
     const sources: SwiftSource[] = [];
     try {
         for (const file of input.files) {

@@ -1,10 +1,11 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import type { Session } from '#cli/run/session.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { ConfigurationTarget } from '#cli/types/configurations.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
 import { configurationName, isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
-import type { CommandPart, PlannedCheck, Session, Substitutions, ToolInvocation } from '#cli/types/execution.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
@@ -51,7 +52,7 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const path = join(root, groups['path'] ?? '');
-    return (statSync(path, { throwIfNoEntry: false }) !== undefined) ? [groups['flag'] ?? '', toPlatform(path)] : [];
+    return statSync(path, { throwIfNoEntry: false }) !== undefined ? [groups['flag'] ?? '', toPlatform(path)] : [];
 }
 
 function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
@@ -189,3 +190,16 @@ export function perFileCommands(parts: CommandPart[], files: string[]): ToolInvo
         ...(hasFile ? { file } : {}),
     }));
 }
+
+export type CommandPart = string | { file: true };
+
+export type Substitutions = {
+    files: string[];
+    scope: string;
+    root: string;
+    messageFile?: string;
+    indent: number;
+};
+
+/** A tool command expanded and ready to spawn: once, or once per file. */
+export type ToolInvocation = { argv: string[]; file?: string };

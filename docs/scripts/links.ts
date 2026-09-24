@@ -3,6 +3,8 @@ import { Parser } from 'htmlparser2';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { globSync, statSync } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
+import { policyJsonSchema } from '../../packages/cli/src/policy/json-schema';
 
 type PageLinks = { path: string; ids: Set<string>; links: string[] };
 
@@ -82,5 +84,8 @@ export async function validateSiteLinks(directory: URL, site: string): Promise<v
 if (import.meta.main) {
     if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
     await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
+    const schema = JSON.parse(await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'));
+    if (!isDeepStrictEqual(schema, policyJsonSchema()))
+        throw new Error('The public schema differs from the runtime policy schema.');
     process.stdout.write('All built-site links and fragment targets are valid.\n');
 }

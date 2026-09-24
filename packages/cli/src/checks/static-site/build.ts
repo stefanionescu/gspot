@@ -1,15 +1,15 @@
 import { createHash } from 'node:crypto';
 // The build of a static site: run once for each scope in a session, because every output check reads the same folder.
 import { join, relative } from 'node:path';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { rmSync, statSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/fixers.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { commandArguments } from '#cli/policy/settings.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
-import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 /** The output of one isolated static-site build. */
 export type SiteBuild = {

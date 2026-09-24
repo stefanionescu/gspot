@@ -34,8 +34,6 @@ bun-debug.log*
 # Build output and files copied from packages at build time
 /dist/
 /packages/cli/build/
-/packages/cli/grammars/*.wasm
-!/packages/cli/grammars/swift.wasm
 
 # Build output of the workspace packages
 /packages/*/dist/

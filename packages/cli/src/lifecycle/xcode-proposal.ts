@@ -1,7 +1,7 @@
 // What init proposes for an Xcode project: the project of the scope, and a shared scheme.
 import { posix } from 'node:path';
-import type { ConfinedRoot } from '#cli/types/filesystem.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const PROJECT_SUFFIX = '.xcodeproj';
 const SCHEME_SUFFIX = '.xcscheme';

@@ -1,8 +1,8 @@
 // What a Swift scope builds: an Xcode scheme when the policy names a project, or the Swift package.
 import { join } from 'node:path';
 import { buildFolder } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import { mutationTarget } from '#cli/filesystem/confined.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { mutationTarget } from '#cli/platform/filesystem.ts';
 
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {

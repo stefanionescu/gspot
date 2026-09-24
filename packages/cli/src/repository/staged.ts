@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 // Staged files for the commit stage, and the honest note about unstaged changes.
-import type { ChangedSet, StagedSet, PushSelection } from '#cli/types/repository.ts';
+import type { PushSelection } from '#cli/repository/snapshot.ts';
 
 async function observed(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
     const result = await run(['git', ...argv], {
@@ -318,3 +318,7 @@ export async function pushedRevisions(
     }
     return result;
 }
+
+export type ChangedSet = { reference: string; paths: string[] };
+
+export type StagedSet = { staged: string[]; unstaged: number };

@@ -2,13 +2,11 @@ import { z } from 'zod';
 import ts from 'typescript';
 import { pathToFileURL } from 'node:url';
 import { createRequire, isBuiltin } from 'node:module';
+import { eslintResponse } from '#cli/evaluation/protocol.ts';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { EslintAdoption, EslintRegistration } from '#cli/types/policy.ts';
-import type { LegacyEslintApi, LegacyEslintCriteria } from '#cli/types/ownership.ts';
-
-import { eslintResponse } from '#cli/schemas/evaluation.ts';
-import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/schemas/evaluation.ts';
+import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
+import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
 
 async function registerEslintModule(
     root: string,
@@ -98,7 +96,7 @@ async function legacyEntries(
     );
     const result: Record<string, unknown>[] = [];
     for (const directory of directories) {
-        let source: import('#cli/types/ownership.ts').LegacyEslintEntry[] = [];
+        let source: LegacyEslintEntry[] = [];
         for (const ancestor of directories) {
             if (ancestor !== '.' && ancestor !== directory && !directory.startsWith(`${ancestor}/`)) continue;
             const entries = configurations.get(ancestor)!;
@@ -374,3 +372,47 @@ export async function evaluateRuleCoverage(
     }
     return result;
 }
+
+export type LegacyEslintMatcher = {
+    pattern: string;
+    negate: boolean;
+    options: { matchBase?: boolean };
+};
+
+export type LegacyEslintCriteria = {
+    basePath: string;
+    patterns: { includes: LegacyEslintMatcher[] | null; excludes: LegacyEslintMatcher[] | null }[];
+};
+
+export type LegacyEslintDependency = {
+    id: string;
+    filePath: string;
+    definition: unknown;
+    original?: unknown;
+    error?: Error | null;
+};
+
+export type LegacyEslintEntry = {
+    type: string;
+    name: string;
+    criteria: LegacyEslintCriteria | null;
+    ignorePattern?: { basePath: string; patterns: string[]; loose: boolean };
+    parser?: LegacyEslintDependency;
+    plugins?: Record<string, LegacyEslintDependency>;
+    [key: string]: unknown;
+};
+
+export type LegacyEslintApi = {
+    Legacy: {
+        ConfigArrayFactory: new (options: Record<string, unknown>) => {
+            loadFile(path: string): LegacyEslintEntry[];
+            loadInDirectory(path: string): LegacyEslintEntry[];
+            loadDefaultESLintIgnore(): LegacyEslintEntry[];
+        };
+        IgnorePattern: { DefaultPatterns: string[] };
+        naming: { normalizePackageName(name: string, prefix: string): string };
+    };
+    FlatCompat: new (options: Record<string, unknown>) => {
+        config(configuration: Record<string, unknown>): Record<string, unknown>[];
+    };
+};

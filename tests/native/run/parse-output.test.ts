@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { generateKeyPairSync, randomUUID } from 'node:crypto';
-import { rejects } from 'node:assert/strict';
-import { engineInput } from '#cli/run/engines.ts';
-import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { planRun } from '#cli/run/plan.ts';
+import { rejects } from 'node:assert/strict';
 import { emitAll } from '#cli/emit/targets.ts';
 import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
+import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import { engineInput, resolveCheck } from '#cli/run/engines.ts';
 import { isToolBroken, checkedFindings } from '#cli/run/broken-tool.ts';
 import { parseOutput, ToolOutputError } from '#cli/run/parse-output.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
@@ -602,7 +602,7 @@ test.each(['$/', '"$/', '"\\u0024/', '|- # $comment\n            $/'])(
         });
         const session = await openSession(sandbox.path);
         const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-        const failed = await planned.run(session, planned);
+        const failed = await resolveCheck(planned.spec)(session, planned);
         expect(failed.status, JSON.stringify(failed)).toBe('fail');
         expect(failed.findings).toContainEqual(
             expect.objectContaining({
@@ -619,7 +619,7 @@ test.each(['$/', '"$/', '"\\u0024/', '|- # $comment\n            $/'])(
         );
         const corrected = await openSession(sandbox.path);
         const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-        expect((await valid.run(corrected, valid)).status).toBe('ok');
+        expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
         expect(await Bun.file(join(sandbox.path, 'unrelated.yaml')).text()).toBe('42\n');
     },
 );
@@ -639,7 +639,7 @@ test.each(['$/', '"$/', "'$/", '"\\x24/', '"\\u0024/', '"\\U00000024/', '|-\n   
         });
         const session = await openSession(sandbox.path);
         const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-        const failed = await planned.run(session, planned);
+        const failed = await resolveCheck(planned.spec)(session, planned);
         expect(failed.status, JSON.stringify(failed)).toBe('fail');
         expect(failed.findings).toContainEqual(
             expect.objectContaining({
@@ -657,7 +657,7 @@ test.each(['$/', '"$/', "'$/", '"\\x24/', '"\\u0024/', '"\\U00000024/', '|-\n   
         );
         const corrected = await openSession(sandbox.path);
         const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-        expect((await valid.run(corrected, valid)).status).toBe('ok');
+        expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
         expect(await Bun.file(join(sandbox.path, '.github/workflows/called.yml')).text()).toBe(called);
     },
 );
@@ -672,7 +672,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     });
     const session = await openSession(sandbox.path);
     const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-    const failed = await planned.run(session, planned);
+    const failed = await resolveCheck(planned.spec)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
     expect(failed.findings).toContainEqual(
         expect.objectContaining({
@@ -689,6 +689,6 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     );
     const corrected = await openSession(sandbox.path);
     const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-    expect((await valid.run(corrected, valid)).status).toBe('ok');
+    expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
 });

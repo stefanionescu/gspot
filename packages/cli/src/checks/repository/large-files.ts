@@ -1,6 +1,6 @@
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 // A tracked file above the size limit is under LFS or declared, or it is a finding.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { isUnderLfs } from '#cli/repository/file-classification.ts';
 

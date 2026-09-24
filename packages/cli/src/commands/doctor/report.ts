@@ -1,18 +1,17 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
-import type { ToolProbe } from '#cli/types/tools.ts';
+import type { Session } from '#cli/run/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { probeTool } from '#cli/tools/tool-probe.ts';
 import { coverageReport } from '#cli/run/coverage.ts';
-import type { Session } from '#cli/types/execution.ts';
-import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
+import type { ToolProbe } from '#cli/tools/tool-probe.ts';
 // What doctor prints, as data and as text.
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
+import { collectPins } from '#cli/tools/tool-installation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
-import type { ChangeKey, ChangeReport, DoctorReport } from '#cli/types/reports.ts';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;
@@ -187,3 +186,40 @@ export function doctorText(report: DoctorReport): string {
     ];
     return `${lines.join('\n')}\n`;
 }
+
+export type CoverageReport = {
+    endings: { ending: string; scope: string; files: number; kinds: string[] }[];
+    unchecked: { path: string; reason: string; remedy?: string }[];
+    partial: { path: string; missing: string[] }[];
+    checked: number;
+};
+
+export type ChangeReport = {
+    detectedNotSelected: { configuration: string; evidence: string; command: string }[];
+    recommendedNotSelected: { configuration: string; evidence: string; command: string }[];
+    configurationNotOwned: { path: string; note: string; command: string }[];
+    changedOutsideGspot: { path: string; note: string; command: string }[];
+    pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
+};
+
+export type DoctorReport = {
+    submodules: string[];
+    tools: ToolProbe[];
+    coverage: CoverageReport;
+    changes: ChangeReport;
+    hooks: string;
+    ci: string;
+    rules: { files: number };
+    version: { running: string; pinned?: string };
+    exitCode: number;
+};
+
+export type ChangeKey =
+    | 'detectedNotSelected'
+    | 'recommendedNotSelected'
+    | 'configurationNotOwned'
+    | 'changedOutsideGspot';
+
+export type ChangeRow = { path: string; note: string; command: string };
+
+export type DoctorOptions = { cwd: string };

@@ -1,18 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
+import type { Session } from '#cli/run/session.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Session } from '#cli/types/execution.ts';
+import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
 import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { PreparedHook } from '#cli/lifecycle/hook-managers.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { basename, dirname, isAbsolute, posix, relative, resolve } from 'node:path';
 import { simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
-import type { FileProposal, HookLocation, LifecycleOwner, PreparedHook } from '#cli/types/ownership.ts';
 import { hookBody, hookCommand, huskyLines, huskyReady, lefthookConfiguration } from '#cli/emit/hooks.ts';
 
 function rejectDifferingNativeHook(
@@ -410,3 +411,11 @@ export function hookStatus(
         files.close();
     }
 }
+
+export type HookLocation = {
+    root: string;
+    directory: string;
+    absolute: string;
+    gitRoot: string;
+    stateDirectory: string;
+};

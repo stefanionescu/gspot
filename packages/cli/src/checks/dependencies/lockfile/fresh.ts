@@ -1,9 +1,9 @@
 // Every lockfile matches its manifest: the package manager installs from it without wanting to change it.
 import { dirname, join } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 
 const SHOWN_LINES = 3;
@@ -30,7 +30,8 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     for (const file of input.files) {
         const filename = file.path.slice(file.path.lastIndexOf('/') + 1);
         const command =
-            filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, file.path, input.observations).toString('utf8'))
+            filename === 'yarn.lock' &&
+            /^__metadata:/mu.test(readSource(input.root, file.path, input.observations).toString('utf8'))
                 ? ['yarn', 'install', '--immutable']
                 : FROZEN_INSTALLS[filename];
         if (command === undefined) continue;

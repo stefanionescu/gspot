@@ -1,18 +1,11 @@
 // Every check one identifier goes through: exclusion, structural prefix, case, digits, length, words, duplicates, terms.
 import { hasCase } from '#cli/naming/cases.ts';
+import type { Identifier } from '#cli/naming/extract.ts';
 import { CALLBACK_VERB } from '#cli/naming/categories.ts';
 import { limitsUnderRules, rulesFor } from '#cli/naming/policy.ts';
 import { repeatedPart, splitParts, wordsOf } from '#cli/naming/split.ts';
 import { bannedTerm, isExempt, isReservedUseAllowed } from '#cli/naming/match.ts';
-
-import type {
-    CategoryLimits,
-    EffectivePolicy,
-    Identifier,
-    NameProblem,
-    NamingContext,
-    PathRule,
-} from '#cli/types/naming.ts';
+import type { CategoryLimits, EffectivePolicy, PathRule } from '#cli/naming/policy.ts';
 
 const DIGIT = /\d/u;
 const TEST_GROUP = 'test group';
@@ -126,3 +119,23 @@ export function nameProblems(identifier: Identifier, context: NamingContext): Na
     ];
     return problems.filter((problem) => problem !== undefined);
 }
+
+/** One thing wrong with one identifier. */
+export type NameProblem = {
+    rule:
+        | 'case'
+        | 'digits'
+        | 'length'
+        | 'words'
+        | 'duplicate-words'
+        | 'banned-term'
+        | 'reserved-term'
+        | 'callback-verb';
+    message: string;
+    source?: string;
+};
+
+/** The parser languages the engine loads. */
+
+/** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
+export type NamingContext = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };

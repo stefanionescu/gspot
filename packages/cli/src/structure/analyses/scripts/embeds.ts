@@ -1,5 +1,5 @@
 // Inline Python, Node and generated-script heredocs. Searched: shellcheck, semgrep; neither has the rule.
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 import { RUNTIME_EMBEDS } from '#cli/structure/patterns.ts';
 
 /**

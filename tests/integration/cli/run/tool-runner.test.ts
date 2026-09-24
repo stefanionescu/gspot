@@ -6,9 +6,10 @@ import { executeRun } from '#cli/run/execute.ts';
 import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { resolveCheck } from '#cli/run/engines.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
-import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
+import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 
 describe('file batches', () => {
     test('a list that fits is one batch, and a long list splits under the budget in order', () => {
@@ -369,7 +370,7 @@ test.each([0, 1, 3])(
         const session = await openSession(sandbox.path);
         const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await planned.run(session, planned);
+        const result = await resolveCheck(planned.spec)(session, planned);
         expect(result.status, JSON.stringify(result)).toBe(code === 0 ? 'ok' : code === 1 ? 'fail' : 'error');
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);

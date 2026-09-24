@@ -1,8 +1,8 @@
 import { nearMatches } from '#cli/policy/near.ts';
-import type { RuleFile } from '#cli/types/agents.ts';
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
-import type { Session } from '#cli/types/execution.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { Session } from '#cli/run/session.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
+import type { RuleFile } from '#cli/agents/instructions.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 

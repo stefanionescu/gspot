@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 // Trivy over literal service images in tracked Compose files, on request.
 import { join } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { toolOutputDetail } from '#cli/run/broken-tool.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 

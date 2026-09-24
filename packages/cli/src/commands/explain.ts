@@ -4,8 +4,8 @@ import { openSession } from '#cli/run/session.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { hasPolicy } from '#cli/policy/read-policy.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 
 async function explainResult(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);

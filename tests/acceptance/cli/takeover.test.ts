@@ -3,17 +3,16 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-// Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import { run as runProcess } from '#cli/platform/spawn.ts';
 import { treeContents } from '#tests/support/cli/contents.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+// Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
+import { runBlocking, run as runProcess } from '#cli/platform/spawn.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 
@@ -507,10 +506,9 @@ test.each(['setup.cfg', 'tox.ini'])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const policy = readPolicy(sandbox.path).policy;
-        expect(policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule)).toStrictEqual([
-            'LT01',
-            'RF01',
-        ]);
+        expect(
+            policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule),
+        ).toStrictEqual(['LT01', 'RF01']);
         expect(JSON.parse(initialized.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(
             false,
         );

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { packageEnvironment } from '#cli/tools/package-environment.ts';
 

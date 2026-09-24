@@ -12,11 +12,10 @@ import { registerInstall } from '#cli/commands/install.ts';
 import type { OutputOptions } from '#cli/output/messages.ts';
 import { registerInit } from '#cli/commands/init/command.ts';
 import { installCompletion } from '#cli/output/completion.ts';
-// The commander program: every command from commands/, the global flags, and the run over argv.
-import { registerAdd } from '#cli/commands/configurations.ts';
+import { registerUninstall } from '#cli/commands/uninstall.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
-import { registerRemove } from '#cli/commands/configurations.ts';
-import { registerUninstall } from '#cli/commands/uninstall/command.ts';
+// The commander program: every command from commands/, the global flags, and the run over argv.
+import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
 import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 
 const HELP_CODES = new Set(['commander.helpDisplayed', 'commander.version', 'commander.help']);

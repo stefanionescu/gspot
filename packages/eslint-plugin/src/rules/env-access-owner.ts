@@ -1,8 +1,7 @@
-import { createRule } from '#plugin/rules/definition.ts';
 // process.env, import.meta.env, Bun.env and Deno.env read outside the declared configuration owner.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
@@ -60,7 +59,7 @@ export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
             why: 'When any file reads the environment, nobody can list what the program needs to run; one owner can.',
             fix: 'Read the variable in the configuration owner (architecture.roles.env) and pass the value where it is used.',
         },
-        schema: [optionsSchema({ owners: stringList })],
+        schema: [optionsSchema({ owners: { type: 'array', items: { type: 'string' } } })],
         messages: { owner: 'Environment variables are read in {{owners}} only. Read it there and pass the value in.' },
     },
     defaultOptions: [{ owners: ['src/env/**', 'config/**'] }],

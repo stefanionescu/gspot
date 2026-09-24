@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { RunReport } from '#cli/types/reports.ts';
-import { pushReportSchema } from '#cli/schemas/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
+import { pushReportSchema } from '#cli/output/schema.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../packages/cli/src/main.ts');
@@ -160,7 +160,9 @@ test('push cancellation retains completed reports and names references not check
         expect(sarif.runs[1].invocations[0].executionSuccessful).toBe(false);
         expect(sarif.runs[1].properties.canceled.pendingRefs).toStrictEqual(['refs/heads/second']);
         expect(report.exitCode).toBe(2);
-        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
+        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
+            report,
+        );
         expect(existsSync(started.snapshot)).toBe(false);
         expect(() => process.kill(started.pid, 0)).toThrow();
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
@@ -240,7 +242,7 @@ test('staged cancellation during dependency copying removes partial output and p
         writeFileSync(join(dependencies, `${index}.js`), `export const value=${index};\n`);
     const marker = join(sandbox.path, 'copying.json');
     const program = `
-import {mock} from 'bun:test';
+import { mock } from 'bun:test';
 const filesystem=await import('node:fs/promises');
 const copy=filesystem.cp;
 mock.module('node:fs/promises',()=>({...filesystem,async cp(source,destination,options){

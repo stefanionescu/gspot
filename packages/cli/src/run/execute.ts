@@ -1,24 +1,29 @@
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
-import { isAbsolute, join, relative, sep } from 'node:path';
 import { applyFixers } from '#cli/run/fixers.ts';
+import type { Session } from '#cli/run/session.ts';
+import { resolveCheck } from '#cli/run/engines.ts';
+import type { FixReport } from '#cli/run/fixers.ts';
 import { writeReport } from '#cli/output/report.ts';
+import type { IgnoreUse } from '#cli/run/ignores.ts';
 import { probeTool } from '#cli/tools/tool-probe.ts';
 import { coverageReport } from '#cli/run/coverage.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
-import type { IgnoreEntry } from '#cli/types/policy.ts';
 import { prepareCommand } from '#cli/run/tool-runner.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { jobsWanted } from '#cli/platform/environment.ts';
-import type { TrackedFile, SourceObservations } from '#cli/types/repository.ts';
+import type { IgnoreEntry } from '#cli/policy/normalize.ts';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
+import type { PlanOptions, PlannedCheck } from '#cli/run/plan.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
-import type { RunReport, CheckResult, Finding } from '#cli/types/reports.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { RunReport, CheckResult, Finding } from '#cli/output/schema.ts';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { FixReport, IgnoreUse, PlannedCheck, RunOptions, RunOutcome, Session } from '#cli/types/execution.ts';
 import { cacheInputs, cacheKey, fileHash, pruneCache, readCached, textHash, writeCached } from '#cli/run/cache.ts';
 
 /** File observations shared by cached checks within one execution pass. */
@@ -27,12 +32,6 @@ type RunHashes = {
     files: Map<string, string>;
     tools: Map<string, string>;
 };
-
-/** Policy entries that filter reported findings. */
-type FilterInputs = { ignores: IgnoreEntry[] };
-
-/** One result on its way through the filters: the check, its result, and the findings no ignore took. */
-type Sifted = { check: PlannedCheck; result: CheckResult; remaining: Finding[] };
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
@@ -48,8 +47,10 @@ function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashe
     let identity = hashes.tools.get(path);
     if (identity === undefined) {
         const local = relative(session.root, path);
-        const identityPath = session.cacheRoot !== undefined && !isAbsolute(local) && local !== '..' && !local.startsWith(`..${sep}`)
-            ? join(session.cacheRoot, local) : path;
+        const identityPath =
+            session.cacheRoot !== undefined && !isAbsolute(local) && local !== '..' && !local.startsWith(`..${sep}`)
+                ? join(session.cacheRoot, local)
+                : path;
         identity = JSON.stringify({
             path: identityPath,
             mode: statSync(path).mode,
@@ -130,6 +131,7 @@ function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult):
 async function runOne(
     session: Session,
     planned: PlannedCheck,
+    run: ReturnType<typeof resolveCheck>,
     options: RunOptions,
     config: RunHashes,
     staged?: Set<string>,
@@ -147,12 +149,15 @@ async function runOne(
     const key = options.noCache === true ? undefined : keyFor(session, planned, config);
     const cached = key === undefined ? undefined : cachedResult(session.cacheRoot ?? session.root, key, planned);
     if (cached) return cached;
-    const result = await planned.run(session, planned, staged);
+    const result = await run(session, planned, staged);
     if (key !== undefined && !options.isDryRun && RAN_STATUSES.has(result.status)) {
-        const stored = session.cacheRoot === undefined || result.command === undefined ? result : {
-            ...result,
-            command: result.command.map((part) => part.replaceAll(session.root, () => session.cacheRoot!)),
-        };
+        const stored =
+            session.cacheRoot === undefined || result.command === undefined
+                ? result
+                : {
+                      ...result,
+                      command: result.command.map((part) => part.replaceAll(session.root, () => session.cacheRoot!)),
+                  };
         writeCached(session.cacheRoot ?? session.root, key, stored);
     }
     return result;
@@ -186,45 +191,28 @@ function ignoreRows(uses: Map<string, IgnoreUse>): RunReport['ignores'] {
         .toArray();
 }
 
-// What is left of one result after the inline ignores and the ignores of the policy.
-function withoutIgnored(
+function filterResult(
     observations: SourceObservations,
-    sifted: Sifted,
-    filtering: FilterInputs,
-    uses: Map<string, IgnoreUse>,
-): Finding[] {
-    const inline = applyInlineIgnores(observations, sifted.result.findings);
-    const ignored = applyIgnores(
-        inline,
-        filtering.ignores.filter((entry) => entry.check === sifted.check.check),
-    );
-    mergeUses(uses, ignored.uses);
-    return ignored.kept;
-}
-
-function filterAll(
-    observations: SourceObservations,
-    active: PlannedCheck[],
-    results: CheckResult[],
-    filtering: FilterInputs,
+    check: PlannedCheck,
+    result: CheckResult,
+    ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
     options: RunOptions,
 ): void {
-    const paired = results.flatMap((result, index): Sifted[] => {
-        const check = active[index];
-        return check === undefined ? [] : [{ check, result, remaining: [] }];
-    });
-    const ran = paired.filter((entry) => RAN_STATUSES.has(entry.result.status));
-    for (const entry of ran) entry.remaining = withoutIgnored(observations, entry, filtering, uses);
-    for (const { check, result, remaining } of ran) {
+    if (RAN_STATUSES.has(result.status)) {
         const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
-        result.findings = remaining;
+        const inline = applyInlineIgnores(observations, result.findings);
+        const ignored = applyIgnores(
+            inline,
+            ignores.filter((entry) => entry.check === check.check),
+        );
+        mergeUses(uses, ignored.uses);
+        result.findings = ignored.kept;
         if (countedFailure || result.findings.length > 0) result.status = 'fail';
         else if (result.status !== 'cache') result.status = 'ok';
     }
-    for (const { check, result } of paired)
-        if (FAILED_STATUSES.has(result.status))
-            result.reproduce = `${reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }) })}${options.comparison?.content === 'index' ? ' --staged' : ''}`;
+    if (FAILED_STATUSES.has(result.status))
+        result.reproduce = `${reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }) })}${options.comparison?.content === 'index' ? ' --staged' : ''}`;
 }
 
 function skipRows(planned: PlannedCheck[]): RunReport['skips'] {
@@ -254,6 +242,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     session.probes.clear();
     const started = new Date();
     let planned = await planRun(session, options);
+    let executable = planned.map((check) => ({ check, run: resolveCheck(check.spec) }));
     const fixes = options.fix ? await applyFixers(session, planned, options.isDryRun) : undefined;
     if (fixes !== undefined && !options.isDryRun) {
         const { declarations, scopes, exclude } = session.policyFiles.policy;
@@ -262,23 +251,25 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         session.observations = { root: session.root, sources: new Map() };
         session.probes.clear();
         planned = await planRun(session, options);
+        executable = planned.map((check) => ({ check, run: resolveCheck(check.spec) }));
     }
     const config = { policy: textHash(session.policyFiles.text), files: new Map(), tools: new Map() };
     const staged = options.staged ? new Set(options.staged) : undefined;
     const limiter = pLimit(jobsWanted() ?? Math.max(1, cpus().length));
     const active = planned.filter((check) => isActive(check));
     const { ignores } = session.policyFiles.policy;
-    const filtering: FilterInputs = { ignores };
     const uses = new Map<string, IgnoreUse>(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }]));
     const settled = await Promise.allSettled(
-        active.map((check) =>
-            limiter(async () => {
-                const result = await runOne(session, check, options, config, staged);
-                filterAll(session.observations, [check], [result], filtering, uses, options);
-                options.onResult?.(result);
-                return result;
-            }),
-        ),
+        executable
+            .filter(({ check }) => isActive(check))
+            .map(({ check, run }) =>
+                limiter(async () => {
+                    const result = await runOne(session, check, run, options, config, staged);
+                    filterResult(session.observations, check, result, ignores, uses, options);
+                    options.onResult?.(result);
+                    return result;
+                }),
+            ),
     );
     const results = settled.map((result) => {
         if (result.status === 'rejected') throw result.reason;
@@ -334,3 +325,14 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }
+
+export type RunOptions = PlanOptions & {
+    onResult?: (result: CheckResult) => void;
+    fix: boolean;
+    isDryRun: boolean;
+    noCache?: boolean;
+    comparison?: NonNullable<RunReport['comparison']>;
+    cancelSignal?: AbortSignal;
+};
+
+export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };

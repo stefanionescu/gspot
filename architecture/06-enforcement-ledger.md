@@ -693,7 +693,7 @@ Each manifest declares the suppression comment of its tool, and the check reads 
 comment style.
 
 A tool in a manifest takes `suppression = { marker, reason }`. The check takes the
-comment styles from `config/markers.ts` and the markers from the selected manifests.
+comment styles from `run/ignores.ts` and the markers from the selected manifests.
 
 Planted files in SQL, CSS, HTML, and Markdown, each with a bare suppression.
 

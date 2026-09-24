@@ -1,12 +1,13 @@
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
-import type { FileDeclaration } from '#cli/types/policy.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { swiftTestTags } from '#cli/repository/swift-tests.ts';
+import type { FileDeclaration } from '#cli/policy/normalize.ts';
 import { FILE_PREFIX_BYTES } from '#cli/repository/file-tags.ts';
-import type { Repository, TrackedFile } from '#cli/types/repository.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
+import type { Attribute, TrackedFile } from '#cli/repository/file-classification.ts';
 import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
 
 /**
@@ -57,3 +58,27 @@ export async function readRepository(
     }
     return { root, attributes, hasGit: isGitRepository(root), files, scopes: policyScopes(scopeEntries) };
 }
+
+/** Source bytes observed during one run, confined to its original repository root. */
+export type SourceObservations = {
+    root: string;
+    sources: Map<string, Buffer>;
+};
+
+export type Repository = {
+    root: string;
+    attributes: Attribute[];
+    hasGit: boolean;
+    files: TrackedFile[];
+    scopes: ScopeEntry[];
+};
+
+/** What detection reads from a scope's tree once, for every manifest to look at. */
+export type TreeFacts = {
+    candidates: TrackedFile[];
+    extensionCounts: Map<string, number>;
+    names: Set<string>;
+    shebangs: Set<string>;
+    dependencies: Map<string, string>;
+    scope: string;
+};

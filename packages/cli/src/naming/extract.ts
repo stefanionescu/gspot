@@ -1,11 +1,10 @@
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Identifier } from '#cli/types/naming.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 // The identifiers of one file: parse it with the grammar its language names and run that language's extractor.
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/naming/extractors/bash.ts';
 import { swiftIdentifiers } from '#cli/naming/extractors/swift.ts';
-import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pythonIdentifiers } from '#cli/naming/extractors/python.ts';
+import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { typescriptIdentifiers } from '#cli/naming/extractors/typescript.ts';
 
 /**
@@ -36,3 +35,20 @@ export async function identifiersOf(
         tree.delete();
     }
 }
+
+/** One identifier an extractor found. */
+export type Identifier = {
+    file: string;
+    line: number;
+    column: number;
+    language: string;
+    category: string;
+    /** The label a finding prints, such as `typescript function`. */
+    kind: string;
+    name: string;
+    /** For a directory name: the directory path, so a path rule can match it. */
+    directory?: string;
+};
+
+/** Where an extractor puts what it finds. */
+export type ExtractSink = { file: string; language: string; out: Identifier[] };

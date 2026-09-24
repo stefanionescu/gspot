@@ -1,8 +1,7 @@
 // A relative import that escapes the scope.
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'escape'>({
@@ -17,7 +16,12 @@ export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'esc
             why: 'Scopes are separate projects; a path between them couples two builds that were meant to stay apart.',
             fix: 'Move the shared code into a package both scopes depend on, or allow the escape with a reason.',
         },
-        schema: [optionsSchema({ scopes: stringList, allowedEscapes: stringList })],
+        schema: [
+            optionsSchema({
+                scopes: { type: 'array', items: { type: 'string' } },
+                allowedEscapes: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: {
             escape: 'This import leaves the scope "{{scope}}" for "{{target}}". Each scope imports only from within itself.',
         },

@@ -1,10 +1,12 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { ConfigurationReason } from '#cli/types/ownership.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import type { ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { Proposal, UnknownLanguage } from '#cli/configurations/detect.ts';
 // What init selects: configurations at the root and per scope from detection and flags, then the closure of requires.
 import type { InitContext, InitInputs, InitSelection } from '#cli/commands/init/types.ts';
 import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
@@ -245,3 +247,16 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     const how = new Map([...selectedIds].map((id) => [id, reasonFor(id, sets)]));
     return { scopes, rootIds, scopeProposals, selectedIds, rootProposals, how };
 }
+
+export type DetectionSummary = {
+    files: TrackedFile[];
+    proposals: Proposal[];
+    scopes: ScopeEntry[];
+    tooling: ExistingTooling;
+    owned: string[];
+    unowned: string[];
+    unknown: UnknownLanguage[];
+    manifests: Map<string, Manifest>;
+};
+
+export type ConfigurationReason = 'named' | 'detected' | 'recommended' | 'required';

@@ -1,10 +1,9 @@
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { isInScope } from '#cli/configurations/claims.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { ImportIndex } from '#cli/types/structure.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;
 const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
@@ -35,7 +34,9 @@ async function importedEdges(input: EngineInput, path: string, owned: Set<string
     try {
         if (tree.rootNode.hasError) {
             const location = (tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode).startPosition;
-            throw new Error(`Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`);
+            throw new Error(
+                `Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`,
+            );
         }
         const scanner = new Bun.Transpiler({ loader: path.endsWith('x') ? 'tsx' : 'ts' });
         const edges: ImportIndex['edges'] = [];
@@ -113,3 +114,9 @@ export async function scopeImports(input: EngineInput): Promise<ImportIndex> {
     scopes.set(key, index);
     return index;
 }
+
+export type ImportIndex = {
+    paths: string[];
+    importers: Map<string, Set<string>>;
+    edges: { from: string; to: string; source: string; line: number; column: number }[];
+};

@@ -28,9 +28,8 @@
         "../../../../packages/eslint-plugin/**/coverage/**",
         "../../../../packages/eslint-plugin/**/.build/**",
         "../../../../packages/eslint-plugin/**/DerivedData/**",
-        "../../../../packages/eslint-plugin/packages/cli/schemas/gspot.schema.json",
-        "../../../../packages/eslint-plugin/packages/cli/grammars/swift.wasm",
-        "../../../../packages/eslint-plugin/packages/cli/grammars/swift.LICENSE",
-        "../../../../packages/eslint-plugin/packages/cli/scripts/notices.json"
+        "../../../../packages/eslint-plugin/packages/cli/vendor/swift.wasm",
+        "../../../../packages/eslint-plugin/packages/cli/vendor/swift.LICENSE",
+        "../../../../packages/eslint-plugin/packages/cli/vendor/notices.json"
     ]
 }

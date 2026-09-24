@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseToml } from 'smol-toml';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 
@@ -22,7 +22,7 @@ const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();
@@ -162,7 +162,10 @@ test.each(['replacement', 'block'] as const)(
             writeFileSync(join(directory.path, 'config.txt'), 'edited after proposal\n');
             expect(() => owner.applyProposal(proposal)).toThrow('File changed after its proposal');
             expect(owner.restore('config.txt')).toBe('preserved');
-            expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('edited after proposal\n'), mode: 0o640 });
+            expect(owner.read('config.txt')).toStrictEqual({
+                bytes: Buffer.from('edited after proposal\n'),
+                mode: 0o640,
+            });
         } finally {
             owner.close();
         }

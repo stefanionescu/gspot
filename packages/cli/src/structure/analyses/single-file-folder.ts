@@ -1,4 +1,4 @@
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 // A leaf folder holding one code file. Searched: eslint-plugin-unicorn, ls-lint, knip; none sees a folder.
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { IGNORED_FOLDERS } from '#cli/structure/patterns.ts';

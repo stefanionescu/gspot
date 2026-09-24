@@ -1,9 +1,9 @@
 import type { Node } from 'web-tree-sitter';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 // Blocking calls inside an async function: they stop the event loop for every other task.
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 
 const BLOCKING_NAMES = new Set([
     'time.sleep',
@@ -57,7 +57,11 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
-        const tree = await parseSource('python', readSource(input.root, file.path, input.observations).toString('utf8'), input);
+        const tree = await parseSource(
+            'python',
+            readSource(input.root, file.path, input.observations).toString('utf8'),
+            input,
+        );
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const call of blockingCalls(tree.rootNode))

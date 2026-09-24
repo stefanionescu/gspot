@@ -7,9 +7,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/policy/propose.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' as const }],
@@ -374,7 +374,9 @@ test.each(['setup.cfg', 'tox.ini'])(
                 { check: 'sql/sqlfluff', rule: 'LT01' },
                 { check: 'sql/sqlfluff', rule: 'RF01' },
             ]);
-            expect(carried.retained).toStrictEqual([{ path, note: expect.stringContaining('remove that section manually') }]);
+            expect(carried.retained).toStrictEqual([
+                { path, note: expect.stringContaining('remove that section manually') },
+            ]);
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         }
         await Bun.write(join(sandbox.path, path), '[flake8]\nignore = E501\n');
@@ -441,7 +443,9 @@ test.each([
     await Bun.write(join(sandbox.path, path), '[sqlfluff]\nexclude_rules = LT01\n');
     const corrected = await collectCarried(sandbox.path, { ...tooling, configs: [...configs] }, new Set(['sql']), []);
     expect(corrected.unread).toStrictEqual([]);
-    expect([...corrected.tools.values()].flatMap((tool) => tool.ignores).map((entry) => entry.rule)).toStrictEqual(['LT01']);
+    expect([...corrected.tools.values()].flatMap((tool) => tool.ignores).map((entry) => entry.rule)).toStrictEqual([
+        'LT01',
+    ]);
     expect(corrected.removed).toStrictEqual([]);
 });
 

@@ -3,8 +3,8 @@ import { join, relative } from 'node:path';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { GitEntry, SnapshotSource, SourceObservations } from '#cli/types/repository.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/snapshot-dependencies.ts';
 
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
@@ -137,11 +137,7 @@ export async function gitBlobs(
  * @param cancelSignal command cancellation
  * @returns validated entries
  */
-async function readEntries(
-    root: string,
-    source: SnapshotSource,
-    cancelSignal?: AbortSignal,
-): Promise<GitEntry[]> {
+async function readEntries(root: string, source: SnapshotSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const command =
         source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.object];
     const observed = await runBinary(command, {
@@ -264,3 +260,21 @@ export async function withRevisionSnapshot<Result>(
         rmSync(snapshot, { recursive: true, force: true });
     }
 }
+
+export type SnapshotSource = { kind: 'index' } | { kind: 'commit'; object: string };
+
+export type PushRevision = {
+    object: string;
+    tree: string;
+    refs: string[];
+    commits: string[];
+    historyComplete: boolean;
+    paths?: string[];
+};
+
+export type PushSelection = {
+    revisions: PushRevision[];
+    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+};
+
+export type GitEntry = { mode: string; object: string; path: string };

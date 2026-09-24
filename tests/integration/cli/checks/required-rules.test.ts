@@ -5,7 +5,7 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
 import { mkdirSync, symlinkSync, writeFileSync, readFileSync } from 'node:fs';
 

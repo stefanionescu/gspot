@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 // The checks that read supabase/config.toml: it parses, its functions exist, its buckets have policies, and migrations are named as the CLI names them.
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { SUPABASE_CONFIG, functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 

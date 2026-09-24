@@ -3,20 +3,23 @@ import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import parseLicense from 'spdx-expression-parse';
 import { toolPin } from '#cli/tools/tool-probe.ts';
-import type { TomlTable } from '#cli/types/policy.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { RawPolicy } from '#cli/policy/schema.ts';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
-import type { ExistingTool } from '#cli/types/repository.ts';
-import type { stylelintRequest } from '#cli/schemas/evaluation.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { CarrySource } from '#cli/lifecycle/carry-source.ts';
 // The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
+import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
 import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import type { ExistingTool } from '#cli/repository/existing-tooling.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import { licenseResponse, stylelintResponse, stylelintSource } from '#cli/schemas/evaluation.ts';
-import type { CarriedConfiguration, CarriedIgnore, CarryPush, CarrySource } from '#cli/types/ownership.ts';
+import { licenseResponse, stylelintResponse, stylelintSource } from '#cli/evaluation/protocol.ts';
 
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
 
@@ -686,3 +689,27 @@ export async function carryFrom(
     if (carrier) await carrier(source, path, lists, root, check);
     else carryDisabled(source, tool, path, lists, check);
 }
+
+export type CarriedIgnore = { check: string; rule?: string; reason: string; paths?: string[] };
+
+export type CarriedFormatter = {
+    format: Policy['format'];
+    extra?: TomlTable;
+    ignorePatterns?: string[];
+    nativeDefaults?: boolean;
+    editorconfig?: NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted'];
+};
+
+export type CarriedLists = Map<string, { settings: TomlTable; ignores: CarriedIgnore[] }>;
+
+export type CarriedConfiguration = {
+    tools: CarriedLists;
+    scopes: Map<string, { configurations: string[]; tools: Record<string, TomlTable> }>;
+    formatter?: CarriedFormatter;
+    observed: Map<string, FileSnapshot>;
+    removed: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
+};
+
+export type CarryPush = (rule: string, paths?: string[]) => void;

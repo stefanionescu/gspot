@@ -1,6 +1,7 @@
+import type { Analysis } from '#cli/structure/engine.ts';
 // Two shell functions with the same body. Searched: jscpd (no shell grammar), shellcheck; neither compares functions.
 import { codeLines } from '#cli/structure/code-lines.ts';
-import type { Analysis, ScriptFunction } from '#cli/types/structure.ts';
+import type { ScriptFunction } from '#cli/structure/parser.ts';
 
 const DEFAULT_MIN_LINES = 3;
 

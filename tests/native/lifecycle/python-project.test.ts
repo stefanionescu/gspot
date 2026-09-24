@@ -125,7 +125,9 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                         file.kind === 'lock' ? 'lock' : 'config',
                     );
             });
-            expect(pythonInstallSteps(repository.path)).toStrictEqual([['uv', 'sync', '--locked', '--project', '.gspot']]);
+            expect(pythonInstallSteps(repository.path)).toStrictEqual([
+                ['uv', 'sync', '--locked', '--project', '.gspot'],
+            ]);
             const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
             const lockPath = join(repository.path, '.gspot/uv.lock');
             const lock = readFileSync(lockPath);
@@ -219,7 +221,9 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 writeFileSync(join(clone, 'source.py'), 'import os\n');
                 const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
                 expect(defect.code, defect.stderr).toBe(1);
-                expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
+                expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual([
+                    'F401',
+                ]);
                 const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
                 expect(fixed.code, fixed.stderr).toBe(0);
                 const clean = await run([checker, 'check', 'source.py'], { cwd: clone });

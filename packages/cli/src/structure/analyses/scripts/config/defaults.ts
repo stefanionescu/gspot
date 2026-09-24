@@ -1,5 +1,5 @@
 // Variable defaults live in the configuration owners. Searched: shellcheck; it accepts every expansion.
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 import { DEFAULT_EXPANSION } from '#cli/structure/patterns.ts';
 
 /**

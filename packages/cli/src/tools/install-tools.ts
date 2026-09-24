@@ -1,16 +1,15 @@
 import semver from 'semver';
-import type { Session } from '#cli/types/execution.ts';
+import type { Session } from '#cli/run/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
-import { UV_INSTALLER } from '#cli/tools/installers.ts';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { InstallationError } from '#cli/tools/install-error.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { installPackageProject } from '#cli/tools/package-project.ts';
 import { packageEnvironment } from '#cli/tools/package-environment.ts';
+import { UV_INSTALLER, pythonPins } from '#cli/tools/tool-installation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
@@ -40,6 +39,7 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
     if (!isInstalling) {
         return 'install skipped; run: gspot install';
     }
+    const manifests = everyManifest(session);
     const notes: string[] = [];
     const failures: Error[] = [];
     try {
@@ -76,14 +76,14 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
                 ? ''
                 : await installPackageProject(
                       root,
-                      everyManifest(session).flatMap((manifest) => manifest.tools),
+                      manifests.flatMap((manifest) => manifest.tools),
                   );
         if (installed !== '') notes.push(installed);
     } catch (error) {
         failures.push(error instanceof Error ? error : new Error('Package installation failed.'));
     }
     try {
-        if (toolEnvironment(session).length > 0) {
+        if (pythonPins(manifests).length > 0) {
             let executable = 'uv';
             if (runner === 'mise') {
                 const located = await runToolCommand(

@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { stripVTControlCharacters } from 'node:util';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { basename, dirname } from 'node:path';
 import { evaluateLicenses } from '#cli/evaluation/license.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';
 import { evaluateEslintPreview } from '#cli/evaluation/eslint-preview.ts';
 import { evaluateEslint, evaluateRuleCoverage } from '#cli/evaluation/eslint.ts';
@@ -16,7 +16,7 @@ import {
     eslintCoverageResponse,
     formatResponse,
     ignoredPathsResponse,
-} from '#cli/schemas/evaluation.ts';
+} from '#cli/evaluation/protocol.ts';
 
 try {
     const request = configurationRequest.parse(

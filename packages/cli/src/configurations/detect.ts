@@ -1,10 +1,12 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import * as linguistLanguages from 'linguist-languages';
+import type { TreeFacts } from '#cli/repository/tree.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { SHEBANG_INTERPRETERS } from '#cli/repository/patterns.ts';
-import type { TreeFacts, ManifestFacts, TrackedFile } from '#cli/types/repository.ts';
-import type { Manifest, Proposal, UnknownLanguage } from '#cli/types/configurations.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 type LinguistEntry = {
     extensions?: readonly string[];
@@ -221,3 +223,7 @@ export function shebangInterpreter(firstLine: string): string | undefined {
     const stripped = withoutTrailingVersion(word);
     return SHEBANG_INTERPRETERS[word] ?? SHEBANG_INTERPRETERS[stripped];
 }
+
+export type Proposal = { configuration: string; evidence: string; kind: string; count?: number };
+
+export type UnknownLanguage = { language: string; extensions: string[]; count: number };

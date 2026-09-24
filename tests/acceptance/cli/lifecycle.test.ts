@@ -8,7 +8,7 @@ import { run as spawn } from '#cli/platform/spawn.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const INIT = [
@@ -51,8 +51,12 @@ test('initialization and cold and warm staged checks stay within the 5000-file p
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout);
         if (measurements.length === 2)
-            expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe('cache');
-        console.log(`5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${ceiling} ms`);
+            expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe(
+                'cache',
+            );
+        console.log(
+            `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${ceiling} ms`,
+        );
         expect(elapsed).toBeLessThan(ceiling);
         expect(report.checks.some((check: { status: string }) => ['error', 'missing'].includes(check.status))).toBe(
             false,
@@ -335,7 +339,9 @@ test.each(['before', 'after'] as const)(
         const preview = await run(directory.path, ['uninstall', '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as { plan: { remove: string[] } }).plan.remove).toContain(path);
-        expect(ownershipSchema.parse(JSON.parse(readFileSync(recordPath, 'utf8'))).pending).toStrictEqual(state.pending);
+        expect(ownershipSchema.parse(JSON.parse(readFileSync(recordPath, 'utf8'))).pending).toStrictEqual(
+            state.pending,
+        );
         const removed = await run(directory.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(existsSync(join(directory.path, path))).toBe(false);

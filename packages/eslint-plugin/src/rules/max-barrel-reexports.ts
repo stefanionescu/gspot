@@ -1,8 +1,7 @@
 // More than the limit of re-exports in one index.
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
-import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 const DEFAULT_MAX = 20;
 
@@ -18,7 +17,7 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
             why: 'A barrel that grows without bound becomes the import everyone reaches for, and every change to any file behind it touches every importer.',
             fix: 'Import from the modules that declare the values, or split the index by area. Raise limits.barrel_reexports with a reason if the barrel is the contract.',
         },
-        schema: [optionsSchema({ max: positiveInteger })],
+        schema: [optionsSchema({ max: { type: 'integer', minimum: 1 } })],
         messages: {
             tooMany:
                 'This index has {{count}} re-exports; the limit is {{max}}. Import from the owning modules or split the index.',

@@ -6,9 +6,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { coverageReport } from '#cli/run/coverage.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { installHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();

@@ -46,7 +46,6 @@ preserve unsupported authored input with an explicit limitation rather than gues
 | `AGENTS.md`, and the agent files the repository holds     | gspot, one managed block each | yes     | the index of rule files: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                                    |
 | the hook or task a hook calls                             | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file of the repository, or in `.git/hooks/` of each clone |
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`   | gspot                         | yes     | the CI job, when enabled                                                                                                  |
-| `packages/cli/schemas/gspot.schema.json`                  | gspot                         | yes     | the JSON Schema of `gspot.toml`, published with each release                                                              |
 
 The only shared-manifest writes are the `gspot` launcher and explicitly accepted lint task
 entries. gspot never writes tool dependencies or package lifecycle scripts into the developer's

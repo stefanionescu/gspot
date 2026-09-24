@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 
@@ -33,7 +33,9 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`;
     if (!(statSync(join(input.root, manifest), { throwIfNoEntry: false }) !== undefined))
         throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.observations).toString('utf8')));
+    const project = importConfiguration.parse(
+        parse(readSource(input.root, manifest, input.observations).toString('utf8')),
+    );
     if (project.tool?.importlinter === undefined)
         throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
@@ -57,7 +59,11 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function dependencyOwnership(input: EngineInput): Finding[] {
-    if (!['uv.lock', 'poetry.lock', 'pdm.lock'].some((name) => (statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined)))
+    if (
+        !['uv.lock', 'poetry.lock', 'pdm.lock'].some(
+            (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
+        )
+    )
         throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));

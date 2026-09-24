@@ -10,7 +10,7 @@ export default defineConfig({
     vite: { oxc: { target: 'es2022' } },
     integrations: [
         {
-            name: 'gspot-schema',
+            name: 'font-licenses',
             hooks: {
                 'astro:build:done': ({ dir }) => {
                     const licenses = new URL('licenses/', dir);
@@ -21,12 +21,6 @@ export default defineConfig({
                             new URL(`${font}.txt`, licenses),
                         );
                     }
-                    const directory = new URL('schema/', dir);
-                    mkdirSync(directory, { recursive: true });
-                    copyFileSync(
-                        new URL('../packages/cli/schemas/gspot.schema.json', import.meta.url),
-                        new URL('gspot.schema.json', directory),
-                    );
                 },
             },
         },

@@ -1,5 +1,4 @@
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 // An import from a test-harness barrel.
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 
@@ -15,7 +14,12 @@ export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'b
             why: 'Support modules that import their own barrel create cycles and load every sandbox to use one.',
             fix: 'Import the specific harness module instead of the barrel.',
         },
-        schema: [optionsSchema({ barrels: stringList, within: stringList })],
+        schema: [
+            optionsSchema({
+                barrels: { type: 'array', items: { type: 'string' } },
+                within: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: { barrel: 'Import the specific module instead of the harness barrel "{{source}}".' },
     },
     defaultOptions: [{ barrels: [], within: ['**/tests/harness/**'] }],

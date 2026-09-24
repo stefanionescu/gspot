@@ -1,10 +1,10 @@
+import type { Session } from '#cli/run/session.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Session } from '#cli/types/execution.ts';
 import type { Explanation } from '#cli/output/explain.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import { claimedInputs, configuredChecks } from '#cli/run/plan.ts';
 // File explanations: claims, checks, and ignores within the selected scope.
 import { claimants, pathMatcher } from '#cli/configurations/claims.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
     if (file.nature === 'binary') return 'binary: eligible for secrets and size checks';

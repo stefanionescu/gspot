@@ -1,5 +1,5 @@
 // File stems and directory names as identifiers: the stem without its extension, every folder on the way, Next.js segments unwrapped.
-import type { Identifier } from '#cli/types/naming.ts';
+import type { Identifier } from '#cli/naming/extract.ts';
 
 const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
 const MIGRATION_DIRECTORY = /^\d{14}_/u;

@@ -2,19 +2,19 @@ import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { emitAll } from '#cli/emit/targets.ts';
 import { head } from '#cli/repository/tracked.ts';
+import type { Session } from '#cli/run/session.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
 import { isOwned } from '#cli/lifecycle/takeover.ts';
-import type { Session } from '#cli/types/execution.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { ChangeReport, ChangeRow } from '#cli/types/reports.ts';
 // What changed in the repository after init: configurations detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { pinnedTwice, MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/types/repository.ts';
+import type { ChangeReport, ChangeRow } from '#cli/commands/doctor/report.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const HEAD_BYTES = 600;
 
@@ -128,7 +128,7 @@ export function changeReport(session: Session): ChangeReport {
         configurationNotOwned: [
             ...configurationNotOwned(session, tooling, selected),
             ...unownedGeneratedFiles(session),
-            ...((statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) !== undefined)
+            ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) !== undefined
                 ? [
                       {
                           path: 'gspot.local.toml',

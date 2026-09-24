@@ -37,7 +37,7 @@ const SCRIPTS = [
     "**/*.config.{js,mjs,cjs,ts}",
     ".mise/tasks/**",
     "packages/npm/**",
-    "packages/cli/scripts/**",
+    "packages/cli/release/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference.ts"
 ];
@@ -776,10 +776,9 @@ export default [
     "**/build/**",
     "**/coverage/**",
     ".gspot/**",
-    "packages/cli/schemas/gspot.schema.json",
-    "packages/cli/grammars/swift.wasm",
-    "packages/cli/grammars/swift.LICENSE",
-    "packages/cli/scripts/notices.json"
+    "packages/cli/vendor/swift.wasm",
+    "packages/cli/vendor/swift.LICENSE",
+    "packages/cli/vendor/notices.json"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },

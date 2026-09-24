@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import type { Session } from '#cli/types/execution.ts';
+import type { Session } from '#cli/run/session.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 
 /**

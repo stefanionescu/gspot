@@ -104,7 +104,7 @@ The library does not own gspot tool selection, version policy, domain preparatio
 | [linguist-js](https://github.com/Nixinova/LinguistJS)                | Language detection over the tree                           | Fetches Linguist data at run time; gspot uses the `linguist-languages` data package offline instead                                                                                                              |
 
 The current lifecycle boundary uses standard filesystem APIs in
-`packages/cli/src/filesystem/confined.ts`. It validates repository-relative paths and existing
+`packages/cli/src/platform/filesystem.ts`. It validates repository-relative paths and existing
 parents, checks expected bytes and modes before replacement, and supports journaled recovery.
 It does not use `__openat` or provide handle-relative protection against hostile concurrent
 directory replacement. That race is outside the contract. Native platform evidence and

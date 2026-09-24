@@ -4,8 +4,8 @@ import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

@@ -1,10 +1,10 @@
 import { parse } from 'postcss';
 import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
-import type { Finding } from '#cli/types/reports.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import type { Finding } from '#cli/output/schema.ts';
 // CSS modules against the code that imports them: every class defined is read, and every class read is defined.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 
 const MODULE_SUFFIX = /\.module\.(?:css|scss|pcss)$/u;
 const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;

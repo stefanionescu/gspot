@@ -1,15 +1,15 @@
-import { scopeImports } from '#cli/structure/imports.ts';
-import type { ArchitectureElement } from '#cli/types/policy.ts';
 import { rmSync } from 'node:fs';
 import { globbySync } from 'globby';
 import { scratchCopy } from '#cli/run/fixers.ts';
 // Checks of two libraries that read files: what client code imports from the server, and Drizzle tables with their relations and migrations.
 import { basename, dirname, join } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { scopeImports } from '#cli/structure/imports.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { ArchitectureElement } from '#cli/policy/normalize.ts';
 
 const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 

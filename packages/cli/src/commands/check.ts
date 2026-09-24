@@ -2,13 +2,16 @@ import { readFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
+import type { Session } from '#cli/run/session.ts';
 import { progress } from '#cli/output/progress.ts';
+import type { FixReport } from '#cli/run/fixers.ts';
+import type { StageFilter } from '#cli/run/plan.ts';
 import { writeReport } from '#cli/output/report.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { note, warn } from '#cli/output/messages.ts';
+import type { RunOptions } from '#cli/run/execute.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
-import type { PushReport } from '#cli/types/reports.ts';
-import type { Stage } from '#cli/types/configurations.ts';
+import type { Stage } from '#cli/configurations/schema.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
@@ -16,21 +19,14 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { Command, InvalidArgumentError, Option } from 'commander';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import type { ChangedSet, StagedSet } from '#cli/types/repository.ts';
+import type { ChangedSet, StagedSet } from '#cli/repository/staged.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import type { PushReport, CheckResult, RunReport } from '#cli/output/schema.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/staged.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
-import type {
-    CheckOptions,
-    StageFilter,
-    CheckCommandResult,
-    CommandResult,
-    FixReport,
-    RunOptions,
-    Session,
-} from '#cli/types/execution.ts';
 
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {
@@ -470,3 +466,23 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
         signal,
     );
 }
+
+export type CheckOptions = {
+    onResult?: (result: CheckResult) => void;
+    cwd: string;
+    only?: string[];
+    paths: string[];
+    staged: boolean;
+    push?: { input: string; remote?: string };
+    changed?: string;
+    fix: boolean;
+    isDryRun: boolean;
+    stage?: StageFilter;
+    skips: string[];
+    messageFile?: string;
+    quiet: boolean;
+    verbose: boolean;
+    noCache: boolean;
+};
+
+export type CheckCommandResult = CommandResult & { report?: RunReport };

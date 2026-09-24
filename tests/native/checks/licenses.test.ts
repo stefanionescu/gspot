@@ -7,7 +7,7 @@ import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { chmodSync, existsSync, readFileSync, unlinkSync, symlinkSync } from 'node:fs';
 

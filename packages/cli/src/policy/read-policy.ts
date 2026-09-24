@@ -3,12 +3,13 @@ import type { z } from 'zod';
 import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { parse as parseToml, TomlError } from 'smol-toml';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { PathSegment } from '#cli/policy/problems.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reasonProblems, pathProblems } from '#cli/policy/problems.ts';
-import type { PolicyFiles, PathSegment, Policy } from '#cli/types/policy.ts';
 import { policyLocation, sourceLocations } from '#cli/policy/source-locations.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
@@ -111,3 +112,9 @@ export function readPolicy(root: string): PolicyFiles {
     const policy = parsePolicyText(text, 'gspot.toml', root);
     return { policy, path, text };
 }
+
+export type PolicyFiles = {
+    policy: Policy;
+    path: string;
+    text: string;
+};

@@ -1,7 +1,6 @@
 // What every command does with its result: print text or JSON, set the exit code, turn errors into exit 2.
 import { printJson } from '#cli/output/json.ts';
 import { fail, print } from '#cli/output/messages.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
 
 const KNOWN_ERRORS = new Set([
     'PolicyError',
@@ -42,3 +41,5 @@ export async function printCommand(
         else throw error;
     }
 }
+
+export type CommandResult = { text: string; json: unknown; exitCode: number };

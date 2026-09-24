@@ -1,7 +1,6 @@
 // The settings listing: every setting, its value, and where it came from.
-import type { Session } from '#cli/types/execution.ts';
+import type { Session } from '#cli/run/session.ts';
 import { listSettings } from '#cli/policy/settings.ts';
-import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#cli/types/policy.ts';
 
 function rowsFor(session: Session): SettingRow[] {
     return session.scopes.flatMap((selection) => {
@@ -44,3 +43,20 @@ export function settingRows(session: Session): SettingsListing {
     );
     return { rows: rowsFor(session), extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }
+
+export type SettingRow = {
+    key: string;
+    value: unknown;
+    source: string;
+    direction: string;
+    scope?: string;
+};
+
+/** One `[tools.<tool>.extra]` table: the keys it sets and why. */
+export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };
+
+/** The settings listing. */
+export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
+
+/** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
+export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason?: string } }>;

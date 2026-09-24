@@ -1,9 +1,9 @@
 // Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 type BaselineReason = { fingerprint: string; reason: string };
 
@@ -37,7 +37,8 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
             ? []
             : [finding(input, 'no-reason', `The baseline entry ${entry.Fingerprint} has no reason.`)]),
         // An entry with a commit is a finding in history: the file may be gone, and the commit still holds the value.
-        ...((entry.Commit ?? '') !== '' || (statSync(join(input.root, entry.File), { throwIfNoEntry: false }) !== undefined)
+        ...((entry.Commit ?? '') !== '' ||
+        statSync(join(input.root, entry.File), { throwIfNoEntry: false }) !== undefined
             ? []
             : [
                   finding(

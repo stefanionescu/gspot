@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import { mutationPath } from '#cli/filesystem/confined.ts';
+import { mutationPath } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import type { SiteBuild } from '#cli/checks/static-site/build.ts';
 // The checks that read the built output of a static site.
@@ -211,9 +211,7 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
         .map((match) => match.groups!['url']!)
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = pathMatcher(
-        (input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html'],
-    );
+    const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>

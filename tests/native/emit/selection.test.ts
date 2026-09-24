@@ -1,19 +1,19 @@
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { parse, stringify } from 'smol-toml';
 import { emitAll } from '#cli/emit/targets.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import type { RunReport } from '#cli/types/reports.ts';
-import { openSession } from '#cli/run/session.ts';
 import { executeRun } from '#cli/run/execute.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { RunReport } from '#cli/output/schema.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { writeFileSync, symlinkSync, mkdirSync, chmodSync, statSync } from 'node:fs';
+import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();

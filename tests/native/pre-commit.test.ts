@@ -5,9 +5,9 @@ import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { chmodSync, readFileSync, unlinkSync, writeFileSync, renameSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';

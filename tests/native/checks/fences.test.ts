@@ -5,10 +5,10 @@ import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { fences } from '#cli/checks/docs/fences.ts';
-import type { MergedView } from '#cli/types/policy.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 
 function input(root: string, paths: string[], tracked = paths): EngineInput {
     const files = paths.map((path) => ({

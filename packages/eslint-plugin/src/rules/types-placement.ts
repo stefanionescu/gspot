@@ -1,8 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-// Type aliases and enum replacements live under the types directory; that directory holds type-only imports and no runtime exports.
-import { createRule } from '#plugin/rules/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+// Type aliases and enum replacements live under the types directory; that directory holds type-only imports and no runtime exports.
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const TYPE_DECLARATIONS = new Set([
@@ -110,7 +109,7 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
             optionsSchema({
                 typesDirectory: { type: 'string' },
                 allowInterface: { type: 'boolean' },
-                exempt: stringList,
+                exempt: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: {

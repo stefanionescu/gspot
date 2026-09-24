@@ -2,12 +2,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 import { stringify as stringifyToml } from 'smol-toml';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 // The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
-import type { TomlTable, Mutation, WriteResult } from '#cli/types/policy.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
 
 function isTable(value: unknown): value is TomlTable {
@@ -220,3 +221,7 @@ export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTabl
     if (holder === undefined) throw new PolicyError([messages.scopeMissing(scope)]);
     return holder;
 }
+
+export type Mutation = (raw: TomlTable) => void;
+
+export type WriteResult = { text: string; policy: Policy; changed: boolean };

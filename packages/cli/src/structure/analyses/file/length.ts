@@ -1,5 +1,5 @@
 // A shell script over the code-line ceiling. Searched: shellcheck, shfmt; neither counts lines.
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
 
 /**

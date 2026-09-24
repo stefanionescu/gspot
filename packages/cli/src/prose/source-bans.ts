@@ -1,8 +1,8 @@
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 // What a source file may not say to Vale: an in-text directive in Markdown, a block comment in SQL.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#cli/prose/syntax.ts';
 
 const MARKDOWN = new Set(['.md', '.mdx']);
@@ -50,6 +50,10 @@ export function sourceBans(input: EngineInput): Finding[] {
                 file.nature === 'source' && (MARKDOWN.has(extensionOf(file.path)) || SQL.has(extensionOf(file.path))),
         )
         .flatMap((file) =>
-            lineFindings(input, file.path, readSource(input.root, file.path, input.observations).toString('utf8').split('\n')),
+            lineFindings(
+                input,
+                file.path,
+                readSource(input.root, file.path, input.observations).toString('utf8').split('\n'),
+            ),
         );
 }

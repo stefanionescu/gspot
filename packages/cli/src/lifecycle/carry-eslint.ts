@@ -1,9 +1,9 @@
 import { basename } from 'node:path';
 import { carriedTool } from '#cli/lifecycle/carry.ts';
-import { eslintResponse } from '#cli/schemas/evaluation.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
-import type { CarriedConfiguration } from '#cli/types/ownership.ts';
+import { eslintResponse } from '#cli/evaluation/protocol.ts';
+import type { CarriedConfiguration } from '#cli/lifecycle/carry.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 /**
  * Convert ESLint selectors and module registrations from observed configuration.

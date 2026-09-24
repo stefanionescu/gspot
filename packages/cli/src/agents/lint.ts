@@ -1,6 +1,8 @@
+import { globby } from 'globby';
+import { fileURLToPath } from 'node:url';
+import { readSource } from '#cli/repository/tracked.ts';
 // Lints the rule files: front matter, links, size, layer boundary, fences, corruption.
 import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
-import type { RuleText, RuleFinding, RulesLintReport, FenceWalk } from '#cli/types/agents.ts';
 
 import {
     BOUNDARY_LAYERS,
@@ -142,3 +144,33 @@ export function isRulePath(path: string): boolean {
 export function lintRules(files: RuleText[]): RulesLintReport {
     return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
 }
+
+if (import.meta.main) {
+    const rulesFolder = fileURLToPath(new URL('../../rules/', import.meta.url));
+    const paths = await globby(['**/*.md'], { cwd: rulesFolder });
+    const files = paths
+        .filter((path) => isRulePath(path))
+        .toSorted((a, b) => a.localeCompare(b))
+        .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
+    const report = lintRules(files);
+    for (const finding of report.findings)
+        console.log(`rules/${finding.file}:${String(finding.line)}: ${finding.message}`);
+    process.exitCode = report.findings.length > 0 ? 1 : 0;
+}
+
+/** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */
+export type RuleFinding = { file: string; line: number; message: string };
+
+/** A rule file by its path relative to rules/. */
+export type RuleText = { path: string; text: string };
+
+/** The rule lint's result. */
+export type RulesLintReport = { findings: RuleFinding[]; files: number };
+
+/** The state of a walk over a file's fenced blocks. */
+export type FenceWalk = {
+    file: string;
+    findings: RuleFinding[];
+    open: { ticks: string; line: number } | undefined;
+    onProse: (line: string, number: number) => void;
+};

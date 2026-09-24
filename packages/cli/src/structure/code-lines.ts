@@ -1,5 +1,5 @@
 // Code lines of a shell script: comments stripped with the quotes respected, blanks dropped.
-import type { CodeLine } from '#cli/types/structure.ts';
+
 import { DIRECTORY_CONSTANT_SIGNS, DIRECTORY_CONSTANT_START } from '#cli/structure/patterns.ts';
 
 const QUOTES = new Set(["'", '"']);
@@ -72,3 +72,6 @@ export function isDirectoryConstant(code: string): boolean {
         DIRECTORY_CONSTANT_SIGNS.every((sign) => code.includes(sign))
     );
 }
+
+/** A line of a shell script with its comment stripped, keyed by its one-based number. */
+export type CodeLine = { number: number; code: string };

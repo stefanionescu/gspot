@@ -1,8 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 // An exported `new` instance outside a registry file.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ChainExpression']);
@@ -25,7 +24,7 @@ export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'reg
             why: 'An instance exported from anywhere is a hidden singleton; a registry file makes every shared instance visible in one place.',
             fix: "Create the instance in the module's registry file and import it from there.",
         },
-        schema: [optionsSchema({ registryFiles: stringList })],
+        schema: [optionsSchema({ registryFiles: { type: 'array', items: { type: 'string' } } })],
         messages: { registry: 'Exported instances created with new live in a registry file, not here.' },
     },
     defaultOptions: [{ registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js'] }],

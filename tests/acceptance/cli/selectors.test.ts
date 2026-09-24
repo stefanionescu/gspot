@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 

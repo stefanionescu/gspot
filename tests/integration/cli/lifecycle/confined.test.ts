@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import { fileMode, mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { fileMode, mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 import {
     linkSync,

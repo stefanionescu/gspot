@@ -2,9 +2,9 @@ import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { readSource } from '#cli/repository/tracked.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { mkdirSync, readdirSync, statSync, lstatSync } from 'node:fs';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
+import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
 
 /**
  * Prepare and lock one compiler directory without following existing output links.

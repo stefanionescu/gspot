@@ -1,7 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { ignoredPathsResponse } from '#cli/schemas/evaluation.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution.ts';
+import type { Session } from '#cli/run/session.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { ignoredPathsResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 /**

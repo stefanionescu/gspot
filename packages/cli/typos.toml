@@ -18,7 +18,7 @@ capitalisation = "capitalisation"
 speling = "speling"
 
 [files]
-extend-exclude = [ "/**/*.lock", "/*.lock", "/**/bun.lockb", "/bun.lockb", "/**/package-lock.json", "/package-lock.json", "/**/pnpm-lock.yaml", "/pnpm-lock.yaml", "/**/yarn.lock", "/yarn.lock", "/**/Package.resolved", "/Package.resolved", "/**/*.pbxproj", "/*.pbxproj", "/**/*.xcstrings", "/*.xcstrings", "/**/*.svg", "/*.svg", "/**/*.min.js", "/*.min.js", "/**/*.min.css", "/*.min.css", "/configurations/policy/prose/styles/gspot/us-english.yml", "/configurations/policy/spelling/manifest.toml", "/schemas/gspot.schema.json", "/grammars/swift.wasm", "/grammars/swift.LICENSE", "/scripts/notices.json" ]
+extend-exclude = [ "/**/*.lock", "/*.lock", "/**/bun.lockb", "/bun.lockb", "/**/package-lock.json", "/package-lock.json", "/**/pnpm-lock.yaml", "/pnpm-lock.yaml", "/**/yarn.lock", "/yarn.lock", "/**/Package.resolved", "/Package.resolved", "/**/*.pbxproj", "/*.pbxproj", "/**/*.xcstrings", "/*.xcstrings", "/**/*.svg", "/*.svg", "/**/*.min.js", "/*.min.js", "/**/*.min.css", "/*.min.css", "/configurations/policy/prose/styles/gspot/us-english.yml", "/configurations/policy/spelling/manifest.toml", "/vendor/swift.wasm", "/vendor/swift.LICENSE", "/vendor/notices.json" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]

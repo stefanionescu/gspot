@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -39,7 +39,9 @@ test(
                     finding.rule === '@typescript-eslint/consistent-type-definitions' ||
                     finding.rule === 'gspot/types-placement',
             );
-        expect(findings.map(({ check, file, line, column, rule }) => ({ check, file, line, column, rule }))).toStrictEqual([
+        expect(
+            findings.map(({ check, file, line, column, rule }) => ({ check, file, line, column, rule })),
+        ).toStrictEqual([
             {
                 check: 'typescript/eslint',
                 file: 'src/order.ts',

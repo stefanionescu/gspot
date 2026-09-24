@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import type { stylelintRequest } from '#cli/schemas/evaluation.ts';
+import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
 
 const reportSchema = z.object({
     results: z

@@ -510,8 +510,8 @@ The JSON shape test holds the record without `root`.
 
 An unknown engine name is refused when the manifest is read.
 
-The manifest schema holds the engine names as an enum. `UNPARSED_LIMIT` and the
-comment openers live once, in `config/markers.ts`.
+The manifest schema holds the engine names as an enum. Shared comment openers belong to
+`run/ignores.ts`.
 
 A manifest test repository with `engine = "nope"` fails to load.
 

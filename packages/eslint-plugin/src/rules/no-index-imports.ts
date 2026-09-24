@@ -1,9 +1,8 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 // An import path that names an index file or a barrel.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 const DEFAULT_PATTERNS = [
     String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,
@@ -23,7 +22,12 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
             why: 'An index import pulls in everything behind the barrel and hides which module the value comes from.',
             fix: 'Import from the leaf module directly.',
         },
-        schema: [optionsSchema({ allow: stringList, patterns: stringList })],
+        schema: [
+            optionsSchema({
+                allow: { type: 'array', items: { type: 'string' } },
+                patterns: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: { index: 'Import the owning module instead of the index "{{source}}".' },
     },
     defaultOptions: [{ allow: [], patterns: DEFAULT_PATTERNS }],

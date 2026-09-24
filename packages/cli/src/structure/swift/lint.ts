@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import type { Session } from '#cli/run/session.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
+import type { PlannedCheck } from '#cli/run/plan.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
-import type { CheckResult } from '#cli/types/reports.ts';
+import type { CheckResult } from '#cli/output/schema.ts';
 import { swiftSources } from '#cli/structure/swift/sources.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 
 const DOC_RULE = 'doc_comment_style';

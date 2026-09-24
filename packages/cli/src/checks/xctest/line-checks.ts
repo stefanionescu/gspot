@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 // Swift test syntax: skip reasons, sleep calls, and snapshot recording modes.
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { textOf, xcodeFinding } from '#cli/checks/xcode/files.ts';
 

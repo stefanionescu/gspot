@@ -1,7 +1,6 @@
 // A leaf folder holding one code file.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 import {
     CODE_EXTENSIONS,
@@ -32,7 +31,13 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
             why: 'A folder of one file adds a level to every path and promises siblings that never arrive.',
             fix: 'Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed.',
         },
-        schema: [optionsSchema({ extensions: stringList, ignorePaths: stringList, allow: stringList })],
+        schema: [
+            optionsSchema({
+                extensions: { type: 'array', items: { type: 'string' } },
+                ignorePaths: { type: 'array', items: { type: 'string' } },
+                allow: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: {
             lone: 'This folder holds only {{name}}. Move the file up beside its neighbors, or allow the folder with a reason.',
         },

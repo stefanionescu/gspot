@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { chmodSync, readFileSync, readlinkSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -10,7 +10,7 @@ const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
 
 test.each(['success', 'error', 'interruption', 'edited', 'damaged backup'] as const)(
     'read-only replacement preserves recovery bytes through %s with Windows filesystem semantics',
@@ -121,7 +121,7 @@ test.each(['before', 'after'] as const)(
         await createFileTree(directory.path, Object.fromEntries(paths.map((path) => [path, `authored ${path}\n`])));
         for (const path of paths) chmodSync(join(directory.path, path), 0o640);
         const program = String.raw`
-import {mock} from 'bun:test';
+import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
 const open=boundary.openConfinedRoot;
 mock.module(${JSON.stringify(boundary)},()=>({...boundary,openConfinedRoot(root){
@@ -192,7 +192,7 @@ test.each(['before', 'after'] as const)(
             initial.close();
         }
         const program = `
-import {mock} from 'bun:test';
+import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
 const open=boundary.openConfinedRoot;
 mock.module(${JSON.stringify(boundary)},()=>({...boundary,openConfinedRoot(root){

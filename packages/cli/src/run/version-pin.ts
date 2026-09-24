@@ -1,7 +1,6 @@
 import * as messages from '#cli/policy/messages.ts';
-import { VERSION_FILE_LINE } from '#cli/emit/markers.ts';
 import packageManifest from '#package' with { type: 'json' };
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 // .gspot/version against the running binary; the exit-2 refusal with its two remedies.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
@@ -42,7 +41,7 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
     withLifecycleOwner(root, (owner) => {
         const status = owner.replace(
             '.gspot/version',
-            { bytes: Buffer.from(VERSION_FILE_LINE.replaceAll('{{version}}', () => version)), mode: 0o644 },
+            { bytes: Buffer.from(`${version}\n`), mode: 0o644 },
             'pin',
             true,
         );

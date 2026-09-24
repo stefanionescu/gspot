@@ -3,7 +3,7 @@ import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 
 test('SQL migration names retain their timestamp while enforcing snake case', async () => {
     await using sandbox = await testdir();
@@ -61,7 +61,14 @@ allowed = [{name = "remote_record", reason = "The external Python interface fixe
     expect(complete.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
         { check: 'naming/policy-schema', scope: '', status: 'ok' },
     ]);
-    const narrowed = await run(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy-schema', '--no-cache', '--json']);
+    const narrowed = await run(sandbox.path, [
+        'check',
+        'entry.sh',
+        '--only',
+        'naming/policy-schema',
+        '--no-cache',
+        '--json',
+    ]);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
     const invalid = policy.replace('name = "remote_record"', 'name = "remoteRecord"');
     await Bun.write(join(sandbox.path, 'gspot.toml'), invalid);
@@ -69,7 +76,10 @@ allowed = [{name = "remote_record", reason = "The external Python interface fixe
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
     expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'gspot.toml', message: 'naming.allowed names "remoteRecord", which no identifier in this scope carries. (scope worker)' },
+        {
+            file: 'gspot.toml',
+            message: 'naming.allowed names "remoteRecord", which no identifier in this scope carries. (scope worker)',
+        },
     ]);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(invalid);
     await Bun.write(join(sandbox.path, 'gspot.toml'), policy);

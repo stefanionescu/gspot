@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { parseProfile } from '#cli/profile/read.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 

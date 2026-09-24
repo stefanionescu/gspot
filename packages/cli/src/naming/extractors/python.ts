@@ -1,6 +1,6 @@
 // Identifiers a Python file declares, by category, through tree-sitter. Dunder names belong to the language and are left out.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/types/naming.ts';
+import type { ExtractSink, Identifier } from '#cli/naming/extract.ts';
 
 const PARAMETER_NODES = new Set(['identifier', 'typed_parameter', 'default_parameter', 'typed_default_parameter']);
 const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);

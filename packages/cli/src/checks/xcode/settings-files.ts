@@ -1,6 +1,6 @@
 // Build settings, entitlements and transport security: the files that decide what the app may do.
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;

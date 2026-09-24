@@ -7,11 +7,11 @@ import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readdirSync, type Dirent } from 'node:fs';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
-import type { ManifestFacts, ScopeEntry } from '#cli/types/repository.ts';
-import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 function lastSegment(path: string): string {
     return path.slice(path.lastIndexOf('/') + 1);
@@ -214,3 +214,10 @@ export function scopeAncestors(
         .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
         .toSorted((left, right) => left.path.length - right.path.length);
 }
+
+export type ScopeEntry = {
+    name: string;
+    path: string;
+    configurations: string[];
+    source: 'root' | 'gspot.toml' | 'workspace';
+};

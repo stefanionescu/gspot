@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { grammarPath } from '#cli/platform/assets.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { Language, Parser, type Tree } from 'web-tree-sitter';
-import { grammarPath } from '#cli/platform/assets.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { SourceObservations } from '#cli/types/repository.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 
 export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 

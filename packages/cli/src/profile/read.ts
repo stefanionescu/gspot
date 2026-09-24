@@ -2,11 +2,11 @@
 import { resolve } from 'node:path';
 import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
-import { nearMatches } from '#cli/policy/near.ts';
 import { readFileSync, statSync } from 'node:fs';
+import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Profile } from '#cli/types/profiles.ts';
-import { profileSchema, isRepositoryPath } from '#cli/schemas/profiles.ts';
+import type { ProfileTables } from '#cli/profile/schema.ts';
+import { profileSchema, isRepositoryPath } from '#cli/profile/schema.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const GITHUB_PREFIX = 'github:';
@@ -32,7 +32,8 @@ async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith('https://')) return fetched(source);
     if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
     const path = resolve(cwd, source);
-    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) throw new ProfileError([`There is no profile at ${source}.`]);
+    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined))
+        throw new ProfileError([`There is no profile at ${source}.`]);
     return readFileSync(path, 'utf8');
 }
 
@@ -106,3 +107,5 @@ export function parseProfile(text: string, source: string): Profile {
 export async function readProfile(source: string, cwd: string): Promise<Profile> {
     return parseProfile(await profileText(source, cwd), source);
 }
+
+export type Profile = { source: string; digest: string; tables: ProfileTables };

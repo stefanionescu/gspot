@@ -2,11 +2,9 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
-        "packages/cli/scripts/compile.ts",
-        "packages/cli/scripts/build-swift-grammar.ts",
+        "packages/cli/release/build-swift-grammar.ts",
         "**/publish.ts",
-        "packages/cli/scripts/generate-schema.ts",
-        "packages/cli/scripts/check-rule-guides.ts",
+        "packages/cli/src/agents/lint.ts",
         "packages/npm/gspot/gspot.js",
         "docs/src/content/reference.ts",
         "docs/astro.config.ts",
@@ -25,10 +23,9 @@
     "ignore": [
         ".gspot/**",
         "eslint.config.{js,mjs,cjs}",
-        "packages/cli/schemas/gspot.schema.json",
-        "packages/cli/grammars/swift.wasm",
-        "packages/cli/grammars/swift.LICENSE",
-        "packages/cli/scripts/notices.json"
+        "packages/cli/vendor/swift.wasm",
+        "packages/cli/vendor/swift.LICENSE",
+        "packages/cli/vendor/notices.json"
     ],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
@@ -171,11 +168,9 @@
         ".": {
             "entry": [
                 "**/build.ts",
-                "packages/cli/scripts/compile.ts",
-                "packages/cli/scripts/build-swift-grammar.ts",
+                "packages/cli/release/build-swift-grammar.ts",
                 "**/publish.ts",
-                "packages/cli/scripts/generate-schema.ts",
-                "packages/cli/scripts/check-rule-guides.ts",
+                "packages/cli/src/agents/lint.ts",
                 "packages/npm/gspot/gspot.js",
                 "docs/src/content/reference.ts",
                 "docs/astro.config.ts",
@@ -194,11 +189,9 @@
         "packages/cli": {
             "entry": [
                 "**/build.ts",
-                "scripts/compile.ts",
-                "scripts/build-swift-grammar.ts",
+                "release/build-swift-grammar.ts",
                 "**/publish.ts",
-                "scripts/generate-schema.ts",
-                "scripts/check-rule-guides.ts",
+                "src/agents/lint.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/plugin.{ts,js}",

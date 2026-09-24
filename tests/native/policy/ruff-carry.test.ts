@@ -7,8 +7,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { realpathSync, symlinkSync } from 'node:fs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],
@@ -200,7 +200,10 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
     expect(carried.unread).toStrictEqual([]);
     expect(carried.removed.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
-    expect(carried.retained.map(({ path }) => path).sort()).toStrictEqual(['config/base.toml', 'config/pyproject.toml']);
+    expect(carried.retained.map(({ path }) => path).sort()).toStrictEqual([
+        'config/base.toml',
+        'config/pyproject.toml',
+    ]);
     expect([...carried.observed.keys()].sort()).toStrictEqual(Object.keys(originals).sort());
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),

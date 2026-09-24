@@ -1,8 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
 // `process.env` in a client module beyond NEXT_PUBLIC_* and NODE_ENV (Next.js).
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/rules/env-access-owner.ts';
 
 function readName(node: TSESTree.MemberExpression): string | undefined {
@@ -23,7 +22,13 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
-        schema: [optionsSchema({ clientModule: { type: 'boolean' }, publicPrefixes: stringList, allowed: stringList })],
+        schema: [
+            optionsSchema({
+                clientModule: { type: 'boolean' },
+                publicPrefixes: { type: 'array', items: { type: 'string' } },
+                allowed: { type: 'array', items: { type: 'string' } },
+            }),
+        ],
         messages: {
             private:
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',

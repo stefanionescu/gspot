@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { mkdirSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
@@ -134,6 +134,8 @@ test.each(['source.sh', '../outside/source.sh'])(
         expect(await Bun.file(join(sandbox.path, 'outside/source.sh')).text()).toBe(comment);
         unlinkSync(join(root, 'source.sh'));
         writeFileSync(join(root, 'source.sh'), comment);
-        expect(applyInlineIgnores({ root: root, sources: new Map() }, [{ ...finding, file: 'source.sh' }])).toStrictEqual([]);
+        expect(
+            applyInlineIgnores({ root: root, sources: new Map() }, [{ ...finding, file: 'source.sh' }]),
+        ).toStrictEqual([]);
     },
 );

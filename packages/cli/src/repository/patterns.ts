@@ -168,7 +168,10 @@ export const INSTALLED_PREFIXES = [
 
 /** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
 export const VALE_STYLES_PREFIX = '.gspot/config/vale/styles/';
-export const VALE_OWN_PREFIXES = ['.gspot/config/vale/styles/gspot/', '.gspot/config/vale/styles/config/vocabularies/gspot/'];
+export const VALE_OWN_PREFIXES = [
+    '.gspot/config/vale/styles/gspot/',
+    '.gspot/config/vale/styles/config/vocabularies/gspot/',
+];
 
-/** Recovery and ownership metadata never enter repository checks or generated proposals. */
-export const LIFECYCLE_PRIVATE_PATH = /(?:^|\/)\.gspot\/(?:state(?:\/|$)|ownership\.json$|writer\.lock$|recovery(?:\/|$))/iu;
+/** Compiled selectors over config-root POSIX paths. */
+export type PathExpressions = { includes: string[]; excludes: string[] };

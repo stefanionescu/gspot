@@ -1,8 +1,8 @@
 // The string files and the asset folders of a project: every string has every locale, and every image set has an image that exists and that code names.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 

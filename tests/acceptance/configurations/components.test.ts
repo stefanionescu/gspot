@@ -4,11 +4,12 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework.
-import type { RunReport } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+
 /** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
 type ComponentShape = {
     check: string;

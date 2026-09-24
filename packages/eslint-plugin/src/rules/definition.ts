@@ -1,6 +1,7 @@
 // The rule creator every rule uses: docs carry summary, why and fix, in plain words, like a check manifest.
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { TSESLint } from '@typescript-eslint/utils';
+import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 const base = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/reference/plugin/${name}/`);
 
@@ -42,3 +43,13 @@ export type RuleDocs = {
     fix: string;
     example: string;
 };
+
+/**
+ * An object with the given properties and nothing else.
+ * @param properties the property schemas
+ * @param required the property names that must be present
+ * @returns the schema
+ */
+export function optionsSchema(properties: Record<string, JSONSchema4>, required: string[] = []): JSONSchema4 {
+    return { type: 'object', properties, additionalProperties: false, ...(required.length > 0 ? { required } : {}) };
+}

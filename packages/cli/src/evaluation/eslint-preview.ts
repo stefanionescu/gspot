@@ -3,8 +3,8 @@ import ts from 'typescript';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { join, resolve } from 'node:path';
-import { mutationPath } from '#cli/filesystem/confined.ts';
-import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
+import { mutationPath } from '#cli/platform/filesystem.ts';
+import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 
 function moduleSource(path: string, text: string): string {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);

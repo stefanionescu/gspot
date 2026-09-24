@@ -5,7 +5,7 @@ import { openSession } from '#cli/run/session.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 
 const policy = `version = 1

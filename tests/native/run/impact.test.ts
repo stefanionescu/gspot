@@ -4,11 +4,11 @@ import { planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Session } from '#cli/types/execution.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };

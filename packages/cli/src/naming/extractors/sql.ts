@@ -1,6 +1,6 @@
+import type { Identifier } from '#cli/naming/extract.ts';
 // Identifiers a SQL file declares: schemas, tables, columns, functions, parameters, indexes, triggers and policies.
-import type { SourceObservations } from '#cli/types/repository.ts';
-import type { Identifier } from '#cli/types/naming.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';

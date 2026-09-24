@@ -2,8 +2,8 @@ import { delimiter, join } from 'node:path';
 import { readFileSync, rmSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/output/schema.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

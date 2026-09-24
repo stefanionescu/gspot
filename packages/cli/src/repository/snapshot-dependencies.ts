@@ -2,12 +2,12 @@ import { z } from 'zod';
 import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { constants, readFileSync, statSync } from 'node:fs';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
+import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 
@@ -179,7 +179,7 @@ export async function copyDependencies(
             assertDependencyReady(snapshot, folder, dependency, pending);
             const source = join(root, folder, dependency);
             const target = join(snapshot, folder, dependency);
-            if ((statSync(target, { throwIfNoEntry: false }) !== undefined))
+            if (statSync(target, { throwIfNoEntry: false }) !== undefined)
                 throw new SelectionError([
                     'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
                 ]);
@@ -187,18 +187,22 @@ export async function copyDependencies(
             await mkdir(target, { mode: 0o700 });
             const copy = pLimit(COPY_CONCURRENCY);
             // Each child has its own destination. Drain every copy before cleanup or link validation.
-            const copied = await Promise.allSettled((await readdir(source)).map((name) => copy(async () => {
-                cancelSignal?.throwIfAborted();
-                await cp(join(source, name), join(target, name), {
-                    recursive: true,
-                    verbatimSymlinks: true,
-                    mode: constants.COPYFILE_FICLONE,
-                    filter: () => {
+            const copied = await Promise.allSettled(
+                (await readdir(source)).map((name) =>
+                    copy(async () => {
                         cancelSignal?.throwIfAborted();
-                        return true;
-                    },
-                });
-            })));
+                        await cp(join(source, name), join(target, name), {
+                            recursive: true,
+                            verbatimSymlinks: true,
+                            mode: constants.COPYFILE_FICLONE,
+                            filter: () => {
+                                cancelSignal?.throwIfAborted();
+                                return true;
+                            },
+                        });
+                    }),
+                ),
+            );
             for (const result of copied) if (result.status === 'rejected') throw result.reason;
             await chmod(target, sourceMode);
             if (dependency === '.venv') {
@@ -407,8 +411,8 @@ function assertDependencyReady(snapshot: string, folder: string, dependency: str
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
     if (
-        !LOCKS.some((lock) => (statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined)) &&
-        !LOCKS.some((lock) => (statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined))
+        !LOCKS.some((lock) => statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
+        !LOCKS.some((lock) => statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined)
     )
         throw new SelectionError([
             'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',

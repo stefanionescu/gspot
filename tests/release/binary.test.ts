@@ -92,7 +92,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const options = { cwd: checkout, timeoutMs: 180_000 };
     const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const built = await runProcess([process.execPath, 'packages/cli/scripts/build.ts'], options);
+    const built = await runProcess([process.execPath, 'packages/cli/release/build.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
     copyFileSync(join(checkout, 'dist', host.binary), executable);
@@ -122,4 +122,29 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
     expect(existsSync(checkout)).toBe(false);
+    const sources = {
+        'task.sh': 'shell_command=1\n',
+        'task.py': 'shell_command = 1\n',
+        'Task.swift': 'let shellCommand = 1\n',
+        'task.js': 'export const shellCommand = 1;\n',
+        'task.ts': 'export const shellCommand: number = 1;\n',
+        'task.tsx': 'export const shellCommand = <div />;\n',
+        'task.sql': 'CREATE TABLE shell_table (id integer);\n',
+    };
+    await createFileTree(consumer, {
+        ...sources,
+        'gspot.toml':
+            'version = 1\nlevel = "all"\nconfigurations = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
+    });
+    const checked = await runProcess([executable, 'check', '--only', 'naming/identifiers', '--json'], {
+        cwd: consumer,
+        timeoutMs: 60_000,
+        env: { NODE_PATH: undefined, NODE_OPTIONS: undefined },
+    });
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = JSON.parse(checked.stdout) as { checks: { status: string; findings: { file: string }[] }[] };
+    expect(report.checks.map((check) => check.status)).toStrictEqual(['fail']);
+    expect(
+        [...new Set(report.checks.flatMap((check) => check.findings.map((finding) => finding.file)))].sort(),
+    ).toStrictEqual(Object.keys(sources).sort());
 }, 360_000);

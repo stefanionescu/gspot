@@ -1,7 +1,7 @@
+import type { CheckOptions } from '#cli/commands/check.ts';
 // The reproduce line per failing check: the same in the hook, in CI and in the terminal.
 
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import type { CheckOptions } from '#cli/types/execution.ts';
 
 /**
  * The command that runs one check alone.

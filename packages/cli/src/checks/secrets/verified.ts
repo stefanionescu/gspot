@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import type { Session } from '#cli/run/session.ts';
 import { runBinary } from '#cli/platform/spawn.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
 import { pushBase } from '#cli/repository/staged.ts';
 import { gitBlobs } from '#cli/repository/snapshot.ts';
-import type { CheckResult } from '#cli/types/reports.ts';
+import { runToolCheck } from '#cli/run/tool-runner.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import type { CheckResult } from '#cli/output/schema.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { Session, PlannedCheck } from '#cli/types/execution.ts';
-import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 /**

@@ -1,8 +1,8 @@
 // The project file against the tree: test plans, sources in no target, references to files that are gone, and symlinks.
 import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import type { TestPlan } from '#cli/checks/xcode/types.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';

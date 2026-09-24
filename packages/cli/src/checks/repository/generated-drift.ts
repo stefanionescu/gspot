@@ -1,7 +1,7 @@
-import type { Finding } from '#cli/types/reports.ts';
-import type { DriftEntry } from '#cli/types/generation.ts';
+import type { DriftEntry } from '#cli/emit/drift.ts';
+import type { Finding } from '#cli/output/schema.ts';
 // Does every generated file match its render? Runs apply --dry-run in memory.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 
 const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',

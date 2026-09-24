@@ -1,7 +1,6 @@
 // Two or more entries in one directory sharing a name prefix, at or above the threshold.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema, positiveInteger, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 import {
     isIndexFile,
@@ -42,10 +41,10 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
         },
         schema: [
             optionsSchema({
-                threshold: positiveInteger,
-                scope: stringList,
-                ignorePaths: stringList,
-                allow: stringList,
+                threshold: { type: 'integer', minimum: 1 },
+                scope: { type: 'array', items: { type: 'string' } },
+                ignorePaths: { type: 'array', items: { type: 'string' } },
+                allow: { type: 'array', items: { type: 'string' } },
             }),
         ],
         messages: {

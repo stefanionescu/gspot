@@ -1,4 +1,4 @@
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { trivialFile } from '#cli/structure/statements.ts';
 

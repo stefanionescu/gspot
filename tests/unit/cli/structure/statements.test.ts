@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { policySchema } from '#cli/schemas/policy.ts';
+import { policySchema } from '#cli/policy/schema.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { functionsOf as swiftFunctions } from '#cli/structure/swift/sources.ts';
 import { executableStatements, trivialFile } from '#cli/structure/statements.ts';

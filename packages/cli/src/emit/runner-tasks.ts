@@ -2,16 +2,15 @@ import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { headerFor } from '#cli/emit/templates.ts';
-import { PACKAGE_LIFECYCLE } from '#cli/schemas/runners.ts';
+import { PACKAGE_LIFECYCLE } from '#cli/policy/runner.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { RunnerTaskNames } from '#cli/schemas/runners.ts';
+import type { RunnerTaskNames } from '#cli/policy/runner.ts';
 // Mise tool pins and task definitions; npm tools belong to the isolated package project.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { MISE_BACKENDS, UV_INSTALLER } from '#cli/tools/installers.ts';
-import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
-import type { Manifest, ToolPin, InstallerPin } from '#cli/types/configurations.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/emit/targets.ts';
+import type { Manifest, ToolPin, InstallerPin } from '#cli/configurations/read-manifests.ts';
+import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/tool-installation.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;
@@ -160,21 +159,6 @@ export function misePin(tool: ToolPin): InstallerPin | undefined {
 }
 
 /**
- * Every distinct tool pin across the selection, sorted by name.
- * @param manifests the selected manifests
- * @returns the pins
- */
-export function collectPins(manifests: Manifest[]): ToolPin[] {
-    const pins = new Map<string, ToolPin>();
-    for (const manifest of manifests)
-        for (const tool of manifest.tools) if (!pins.has(tool.name)) pins.set(tool.name, tool);
-    return pins
-        .values()
-        .toArray()
-        .toSorted((a, b) => a.name.localeCompare(b.name));
-}
-
-/**
  * Select only the tools installed by mise, excluding npm dependencies of the private project.
  * @param manifests the selected manifests
  * @param isPackagePinned whether npm tools belong to the isolated package project
@@ -224,21 +208,6 @@ export function miseTasks(
             `run = ${JSON.stringify(task.run)}`,
         );
     return { path: MISE_CONFIG_PATH, content: `${lines.join('\n')}\n`, readOnly: true, kind: 'runner' };
-}
-
-/**
- * The devDependencies an npm-family task runner pins.
- * @param manifests the selected manifests
- * @param runner the task runner; under mise, tools mise can pin stay out
- * @returns package name to version, sorted
- */
-export function npmPins(manifests: Manifest[], runner = 'npm'): Record<string, string> {
-    const pins: [string, string][] = [];
-    for (const tool of collectPins(manifests)) {
-        const installation = privateToolInstallation(tool, runner);
-        if (installation?.kind === 'npm') pins.push([installation.name, installation.version]);
-    }
-    return Object.fromEntries(pins.toSorted(([a], [b]) => a.localeCompare(b)));
 }
 
 /**

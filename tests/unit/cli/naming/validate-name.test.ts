@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { compileTerms } from '#cli/naming/match.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
+import type { Identifier } from '#cli/naming/extract.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { EffectivePolicy, Identifier } from '#cli/types/naming.ts';
+import type { EffectivePolicy } from '#cli/naming/policy.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];
@@ -115,7 +116,9 @@ describe('nameProblems', () => {
 
     test('handle leads a name only in a React file', () => {
         expect(nameProblems(identifier('handleSubmit'), plain)[0]?.rule).toBe('callback-verb');
-        expect(nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false })).toStrictEqual([]);
+        expect(
+            nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false }),
+        ).toStrictEqual([]);
     });
 });
 

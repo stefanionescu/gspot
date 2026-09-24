@@ -1,18 +1,10 @@
 import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import type { Policy, Reasoned, ToolTable } from '#cli/policy/normalize.ts';
 // The checks on a normalized policy that the schema cannot state: reasons present, selectors precise, scopes real.
-import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
-
-import type {
-    EditorconfigAdoption,
-    EslintAdoption,
-    PathSegment,
-    Policy,
-    PolicyProblem,
-    Reasoned,
-    ToolTable,
-} from '#cli/types/policy.ts';
+import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { EditorconfigAdoption, EslintAdoption } from '#cli/policy/schema.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -293,3 +285,9 @@ export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
     files.close();
     return [...missing, ...duplicates, ...configuration];
 }
+
+/** An authored policy value and the semantic problem it caused. */
+export type PolicyProblem = { path: PathSegment[]; message: string };
+
+/** One step of a zod issue path. */
+export type PathSegment = string | number;

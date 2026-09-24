@@ -3,20 +3,20 @@ import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 import { locateTool } from '#cli/tools/tool-probe.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
-import type { SpawnResult } from '#cli/types/platform.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { MergedView, Policy } from '#cli/types/policy.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import type { ProseRoute, ValeAlert } from '#cli/types/prose.ts';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -289,3 +289,11 @@ export async function valeFindings(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
+
+// Type aliases of the prose engine.
+
+/** How one file reaches Vale. */
+export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: string };
+
+/** One Vale alert, parsed. */
+export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };

@@ -10,8 +10,8 @@ import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
 import { existsSync, readFileSync, symlinkSync, chmodSync, writeFileSync, statSync, rmSync } from 'node:fs';
@@ -522,7 +522,7 @@ test.each(['before', 'after'] as const)(
         const hook = join(location.absolute, 'pre-push');
         const original = '#!/bin/sh\nexit 0\n';
         writeFileSync(hook, original, { mode: 0o751 });
-        const boundary = fileURLToPath(new URL('../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
+        const boundary = fileURLToPath(new URL('../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
         const installer = fileURLToPath(new URL('../../../packages/cli/src/commands/install.ts', import.meta.url));
         const child = `
         import { mock } from 'bun:test';
@@ -611,10 +611,8 @@ test('uninstall recovers after restoring an original hook and before removing it
     const original = '#!/bin/sh\nexit 0\n';
     writeFileSync(hook, original, { mode: 0o751 });
     expect((await installCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
-    const boundary = fileURLToPath(new URL('../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
-    const uninstall = fileURLToPath(
-        new URL('../../../packages/cli/src/commands/uninstall/command.ts', import.meta.url),
-    );
+    const boundary = fileURLToPath(new URL('../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
+    const uninstall = fileURLToPath(new URL('../../../packages/cli/src/commands/uninstall.ts', import.meta.url));
     const child = `
         import { mock } from 'bun:test';
         const boundary = await import(${JSON.stringify(boundary)});

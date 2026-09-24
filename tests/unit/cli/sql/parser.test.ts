@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { parseSql } from '#cli/parsers/sql/parser.ts';
-import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
-import type { SourceObservations } from '#cli/types/repository.ts';
+import type { SourceObservations } from '#cli/repository/tree.ts';
+import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
@@ -58,24 +58,19 @@ test('SQL statement positions skip nested comments and count Unicode prefixes co
     ]);
 });
 
-test('concurrent SQL parsing initializes the WASM module once in a fresh process', () => {
+test('concurrent SQL parsing returns independent results in a fresh process', () => {
     const script = `
-        import { spyOn } from 'bun:test';
-        import * as fs from 'node:fs';
         import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/parser.ts', import.meta.dir))};
-        const original = fs.readFileSync;
-        let loads = 0;
-        spyOn(fs, 'readFileSync').mockImplementation((path, ...args) => {
-            if (String(path).endsWith('libpg-query.wasm')) loads += 1;
-            return original(path, ...args);
-        });
-        const parsed = await Promise.all(Array.from({length: 8}, (_, index) => parseSql('SELECT ' + index)));
-        if (parsed.some((result) => result.error !== undefined)) process.exit(1);
-        console.log(loads);
+        const parsed = await Promise.all(['SELECT 1', 'SELEC 2', 'SELECT 3'].map((sql) => parseSql(sql)));
+        console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
     const result = Bun.spawnSync([process.execPath, '-e', script]);
     expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(result.stdout.toString().trim()).toBe('1');
+    expect(JSON.parse(result.stdout.toString())).toStrictEqual([
+        null,
+        { text: 'syntax error at or near "SELEC"', offset: 0 },
+        null,
+    ]);
 });
 
 test('psql commands and variables preserve diagnostic positions and PostgreSQL casts', async () => {

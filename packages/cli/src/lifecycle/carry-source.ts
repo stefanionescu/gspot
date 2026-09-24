@@ -2,12 +2,11 @@ import JSON5 from 'json5';
 import { parse as parseYaml } from 'yaml';
 import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import type { TomlTable } from '#cli/types/policy.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
-import type { CarrySource } from '#cli/types/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
@@ -79,3 +78,5 @@ export function parseCarrySource(
         throw new Error('Configuration must contain a settings table.');
     return { ...source, parsed: parsed as TomlTable };
 }
+
+export type CarrySource = { text: string; parsed: TomlTable; original: FileSnapshot };

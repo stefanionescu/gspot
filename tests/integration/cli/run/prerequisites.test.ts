@@ -5,6 +5,7 @@ import { planRun } from '#cli/run/plan.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { resolveCheck } from '#cli/run/engines.ts';
 
 const POLICY =
     'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
@@ -87,7 +88,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     ).flat();
     expect(planned).toHaveLength(consumers.size + 1);
     for (const check of planned) {
-        const result = await check.run(session, check);
+        const result = await resolveCheck(check.spec)(session, check);
         if (check.check === 'static-site/build') {
             expect(result.status).toBe('fail');
             expect(result.findings[0]?.message).toContain('Planted build failure');
@@ -103,6 +104,6 @@ test('a failed site build skips every output consumer and a new session rebuilds
     const next = await openSession(sandbox.path);
     next.resources = resources;
     const [build] = await planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
-    const rebuilt = await build!.run(next, build!);
+    const rebuilt = await resolveCheck(build!.spec)(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

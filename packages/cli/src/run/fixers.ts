@@ -1,18 +1,35 @@
 import { tmpdir } from 'node:os';
 import { createTwoFilesPatch } from 'diff';
+import type { Session } from '#cli/run/session.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
+import type { PlannedCheck } from '#cli/run/plan.ts';
+import { prepareCommand } from '#cli/run/tool-runner.ts';
+import type { FixOrder } from '#cli/configurations/schema.ts';
 import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
+import type { PreparedCommand } from '#cli/run/tool-runner.ts';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import type { ToolPin } from '#cli/configurations/read-manifests.ts';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
-import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 import { executionFailure, hasToolError } from '#cli/run/broken-tool.ts';
-import { prepareCommand, runToolCommand, toolDeadlineSeconds } from '#cli/run/tool-runner.ts';
-import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution.ts';
+import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 
-import { constants, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import {
+    constants,
+    cpSync,
+    mkdirSync,
+    mkdtempSync,
+    readdirSync,
+    readFileSync,
+    realpathSync,
+    rmSync,
+    statSync,
+    symlinkSync,
+    unlinkSync,
+    writeFileSync,
+} from 'node:fs';
 
 const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
 
@@ -273,7 +290,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
                     }
                     const destination = relocated(original);
                     unlinkSync(target);
-                    if (destination !== undefined && (statSync(destination, { throwIfNoEntry: false }) !== undefined)) {
+                    if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined) {
                         symlinkSync(relative(dirname(target), destination), target, 'dir');
                     } else {
                         copies.set(original, target);
@@ -290,7 +307,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         for (const { source, target } of fileLinks) {
             const destination = relocated(source);
             unlinkSync(target);
-            if (destination !== undefined && (statSync(destination, { throwIfNoEntry: false }) !== undefined))
+            if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined)
                 symlinkSync(relative(dirname(target), destination), target, 'file');
             else cpSync(source, target);
         }
@@ -302,3 +319,10 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         files.close();
     }
 }
+
+export type FixResult = { check: string; changed: string[] } & (
+    | { status: 'changed' | 'unchanged' | 'skipped' }
+    | { status: 'failed'; note: string }
+);
+
+export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };

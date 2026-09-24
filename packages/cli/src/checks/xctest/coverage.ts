@@ -1,9 +1,9 @@
 import { z } from 'zod';
 // Line coverage of the targets the policy names, from one xcodebuild test run.
 import { join } from 'node:path';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';

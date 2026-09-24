@@ -1,6 +1,8 @@
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
+// The plugin object: rules and configs. The package entry; the flat config registers it under the key `gspot`.
+import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
@@ -22,12 +24,10 @@ import { noHarnessBarrelImports } from '#plugin/rules/no-harness-barrel-imports.
 import { noReexportsOutsideIndex } from '#plugin/rules/no-reexports-outside-index.ts';
 import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
 import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
-// The plugin object: rules and configs. The package entry; the flat config registers it under the key `gspot`.
-import { envAccessOwner as environmentAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-before-imports.ts';
 
 const rules = {
-    'env-access-owner': environmentAccessOwner,
+    'env-access-owner': envAccessOwner,
     'header-comments-before-imports': headerCommentsBeforeImports,
     'import-direction': importDirection,
     'import-layout': importLayout,

@@ -1,11 +1,11 @@
+// The integrity engine: one function per check, chosen by `analysis =` in the manifest.
+import type { Engine } from '#cli/run/engines.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';
-// The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { Engine } from '#cli/types/execution.ts';
+import { localeFiles } from '#cli/checks/locales.ts';
 import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
-import { localeFiles } from '#cli/checks/i18n/locales.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { docsHeadings } from '#cli/checks/docs/headings.ts';
 import { htmlCopy, htmlScripts } from '#cli/checks/html.ts';
@@ -14,9 +14,9 @@ import { envFiles } from '#cli/checks/security/env/files.ts';
 import { nginxTest } from '#cli/checks/nginx/config-test.ts';
 import { routesTested } from '#cli/checks/express/routes.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { testCoverage } from '#cli/checks/xctest/coverage.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 import { dockerignore } from '#cli/checks/docker/ignore-file.ts';

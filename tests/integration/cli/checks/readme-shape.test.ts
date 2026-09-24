@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { MergedView } from '#cli/types/policy.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
+import type { MergedView } from '#cli/policy/merge.ts';
 import { docsHeadings } from '#cli/checks/docs/headings.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 
 function input(root: string, paths: string[], docs: Record<string, unknown> = {}): EngineInput {

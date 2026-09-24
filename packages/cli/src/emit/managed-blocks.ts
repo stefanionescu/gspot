@@ -1,10 +1,14 @@
-import { PRIVATE_PATHS } from '#cli/platform/layout.ts';
+import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 // Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
-import type { BlockStyle } from '#cli/types/generation.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
-import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_START } from '#cli/emit/markers.ts';
+const MANAGED_BLOCK_START = '<!-- >>> gspot managed >>> -->';
+const MANAGED_BLOCK_END = '<!-- <<< gspot managed <<< -->';
+
+const HASH_BLOCK_START = '# >>> gspot managed >>>';
+const HASH_BLOCK_END = '# <<< gspot managed <<<';
 
 /**
  * Locate one complete block, refusing ambiguous or malformed markers.
@@ -78,3 +82,5 @@ export function gitignoreBlock(
 ): string {
     return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }
+
+export type BlockStyle = 'markdown' | 'hash';

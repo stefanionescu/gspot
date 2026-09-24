@@ -1,5 +1,6 @@
 // Every shell function announces itself in a comment block above it. Searched: shellcheck, shfmt, bashdoc; none requires it.
-import type { Analysis, ScriptFunction } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
+import type { ScriptFunction } from '#cli/structure/parser.ts';
 import { DOC_SECTIONS, ENTRY_FUNCTIONS, VAGUE_SUMMARY_WORDS } from '#cli/structure/patterns.ts';
 
 const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;

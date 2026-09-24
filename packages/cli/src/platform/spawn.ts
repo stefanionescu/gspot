@@ -4,7 +4,6 @@ import { execa, execaSync, type Result } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { delimiter, dirname, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/types/platform.ts';
 
 const MISSING_CODE = 127;
 const FAILED_CODE = 1;
@@ -222,3 +221,29 @@ export async function runBinary(command: string[], options: AsyncSpawnOptions): 
         await supervision.dispose(executionFailure);
     }
 }
+
+export type SpawnResult = {
+    code: number;
+    stdout: string;
+    stderr: string;
+    missing: boolean;
+    duration: number;
+    isTimedOut?: boolean;
+    isCanceled?: boolean;
+    isErrored?: boolean;
+};
+
+export type SpawnOptions = {
+    cwd: string;
+    env?: Record<string, string | undefined>;
+    stdin?: string;
+    timeoutMs?: number;
+};
+
+export type AsyncSpawnOptions = SpawnOptions & {
+    cancelSignal?: AbortSignal;
+    onStdout?: (chunk: string) => void;
+    onStderr?: (chunk: string) => void;
+};
+
+export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };

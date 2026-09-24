@@ -8,7 +8,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
@@ -216,7 +216,18 @@ test('uv is an installer rather than a task runner, and Python initialization pr
     for (const runner of ['mise', 'npm', 'bun', 'pnpm', 'yarn']) expect(rejected.stderr).toContain(runner);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);
-    const accepted = await run(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'python', '--no-runner', '--no-install', '--no-ci', '--no-hooks', '--no-rules']);
+    const accepted = await run(sandbox.path, [
+        'init',
+        '--yes',
+        '--dry-run',
+        '--configurations',
+        'python',
+        '--no-runner',
+        '--no-install',
+        '--no-ci',
+        '--no-hooks',
+        '--no-rules',
+    ]);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);

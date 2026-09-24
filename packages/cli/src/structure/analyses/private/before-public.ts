@@ -1,5 +1,5 @@
 // Private shell functions above the public ones, main last. Searched: shfmt, shellcheck; neither orders declarations.
-import type { Analysis } from '#cli/types/structure.ts';
+import type { Analysis } from '#cli/structure/engine.ts';
 
 /**
  * One finding per private function below a public one, and one when main is not the last function.

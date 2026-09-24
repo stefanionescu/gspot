@@ -1,8 +1,7 @@
 // A relative import that crosses a sibling top-level folder; use the alias.
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
-import { aliasMap, optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
@@ -42,7 +41,12 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
             why: 'A path of ../../ ties the importer to the tree shape; the alias names the folder and survives a move.',
             fix: 'Keep relative imports within a top-level folder. gspot check --fix uses a configured alias when one exists.',
         },
-        schema: [optionsSchema({ scope: stringList, aliases: aliasMap })],
+        schema: [
+            optionsSchema({
+                scope: { type: 'array', items: { type: 'string' } },
+                aliases: { type: 'object', additionalProperties: { type: 'string' } },
+            }),
+        ],
         messages: {
             cross: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
             crossNoAlias: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',

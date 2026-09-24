@@ -3,8 +3,8 @@ import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { ConfigurationOutput } from '#cli/types/generation.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/emit/targets.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
 const PATH = '.pre-commit-config.yaml';

@@ -5,8 +5,8 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
-import { eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
 import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {

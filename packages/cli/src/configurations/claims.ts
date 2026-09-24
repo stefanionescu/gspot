@@ -1,9 +1,11 @@
 // Which selected configuration claims which file, per scope.
 import picomatch from 'picomatch';
+import type { Claims } from '#cli/configurations/schema.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { Claims, Manifest } from '#cli/types/configurations.ts';
+import type { PathExpressions } from '#cli/repository/patterns.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
-import type { PathExpressions, TrackedFile } from '#cli/types/repository.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 const GLOB_CHARS = /[*?{]/u;
 

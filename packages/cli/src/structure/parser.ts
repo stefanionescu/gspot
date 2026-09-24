@@ -1,7 +1,6 @@
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
-import type { EngineInput } from '#cli/types/execution.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { ScriptFunction } from '#cli/types/structure.ts';
 import { executableStatements } from '#cli/structure/statements.ts';
 
 /**
@@ -10,7 +9,10 @@ import { executableStatements } from '#cli/structure/statements.ts';
  * @param context optional execution observations and their resource owner
  * @returns the functions with one-based start and end lines and the lines between the braces
  */
-export async function scriptFunctions(text: string, context?: Pick<EngineInput, 'observations' | 'resources'>): Promise<ScriptFunction[]> {
+export async function scriptFunctions(
+    text: string,
+    context?: Pick<EngineInput, 'observations' | 'resources'>,
+): Promise<ScriptFunction[]> {
     const tree = await parseSource('bash', text, context);
     if (tree === null) throw new Error('The source parser returned no tree.');
     const lines = text.split('\n');
@@ -44,3 +46,25 @@ export async function scriptFunctions(text: string, context?: Pick<EngineInput, 
 export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions.find((entry) => entry.start <= line && line <= entry.end);
 }
+
+/** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
+export type ScriptFunction = { name: string; start: number; end: number; body: string[]; statements: number };
+
+/** One shell script the engine reads. */
+export type ScriptFile = {
+    path: string;
+    text: string;
+    lines: string[];
+    functions: ScriptFunction[];
+    isExecutable: boolean;
+    /** Identifier tokens outside declaration lines, by name, with the lines they appear on. */
+    references: Map<string, number[]>;
+    /** Names assigned at the top level, outside every function. */
+    assignments: Set<string>;
+};
+
+/** The shell scripts of one scope, with the function owners across them. */
+export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
+
+/** How an analysis reports one problem in one file. */
+export type ScriptReport = (line: number, rule: string, message: string) => void;

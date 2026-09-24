@@ -1,32 +1,16 @@
-import { checkActions } from '#cli/checks/actions.ts';
 import { toolPin } from '#cli/tools/tool-probe.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
-// The check graph for a run: stage, scope, file sets, requirements, skips.
-import type { RepositoryCheck } from '#cli/types/policy.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
+import type { RunReport } from '#cli/output/schema.ts';
 import { configurationName } from '#cli/run/scope-paths.ts';
 import { prettierInputs } from '#cli/run/prettier-inputs.ts';
-import { checkSwiftlint } from '#cli/structure/swift/lint.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
-import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
-import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
-import { checkCommitMessages } from '#cli/checks/commits/messages.ts';
-import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
+// The check graph for a run: stage, scope, file sets, requirements, skips.
+import type { RepositoryCheck } from '#cli/policy/normalize.ts';
+import type { ScopeSelection, Session } from '#cli/run/session.ts';
+import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
 import { checkState, waitingSetting } from '#cli/policy/check-state.ts';
-import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { Manifest, ToolPin } from '#cli/configurations/read-manifests.ts';
 import { claimedByClaims, isInScope, pathMatcher } from '#cli/configurations/claims.ts';
-
-import type {
-    CheckRunner,
-    PlanEntry,
-    PlanContext,
-    PlanOptions,
-    PlannedCheck,
-    ScopeSelection,
-    Session,
-    StageFilter,
-} from '#cli/types/execution.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 
@@ -122,15 +106,10 @@ function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set
     return [...entries, ...own];
 }
 
-function isStageOk(spec: CheckSpec, options: PlanOptions): boolean {
-    if (spec.stage === 'message') return options.stage === 'message';
-    const isOnlyOverride = options.only !== undefined && options.stage === 'all';
-    return isOnlyOverride || isStageWanted(options.stage, spec.stage);
-}
-
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     if (options.only !== undefined && !options.only.includes(spec.name)) return false;
-    return isStageOk(spec, options);
+    if (spec.stage === 'message') return options.stage === 'message';
+    return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, spec.stage);
 }
 
 function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
@@ -245,31 +224,6 @@ function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: strin
     return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
 }
 
-function runnerFor(spec: CheckSpec): CheckRunner {
-    if (spec.engine !== undefined) {
-        const engine = resolveEngine(spec);
-        return (session, planned, staged) => runEngineCheck(session, engine, planned, staged);
-    }
-    if (spec.analysis === 'verified-secrets') return checkVerifiedSecrets;
-    if (spec.analysis === 'gitleaks-history') return checkSecretHistory;
-    if (spec.analysis === 'commit-messages') return checkCommitMessages;
-    if (spec.analysis === 'typescript') return checkTypescript;
-    if (spec.analysis === 'javascript') return checkJavascript;
-    if (spec.analysis === 'swiftlint') return checkSwiftlint;
-    if (spec.analysis === 'actions') return checkActions;
-    if (spec.reported_by !== undefined)
-        return async (_session, planned) => ({
-            check: spec.name,
-            scope: planned.scope.scope.path,
-            status: 'skipped',
-            note: `its findings come from ${spec.reported_by}`,
-            files: 0,
-            duration: 0,
-            findings: [],
-        });
-    return (session, planned) => runToolCheck(session, planned);
-}
-
 function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.spec.runs !== 'per-file-list' || check.files.length === 0) return check;
     const ignored = check.scope.view
@@ -288,7 +242,6 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
     const check: PlannedCheck = {
-        run: runnerFor(spec),
         check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
         spec,
@@ -426,3 +379,46 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
     }
     return checks;
 }
+
+export type StageFilter = 'all' | 'commit' | 'push' | 'manual' | 'message';
+
+export type PlanOptions = {
+    commits?: string[];
+    historyComplete?: boolean;
+    stage: StageFilter;
+    staged?: string[];
+    changed?: string[];
+    only?: string[];
+    /** Root-relative paths selected by positional file and directory arguments. */
+    paths?: string[];
+    skips: string[];
+    messageFile?: string;
+};
+
+export type PlannedCheck = {
+    commits?: string[];
+    check: string;
+    scope: ScopeSelection;
+    spec: CheckSpec;
+    manifest?: Manifest;
+    files: TrackedFile[];
+    tool?: ToolPin;
+    skip?: { source: RunReport['skips'][number]['source']; note: string };
+    projectWide: boolean;
+    /** Changed paths absent from the readable tree that still trigger a project check. */
+    triggerPaths: string[];
+    messageFile?: string;
+};
+
+/** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
+export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
+
+/** What planning one scope needs. */
+export type PlanContext = {
+    session: Session;
+    scope: ScopeSelection;
+    options: PlanOptions;
+    platform: string;
+    narrow: Set<string> | undefined;
+    children: string[];
+};

@@ -23,9 +23,8 @@
         "../../../docs/**/coverage/**",
         "../../../docs/**/.build/**",
         "../../../docs/**/DerivedData/**",
-        "../../../docs/packages/cli/schemas/gspot.schema.json",
-        "../../../docs/packages/cli/grammars/swift.wasm",
-        "../../../docs/packages/cli/grammars/swift.LICENSE",
-        "../../../docs/packages/cli/scripts/notices.json"
+        "../../../docs/packages/cli/vendor/swift.wasm",
+        "../../../docs/packages/cli/vendor/swift.LICENSE",
+        "../../../docs/packages/cli/vendor/notices.json"
     ]
 }

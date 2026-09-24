@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 
 const KEYS = new Set([
     'npmRegistryServer',

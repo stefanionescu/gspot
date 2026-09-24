@@ -1,12 +1,13 @@
 import { parseBuffer } from 'editorconfig';
 import { basename, dirname } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import type { CarrySource } from '#cli/lifecycle/carry-source.ts';
 import { parseCarrySource } from '#cli/lifecycle/carry-source.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { formatRequest, formatResponse } from '#cli/schemas/evaluation.ts';
-import type { CarrySource, CarriedConfiguration, CarriedFormatter } from '#cli/types/ownership.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
+import type { CarriedConfiguration, CarriedFormatter } from '#cli/lifecycle/carry.ts';
 
 /**
  * Convert observed formatter and EditorConfig settings before proposing retirement.

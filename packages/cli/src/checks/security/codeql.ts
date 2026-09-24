@@ -3,15 +3,15 @@ import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { toolPin } from '#cli/tools/tool-probe.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 // CodeQL on request: one database and one analysis per language, with the accepted results taken out by rule and path.
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import { mutationTarget } from '#cli/filesystem/confined.ts';
+import { mutationTarget } from '#cli/platform/filesystem.ts';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };
 

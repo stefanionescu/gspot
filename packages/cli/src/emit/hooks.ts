@@ -1,10 +1,11 @@
-import { HOOK_HEADER } from '#cli/emit/markers.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/emit/targets.ts';
 import { currentBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
-import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/types/generation.ts';
+
+const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
 
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
@@ -234,3 +235,7 @@ export function lefthookConfiguration(
         ],
     };
 }
+
+export type HookName = 'pre-commit' | 'pre-push' | 'commit-msg';
+
+export type LefthookBlock = Record<string, { commands: Record<string, unknown> }>;

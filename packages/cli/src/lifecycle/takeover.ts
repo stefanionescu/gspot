@@ -1,14 +1,15 @@
 import { dirname } from 'node:path';
 import { carryFrom } from '#cli/lifecycle/carry.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
 import { collectEslint } from '#cli/lifecycle/carry-eslint.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { CarriedConfiguration } from '#cli/lifecycle/carry.ts';
 import { collectFormatting } from '#cli/lifecycle/carry-formatting.ts';
+import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 // Observe configuration carryover before retiring supported inputs through the lifecycle owner.
 import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import type { CarriedConfiguration, TakeoverPlan, TakeoverRemovalResult } from '#cli/types/ownership.ts';
 
 function sortedUnique(items: string[]): string[] {
     return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
@@ -195,3 +196,18 @@ export function unownedTools(tooling: ExistingTooling, selected: Set<string>): s
         tooling.configs.filter((config) => !isOwned(config.tool, selected)).map((config) => config.tool),
     );
 }
+
+export type TakeoverPlan = {
+    profile?: { name: string; digest: string; selection: string; detected: string[] };
+    configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
+    write: { path: string; note: string }[];
+    remove: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
+    carried: { from: string; count: number; into: string }[];
+    change: { path: string; note: string }[];
+    noLongerRuns: { path: string; note: string }[];
+    ignores: { check: string; rule?: string; reason: string }[];
+};
+
+export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };

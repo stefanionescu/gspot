@@ -2,9 +2,22 @@
 import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { toPosix } from '#cli/platform/paths.ts';
 import { readFileSync, statSync } from 'node:fs';
-import { GRAMMAR_SOURCES } from '#cli/parsers/grammars.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+
+const GRAMMAR_SOURCES: Record<string, string> = {
+    'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',
+    'css.wasm': 'tree-sitter-css/tree-sitter-css.wasm',
+    'html.wasm': 'tree-sitter-html/tree-sitter-html.wasm',
+    'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',
+    'python.wasm': 'tree-sitter-python/tree-sitter-python.wasm',
+    'tsx.wasm': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
+    'typescript.wasm': 'tree-sitter-typescript/tree-sitter-typescript.wasm',
+    'web-tree-sitter.wasm': 'web-tree-sitter/web-tree-sitter.wasm',
+    'libpg-query.wasm': 'libpg-query/wasm/libpg-query.wasm',
+};
+
+export const GRAMMAR_NAMES = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'];
 
 type EmbeddedIndex = Record<string, string>;
 
@@ -18,7 +31,11 @@ const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: stri
 function findRepoRoot(): string {
     let dir = dirname(fileURLToPath(new URL(import.meta.url)));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
-        if ((statSync(join(dir, 'packages/cli/configurations'), { throwIfNoEntry: false }) !== undefined) && (statSync(join(dir, 'packages'), { throwIfNoEntry: false }) !== undefined)) return dir;
+        if (
+            statSync(join(dir, 'packages/cli/configurations'), { throwIfNoEntry: false }) !== undefined &&
+            statSync(join(dir, 'packages'), { throwIfNoEntry: false }) !== undefined
+        )
+            return dir;
         dir = dirname(dir);
     }
     throw new Error('The configurations folder is not beside the source tree.');
@@ -71,16 +88,18 @@ export function readAsset(path: string): string {
  * @returns the WASM asset path
  */
 export function grammarPath(name: string): string {
+    if (!GRAMMAR_NAMES.includes(name)) throw new Error(`No grammar is called ${name}.`);
     const index = embeddedIndex();
-    const embedded = index?.[`grammars/${name}`];
-    if (embedded !== undefined) return embedded;
+    if (index !== undefined) {
+        const embedded = index[`grammars/${name}`];
+        if (embedded === undefined) throw new Error(`No embedded grammar is called ${name}.`);
+        return embedded;
+    }
     const root = developmentRoot();
-    const vendored = join(root, 'packages', 'cli', 'grammars', name);
-    const source = GRAMMAR_SOURCES[name];
-    if (source === undefined && (statSync(vendored, { throwIfNoEntry: false }) !== undefined)) return vendored;
-    if (source === undefined) throw new Error(`No grammar is called ${name}.`);
+    if (name === 'swift.wasm') return join(root, 'packages', 'cli', 'vendor', name);
+    const source = GRAMMAR_SOURCES[name]!;
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
-    const found = candidates.find((candidate) => (statSync(candidate, { throwIfNoEntry: false }) !== undefined));
+    const found = candidates.find((candidate) => statSync(candidate, { throwIfNoEntry: false }) !== undefined);
     if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);
     return found;
 }

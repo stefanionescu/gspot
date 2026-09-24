@@ -1,7 +1,6 @@
-import { createRule } from '#plugin/rules/definition.ts';
-import { optionsSchema } from '#plugin/rules/options.ts';
 // Any re-export in application source when the reexports setting is none.
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
+import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
 
 export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'local'>({
     name: 'no-reexports',

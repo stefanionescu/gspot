@@ -255,7 +255,7 @@ the project license from distribution output. Platform packages also include `NO
 inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
 The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
 lives beside the build entry point; pinned upstream supplements and provenance live in
-`packages/cli/scripts/notices.json`. Retain upstream text until installed dependencies supply the required
+`packages/cli/vendor/notices.json`. Retain upstream text until installed dependencies supply the required
 material. Include the Bun runtime and vendored Swift grammar provenance. A dependency-tree
 scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
 

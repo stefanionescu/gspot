@@ -1,4 +1,4 @@
-import type { CoverageReport } from '#cli/types/reports.ts';
+import type { CoverageReport } from '#cli/commands/doctor/report.ts';
 
 /**
  * Shared source-ending coverage rows for doctor and the configuration listing.

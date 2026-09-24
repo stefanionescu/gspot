@@ -1,6 +1,6 @@
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 /**

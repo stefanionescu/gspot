@@ -1,11 +1,11 @@
 import { rmSync } from 'node:fs';
-import type { Finding } from '#cli/types/reports.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 // The build of a Swift scope, the analyzer over its log, and Periphery over the project.
 import { join, relative as relativePath } from 'node:path';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import type { ConfinedRoot } from '#cli/types/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
 

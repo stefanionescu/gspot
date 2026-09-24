@@ -1,9 +1,9 @@
 // HTML files read through the embedded grammar: no inline script or handler, and templates that hold placeholders in place of copy.
 import type { Node } from 'web-tree-sitter';
-import type { Finding } from '#cli/types/reports.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { Finding } from '#cli/output/schema.ts';
+import type { EngineInput } from '#cli/run/engines.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 
 type MarkupProblem = { node: Node; rule: string; text: string };
@@ -119,7 +119,11 @@ async function findings(
 ): Promise<Finding[]> {
     const found: Finding[] = [];
     for (const path of paths) {
-        const tree = await parseSource('html', readSource(input.root, path, input.observations).toString('utf8'), input);
+        const tree = await parseSource(
+            'html',
+            readSource(input.root, path, input.observations).toString('utf8'),
+            input,
+        );
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const problem of read(tree.rootNode))

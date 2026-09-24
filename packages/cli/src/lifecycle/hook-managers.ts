@@ -3,15 +3,14 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
+import type { Session } from '#cli/run/session.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { probeTool } from '#cli/tools/tool-probe.ts';
-import type { Session } from '#cli/types/execution.ts';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
-import type { PreparedHook } from '#cli/types/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { hookPrefix, huskyLines, huskyReady, lefthookCommand, lefthookConfiguration } from '#cli/emit/hooks.ts';
@@ -319,3 +318,5 @@ export async function installHookManager(session: Session): Promise<string> {
         rmSync(work, { recursive: true, force: true });
     }
 }
+
+export type PreparedHook = { generated: string; installed: string };

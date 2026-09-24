@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/schemas/reports.ts';
+import { reportSchema } from '#cli/output/schema.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
@@ -65,7 +65,9 @@ test.each(['recommended', 'all'])(
         await Bun.write(join(sandbox.path, 'app/math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
+            [],
+        );
         expect(readFileSync(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
     },
     PLANTED_TIMEOUT_MS * 2,
@@ -87,7 +89,9 @@ test.each(['recommended', 'all'])(
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
+        expect(
+            reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings),
+        ).toStrictEqual([
             expect.objectContaining({ rule: 'coverage-lines' }),
             expect.objectContaining({
                 check: 'jest/coverage',
@@ -98,7 +102,9 @@ test.each(['recommended', 'all'])(
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
+            [],
+        );
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected.replace('toBe(6)', 'toBe(7)'));
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);

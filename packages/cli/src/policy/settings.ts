@@ -2,22 +2,11 @@ import { parseShell } from '@yarnpkg/parsers';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
+import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/settings.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import { rootSettingSchemas, integrationSettingSchemas } from '#cli/schemas/policy.ts';
-
-import type {
-    WrittenValue,
-    PolicyLayer,
-    SettingState,
-    SpecMatch,
-    NamingCategoryTable,
-    NamingLanguageTable,
-    Policy,
-    Reasoned,
-    ResolvedSetting,
-    ExposedSettings,
-} from '#cli/types/policy.ts';
+import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
+import type { NamingCategoryTable, NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
@@ -80,12 +69,17 @@ function namingKeys(policy: Partial<Policy>): string[] {
 function toolKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
     const keys: string[] = [];
     const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
-        Object.entries(table).filter(([slot]) => slot !== 'extra')
-            .map(([slot, value]) => ({ key: `tools.${tool}.${slot}`, value })));
+        Object.entries(table)
+            .filter(([slot]) => slot !== 'extra')
+            .map(([slot, value]) => ({ key: `tools.${tool}.${slot}`, value })),
+    );
     for (const { key, value } of pending) {
         const children = Array.isArray(value) ? undefined : asRecord(value);
-        if (!surface.specs.has(key) && children !== undefined &&
-            [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`))) {
+        if (
+            !surface.specs.has(key) &&
+            children !== undefined &&
+            [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`))
+        ) {
             pending.push(...Object.entries(children).map(([slot, child]) => ({ key: `${key}.${slot}`, value: child })));
         } else keys.push(key);
     }
@@ -393,3 +387,33 @@ export function commandArguments(source: string): string[] {
             .join('');
     });
 }
+
+export type ResolvedSetting = {
+    key: string;
+    spec: SettingSpec;
+    value: unknown;
+    reason?: string;
+    source: string;
+    scope?: string;
+};
+
+export type ExposedSettings = {
+    specs: Map<string, SettingSpec>;
+    defaults: Map<string, { value: unknown; configuration: string }>;
+    problems: { key: string; message: string }[];
+};
+
+/** A written value with its reason, once the reasoned form is unwrapped. */
+export type WrittenValue = { value: unknown; reason?: string };
+
+/** One layer of policy that a key is resolved through: the root table or one scope table. */
+export type PolicyLayer = { table: Partial<Policy>; name: string };
+
+/** A written key matched to its spec, with the language and category the key names. */
+export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
+
+/** Where a resolved value stands after some layers were applied. */
+export type SettingState = { value: unknown; source: string; reason: string | undefined };
+
+/** What resolving a value for one scope needs. */
+export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };

@@ -2,9 +2,9 @@ import { relative, dirname } from 'node:path';
 // One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { StubSpec } from '#cli/types/configurations.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { GeneratedFile } from '#cli/emit/targets.ts';
+import type { StubSpec } from '#cli/configurations/schema.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { applyEdits, modify, parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
