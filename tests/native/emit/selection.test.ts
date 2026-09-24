@@ -13,7 +13,7 @@ import { openSession } from '#cli/run/session.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { writeFileSync, symlinkSync, mkdirSync } from 'node:fs';
+import { writeFileSync, symlinkSync, mkdirSync, chmodSync, statSync } from 'node:fs';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
@@ -388,6 +388,7 @@ test.each([false, true])(
             ({ path }) => path === '.gspot/config/jsconfig.json',
         )!;
         await Bun.write(join(sandbox.path, generated.path), generated.content);
+        chmodSync(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
         const env = { PATH: toolsPath(['tsc']) };
         const broken = await run(sandbox.path, command, env);
@@ -403,6 +404,7 @@ test.each([false, true])(
             'Preserve this authored metadata.\n',
         );
         expect(await Bun.file(join(sandbox.path, generated.path)).text()).toBe(generated.content);
+        expect(statSync(join(sandbox.path, generated.path)).mode & 0o777).toBe(0o444);
         if (authored) {
             expect(await Bun.file(join(sandbox.path, 'jsconfig.json')).text()).toBe(config);
             await Bun.write(join(sandbox.path, 'jsconfig.json'), '{');

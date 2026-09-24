@@ -1,7 +1,7 @@
 // Selects compiler project mode and confines build metadata to a disposable copy.
 import ts from 'typescript';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
@@ -76,23 +76,36 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
  */
 export async function checkJavascript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
-    const target = targetInScope(scope, planned.manifest!.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json')!);
-    const scratch = scratchCopy(session.root, [
-        ...session.repository.files.map((file) => file.path), target,
-    ], session.repository.scopes.map((entry) => entry.path));
+    const target = targetInScope(
+        scope,
+        planned.manifest!.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json')!,
+    );
+    const scratch = scratchCopy(
+        session.root,
+        [...session.repository.files.map((file) => file.path), target],
+        session.repository.scopes.map((entry) => entry.path),
+    );
     try {
         const directory = join(scratch, scope);
         const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
         const generatedPath = join(scratch, target);
         const generated = getTsconfig(scratch, generatedPath);
         if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
-        const scopedFiles = generated.fileNames.filter((path) =>
-            scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope);
+        const scopedFiles = generated.fileNames.filter(
+            (path) => scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope,
+        );
         const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
-        writeFileSync(generatedPath, JSON.stringify({ ...authored,
-            files: scopedFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
-            include: [], exclude: [],
-        }));
+        // Managed configurations are read-only; only the disposable copy is rewritten.
+        chmodSync(generatedPath, 0o600);
+        writeFileSync(
+            generatedPath,
+            JSON.stringify({
+                ...authored,
+                files: scopedFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
+                include: [],
+                exclude: [],
+            }),
+        );
         const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
         const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
         if (roots !== undefined) command.push('--typeRoots', roots.join(','));
