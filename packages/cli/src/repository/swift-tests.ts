@@ -1,6 +1,9 @@
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 
-/** Identify Swift test declarations and package targets without matching comment or string text. */
+/**
+ * Identify Swift test declarations and package targets without matching comment or string text.
+ * @param text
+ */
 export async function swiftTestTags(text: string): Promise<string[]> {
     const parser = await parserFor('swift');
     const tree = parser.parse(text);
@@ -10,7 +13,7 @@ export async function swiftTestTags(text: string): Promise<string[]> {
         const attributes = tree.rootNode.descendantsOfType('attribute');
         const isTest =
             imports.some((node) => {
-                const name = node.namedChildren.find((child) => child.type === 'identifier')?.text.split('.')[0];
+                const name = node.namedChildren.find((child) => child.type === 'identifier')?.text.split('.', 1)[0];
                 return name === 'XCTest' || name === 'Testing';
             }) ||
             attributes.some((node) => {

@@ -1,5 +1,5 @@
-import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '#plugin/rules/definition.ts';
 // A non-index file that only re-exports.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';

@@ -1,13 +1,13 @@
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { chmodSync, existsSync, readFileSync } from 'node:fs';
-import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/run/session.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { delimiter, dirname, join } from 'node:path';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { chmodSync, existsSync, readFileSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
@@ -59,7 +59,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
     });
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout).error).toContain(MISE_MIN_VERSION);
-    expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toEqual(generated);
+    expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
     const linked = await run(['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, state.path], {
         cwd: repository.path,
         env,
@@ -68,7 +68,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
     const installed = await run([process.execPath, CLI, 'install', '--json'], { cwd: repository.path, env });
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(JSON.parse(installed.stdout).installed).toBe(true);
-    expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toEqual(generated);
+    expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
     expect(readFileSync(join(repository.path, 'gspot.toml'), 'utf8')).toBe(policy);
     const invalid = await run(['mise', 'run', '--quiet', 'gspot:apply', '--', '--invalid'], {
         cwd: repository.path,

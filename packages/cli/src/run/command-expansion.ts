@@ -1,10 +1,11 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { configurationName, isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
 import type { CommandPart, PlannedCheck, Session, Substitutions, ToolInvocation } from '#cli/types/execution.ts';
-import { existsSync } from 'node:fs';
-import { join, posix } from 'node:path';
+
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
 const WORKSPACE_PREFIX = '{workspace:';
@@ -24,6 +25,7 @@ function listArguments(planned: PlannedCheck, part: string): string[] | undefine
     const items = typeof held === 'string' ? [held].filter((item) => item !== '') : (held ?? []);
     return items.flatMap((item) => [groups['flag'] ?? '', toPlatform(item)]);
 }
+
 /**
  * Replaces every setting placeholder in a command part with the value the policy holds.
  * @param planned the check, whose scope holds the settings
@@ -38,6 +40,7 @@ function settingsFilled(planned: PlannedCheck, part: string): string {
             : '';
     });
 }
+
 /**
  * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
  * @param root the repository root
@@ -48,8 +51,9 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const path = join(root, groups['path'] ?? '');
-    return existsSync(path) ? [groups['flag'] ?? '', toPlatform(path)] : [];
+    return (statSync(path, { throwIfNoEntry: false }) !== undefined) ? [groups['flag'] ?? '', toPlatform(path)] : [];
 }
+
 function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
     const own = planned.manifest?.configs ?? [];
     const every = session.manifests
@@ -58,6 +62,7 @@ function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarge
         .toArray();
     return [...own, ...every];
 }
+
 function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
     const target = allConfigs(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
@@ -65,10 +70,16 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no configuration renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
+
 function stubPath(name: string, scope: string): string {
     return scope === '' ? name : `${scope}/${name}`;
 }
-/** Configuration paths named by a check command or its environment. */
+/**
+ * Configuration paths named by a check command or its environment.
+ * @param session
+ * @param planned
+ * @param command
+ */
 export function commandConfigurations(
     session: Session,
     planned: PlannedCheck,
@@ -122,6 +133,7 @@ function expandPart(session: Session, planned: PlannedCheck, part: string, sub: 
     const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
     return policyPart ?? plainPart(session, planned, part, sub);
 }
+
 function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
     if (part === '{files}') return sub.files;
     if (part === '{file}') return [{ file: true }];

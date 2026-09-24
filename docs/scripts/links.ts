@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { globSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Parser } from 'htmlparser2';
+import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { globSync, statSync } from 'node:fs';
+
 type PageLinks = { path: string; ids: Set<string>; links: string[] };
 
 function inspectPage(path: string, content: string): PageLinks {

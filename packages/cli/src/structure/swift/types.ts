@@ -1,6 +1,6 @@
-import type { EngineInput } from '#cli/types/execution.ts';
 // Types of the swift checks.
 import type { Node, Tree } from 'web-tree-sitter';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { StructureProblem } from '#cli/structure/python/types.ts';
 
 /** One parsed Swift file of a run. */

@@ -20,7 +20,7 @@ CREATE VIEW app.active_accounts AS SELECT id FROM app.user_accounts;
 describe('sqlIdentifiers', () => {
     test('every declared name arrives with its category and its line', async () => {
         const found = await sqlIdentifiers('schema.sql', SOURCE);
-        expect(found.map((entry) => [entry.category, entry.name, entry.line])).toEqual([
+        expect(found.map((entry) => [entry.category, entry.name, entry.line])).toStrictEqual([
             ['schemas', 'app', 2],
             ['tables', 'user_accounts', 4],
             ['columns', 'id', 5],
@@ -40,6 +40,16 @@ describe('sqlIdentifiers', () => {
         await expect(sqlIdentifiers('broken.sql', 'CREATE TABLE ;')).rejects.toThrow('SQL parse failed');
         expect(
             (await sqlIdentifiers('broken.sql', 'CREATE TABLE accounts (id int);')).map((entry) => entry.name),
-        ).toEqual(['accounts', 'id']);
+        ).toStrictEqual(['accounts', 'id']);
     });
+});
+
+test('psql declaration variables are excluded while authored names retain their locations', async () => {
+    const source = '\\set table accounts\nCREATE TABLE :table ("createdAt" int);\nCREATE TABLE :"id" (id int);';
+    expect(
+        (await sqlIdentifiers('schema.sql', source)).map(({ name, line, column }) => ({ name, line, column })),
+    ).toStrictEqual([
+        { name: 'createdAt', line: 2, column: 23 },
+        { name: 'id', line: 3, column: 21 },
+    ]);
 });

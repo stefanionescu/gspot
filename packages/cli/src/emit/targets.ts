@@ -1,31 +1,30 @@
-import { bunConfiguration } from '#cli/emit/bun.ts';
-import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
 import { posix } from 'node:path';
-import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
-import { toolPackages } from '#cli/emit/tool-packages.ts';
-import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-
-import { mutationTarget } from '#cli/filesystem/confined.ts';
 import { styleFiles } from '#cli/prose/vale.ts';
-import type { MergedView, EditorconfigAdoption } from '#cli/types/policy.ts';
-// Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
-import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
+import { bunConfiguration } from '#cli/emit/bun.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
-import { claimedByClaims, pathMatcher } from '#cli/configurations/claims.ts';
-import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
-import type { ScopeSelection, Session } from '#cli/types/execution.ts';
-import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
+import { toolPackages } from '#cli/emit/tool-packages.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { mutationTarget } from '#cli/filesystem/confined.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
-import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
-import { huskyLines, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
+// Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
+import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
+import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
 import { miseTasks, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import type { ScopeSelection, Session } from '#cli/types/execution.ts';
+import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
+import { huskyLines, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { emitTarget, eta, templateInputs } from '#cli/emit/templates.ts';
+import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
+import type { MergedView, EditorconfigAdoption } from '#cli/types/policy.ts';
+import { claimedByClaims, pathMatcher } from '#cli/configurations/claims.ts';
+import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
 import type { EmitContext, GeneratedFile, GeneratedProposal, TemplateInputs } from '#cli/types/generation.ts';
 
 const JSON_INDENT = 4;
@@ -136,11 +135,12 @@ function stubFor(
     else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.configuration.name));
 }
 
-// A target with a needs key is written only while the configuration it names is selected somewhere in the repository.
-function isWanted(config: ConfigurationTarget, session: Session): boolean {
+// Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
+function isWanted(config: ConfigurationTarget, session: Session, selection: ScopeSelection): boolean {
     if (config.needs === undefined) return true;
     const wanted = config.needs;
-    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === wanted));
+    const scopes = config.per_scope ? [selection] : session.scopes;
+    return scopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === wanted));
 }
 
 function configurationFiles(
@@ -151,7 +151,7 @@ function configurationFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (!isWanted(config, session)) continue;
+        if (!isWanted(config, session, selection)) continue;
         const target = targetInScope(selection.scope.path, config);
         if (config.fragment) {
             out.files.push(...directoryStubs({ session, selection, manifest }, config, target));
@@ -304,6 +304,7 @@ function validateProposal(proposal: GeneratedProposal): void {
 /**
  * Renders every generated file, block and merge for the session, in memory.
  * @param session the session
+ * @param takeover
  * @returns the files, blocks, merges and package edits
  */
 export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSnapshot>): GeneratedProposal {
@@ -359,7 +360,11 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
     runnerOutputs(session, out);
     workflowOutput(session, out);
     out.files.push(...assembleRules(session));
-    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'prose')))
+    if (
+        session.scopes.some((selection) =>
+            selection.selected.some((manifest) => manifest.configuration.name === 'prose'),
+        )
+    )
         out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
     blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));

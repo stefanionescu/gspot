@@ -1,10 +1,9 @@
-import type { EngineInput } from '#cli/types/execution.ts';
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { DocProblem, Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-
+import type { DocProblem, Migration } from '#cli/checks/postgres/types.ts';
 
 const PURPOSE = /^--\s*Purpose:/iu;
 const SECTION = /^-- (?<name>[A-Z][A-Za-z ]+)$/u;

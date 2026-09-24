@@ -1,11 +1,11 @@
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const guides = join(root, 'docs/src/content/docs/guides');
@@ -30,11 +30,14 @@ describe('documented examples', () => {
     });
 });
 
-test.each(['', '   ', { file: '' }])(
+test.each(['', ' '.repeat(3), { file: '' }])(
     'planted cases reject an empty diagnostic expectation before writing: %j',
     async (expected) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', 'source.txt': 'original' });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = []\n',
+            'source.txt': 'original',
+        });
         await expect(
             runPlanted(
                 sandbox.path,

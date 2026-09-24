@@ -1,16 +1,19 @@
 import type { EslintRuleBlock } from '#cli/types/generation.ts';
-import type { EslintSettings, Policy } from '#cli/types/policy.ts';
 import { pathExpressions } from '#cli/configurations/claims.ts';
+import type { EslintSettings, Policy } from '#cli/types/policy.ts';
 
-/** Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope. */
+/**
+ * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
+ * @param policy
+ */
 export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     const tables = [
         { scope: '', table: policy },
         ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ scope, table })),
     ].toSorted((first, second) => first.scope.split('/').length - second.scope.split('/').length);
-    const settings = tables.map(({ scope, table }) => ({
+    const settings = tables.map<{ scope: string; settings: EslintSettings }>(({ scope, table }) => ({
         scope,
-        settings: (table.tools?.['eslint'] ?? {}) as EslintSettings,
+        settings: table.tools?.['eslint'] ?? {},
     }));
     const base = settings.flatMap(({ scope, settings }): EslintRuleBlock[] =>
         settings.rules === undefined ? [] : [{ scope, ...pathExpressions(['**/*']), rules: settings.rules }],

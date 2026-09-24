@@ -35,6 +35,7 @@ scoop = "supabase"
 template = "semgrep-supabase.yml.tmpl"
 target = ".gspot/config/semgrep/supabase.yml"
 rules_path = ["rules"]
+per_scope = true
 needs = "security"
 
 [[checks]]
@@ -89,9 +90,9 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "supabase-admin-key"
 coverage = ["security"]
-summary = "Checks that the service role key is named only under tools.supabase.admin_key_paths."
+summary = "Checks that the service role key is named only under tools.supabase.admin_key_files."
 why = "The service role key bypasses row level security, so one client bundle that holds it gives every user the whole database."
-help = "Move the code to a server path, or add the path to tools.supabase.admin_key_paths when it never reaches a client."
+help = "Move the code to a server path, or add the path to tools.supabase.admin_key_files when it never reaches a client."
 
 [[checks]]
 name = "supabase/deno-lint"
@@ -153,14 +154,14 @@ default = ""
 summary = "The committed database types file, relative to the scope; empty turns the comparison off."
 
 [[settings]]
-name = "tools.supabase.functions_dir"
+name = "tools.supabase.functions_directory"
 kind = "string"
 direction = "neutral"
 default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."
 
 [[settings]]
-name = "tools.supabase.admin_key_paths"
+name = "tools.supabase.admin_key_files"
 kind = "list"
 direction = "loosening"
 default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]

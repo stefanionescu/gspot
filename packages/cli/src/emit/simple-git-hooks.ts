@@ -1,14 +1,13 @@
+import { z } from 'zod';
+import { isDeepStrictEqual } from 'node:util';
 import { HOOK_FILES } from '#cli/repository/hooks.ts';
+import type { Session } from '#cli/types/execution.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import type { ConfinedRoot } from '#cli/types/filesystem.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { hookBody, hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
 import type { GeneratedProposal, HookName } from '#cli/types/generation.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { ConfinedRoot } from '#cli/types/filesystem.ts';
-
-import type { Session } from '#cli/types/execution.ts';
-import { isDeepStrictEqual } from 'node:util';
-import { z } from 'zod';
 
 const DIRECTORY = '.gspot/integrations/simple-git-hooks';
 
@@ -34,12 +33,22 @@ function requirePackageConfiguration(files: ConfinedRoot): void {
     }
 }
 
-/** Invoke the generated integration from the Git working directory. */
+/**
+ * Invoke the generated integration from the Git working directory.
+ * @param prefix
+ * @param name
+ */
 export function simpleGitHookCommand(prefix: string, name: string): string {
     return `bash '${`${prefix}${DIRECTORY}/${name}`.replaceAll("'", "'\"'\"'")}' "$@"`;
 }
 
-/** Run only gspot when native initialization exits before the package command. */
+/**
+ * Run only gspot when native initialization exits before the package command.
+ * @param root
+ * @param name
+ * @param runner
+ * @param binary
+ */
 export function simpleGitHookFallback(
     root: string,
     name: HookName,
@@ -49,7 +58,12 @@ export function simpleGitHookFallback(
     return hookBody(name, runner, binary, false, [hookCommand(name, runner, binary, hookPrefix(root))]);
 }
 
-/** Preserve each authored command in a subprocess before running the gspot check. */
+/**
+ * Preserve each authored command in a subprocess before running the gspot check.
+ * @param session
+ * @param out
+ * @param binary
+ */
 export function simpleGitHookOutputs(session: Session, out: GeneratedProposal, binary: string | undefined): void {
     const prefix = hookPrefix(session.root);
     const runner = session.policyFiles.policy.runner?.tool;
@@ -111,7 +125,12 @@ export function simpleGitHookOutputs(session: Session, out: GeneratedProposal, b
     }
 }
 
-/** Verify executable integration, including clones without local ownership records. */
+/**
+ * Verify executable integration, including clones without local ownership records.
+ * @param root
+ * @param runner
+ * @param binary
+ */
 export function simpleGitHooksReady(root: string, runner: string | undefined, binary: string | undefined): boolean {
     const prefix = hookPrefix(root);
     const entries = readOwnership(root).files;
@@ -130,7 +149,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
             const expected = hookBody(name, runner, binary, original !== undefined, [
                 hookCommand(name, runner, binary, prefix),
             ]);
-            if (current === undefined || !current.bytes.equals(Buffer.from(expected))) return false;
+            if (!current?.bytes.equals(Buffer.from(expected))) return false;
             if (
                 process.platform !== 'win32' &&
                 ((current.mode & 0o111) === 0 || (original !== undefined && (original.mode & 0o111) === 0))

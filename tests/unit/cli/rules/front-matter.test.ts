@@ -3,7 +3,7 @@ import { frontMatterFindings, layerOfPath, parseFrontMatter } from '#cli/agents/
 
 describe('front matter', () => {
     test('parses the fields between the fences', () => {
-        expect(parseFrontMatter('---\nlayer: code\nconfiguration: naming\ntitle: Naming\n---\n\n# Naming\n')).toEqual({
+        expect(parseFrontMatter('---\nlayer: code\nconfiguration: naming\ntitle: Naming\n---\n\n# Naming\n')).toStrictEqual({
             layer: 'code',
             configuration: 'naming',
             title: 'Naming',
@@ -21,7 +21,7 @@ describe('front matter', () => {
     test('findings name what disagrees', () => {
         const text = '---\nlayer: code\nconfiguration: Not An Id\ntitle: Other\n---\n\n# Naming\n';
         const messages = frontMatterFindings('language/typescript/TS.md', text).map((finding) => finding.message);
-        expect(messages).toEqual([
+        expect(messages).toStrictEqual([
             "layer 'code' does not match the path ('language')",
             "configuration 'Not An Id' is not a configuration id or none",
             "title 'Other' does not equal the H1 'Naming'",

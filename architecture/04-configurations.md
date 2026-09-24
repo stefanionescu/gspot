@@ -305,13 +305,13 @@ Signals, in the order `init` prints them:
 | `nginx.conf`                                                                                                                          | nginx                                                                                         |
 | `vitest` in dependencies                                                                                                              | vitest                                                                                        |
 | `pytest` in dependencies or `[tool.pytest]`                                                                                           | pytest                                                                                        |
-| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library configuration                                                                            |
+| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library configuration                                                                     |
 | `*.sql` files                                                                                                                         | sql; postgres where a migrations folder, `pg`, or Supabase is found                           |
 | `*.html` files; `index.html`, `_headers`, or a web manifest at the root                                                               | html; static-site                                                                             |
 | `.md` files                                                                                                                           | markdown                                                                                      |
 | `.json`, `.yaml`, `.toml` files                                                                                                       | configs                                                                                       |
 | any repository                                                                                                                        | structure, naming, formatting, spelling, secrets; commits, security, and licenses are offered |
-| a language gspot has no configuration for, named through `linguist-languages`                                                                | nothing; the plan names the language and its file count                                       |
+| a language gspot has no configuration for, named through `linguist-languages`                                                         | nothing; the plan names the language and its file count                                       |
 
 Detection reads manifests and file names. It never reads code to guess a framework.
 
@@ -664,18 +664,18 @@ definition: `check`, `configuration`, or `rule`. A finding's `check` field holds
 it is not a second definition. Do not rename it to a generic `name` field. A setting name is
 its dotted configuration address.
 
-| Meaning                                  | Definition or serialized field                            | Local variable or parameter                               |
-| ---------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
-| Check definition                         | `CheckSpec.name`                                          | `check`                                                   |
-| Check name                               | `Finding.check`, `CheckResult.check`, `IgnoreEntry.check` | `checkName`, plural `checkNames`                          |
-| Planned execution of a check             | `PlannedCheck`                                            | `plannedCheck`                                            |
-| Configuration definition                        | `manifest.configuration.name`                                    | `configuration`; `manifest` for the complete manifest            |
-| Configuration name                              | `configuration` when referenced; `configurations` for a list            | `configurationName`, plural `configurationNames`                        |
-| Tool rule name                           | `rule` on a finding or ignore                             | `ruleName`, plural `ruleNames`                            |
-| Setting definition and its name          | `SettingSpec.name`                                        | `setting` for the definition, `settingName` for its name  |
-| Scope definition and its path            | `scope.path`; `scope` in a serialized result              | `scope` for the object, `scopePath` for the relative path |
-| Tracked file and its path                | `file.path`; `file` in a finding                          | `file` for the object, `filePath` for the path            |
-| Config root, Git root, process directory | Preserve the relevant external schema field               | `configRoot`, `gitRoot`, `workingDirectory`               |
+| Meaning                                  | Definition or serialized field                               | Local variable or parameter                               |
+| ---------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| Check definition                         | `CheckSpec.name`                                             | `check`                                                   |
+| Check name                               | `Finding.check`, `CheckResult.check`, `IgnoreEntry.check`    | `checkName`, plural `checkNames`                          |
+| Planned execution of a check             | `PlannedCheck`                                               | `plannedCheck`                                            |
+| Configuration definition                 | `manifest.configuration.name`                                | `configuration`; `manifest` for the complete manifest     |
+| Configuration name                       | `configuration` when referenced; `configurations` for a list | `configurationName`, plural `configurationNames`          |
+| Tool rule name                           | `rule` on a finding or ignore                                | `ruleName`, plural `ruleNames`                            |
+| Setting definition and its name          | `SettingSpec.name`                                           | `setting` for the definition, `settingName` for its name  |
+| Scope definition and its path            | `scope.path`; `scope` in a serialized result                 | `scope` for the object, `scopePath` for the relative path |
+| Tracked file and its path                | `file.path`; `file` in a finding                             | `file` for the object, `filePath` for the path            |
+| Config root, Git root, process directory | Preserve the relevant external schema field                  | `configRoot`, `gitRoot`, `workingDirectory`               |
 
 A named domain definition does not acquire `id` or `key` as an alias. A map key is still a
 key. External contracts keep their required fields, such as SARIF `ruleId`, SPDX identifiers,

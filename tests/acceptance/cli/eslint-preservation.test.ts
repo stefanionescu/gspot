@@ -1,9 +1,9 @@
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
 const SOURCE = 'alert(left == right);\n';
@@ -38,20 +38,20 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
             const [defective] = await eslint.lintFiles([file]);
             expect(
                 defective!.messages.map(({ ruleId, severity, line, column }) => ({ ruleId, severity, line, column })),
-            ).toEqual([
+            ).toStrictEqual([
                 file.startsWith('tests/')
                     ? { ruleId: 'no-alert', severity: 1, line: 1, column: 1 }
                     : { ruleId: 'eqeqeq', severity: 2, line: 1, column: 12 },
             ]);
             writeFileSync(join(repository.path, file), 'void (left === right);\n');
             const [corrected] = await eslint.lintFiles([file]);
-            expect(corrected!.messages).toEqual([]);
+            expect(corrected!.messages).toStrictEqual([]);
         }
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
         expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -68,11 +68,11 @@ test(
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const [result] = await new ESLint({ cwd: repository.path }).lintFiles(['source.js']);
-        expect(result!.messages.map(({ ruleId }) => ruleId)).toEqual(['eqeqeq']);
+        expect(result!.messages.map(({ ruleId }) => ruleId)).toStrictEqual(['eqeqeq']);
         expect(readFileSync(join(repository.path, 'eslint.config.cjs'), 'utf8')).toBe(original);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );

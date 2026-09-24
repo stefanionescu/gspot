@@ -20,8 +20,6 @@ Edit `gspot.toml` to choose checks. See [edit and retain repository files](docs/
 **Unreleased:** use a source checkout. Local builds and package tests do not establish a
 published release or native verification on every target platform.
 
-**Tools**
-
 <p>
   <img src="docs/public/brand/readme/tool-eslint.svg" alt="ESLint" width="144" height="40">
   <img src="docs/public/brand/readme/tool-prettier.svg" alt="Prettier" width="144" height="40">
@@ -54,7 +52,7 @@ The corrected module produces no finding from this rule. The application still n
 implementation for the route. Follow the [executable JavaScript example](docs/src/content/docs/guides/client-environment.md)
 for setup, the captured diagnostic, and verification.
 
-## Run from source
+## Source checkout setup
 
 Complete the [source installation](docs/src/content/docs/guides/install.md), including Git,
 mise, and the pinned Bun and Node runtimes. The guide defines a `gspot` shell function for
@@ -95,13 +93,13 @@ The [customization guide](docs/src/content/docs/guides/customize.md) covers sett
 
 ## Daily commands
 
-| Command | Purpose |
-| --- | --- |
-| `gspot check` | Run selected checks. |
-| `gspot check --staged` | Check staged content while preserving unstaged edits. |
-| `gspot check --changed` | Select affected checks from working-tree changes. |
-| `gspot install` | Install the repository's locked tools and selected hooks after cloning. |
-| `gspot doctor` | Diagnose missing tools, configuration drift, and check coverage. |
+| Command                 | Purpose                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `gspot check`           | Run selected checks.                                                    |
+| `gspot check --staged`  | Check staged content while preserving unstaged edits.                   |
+| `gspot check --changed` | Select affected checks from working-tree changes.                       |
+| `gspot install`         | Install the repository's locked tools and selected hooks after cloning. |
+| `gspot doctor`          | Diagnose missing tools, configuration drift, and check coverage.        |
 
 An affected project check can report defects in unchanged files. Local hooks can be bypassed;
 [CI checks](docs/src/content/docs/guides/hooks-and-ci.md) run independently.

@@ -1,10 +1,9 @@
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
-
 import type { PathExpressions } from '#cli/types/repository.ts';
-// What apply renders and writes: generated files, blocks, merges, package edits, the workflow and the hooks.
-import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
 import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import type { FormatSettings, MergedView, Policy } from '#cli/types/policy.ts';
+// What apply renders and writes: generated files, blocks, merges, package edits, the workflow and the hooks.
+import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
 
 export type GeneratedFile = {
     rulesPath?: string[];
@@ -62,6 +61,7 @@ export type TemplateInputs = {
     markdownlintRules: Record<string, unknown>;
     targetPath?: string;
     scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
+    javascriptConfig: (targetPath: string) => Record<string, unknown>;
     prettierConfig: (targetPath: string) => Record<string, unknown>;
     editorconfigOverrides: () => EditorconfigOverride[];
     eslintPolicy: EslintRuleBlock[];

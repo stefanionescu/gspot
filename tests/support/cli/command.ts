@@ -1,6 +1,7 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
 /** What a spawned command left behind, for tests. */

@@ -26,6 +26,7 @@ npm = "ajv"
 template = "semgrep-express.yml.tmpl"
 target = ".gspot/config/semgrep/express.yml"
 rules_path = ["rules"]
+per_scope = true
 needs = "security"
 
 [[configs]]
@@ -65,7 +66,7 @@ help = "Run the command and commit the document it writes."
 [[checks]]
 name = "express/routes-tested"
 title = "Routes tested"
-example = "With `tools.express.route_glob = [\"routes/*.ts\"]`, `routes/users.ts` reports `untested-route` when no test in the same scope imports it. Add `import { users } from './routes/users.js';` to `users.test.ts` and test the route's behavior. This check resolves imports; it does not execute the test or establish assertion coverage."
+example = "With `tools.express.route_files = [\"routes/*.ts\"]`, `routes/users.ts` reports `untested-route` when no test in the same scope imports it. Add `import { users } from './routes/users.js';` to `users.test.ts` and test the route's behavior. This check resolves imports; it does not execute the test or establish assertion coverage."
 level = "all"
 stage = "push"
 runs = "per-scope"
@@ -91,14 +92,14 @@ default = ""
 summary = "The command that writes the OpenAPI document from the code."
 
 [[settings]]
-name = "tools.express.route_glob"
+name = "tools.express.route_files"
 kind = "list"
 direction = "tightening"
 default = []
 summary = "The route files that each need a test; empty turns the check off."
 
 [[settings]]
-name = "tools.express.test_glob"
+name = "tools.express.test_files"
 kind = "list"
 direction = "neutral"
 default = ["**/*.test.*", "**/*.spec.*", "**/tests/**"]

@@ -129,7 +129,7 @@ test('preserves stdin, argument boundaries, final newlines, and the requested en
             },
         );
         expect(result.code).toBe(0);
-        expect(JSON.parse(result.stdout)).toEqual({
+        expect(JSON.parse(result.stdout)).toStrictEqual({
             text: input,
             args: ['space separated', '$(echo must-stay-literal)'],
             value: 'selected',
@@ -159,10 +159,13 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
     const children = spyOn(childProcess, 'spawn');
     let child: childProcess.ChildProcess | undefined;
     try {
-        const running = (capture === 'binary' ? runBinary : run)([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
-            cwd: sandbox.path,
-            timeoutMs: 3000,
-        });
+        const running = (capture === 'binary' ? runBinary : run)(
+            [process.execPath, '-e', 'setInterval(() => {}, 1000)'],
+            {
+                cwd: sandbox.path,
+                timeoutMs: 3000,
+            },
+        );
         const launched = children.mock.results[0];
         if (launched?.type === 'return') {
             child = launched.value;
@@ -193,7 +196,7 @@ test('binary capture preserves invalid UTF-8 and classifies cancellation and dea
         ],
         { cwd: sandbox.path },
     );
-    expect([...result.stdout]).toEqual([0, 255, 128, 10]);
+    expect([...result.stdout]).toStrictEqual([0, 255, 128, 10]);
     expect(result.stderr).toBe('diagnostic\n');
     expect(result.code).toBe(0);
     const canceled = await runBinary([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {

@@ -1,7 +1,7 @@
-import type { outputSchema } from '#cli/schemas/check-output.ts';
-import type { manifestSchema } from '#cli/schemas/manifests.ts';
-import type { Defined } from '#cli/types/policy.ts';
 import type { z } from 'zod';
+import type { Defined } from '#cli/types/policy.ts';
+import type { manifestSchema } from '#cli/schemas/manifests.ts';
+import type { outputSchema } from '#cli/schemas/check-output.ts';
 // The shape of a configuration manifest.toml after validation.
 
 type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;

@@ -1,15 +1,19 @@
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { gitBlobs } from '#cli/repository/snapshot.ts';
-import { pushBase } from '#cli/repository/staged.ts';
+import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
+import { pushBase } from '#cli/repository/staged.ts';
+import { gitBlobs } from '#cli/repository/snapshot.ts';
 import type { CheckResult } from '#cli/types/reports.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution.ts';
+import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
+import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
-/** Supply selected changed blobs and commit metadata to TruffleHog's native JSON enumerator. */
+/**
+ * Supply selected changed blobs and commit metadata to TruffleHog's native JSON enumerator.
+ * @param session
+ * @param planned
+ */
 export async function checkVerifiedSecrets(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const base: CheckResult = {

@@ -1,11 +1,11 @@
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const SOURCE = 'export const greeting="hello";\n';
 const FILES = ['source.js', 'generated/authored.js', 'generated/skipped.js', 'space name.js'];
@@ -52,7 +52,7 @@ test(
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(SOURCE);
         const ignored = await run(repository.path, [...args, 'generated/skipped.js']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(ignored.stdout)).skips).toEqual([
+        expect(reportSchema.parse(JSON.parse(ignored.stdout)).skips).toStrictEqual([
             { check: 'formatting/prettier', source: 'ignore' },
         ]);
         const future = join(repository.path, 'generated/future.js');
@@ -68,7 +68,7 @@ test(
         const skippedFuture = await run(repository.path, [...args, 'generated/future.js']);
         expect(skippedFuture.code, skippedFuture.stdout + skippedFuture.stderr).toBe(0);
         const futureReport = reportSchema.parse(JSON.parse(skippedFuture.stdout));
-        expect(futureReport.skips).toEqual([{ check: 'formatting/prettier', source: 'ignore' }]);
+        expect(futureReport.skips).toStrictEqual([{ check: 'formatting/prettier', source: 'ignore' }]);
         expect(futureReport.coverage.checked).toBe(0);
         expect(readFileSync(future, 'utf8')).toBe(SOURCE);
         const generated = readFileSync(join(repository.path, '.prettierignore'), 'utf8');

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { appendEntry, appendList, deleteKey, removeEntries, setKey, writePolicy } from '#cli/policy/write.ts';
 
 const text =
@@ -14,7 +14,7 @@ describe('writePolicy', () => {
         const invalid = Buffer.concat([Buffer.from(text), Buffer.from([0xff])]);
         writeFileSync(path, invalid);
         expect(() => writePolicy(sandbox.path, setKey('coverage.strict', true))).toThrow('valid UTF-8');
-        expect(readFileSync(path)).toEqual(invalid);
+        expect(readFileSync(path)).toStrictEqual(invalid);
         writeFileSync(path, text);
         chmodSync(path, 0o644);
         expect(() =>

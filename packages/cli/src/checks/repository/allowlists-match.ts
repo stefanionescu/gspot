@@ -1,11 +1,11 @@
+import { basename, dirname } from 'node:path';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 // Every path pattern in the policy matches at least one tracked file or folder: an ignore, a declaration, an allowance or an exclusion that matches nothing is a leftover.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import { lockedPackages } from '#cli/repository/locked-packages.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { basename, dirname } from 'node:path';
 import type { LicenseException } from '#cli/checks/licenses.ts';
+import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
 
 type PathPattern = { pattern: string; where: string };
@@ -102,7 +102,7 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
             throw new Error('License exceptions require a dependency lockfile in their project or workspace.');
         for (const { path } of paths)
             if (!locks.has(path))
-                locks.set(path, lockedPackages(basename(path), readSource(input.root, path).toString('utf8')));
+                locks.set(path, lockedPackages(basename(path), readSource(input.root, path, input.observations).toString('utf8')));
         for (const exception of exceptions) {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (

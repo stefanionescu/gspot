@@ -1,14 +1,14 @@
-import { rejects } from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
+import { rejects } from 'node:assert/strict';
+import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#cli/types/policy.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
+import type { MergedView } from '#cli/types/policy.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 
 function input(root: string, paths: string[], tracked = paths): EngineInput {
     const files = paths.map((path) => ({
@@ -49,7 +49,7 @@ describe('fences and paths', () => {
             'a.md': '```json\n{"a": 1}\n```\n\n```json\n{oops\n```\n\n```toml\nkey = \n```\n\n```ts\nconst a: number = 1;\n```\n\n```text\nnot code {\n```\n',
         });
         const found = await fences(input(sandbox.path, ['a.md']));
-        expect(found.map((finding) => [finding.line, finding.rule])).toEqual([
+        expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
             [5, 'json'],
             [9, 'toml'],
         ]);
@@ -62,7 +62,7 @@ describe('fences and paths', () => {
             'mise.toml': '[tasks.build]\nrun = "x"\n',
         });
         const found = await stalePaths(input(sandbox.path, ['a.md'], ['a.md', 'src/here.ts', 'mise.toml']));
-        expect(found.map((finding) => finding.message)).toEqual([
+        expect(found.map((finding) => finding.message)).toStrictEqual([
             'src/gone.ts names no tracked file or folder.',
             'mise run gone names no task or script.',
         ]);
@@ -73,7 +73,7 @@ describe('fences and paths', () => {
             'a.md': '> ~~~json\n> {oops\n> ~~~~\n\n```json\n{oops\n',
         });
         const found = await fences(input(sandbox.path, ['a.md']));
-        expect(found.map((finding) => [finding.line, finding.rule])).toEqual([
+        expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
             [1, 'json'],
             [5, 'json'],
         ]);
@@ -85,7 +85,7 @@ describe('fences and paths', () => {
             'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n',
         });
         const found = await stalePaths(input(sandbox.path, ['a.md']));
-        expect(found.map((finding) => [finding.line, finding.message])).toEqual([
+        expect(found.map((finding) => [finding.line, finding.message])).toStrictEqual([
             [6, 'src/missing.ts names no tracked file or folder.'],
         ]);
     });
@@ -123,7 +123,7 @@ test('Bash examples report syntax errors, accept corrections, and stop on cancel
     expect(found).toMatchObject([{ check: 'markdown/fences', file: 'a.md', line: 1, rule: 'bash', fixable: false }]);
     expect(found[0]!.message).toContain('syntax error');
     writeFileSync(join(sandbox.path, 'a.md'), '```bash\nprintf "%s\\n" "Hello"\n```\n');
-    expect(await fences(selected)).toEqual([]);
+    expect(await fences(selected)).toStrictEqual([]);
     selected.cancelSignal = AbortSignal.abort();
     await rejects(fences(selected), { message: 'The command was canceled.' });
 });

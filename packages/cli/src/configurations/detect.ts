@@ -1,8 +1,8 @@
-import { pathMatcher } from '#cli/configurations/claims.ts';
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import * as linguistLanguages from 'linguist-languages';
-import { SHEBANG_INTERPRETERS } from '#cli/repository/patterns.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { SHEBANG_INTERPRETERS } from '#cli/repository/patterns.ts';
 import type { TreeFacts, ManifestFacts, TrackedFile } from '#cli/types/repository.ts';
 import type { Manifest, Proposal, UnknownLanguage } from '#cli/types/configurations.ts';
 
@@ -122,7 +122,12 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined 
     const { configuration } = manifest;
     const byExtension = extensionEvidence(manifest, tree);
     if (byExtension !== undefined)
-        return { configuration: configuration.name, kind: configuration.kind, evidence: byExtension, count: extensionCount(manifest, tree) };
+        return {
+            configuration: configuration.name,
+            kind: configuration.kind,
+            evidence: byExtension,
+            count: extensionCount(manifest, tree),
+        };
     for (const source of EVIDENCE) {
         const evidence = source(manifest, tree);
         if (evidence !== undefined) return { configuration: configuration.name, kind: configuration.kind, evidence };

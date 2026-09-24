@@ -1,8 +1,8 @@
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();
@@ -29,7 +29,7 @@ test('generated and vendored settings classify directories and removal returns f
     const checked = (JSON.parse(after.stdout) as { checks: { files: number; findings: { file: string }[] }[] })
         .checks[0];
     expect(checked?.files).toBe(2);
-    expect(checked?.findings.map((finding) => finding.file)).toEqual([
+    expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
         'output types/broken.sh',
         'output types/broken.sh',
     ]);
@@ -65,7 +65,7 @@ test('declarations retain producer metadata and reasons while removing individua
         (Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')) as Record<string, unknown>)[
             'generated'
         ],
-    ).toEqual([{ paths: ['b.sh'], produced_by: 'bun generate.ts', reason: 'Build output retained for consumers' }]);
+    ).toStrictEqual([{ paths: ['b.sh'], produced_by: 'bun generate.ts', reason: 'Build output retained for consumers' }]);
     writeFileSync(join(directory.path, 'gspot.toml'), `${original}\n[[declare]]\npaths = ["a.sh"]\nvendored = true\n`);
     const legacy = await run(directory.path, ['check', '--only', 'bash/syntax']);
     expect(legacy.code, legacy.stdout + legacy.stderr).toBe(2);

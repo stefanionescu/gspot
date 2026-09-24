@@ -1,12 +1,12 @@
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { git } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
-import { chmodSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { delimiter, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { chmodSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const entry = fileURLToPath(new URL('../../../docs/scripts/verify-release.ts', import.meta.url));
 

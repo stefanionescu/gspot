@@ -1,10 +1,10 @@
+import { relative, dirname } from 'node:path';
 // One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
-import type { StubSpec } from '#cli/types/configurations.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { headerFor } from '#cli/emit/templates.ts';
+import type { StubSpec } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-import { relative, dirname } from 'node:path';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { applyEdits, modify, parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
@@ -55,7 +55,13 @@ export function bodyStub(
 ): GeneratedFile {
     const body = String(fillTarget(stub.body ?? '', stubPath, targetPath));
     const ended = body.endsWith('\n') ? body : `${body}\n`;
-    return { path: stubPath, content: `${headerFor(stubPath, version)}${ended}`, readOnly: true, kind: 'stub', configuration };
+    return {
+        path: stubPath,
+        content: `${headerFor(stubPath, version)}${ended}`,
+        readOnly: true,
+        kind: 'stub',
+        configuration,
+    };
 }
 
 /**

@@ -65,7 +65,11 @@ function suffixes(pattern: string, scope: string): string[] {
     return [...states].map((index) => `/${parts.slice(index).join('/')}${directory ? '/' : ''}`);
 }
 
-/** Preserve ordered gitignore patterns when native discovery moves their base into a scope directory. */
+/**
+ * Preserve ordered gitignore patterns when native discovery moves their base into a scope directory.
+ * @param patterns
+ * @param scope
+ */
 export function scopeIgnorePatterns(patterns: string[], scope: string): string[] {
     if (scope === '') return patterns;
     return patterns.flatMap((pattern) => {

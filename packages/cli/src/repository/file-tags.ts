@@ -13,6 +13,8 @@ export const EXTENSION_TAGS: Record<string, string[]> = {
     '.mts': ['typescript', 'text'],
     '.cts': ['typescript', 'text'],
     '.tsx': ['typescript', 'tsx', 'text'],
+    '.vue': ['vue', 'source', 'text'],
+    '.svelte': ['svelte', 'source', 'text'],
     '.swift': ['swift', 'text'],
     '.sql': ['sql', 'text'],
     '.pgsql': ['sql', 'text'],

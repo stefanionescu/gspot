@@ -2,7 +2,6 @@
 import { createRule } from '#plugin/rules/definition.ts';
 import { optionsSchema } from '#plugin/rules/options.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 const BLANK = /^\s*$/u;

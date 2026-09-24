@@ -1,27 +1,35 @@
-import { detectPackageManager } from 'nypm';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
-import semver from 'semver';
 import { z } from 'zod';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import semver from 'semver';
 import { dirname, join } from 'node:path';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
+import { detectPackageManager } from 'nypm';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution.ts';
+import { runToolCommand } from '#cli/run/tool-runner.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 export const packageManagerSchema = z.strictObject({
     name: z.enum(['npm', 'bun', 'pnpm', 'yarn']),
     version: z.string().refine((value) => semver.valid(value) !== null, 'Package manager version must be exact.'),
 });
 
+/**
+ *
+ * @param value
+ */
 export function parsePackageManager(value: string): z.infer<typeof packageManagerSchema> {
     const [name, version, ...extra] = value.split('@');
     if (extra.length > 0) throw new Error('Invalid packageManager declaration.');
     return packageManagerSchema.parse({ name, version });
 }
 
-/** Observe the repository manager and retain the version recorded for its isolated tool project. */
+/**
+ * Observe the repository manager and retain the version recorded for its isolated tool project.
+ * @param root
+ * @param projectPaths
+ */
 export async function toolPackageManager(
     root: string,
     projectPaths: string[],
@@ -56,7 +64,10 @@ export async function toolPackageManager(
     }
 }
 
-/** Generate the npm tools as a private project without adding dependencies to the repository. */
+/**
+ * Generate the npm tools as a private project without adding dependencies to the repository.
+ * @param session
+ */
 export function toolPackages(session: Session): GeneratedFile[] {
     if (session.packageManager === undefined) return [];
     const manager = packageManagerSchema.parse(session.packageManager);

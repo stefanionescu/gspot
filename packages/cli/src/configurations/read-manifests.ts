@@ -59,9 +59,15 @@ function checkProblems(check: RawCheck): string[] {
         check.nested_config !== undefined && check.cwd !== 'scope'
             ? `check ${check.name} discovers nested configuration and requires cwd = scope.`
             : undefined,
-        (check.isolated_files === true || check.file_prefix !== undefined) &&
-        (check.runs !== 'per-file-list' || !check.command?.includes('{files}'))
-            ? `check ${check.name} isolates files or prefixes file arguments and requires a per-file-list command with {files}.`
+        check.file_prefix !== undefined && (check.runs !== 'per-file-list' || !check.command?.includes('{files}'))
+            ? `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`
+            : undefined,
+        check.isolated_files === true &&
+        !(
+            (check.runs === 'per-file-list' && check.command?.includes('{files}')) ||
+            (check.runs === 'per-scope' && check.command?.includes('{root}'))
+        )
+            ? `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`
             : undefined,
         check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined)
             ? `check ${check.name} is reported by another check and cannot declare a fixer.`
@@ -141,7 +147,8 @@ export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
     const result = manifestSchema.safeParse(parsed);
     const configurationName = result.success ? result.data.configuration.name : dir;
-    if (!result.success) throw new ManifestError(configurationName, [...new Set(result.error.issues.flatMap(issueLines))]);
+    if (!result.success)
+        throw new ManifestError(configurationName, [...new Set(result.error.issues.flatMap(issueLines))]);
     const raw = result.data;
     const problems = refusals(raw);
     if (raw.checks.some((check) => raw.configuration.check_references?.includes(check.name)))
@@ -163,18 +170,25 @@ export function parseManifest(text: string, dir: string): Manifest {
     };
 }
 
-/** Validate required configurations, unique checks, and executable reporting and replacement owners before accepting a manifest collection. */
+/**
+ * Validate required configurations, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * @param manifests
+ */
 export function validateManifests(manifests: Map<string, Manifest>): void {
     const owners = new Map<string, string>();
     for (const manifest of manifests.values()) {
         for (const required of manifest.configuration.requires)
             if (!manifests.has(required))
-                throw new ManifestError(manifest.configuration.name, [`it requires \`${required}\`, which does not exist.`]);
+                throw new ManifestError(manifest.configuration.name, [
+                    `it requires \`${required}\`, which does not exist.`,
+                ]);
         for (const check of manifest.checks) {
             if (manifest.configuration.check_references?.includes(check.name)) continue;
             const previous = owners.get(check.name);
             if (previous !== undefined)
-                throw new ManifestError(manifest.configuration.name, [`check ${check.name} is already owned by ${previous}.`]);
+                throw new ManifestError(manifest.configuration.name, [
+                    `check ${check.name} is already owned by ${previous}.`,
+                ]);
             owners.set(check.name, manifest.configuration.name);
         }
     }
@@ -261,7 +275,7 @@ export function configurationManifests(): Map<string, Manifest> {
         [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
     );
     for (const manifest of manifests.values())
-        for (const reference of new Set(manifest.configuration.check_references ?? [])) {
+        for (const reference of new Set(manifest.configuration.check_references)) {
             const check = declaredChecks.get(reference);
             if (check !== undefined) manifest.checks.push(check);
         }

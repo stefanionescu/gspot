@@ -1,15 +1,14 @@
-// The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
-import type { RunReport } from '#cli/types/reports.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+// The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
+import type { RunReport } from '#cli/types/reports.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
@@ -185,7 +184,9 @@ process.exit(2);
                 expect(outcome.stdout, planted.check).toMatch(
                     new RegExp(String.raw`^root\s+${planted.check}\s+fail\s`, 'u'),
                 );
-                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text()) as RunReport;
+                const report = JSON.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text(),
+                ) as RunReport;
                 const result = report.checks.find((entry) => entry.check === planted.check);
                 expect(result?.status, outcome.stdout).toBe('fail');
                 const finding = result?.findings.find(

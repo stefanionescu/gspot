@@ -1,4 +1,7 @@
-/** Read ShellCheck rule directives without executing configuration or resolving source paths. */
+/**
+ * Read ShellCheck rule directives without executing configuration or resolving source paths.
+ * @param text
+ */
 export function shellcheckRules(text: string): { enable: string[]; disable: string[] } {
     const rules = { enable: [] as string[], disable: [] as string[] };
     for (const [index, line] of text.split(/\r?\n/u).entries()) {
@@ -26,7 +29,7 @@ export function shellcheckRules(text: string): { enable: string[]; disable: stri
                 rules[key].push(
                     ...entries.map((entry) =>
                         key === 'disable'
-                            ? entry.replace(/(?:SC)?(\d+)/gu, (_, code: string) => `SC${Number(code)}`)
+                            ? entry.replaceAll(/(?:SC)?(\d+)/gu, (_, code: string) => `SC${Number(code)}`)
                             : entry,
                     ),
                 );

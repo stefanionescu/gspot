@@ -3,8 +3,8 @@ import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { SCHEMA_LINE } from '#cli/emit/markers.ts';
 import { policySchema } from '#cli/schemas/policy.ts';
-import type { CarriedConfiguration } from '#cli/types/ownership.ts';
 import type { TomlTable, Proposal } from '#cli/types/policy.ts';
+import type { CarriedConfiguration } from '#cli/types/ownership.ts';
 
 const PREFACE = [
     SCHEMA_LINE,

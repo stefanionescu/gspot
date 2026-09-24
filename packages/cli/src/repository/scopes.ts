@@ -1,17 +1,17 @@
+import { z } from 'zod';
+import JSON5 from 'json5';
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { globbySync } from 'globby';
-import { readdirSync, type Dirent } from 'node:fs';
 import { relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import JSON5 from 'json5';
-import { packageManifestSchema } from '#cli/repository/manifests.ts';
-import { z } from 'zod';
-import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
+import { readdirSync, type Dirent } from 'node:fs';
+import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
-import type { ManifestFacts, ScopeEntry } from '#cli/types/repository.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
+import type { ManifestFacts, ScopeEntry } from '#cli/types/repository.ts';
+import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 function lastSegment(path: string): string {
     return path.slice(path.lastIndexOf('/') + 1);
@@ -29,7 +29,7 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
         const normalized = patterns.map((pattern) => {
             const negate = pattern.startsWith('!') ? '!' : '';
             const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
-            mutationPath(path.replace(/[!*?\[\]{}()|+@]/gu, 'x'));
+            mutationPath(path.replaceAll(/[!*?\[\]{}()|+@]/gu, 'x'));
             return `${negate}${path}`;
         });
         const ancestors = normalized.flatMap((pattern) => {
@@ -201,7 +201,11 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
         .reduce((best, scope) => (scope.path.length > best.path.length ? scope : best), root);
 }
 
-/** Declared ancestors of a scope, ordered from the outermost to the exact scope. */
+/**
+ * Declared ancestors of a scope, ordered from the outermost to the exact scope.
+ * @param entries
+ * @param path
+ */
 export function scopeAncestors(
     entries: Pick<ScopeEntry, 'path' | 'configurations'>[],
     path: string,

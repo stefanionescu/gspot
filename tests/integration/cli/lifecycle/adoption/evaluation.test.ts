@@ -1,14 +1,9 @@
 import { join } from 'node:path';
-
-import { existsSync, readFileSync, symlinkSync } from 'node:fs';
-
 import { expect, test } from 'bun:test';
-
 import { createFileTree, testdir } from 'testdirs';
-
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-
 import { evaluateFormat } from '#cli/evaluation/format.ts';
+import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

@@ -1,6 +1,6 @@
-import { createRule } from '#plugin/rules/definition.ts';
 // More than the limit of re-exports in one index.
 import type { TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '#plugin/rules/definition.ts';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
 

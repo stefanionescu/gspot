@@ -1,9 +1,9 @@
 import * as clack from '@clack/prompts';
 import { rejects } from 'node:assert/strict';
+import * as messages from '#cli/output/messages.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
 import { askConfirmation, askMany, PromptError } from '#cli/output/prompts.ts';
-import * as messages from '#cli/output/messages.ts';
 
 function mockTerminal(isTerminal: boolean): () => void {
     const streams = [process.stdin, process.stdout].map((stream) => ({
@@ -81,10 +81,9 @@ test.each([true, false])(
         const selection = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
-            expect(await askMany('Which configurations?', '--configurations <ids>', [], ['bash', 'markdown'], useDefaults)).toEqual([
-                'bash',
-                'markdown',
-            ]);
+            expect(
+                await askMany('Which configurations?', '--configurations <ids>', [], ['bash', 'markdown'], useDefaults),
+            ).toStrictEqual(['bash', 'markdown']);
             expect(selection).not.toHaveBeenCalled();
             expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --configurations <ids>.');
         } finally {
@@ -110,7 +109,7 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
                     ['bash'],
                     false,
                 ),
-            ).toEqual([...answer]);
+            ).toStrictEqual([...answer]);
             expect(printed).toHaveBeenCalledWith(
                 `Selected: ${answer.length === 0 ? 'none' : 'markdown'}. Change with --configurations <ids>.`,
             );

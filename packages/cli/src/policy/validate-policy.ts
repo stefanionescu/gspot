@@ -1,14 +1,14 @@
-// The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
-import type { PolicyFiles, PathSegment, PolicyProblem } from '#cli/types/policy.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
+import { nearMatches } from '#cli/policy/near.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
+import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { sourceLocations, policyLocation } from '#cli/policy/source-locations.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import { unknownConfiguration } from '#cli/policy/messages.ts';
+// The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
+import type { PolicyFiles, PathSegment, PolicyProblem } from '#cli/types/policy.ts';
 
 /**
  * Every problem the selection and the surface find in a parsed policy. Throws PolicyError when there are any.

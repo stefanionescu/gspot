@@ -1,8 +1,8 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { acceptanceRun } from '#tests/support/cli/worktree.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('a detected reference project reports its syntax defect, accepts its correction, and preserves authored input', async () => {
     await using repository = await testdir();
@@ -25,7 +25,7 @@ test('a detected reference project reports its syntax defect, accepts its correc
     });
     expect(result.init).toContain('written: gspot.toml');
     expect(result.report.exitCode).toBe(1);
-    expect(result.report.skips).toEqual([]);
+    expect(result.report.skips).toStrictEqual([]);
     expect(result.report.checks).toHaveLength(1);
     expect(result.report.checks[0]).toMatchObject({
         check: 'bash/syntax',
@@ -37,8 +37,8 @@ test('a detected reference project reports its syntax defect, accepts its correc
         ],
     });
     expect(result.corrected.exitCode).toBe(0);
-    expect(result.corrected.skips).toEqual([]);
-    expect(result.corrected.failed).toEqual([]);
+    expect(result.corrected.skips).toStrictEqual([]);
+    expect(result.corrected.failed).toStrictEqual([]);
     expect(result.corrected.checks).toHaveLength(1);
     expect(result.corrected.checks[0]).toMatchObject({
         check: 'bash/syntax',

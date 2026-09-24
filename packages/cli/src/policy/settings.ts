@@ -1,10 +1,10 @@
 import { parseShell } from '@yarnpkg/parsers';
-import { scopeAncestors } from '#cli/repository/scopes.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/settings.ts';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
-import { rootSettingSchemas, integrationSettingSchemas } from '#cli/schemas/policy.ts';
+import { scopeAncestors } from '#cli/repository/scopes.ts';
+import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/settings.ts';
 import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
+import { rootSettingSchemas, integrationSettingSchemas } from '#cli/schemas/policy.ts';
 
 import type {
     WrittenValue,
@@ -77,11 +77,18 @@ function namingKeys(policy: Partial<Policy>): string[] {
     return keys;
 }
 
-function toolKeys(policy: Partial<Policy>): string[] {
+function toolKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
     const keys: string[] = [];
-    const tools = policy.tools ?? {};
-    for (const [tool, table] of Object.entries(tools))
-        for (const slot of Object.keys(table)) if (slot !== 'extra') keys.push(`tools.${tool}.${slot}`);
+    const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
+        Object.entries(table).filter(([slot]) => slot !== 'extra')
+            .map(([slot, value]) => ({ key: `tools.${tool}.${slot}`, value })));
+    for (const { key, value } of pending) {
+        const children = Array.isArray(value) ? undefined : asRecord(value);
+        if (!surface.specs.has(key) && children !== undefined &&
+            [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`))) {
+            pending.push(...Object.entries(children).map(([slot, child]) => ({ key: `${key}.${slot}`, value: child })));
+        } else keys.push(key);
+    }
     return keys;
 }
 
@@ -210,7 +217,11 @@ function applyLayers(
     return result;
 }
 
-/** The root policy and applicable scope tables, ordered from outermost to innermost. */
+/**
+ * The root policy and applicable scope tables, ordered from outermost to innermost.
+ * @param policy
+ * @param scope
+ */
 export function policyTables(policy: Policy, scope: string | undefined): PolicyLayer[] {
     return [
         { table: policy, name: 'gspot.toml' },
@@ -233,11 +244,12 @@ export function asRecord(value: unknown): Record<string, unknown> | undefined {
 /**
  * Every setting key a policy table writes, in dotted form.
  * @param policy the root table or one scope table
+ * @param surface the selected manifest settings, including nested tool keys
  * @returns the keys under limits, naming, tools and format
  */
-export function writtenKeys(policy: Partial<Policy>): string[] {
+export function writtenKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
     const format = Object.keys(policy.format ?? {}).map((key) => `format.${key}`);
-    return [...limitKeys(policy), ...namingKeys(policy), ...toolKeys(policy), ...format];
+    return [...limitKeys(policy), ...namingKeys(policy), ...toolKeys(policy, surface), ...format];
 }
 
 /**
@@ -359,14 +371,17 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
 }
 
-/** Read a configured executable and literal arguments, preserving shell quoting. */
+/**
+ * Read a configured executable and literal arguments, preserving shell quoting.
+ * @param source
+ */
 export function commandArguments(source: string): string[] {
     const lines = parseShell(source, { isGlobPattern: () => false });
     const line = lines[0];
     if (lines.length !== 1 || line?.type !== ';' || line.command.then !== undefined)
         throw new Error('Configure one executable with literal arguments.');
     const command = line.command.chain;
-    if (command.type !== 'command' || command.then !== undefined || command.envs.length !== 0)
+    if (command.type !== 'command' || command.then !== undefined || command.envs.length > 0)
         throw new Error('Configure one executable with literal arguments.');
     return command.args.map((argument) => {
         if (argument.type !== 'argument') throw new Error('Command redirection is not supported.');

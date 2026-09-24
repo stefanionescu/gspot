@@ -1,15 +1,10 @@
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
-
 import { fileURLToPath } from 'node:url';
-
-import { chmodSync, readFileSync, readlinkSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-
 import { describe, expect, test } from 'bun:test';
-
 import { createFileTree, testdir } from 'testdirs';
-
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { chmodSync, readFileSync, readlinkSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
@@ -24,7 +19,7 @@ test.each(['success', 'error', 'interruption', 'edited', 'damaged backup'] as co
         const original = Buffer.from([0, 255, 10, 13]);
         const destination = join(directory.path, 'config.txt');
         writeFileSync(destination, original, { mode: 0o444 });
-        const program = `
+        const program = String.raw`
 import { mock } from 'bun:test';
 const fs = await import('node:fs');
 const rename = fs.renameSync;
@@ -38,9 +33,9 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
     if (String(to).endsWith('config.txt')) {
         if (exists(to) && (stat(to).mode & 0o200) === 0)
             throw Object.assign(new Error('Read-only destination'), {code: 'EPERM'});
-        if (read(from).equals(Buffer.from('installed\\n'))) {
+        if (read(from).equals(Buffer.from('installed\n'))) {
             if (point === 'interruption' || point === 'damaged backup') process.exit(73);
-            if (point === 'edited') { write(to, 'developer edit\\n'); process.exit(73); }
+            if (point === 'edited') { write(to, 'developer edit\n'); process.exit(73); }
             if (point === 'error' && !failed) { failed = true; throw new Error('Publication failed'); }
         }
     }
@@ -50,7 +45,7 @@ Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openLifecycleOwner} = await import(${JSON.stringify(implementation)});
 const owner = openLifecycleOwner(process.cwd());
 try {
-    owner.replace('config.txt', {bytes: Buffer.from('installed\\n'), mode: 0o444}, 'config', true);
+    owner.replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 0o444}, 'config', true);
     if (point !== 'success') throw new Error('Expected publication failure');
 } catch (error) {
     if (point !== 'error' || error.message !== 'Publication failed') throw error;
@@ -77,15 +72,15 @@ try {
         if (point === 'edited') {
             expect(() => openLifecycleOwner(directory.path)).toThrow('conflicts with edited');
             expect(readFileSync(destination, 'utf8')).toBe('developer edit\n');
-            expect(readFileSync(join(directory.path, state.pending![0]!.beforeBackup!.backup))).toEqual(original);
+            expect(readFileSync(join(directory.path, state.pending![0]!.beforeBackup!.backup))).toStrictEqual(original);
             return;
         }
         const owner = openLifecycleOwner(directory.path);
         try {
             if (point === 'success') expect(owner.restore('config.txt')).toBe('changed');
-            expect(readFileSync(destination)).toEqual(original);
+            expect(readFileSync(destination)).toStrictEqual(original);
             expect(statSync(destination).mode & 0o777).toBe(0o444);
-            expect(owner.installedPaths()).toEqual([]);
+            expect(owner.installedPaths()).toStrictEqual([]);
         } finally {
             owner.close();
         }
@@ -125,7 +120,7 @@ test.each(['before', 'after'] as const)(
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
         await createFileTree(directory.path, Object.fromEntries(paths.map((path) => [path, `authored ${path}\n`])));
         for (const path of paths) chmodSync(join(directory.path, path), 0o640);
-        const program = `
+        const program = String.raw`
 import {mock} from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
 const open=boundary.openConfinedRoot;
@@ -139,7 +134,7 @@ if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }}));
 const {openLifecycleOwner}=await import(${JSON.stringify(implementation)});
 const owner=openLifecycleOwner(process.cwd());
-owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\\n'),mode:0o444},'config',true)));
+owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));
 owner.close();
 `;
         const child = Bun.spawn([process.execPath, '-e', program], {
@@ -156,7 +151,7 @@ owner.close();
         expect(readFileSync(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
         const owner = openLifecycleOwner(directory.path);
         try {
-            expect(owner.installedPaths().sort()).toEqual(
+            expect(owner.installedPaths().sort()).toStrictEqual(
                 point === 'before' ? ['first.txt'] : ['first.txt', 'middle.txt'],
             );
             owner.applyProposals(
@@ -174,7 +169,7 @@ owner.close();
                 expect(readFileSync(join(directory.path, path), 'utf8')).toBe(`authored ${path}\n`);
                 expect(statSync(join(directory.path, path)).mode & 0o777).toBe(0o640);
             }
-            expect(owner.installedPaths()).toEqual([]);
+            expect(owner.installedPaths()).toStrictEqual([]);
         } finally {
             owner.close();
         }
@@ -223,13 +218,13 @@ owner.close();
         const owner = openLifecycleOwner(directory.path);
         try {
             expect(owner.read('first.txt')).toBeUndefined();
-            expect(owner.installedPaths().sort()).toEqual(
+            expect(owner.installedPaths().sort()).toStrictEqual(
                 point === 'before' ? ['last.txt', 'middle.txt'] : ['last.txt'],
             );
             expect(owner.read('last.txt')?.bytes.toString()).toBe('last.txt');
             owner.applyProposals(owner.installedPaths().map((path) => owner.proposeRestoration(path)));
             for (const path of paths) expect(owner.read(path)).toBeUndefined();
-            expect(owner.installedPaths()).toEqual([]);
+            expect(owner.installedPaths()).toStrictEqual([]);
         } finally {
             owner.close();
         }
@@ -278,12 +273,12 @@ try {
             child.exited,
         ]);
         expect(code, stderr).toBe(0);
-        expect(JSON.parse(stdout)).toEqual({ code: 'ENOSPC' });
+        expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
         for (const name of ['first.bin', 'second.bin']) {
-            expect(readFileSync(join(directory.path, name))).toEqual(original);
+            expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
             expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
         }
-        expect(readOwnership(directory.path).files).toEqual([]);
+        expect(readOwnership(directory.path).files).toStrictEqual([]);
         const owner = openLifecycleOwner(directory.path);
         try {
             owner.applyProposals(
@@ -293,7 +288,7 @@ try {
             );
             owner.applyProposals(['first.bin', 'second.bin'].map((path) => owner.proposeRestoration(path)));
             for (const name of ['first.bin', 'second.bin']) {
-                expect(readFileSync(join(directory.path, name))).toEqual(original);
+                expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
                 expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
             }
         } finally {
@@ -335,7 +330,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 expect(readlinkSync(join(directory.path, 'tool'))).toBe('original');
                 expect(readFileSync(join(directory.path, 'original'), 'utf8')).toBe('authored target');
                 expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('installed target');
-                expect(owner.paths()).toEqual([]);
+                expect(owner.paths()).toStrictEqual([]);
             } finally {
                 owner.close();
             }
@@ -365,7 +360,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
         async (point) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'config.txt': 'original\n' });
-            const script = `
+            const script = String.raw`
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
             const open = boundary.openConfinedRoot;
@@ -381,7 +376,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 },
             }));
             const { openLifecycleOwner } = await import(${JSON.stringify(implementation)});
-            openLifecycleOwner(process.cwd()).replace('config.txt', {bytes: Buffer.from('installed\\n'), mode: 420}, 'config', true);
+            openLifecycleOwner(process.cwd()).replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 420}, 'config', true);
         `;
             const child = Bun.spawnSync([process.execPath, '-e', script], {
                 cwd: directory.path,
@@ -396,9 +391,9 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             const owner = openLifecycleOwner(directory.path);
             try {
                 if (point === 'after') {
-                    expect(owner.paths()).toEqual(['config.txt']);
+                    expect(owner.paths()).toStrictEqual(['config.txt']);
                     expect(owner.restore('config.txt')).toBe('changed');
-                } else expect(owner.paths()).toEqual([]);
+                } else expect(owner.paths()).toStrictEqual([]);
                 expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
                 const recovered = ownershipSchema.parse(
                     JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),

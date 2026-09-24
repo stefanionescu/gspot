@@ -1,4 +1,8 @@
-/** Select one INI section and its colon-delimited subsections without changing their text. */
+/**
+ * Select one INI section and its colon-delimited subsections without changing their text.
+ * @param text
+ * @param section
+ */
 export function iniSection(text: string, section: string): string | undefined {
     const selected: string[] = [];
     const seen = new Set<string>();

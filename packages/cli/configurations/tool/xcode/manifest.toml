@@ -39,7 +39,7 @@ title = "Build settings"
 example = "A non-comment line `PRODUCT_NAME App` in an `.xcconfig` file lacks an assignment operator. Change it to `PRODUCT_NAME = App`."
 level = "recommended"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-xcconfig"
 claims = {extensions = [".xcconfig"]}
@@ -54,7 +54,7 @@ title = "String catalogs"
 example = "A string catalog entry with one translated locale and an absent required locale reports the missing translation. Add that locale and its translation, or explicitly mark the string as not translated when that is the intended catalog state."
 level = "recommended"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-xcstrings"
 claims = {extensions = [".xcstrings"]}
@@ -64,19 +64,19 @@ why = "A string with no translation shows its source language in the middle of a
 help = "Add the translation, or mark the string as not translated in the catalog."
 
 [[checks]]
-name = "xcode/asset-catalogues"
+name = "xcode/asset-catalogs"
 title = "Validate asset catalogs"
 example = "A `Contents.json` image entry naming `icon.png` reports a missing asset when that file does not exist. Add the intended image beside the manifest or remove the obsolete entry."
 level = "recommended"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-assets"
 claims = {paths = ["**/*.xcassets/**"], extensions = [".swift"]}
 coverage = ["consistency"]
 summary = "Checks that every asset Contents.json parses, that every image set holds the images it names, and that some source names every asset."
 why = "An image set with no image draws nothing at run time, and an asset nobody names ships in the app for nothing."
-help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
+help = "Add the image, or delete the asset. For assets named at runtime, add a tracked orphan-asset exception with its reason."
 
 [[checks]]
 name = "xcode/test-plan"
@@ -84,7 +84,7 @@ title = "Check Xcode test plans"
 example = "A test target absent from the test plan used by its scheme reports missing coverage by the plan. Add that target to the plan and point the scheme at the plan."
 level = "all"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-test-plans"
 coverage = ["tests"]
@@ -113,7 +113,7 @@ title = "Symlinks"
 example = "A source directory represented by a symlink reports a project symlink finding. Replace the link with the intended repository-owned directory and update project references."
 level = "all"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-symlinks"
 coverage = ["consistency"]
@@ -124,18 +124,18 @@ help = "Replace the symlink with the folder it points at, or ignore the path wit
 [[checks]]
 name = "xcode/entitlements-policy"
 title = "Entitlements policy"
-example = "An entitlement enabled in an `.entitlements` file but absent from `tools.xcode.allowed_entitlements` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
+example = "An entitlement enabled in an `.entitlements` file but absent from `tools.xcode.entitlements_allowed` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
 level = "recommended"
-waits_for = "tools.xcode.allowed_entitlements"
+waits_for = "tools.xcode.entitlements_allowed"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-entitlements"
 claims = {extensions = [".entitlements"]}
 coverage = ["security"]
-summary = "Checks that every entitlement is on tools.xcode.allowed_entitlements, when the policy holds that list."
+summary = "Checks that every entitlement is on tools.xcode.entitlements_allowed, when the policy holds that list."
 why = "An entitlement is a capability the system grants the app, and a new one deserves a review of its own."
-help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
+help = "Remove the entitlement, or add it to tools.xcode.entitlements_allowed."
 
 [[checks]]
 name = "xcode/ats"
@@ -143,7 +143,7 @@ title = "App Transport Security"
 example = "An Info.plist enabling `NSAllowsArbitraryLoads` disables transport protection broadly and reports a finding. Remove that key. If one host requires an exception, declare only the host-specific exception."
 level = "recommended"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "xcode-ats"
 claims = {extensions = [".plist"]}
@@ -174,18 +174,11 @@ default = "generic/platform=iOS Simulator"
 summary = "The xcodebuild destination."
 
 [[settings]]
-name = "tools.xcode.allowed_entitlements"
+name = "tools.xcode.entitlements_allowed"
 kind = "list"
 direction = "tightening"
 default = []
 summary = "The entitlements the app may hold; empty turns the check off."
-
-[[settings]]
-name = "tools.xcode.orphan_assets"
-kind = "boolean"
-direction = "tightening"
-default = true
-summary = "Whether an asset no source names is a finding."
 
 [rule_files]
 tool = ["tool/xcode/XCODE.md"]

@@ -1,22 +1,20 @@
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import { hookLocation } from '#cli/lifecycle/hooks.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-// What changed in the repository after init: configurations detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { pinnedTwice } from '#cli/emit/runner-tasks.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { head } from '#cli/repository/tracked.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
 import { isOwned } from '#cli/lifecycle/takeover.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
-import { head } from '#cli/repository/tracked.ts';
 import type { Session } from '#cli/types/execution.ts';
+import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
 import type { ChangeReport, ChangeRow } from '#cli/types/reports.ts';
+// What changed in the repository after init: configurations detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { pinnedTwice, MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository.ts';
+import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 const HEAD_BYTES = 600;
 
@@ -130,7 +128,7 @@ export function changeReport(session: Session): ChangeReport {
         configurationNotOwned: [
             ...configurationNotOwned(session, tooling, selected),
             ...unownedGeneratedFiles(session),
-            ...(existsSync(join(session.root, 'gspot.local.toml'))
+            ...((statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) !== undefined)
                 ? [
                       {
                           path: 'gspot.local.toml',

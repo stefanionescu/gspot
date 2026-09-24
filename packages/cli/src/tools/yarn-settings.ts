@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { z } from 'zod';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import { z } from 'zod';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
 
 const KEYS = new Set([
@@ -21,7 +21,12 @@ const KEYS = new Set([
     'unsafeHttpWhitelist',
 ]);
 
-/** Read Yarn-owned connection settings and give its isolated project environment references. */
+/**
+ * Read Yarn-owned connection settings and give its isolated project environment references.
+ * @param root
+ * @param work
+ * @param env
+ */
 export async function yarnSettings(root: string, work: string, env: Record<string, string>): Promise<string[]> {
     delete env['YARN_REGISTRY'];
     const settings: Record<string, unknown> = z

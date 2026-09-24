@@ -1,22 +1,22 @@
-import { drizzleMigrations } from '#cli/checks/libraries.ts';
-import * as processes from '#cli/platform/spawn.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { openSession } from '#cli/run/session.ts';
-import { run as runCli } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { planRun } from '#cli/run/plan.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { drizzleMigrations } from '#cli/checks/libraries.ts';
+import { run as runCli } from '#tests/support/cli/command.ts';
+import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
-const GENERATOR = `import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+const GENERATOR = String.raw`import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const schema = readFileSync('schema.txt', 'utf8');
 if (schema !== 'current') {
     mkdirSync('migrations/meta', { recursive: true });
-    writeFileSync('migrations/0001_change.sql', 'ALTER TABLE records ADD name text;\\n');
-    writeFileSync('migrations/meta/journal.json', '{"version":2}\\n');
+    writeFileSync('migrations/0001_change.sql', 'ALTER TABLE records ADD name text;\n');
+    writeFileSync('migrations/meta/journal.json', '{"version":2}\n');
 }
 
 if (schema === 'failure') {
@@ -67,7 +67,7 @@ for (const scope of ['', 'packages/db']) {
                 if (isFailure) await expect(drizzleMigrations(input)).rejects.toThrow('Migration generation failed');
                 else {
                     const found = await drizzleMigrations(input);
-                    expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toEqual([
+                    expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
                         {
                             check: spec.name,
                             file: path('migrations/0001_change.sql').replaceAll('\\', '/'),
@@ -98,10 +98,10 @@ for (const scope of ['', 'packages/db']) {
                         ]);
                         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
                         const report = reportSchema.parse(JSON.parse(checked.stdout));
-                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toEqual([
+                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
                             { check: spec.name, status: 'fail' },
                         ]);
-                        expect(report.skips).toEqual([]);
+                        expect(report.skips).toStrictEqual([]);
                         expect(
                             report.checks[0]!.findings.map(({ check, file, line, rule, message }) => ({
                                 check,
@@ -110,12 +110,12 @@ for (const scope of ['', 'packages/db']) {
                                 rule,
                                 message,
                             })),
-                        ).toEqual(
+                        ).toStrictEqual(
                             found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
                         );
                     }
                     writeFileSync(join(directory.path, path('schema.txt')), 'current');
-                    expect(await drizzleMigrations(input)).toEqual([]);
+                    expect(await drizzleMigrations(input)).toStrictEqual([]);
                     if (scope === '') {
                         const checked = await runCli(directory.path, [
                             'check',
@@ -128,11 +128,11 @@ for (const scope of ['', 'packages/db']) {
                         ]);
                         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
                         const report = reportSchema.parse(JSON.parse(checked.stdout));
-                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toEqual([
+                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
                             { check: spec.name, status: 'ok' },
                         ]);
-                        expect(report.skips).toEqual([]);
-                        expect(report.checks[0]!.findings).toEqual([]);
+                        expect(report.skips).toStrictEqual([]);
+                        expect(report.checks[0]!.findings).toStrictEqual([]);
                     }
                 }
                 expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
@@ -185,7 +185,7 @@ test.each(['cancellation', 'deadline'])(
             expect(copies.every((path) => !existsSync(path))).toBe(true);
             expect(readFileSync(join(directory.path, 'generate'), 'utf8')).toBe('setInterval(() => {}, 1000);\n');
             await Bun.write(join(directory.path, 'generate'), 'process.exitCode = 0;\n');
-            expect(await drizzleMigrations(input)).toEqual([]);
+            expect(await drizzleMigrations(input)).toStrictEqual([]);
             expect(copies.every((path) => !existsSync(path))).toBe(true);
         } finally {
             spawn.mockRestore();

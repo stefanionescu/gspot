@@ -1,7 +1,9 @@
-import { readProject } from '#cli/checks/xcode/project-reader.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { symlink, readlink, unlink } from 'node:fs/promises';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readProject } from '#cli/checks/xcode/project-reader.ts';
 
 const PROJECT = `// !$*UTF8*$!
 {
@@ -39,7 +41,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     const command = ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(JSON.parse(broken.stdout).checks[0].findings).toEqual([
+    expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
         expect.objectContaining({ file: 'Second/Shared.swift', rule: 'no-target' }),
         expect.objectContaining({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
     ]);
@@ -52,7 +54,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
     const missing = await run(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect(JSON.parse(missing.stdout).checks[0].findings).toEqual([
+    expect(JSON.parse(missing.stdout).checks[0].findings).toStrictEqual([
         expect.objectContaining({
             rule: 'missing-file',
             message: 'The project names Second/Shared.swift, and the tree holds no such file.',
@@ -63,20 +65,23 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 test('project directory offsets and source roots resolve separately', () => {
     const source = PROJECT.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
     const project = readProject(source, '/repo/project');
-    expect([...project.sources]).toEqual(['/repo/Code/First Group/Shared.swift', '/repo/project/Root.swift']);
-    expect(project.folders).toEqual([
+    expect([...project.sources]).toStrictEqual(['/repo/Code/First Group/Shared.swift', '/repo/project/Root.swift']);
+    expect(project.folders).toStrictEqual([
         { path: '/repo/Code/Synced/', excluded: new Set(['/repo/Code/Synced/Excluded.swift']) },
     ]);
 });
 
 test('quoted project strings preserve escapes and ignore comment-like text', () => {
-    const source = PROJECT.replace('path = "First Group";', 'path = "First \\U00e9 \\"Group\\"";').replace(
+    const source = PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 \"Group\"";`).replace(
         'path = Shared.swift;',
         'path = "//Shared.swift";',
     );
-    expect([...readProject(source, '/repo').sources]).toEqual(['/Shared.swift', '/repo/Root.swift']);
+    expect([...readProject(source, '/repo').sources]).toStrictEqual(['/Shared.swift', '/repo/Root.swift']);
     expect(
-        [...readProject(PROJECT.replace('path = "First Group";', 'path = "First \\U00e9 Group";'), '/repo').sources][0],
+        [
+            ...readProject(PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 Group";`), '/repo')
+                .sources,
+        ][0],
     ).toBe('/repo/First é Group/Shared.swift');
 });
 
@@ -123,11 +128,42 @@ test('membership combines projects in a scope and checks nested scopes independe
             scope: check.scope,
             findings: check.findings,
         })),
-    ).toEqual([
+    ).toStrictEqual([
         { scope: '', findings: [] },
         { scope: 'nested', findings: [expect.objectContaining({ file: 'nested/Extra.swift', rule: 'no-target' })] },
     ]);
     await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+
+test('Xcode symlinks use the deepest scope and the immutable staged target', async () => {
+    await using sandbox = await testdir();
+    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policy,
+        'App.xcodeproj/project.pbxproj': PROJECT,
+        'app/App.xcodeproj/project.pbxproj': PROJECT,
+        'app/child/App.xcodeproj/project.pbxproj': PROJECT,
+        'sibling/App.xcodeproj/project.pbxproj': PROJECT,
+        'app/child/Source.swift': 'let value = 1\n',
+    });
+    commitAll(sandbox.path);
+    const link = `${sandbox.path}/app/child/Linked.swift`;
+    await symlink('Source.swift', link);
+    expect(git(sandbox.path, ['add', 'app/child/Linked.swift']).code).toBe(0);
+    await unlink(link);
+    await symlink('Unstaged.swift', link);
+    const command = ['check', '--staged', '--only', 'xcode/symlinks', '--no-cache', '--json'];
+    const broken = await run(sandbox.path, command);
+    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+    const findings = JSON.parse(broken.stdout).checks.flatMap((check: { scope: string; findings: unknown[] }) => check.findings.map(finding => ({ scope: check.scope, finding })));
+    expect(findings).toStrictEqual([{ scope: 'app/child', finding: expect.objectContaining({ file: 'app/child/Linked.swift', line: 1, rule: 'symlink', message: expect.stringContaining('A symlink to Source.swift') }) }]);
+    expect(await readlink(link)).toBe('Unstaged.swift');
+    expect(git(sandbox.path, ['rm', '--cached', '-f', 'app/child/Linked.swift']).code).toBe(0);
+    const corrected = await run(sandbox.path, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(await readlink(link)).toBe('Unstaged.swift');
+    expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
 });

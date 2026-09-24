@@ -10,7 +10,7 @@ describe('path identifiers', () => {
 
     test('Next.js segments are unwrapped and dot folders skipped', () => {
         const names = directoryIdentifiers('app/(marketing)/[slug]/@modal/_lib/.hidden/page.tsx', 'typescript');
-        expect(names.map((entry) => `${entry.category}:${entry.name}`)).toEqual([
+        expect(names.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([
             'directories:app',
             'directories:marketing',
             'path_parameters:slug',

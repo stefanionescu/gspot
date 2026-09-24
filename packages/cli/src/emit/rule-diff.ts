@@ -1,14 +1,14 @@
-import { parse as parseJson, type ParseError } from 'jsonc-parser';
-import { parse as parseToml } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
-import { swiftformatRules } from '#cli/emit/swiftformat-rules.ts';
-import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
-import { valeRules } from '#cli/emit/vale-rules.ts';
-import { javascriptRules } from '#cli/emit/javascript-rules.ts';
+import { parse as parseToml } from 'smol-toml';
 import { gixyRules } from '#cli/emit/gixy-rules.ts';
+import { valeRules } from '#cli/emit/vale-rules.ts';
 import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
+import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { javascriptRules } from '#cli/emit/javascript-rules.ts';
+import { swiftformatRules } from '#cli/emit/swiftformat-rules.ts';
+import { parse as parseJson, type ParseError } from 'jsonc-parser';
+import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
 import type { DriftEntry, GeneratedFile } from '#cli/types/generation.ts';
 
 function document(path: string, text: string): unknown {
@@ -55,7 +55,12 @@ function rulesAt(parsed: unknown, path: string): Map<string, unknown> {
     throw new Error(`Rule path ${path} must contain a rule list or table.`);
 }
 
-/** Compare resolved rule collections using their declared paths. */
+/**
+ * Compare resolved rule collections using their declared paths.
+ * @param paths
+ * @param previous
+ * @param proposed
+ */
 export function compareRules(paths: string[], previous: unknown, proposed: unknown): NonNullable<DriftEntry['rules']> {
     return paths.flatMap((path) => {
         const old = rulesAt(previous, path);
@@ -69,7 +74,11 @@ export function compareRules(paths: string[], previous: unknown, proposed: unkno
     });
 }
 
-/** Compare declared rule lists and tables as data, retaining malformed-file diagnostics beside the byte diff. */
+/**
+ * Compare declared rule lists and tables as data, retaining malformed-file diagnostics beside the byte diff.
+ * @param file
+ * @param before
+ */
 export function ruleDiff(file: GeneratedFile, before: string | undefined): Pick<DriftEntry, 'rules' | 'ruleError'> {
     if (file.rulesPath === undefined) return {};
     try {

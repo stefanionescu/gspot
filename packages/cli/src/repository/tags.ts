@@ -1,6 +1,6 @@
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
 import type { Tagged, RawEntry } from '#cli/types/repository.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/repository/patterns.ts';
 import { shebangExecutable, shebangInterpreter } from '#cli/configurations/detect.ts';
 import { EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#cli/repository/file-tags.ts';

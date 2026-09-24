@@ -1,11 +1,11 @@
-import { exportedProfile } from '#cli/profile/export.ts';
-import { parseProfile } from '#cli/profile/read.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { parseProfile } from '#cli/profile/read.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { exportedProfile } from '#cli/profile/export.ts';
+import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 test('a global ignore stops a repository check and its correction command until removed', async () => {
     await using directory = await testdir();
@@ -24,9 +24,9 @@ test('a global ignore stops a repository check and its correction command until 
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const report = reportSchema.parse(JSON.parse(skipped.stdout));
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
-    expect(report.skips).toEqual([{ check: 'project/quality', source: 'ignore' }]);
+    expect(report.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(report.coverage.checked).toBe(0);
-    expect(report.ignores).toEqual([{ check: 'project/quality', matched: 0 }]);
+    expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
     expect(existsSync(join(directory.path, 'observed.txt'))).toBe(false);
     expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
     const removed = await run(directory.path, ['ignore', 'project/quality', '--remove']);
@@ -55,7 +55,14 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         const applied = await run(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const lint = Bun.spawnSync(
-            [join(modules, '.bin/eslint'), '--config', '.gspot/config/eslint.config.mjs', '--format', 'json', 'source.js'],
+            [
+                join(modules, '.bin/eslint'),
+                '--config',
+                '.gspot/config/eslint.config.mjs',
+                '--format',
+                'json',
+                'source.js',
+            ],
             { cwd: directory.path },
         );
         expect(lint.exitCode, lint.stderr.toString()).not.toBe(2);
@@ -67,7 +74,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
                 .flatMap(({ messages }) => messages)
                 .filter(({ ruleId }) => ruleId === 'no-console')
                 .map(({ ruleId, line, column }) => ({ ruleId, line, column })),
-        ).toEqual(ignored ? [] : [{ ruleId: 'no-console', line: 1, column: 1 }]);
+        ).toStrictEqual(ignored ? [] : [{ ruleId: 'no-console', line: 1, column: 1 }]);
     }
 });
 
@@ -151,7 +158,7 @@ rules = {eqeqeq = ["error", "always"]}
                     column,
                 })),
         );
-        expect(actual).toEqual([
+        expect(actual).toStrictEqual([
             { file: 'apps/web/admin/page.js', severity: 2, line: 1, column: 41 },
             { file: 'apps/web/exempt.js', severity: 1, line: 1, column: 41 },
             ...(ignored
@@ -164,7 +171,7 @@ rules = {eqeqeq = ["error", "always"]}
     }
     const exported = exportedProfile(policy, 'project.profile.toml');
     expect(exported.text).not.toContain('overrides');
-    expect(parseProfile(exported.text, 'project.profile.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toEqual([
+    expect(parseProfile(exported.text, 'project.profile.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual([
         'error',
         'smart',
     ]);
@@ -176,14 +183,14 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const command = [
         'node',
         '-e',
-        'const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("checked.txt", JSON.stringify(paths) + "\\n"); process.exit(paths.some(path => fs.readFileSync(path, "utf8") !== "corrected\\n") ? 1 : 0);',
+        String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("checked.txt", JSON.stringify(paths) + "\n"); process.exit(paths.some(path => fs.readFileSync(path, "utf8") !== "corrected\n") ? 1 : 0);`,
         '--',
         '{files}',
     ];
     const fix = [
         'node',
         '-e',
-        'const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("fixed.txt", JSON.stringify(paths) + "\\n"); for (const path of paths) fs.writeFileSync(path, "corrected\\n");',
+        String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("fixed.txt", JSON.stringify(paths) + "\n"); for (const path of paths) fs.writeFileSync(path, "corrected\n");`,
         '--',
         '{files}',
     ];
@@ -200,7 +207,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const report = reportSchema.parse(JSON.parse(corrected.stdout));
     expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
     for (const log of ['checked.txt', 'fixed.txt'])
-        expect(JSON.parse(readFileSync(join(directory.path, log), 'utf8').trim()).sort()).toEqual([
+        expect(JSON.parse(readFileSync(join(directory.path, log), 'utf8').trim()).sort()).toStrictEqual([
             'inputs/regular.txt',
             'inputs/skip-keep.txt',
         ]);
@@ -210,7 +217,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const skipped = await run(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const skippedReport = reportSchema.parse(JSON.parse(skipped.stdout));
-    expect(skippedReport.skips).toEqual([{ check: 'project/quality', source: 'ignore' }]);
+    expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
     expect(skippedReport.coverage.checked).toBe(0);
     expect(readFileSync(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);

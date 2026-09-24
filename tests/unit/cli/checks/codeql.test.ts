@@ -1,7 +1,7 @@
-import { testdir, createFileTree } from 'testdirs';
-import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { resolve, sep } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { sarifFindings } from '#cli/checks/security/codeql.ts';
 
 const sourceRoot = resolve('selected-source');
@@ -37,7 +37,7 @@ const log = {
 describe('sarifFindings', () => {
     test('every result is a finding at its file and line', () => {
         const findings = sarifFindings(log, 'security/codeql', [], sourceRoot);
-        expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toEqual([
+        expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([
             ['api/src/users.ts', 12, 'js/sql-injection'],
             ['scripts/build.ts', 1, 'js/path-injection'],
         ]);
@@ -49,7 +49,7 @@ describe('sarifFindings', () => {
             { rule: 'js/sql-injection', paths: ['scripts/**'], reason: 'The wrong place for this rule.' },
         ];
         const findings = sarifFindings(log, 'security/codeql', accepted, sourceRoot);
-        expect(findings.map((finding) => finding.rule)).toEqual(['js/sql-injection']);
+        expect(findings.map((finding) => finding.rule)).toStrictEqual(['js/sql-injection']);
     });
 });
 
@@ -61,7 +61,7 @@ test.each([
     { version: '2.1.0', runs: [{ results: null }] },
 ])('an incomplete CodeQL report cannot become a clean result: %j', (value) => {
     expect(() => sarifFindings(value, 'security/codeql', [], sourceRoot)).toThrow();
-    expect(sarifFindings({ version: '2.1.0', runs: [{ results: [] }] }, 'security/codeql', [], sourceRoot)).toEqual([]);
+    expect(sarifFindings({ version: '2.1.0', runs: [{ results: [] }] }, 'security/codeql', [], sourceRoot)).toStrictEqual([]);
 });
 
 test.each([
@@ -120,7 +120,7 @@ test.each([
             [{ rule: 'js/sql-injection', paths: ['api/some file.ts'], reason: 'Reviewed fixture' }],
             sourceRoot,
         ),
-    ).toEqual([]);
+    ).toStrictEqual([]);
 });
 
 test.each([
@@ -141,7 +141,7 @@ test.each(['utf16CodeUnits', 'unicodeCodePoints'] as const)(
     'CodeQL character offsets preserve declared newlines and %s columns',
     async (columnKind) => {
         await using directory = await testdir();
-        await createFileTree(directory.path, { 'unicode.py': '\ufefffirst\r\n😀x = unsafe\n' });
+        await createFileTree(directory.path, { 'unicode.py': '\uFEFFfirst\r\n😀x = unsafe\n' });
         const report = {
             version: '2.1.0',
             runs: [

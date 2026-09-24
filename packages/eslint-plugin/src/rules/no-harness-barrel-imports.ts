@@ -1,6 +1,5 @@
 import { createRule } from '#plugin/rules/definition.ts';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';
-
 // An import from a test-harness barrel.
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 

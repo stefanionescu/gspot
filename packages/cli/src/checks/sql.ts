@@ -1,34 +1,23 @@
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 // The checks every SQL file gets: it parses, it holds no block comment, and it stays under the line ceiling.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 
 const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
 const BLOCK_COMMENT = '/*';
 const LINE_COMMENT = '--';
-// :'name' and :"name" are quoted psql variables; :name after a space, a bracket, a comma or an equals sign is a plain one.
-const PSQL_QUOTED = /:'[A-Za-z_]\w*'|:"[A-Za-z_]\w*"/gu;
-const PSQL_NAMED = /(?<lead>[\s(,=]):[A-Za-z_]\w*/gu;
 // A string, a quoted name, a line comment, or the start of a block comment, whichever comes first.
 const SQL_TOKENS = /'[^']*'|"[^"]*"|--[^\n]*|\/\*/gu;
 
 function sources(input: EngineInput): { path: string; text: string }[] {
     return input.files
         .filter((file) => file.nature === 'source')
-        .map((file) => ({ path: file.path, text: readSource(input.root, file.path).toString('utf8') }));
-}
-
-// A script for psql holds meta-commands and variables the server never sees. A meta-command line becomes blank and a
-// variable becomes a literal or a name of the same length class, so the parser reads what the server reads and lines keep their numbers.
-function withoutPsql(text: string): string {
-    return text
-        .split('\n')
-        .map((line) => (line.trimStart().startsWith('\\') ? '' : line))
-        .join('\n')
-        .replaceAll(PSQL_QUOTED, "''")
-        .replaceAll(PSQL_NAMED, (_match, lead: string) => `${lead}psql_variable`);
+        .map((file) => ({
+            path: file.path,
+            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+        }));
 }
 
 // The index of the first block comment outside a string and outside a line comment, or a negative number.
@@ -47,7 +36,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
     const findings: Finding[] = [];
     for (const source of sources(input)) {
-        const parsed = await sqlFile(withoutPsql(source.text));
+        const parsed = await sqlFile(source.text, input.observations);
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
         findings.push({
@@ -69,7 +58,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function sqlBlockComments(input: EngineInput): Finding[] {
-    const findings = sources(input).flatMap((source): Finding[] => {
+    return sources(input).flatMap((source): Finding[] => {
         const found = blockCommentAt(source.text);
         if (found === -1) return [];
         return [
@@ -83,7 +72,6 @@ export function sqlBlockComments(input: EngineInput): Finding[] {
             },
         ];
     });
-    return findings;
 }
 
 /**
@@ -94,7 +82,7 @@ export function sqlBlockComments(input: EngineInput): Finding[] {
 export function sqlFileLength(input: EngineInput): Finding[] {
     const ceiling = input.view.limit('file_lines', 'sql');
     if (ceiling === undefined) return [];
-    const findings = sources(input).flatMap((source): Finding[] => {
+    return sources(input).flatMap((source): Finding[] => {
         const lines = source.text.split('\n').map((line) => line.trim());
         const count = lines.filter((line) => line !== '' && !line.startsWith(LINE_COMMENT)).length;
         if (count <= ceiling) return [];
@@ -103,7 +91,6 @@ export function sqlFileLength(input: EngineInput): Finding[] {
             { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
         ];
     });
-    return findings;
 }
 
 function proceduralStatements(value: unknown): number {
@@ -130,13 +117,16 @@ function sqlStatements(value: unknown): number {
     return count;
 }
 
-/** Check implemented PostgreSQL functions and their declared input parameters. */
+/**
+ * Check implemented PostgreSQL functions and their declared input parameters.
+ * @param input
+ */
 export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     const threshold = input.view.limit('trivial_statements', 'sql') ?? 2;
     const maximum = input.view.limit('function_parameters', 'sql') ?? 7;
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text);
+        const parsed = await sqlFile(source.text, input.observations);
         if (parsed.error !== undefined)
             throw new Error(`Cannot analyze SQL functions in ${source.path}: ${parsed.error.text}`);
         let trivial = 0;
@@ -166,19 +156,16 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
                 .sval;
             let statements: number;
             if (language === 'plpgsql') {
-                const definition = source.text.slice(statement.start, parsed.statements[index + 1]?.start);
+                const definition = parsed.source.slice(statement.start, parsed.statements[index + 1]?.start);
                 statements = proceduralStatements(await parsePlpgsql(definition));
             } else if (language === 'sql') {
-                if (body !== undefined) {
-                    const parsedBody = await sqlFile(body);
+                if (body === undefined) {
+                    statements = sqlStatements(statement.fields['sql_body']);
+                } else {
+                    const parsedBody = await parseSql(body);
                     if (parsedBody.error !== undefined)
                         throw new Error(`Cannot analyze SQL function body: ${parsedBody.error.text}`);
-                    statements = parsedBody.statements.reduce(
-                        (count, statement) => count + 1 + sqlStatements(statement.fields),
-                        0,
-                    );
-                } else {
-                    statements = sqlStatements(statement.fields['sql_body']);
+                    statements = sqlStatements(parsedBody.tree);
                 }
             } else continue;
             if (statements <= threshold) {

@@ -1,10 +1,10 @@
-import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
-import type { PlannedCheck } from '#cli/types/execution.ts';
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Finding } from '#cli/types/reports.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
+import type { PlannedCheck } from '#cli/types/execution.ts';
+import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
@@ -19,7 +19,7 @@ function isFileNamed(output: OutputFormat | undefined): boolean {
 
 function isOnDisk(file: string, roots: string[]): boolean {
     if (file === '') return false;
-    return roots.some((root) => existsSync(isAbsolute(file) ? file : join(root, file)));
+    return roots.some((root) => (statSync(isAbsolute(file) ? file : join(root, file), { throwIfNoEntry: false }) !== undefined));
 }
 
 /**
@@ -72,7 +72,11 @@ const TAIL_LINES = 20;
 const TRUFFLEHOG_FINDINGS = 183;
 const TYPOS_FINDINGS = 2;
 
-/** Match a tool's declared fatal diagnostics for checks and corrections. */
+/**
+ * Match a tool's declared fatal diagnostics for checks and corrections.
+ * @param spec
+ * @param result
+ */
 export function hasToolError(spec: CheckSpec, result: SpawnResult): boolean {
     return (
         spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`)
@@ -87,7 +91,7 @@ export function hasToolError(spec: CheckSpec, result: SpawnResult): boolean {
  */
 export function toolOutputDetail(result: SpawnResult, placeholder: string): string {
     const output = [result.stderr, result.stdout]
-        .map((stream) => stream.trim().split('\n').slice(0, TAIL_LINES).join('\n'))
+        .map((stream) => stream.trim().split('\n').slice(-TAIL_LINES).join('\n'))
         .filter((stream) => stream !== '');
     return output.length === 0 ? placeholder : output.join('\n');
 }
@@ -104,6 +108,7 @@ export function checkedFindings(planned: PlannedCheck, result: SpawnResult, root
     const isTypos = spec.output?.format === 'typos-json';
     const isMarkdownlint = spec.output?.format === 'markdownlint-json';
     const broken =
+        (result.code !== 0 && spec.findings_exit_codes !== undefined && !spec.findings_exit_codes.includes(result.code)) ||
         (isTypos && result.code !== 0 && result.code !== TYPOS_FINDINGS) ||
         (isMarkdownlint && result.code !== 0 && result.code !== 1) ||
         hasToolError(spec, result);

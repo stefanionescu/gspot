@@ -1,21 +1,18 @@
-import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/emit/format.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { compact } from '#cli/policy/normalize.ts';
-import { CARRIED_REASON } from '#cli/policy/reasons.ts';
-import {
-    formatFields,
-    formatRequest,
-    prettierIgnoreRequest,
-    prettierSettings,
-    prettierSource,
-} from '#cli/schemas/evaluation.ts';
-import type { CarriedFormatter } from '#cli/types/ownership.ts';
-import { createRequire } from 'node:module';
-import { basename, dirname, join } from 'node:path';
+import type { z } from 'zod';
 import { pathToFileURL } from 'node:url';
-import * as bundledPrettier from 'prettier';
 import { parse as parseYaml } from 'yaml';
-import { z } from 'zod';
+import * as bundledPrettier from 'prettier';
+import { createRequire } from 'node:module';
+import { compact } from '#cli/policy/normalize.ts';
+import { basename, dirname, join } from 'node:path';
+import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { CarriedFormatter } from '#cli/types/ownership.ts';
+import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/emit/format.ts';
+
+import type { prettierIgnoreRequest } from '#cli/schemas/evaluation.ts';
+import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/schemas/evaluation.ts';
+
 function supportedOptions(value: unknown) {
     const parsed = prettierSettings.safeParse(value);
     if (!parsed.success)
@@ -24,6 +21,7 @@ function supportedOptions(value: unknown) {
         );
     return parsed.data;
 }
+
 async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
     let implementation: string;
     try {
@@ -41,6 +39,10 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
         throw new Error('The installed Prettier does not expose its configuration API. Repair that installation.');
     return loaded;
 }
+/**
+ *
+ * @param request
+ */
 export async function evaluateFormat(request: z.infer<typeof formatRequest>): Promise<CarriedFormatter> {
     const { root, from, ignorePath } = request;
     const files = openConfinedRoot(root);
@@ -155,7 +157,10 @@ export async function evaluateFormat(request: z.infer<typeof formatRequest>): Pr
             : { extra: { reason: CARRIED_REASON.replaceAll('{{file}}', () => from), ...extra } }),
     };
 }
-/** Resolve the pinned formatter's exclusions without loading executable formatting configuration. */
+/**
+ * Resolve the pinned formatter's exclusions without loading executable formatting configuration.
+ * @param request
+ */
 export async function evaluateIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
     if (openConfinedRoot(request.root).read(request.ignorePath) === undefined)
         throw new Error(`The observed formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);

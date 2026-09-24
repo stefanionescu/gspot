@@ -1,14 +1,14 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { tmpdir } from 'node:os';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { z } from 'zod';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
 // Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 const TOOL = 'jscpd';
 const DEFAULT_CEILING = 4;
@@ -94,7 +94,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
         if (result.code !== 0)
             throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const path = join(work, 'jscpd-report.json');
-        if (!existsSync(path))
+        if (!(statSync(path, { throwIfNoEntry: false }) !== undefined))
             throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const named = input.view.settings['limits.duplication.threshold_percent'];
         return cloneFindings(

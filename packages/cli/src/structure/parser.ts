@@ -1,16 +1,17 @@
-import { executableStatements } from '#cli/structure/statements.ts';
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ScriptFunction } from '#cli/types/structure.ts';
+import { executableStatements } from '#cli/structure/statements.ts';
 
 /**
  * The functions a shell script declares, in order.
  * @param text the script text
+ * @param context optional execution observations and their resource owner
  * @returns the functions with one-based start and end lines and the lines between the braces
  */
-export async function scriptFunctions(text: string): Promise<ScriptFunction[]> {
-    const parser = await parserFor('bash');
-    const tree = parser.parse(text);
+export async function scriptFunctions(text: string, context?: Pick<EngineInput, 'observations' | 'resources'>): Promise<ScriptFunction[]> {
+    const tree = await parseSource('bash', text, context);
     if (tree === null) throw new Error('The source parser returned no tree.');
     const lines = text.split('\n');
     try {

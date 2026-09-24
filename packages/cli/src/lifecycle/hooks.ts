@@ -1,20 +1,19 @@
-import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import { NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
-import { hookBody, hookCommand, huskyLines, huskyReady, lefthookConfiguration } from '#cli/emit/hooks.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
-import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { FileProposal, HookLocation, LifecycleOwner, PreparedHook } from '#cli/types/ownership.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Session } from '#cli/types/execution.ts';
+import { preCommitReady } from '#cli/emit/pre-commit.ts';
+import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { basename, dirname, isAbsolute, posix, relative, resolve } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
+import { simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
+import type { FileProposal, HookLocation, LifecycleOwner, PreparedHook } from '#cli/types/ownership.ts';
+import { hookBody, hookCommand, huskyLines, huskyReady, lefthookConfiguration } from '#cli/emit/hooks.ts';
 
 function rejectDifferingNativeHook(
     path: string,
@@ -34,7 +33,10 @@ function rejectDifferingNativeHook(
         );
 }
 
-/** Ask Git for the actual clone-local destination, including worktrees and core.hooksPath. */
+/**
+ * Ask Git for the actual clone-local destination, including worktrees and core.hooksPath.
+ * @param root
+ */
 export function hookLocation(root: string): HookLocation {
     const repository = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: root });
     if (repository.code !== 0) throw new Error(`Cannot resolve Git root: ${repository.stderr.trim()}`);
@@ -75,7 +77,11 @@ export function hookLocation(root: string): HookLocation {
     return { ...location, stateDirectory: `${location.directory}/.gspot/state` };
 }
 
-/** Plan the dispatcher and original sibling before applying any hook mutation. */
+/**
+ * Plan the dispatcher and original sibling before applying any hook mutation.
+ * @param session
+ * @param manager
+ */
 export function installHooks(session: Session, manager?: ReadonlyMap<string, PreparedHook>): string {
     if (!session.repository.hasGit || (session.policyFiles.policy.hooks?.tool !== 'gspot' && manager === undefined))
         return '';
@@ -200,7 +206,7 @@ export function installHooks(session: Session, manager?: ReadonlyMap<string, Pre
                 if (!manager?.has(name)) proposals.push(owner.proposeRestoration(entry.path));
             }
             for (const [name, content] of manager ?? []) {
-                if (HOOK_FILES.some((hook) => hook === name)) continue;
+                if ((HOOK_FILES as readonly string[]).includes(name)) continue;
                 const path = posix.join(location.directory, name);
                 const current = owner.read(path);
                 if (current === undefined && !recorded.has(path)) continue;
@@ -236,7 +242,11 @@ export function installHooks(session: Session, manager?: ReadonlyMap<string, Pre
     );
 }
 
-/** Plan hook restoration while both the repository and Git hook boundaries remain locked. */
+/**
+ * Plan hook restoration while both the repository and Git hook boundaries remain locked.
+ * @param owner
+ * @param location
+ */
 export function proposeHookRestorations(
     owner: LifecycleOwner,
     location: HookLocation,
@@ -287,7 +297,10 @@ export function proposeHookRestorations(
     return { proposals: proposals.filter((proposal) => proposal.status !== 'preserved'), preserved };
 }
 
-/** Compare Git's executable hook files with their recorded installed identities. */
+/**
+ * Compare Git's executable hook files with their recorded installed identities.
+ * @param session
+ */
 export function hookStatus(
     session: Pick<Session, 'root' | 'policyFiles'> & { repository: Pick<Session['repository'], 'hasGit'> },
 ): { ready: boolean; text: string } {

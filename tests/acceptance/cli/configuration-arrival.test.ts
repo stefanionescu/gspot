@@ -1,11 +1,11 @@
-// Adding a configuration changes the next explicit check through its ESLint fragment.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { readdirSync, symlinkSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { readdirSync, symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Adding a configuration changes the next explicit check through its ESLint fragment.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [

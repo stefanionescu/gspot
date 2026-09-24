@@ -215,6 +215,7 @@ stub = {path = "eslint.config.mjs", body = "export { default } from '{target}';"
 [[configs]]
 template = "jsconfig.json.tmpl"
 target = ".gspot/config/jsconfig.json"
+per_scope = true
 
 [[configs]]
 template = "knip.json.tmpl"
@@ -231,6 +232,7 @@ runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
+findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
 coverage = ["style", "structure", "security"]
@@ -245,9 +247,10 @@ name = "javascript/checkjs"
 title = "Check JavaScript types"
 example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
 level = "recommended"
-stage = "commit"
-runs = "once"
-command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+analysis = "javascript"
 tool = "tsc"
 claims = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 coverage = ["types"]

@@ -1,11 +1,11 @@
+import { z } from 'zod';
+import { hooksSchema } from '#cli/repository/hooks.ts';
+import { runnerSchema } from '#cli/schemas/runners.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
+import { outputSchema } from '#cli/schemas/check-output.ts';
 // The zod schema of gspot.toml. Pure: no transforms, so the JSON schema is generated from it.
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
-import { outputSchema } from '#cli/schemas/check-output.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/schemas/commands.ts';
-import { runnerSchema } from '#cli/schemas/runners.ts';
-import { z } from 'zod';
 
 const INDENT_MAX = 8;
 
@@ -29,6 +29,15 @@ const textList = z.array(text);
 const textListNonEmpty = z.array(text.min(1)).min(1);
 
 const anyTable = z.record(text, z.unknown());
+
+/** Primitive value shapes declared by manifest settings, before reason wrappers. */
+export const settingValueSchemas = {
+    number: z.number(),
+    string: z.string(),
+    boolean: z.boolean(),
+    list: z.array(z.unknown()),
+    table: anyTable,
+};
 
 const reasoned = <T extends z.ZodType>(inner: T) => z.union([inner, z.strictObject({ value: inner, reason: text })]);
 
@@ -299,6 +308,9 @@ const checkSchema = z
         help: text.optional(),
         fix_command: commandSchema.optional(),
         fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
+        findings_exit_codes: findingExitCodesSchema.optional().describe(
+            'Native nonzero statuses that mean source findings. Other nonzero statuses mean execution failure.',
+        ),
         fix_findings_exit_codes: findingExitCodesSchema
             .optional()
             .describe(

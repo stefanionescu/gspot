@@ -58,22 +58,22 @@ test.each(['root', 'nested'])(
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
         expect(installed.version).toBe(configurationManifests().get('licenses')!.tools[0]!.version!);
         const refused = await collectCarried(root, selected, new Set(['licenses']), []);
-        expect(refused.unread.map((entry) => entry.path)).toEqual([path]);
+        expect(refused.unread.map((entry) => entry.path)).toStrictEqual([path]);
         expect(refused.tools.size).toBe(0);
         expect(refused.scopes.size).toBe(0);
-        expect(refused.removed).toEqual([]);
+        expect(refused.removed).toStrictEqual([]);
         expect(await Bun.file(join(root, path)).text()).toBe(original);
         await Bun.write(
             join(project, 'node_modules/missing-dependency/package.json'),
             JSON.stringify({ name: 'missing-dependency', version: '2.0.0', license: 'MPL-2.0' }),
         );
         const carried = await collectCarried(root, selected, new Set(['licenses']), []);
-        expect(carried.unread).toEqual([]);
+        expect(carried.unread).toStrictEqual([]);
         expect(
             scope === 'root'
                 ? carried.tools.get('licenses')?.settings
                 : carried.scopes.get('project')?.tools['licenses'],
-        ).toEqual({
+        ).toStrictEqual({
             licenses_allowed: allowed,
             packages_allowed: [
                 { package: 'example-dependency@1.2.3', license: 'GPL-3.0-only', reason: expect.any(String) },
@@ -82,7 +82,7 @@ test.each(['root', 'nested'])(
         });
         if (scope === 'nested') {
             expect(carried.tools.size).toBe(0);
-            expect(carried.scopes.get('project')?.configurations).toEqual(['licenses']);
+            expect(carried.scopes.get('project')?.configurations).toStrictEqual(['licenses']);
             await Bun.write(
                 join(root, 'gspot.toml'),
                 proposeText({
@@ -101,9 +101,9 @@ test.each(['root', 'nested'])(
             const projectConfig = emitted.find((file) => file.path === '.gspot/config/project/licenses.json')!;
             const siblingConfig = emitted.find((file) => file.path === '.gspot/config/sibling/licenses.json')!;
             expect(JSON.parse(projectConfig.content).packages_allowed).toHaveLength(2);
-            expect(JSON.parse(siblingConfig.content).packages_allowed).toEqual([]);
+            expect(JSON.parse(siblingConfig.content).packages_allowed).toStrictEqual([]);
         }
-        expect(carried.removed.map((entry) => entry.path)).toEqual([path]);
+        expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
         expect(await Bun.file(join(root, path)).text()).toBe(original);
     },
 );
@@ -115,14 +115,14 @@ test.each(['MIT*;Public Domain', 'MIT OR ISC', 'MIT;ISC'])(
         const original = JSON.stringify({ onlyAllow: allowance }) + '\n';
         await createFileTree(sandbox.path, { '.license-checker.json': original });
         const carried = await collectCarried(sandbox.path, tooling, new Set(['licenses']), []);
-        expect(carried.unread.map((entry) => entry.path)).toEqual(['.license-checker.json']);
+        expect(carried.unread.map((entry) => entry.path)).toStrictEqual(['.license-checker.json']);
         expect(carried.tools.size).toBe(0);
-        expect(carried.removed).toEqual([]);
+        expect(carried.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, '.license-checker.json')).text()).toBe(original);
         await Bun.write(join(sandbox.path, '.license-checker.json'), JSON.stringify({ onlyAllow: allowed.join(';') }));
         const corrected = await collectCarried(sandbox.path, tooling, new Set(['licenses']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.tools.get('licenses')?.settings).toEqual({ licenses_allowed: allowed });
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.tools.get('licenses')?.settings).toStrictEqual({ licenses_allowed: allowed });
     },
 );
 
@@ -143,7 +143,7 @@ test('overlapping license configurations remain intact without widening nested a
     };
     const carried = await collectCarried(sandbox.path, discovered, new Set(['licenses']), []);
     expect(carried.unread.map(({ path }) => path)).toContain('.license-checker.json');
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(carried.tools.size).toBe(0);
     expect(carried.scopes.size).toBe(0);
     for (const [path, original] of Object.entries(files))

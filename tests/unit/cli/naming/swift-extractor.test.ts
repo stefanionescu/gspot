@@ -22,13 +22,13 @@ describe('swiftIdentifiers', () => {
         const found = await identifiersOf('Sources/User.swift', SOURCE, 'swift');
         const names = (category: string): string[] =>
             found.filter((entry) => entry.category === category).map((entry) => entry.name);
-        expect(names('types')).toEqual(['Greeter', 'Mood', 'UserProfile', 'Handler']);
-        expect(names('methods')).toEqual(['greet', 'greet']);
-        expect(names('functions')).toEqual(['top_level']);
-        expect(names('parameters')).toEqual(['name', 'userName', 'id', 'value', 'label']);
-        expect(names('properties')).toEqual(['maxCount', 'display_name', 'short']);
-        expect(names('variables')).toEqual(['local_value']);
-        expect(names('constants')).toEqual(['globalConstant']);
-        expect(names('enum_cases')).toEqual(['happy', 'sad', 'veryAngry']);
+        expect(names('types')).toStrictEqual(['Greeter', 'Mood', 'UserProfile', 'Handler']);
+        expect(names('methods')).toStrictEqual(['greet', 'greet']);
+        expect(names('functions')).toStrictEqual(['top_level']);
+        expect(names('parameters')).toStrictEqual(['name', 'userName', 'id', 'value', 'label']);
+        expect(names('properties')).toStrictEqual(['maxCount', 'display_name', 'short']);
+        expect(names('variables')).toStrictEqual(['local_value']);
+        expect(names('constants')).toStrictEqual(['globalConstant']);
+        expect(names('enum_cases')).toStrictEqual(['happy', 'sad', 'veryAngry']);
     });
 });

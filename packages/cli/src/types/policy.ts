@@ -1,7 +1,7 @@
 import type { z } from 'zod';
+import type { SettingSpec } from '#cli/types/configurations.ts';
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { policySchema, scopeSchema } from '#cli/schemas/policy.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import type { CarriedConfiguration, CarriedFormatter } from '#cli/types/ownership.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
@@ -183,6 +183,7 @@ export type SettingState = { value: unknown; source: string; reason: string | un
 
 /** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
 export type SchemaNode = {
+    type?: string;
     properties?: Record<string, SchemaNode>;
     items?: SchemaNode;
     additionalProperties?: SchemaNode | boolean;

@@ -1,7 +1,7 @@
-import { directoryOf } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { exportCommand } from '#cli/profile/command.ts';
 import type { Command } from 'commander';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { exportCommand } from '#cli/profile/command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 
 /**
  * Registers export.

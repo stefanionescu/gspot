@@ -2,10 +2,10 @@
 import { resolve } from 'node:path';
 import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
-import type { Profile } from '#cli/types/profiles.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
+import type { Profile } from '#cli/types/profiles.ts';
 import { profileSchema, isRepositoryPath } from '#cli/schemas/profiles.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
@@ -32,7 +32,7 @@ async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith('https://')) return fetched(source);
     if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
     const path = resolve(cwd, source);
-    if (!existsSync(path)) throw new ProfileError([`There is no profile at ${source}.`]);
+    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) throw new ProfileError([`There is no profile at ${source}.`]);
     return readFileSync(path, 'utf8');
 }
 
@@ -55,7 +55,9 @@ function issueLine(issue: { path: PropertyKey[]; message: string }, source: stri
 
 function configurationProblems(configurations: string[]): string[] {
     const known = configurationManifests().keys().toArray();
-    return configurations.filter((id) => !known.includes(id)).map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
+    return configurations
+        .filter((id) => !known.includes(id))
+        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
 }
 
 /** Every problem a profile has, as one error with one line per problem. */

@@ -1,21 +1,21 @@
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
-import type { ToolProbe, ToolContext } from '#cli/types/tools.ts';
 // Locate and version managed tools under .gspot, project host tools, PATH executables and mise shims.
 import semver from 'semver';
-import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
-import { hasPolicy, readPolicy } from '#cli/policy/read-policy.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { SpawnResult } from '#cli/types/platform.ts';
 import { miseHome } from '#cli/platform/environment.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { installHint } from '#cli/tools/install-hints.ts';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
+import type { ToolProbe, ToolContext } from '#cli/types/tools.ts';
+import { hasPolicy, readPolicy } from '#cli/policy/read-policy.ts';
+import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };
@@ -45,7 +45,7 @@ function candidates(root: string, roots: string[], name: string, privateKind?: '
         for (const path of directories.flatMap((dir) => names.map((file) => join(dir, file)))) {
             const local = relative(root, path).replaceAll('\\', '/');
             if (!local.startsWith('.gspot/')) {
-                if (existsSync(path)) found.push(path);
+                if ((statSync(path, { throwIfNoEntry: false }) !== undefined)) found.push(path);
                 continue;
             }
             try {
@@ -62,7 +62,7 @@ function candidates(root: string, roots: string[], name: string, privateKind?: '
     const onPath = Bun.which(name);
     if (onPath !== null) found.push(onPath);
     const miseBin = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
-    return [...found, ...names.map((file) => join(miseBin, file)).filter((path) => existsSync(path))];
+    return [...found, ...names.map((file) => join(miseBin, file)).filter((path) => (statSync(path, { throwIfNoEntry: false }) !== undefined))];
 }
 
 // The version a package.json above the real file of an npm tool holds, for the package the pin names.
@@ -78,7 +78,7 @@ function packageVersion(root: string, path: string, name: string | undefined): s
             if (managed && !local.startsWith('.gspot/')) return undefined;
             const text =
                 files === undefined
-                    ? existsSync(manifest)
+                    ? (statSync(manifest, { throwIfNoEntry: false }) !== undefined)
                         ? readFileSync(manifest, 'utf8')
                         : undefined
                     : files.read(local)?.bytes.toString('utf8');
@@ -99,7 +99,7 @@ function miseVersion(path: string, tool: ToolPin): string | undefined {
     const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
     if (!path.startsWith(join(home, 'shims'))) return undefined;
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
-    return existsSync(installed) ? npm.version : undefined;
+    return (statSync(installed, { throwIfNoEntry: false }) !== undefined) ? npm.version : undefined;
 }
 
 // What the tool prints about its version, with no color codes: their numbers read as a version.
@@ -140,7 +140,13 @@ function readVersion(root: string, cwd: string, path: string, tool: ToolPin): Ve
     return observeToolVersion(tool, printedVersion(cwd, path, tool), installedPackage, miseVersion(path, tool));
 }
 
-/** Interpret an executable version response for both installation and later probes. */
+/**
+ * Interpret an executable version response for both installation and later probes.
+ * @param tool
+ * @param result
+ * @param installedPackage
+ * @param installedMiseVersion
+ */
 export function observeToolVersion(
     tool: ToolPin,
     result: SpawnResult,
@@ -162,7 +168,12 @@ export function observeToolVersion(
     return { version };
 }
 
-/** Classify a native version against its selected pin and accepted floor. */
+/**
+ * Classify a native version against its selected pin and accepted floor.
+ * @param found
+ * @param want
+ * @param floor
+ */
 export function toolVersionState(found: string, want: string, floor: string): ToolProbe['state'] {
     const version = semver.coerce(found);
     if (version === null) return 'error';
@@ -270,7 +281,11 @@ export function probeTool(context: ToolContext, tool: ToolPin): ToolProbe {
     return probe;
 }
 
-/** Resolve a declared executable pin, or a repository-owned host command. */
+/**
+ * Resolve a declared executable pin, or a repository-owned host command.
+ * @param manifests
+ * @param name
+ */
 export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
     for (const manifest of manifests) {
         const pin = manifest.tools.find((tool) => tool.name === name);

@@ -1,11 +1,12 @@
 // The acceptance run: a detached worktree of a reference repository, gspot installed and run inside it, the worktree removed.
-// The reference repository itself is never written: its working tree and its branches stay as they were.
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { existsSync, writeFileSync } from 'node:fs';
+
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { git } from '#tests/support/cli/git.ts';
+import { existsSync, writeFileSync } from 'node:fs';
+import { run } from '#tests/support/cli/command.ts';
+// The reference repository itself is never written: its working tree and its branches stay as they were.
+import { reportSchema } from '#cli/schemas/reports.ts';
 /** The required checks and corrections of one disposable reference project. */
 type AcceptanceInput = {
     repository: string;

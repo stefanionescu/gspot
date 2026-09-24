@@ -1,12 +1,12 @@
-import { commandArguments } from '#cli/policy/settings.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 // The OpenAPI document of an express service: it lints, and it matches the code that writes it.
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { commandArguments } from '#cli/policy/settings.ts';
 import { toolOutputDetail } from '#cli/run/broken-tool.ts';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 
@@ -63,7 +63,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const document = setting(input, 'openapi', 'document');
     const command = setting(input, 'openapi', 'produced_by');
     if (document === '' || command === '') return [];
-    const before = readSource(input.root, document);
+    const before = readSource(input.root, document, input.observations);
     const scratch = scratchCopy(
         input.root,
         [...input.files.map((file) => file.path), document],

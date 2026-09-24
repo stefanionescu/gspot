@@ -1,20 +1,20 @@
-import { delimiter, join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { initCommand } from '#cli/commands/init/command.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
-import { exportedProfile } from '#cli/profile/export.ts';
-import { parseProfile } from '#cli/profile/read.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { MISE_MIN_VERSION, miseTasks, pinnedTwice } from '#cli/emit/runner-tasks.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { fileURLToPath } from 'node:url';
+import { delimiter, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { parse as parseToml } from 'smol-toml';
 import { openSession } from '#cli/run/session.ts';
 import { applyAll } from '#cli/lifecycle/apply.ts';
-import { parse as parseToml } from 'smol-toml';
+import { createFileTree, testdir } from 'testdirs';
+import { parseProfile } from '#cli/profile/read.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { fileURLToPath } from 'node:url';
+import { exportedProfile } from '#cli/profile/export.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { MISE_MIN_VERSION, miseTasks, pinnedTwice } from '#cli/emit/runner-tasks.ts';
 
 const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -37,12 +37,12 @@ test('task mappings validate before mutation, round-trip profiles, and explain t
     const written = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
     expect(
         parseProfile(exportedProfile(written, 'team.profile.toml').text, 'team.profile.toml').tables.runner?.tasks,
-    ).toEqual(tasks);
+    ).toStrictEqual(tasks);
     const explained = await run([process.execPath, CLI, 'explain', 'runner.tasks', '--json'], { cwd: directory.path });
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout).toContain('lint');
     await applyAll(await openSession(directory.path));
-    expect(JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts).toEqual({
+    expect(JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts).toStrictEqual({
         lint: 'gspot check',
         format: 'gspot check --fix',
         'gspot:apply': 'gspot apply',
@@ -100,7 +100,7 @@ test.each([undefined, 'yarn'])(
             timeout: 10_000,
         });
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
-        expect(JSON.parse(executed.stdout.toString())).toEqual(['check', '--json', 'a b', 'café%']);
+        expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b', 'café%']);
         expect(JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts.prepare).toBe(
             'authored setup',
         );
@@ -178,7 +178,7 @@ test.each(['mise', 'npm'] as const)(
             timeout: 10_000,
         });
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
-        expect(JSON.parse(executed.stdout.toString())).toEqual(['check', '--json', 'a b']);
+        expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b']);
         expect((await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(directory.path, path), 'utf8')).toBe(original);
     },
@@ -195,12 +195,12 @@ test('duplicate pins include only parsed tool keys', async () => {
         pinnedTwice(directory.path, manifests)
             .map(({ tool }) => tool)
             .toSorted((left, right) => left.localeCompare(right)),
-    ).toEqual(['shellcheck', 'typos']);
+    ).toStrictEqual(['shellcheck', 'typos']);
     writeFileSync(
         join(directory.path, 'mise.toml'),
         '[env]\ntypos = "example"\n[tasks]\nshellcheck = "echo example"\n',
     );
-    expect(pinnedTwice(directory.path, manifests)).toEqual([]);
+    expect(pinnedTwice(directory.path, manifests)).toStrictEqual([]);
     writeFileSync(join(directory.path, 'mise.toml'), '[tools\n');
     expect(() => pinnedTwice(directory.path, manifests)).toThrow();
 });
@@ -232,5 +232,5 @@ test('mise gives the root task precedence and forwards arguments unchanged', asy
         timeout: 10_000,
     });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(JSON.parse(result.stdout.toString())).toEqual(['--json', 'a b', 'café%']);
+    expect(JSON.parse(result.stdout.toString())).toStrictEqual(['--json', 'a b', 'café%']);
 }, 25_000);

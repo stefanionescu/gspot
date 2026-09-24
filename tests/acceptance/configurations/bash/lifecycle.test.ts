@@ -1,11 +1,11 @@
-// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { expect, test } from 'bun:test';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test(
     'init --yes writes the policy and check passes over a clean script',
@@ -32,7 +32,7 @@ test(
         expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
         const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(check.code).toBe(0);
-        expect(JSON.parse(check.stdout).checks).toEqual([
+        expect(JSON.parse(check.stdout).checks).toStrictEqual([
             expect.objectContaining({ check: 'bash/shellcheck', status: 'ok' }),
         ]);
         const selected = await run(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
@@ -42,7 +42,7 @@ test(
         expect(record.checks[0]?.check).toBe('bash/shfmt');
         expect(record.exitCode).toBe(0);
         const drift = await run(sandbox.path, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(drift.stdout) as { drift: unknown[] }).drift).toEqual([]);
+        expect((JSON.parse(drift.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
         expect(drift.code).toBe(0);
         const second = await run(sandbox.path, ['init', '--yes']);
         expect(second.code).toBe(2);

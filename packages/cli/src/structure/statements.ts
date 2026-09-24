@@ -14,7 +14,11 @@ const FUNCTIONS = new Set([
     'didset_clause',
 ]);
 
-/** Count executable statements, excluding nested function bodies and type-only declarations. */
+/**
+ * Count executable statements, excluding nested function bodies and type-only declarations.
+ * @param nodes
+ * @param language
+ */
 export function executableStatements(nodes: Node[], language: 'python' | 'swift' | 'bash'): number {
     let count = 0;
     for (const node of nodes) {
@@ -47,7 +51,12 @@ export function executableStatements(nodes: Node[], language: 'python' | 'swift'
     return count;
 }
 
-/** Whether every declaration is an import, alias, forwarding statement, or trivial function. */
+/**
+ * Whether every declaration is an import, alias, forwarding statement, or trivial function.
+ * @param root
+ * @param language
+ * @param threshold
+ */
 export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', threshold: number): boolean {
     const substantial = (node: Node): boolean => {
         if (node.type.includes('comment') || node.type.startsWith('import') || node.type === 'hash_bang_line')

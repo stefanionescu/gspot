@@ -1,17 +1,17 @@
-import { join } from 'node:path';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { exportCommand } from '#cli/profile/command.ts';
-import { applyCommand } from '#cli/commands/apply.ts';
-import { applyUninstall, planUninstall } from '#cli/commands/uninstall/command.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
+import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { exportedProfile } from '#cli/profile/export.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { readProfile } from '#cli/profile/read.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { exportCommand } from '#cli/profile/command.ts';
+import { describe, expect, spyOn, test } from 'bun:test';
+import { exportedProfile } from '#cli/profile/export.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { applyUninstall, planUninstall } from '#cli/commands/uninstall/command.ts';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
@@ -23,7 +23,7 @@ describe('profile file paths', () => {
         });
         const relative = await readProfile(source, sandbox.path);
         const absolute = await readProfile(join(sandbox.path, source), join(sandbox.path, 'project'));
-        expect(absolute.tables).toEqual(relative.tables);
+        expect(absolute.tables).toStrictEqual(relative.tables);
         expect(absolute.digest).toBe(relative.digest);
     });
 });
@@ -90,8 +90,8 @@ test.each(['jest', 'vitest'])(
         );
         await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
         const restored = await readProfile('shared.profile.toml', directory.path);
-        expect(restored.tables.tools?.[configuration]).toEqual(reusable);
-        expect(exported.leftOut).toEqual([`tools.${configuration}.harness_directory: names a repository path`]);
+        expect(restored.tables.tools?.[configuration]).toStrictEqual(reusable);
+        expect(exported.leftOut).toStrictEqual([`tools.${configuration}.harness_directory: names a repository path`]);
         await createFileTree(directory.path, {
             'invalid.profile.toml': stringify({
                 version: 1,
@@ -128,7 +128,7 @@ test('profile export omits local ESLint registrations and selector bases while p
     expect(exported.leftOut).toHaveLength(2);
     await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
     const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.eslint?.adopted).toEqual([reusable]);
+    expect(restored.tables.tools?.eslint?.adopted).toStrictEqual([reusable]);
     await createFileTree(directory.path, {
         'invalid.profile.toml': stringify({
             version: 1,
@@ -168,16 +168,18 @@ test('profile export omits complete EditorConfig documents and preserves reusabl
 
 test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n' });
+    await createFileTree(directory.path, {
+        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+    });
     expect((await exportCommand(directory.path, 'shared.profile.toml')).exitCode).toBe(0);
     const path = join(directory.path, 'shared.profile.toml');
     const first = readFileSync(path);
     expect((await exportCommand(directory.path, 'shared.profile.toml')).exitCode).toBe(0);
-    expect(readFileSync(path)).toEqual(first);
+    expect(readFileSync(path)).toStrictEqual(first);
     expect(readOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
     expect((await applyCommand({ cwd: directory.path, isDryRun: false })).exitCode).toBe(0);
     applyUninstall(directory.path, planUninstall(directory.path));
-    expect(readFileSync(path)).toEqual(first);
+    expect(readFileSync(path)).toStrictEqual(first);
     await Bun.write(path, `${first.toString('utf8')}\n# Authored note.\n`);
     await expect(exportCommand(directory.path, 'shared.profile.toml')).rejects.toThrow('Preserved edited or unowned');
     expect(readFileSync(path, 'utf8')).toContain('# Authored note.');
@@ -187,7 +189,7 @@ test.each([
     '../outside.toml',
     '/outside.toml',
     'C:outside.toml',
-    'C:\\outside.toml',
+    String.raw`C:\outside.toml`,
     'linked/profile.toml',
     'linked.toml',
 ])('profile export refuses unsafe destination %s without changing external bytes', async (file) => {
@@ -217,7 +219,7 @@ test('profile export preserves an unowned destination and refuses the managed re
     expect(statSync(occupied).mode & 0o200).toBe(0);
     const original = readFileSync(join(directory.path, 'gspot.toml'));
     await expect(exportCommand(directory.path, 'gspot.toml')).rejects.toThrow();
-    expect(readFileSync(join(directory.path, 'gspot.toml'))).toEqual(original);
+    expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 
 test('profile publication recovers an interrupted write through the lifecycle journal', async () => {
@@ -234,13 +236,13 @@ test('profile publication recovers an interrupted write through the lifecycle jo
             'Profile publication interrupted',
         );
         expect(await Bun.file(path).exists()).toBe(false);
-        expect(readOwnership(directory.path).pending?.map((entry) => entry.path)).toEqual(['shared.profile.toml']);
+        expect(readOwnership(directory.path).pending?.map((entry) => entry.path)).toStrictEqual(['shared.profile.toml']);
     } finally {
         failed.mockRestore();
     }
     expect((await exportCommand(directory.path, 'shared.profile.toml')).exitCode).toBe(0);
     expect(readOwnership(directory.path).pending).toBeUndefined();
-    expect((await readProfile('shared.profile.toml', directory.path)).tables.configurations).toEqual([]);
+    expect((await readProfile('shared.profile.toml', directory.path)).tables.configurations).toStrictEqual([]);
 });
 
 test('profile publication preserves permissions when adopting identical existing bytes', async () => {
@@ -268,6 +270,6 @@ test('profiles round-trip license allowances and exact-version exceptions', asyn
     );
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });
     const restored = await readProfile('licenses.profile.toml', directory.path);
-    expect(restored.tables.tools?.licenses).toEqual(licenses);
-    expect(exported.leftOut).toEqual([]);
+    expect(restored.tables.tools?.licenses).toStrictEqual(licenses);
+    expect(exported.leftOut).toStrictEqual([]);
 });

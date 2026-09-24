@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { rmSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 
@@ -16,11 +16,11 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
     const path = 'folder % café/file.env';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
-    expect(indexedPaths(sandbox.path)).toEqual([]);
+    expect(indexedPaths(sandbox.path)).toStrictEqual([]);
     git(sandbox.path, 'init', '-q');
     git(sandbox.path, 'add', '--', path);
     rmSync(join(sandbox.path, path));
-    expect(indexedPaths(sandbox.path)).toEqual([path]);
+    expect(indexedPaths(sandbox.path)).toStrictEqual([path]);
 });
 
 test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(

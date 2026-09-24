@@ -1,12 +1,11 @@
-import { readSource } from '#cli/repository/tracked.ts';
+import { z } from 'zod';
+import { parse } from 'smol-toml';
+import { statSync } from 'node:fs';
 // The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
-
-import { parse } from 'smol-toml';
-import { z } from 'zod';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),
@@ -18,13 +17,14 @@ const SHARED_PREFIX = '_';
 
 /**
  * The parsed project file, or the text of the error when it does not parse, or undefined when the repository has none.
- * @param root the repository root
+ * @param input the scoped repository observation
  * @returns the config or the error
  */
-export function readProject(root: string): z.infer<typeof projectSchema> | string | undefined {
-    const path = join(root, SUPABASE_CONFIG);
-    if (!existsSync(path)) return undefined;
-    const text = readSource(root, SUPABASE_CONFIG).toString('utf8');
+export function readProject(input: EngineInput): z.infer<typeof projectSchema> | string | undefined {
+    const local = posix.join(input.scope, SUPABASE_CONFIG);
+    const path = join(input.root, local);
+    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) return undefined;
+    const text = readSource(input.root, local, input.observations).toString('utf8');
     try {
         return projectSchema.parse(parse(text));
     } catch (error) {
@@ -38,7 +38,7 @@ export function readProject(root: string): z.infer<typeof projectSchema> | strin
  * @returns the folder paths, repository-relative
  */
 export function functionFolders(input: EngineInput): string[] {
-    const named = input.view.tool('supabase')['functions_dir'];
+    const named = input.view.tool('supabase')['functions_directory'];
     const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : DEFAULT_FUNCTIONS);
     const folders = input.files
         .map((file) => file.path)

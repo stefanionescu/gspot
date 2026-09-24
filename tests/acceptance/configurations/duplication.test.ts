@@ -1,10 +1,10 @@
-// Planted repository for the duplication configuration: one block copied into a second file.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the duplication configuration: one block copied into a second file.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 const INIT = [

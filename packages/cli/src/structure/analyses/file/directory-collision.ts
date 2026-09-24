@@ -9,7 +9,7 @@ import { directoryOf, directoryTree, stemOf } from '#cli/structure/directories.t
  */
 export const fileDirectoryCollision: Analysis = (context) => {
     const tree = directoryTree(context.input.files);
-    const findings = context.files.flatMap((file) => {
+    return context.files.flatMap((file) => {
         const stem = stemOf(file.path);
         const siblings = tree.get(directoryOf(file.path)) ?? [];
         if (siblings.every((entry) => !(entry.kind === 'dir' && entry.name === stem))) return [];
@@ -22,5 +22,4 @@ export const fileDirectoryCollision: Analysis = (context) => {
             ),
         ];
     });
-    return findings;
 };

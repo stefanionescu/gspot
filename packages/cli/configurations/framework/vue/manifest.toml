@@ -41,6 +41,7 @@ runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
+findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 tool = "eslint"
 claims = {extensions = [".vue"]}

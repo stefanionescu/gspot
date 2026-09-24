@@ -1,11 +1,11 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { git } from '#tests/support/cli/git.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/schemas/reports.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
@@ -27,7 +27,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     const checked = await run(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = reportSchema.parse(JSON.parse(checked.stdout));
-    expect(report.checks[0]?.findings.map(({ file }) => file)).toEqual([
+    expect(report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
         'legacy scripts/required.sh',
         'legacy scripts/required.sh',
     ]);
@@ -46,7 +46,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await run(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[0]?.findings.map(({ file }) => file)).toEqual([
+    expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
         'legacy scripts/nested/example.sh',
         'legacy scripts/nested/example.sh',
     ]);
@@ -73,7 +73,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     );
     expect(text.stdout).toContain('checked index;');
     expect(text.stdout).not.toContain('checked working tree;');
-    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toEqual([
+    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
         'script with spaces.sh',
         'script with spaces.sh',
     ]);
@@ -91,7 +91,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     expect(passedReport.checks[0]?.status).toBe('ok');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
-    expect(JSON.parse(readFileSync(join(directory.path, '.gspot/reports/report.json'), 'utf8'))).toEqual(
+    expect(JSON.parse(readFileSync(join(directory.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
         JSON.parse(passed.stdout),
     );
     unlinkSync(join(directory.path, 'script with spaces.sh'));
@@ -152,7 +152,7 @@ stage = "commit"
     const result = await run(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(result.stdout)).checks[0]?.status).toBe('ok');
-    expect(readFileSync(join(directory.path, 'payload.dat'))).toEqual(Buffer.from([0, 1, 2]));
+    expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(0o644);
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);
 });

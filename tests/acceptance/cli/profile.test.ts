@@ -1,13 +1,13 @@
-// Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { treeContents } from '#tests/support/cli/contents.ts';
+// Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 
@@ -28,7 +28,7 @@ describe('profiles', () => {
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).toContain('profile    team');
         expect(result.stdout).toContain('--dry-run: nothing written');
-        expect(treeContents(sandbox.path)).toEqual(before);
+        expect(treeContents(sandbox.path)).toStrictEqual(before);
     });
 
     test(
@@ -97,10 +97,10 @@ describe('profiles', () => {
             expect(init.stdout).toContain('profile    house');
             expect(init.stdout).toContain('detected, not in the profile: typescript');
             const [one, two] = [await tables(first.path), await tables(second.path)];
-            expect(two['configurations']).toEqual(one['configurations']);
-            expect(two['format']).toEqual({ indent_width: 2 });
-            expect(two['hooks']).toEqual(one['hooks']);
-            expect(two['ignore']).toEqual([
+            expect(two['configurations']).toStrictEqual(one['configurations']);
+            expect(two['format']).toStrictEqual({ indent_width: 2 });
+            expect(two['hooks']).toStrictEqual(one['hooks']);
+            expect(two['ignore']).toStrictEqual([
                 {
                     check: 'bash/shellcheck',
                     rule: 'SC2034',
@@ -195,7 +195,7 @@ describe('policy edits', () => {
             const written = policy['tools'] as {
                 typos: { exclude: { paths: string[]; reason: string }[] };
             };
-            expect(written.typos.exclude.map((entry) => entry.reason)).toEqual([
+            expect(written.typos.exclude.map((entry) => entry.reason)).toStrictEqual([
                 'Text in another language lives here.',
                 'Sandboxs that hold typos on purpose.',
             ]);

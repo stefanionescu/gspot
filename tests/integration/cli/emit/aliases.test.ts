@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { writeFileSync, mkdirSync, rmSync, symlinkSync, unlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { templateInputs } from '#cli/emit/templates.ts';
+import { writeFileSync, mkdirSync, rmSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test.each(['package.json', 'tsconfig.json'])(
     'generation reports malformed %s instead of dropping aliases',
@@ -59,7 +59,7 @@ test('alias generation rejects a package manifest link planted after inventory a
     expect(() => inputs.importAliases('')).toThrow('Unsafe lifecycle destination');
     unlinkSync(path);
     writeFileSync(path, '{"imports":{"#app/*":"./src/*"}}');
-    expect(inputs.importAliases('')).toEqual({ '#app/': 'src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '#app/': 'src/' });
     expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"imports":{"#private/*":"./private/*"}}');
 });
 
@@ -82,7 +82,7 @@ test.each(['tsconfig.json', 'base.json'])('TypeScript alias reads refuse a linke
     expect(() => inputs.importAliases('')).toThrow('private regular file');
     unlinkSync(path);
     writeFileSync(path, '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });
 
 test('TypeScript alias reads retain a declared external dependency configuration', async () => {
@@ -97,7 +97,7 @@ test('TypeScript alias reads retain a declared external dependency configuration
     mkdirSync(join(sandbox.path, 'node_modules'));
     symlinkSync(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
     const session = await openSession(sandbox.path);
-    expect(templateInputs(session, session.scopes[0]!).importAliases('')).toEqual({});
+    expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({});
     expect(await Bun.file(join(dependency.path, 'tsconfig.json')).text()).toBe('{"compilerOptions":{"strict":true}}');
 });
 
@@ -108,7 +108,7 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
     });
     const session = await openSession(sandbox.path);
     const inputs = templateInputs(session, session.scopes[0]!);
-    expect(inputs.importAliases('')).toEqual({});
+    expect(inputs.importAliases('')).toStrictEqual({});
     writeFileSync(
         join(sandbox.path, 'tsconfig.json'),
         `{
@@ -116,7 +116,7 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
         "compilerOptions": { "paths": { "@app/*": ["./src/*"], }, },
     }`,
     );
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });
 
 test('inherited aliases resolve from the configuration that declares them', async () => {
@@ -128,12 +128,12 @@ test('inherited aliases resolve from the configuration that declares them', asyn
     });
     const session = await openSession(sandbox.path);
     const inputs = templateInputs(session, session.scopes[0]!);
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
     writeFileSync(
         join(sandbox.path, 'configs/tsconfig.json'),
         '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
     );
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'app/src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'app/src/' });
 });
 
 test('generation preserves authored aliases and reports missing authored bases', async () => {
@@ -144,7 +144,7 @@ test('generation preserves authored aliases and reports missing authored bases',
     });
     const session = await openSession(sandbox.path);
     const inputs = templateInputs(session, session.scopes[0]!);
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
     expect(emitAll(session).files.some((file) => file.path === '.gspot/config/tsconfig.check.json')).toBe(true);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);
     writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');

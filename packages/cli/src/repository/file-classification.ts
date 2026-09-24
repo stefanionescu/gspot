@@ -1,7 +1,7 @@
-// Every tracked path has one nature: source, generated, vendored, binary.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { FileDeclaration } from '#cli/types/policy.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
+// Every tracked path has one nature: source, generated, vendored, binary.
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { Attribute, NatureVerdict } from '#cli/types/repository.ts';
 
 import {

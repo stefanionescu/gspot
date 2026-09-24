@@ -1,12 +1,12 @@
-import { applyCommand } from '#cli/commands/apply.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
 test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'])(
     'a fresh %s clone installs without tracked changes and enforces staged source through real commits',
@@ -126,7 +126,7 @@ format = "lines"
             const status = await run(['git', 'status', '--porcelain'], { cwd: clone.path });
             expect(status.code, status.stderr).toBe(0);
             expect(status.stdout).toBe('');
-            expect(readFileSync(lockPath)).toEqual(lock);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
         }
         const options = {
             cwd: clone.path,
@@ -187,12 +187,12 @@ format = "lines"
                 env: { PATH: `${launcher.path}${delimiter}${options.env.PATH}` },
             });
             expect(dispatched.code, dispatched.stdout + dispatched.stderr).toBe(0);
-            expect(JSON.parse(readFileSync(join(clone.path, 'runner-observed'), 'utf8'))).toEqual([
+            expect(JSON.parse(readFileSync(join(clone.path, 'runner-observed'), 'utf8'))).toStrictEqual([
                 'check',
                 '--staged',
             ]);
             unlinkSync(join(clone.path, 'runner-observed'));
-            expect(readFileSync(originalPath)).toEqual(original);
+            expect(readFileSync(originalPath)).toStrictEqual(original);
             writeFileSync(join(clone.path, 'gspot.toml'), policy);
             const restoredRunner = await run([process.execPath, main, 'apply'], options);
             expect(restoredRunner.code, restoredRunner.stdout + restoredRunner.stderr).toBe(0);

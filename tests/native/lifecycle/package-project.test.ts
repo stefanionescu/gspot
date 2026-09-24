@@ -1,18 +1,18 @@
-import * as spawn from '#cli/platform/spawn.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { expect, spyOn, test } from 'bun:test';
+import * as spawn from '#cli/platform/spawn.ts';
+import { computeDrift } from '#cli/emit/drift.ts';
 import { openSession } from '#cli/run/session.ts';
 import { applyAll } from '#cli/lifecycle/apply.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { probeTool } from '#cli/tools/tool-probe.ts';
-import { computeDrift } from '#cli/emit/drift.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/package-project.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 
 const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -31,7 +31,7 @@ test.each([
         const tools = [...configurationManifests().values()].flatMap((manifest) => manifest.tools);
         await using repository = await testdir();
         await using artifacts = await testdir();
-        const version = await run([manager, '--version'], { cwd: artifacts.path, timeoutMs: 15000 });
+        const version = await run([manager, '--version'], { cwd: artifacts.path, timeoutMs: 15_000 });
         expect(version.code, version.stdout + version.stderr).toBe(0);
         const packed = await run(
             [
@@ -43,7 +43,7 @@ test.each([
                 '--pack-destination',
                 artifacts.path,
             ],
-            { cwd: artifacts.path, timeoutMs: 30000 },
+            { cwd: artifacts.path, timeoutMs: 30_000 },
         );
         expect(packed.code, packed.stdout + packed.stderr).toBe(0);
         const archive = readFileSync(join(artifacts.path, JSON.parse(packed.stdout)[0].filename));
@@ -63,7 +63,7 @@ test.each([
                     '--pack-destination',
                     artifacts.path,
                 ],
-                { cwd: artifacts.path, timeoutMs: 30000 },
+                { cwd: artifacts.path, timeoutMs: 30_000 },
             );
             expect(checker.code, checker.stdout + checker.stderr).toBe(0);
             const checkerArchive = readFileSync(join(artifacts.path, JSON.parse(checker.stdout)[0].filename));
@@ -124,7 +124,7 @@ test.each([
                 'node_modules/authored.txt': 'keep project dependencies',
             });
             const yarnConfiguration =
-                manager === 'yarn' && Number(version.stdout.trim().split('.')[0]) >= 2
+                manager === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2
                     ? `npmRegistryServer: "http://127.0.0.1:${server.port}"\nnpmAuthToken: "${token}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
                     : undefined;
             if (yarnConfiguration !== undefined)
@@ -132,7 +132,7 @@ test.each([
             const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
             expect(initialized.code, initialized.stderr).toBe(0);
             const first = await applyAll(await openSession(repository.path));
-            expect(first.notes.filter((note) => note.startsWith('preserved'))).toEqual([]);
+            expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
             const manifest = readFileSync(join(repository.path, '.gspot/package.json'));
             const lockPath = join(repository.path, '.gspot', LOCKS[manager]);
             const lock = readFileSync(lockPath);
@@ -144,7 +144,7 @@ test.each([
             });
             expect(preview.code, preview.stdout + preview.stderr).toBe(0);
             expect(JSON.parse(preview.stdout).isDryRun).toBe(true);
-            expect(readFileSync(ownershipPath)).toEqual(ownership);
+            expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
             expect(lock.toString('utf8')).not.toContain(token);
             if (manager === 'yarn' && version.stdout.trim().startsWith('1.'))
                 expect(lock.toString('utf8')).not.toContain(`http://127.0.0.1:${server.port}`);
@@ -160,7 +160,7 @@ test.each([
                 'Run: gspot apply, then gspot install',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(stale);
-            expect(readFileSync(ownershipPath)).toEqual(ownership);
+            expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
             expect(computeDrift(await openSession(repository.path))).toContainEqual({
                 path: `.gspot/${LOCKS[manager]}`,
                 kind: 'changed',
@@ -180,12 +180,12 @@ ${lock.toString('utf8')}
                 'Install that package manager version first',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(conflict);
-            expect(readFileSync(join(repository.path, '.gspot/package.json'))).toEqual(manifest);
-            expect(readFileSync(ownershipPath)).toEqual(ownership);
+            expect(readFileSync(join(repository.path, '.gspot/package.json'))).toStrictEqual(manifest);
+            expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
             writeFileSync(join(repository.path, projectPath), rootPackage);
             const repaired = await applyAll(await openSession(repository.path));
             expect(repaired.written).toContain(`.gspot/${LOCKS[manager]}`);
-            expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toEqual([]);
+            expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
             const recovery = join(repository.path, '.gspot/state/recovery');
             expect(
                 readdirSync(recovery, { recursive: true })
@@ -225,7 +225,7 @@ ${lock.toString('utf8')}
                         'Native wrapper download failed',
                     );
                     expect(existsSync(join(repository.path, '.gspot/node_modules/prettier'))).toBe(false);
-                    expect(readFileSync(lockPath)).toEqual(lock);
+                    expect(readFileSync(lockPath)).toStrictEqual(lock);
                 } finally {
                     initialize.mockRestore();
                 }
@@ -249,7 +249,7 @@ ${lock.toString('utf8')}
                     .get('formatting')!
                     .tools.find((tool) => tool.name === 'ec')!;
                 expect(probeTool({ root: repository.path, probes: new Map() }, checker).state).toBe('ok');
-                expect(readOwnership(repository.path).files.find((entry) => entry.path === binary?.path)).toEqual(
+                expect(readOwnership(repository.path).files.find((entry) => entry.path === binary?.path)).toStrictEqual(
                     binary,
                 );
             }
@@ -266,9 +266,9 @@ ${lock.toString('utf8')}
             expect(readFileSync(join(repository.path, 'node_modules/authored.txt'), 'utf8')).toBe(
                 'keep project dependencies',
             );
-            expect(readFileSync(lockPath)).toEqual(lock);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
             expect(statSync(lockPath).mode).toBe(mode);
-            expect(readFileSync(join(repository.path, '.gspot/package.json'))).toEqual(manifest);
+            expect(readFileSync(join(repository.path, '.gspot/package.json'))).toStrictEqual(manifest);
             const executable = join(repository.path, '.gspot/node_modules/.bin/prettier');
             const invalid = await run([executable, '--check', 'source.js'], { cwd: repository.path });
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
@@ -276,10 +276,10 @@ ${lock.toString('utf8')}
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const checked = await run([executable, '--check', 'source.js'], { cwd: repository.path });
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            expect(computeDrift(await openSession(repository.path))).toEqual([]);
+            expect(computeDrift(await openSession(repository.path))).toStrictEqual([]);
             const second = await applyAll(await openSession(repository.path));
-            expect(second.written).toEqual([]);
-            expect(readFileSync(lockPath)).toEqual(lock);
+            expect(second.written).toStrictEqual([]);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
             const readmePath = join(repository.path, '.gspot/node_modules/prettier/README.md');
             const readme = readFileSync(readmePath);
             writeFileSync(readmePath, 'authored later');
@@ -331,8 +331,8 @@ ${lock.toString('utf8')}
                     const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
                     expect(status.code, status.stderr).toBe(0);
                     expect(status.stdout).toBe('');
-                    expect(readFileSync(join(clone, '.gspot', LOCKS[manager]))).toEqual(lock);
-                    expect(readFileSync(join(clone, '.gspot/package.json'))).toEqual(manifest);
+                    expect(readFileSync(join(clone, '.gspot', LOCKS[manager]))).toStrictEqual(lock);
+                    expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
                 }
                 const formatter = join(clone, '.gspot/node_modules/.bin/prettier');
                 writeFileSync(join(clone, 'source.js'), 'export const greeting="hello";');
@@ -351,5 +351,5 @@ ${lock.toString('utf8')}
             server.stop(true);
         }
     },
-    120000,
+    120_000,
 );

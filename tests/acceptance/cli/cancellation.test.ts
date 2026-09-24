@@ -1,11 +1,11 @@
+import { expect, test } from 'bun:test';
+import { dirname, join } from 'node:path';
+import { git } from '#tests/support/cli/git.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import type { RunReport } from '#cli/types/reports.ts';
 import { pushReportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const CLI = join(import.meta.dir, '../../../packages/cli/src/main.ts');
 
@@ -38,8 +38,8 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
             expect(report.checks[0]!.note).toContain('canceled');
             expect(report.coverage.checked).toBe(0);
             expect(
-                JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0].invocations[0]
-                    .executionSuccessful,
+                JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0]
+                    .invocations[0].executionSuccessful,
             ).toBe(false);
             expect(() => process.kill(toolPid, 0)).toThrow();
         } finally {
@@ -89,7 +89,7 @@ test.each(['diff', 'clone', 'cat-file'])(
             const started = JSON.parse(readFileSync(marker, 'utf8')) as { pid: number; snapshot?: string };
             child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
             expect(await child.exited, await errors).toBe(2);
-            expect(JSON.parse(await output)).toEqual({ error: 'canceled', exitCode: 2 });
+            expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
             expect(() => process.kill(started.pid, 0)).toThrow();
             if (started.snapshot !== undefined) expect(existsSync(started.snapshot)).toBe(false);
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
@@ -154,13 +154,13 @@ test('push cancellation retains completed reports and names references not check
         expect(report.revisions).toHaveLength(1);
         expect(report.revisions[0]?.object).toBe(first);
         expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
-        expect(report.canceled?.pendingRefs).toEqual(['refs/heads/second']);
+        expect(report.canceled?.pendingRefs).toStrictEqual(['refs/heads/second']);
         const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
         expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
         expect(sarif.runs[1].invocations[0].executionSuccessful).toBe(false);
-        expect(sarif.runs[1].properties.canceled.pendingRefs).toEqual(['refs/heads/second']);
+        expect(sarif.runs[1].properties.canceled.pendingRefs).toStrictEqual(['refs/heads/second']);
         expect(report.exitCode).toBe(2);
-        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toEqual(report);
+        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
         expect(existsSync(started.snapshot)).toBe(false);
         expect(() => process.kill(started.pid, 0)).toThrow();
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
@@ -205,7 +205,7 @@ await import(${JSON.stringify(CLI)});
             expect(existsSync(started)).toBe(true);
             child.kill(signal);
             expect(await child.exited, await errors).toBe(2);
-            expect(JSON.parse(await output)).toEqual({ error: 'canceled', exitCode: 2 });
+            expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
             expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
@@ -260,7 +260,7 @@ await import(${JSON.stringify(CLI)});
         const observed = JSON.parse(readFileSync(marker, 'utf8')) as { destination: string };
         child.kill('SIGTERM');
         expect(await child.exited, await errors).toBe(2);
-        expect(JSON.parse(await output)).toEqual({ error: 'canceled', exitCode: 2 });
+        expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
         expect(existsSync(dirname(observed.destination))).toBe(false);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(readdirSync(dependencies)).toHaveLength(4000);

@@ -1,14 +1,14 @@
-import * as messages from '#cli/policy/messages.ts';
-// The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
+import * as messages from '#cli/policy/messages.ts';
+import { fileMissing } from '#cli/policy/messages.ts';
+import { stringify as stringifyToml } from 'smol-toml';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+// The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { TomlTable, Mutation, WriteResult } from '#cli/types/policy.ts';
 import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
-import { fileMissing } from '#cli/policy/messages.ts';
-import { stringify as stringifyToml } from 'smol-toml';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -70,7 +70,12 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     return { text: next, policy, changed: next !== text };
 }
 
-/** Apply a validated policy proposal through lifecycle ownership. */
+/**
+ * Apply a validated policy proposal through lifecycle ownership.
+ * @param root
+ * @param mutate
+ * @param isDryRun
+ */
 export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
     const original = openConfinedRoot(root).read('gspot.toml');
     if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
@@ -160,8 +165,7 @@ export function deleteKey(key: string): Mutation {
         }
         Reflect.deleteProperty(tables.at(-1)!, name);
         for (let index = tables.length - 1; index > 0; index -= 1)
-            if (Object.keys(tables[index]!).length === 0)
-                Reflect.deleteProperty(tables[index - 1]!, path[index - 1]!);
+            if (Object.keys(tables[index]!).length === 0) Reflect.deleteProperty(tables[index - 1]!, path[index - 1]!);
     };
 }
 

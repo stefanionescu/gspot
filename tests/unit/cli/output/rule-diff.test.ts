@@ -15,17 +15,17 @@ test('Gixy previews retain final root selectors and keep plugin options outside 
             file,
             '; explanation\r\nchecks: aliastraversal, ssrf\r\nskips = aliastraversal\r\nskips = ssrf # retained\r\n[origins]\nhttps-only = true\n',
         ),
-    ).toEqual({ rules: [] });
-    expect(ruleDiff(file, 'checks = ssrf\n')).toEqual({
+    ).toStrictEqual({ rules: [] });
+    expect(ruleDiff(file, 'checks = ssrf\n')).toStrictEqual({
         rules: [
             { path: 'checks', added: ['aliastraversal'], removed: [], changed: [] },
             { path: 'skips', added: ['ssrf'], removed: [], changed: [] },
         ],
     });
-    expect(ruleDiff(file, 'skips = [ssrf]\n')).toEqual({
+    expect(ruleDiff(file, 'skips = [ssrf]\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Gixy check selectors must be comma-separated strings.',
     });
-    expect(ruleDiff(file, '=\n')).toEqual({
+    expect(ruleDiff(file, '=\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Gixy rule configuration contains an invalid option.',
     });
 });
@@ -40,16 +40,16 @@ test('record rule lists compare by ID and diagnose ambiguous duplicate IDs', () 
     };
     expect(
         ruleDiff(file, 'rules:\n  - id: second\n    pattern: exec(...)\n  - id: first\n    pattern: eval(...)\n'),
-    ).toEqual({ rules: [] });
+    ).toStrictEqual({ rules: [] });
     expect(
         ruleDiff(file, 'rules:\n  - id: first\n    pattern: other(...)\n  - id: removed\n    pattern: exec(...)\n'),
-    ).toEqual({
+    ).toStrictEqual({
         rules: [{ path: 'rules', added: ['second'], removed: ['removed'], changed: ['first'] }],
     });
-    expect(ruleDiff(file, 'rules:\n  - id: first\n  - id: first\n')).toEqual({
+    expect(ruleDiff(file, 'rules:\n  - id: first\n  - id: first\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Rule path rules contains duplicate ID first.',
     });
-    expect(ruleDiff(file, 'rules:\n  - pattern: eval(...)\n')).toEqual({
+    expect(ruleDiff(file, 'rules:\n  - pattern: eval(...)\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Rule path rules must contain records with string IDs.',
     });
 });
@@ -62,14 +62,14 @@ test('JavaScript comparison reads static exports and rejects executable rule val
         kind: 'config',
         readOnly: true,
     };
-    expect(ruleDiff(file, "export default {rules: {'type-case': [0]}};")).toEqual({
+    expect(ruleDiff(file, "export default {rules: {'type-case': [0]}};")).toStrictEqual({
         rules: [{ path: 'rules', added: [], removed: [], changed: ['type-case'] }],
     });
-    expect(ruleDiff(file, file.content)).toEqual({ rules: [] });
+    expect(ruleDiff(file, file.content)).toStrictEqual({ rules: [] });
     expect(
         ruleDiff(file, "module.exports = {rules: (() => { throw new Error('Executed fixture'); })()};").ruleError,
     ).toContain('JSON5');
-    expect(ruleDiff(file, `${file.content}\nthrow new Error('Executed fixture');`)).toEqual({
+    expect(ruleDiff(file, `${file.content}\nthrow new Error('Executed fixture');`)).toStrictEqual({
         ruleError: 'Rule comparison failed: JavaScript rule comparison requires a single static configuration export.',
     });
 });
@@ -87,14 +87,14 @@ test('Vale comparison combines style selections and keeps rule overrides in thei
             file,
             '[*]\nBasedOnStyles = Example\nBasedOnStyles = Vale\nExample.Rule = NO\nExample.Rule = YES\nExample.Rule = NO\n[*.md]\nExample.Rule = NO\n',
         ),
-    ).toEqual({ rules: [] });
-    expect(ruleDiff(file, '[*]\nBasedOnStyles = Vale\nExample.Rule = "NO" # explanation\n')).toEqual({
+    ).toStrictEqual({ rules: [] });
+    expect(ruleDiff(file, '[*]\nBasedOnStyles = Vale\nExample.Rule = "NO" # explanation\n')).toStrictEqual({
         rules: [
             { path: '*.rules', added: [], removed: [], changed: ['Example.Rule'] },
             { path: '*.BasedOnStyles', added: ['Example'], removed: [], changed: [] },
         ],
     });
-    expect(ruleDiff(file, '[*\n')).toEqual({ ruleError: 'Rule comparison failed: Unclosed Vale section on line 1.' });
+    expect(ruleDiff(file, '[*\n')).toStrictEqual({ ruleError: 'Rule comparison failed: Unclosed Vale section on line 1.' });
 });
 
 test('SQLFluff comparison names excluded rules and changed rule options while ignoring list order', () => {
@@ -111,22 +111,22 @@ test('SQLFluff comparison names excluded rules and changed rule options while ig
             file,
             '[sqlfluff]\nexclude_rules = LT01,\n    CP01\n; explanation\n[sqlfluff:rules:capitalisation.keywords]\ncapitalisation_policy=upper\n',
         ),
-    ).toEqual({ rules: [] });
+    ).toStrictEqual({ rules: [] });
     expect(
         ruleDiff(
             file,
             '[sqlfluff]\nexclude_rules=LT01\n[sqlfluff:rules:capitalisation.keywords]\ncapitalisation_policy=lower\n',
         ),
-    ).toEqual({
+    ).toStrictEqual({
         rules: [
             { path: 'sqlfluff.exclude_rules', added: ['CP01'], removed: [], changed: [] },
             { path: 'sqlfluff:rules', added: [], removed: [], changed: ['capitalisation.keywords'] },
         ],
     });
-    expect(ruleDiff(file, '[sqlfluff]\nexclude_rules=LT01\nexclude_rules=CP01\n')).toEqual({
+    expect(ruleDiff(file, '[sqlfluff]\nexclude_rules=LT01\nexclude_rules=CP01\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Duplicate SQLFluff option on line 3.',
     });
-    expect(ruleDiff(file, 'exclude_rules=CP01\n')).toEqual({
+    expect(ruleDiff(file, 'exclude_rules=CP01\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Invalid SQLFluff configuration on line 1.',
     });
 });
@@ -139,10 +139,10 @@ test('SQLFluff comparison preserves case-sensitive options and resolves inherite
         kind: 'config',
         readOnly: true,
     };
-    expect(ruleDiff(file, '[DEFAULT]\nflag = TRUE\nlimit = 1.0\n[sqlfluff:rules:example]\nName = VALUE\n')).toEqual({
+    expect(ruleDiff(file, '[DEFAULT]\nflag = TRUE\nlimit = 1.0\n[sqlfluff:rules:example]\nName = VALUE\n')).toStrictEqual({
         rules: [],
     });
-    expect(ruleDiff(file, file.content.replace('Name', 'name'))).toEqual({
+    expect(ruleDiff(file, file.content.replace('Name', 'name'))).toStrictEqual({
         rules: [{ path: 'sqlfluff:rules', added: [], removed: [], changed: ['example'] }],
     });
 });
@@ -161,10 +161,10 @@ test.each([
     { path: 'rules.toml', before: '[rules]\nfirst = true\nsecond = 2\n', after: '[rules]\nsecond = 3\nthird = true\n' },
 ])('rule comparison describes additions, removals, and option changes in $path', ({ path, before, after }) => {
     const file: GeneratedFile = { path, content: after, rulesPath: ['rules'], kind: 'config', readOnly: true };
-    expect(ruleDiff(file, before)).toEqual({
+    expect(ruleDiff(file, before)).toStrictEqual({
         rules: [{ path: 'rules', added: ['third'], removed: ['first'], changed: ['second'] }],
     });
-    expect(ruleDiff(file, after)).toEqual({ rules: [] });
+    expect(ruleDiff(file, after)).toStrictEqual({ rules: [] });
 });
 
 test('rule comparison ignores list order and reports malformed JSON without claiming additions', () => {
@@ -175,8 +175,8 @@ test('rule comparison ignores list order and reports malformed JSON without clai
         kind: 'config',
         readOnly: true,
     };
-    expect(ruleDiff(file, '{ "rules": ["second", "first"] }')).toEqual({ rules: [] });
-    expect(ruleDiff(file, '{broken')).toEqual({
+    expect(ruleDiff(file, '{ "rules": ["second", "first"] }')).toStrictEqual({ rules: [] });
+    expect(ruleDiff(file, '{broken')).toStrictEqual({
         ruleError: 'Rule comparison failed: Rule configuration is not valid JSON.',
     });
 });
@@ -194,17 +194,17 @@ test('ShellCheck comparisons combine repeated directives and normalize code pref
             file,
             '# example\r\nsource="path # literal"\r\nsource-path=path#literal\r\ndisable="2002" disable=2086 # reason\r\nenable=all\r\n',
         ),
-    ).toEqual({ rules: [] });
-    expect(ruleDiff(file, 'disable=SC2086\ndisable=SC2046\n')).toEqual({
+    ).toStrictEqual({ rules: [] });
+    expect(ruleDiff(file, 'disable=SC2086\ndisable=SC2046\n')).toStrictEqual({
         rules: [
             { path: 'enable', added: ['all'], removed: [], changed: [] },
             { path: 'disable', added: ['SC2002'], removed: ['SC2046'], changed: [] },
         ],
     });
-    expect(ruleDiff(file, 'disable="SC2086')).toEqual({
+    expect(ruleDiff(file, 'disable="SC2086')).toStrictEqual({
         ruleError: 'Rule comparison failed: Unterminated ShellCheck quote on line 1.',
     });
-    expect(ruleDiff(file, 'disable=misspelled')).toEqual({
+    expect(ruleDiff(file, 'disable=misspelled')).toStrictEqual({
         ruleError: 'Rule comparison failed: Invalid ShellCheck disable list on line 1.',
     });
 });
@@ -222,20 +222,20 @@ test('SwiftFormat comparisons combine repeated and continued rule lists without 
             file,
             '--enable "trailingSpace" # explanation\r\n--enable consecutiveSpaces\r\n--disable redundantSelf\r\n--indent 2\r\n',
         ),
-    ).toEqual({ rules: [] });
+    ).toStrictEqual({ rules: [] });
     expect(
         ruleDiff(file, '--enable consecutiveSpaces,\\\n# continued list\n trailingSpace\n--disable redundantSelf\n'),
-    ).toEqual({ rules: [] });
-    expect(ruleDiff(file, '--enable consecutiveSpaces\n--disable trailingSpace\n')).toEqual({
+    ).toStrictEqual({ rules: [] });
+    expect(ruleDiff(file, '--enable consecutiveSpaces\n--disable trailingSpace\n')).toStrictEqual({
         rules: [
             { path: 'enable', added: ['trailingSpace'], removed: [], changed: [] },
             { path: 'disable', added: ['redundantSelf'], removed: ['trailingSpace'], changed: [] },
         ],
     });
-    expect(ruleDiff(file, '--enable "trailingSpace\n')).toEqual({
+    expect(ruleDiff(file, '--enable "trailingSpace\n')).toStrictEqual({
         ruleError: 'Rule comparison failed: Invalid SwiftFormat enable list on line 1.',
     });
-    expect(ruleDiff(file, '--filter **/Tests/**\n--disable trailingSpace\n')).toEqual({
+    expect(ruleDiff(file, '--filter **/Tests/**\n--disable trailingSpace\n')).toStrictEqual({
         ruleError:
             'Rule comparison failed: SwiftFormat rule comparison does not support configuration sections or filters.',
     });

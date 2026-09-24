@@ -4,7 +4,11 @@ import { runToolCheck } from '#cli/run/tool-runner.ts';
 import type { CheckResult } from '#cli/types/reports.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution.ts';
 
-/** Scan the exact selected commits, including secrets removed before the final pushed tree. */
+/**
+ * Scan the exact selected commits, including secrets removed before the final pushed tree.
+ * @param session
+ * @param planned
+ */
 export async function checkSecretHistory(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {

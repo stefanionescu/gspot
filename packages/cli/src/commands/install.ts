@@ -1,8 +1,21 @@
-import { directoryOf } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
 import type { Command } from 'commander';
+import { openSession } from '#cli/run/session.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { installTools } from '#cli/tools/install-tools.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import { pythonInstallSteps } from '#cli/tools/python-project.ts';
+import { packageInstallSteps } from '#cli/tools/package-project.ts';
 
-/** Register immutable installation for a clone. */
+/**
+ * Register immutable installation for a clone.
+ * @param program
+ */
 export function registerInstall(program: Command): void {
     program
         .command('install')
@@ -21,20 +34,12 @@ export function registerInstall(program: Command): void {
             );
         });
 }
-
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
-import { hookLocation } from '#cli/lifecycle/hooks.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { openSession } from '#cli/run/session.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import { installTools } from '#cli/tools/install-tools.ts';
-import { packageInstallSteps } from '#cli/tools/package-project.ts';
-import { pythonInstallSteps } from '#cli/tools/python-project.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
 type InstallOptions = { cwd: string; isDryRun: boolean };
 
-/** Preview or install this clone's locked tools without regenerating tracked configuration. */
+/**
+ * Preview or install this clone's locked tools without regenerating tracked configuration.
+ * @param options
+ */
 export async function installCommand(options: InstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     assertPinMatches(root);

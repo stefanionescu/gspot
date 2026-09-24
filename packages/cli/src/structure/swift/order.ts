@@ -1,9 +1,9 @@
 // Where things sit in a Swift file: file-local declarations first, and the environment read in one place.
 import type { Node } from 'web-tree-sitter';
-import type { SwiftSource } from '#cli/structure/swift/types.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { StructureProblem } from '#cli/structure/python/types.ts';
 import { visibilityOf } from '#cli/structure/swift/sources.ts';
+import type { SwiftSource } from '#cli/structure/swift/types.ts';
+import type { StructureProblem } from '#cli/structure/python/types.ts';
 
 const DECLARATIONS = new Set([
     'class_declaration',

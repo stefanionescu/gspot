@@ -1,6 +1,6 @@
+import type { TSESTree } from '@typescript-eslint/utils';
 // An exported declaration above a non-exported one: private first, public last.
 import { createRule } from '#plugin/rules/definition.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const DECLARATIONS = new Set([

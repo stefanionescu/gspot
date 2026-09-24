@@ -1,14 +1,14 @@
+import prettier from 'prettier';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import prettier from 'prettier';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { parse as parseToml, stringify } from 'smol-toml';
 import { parse as parseYaml } from 'yaml';
-import { createFileTree, testdir } from 'testdirs';
+import { planRun } from '#cli/run/plan.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
-import { planRun } from '#cli/run/plan.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { prepareCommand } from '#cli/run/tool-runner.ts';
+import { parse as parseToml, stringify } from 'smol-toml';
 
 test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {
     await using directory = await testdir();

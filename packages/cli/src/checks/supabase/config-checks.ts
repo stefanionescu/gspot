@@ -1,10 +1,9 @@
 import { posix } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
 // The checks that read supabase/config.toml: it parses, its functions exist, its buckets have policies, and migrations are named as the CLI names them.
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { SUPABASE_CONFIG } from '#cli/checks/supabase/project.ts';
-import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
+import { SUPABASE_CONFIG, functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**
  * The project file parses, and every function it configures has a folder.
@@ -12,7 +11,7 @@ import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supab
  * @returns the findings
  */
 export function projectValid(input: EngineInput): Finding[] {
-    const config = readProject(input.scopeRoot);
+    const config = readProject(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
     if (typeof config === 'string') return [supabaseFinding(input, at, 'parse', config)];
@@ -34,7 +33,7 @@ export function projectValid(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
-    const config = readProject(input.scopeRoot);
+    const config = readProject(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
     if (typeof config === 'string') throw new Error(`Cannot inspect storage policies: ${config}`);

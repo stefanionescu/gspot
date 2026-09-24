@@ -1,9 +1,12 @@
-import { MISE_CONFIG_PATH, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import type { Finding } from '#cli/types/reports.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { MISE_CONFIG_PATH, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
 
-/** Report missing or changed task bodies through the same field owner used by generation. */
+/**
+ * Report missing or changed task bodies through the same field owner used by generation.
+ * @param input
+ */
 export function taskPolicy(input: EngineInput): Finding[] {
     const runner = input.policyFiles.policy.runner;
     if (runner === undefined) return [];

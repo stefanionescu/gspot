@@ -2,7 +2,6 @@
 import { posix } from 'node:path';
 import { createRule } from '#plugin/rules/definition.ts';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';
-
 import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
 const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;

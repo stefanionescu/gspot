@@ -1,12 +1,13 @@
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import * as manifestDefinitions from '#cli/configurations/read-manifests.ts';
-import * as programDefinition from '#cli/program.ts';
-import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import plugin from '#plugin/plugin.ts';
+import { expect, spyOn, test } from 'bun:test';
+import * as programDefinition from '#cli/program.ts';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { referencePages } from '../../../docs/src/content/reference.ts';
+import * as manifestDefinitions from '#cli/configurations/read-manifests.ts';
 import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
-import plugin from '../../../packages/eslint-plugin/src/plugin.ts';
+
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {
     const program = programDefinition.buildProgram();
     const parent = program
@@ -155,7 +156,7 @@ test('plugin references reject an empty example before publishing pages', () => 
     const docs = rule.meta.docs!;
     const original = docs.example;
     try {
-        docs.example = '   ';
+        docs.example = ' '.repeat(3);
         expect(() => referencePages()).toThrow('Plugin rule no-trivial-files has no example.');
     } finally {
         docs.example = original;

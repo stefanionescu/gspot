@@ -43,6 +43,7 @@ level = "recommended"
 stage = "commit"
 engine = "naming"
 analysis = "policy-schema"
+runs = "once"
 coverage = ["naming"]
 summary = "Checks that the naming settings in gspot.toml are valid and that every allowed name and path rule matches something."
 why = "An allowed name that matches nothing is a leftover, and a path rule that matches nothing hides a typo."

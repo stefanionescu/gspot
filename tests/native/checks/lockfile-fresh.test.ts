@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { planRun } from '#cli/run/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { engineInput, runEngineCheck } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
+import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 'unexpected'])(
     'frozen installation reports %s as inability, preserves the repository, and retries successfully',
@@ -48,7 +48,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
         try {
             const result = await runEngineCheck(session, lockfileFresh, planned!);
             expect(result.status).toBe(failure === 'missing' ? 'missing' : 'error');
-            expect(result.findings).toEqual([]);
+            expect(result.findings).toStrictEqual([]);
             expect(readFileSync(join(directory.path, 'bun.lock'), 'utf8')).toBe('original lock\n');
             expect(readFileSync(join(directory.path, 'node_modules/protected.txt'), 'utf8')).toBe(
                 'installed dependency\n',
@@ -74,7 +74,7 @@ test.each([
     await using directory = await testdir();
     const version = await processes.run([manager, '--version'], { cwd: directory.path });
     expect(version.code, version.stdout + version.stderr).toBe(0);
-    const modernYarn = manager === 'yarn' && Number(version.stdout.trim().split('.')[0]) >= 2;
+    const modernYarn = manager === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
         'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["dependencies"]\n`,
@@ -112,10 +112,10 @@ test.each([
     });
     const input = engineInput(session, planned!);
     expect(await lockfileFresh(input)).toContainEqual(expect.objectContaining({ rule: 'stale-lockfile' }));
-    expect(readFileSync(join(directory.path, lockName))).toEqual(lock);
+    expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
     await Bun.write(join(directory.path, 'package.json'), manifest);
-    expect(await lockfileFresh(input)).toEqual([]);
-    expect(readFileSync(join(directory.path, lockName))).toEqual(lock);
+    expect(await lockfileFresh(input)).toStrictEqual([]);
+    expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
     expect(existsSync(join(directory.path, 'node_modules'))).toBe(false);
 });

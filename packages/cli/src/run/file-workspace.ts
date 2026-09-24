@@ -1,9 +1,13 @@
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
-/** Copy selected files and declared configurations without native discovery inputs. */
+/**
+ * Copy selected files and declared configurations without native discovery inputs.
+ * @param root
+ * @param paths
+ */
 export function createFileWorkspace(
     root: string,
     paths: string[],
@@ -31,7 +35,9 @@ export function createFileWorkspace(
         return {
             root: directory,
             originals,
-            [Symbol.dispose]: () => rmSync(directory, { recursive: true, force: true }),
+            [Symbol.dispose]: () => {
+                rmSync(directory, { recursive: true, force: true });
+            },
         };
     } catch (error) {
         rmSync(directory, { recursive: true, force: true });

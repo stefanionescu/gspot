@@ -1,10 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/schemas/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const modules = join(import.meta.dir, '../../../node_modules');
 const source =
@@ -65,7 +65,7 @@ test.each(['recommended', 'all'])(
         await Bun.write(join(sandbox.path, 'app/math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toEqual([]);
+        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         expect(readFileSync(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
     },
     PLANTED_TIMEOUT_MS * 2,
@@ -87,7 +87,7 @@ test.each(['recommended', 'all'])(
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings)).toEqual([
+        expect(reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
             expect.objectContaining({ rule: 'coverage-lines' }),
             expect.objectContaining({
                 check: 'jest/coverage',
@@ -98,17 +98,17 @@ test.each(['recommended', 'all'])(
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toEqual([]);
+        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected.replace('toBe(6)', 'toBe(7)'));
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toEqual([
+        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
             expect.objectContaining({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), 'require("./missing-test-dependency.cjs");\n');
         const unavailable = await run(sandbox.path, command, environment);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
-        expect(reportSchema.parse(JSON.parse(unavailable.stdout)).checks).toEqual([
+        expect(reportSchema.parse(JSON.parse(unavailable.stdout)).checks).toStrictEqual([
             expect.objectContaining({ check: 'jest/coverage', status: 'error' }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);

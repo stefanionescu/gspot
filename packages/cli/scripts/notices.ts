@@ -19,7 +19,7 @@ const upstream = z
         ({ licenses, packages }) => Object.values(packages).every((record) => record.license in licenses),
         'Every package notice needs its license text.',
     )
-    .parse(JSON.parse(readFileSync(new URL('./notices.json', import.meta.url), 'utf8')));
+    .parse(JSON.parse(readFileSync(new URL('notices.json', import.meta.url), 'utf8')));
 const metadataSchema = z.object({ inputs: z.record(z.string(), z.unknown()) });
 const MINIMUM_FENCE_LENGTH = 3;
 const LICENSE = /^(?:LICEN[CS]E|COPYING|NOTICE)(?:$|[.-])/iu;

@@ -1,15 +1,15 @@
-import { run } from '#tests/support/cli/command.ts';
-import { rejects } from 'node:assert/strict';
+import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as fs from 'node:fs';
+import { run } from '#tests/support/cli/command.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
     await using directory = await testdir();
@@ -178,15 +178,22 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             install: false,
             allowDirty: false,
         } as const;
-        await rejects(initCommand({ ...options, configurations: [...options.configurations], scopes: [...options.scopes] }), {
-            message: /Unsafe lifecycle|Scope directory does not exist/u,
-        });
+        await rejects(
+            initCommand({ ...options, configurations: [...options.configurations], scopes: [...options.scopes] }),
+            {
+                message: /Unsafe lifecycle|Scope directory does not exist/u,
+            },
+        );
         expect(existsSync(join(root, 'gspot.toml'))).toBe(false);
         expect(existsSync(join(root, '.gspot'))).toBe(false);
         expect(readFileSync(join(directory.path, 'outside/nested/keep.txt'), 'utf8')).toBe('original\n');
         unlinkSync(join(root, 'linked'));
         await createFileTree(root, { 'src/keep.txt': 'inside\n' });
-        const corrected = await initCommand({ ...options, configurations: [...options.configurations], scopes: ['src='] });
+        const corrected = await initCommand({
+            ...options,
+            configurations: [...options.configurations],
+            scopes: ['src='],
+        });
         expect(corrected.exitCode).toBe(0);
         expect(readFileSync(join(root, 'gspot.toml'), 'utf8')).toContain('path = "src"');
     },
@@ -198,4 +205,19 @@ test('initialization refuses the removed selection flag without writing files', 
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
     expect(rejected.stdout + rejected.stderr).toContain("unknown option '--presets'");
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
+});
+
+test('uv is an installer rather than a task runner, and Python initialization preserves its project', async () => {
+    await using sandbox = await testdir();
+    const project = '[project]\nname = "sample"\nversion = "1.0.0"\ndependencies = []\n';
+    await createFileTree(sandbox.path, { 'pyproject.toml': project, 'source.py': 'print("ready")\n' });
+    const rejected = await run(sandbox.path, ['init', '--yes', '--runner', 'uv']);
+    expect(rejected.code).toBe(2);
+    for (const runner of ['mise', 'npm', 'bun', 'pnpm', 'yarn']) expect(rejected.stderr).toContain(runner);
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);
+    const accepted = await run(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'python', '--no-runner', '--no-install', '--no-ci', '--no-hooks', '--no-rules']);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);
 });

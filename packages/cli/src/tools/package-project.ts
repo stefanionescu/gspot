@@ -1,25 +1,25 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
-import { observeToolVersion, toolVersionState } from '#cli/tools/tool-probe.ts';
-import { InstallationError } from '#cli/tools/install-error.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import { yarnSettings } from '#cli/tools/yarn-settings.ts';
-import { parseSyml } from '@yarnpkg/parsers';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 import semver from 'semver';
-import { parse as parseJsonc, modify, applyEdits } from 'jsonc-parser';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { parse as parseYaml } from 'yaml';
-import { parsePackageManager } from '#cli/emit/tool-packages.ts';
-import { packageEnvironment } from '#cli/tools/package-environment.ts';
+import { parseSyml } from '@yarnpkg/parsers';
+import { isDeepStrictEqual } from 'node:util';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import type { LifecycleOwner } from '#cli/types/ownership.ts';
+import { yarnSettings } from '#cli/tools/yarn-settings.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { LifecycleOwner } from '#cli/types/ownership.ts';
+import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { InstallationError } from '#cli/tools/install-error.ts';
+import { parsePackageManager } from '#cli/emit/tool-packages.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { packageEnvironment } from '#cli/tools/package-environment.ts';
+import { parse as parseJsonc, modify, applyEdits } from 'jsonc-parser';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { observeToolVersion, toolVersionState } from '#cli/tools/tool-probe.ts';
 
 const PROJECT = '.gspot/package.json';
 const SETUP = 'Run: gspot apply, then gspot install';
@@ -76,46 +76,55 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
     if (/^(?:<{7}|={7}|>{7})/mu.test(content)) return false;
     try {
         let actual: unknown;
-        if (name === 'npm')
-            actual = z
-                .object({
-                    packages: z.record(
-                        z.string(),
-                        z.object({ devDependencies: z.record(z.string(), z.string()).optional() }),
+        switch (name) {
+            case 'npm': {
+                actual = z
+                    .object({
+                        packages: z.record(
+                            z.string(),
+                            z.object({ devDependencies: z.record(z.string(), z.string()).optional() }),
+                        ),
+                    })
+                    .parse(JSON.parse(content)).packages['']?.devDependencies;
+                break;
+            }
+            case 'bun': {
+                actual = z
+                    .object({
+                        workspaces: z.record(
+                            z.string(),
+                            z.object({ devDependencies: z.record(z.string(), z.string()).optional() }),
+                        ),
+                    })
+                    .parse(parseJsonc(content)).workspaces['']?.devDependencies;
+                break;
+            }
+            case 'pnpm': {
+                const pinned = z
+                    .object({ importers: z.record(z.string(), z.object({ devDependencies: z.unknown() })) })
+                    .parse(parseYaml(content)).importers['.']?.devDependencies;
+                const entries = z.record(z.string(), z.object({ specifier: z.string() })).parse(pinned);
+                actual = Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));
+
+                break;
+            }
+            default: {
+                const entries = z
+                    .record(z.string(), z.object({ version: z.string().optional() }).passthrough())
+                    .parse(parseSyml(content));
+                return Object.entries(dependencies).every(([dependency, version]) =>
+                    Object.entries(entries).some(
+                        ([descriptors, entry]) =>
+                            descriptors
+                                .split(/,\s*/u)
+                                .some(
+                                    (descriptor) =>
+                                        descriptor === `${dependency}@${version}` ||
+                                        descriptor === `${dependency}@npm:${version}`,
+                                ) && entry.version === version,
                     ),
-                })
-                .parse(JSON.parse(content)).packages['']?.devDependencies;
-        else if (name === 'bun')
-            actual = z
-                .object({
-                    workspaces: z.record(
-                        z.string(),
-                        z.object({ devDependencies: z.record(z.string(), z.string()).optional() }),
-                    ),
-                })
-                .parse(parseJsonc(content)).workspaces['']?.devDependencies;
-        else if (name === 'pnpm') {
-            const pinned = z
-                .object({ importers: z.record(z.string(), z.object({ devDependencies: z.unknown() })) })
-                .parse(parseYaml(content)).importers['.']?.devDependencies;
-            const entries = z.record(z.string(), z.object({ specifier: z.string() })).parse(pinned);
-            actual = Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));
-        } else {
-            const entries = z
-                .record(z.string(), z.object({ version: z.string().optional() }).passthrough())
-                .parse(parseSyml(content));
-            return Object.entries(dependencies).every(([dependency, version]) =>
-                Object.entries(entries).some(
-                    ([descriptors, entry]) =>
-                        descriptors
-                            .split(/,\s*/u)
-                            .some(
-                                (descriptor) =>
-                                    descriptor === `${dependency}@${version}` ||
-                                    descriptor === `${dependency}@npm:${version}`,
-                            ) && entry.version === version,
-                ),
-            );
+                );
+            }
         }
         return isDeepStrictEqual(actual ?? {}, dependencies);
     } catch {
@@ -123,7 +132,11 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
     }
 }
 
-/** Yarn Classic accepts registry-relative tarball references; retain its own serialization and validate each edit. */
+/**
+ * Yarn Classic accepts registry-relative tarball references; retain its own serialization and validate each edit.
+ * @param content
+ * @param registry
+ */
 function relativeYarnLock(content: string, registry: string): string {
     const schema = z.record(z.string(), z.object({ resolved: z.string().optional() }).passthrough());
     const entries = schema.parse(parseSyml(content));
@@ -145,7 +158,11 @@ function relativeYarnLock(content: string, registry: string): string {
     return edited;
 }
 
-/** Keep native npm package identities and integrity while resolving standard tarballs through local registry settings. */
+/**
+ * Keep native npm package identities and integrity while resolving standard tarballs through local registry settings.
+ * @param content
+ * @param env
+ */
 function portableBunLock(content: string, env: Record<string, string>): string {
     const schema = z.object({ packages: z.record(z.string(), z.array(z.unknown())) }).passthrough();
     const parsed = schema.parse(parseJsonc(content));
@@ -159,7 +176,7 @@ function portableBunLock(content: string, env: Record<string, string>): string {
         const name = identity.slice(0, separator);
         const version = identity.slice(separator + 1);
         if (semver.valid(version) === null || !/^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u.test(integrity)) continue;
-        const scope = name.startsWith('@') ? name.split('/')[0] : undefined;
+        const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
         const registry =
             (scope === undefined ? undefined : env[`npm_config_${scope}:registry`]) ?? env['npm_config_registry'];
         if (registry === undefined) continue;
@@ -255,7 +272,12 @@ function writeProject(work: string, manifest: string, yarn: string | undefined):
     if (yarn !== undefined) writeFileSync(join(work, '.yarnrc.yml'), yarn);
 }
 
-/** Resolve only a missing or mismatched tool lock, before apply publishes generated files. */
+/**
+ * Resolve only a missing or mismatched tool lock, before apply publishes generated files.
+ * @param root
+ * @param files
+ * @param owner
+ */
 export async function resolvePackageProject(
     root: string,
     files: GeneratedFile[],
@@ -293,7 +315,11 @@ export async function resolvePackageProject(
     });
 }
 
-/** Compare generated package requirements to the recorded native lock without resolving or writing. */
+/**
+ * Compare generated package requirements to the recorded native lock without resolving or writing.
+ * @param root
+ * @param generated
+ */
 export function packageLockDrift(
     root: string,
     generated: GeneratedFile[],
@@ -315,7 +341,10 @@ export function packageLockDrift(
     }
 }
 
-/** Validate the recorded inputs and preview native immutable commands without creating ownership state. */
+/**
+ * Validate the recorded inputs and preview native immutable commands without creating ownership state.
+ * @param root
+ */
 export function packageInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
     try {
@@ -335,7 +364,11 @@ export function packageInstallSteps(root: string): string[][] {
     }
 }
 
-/** Install locked packages outside the repository, then publish each owned entry through native confinement. */
+/**
+ * Install locked packages outside the repository, then publish each owned entry through native confinement.
+ * @param root
+ * @param tools
+ */
 export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {
         const project = owner.read(PROJECT);

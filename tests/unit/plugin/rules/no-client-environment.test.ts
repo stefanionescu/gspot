@@ -1,6 +1,6 @@
-import example from '../../../../docs/src/components/home/client-environment.json';
 import { tester } from '#tests/support/plugin/tester.ts';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
+import example from '../../../../docs/src/components/home/client-environment.json';
 
 tester().run('no-client-environment', noClientEnvironment, {
     valid: [

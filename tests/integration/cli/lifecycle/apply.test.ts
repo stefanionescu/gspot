@@ -1,14 +1,14 @@
-import { applyCommand } from '#cli/commands/apply.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openSession } from '#cli/run/session.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { emitAll } from '#cli/emit/targets.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('apply rejects injected SQLFluff dialect directives with exit 2 before changing configuration', async () => {
     await using sandbox = await testdir();
@@ -64,8 +64,20 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
 
 test.each([
     { configuration: 'bash', tool: 'shellcheck', rule: 'SC2086', target: 'shellcheckrc', collection: 'disable' },
-    { configuration: 'swift', tool: 'swiftformat', rule: 'consecutiveSpaces', target: 'swiftformat', collection: 'disable' },
-    { configuration: 'sql', tool: 'sqlfluff', rule: 'CP01', target: 'sqlfluff.cfg', collection: 'sqlfluff.exclude_rules' },
+    {
+        configuration: 'swift',
+        tool: 'swiftformat',
+        rule: 'consecutiveSpaces',
+        target: 'swiftformat',
+        collection: 'disable',
+    },
+    {
+        configuration: 'sql',
+        tool: 'sqlfluff',
+        rule: 'CP01',
+        target: 'sqlfluff.cfg',
+        collection: 'sqlfluff.exclude_rules',
+    },
     {
         configuration: 'postgres',
         tool: 'squawk',
@@ -102,7 +114,9 @@ test('apply preview names added Vale styles when prose moves from recommended to
     await using sandbox = await testdir();
     const policy = 'version = 1\nconfigurations = ["prose"]\n[rules]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
-    const original = emitAll(await openSession(sandbox.path)).files.find((file) => file.path === '.gspot/config/vale.ini')!;
+    const original = emitAll(await openSession(sandbox.path)).files.find(
+        (file) => file.path === '.gspot/config/vale.ini',
+    )!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), `level = "all"\n${policy}`);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
@@ -197,7 +211,10 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
 
 test('a failed pin publication leaves the old version and succeeds after the write failure is repaired', async () => {
     await using repository = await testdir();
-    await createFileTree(repository.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', '.gspot/version': '0.0.1\n' });
+    await createFileTree(repository.path, {
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        '.gspot/version': '0.0.1\n',
+    });
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
         if (String(target) === join(repository.path, '.gspot/version')) throw new Error('Pin write denied');

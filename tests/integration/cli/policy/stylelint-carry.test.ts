@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { readFileSync, rmSync, symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import stylelint from 'stylelint';
 import { stringify } from 'smol-toml';
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import { expect, test } from 'bun:test';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/policy/propose.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import type { ExistingTooling } from '#cli/types/repository.ts';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
@@ -49,9 +49,9 @@ test.each([
         }),
     });
     const session = await openSession(sandbox.path);
-    expect(session.scopes[0]!.view.rulesOff('css/stylelint')).toEqual([]);
+    expect(session.scopes[0]!.view.rulesOff('css/stylelint')).toStrictEqual([]);
     for (const scope of session.scopes.filter(({ scope }) => scope.path !== ''))
-        expect(scope.view.rulesOff('css/stylelint')).toEqual(disabled ? ['block-no-empty'] : []);
+        expect(scope.view.rulesOff('css/stylelint')).toStrictEqual(disabled ? ['block-no-empty'] : []);
 });
 
 test('nested Stylelint adoption preserves sibling rules and whole-scope allowances in native editor configurations', async () => {
@@ -78,9 +78,9 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
         })),
     };
     const carried = await collectCarried(sandbox.path, discovered, new Set(['css']), []);
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toEqual(['theme[1]/.stylelintrc.json', 'other/.stylelintrc.json']);
-    expect(carried.tools.get('stylelint')?.settings).toEqual({});
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['theme[1]/.stylelintrc.json', 'other/.stylelintrc.json']);
+    expect(carried.tools.get('stylelint')?.settings).toStrictEqual({});
     expect(carried.observed.has('theme[1]/base.json')).toBe(true);
     const samples = [
         { path: 'theme[1]/future.css', code: '#example { color: red; }', expected: ['color-named', 'selector-max-id'] },
@@ -92,7 +92,7 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
         { path: 'theme[1]/corrected.css', code: '.example { color: #abc; }', expected: [] },
     ];
     const baseline = await stylelint.lint({ code: 'a {}', codeFilename: join(sandbox.path, 'theme[1]/future.css') });
-    expect(baseline.results.flatMap((result) => result.warnings)).toEqual([]);
+    expect(baseline.results.flatMap((result) => result.warnings)).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
@@ -116,7 +116,7 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
             .flatMap((result) => result.warnings.map((warning) => warning.rule))
             .filter((rule) => ['color-named', 'selector-max-id', 'block-no-empty'].includes(rule))
             .sort();
-        expect(relevant, path).toEqual(expected);
+        expect(relevant, path).toStrictEqual(expected);
     }
     expect(readFileSync(join(sandbox.path, 'theme[1]/base.json'), 'utf8')).toBe(
         '{"rules":{"color-named":"never","selector-max-id":0}}\n',
@@ -142,7 +142,7 @@ test('overlapping Stylelint sources preserve every original before adoption', as
     expect(carried.unread).toContainEqual(
         expect.objectContaining({ path: '.stylelintrc.json', note: expect.stringContaining('Overlapping') }),
     );
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(carried.scopes.size).toBe(0);
     for (const path of ['.stylelintrc.json', 'nested/.stylelintrc.json'])
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
@@ -160,13 +160,13 @@ test('Stylelint package lookups do not adopt a same-named local file', async () 
         stylelint.lint({ code: 'a { color: red; }', configFile: join(sandbox.path, '.stylelintrc.json') }),
     ).rejects.toThrow('Could not find "config/base.json"');
     const refused = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-    expect(refused.removed).toEqual([]);
-    expect(refused.unread.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+    expect(refused.removed).toStrictEqual([]);
+    expect(refused.unread.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
     expect(refused.tools.size).toBe(0);
     await Bun.write(join(sandbox.path, '.stylelintrc.json'), '{"extends":"./config/base.json"}\n');
     const corrected = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-    expect(corrected.unread).toEqual([]);
-    expect(corrected.removed.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+    expect(corrected.unread).toStrictEqual([]);
+    expect(corrected.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
 });
 
 test.each(['cycle', 'invalid options', 'external link'])(
@@ -191,17 +191,17 @@ test.each(['cycle', 'invalid options', 'external link'])(
             symlinkSync(join(external.path, 'base.json'), join(sandbox.path, 'config/base.json'));
         }
         const refused = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(refused.unread.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
-        expect(refused.removed).toEqual([]);
+        expect(refused.unread.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
+        expect(refused.removed).toStrictEqual([]);
         expect(refused.tools.size).toBe(0);
         expect(readFileSync(join(sandbox.path, '.stylelintrc.json'), 'utf8')).toBe(original);
         expect(readFileSync(join(external.path, 'base.json'), 'utf8')).toBe('{"rules":{"color-named":"never"}}\n');
         rmSync(join(sandbox.path, 'config/base.json'));
         await Bun.write(join(sandbox.path, 'config/base.json'), '{"rules":{"color-named":"never"}}\n');
         const corrected = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.removed.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
-        expect(corrected.observed.get('config/base.json')?.bytes).toEqual(
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
+        expect(corrected.observed.get('config/base.json')?.bytes).toStrictEqual(
             readFileSync(join(sandbox.path, 'config/base.json')),
         );
     },
@@ -220,15 +220,15 @@ test.each(['absent', 'different version'])(
                 : { 'node_modules/stylelint/package.json': '{"name":"stylelint","version":"0.0.0"}\n' }),
         });
         const refused = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(refused.removed).toEqual([]);
-        expect(refused.unread.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+        expect(refused.removed).toStrictEqual([]);
+        expect(refused.unread.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
         expect(refused.tools.size).toBe(0);
         expect(readFileSync(join(sandbox.path, '.stylelintrc.json'), 'utf8')).toBe(original);
         rmSync(join(sandbox.path, 'node_modules'), { recursive: true, force: true });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const corrected = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.removed.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
     },
 );
 
@@ -264,8 +264,8 @@ test.each([false, true])(
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const carried = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(carried.unread).toEqual([]);
-        expect(carried.removed.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+        expect(carried.unread).toStrictEqual([]);
+        expect(carried.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
             stringify({
@@ -291,12 +291,12 @@ test.each([false, true])(
                 .flatMap((result) => result.warnings)
                 .filter((warning) => Object.hasOwn(rules, warning.rule));
             expect(findings).toHaveLength(code.startsWith('#') ? 2 : 0);
-            expect(findings.map(({ rule, line, column }) => ({ rule, line, column }))).toEqual(
+            expect(findings.map(({ rule, line, column }) => ({ rule, line, column }))).toStrictEqual(
                 before.results
                     .flatMap((result) => result.warnings)
                     .map(({ rule, line, column }) => ({ rule, line, column })),
             );
-            expect(after.results.flatMap((result) => result.invalidOptionWarnings)).toEqual([]);
+            expect(after.results.flatMap((result) => result.invalidOptionWarnings)).toStrictEqual([]);
         }
         expect(readFileSync(join(sandbox.path, '.stylelintrc.json'), 'utf8')).toBe(original);
     },
@@ -315,13 +315,13 @@ test.each([
         await createFileTree(sandbox.path, { '.stylelintrc.json': original, 'package.json': '{"private":true}\n' });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const refused = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(refused.unread.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
-        expect(refused.removed).toEqual([]);
+        expect(refused.unread.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
+        expect(refused.removed).toStrictEqual([]);
         expect(refused.tools.size).toBe(0);
         expect(readFileSync(join(sandbox.path, '.stylelintrc.json'), 'utf8')).toBe(original);
         await Bun.write(join(sandbox.path, '.stylelintrc.json'), '{"rules":{"color-named":"never"}}\n');
         const corrected = await collectCarried(sandbox.path, tooling, new Set(['css']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.removed.map((entry) => entry.path)).toEqual(['.stylelintrc.json']);
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
     },
 );

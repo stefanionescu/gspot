@@ -1,14 +1,14 @@
-import { readRepository } from '#cli/repository/tree.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { join, relative } from 'node:path';
-import { realpathSync, symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
 import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import { expect, test } from 'bun:test';
+import { join, relative } from 'node:path';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { realpathSync, symlinkSync } from 'node:fs';
+import { readRepository } from '#cli/repository/tree.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
 import type { ExistingTooling } from '#cli/types/repository.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],
@@ -35,7 +35,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
         ...Object.fromEntries(paths.map((path) => [path, 'import os\n'])),
     });
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toEqual([]);
+    expect(carried.unread).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         stringify({
@@ -70,7 +70,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     const failed = run();
     expect(failed.exitCode, failed.stderr.toString()).toBe(1);
     const findings = JSON.parse(failed.stdout.toString()) as { filename: string }[];
-    expect(findings.map(({ filename }) => relative(realpathSync(sandbox.path), filename)).sort()).toEqual([
+    expect(findings.map(({ filename }) => relative(realpathSync(sandbox.path), filename)).sort()).toStrictEqual([
         'backend/kept.py',
         'ignored.py',
     ]);
@@ -87,9 +87,9 @@ test.each(['per-file-ignores', 'extend-per-file-ignores'])(
             const original = stringify({ lint: { ignore: ['F401'], [key]: { [pattern]: ['E401'] } } });
             await Bun.write(join(sandbox.path, 'backend/ruff.toml'), original);
             const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), []);
-            expect(carried.unread.map((entry) => entry.path)).toEqual(['backend/ruff.toml']);
-            expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toEqual([]);
-            expect(carried.removed).toEqual([]);
+            expect(carried.unread.map((entry) => entry.path)).toStrictEqual(['backend/ruff.toml']);
+            expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([]);
+            expect(carried.removed).toStrictEqual([]);
             expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
         }
     },
@@ -115,7 +115,7 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
     const before = run('backend/ruff.toml');
     expect(before.exitCode, before.stderr.toString()).toBe(1);
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toEqual([]);
+    expect(carried.unread).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
@@ -130,8 +130,8 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
             path: relative(realpathSync(sandbox.path), filename),
             code,
         }));
-    expect(diagnostics(before)).toEqual([{ path: 'backend/kept.py', code: 'F401' }]);
-    expect(diagnostics(after)).toEqual(diagnostics(before));
+    expect(diagnostics(before)).toStrictEqual([{ path: 'backend/kept.py', code: 'F401' }]);
+    expect(diagnostics(after)).toStrictEqual(diagnostics(before));
     await Bun.write(join(sandbox.path, 'backend/kept.py'), 'pass\n');
     const corrected = run(config.path);
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
@@ -146,15 +146,15 @@ test('Ruff adoption reads its declared pyproject table without retiring project 
     const repository = await readRepository(sandbox.path, [], [], []);
     const discovered = existingTooling(sandbox.path, repository.files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['python']), ['backend/example.py']);
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed).toEqual([]);
-    expect(carried.tools.get('ruff')?.ignores).toEqual([
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed).toStrictEqual([]);
+    expect(carried.tools.get('ruff')?.ignores).toStrictEqual([
         { check: 'python/ruff', rule: 'F401', paths: ['backend/**'], reason: expect.any(String) },
     ]);
-    expect(carried.retained).toEqual([{ path, note: expect.stringContaining('tool.ruff') }]);
+    expect(carried.retained).toStrictEqual([{ path, note: expect.stringContaining('tool.ruff') }]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     await Bun.write(join(sandbox.path, path), '[project]\nname = "example"\nversion = "0.1.0"\n');
-    expect(existingTooling(sandbox.path, repository.files, []).configs).toEqual([]);
+    expect(existingTooling(sandbox.path, repository.files, []).configs).toStrictEqual([]);
 });
 
 test('Ruff inheritance retains native merges and each parent selector directory', async () => {
@@ -198,15 +198,17 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     const before = run();
     expect(before.exitCode, before.stderr.toString()).toBe(1);
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toEqual(['backend/ruff.toml']);
-    expect(carried.retained.map(({ path }) => path).sort()).toEqual(['config/base.toml', 'config/pyproject.toml']);
-    expect([...carried.observed.keys()].sort()).toEqual(Object.keys(originals).sort());
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
+    expect(carried.retained.map(({ path }) => path).sort()).toStrictEqual(['config/base.toml', 'config/pyproject.toml']);
+    expect([...carried.observed.keys()].sort()).toStrictEqual(Object.keys(originals).sort());
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
-    const config = emitAll(await openSession(sandbox.path)).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
+    const config = emitAll(await openSession(sandbox.path)).files.find(
+        (file) => file.path === '.gspot/config/ruff.toml',
+    )!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
     expect(after.exitCode, after.stderr.toString()).toBe(1);
@@ -215,11 +217,11 @@ test('Ruff inheritance retains native merges and each parent selector directory'
             path: relative(realpathSync(sandbox.path), filename),
             code,
         }));
-    expect(diagnostics(before)).toEqual([
+    expect(diagnostics(before)).toStrictEqual([
         { path: 'backend/elsewhere/kept.py', code: 'F401' },
         { path: 'backend/parent.py', code: 'F401' },
     ]);
-    expect(diagnostics(after)).toEqual(diagnostics(before));
+    expect(diagnostics(after)).toStrictEqual(diagnostics(before));
     await Bun.write(join(sandbox.path, 'backend/parent.py'), 'pass\n');
     await Bun.write(join(sandbox.path, 'backend/elsewhere/kept.py'), 'pass\n');
     const corrected = run(config.path);
@@ -239,10 +241,10 @@ test.each([
     const original = 'extend = "../config/base.toml"\n[lint]\nignore = ["F401"]\n';
     await createFileTree(sandbox.path, { 'backend/ruff.toml': original, 'config/base.toml': parent });
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), []);
-    expect(carried.unread.map(({ path }) => path)).toEqual(['backend/ruff.toml']);
+    expect(carried.unread.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
     expect(carried.tools.size).toBe(0);
-    expect(carried.removed).toEqual([]);
-    expect(carried.retained).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
+    expect(carried.retained).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
 });
 
@@ -254,9 +256,9 @@ test('Ruff inheritance refuses an external symlink without adopting child exclus
     await createFileTree(outside.path, { 'base.toml': '[lint]\nignore = ["E701"]\n' });
     symlinkSync(join(outside.path, 'base.toml'), join(sandbox.path, 'backend/base.toml'));
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), []);
-    expect(carried.unread.map(({ path }) => path)).toEqual(['backend/ruff.toml']);
+    expect(carried.unread.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
     expect(carried.tools.size).toBe(0);
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
     expect(await Bun.file(join(outside.path, 'base.toml')).text()).toBe('[lint]\nignore = ["E701"]\n');
 });
@@ -270,9 +272,9 @@ test('overlapping Ruff configurations cannot turn a parent exception into a chil
     const repository = await readRepository(sandbox.path, [], [], []);
     const discovered = existingTooling(sandbox.path, repository.files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['python']), []);
-    expect(carried.unread.map((entry) => entry.path)).toEqual(['ruff.toml']);
+    expect(carried.unread.map((entry) => entry.path)).toStrictEqual(['ruff.toml']);
     expect(carried.tools.size).toBe(0);
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, 'ruff.toml')).text()).toBe('[lint]\nignore = ["F401"]\n');
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe('[lint]\nignore = ["E401"]\n');
 });

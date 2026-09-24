@@ -1,18 +1,17 @@
 import { z } from 'zod';
-import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
-// Mise tool pins and task definitions; npm tools belong to the isolated package project.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
-import type { RunnerTaskNames } from '#cli/schemas/runners.ts';
 import { PACKAGE_LIFECYCLE } from '#cli/schemas/runners.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { isDeepStrictEqual } from 'node:util';
-import { MISE_BACKENDS, UV_INSTALLER } from '#cli/tools/installers.ts';
-import type { Manifest, ToolPin, InstallerPin } from '#cli/types/configurations.ts';
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
-
+import type { RunnerTaskNames } from '#cli/schemas/runners.ts';
+// Mise tool pins and task definitions; npm tools belong to the isolated package project.
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { MISE_BACKENDS, UV_INSTALLER } from '#cli/tools/installers.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
+import type { Manifest, ToolPin, InstallerPin } from '#cli/types/configurations.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;
@@ -67,7 +66,11 @@ function readRunnerTasks(
     };
 }
 
-/** Propose existing check and format names and retain the exact input reviewed during init. */
+/**
+ * Propose existing check and format names and retain the exact input reviewed during init.
+ * @param root
+ * @param runner
+ */
 export function proposedRunnerTasks(
     root: string,
     runner: string,
@@ -82,7 +85,12 @@ export function proposedRunnerTasks(
     };
 }
 
-/** Plan accepted task bodies without replacing unaccepted names or package lifecycle scripts. */
+/**
+ * Plan accepted task bodies without replacing unaccepted names or package lifecycle scripts.
+ * @param root
+ * @param runner
+ * @param names
+ */
 export function runnerTaskPlan(
     root: string,
     runner: string,
@@ -190,6 +198,7 @@ export function misePins(manifests: Manifest[], isPackagePinned: boolean): (Inst
  * @param manifests the selected manifests
  * @param version the gspot version
  * @param isPackagePinned whether npm tools are pinned in .gspot/package.json instead
+ * @param tasks
  * @returns the generated file
  */
 export function miseTasks(
@@ -204,8 +213,8 @@ export function miseTasks(
         `min_version = "${MISE_MIN_VERSION}"`,
         '',
         '[tools]',
+        `"github:stefanionescu/gspot" = "${version}"`,
     ];
-    lines.push(`"github:stefanionescu/gspot" = "${version}"`);
     for (const pin of misePins(manifests, isPackagePinned)) lines.push(`${tomlKey(pin.name)} = "${pin.version}"`);
     for (const task of tasks)
         lines.push(

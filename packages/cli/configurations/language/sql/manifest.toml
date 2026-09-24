@@ -58,6 +58,7 @@ example = "The query `select id from user_accounts;` reports CP01 under the conf
 level = "all"
 stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
+findings_exit_codes = [1]
 fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 fix_order = "format"
 fix_findings_exit_codes = [1]

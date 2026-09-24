@@ -1,8 +1,8 @@
+import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const TESTS = join(ROOT, 'tests');

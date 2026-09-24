@@ -1,9 +1,8 @@
+import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule } from '#plugin/rules/definition.ts';
 // `process.env` in a client module beyond NEXT_PUBLIC_* and NODE_ENV (Next.js).
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
-
 import { memberName, isGlobalEnvironmentHost } from '#plugin/rules/env-access-owner.ts';
 
 function readName(node: TSESTree.MemberExpression): string | undefined {

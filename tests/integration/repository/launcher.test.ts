@@ -1,7 +1,7 @@
-import { expect, test } from 'bun:test';
-import { chmodSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
+import { chmodSync, copyFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 
 test('source launcher preserves directory, arguments, input, and exit status', async () => {
@@ -27,7 +27,7 @@ test('source launcher preserves directory, arguments, input, and exit status', a
     });
     const output = new Response(child.stdout).text();
     expect(await child.exited, await new Response(child.stderr).text()).toBe(7);
-    expect(JSON.parse(await output)).toEqual({ cwd: join(sandbox.path, 'caller'), args, input: 'exact input\n' });
+    expect(JSON.parse(await output)).toStrictEqual({ cwd: join(sandbox.path, 'caller'), args, input: 'exact input\n' });
 });
 
 test.each(['SIGINT', 'SIGTERM'] as const)(

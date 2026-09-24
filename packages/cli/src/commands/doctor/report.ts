@@ -1,18 +1,18 @@
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Colors } from 'picocolors/types';
-// What doctor prints, as data and as text.
-import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { changeReport } from '#cli/commands/doctor/changes.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
+import { colors } from '#cli/output/messages.ts';
+import type { ToolProbe } from '#cli/types/tools.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
-import { colors } from '#cli/output/messages.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
-import { probeTool } from '#cli/tools/tool-probe.ts';
-import type { Session } from '#cli/types/execution.ts';
+// What doctor prints, as data and as text.
+import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ChangeKey, ChangeReport, DoctorReport } from '#cli/types/reports.ts';
-import type { ToolProbe } from '#cli/types/tools.ts';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;

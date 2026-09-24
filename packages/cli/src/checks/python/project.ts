@@ -1,15 +1,15 @@
-import { readSource } from '#cli/repository/tracked.ts';
+import { z } from 'zod';
 // The project checks of a Python scope: import contracts, who owns the dependencies, and which files the type check leaves out.
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { z } from 'zod';
+import { statSync } from 'node:fs';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
 import { pathMatcher } from '#cli/configurations/claims.ts';
+import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 
 const MANIFEST = 'pyproject.toml';
 const importConfiguration = z.object({
@@ -31,9 +31,9 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`;
-    if (!existsSync(join(input.root, manifest)))
+    if (!(statSync(join(input.root, manifest), { throwIfNoEntry: false }) !== undefined))
         throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(parse(readSource(input.root, manifest).toString('utf8')));
+    const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.observations).toString('utf8')));
     if (project.tool?.importlinter === undefined)
         throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
@@ -57,7 +57,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function dependencyOwnership(input: EngineInput): Finding[] {
-    if (!['uv.lock', 'poetry.lock', 'pdm.lock'].some((name) => existsSync(join(input.root, input.scope, name))))
+    if (!['uv.lock', 'poetry.lock', 'pdm.lock'].some((name) => (statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined)))
         throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
@@ -77,7 +77,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
     const installs = files
         .filter((file) => !isAllowed(file.path) && INSTALL_HOLDERS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readSource(input.root, file.path)
+            readSource(input.root, file.path, input.observations)
                 .toString('utf8')
                 .split('\n')
                 .flatMap((text, index): Finding[] =>

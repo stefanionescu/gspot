@@ -1,6 +1,12 @@
 import type { CheckResult } from '#cli/types/reports.ts';
 
-/** Print completed check states without mixing progress into machine-readable output. */
+/**
+ * Print completed check states without mixing progress into machine-readable output.
+ * @param stream
+ * @param stream.isTTY
+ * @param stream.write
+ * @param quiet
+ */
 export function progress(
     stream: { isTTY?: boolean; write(text: string): unknown },
     quiet: boolean,

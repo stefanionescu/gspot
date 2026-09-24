@@ -1,9 +1,14 @@
 import { symlinkSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework.
 import type { RunReport } from '#cli/types/reports.ts';
-import { describe, expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import vueManifest from 'vue/package.json' with { type: 'json' };
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 /** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
 type ComponentShape = {
     check: string;
@@ -12,12 +17,6 @@ type ComponentShape = {
     planted: string;
     cases: [string, string][];
 };
-
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import vueManifest from 'vue/package.json' with { type: 'json' };
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const init = (configurations: string[]): string[] => [
@@ -173,7 +172,7 @@ test.each([
                 .filter((finding) => finding.rule === 'gspot/no-trivial-functions')
                 .map(({ check, rule, file, line, column }) => ({ check, rule, file, line, column })),
             broken.stdout + broken.stderr,
-        ).toEqual([
+        ).toStrictEqual([
             { check: `${framework}/eslint`, rule: 'gspot/no-trivial-functions', file: filename, line: 2, column: 1 },
         ]);
         if (language === 'typescript')
@@ -201,7 +200,7 @@ test.each([
                         finding.rule === 'gspot/no-trivial-functions' ||
                         finding.rule === '@typescript-eslint/no-explicit-any',
                 ),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );

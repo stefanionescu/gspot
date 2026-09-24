@@ -2,16 +2,17 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 
-const POLICY = 'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
+const POLICY =
+    'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
 const WAITING = new Map([
     ['nextjs/build', 'tools.next.build_in_gate'],
     ['postgres/migration-docs', 'tools.postgres.migration_docs'],
     ['xctest/coverage', 'tools.xctest.coverage'],
-    ['xcode/entitlements-policy', 'tools.xcode.allowed_entitlements'],
+    ['xcode/entitlements-policy', 'tools.xcode.entitlements_allowed'],
     ['static-site/size', 'tools.site.size_limits'],
 ]);
 
@@ -34,7 +35,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     };
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
-    expect(new Set(outcome.report.checks.map((check) => check.check))).toEqual(new Set(WAITING.keys()));
+    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(WAITING.keys()));
     expect(outcome.report.coverage.checked).toBe(0);
     for (const check of outcome.report.checks) {
         expect(check.status).toBe('skipped');
@@ -42,7 +43,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     }
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
-        POLICY + '[tools.xcode]\nallowed_entitlements = ["com.apple.security.app-sandbox"]\n',
+        POLICY + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
     const enabled = await executeRun(await openSession(sandbox.path), {
         ...options,

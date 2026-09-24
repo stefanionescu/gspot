@@ -1,11 +1,11 @@
-import { REPORT_DIRECTORY } from '#cli/platform/layout.ts';
+import { join } from 'node:path';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { REPORT_DIRECTORY } from '#cli/platform/layout.ts';
+import { reportStorageFailure } from '#cli/output/messages.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { Finding, PushReport, RunReport } from '#cli/types/reports.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
-import { join } from 'node:path';
 
 const JSON_INDENT = 4;
 
@@ -18,7 +18,10 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
     };
 }
 
-/** Render located findings using GitLab's Code Quality format. */
+/**
+ * Render located findings using GitLab's Code Quality format.
+ * @param report
+ */
 function codeQualityText(report: RunReport | PushReport): string {
     const reports = 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report];
     const findings = reports.flatMap((entry) => [
@@ -123,7 +126,10 @@ function sarifRun(report: RunReport): SarifRunBuilder {
     return run;
 }
 
-/** Render each pushed revision as a separate SARIF run, retaining every verdict. */
+/**
+ * Render each pushed revision as a separate SARIF run, retaining every verdict.
+ * @param report
+ */
 export function sarifText(report: RunReport | PushReport): string {
     const builder = new SarifBuilder();
     for (const entry of 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report])

@@ -1,10 +1,10 @@
 // The rule lint of this repository, run as the [[check]] rules/lint: every rule file under rules/ against the rule requirements.
 
 import { globby } from 'globby';
-import { readSource } from '#cli/repository/tracked.ts';
 // Usage: bun packages/cli/scripts/check-rule-guides.ts
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readSource } from '#cli/repository/tracked.ts';
 import { isRulePath, lintRules } from '#cli/agents/lint.ts';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));

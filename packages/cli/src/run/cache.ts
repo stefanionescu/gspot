@@ -1,15 +1,16 @@
-import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
+import type { SourceObservations } from '#cli/types/repository.ts';
+import { globbySync } from 'globby';
+import { join, relative } from 'node:path';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
+import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
+import type { CacheKeyInput } from '#cli/types/execution.ts';
+import { readdirSync, statSync, type Dirent } from 'node:fs';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
-import type { CacheKeyInput } from '#cli/types/execution.ts';
-import type { CheckResult } from '#cli/types/reports.ts';
-import { globbySync } from 'globby';
-import { readdirSync, statSync, type Dirent } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 const CACHE_FORMAT = 5;
 // Thirty days in milliseconds.
@@ -40,11 +41,15 @@ export function cacheKey(input: CacheKeyInput): string {
  * @param path the file, relative to the root
  * @returns the digest
  */
-export function fileHash(root: string, path: string): string {
-    return new Bun.CryptoHasher('sha256').update(readSource(root, path)).digest('hex');
+export function fileHash(root: string, path: string, observations?: SourceObservations): string {
+    return new Bun.CryptoHasher('sha256').update(readSource(root, path, observations)).digest('hex');
 }
 
-/** Expand declared cache inputs without traversing directories outside the repository. */
+/**
+ * Expand declared cache inputs without traversing directories outside the repository.
+ * @param root
+ * @param patterns
+ */
 export function cacheInputs(root: string, patterns: string[]): string[] {
     const files = openConfinedRoot(root, 'native');
     const localPath = (path: string): string => relative(root, path).replaceAll('\\', '/');

@@ -1,11 +1,16 @@
 import { win32 } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';
 
-const DIRECTORY_FLAG = 0x80000000;
-const OFFSET_MASK = 0x7fffffff;
+const DIRECTORY_FLAG = 0x80_00_00_00;
+const OFFSET_MASK = 0x7f_ff_ff_ff;
 const SECTION_SIZE = 40;
 
-/** Relocate uv interpreter metadata without changing its native code or embedded Python ZIP. */
+/**
+ * Relocate uv interpreter metadata without changing its native code or embedded Python ZIP.
+ * @param bytes
+ * @param interpreters
+ * @param hosts
+ */
 export function relocateWindowsLauncher(
     bytes: Buffer,
     interpreters: ReadonlyMap<string, string>,
@@ -28,8 +33,8 @@ export function relocateWindowsLauncher(
     const count = short(pe + 6);
     const optional = pe + 24;
     const magic = short(optional);
-    if (magic !== 0x10b && magic !== 0x20b) return undefined;
-    const directories = optional + (magic === 0x20b ? 112 : 96);
+    if (magic !== 0x1_0b && magic !== 0x2_0b) return undefined;
+    const directories = optional + (magic === 0x2_0b ? 112 : 96);
     const sectionTable = optional + short(pe + 20);
     range(sectionTable, count * SECTION_SIZE);
     const sections = Array.from({ length: count }, (_, index) => sectionTable + index * SECTION_SIZE);
@@ -117,7 +122,7 @@ export function relocateWindowsLauncher(
     result.writeUInt32LE(address, header + 12);
     result.writeUInt32LE(rawSize, header + 16);
     result.writeUInt32LE(rawOffset, header + 20);
-    result.writeUInt32LE(0x40000040, header + 36);
+    result.writeUInt32LE(0x40_00_00_40, header + 36);
     result.writeUInt16LE(count + 1, pe + 6);
     result.writeUInt32LE(word(optional + 8) + rawSize, optional + 8);
     result.writeUInt32LE(align(address + value.length, sectionAlignment), optional + 56);

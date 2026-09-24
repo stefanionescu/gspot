@@ -1,13 +1,13 @@
-import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
-import * as processes from '#cli/platform/spawn.ts';
+import { join } from 'node:path';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 for (const scope of ['', 'apps/web']) {
     describe(`Next.js output preservation in ${scope || 'root'}`, () => {
@@ -40,8 +40,10 @@ for (const scope of ['', 'apps/web']) {
                 const mode = statSync(config).mode;
                 const directories: string[] = [];
                 const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-                const probe = spyOn(processes, 'runBlocking').mockImplementation((command) => {
-                    expect(command.slice(1)).toEqual(['--version']);
+                const runBlocking = processes.runBlocking;
+                const probe = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+                    if (command[0] === 'git') return runBlocking(command, options);
+                    expect(command.slice(1)).toStrictEqual(['--version']);
                     return { code: 0, missing: false, duration: 1, stdout: 'Version 5.9.3', stderr: '' };
                 });
                 const run = spyOn(processes, 'run').mockImplementation(async (command, options) => {
@@ -84,11 +86,11 @@ for (const scope of ['', 'apps/web']) {
                         check === 'nextjs/typecheck' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
                     );
                     writeFileSync(join(directory.path, path('src/page.ts')), 'corrected input\n');
-                    expect(await execute(input)).toEqual([]);
+                    expect(await execute(input)).toStrictEqual([]);
                     expect(directories.every((cwd) => !existsSync(cwd))).toBe(true);
-                    expect(readFileSync(config)).toEqual(original);
+                    expect(readFileSync(config)).toStrictEqual(original);
                     expect(statSync(config).mode).toBe(mode);
-                    expect(readFileSync(untracked)).toEqual(Buffer.from([0, 255, 1, 2]));
+                    expect(readFileSync(untracked)).toStrictEqual(Buffer.from([0, 255, 1, 2]));
                     expect(readFileSync(join(directory.path, path('next-env.d.ts')), 'utf8')).toBe(
                         '// Authored type declaration\n',
                     );

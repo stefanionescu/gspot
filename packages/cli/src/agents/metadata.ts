@@ -45,7 +45,12 @@ export function parseFrontMatter(text: string): FrontMatter | undefined {
     const end = lines.indexOf(FENCE, 1);
     if (end === -1) return undefined;
     const fields = fieldsOf(lines.slice(1, end));
-    return { layer: fields['layer'] ?? '', configuration: fields['configuration'] ?? '', title: fields['title'] ?? '', fields };
+    return {
+        layer: fields['layer'] ?? '',
+        configuration: fields['configuration'] ?? '',
+        title: fields['title'] ?? '',
+        fields,
+    };
 }
 
 /**
@@ -67,7 +72,11 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
             message: `layer '${matter.layer}' does not match the path ('${expected}')`,
         });
     if (!CONFIGURATION_ID.test(matter.configuration))
-        findings.push({ file: path, line: 3, message: `configuration '${matter.configuration}' is not a configuration id or none` });
+        findings.push({
+            file: path,
+            line: 3,
+            message: `configuration '${matter.configuration}' is not a configuration id or none`,
+        });
     const heading = headingOf(text.split('\n')) ?? '';
     if (heading !== matter.title)
         findings.push({ file: path, line: 4, message: `title '${matter.title}' does not equal the H1 '${heading}'` });

@@ -1,15 +1,15 @@
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { readGitSetting } from '#cli/platform/spawn.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { shippedFormat } from '#cli/configurations/listing.ts';
+import type { CarriedFormatter } from '#cli/types/ownership.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import type { FormatSettings, Policy } from '#cli/types/policy.ts';
+import { askChoice, askConfirmation, askMany } from '#cli/output/prompts.ts';
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/commands/init/types.ts';
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { askChoice, askConfirmation, askMany } from '#cli/output/prompts.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import type { CarriedFormatter } from '#cli/types/ownership.ts';
-import type { FormatSettings, Policy } from '#cli/types/policy.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
@@ -32,7 +32,6 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'npm', label: 'npm (package.json scripts)' },
     { value: 'pnpm', label: 'pnpm (package.json scripts)' },
     { value: 'yarn', label: 'yarn (package.json scripts)' },
-    { value: 'uv', label: 'uv (private Python environment)' },
     { value: 'none', label: 'none' },
 ];
 
@@ -44,7 +43,7 @@ function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
 }
 
 function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
-    if (tooling.ci.some((path) => path === '.gitlab-ci.yml')) return 'gitlab';
+    if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
     const files = openConfinedRoot(root);
     try {

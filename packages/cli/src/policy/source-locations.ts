@@ -1,5 +1,5 @@
-import { parseDocument } from '@decimalturn/toml-patch';
 import type { PathSegment } from '#cli/types/policy.ts';
+import { parseDocument } from '@decimalturn/toml-patch';
 
 type Block = ReturnType<typeof parseDocument>['cst'][number];
 type KeyValue = Extract<Block, { type: 'KeyValue' }>;
@@ -39,7 +39,10 @@ function expandedTable(parts: string[], arrays: Map<string, number>): PathSegmen
     return path;
 }
 
-/** Map policy paths to authored values, including repeated and nested TOML tables. */
+/**
+ * Map policy paths to authored values, including repeated and nested TOML tables.
+ * @param text
+ */
 export function sourceLocations(text: string): Map<string, Position> {
     const locations = new Map<string, Position>([['[]', { line: 1, column: 0 }]]);
     const arrays = new Map<string, number>();
@@ -65,7 +68,11 @@ export function sourceLocations(text: string): Map<string, Position> {
     return locations;
 }
 
-/** Locate a value or, for an absent required value, its nearest authored container. */
+/**
+ * Locate a value or, for an absent required value, its nearest authored container.
+ * @param locations
+ * @param path
+ */
 export function policyLocation(locations: Map<string, Position>, path: PathSegment[]): string {
     const remaining = [...path];
     while (true) {

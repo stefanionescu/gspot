@@ -1,14 +1,14 @@
-import { join, relative } from 'node:path';
-import { chmodSync, readFileSync, unlinkSync, writeFileSync, renameSync } from 'node:fs';
-import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { expect, test } from 'bun:test';
+import { join, relative } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { openSession } from '#cli/run/session.ts';
-import { run } from '#cli/platform/spawn.ts';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { chmodSync, readFileSync, unlinkSync, writeFileSync, renameSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 
@@ -96,7 +96,7 @@ test.each(['', "apps/worker's tools"])(
         };
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
             args: ['check', '--staged'],
             input: '',
         });
@@ -195,7 +195,7 @@ test.each(['', "apps/worker's tools"])(
             { cwd: root, env },
         );
         expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
             args: ['check', '--push', '--', 'origin', 'remote with spaces'],
             input,
         });
@@ -206,7 +206,7 @@ test.each(['', "apps/worker's tools"])(
             { cwd: root, env },
         );
         expect(message.code, message.stdout + message.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
             args: ['check', '--stage', 'message', '--message-file', join(root, 'message with spaces')],
             input: '',
         });

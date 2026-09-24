@@ -1,13 +1,13 @@
-// Planted repository for the bash configuration: every check of the configuration fires on its planted defect and passes without it.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { chmodSync, writeFileSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
+// Planted repository for the bash configuration: every check of the configuration fires on its planted defect and passes without it.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const HEAD =
     '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';

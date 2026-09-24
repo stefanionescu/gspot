@@ -1,13 +1,13 @@
-import { applyCommand } from '#cli/commands/apply.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
@@ -87,11 +87,11 @@ test.each(['', "apps/worker's tools"])(
         expect(checked.code, checked.stderr).toBe(0);
         for (const path of ['local-input', 'package-input', 'gspot-input'])
             expect(readFileSync(join(path === 'gspot-input' ? root : sandbox.path, path), 'utf8')).toBe(input);
-        expect(JSON.parse(readFileSync(join(sandbox.path, 'package-args'), 'utf8'))).toEqual([
+        expect(JSON.parse(readFileSync(join(sandbox.path, 'package-args'), 'utf8'))).toStrictEqual([
             'origin',
             'remote with spaces',
         ]);
-        expect(JSON.parse(readFileSync(join(root, 'gspot-args'), 'utf8'))).toEqual([
+        expect(JSON.parse(readFileSync(join(root, 'gspot-args'), 'utf8'))).toStrictEqual([
             'check',
             '--push',
             '--',
@@ -116,7 +116,7 @@ test.each(['', "apps/worker's tools"])(
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
             if (calls !== '') {
                 expect(readFileSync(join(root, 'gspot-input'), 'utf8')).toBe(input);
-                expect(JSON.parse(readFileSync(join(root, 'gspot-args'), 'utf8'))).toEqual([
+                expect(JSON.parse(readFileSync(join(root, 'gspot-args'), 'utf8'))).toStrictEqual([
                     'check',
                     '--push',
                     '--',

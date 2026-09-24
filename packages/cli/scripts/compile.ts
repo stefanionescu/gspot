@@ -1,8 +1,8 @@
 import { dirname, join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { releaseTargets } from '#cli/platform/release-targets.ts';
 import packageManifest from '#package' with { type: 'json' };
+import { releaseTargets } from '#cli/platform/release-targets.ts';
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
 
 function target(value: string): Bun.Build.CompileTarget {
     if (!releaseTargets.some((entry) => entry.target === value))

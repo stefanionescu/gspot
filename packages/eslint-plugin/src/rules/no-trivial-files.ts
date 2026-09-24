@@ -1,6 +1,6 @@
+import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule } from '#plugin/rules/definition.ts';
 import { statementCount } from '#plugin/rules/no-trivial-functions.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
 import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
 
 export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({
@@ -29,42 +29,53 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
             switch (node.type) {
                 case 'ImportDeclaration':
                 case 'ExportAllDeclaration':
-                case 'EmptyStatement':
+                case 'EmptyStatement': {
                     return false;
-                case 'ExportNamedDeclaration':
+                }
+                case 'ExportNamedDeclaration': {
                     return node.declaration !== null && substantial(node.declaration);
-                case 'ExportDefaultDeclaration':
+                }
+                case 'ExportDefaultDeclaration': {
                     return substantial(node.declaration);
+                }
                 case 'FunctionDeclaration':
                 case 'FunctionExpression':
-                case 'ArrowFunctionExpression':
+                case 'ArrowFunctionExpression': {
                     return (
                         node.body?.type === 'BlockStatement' &&
                         statementCount(node.body, context.sourceCode.visitorKeys) > max
                     );
+                }
                 case 'ClassDeclaration':
-                case 'ClassExpression':
+                case 'ClassExpression': {
                     return node.body.body.some(substantial);
+                }
                 case 'MethodDefinition':
-                case 'PropertyDefinition':
+                case 'PropertyDefinition': {
                     return node.value !== null && substantial(node.value);
-                case 'VariableDeclaration':
+                }
+                case 'VariableDeclaration': {
                     return node.declarations.some(
                         (declaration) => declaration.init !== null && substantial(declaration.init),
                     );
+                }
                 case 'Identifier':
-                case 'MemberExpression':
+                case 'MemberExpression': {
                     return false;
+                }
                 case 'TSAsExpression':
                 case 'TSSatisfiesExpression':
-                case 'TSNonNullExpression':
+                case 'TSNonNullExpression': {
                     return substantial(node.expression);
-                case 'ExpressionStatement':
+                }
+                case 'ExpressionStatement': {
                     return substantial(node.expression);
-                case 'AwaitExpression':
+                }
+                case 'AwaitExpression': {
                     return substantial(node.argument);
+                }
                 case 'CallExpression':
-                case 'NewExpression':
+                case 'NewExpression': {
                     return (
                         node.typeArguments?.params.some(
                             (parameter) => parameter.type === 'TSTypeLiteral' && parameter.members.length > 0,
@@ -79,14 +90,19 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                             node.callee.object.type === 'CallExpression' &&
                             substantial(node.callee.object))
                     );
-                case 'TSInterfaceDeclaration':
+                }
+                case 'TSInterfaceDeclaration': {
                     return node.body.body.length > 0;
-                case 'TSTypeAliasDeclaration':
+                }
+                case 'TSTypeAliasDeclaration': {
                     return node.typeAnnotation.type !== 'TSTypeReference';
-                case 'TSDeclareFunction':
+                }
+                case 'TSDeclareFunction': {
                     return false;
-                default:
+                }
+                default: {
                     return true;
+                }
             }
         };
         return {

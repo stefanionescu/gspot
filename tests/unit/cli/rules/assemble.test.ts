@@ -3,7 +3,7 @@ import { excludeProblems, FIRST_READ } from '#cli/agents/assemble.ts';
 
 describe('[rules] exclude', () => {
     test('a file path and a layer folder are accepted', () => {
-        expect(excludeProblems(['general/code/ACCESSIBILITY.md', 'library'])).toEqual([]);
+        expect(excludeProblems(['general/code/ACCESSIBILITY.md', 'library'])).toStrictEqual([]);
     });
 
     test('an entry that matches no rule file names the near match', () => {

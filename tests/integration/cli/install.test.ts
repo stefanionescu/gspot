@@ -1,20 +1,20 @@
-import { rejects } from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { join, delimiter, relative } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
-import { MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
-import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { openSession } from '#cli/run/session.ts';
-import { existsSync, readFileSync, symlinkSync, chmodSync, writeFileSync, statSync, rmSync } from 'node:fs';
-import * as processes from '#cli/platform/spawn.ts';
 import { applyAll } from '#cli/lifecycle/apply.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
+import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { join, delimiter, relative } from 'node:path';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
+import { existsSync, readFileSync, symlinkSync, chmodSync, writeFileSync, statSync, rmSync } from 'node:fs';
 
 test.each([true, false])(
     'uninstall describes only owned hooks and preserves hooksPath when an original exists: %s',
@@ -37,7 +37,7 @@ test.each([true, false])(
         const hook = join(directory.path, '.custom-hooks/pre-commit');
         const installed = readFileSync(hook);
         expect((await uninstallCommand(options)).text).toContain('restore or remove unchanged dispatchers');
-        expect(readFileSync(hook)).toEqual(installed);
+        expect(readFileSync(hook)).toStrictEqual(installed);
         expect((await uninstallCommand({ ...options, isDryRun: false })).exitCode).toBe(0);
         if (hasOriginal) expect(readFileSync(hook, 'utf8')).toBe(original);
         else expect(existsSync(hook)).toBe(false);
@@ -55,7 +55,8 @@ test.each(['missing', 'malformed'])(
         const rootPolicy = 'version = 1\nconfigurations = []\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': rootPolicy,
-            'project/gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'project/gspot.toml':
+                'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
             'project/authored.txt': 'original bytes',
             'project/.gspot/unowned.json': '{"authored":true}',
             'project/child/.keep': '',
@@ -123,7 +124,8 @@ test.each(['default', 'external'] as const)(
         await using external = await testdir();
         const root = join(sandbox.path, 'project');
         await createFileTree(sandbox.path, {
-            'project/gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'project/gspot.toml':
+                'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
         });
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
         if (kind === 'external') {
@@ -185,7 +187,7 @@ test.each([undefined, 'custom-hooks'])(
         const configPath = join(sandbox.path, '.git/config');
         const originalConfig = readFileSync(configPath);
         await applyAll(await openSession(sandbox.path));
-        expect(readFileSync(configPath)).toEqual(originalConfig);
+        expect(readFileSync(configPath)).toStrictEqual(originalConfig);
         expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(packageText);
         expect(readFileSync(join(sandbox.path, 'custom-hooks/pre-commit'), 'utf8')).toBe(hookText);
         expect(existsSync(join(sandbox.path, '.gspot/hooks'))).toBe(false);
@@ -221,7 +223,7 @@ test('omitting hooks preserves existing managed hook files and their Git locatio
     const config = readFileSync(join(sandbox.path, '.git/config'));
     await applyAll(await openSession(sandbox.path));
     expect(readFileSync(join(sandbox.path, '.gspot/hooks/pre-commit'), 'utf8')).toBe(hook);
-    expect(readFileSync(join(sandbox.path, '.git/config'))).toEqual(config);
+    expect(readFileSync(join(sandbox.path, '.git/config'))).toStrictEqual(config);
 });
 
 test('apply refuses a proposal whose policy changed after the session was read', async () => {
@@ -257,18 +259,19 @@ test.each(['missing', 'outdated', 'download-failed'] as const)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': 'Authored project.\n' });
         const run = processes.run;
+        let isRepaired = false;
         const installer = spyOn(processes, 'run').mockImplementation((command, options) =>
             command[0] === 'mise'
                 ? Promise.resolve({
                       code:
-                          availability === 'missing'
+                          !isRepaired && availability === 'missing'
                               ? 127
-                              : availability === 'download-failed' && command[1] === 'install'
+                              : !isRepaired && availability === 'download-failed' && command[1] === 'install'
                                 ? 1
                                 : 0,
-                      missing: availability === 'missing',
+                      missing: !isRepaired && availability === 'missing',
                       duration: 0,
-                      stdout: availability === 'outdated' ? 'mise 2020.1.1' : `mise ${MISE_MIN_VERSION}`,
+                      stdout: !isRepaired && availability === 'outdated' ? 'mise 2020.1.1' : `mise ${MISE_MIN_VERSION}`,
                       stderr: '',
                   })
                 : run(command, options),
@@ -287,16 +290,21 @@ test.each(['missing', 'outdated', 'download-failed'] as const)(
                 install: true,
                 allowDirty: true,
             });
-            expect(result.exitCode).toBe(0);
+            expect(result.exitCode).toBe(2);
             expect(result.text).toContain('tool installation is incomplete');
             expect(result.text).toContain('Run: gspot install');
-            expect((await openSession(sandbox.path)).policyFiles.policy.configurations).toEqual([]);
+            expect((await openSession(sandbox.path)).policyFiles.policy.configurations).toStrictEqual([]);
             expect(readFileSync(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
             const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
             expect(retry.exitCode).toBe(2);
             expect(retry.text).toContain(
                 availability === 'download-failed' ? 'installation command mise install failed' : 'Install mise',
             );
+            const policy = readFileSync(join(sandbox.path, 'gspot.toml'));
+            isRepaired = true;
+            const repaired = await installCommand({ cwd: sandbox.path, isDryRun: false });
+            expect(repaired.exitCode, repaired.text).toBe(0);
+            expect(readFileSync(join(sandbox.path, 'gspot.toml'))).toStrictEqual(policy);
             expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
         } finally {
             installer.mockRestore();
@@ -442,14 +450,14 @@ test.each(['default', 'external', 'worktree'] as const)(
         const preview = await installCommand({ cwd: root, isDryRun: true });
         expect(preview.exitCode, preview.text).toBe(0);
         expect(preview.text).toContain(directory);
-        expect(readFileSync(hook)).toEqual(before);
+        expect(readFileSync(hook)).toStrictEqual(before);
         await applyAll(await openSession(root));
-        expect(readFileSync(hook)).toEqual(before);
+        expect(readFileSync(hook)).toStrictEqual(before);
         for (let attempt = 0; attempt < 2; attempt++) {
             const installed = await installCommand({ cwd: root, isDryRun: false });
             expect(installed.exitCode, installed.text).toBe(0);
         }
-        expect(readFileSync(join(sandbox.path, '.git/config'))).toEqual(config);
+        expect(readFileSync(join(sandbox.path, '.git/config'))).toStrictEqual(config);
         expect(readFileSync(`${hook}.gspot-original`, 'utf8')).toBe(original);
         expect(statSync(`${hook}.gspot-original`).mode & 0o777).toBe(0o751);
         const env = { PATH: `${launcher.path}${delimiter}${environmentVariables()['PATH'] ?? ''}` };
@@ -462,8 +470,8 @@ test.each(['default', 'external', 'worktree'] as const)(
         expect(chained.code, chained.stderr).toBe(0);
         const first = JSON.parse(readFileSync(join(root, 'original.json'), 'utf8'));
         const second = JSON.parse(readFileSync(join(root, 'gspot.json'), 'utf8'));
-        expect(first.args).toEqual(['remote name', 'ssh://example.com/a b']);
-        expect(second.args).toEqual(['check', '--push', '--', 'remote name', 'ssh://example.com/a b']);
+        expect(first.args).toStrictEqual(['remote name', 'ssh://example.com/a b']);
+        expect(second.args).toStrictEqual(['check', '--push', '--', 'remote name', 'ssh://example.com/a b']);
         expect(first.input).toBe(input);
         expect(second.input).toBe(input);
         expect(first.cwd).toBe(second.cwd);
@@ -483,7 +491,7 @@ test.each(['default', 'external', 'worktree'] as const)(
         expect(readFileSync(hook, 'utf8')).toBe(editedOriginal);
         expect(statSync(hook).mode & 0o777).toBe(0o751);
         expect(readFileSync(`${hook}.gspot-original`, 'utf8')).toBe(editedOriginal);
-        expect(readFileSync(join(sandbox.path, '.git/config'))).toEqual(config);
+        expect(readFileSync(join(sandbox.path, '.git/config'))).toStrictEqual(config);
     },
 );
 
@@ -604,7 +612,9 @@ test('uninstall recovers after restoring an original hook and before removing it
     writeFileSync(hook, original, { mode: 0o751 });
     expect((await installCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
     const boundary = fileURLToPath(new URL('../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
-    const uninstall = fileURLToPath(new URL('../../../packages/cli/src/commands/uninstall/command.ts', import.meta.url));
+    const uninstall = fileURLToPath(
+        new URL('../../../packages/cli/src/commands/uninstall/command.ts', import.meta.url),
+    );
     const child = `
         import { mock } from 'bun:test';
         const boundary = await import(${JSON.stringify(boundary)});
@@ -652,7 +662,7 @@ test('uninstall acquires the hook boundary before removing repository outputs', 
             message: /Another lifecycle writer/u,
         });
         expect(readFileSync(join(directory.path, 'owned.txt'), 'utf8')).toBe('installed\n');
-        expect(readFileSync(join(location.absolute, 'pre-commit'))).toEqual(hook);
+        expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(hook);
     } finally {
         locked.close();
     }
@@ -694,15 +704,14 @@ test('a nested hook boundary keeps recovery ignored through installation and res
     const session = await openSession(sandbox.path);
     installHooks(session);
     const boundary = sandbox.path;
-    const backup = readOwnership(boundary).files.find((entry) => entry.path === 'custom/hooks/pre-commit')!.original!.backup;
+    const backup = readOwnership(boundary).files.find((entry) => entry.path === 'custom/hooks/pre-commit')!.original!
+        .backup;
     for (const path of ['.gspot/state/ownership.json', backup])
         expect(processes.runBlocking(['git', 'check-ignore', '--', path], { cwd: sandbox.path }).code).toBe(0);
     expect((await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false })).exitCode).toBe(0);
     expect(readFileSync(join(boundary, 'custom/hooks/pre-commit'), 'utf8')).toBe(original);
     expect(readFileSync(join(boundary, backup), 'utf8')).toBe(original);
-    expect(processes.runBlocking(['git', 'check-ignore', '--', backup], { cwd: sandbox.path }).code).toBe(
-        0,
-    );
+    expect(processes.runBlocking(['git', 'check-ignore', '--', backup], { cwd: sandbox.path }).code).toBe(0);
 });
 
 test('a nested policy preserves tracked hooks outside its own directory', async () => {
@@ -728,7 +737,8 @@ test('a nested policy preserves tracked hooks outside its own directory', async 
 test('Git hooks can use the repository root without an empty confined path', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'repository/gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+        'repository/gspot.toml':
+            'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
     });
     const root = join(sandbox.path, 'repository');
     for (const args of [

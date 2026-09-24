@@ -1,15 +1,15 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
 import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
 import { run } from '#cli/platform/spawn.ts';
-import * as processes from '#cli/platform/spawn.ts';
-import { chmodSync, existsSync, readFileSync, unlinkSync, symlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
-import { licensesPackages } from '#cli/checks/licenses.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
+import { licensesPackages } from '#cli/checks/licenses.ts';
+import { chmodSync, existsSync, readFileSync, unlinkSync, symlinkSync } from 'node:fs';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
@@ -66,7 +66,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
         );
     };
     await writeLicense('GPL-3.0-only');
-    expect(await licensesPackages(await input(root))).toEqual([
+    expect(await licensesPackages(await input(root))).toStrictEqual([
         expect.objectContaining({
             file: 'pyproject.toml',
             rule: 'license',
@@ -77,22 +77,22 @@ test('native Python license scanning ignores project scanner exclusions and veri
         join(root, 'gspot.toml'),
         'version = 1\nconfigurations = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
     );
-    expect(await licensesPackages(await input(root))).toEqual([]);
+    expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT');
-    expect(await licensesPackages(await input(root))).toEqual([
+    expect(await licensesPackages(await input(root))).toStrictEqual([
         expect.objectContaining({ rule: 'license', message: expect.stringContaining('exception no longer holds') }),
     ]);
     await Bun.write(join(root, 'gspot.toml'), 'version = 1\nconfigurations = ["licenses"]\n');
-    expect(await licensesPackages(await input(root))).toEqual([]);
+    expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT-0');
-    expect(await licensesPackages(await input(root))).toEqual([
+    expect(await licensesPackages(await input(root))).toStrictEqual([
         expect.objectContaining({ message: expect.stringContaining('reports MIT-0, which is not an allowed license') }),
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
         'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
     );
-    expect(await licensesPackages(await input(root))).toEqual([]);
+    expect(await licensesPackages(await input(root))).toStrictEqual([]);
 });
 
 test.each(['malformed JSON', 'missing version', 'missing license', 'empty report', 'scanner failure'])(
@@ -110,7 +110,7 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
         let broken = true;
         const directories: string[] = [];
         const spawn = spyOn(processes, 'run').mockImplementation(async (_argv, options) => {
-            directories.push(options!.cwd!);
+            directories.push(options.cwd);
             const report = { Name: 'example', Version: '1.0.0', License: 'MIT' };
             const values = broken && failure === 'empty report' ? [] : [report];
             if (broken && failure === 'missing version') Reflect.deleteProperty(report, 'Version');
@@ -127,7 +127,7 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
             await expect(licensesPackages(selected)).rejects.toThrow();
             expect(directories.every((directory) => !existsSync(directory))).toBe(true);
             broken = false;
-            expect(await licensesPackages(selected)).toEqual([]);
+            expect(await licensesPackages(selected)).toStrictEqual([]);
             expect(directories.every((directory) => !existsSync(directory))).toBe(true);
         } finally {
             spawn.mockRestore();
@@ -167,11 +167,11 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
             await expect(licensesPackages(selected)).rejects.toThrow();
             expect(spawn).not.toHaveBeenCalled();
             if (failure === 'external link') {
-                expect(readFileSync(join(outside.path, 'configuration.json'))).toEqual(original);
+                expect(readFileSync(join(outside.path, 'configuration.json'))).toStrictEqual(original);
                 unlinkSync(path);
             }
             await Bun.write(path, original);
-            expect(await licensesPackages(selected)).toEqual([]);
+            expect(await licensesPackages(selected)).toStrictEqual([]);
             expect(spawn).toHaveBeenCalledTimes(1);
         } finally {
             spawn.mockRestore();

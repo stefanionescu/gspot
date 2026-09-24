@@ -1,7 +1,7 @@
-import type { packageManifestSchema } from '#cli/repository/manifests.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
-import type { Policy } from '#cli/types/policy.ts';
 import type { z } from 'zod';
+import type { Policy } from '#cli/types/policy.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
+import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 
 export type PackageManifest = z.infer<typeof packageManifestSchema>;
 
@@ -27,6 +27,12 @@ export type ScopeEntry = {
     source: 'root' | 'gspot.toml' | 'workspace';
 };
 
+/** Source bytes observed during one run, confined to its original repository root. */
+export type SourceObservations = {
+    root: string;
+    sources: Map<string, Buffer>;
+};
+
 export type Repository = {
     root: string;
     attributes: Attribute[];
@@ -39,7 +45,7 @@ export type DependencyMap = Record<string, string>;
 
 export type ManifestFacts = {
     path: string;
-    kind: 'package.json' | 'pyproject.toml' | 'Package.swift';
+    kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
     dependencies: DependencyMap;
     installed: DependencyMap;
     scripts: Record<string, string>;

@@ -1,17 +1,16 @@
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { resolvePackageProject } from '#cli/tools/package-project.ts';
-import { resolvePythonProject } from '#cli/tools/python-project.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
 // Write every generated file, block and merge; remove recorded strays. The apply command as a function.
 import { emitAll } from '#cli/emit/targets.ts';
-import { generatedSnapshot, readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { hasPackages, installPackages } from '#cli/prose/vale.ts';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { writePin } from '#cli/run/version-pin.ts';
 import type { Session } from '#cli/types/execution.ts';
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
+import { hasPackages, installPackages } from '#cli/prose/vale.ts';
+import { resolvePythonProject } from '#cli/tools/python-project.ts';
+import { resolvePackageProject } from '#cli/tools/package-project.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/types/ownership.ts';
-import { parse as parseJsonc } from 'jsonc-parser';
+import type { ApplyReport, GeneratedProposal } from '#cli/types/generation.ts';
+import { generatedSnapshot, readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];

@@ -1,14 +1,14 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { CarrySource } from '#cli/types/ownership.ts';
-import type { TomlTable } from '#cli/types/policy.ts';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
 import JSON5 from 'json5';
+import { parse as parseYaml } from 'yaml';
 import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { parse as parseYaml } from 'yaml';
+import type { TomlTable } from '#cli/types/policy.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
+import type { CarrySource } from '#cli/types/ownership.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
+import { configurationSection } from '#cli/repository/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
@@ -16,7 +16,7 @@ const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.yml': parseYaml,
     '.json': (text) => JSON.parse(text) as unknown,
     '.jsonc': parseJsonc,
-    '.json5': (text) => JSON5.parse(text) as unknown,
+    '.json5': (text) => JSON5.parse(text),
 };
 
 function parseSource(tool: string, path: string, text: string): unknown {
@@ -35,7 +35,11 @@ function parseSource(tool: string, path: string, text: string): unknown {
     return {};
 }
 
-/** Capture original UTF-8 configuration bytes and permissions through the confined reader. */
+/**
+ * Capture original UTF-8 configuration bytes and permissions through the confined reader.
+ * @param root
+ * @param path
+ */
 export function observeConfiguration(root: string, path: string): Omit<CarrySource, 'parsed'> {
     const files = openConfinedRoot(root);
     try {
@@ -49,7 +53,15 @@ export function observeConfiguration(root: string, path: string): Omit<CarrySour
     }
 }
 
-/** Parse static settings from the same bytes used for mutation authorization. */
+/**
+ * Parse static settings from the same bytes used for mutation authorization.
+ * @param original
+ * @param tool
+ * @param path
+ * @param selector
+ * @param selector.table
+ * @param selector.key
+ */
 export function parseCarrySource(
     original: FileSnapshot,
     tool: string,

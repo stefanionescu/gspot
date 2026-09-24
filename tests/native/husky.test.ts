@@ -1,13 +1,13 @@
-import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync, unlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { delimiter, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
-import { openSession } from '#cli/run/session.ts';
-import { run } from '#cli/platform/spawn.ts';
+import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync, unlinkSync } from 'node:fs';
 
 test.each(['default', 'native', 'nested'])(
     'Husky preserves authored hooks and exact Git input in a %s installation',
@@ -59,7 +59,7 @@ test.each(['default', 'native', 'nested'])(
         expect(hookStatus(await openSession(root)).ready).toBe(false);
         for (let attempt = 0; attempt < 2; attempt++) await installHookManager(await openSession(root));
         expect(hookStatus(await openSession(root)).ready).toBe(true);
-        expect(readFileSync(join(top, '.git/config'))).toEqual(config);
+        expect(readFileSync(join(top, '.git/config'))).toStrictEqual(config);
         const input = 'refs/heads/main a refs/heads/main b\nrefs/tags/v1 c refs/tags/v1 d\n';
         const remote = 'remote with spaces "quotes" $dollar `literal`';
         writeFileSync(join(top, 'push-input'), input);
@@ -72,7 +72,7 @@ test.each(['default', 'native', 'nested'])(
             );
             expect(result.code, result.stdout + result.stderr).toBe(verdict);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
-            expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+            expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
                 args: ['check', '--push', '--', 'origin', remote],
                 input,
             });
@@ -98,7 +98,7 @@ test.each(['default', 'native', 'nested'])(
             expect(result.code, result.stdout + result.stderr).toBe(status);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
             if (calls !== '')
-                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
                     args: ['check', '--push', '--', 'origin', remote],
                     input,
                 });
@@ -156,7 +156,7 @@ test.each(['default', 'native', 'nested'])(
         const checked = await run(['git', 'hook', 'run', 'commit-msg', '--', message], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toEqual([
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual([
             'check',
             '--stage',
             'message',
@@ -164,7 +164,7 @@ test.each(['default', 'native', 'nested'])(
             join(top, message),
         ]);
         expect(readFileSync(join(top, 'initialized'), 'utf8')).toBe('initialized');
-        expect(readdirSync(join(root, 'scratch'))).toEqual(['.keep']);
+        expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
         if (kind === 'default') {
             const policy = readFileSync(join(root, 'gspot.toml'), 'utf8');
             writeFileSync(join(root, 'gspot.toml'), policy + '\n[runner]\ntool = "mise"\n');
@@ -178,10 +178,10 @@ test.each(['default', 'native', 'nested'])(
             expect(hookStatus(await openSession(root)).ready).toBe(true);
         }
         expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
-        expect(readFileSync(join(location.absolute, 'pre-push'))).toEqual(original);
+        expect(readFileSync(join(location.absolute, 'pre-push'))).toStrictEqual(original);
         expect(readFileSync(join(root, '.husky/pre-push'), 'utf8')).toBe(authored);
         expect(existsSync(join(location.absolute, 'pre-push.gspot-manager'))).toBe(false);
-        expect(readFileSync(join(top, '.git/config'))).toEqual(config);
+        expect(readFileSync(join(top, '.git/config'))).toStrictEqual(config);
     },
     60_000,
 );

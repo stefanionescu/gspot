@@ -22,8 +22,8 @@ describe('identifiersOf', () => {
         const found = await identifiersOf('src/a.ts', TS, 'typescript');
         const byCategory = (category: string): string[] =>
             found.filter((entry) => entry.category === category).map((entry) => entry.name);
-        expect(byCategory('functions')).toEqual(['parseHttpUrl']);
-        expect(byCategory('parameters')).toEqual([
+        expect(byCategory('functions')).toStrictEqual(['parseHttpUrl']);
+        expect(byCategory('parameters')).toStrictEqual([
             'rawInput',
             'retries',
             'rest',
@@ -33,12 +33,12 @@ describe('identifiersOf', () => {
             'baseUrl',
             'body',
         ]);
-        expect(byCategory('variables')).toEqual(['enhancedHandler', 'payload', 'table']);
-        expect(byCategory('classes')).toEqual(['HttpClient']);
-        expect(byCategory('properties')).toEqual(['secret', 'DEFAULT_PORT', 'baseUrl', 'retries']);
-        expect(byCategory('methods')).toEqual(['send']);
-        expect(byCategory('types')).toEqual(['Options', 'Verdict', 'Mode']);
-        expect(byCategory('enum_cases')).toEqual(['Fast', 'Slow']);
+        expect(byCategory('variables')).toStrictEqual(['enhancedHandler', 'payload', 'table']);
+        expect(byCategory('classes')).toStrictEqual(['HttpClient']);
+        expect(byCategory('properties')).toStrictEqual(['secret', 'DEFAULT_PORT', 'baseUrl', 'retries']);
+        expect(byCategory('methods')).toStrictEqual(['send']);
+        expect(byCategory('types')).toStrictEqual(['Options', 'Verdict', 'Mode']);
+        expect(byCategory('enum_cases')).toStrictEqual(['Fast', 'Slow']);
         expect(found.map((entry) => entry.name)).not.toContain('keyOne');
         expect(found.find((entry) => entry.name === 'send')?.line).toBe(9);
     });
@@ -49,7 +49,7 @@ describe('identifiersOf', () => {
             'readonly ROOT=1\nlocal count\nbuild_all() {\n  TARGET=x\n}\n',
             'bash',
         );
-        expect(found.map((entry) => `${entry.category}:${entry.name}`)).toEqual([
+        expect(found.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([
             'variables:ROOT',
             'variables:count',
             'functions:build_all',
@@ -58,6 +58,6 @@ describe('identifiersOf', () => {
     });
 
     test('a language without an extractor yields nothing', async () => {
-        expect(await identifiersOf('a.rb', 'x = 1', 'ruby')).toEqual([]);
+        expect(await identifiersOf('a.rb', 'x = 1', 'ruby')).toStrictEqual([]);
     });
 });

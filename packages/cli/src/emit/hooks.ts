@@ -1,9 +1,9 @@
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import { currentBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
 import { HOOK_HEADER } from '#cli/emit/markers.ts';
-import { isGitRepository } from '#cli/repository/tracked.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { HOOK_FILES } from '#cli/repository/hooks.ts';
+import { isGitRepository } from '#cli/repository/tracked.ts';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { currentBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
 import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/types/generation.ts';
 
 const HOOK_ARGS: Record<HookName, string> = {
@@ -19,7 +19,10 @@ const RUNNER_EXEC: Record<string, string> = {
     yarn: 'yarn exec gspot',
 };
 
-/** Locate policy-owned hook configuration relative to the working directory Git uses for hooks. */
+/**
+ * Locate policy-owned hook configuration relative to the working directory Git uses for hooks.
+ * @param root
+ */
 export function hookPrefix(root: string): string {
     if (!isGitRepository(root)) return '';
     const result = runBlocking(['git', 'rev-parse', '--show-prefix'], { cwd: root });
@@ -27,22 +30,39 @@ export function hookPrefix(root: string): string {
     return result.stdout.replace(/\n$/u, '');
 }
 
-/** Resolve gspot locally, without downloading a missing launcher. */
+/**
+ * Resolve gspot locally, without downloading a missing launcher.
+ * @param runner
+ * @param binaryPath
+ */
 export function runnerExec(runner: string | undefined, binaryPath?: string): string {
     return (
         RUNNER_EXEC[runner ?? ''] ?? (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
     );
 }
 
-/** The check invocation for one Git hook. */
+/**
+ * The check invocation for one Git hook.
+ * @param name
+ * @param runner
+ * @param binaryPath
+ * @param directory
+ */
 export function hookCommand(name: HookName, runner: string | undefined, binaryPath?: string, directory = ''): string {
     const at = directory === '' ? '' : `cd '${directory.replaceAll("'", "'\"'\"'")}' && `;
     const args = name === 'commit-msg' ? 'check --stage message --message-file "${gspot_message}"' : HOOK_ARGS[name];
     const executable = runner !== undefined && Object.hasOwn(RUNNER_EXEC, runner) ? runner : (binaryPath ?? 'gspot');
-    return `${at}{ gspot_executable=$(command -v '${executable.replaceAll("'", "'\"'\"'")}') && [ -x "$gspot_executable" ] || { printf "%s\\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; ${runnerExec(runner, binaryPath)} ${args}; }`;
+    return String.raw`${at}{ gspot_executable=$(command -v '${executable.replaceAll("'", "'\"'\"'")}') && [ -x "$gspot_executable" ] || { printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; ${runnerExec(runner, binaryPath)} ${args}; }`;
 }
 
-/** Execute an existing hook as a subprocess before checking the same Git input. */
+/**
+ * Execute an existing hook as a subprocess before checking the same Git input.
+ * @param name
+ * @param runner
+ * @param binaryPath
+ * @param original
+ * @param commands
+ */
 export function hookBody(
     name: HookName,
     runner: string | undefined,
@@ -77,7 +97,7 @@ export function hookBody(
             'status=0',
             `(export GSPOT_HOOK=${name}; ${command})${buffered ? ' <"${input}"' : ''} || status=$?`,
             'if [[ ${status} -eq 126 || ${status} -eq 127 ]]; then',
-            '    printf "%s\\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2',
+            String.raw`    printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2`,
             '    status=2',
             'fi',
             'if [[ ${status} -ne 0 ]]; then exit "${status}"; fi',
@@ -87,7 +107,12 @@ export function hookBody(
     ].join('\n');
 }
 
-/** The managed invocation in each authored Husky script. */
+/**
+ * The managed invocation in each authored Husky script.
+ * @param root
+ * @param runner
+ * @param binaryPath
+ */
 export function huskyLines(
     root: string,
     runner: string | undefined,
@@ -115,7 +140,12 @@ export function huskyLines(
     }));
 }
 
-/** Verify the invocation without claiming ownership of authored Husky commands. */
+/**
+ * Verify the invocation without claiming ownership of authored Husky commands.
+ * @param root
+ * @param runner
+ * @param binaryPath
+ */
 export function huskyReady(root: string, runner: string | undefined, binaryPath?: string): boolean {
     const files = openConfinedRoot(root);
     try {
@@ -130,7 +160,12 @@ export function huskyReady(root: string, runner: string | undefined, binaryPath?
     }
 }
 
-/** Preserve the gspot verdict before the native manager combines job results. */
+/**
+ * Preserve the gspot verdict before the native manager combines job results.
+ * @param name
+ * @param runner
+ * @param binaryPath
+ */
 export function lefthookCommand(name: HookName, runner: string | undefined, binaryPath?: string): string {
     const args =
         name === 'pre-push'
@@ -141,13 +176,17 @@ export function lefthookCommand(name: HookName, runner: string | undefined, bina
     return [
         'gspot_status=0',
         `${runnerExec(runner, binaryPath)} ${args} || gspot_status=$?`,
-        'if [ "$gspot_status" -eq 126 ] || [ "$gspot_status" -eq 127 ]; then printf "%s\\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; gspot_status=2; fi',
+        String.raw`if [ "$gspot_status" -eq 126 ] || [ "$gspot_status" -eq 127 ]; then printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; gspot_status=2; fi`,
         'if [ -n "${GSPOT_LEFTHOOK_RESULT:-}" ]; then printf "%s\\n" "$gspot_status" > "$GSPOT_LEFTHOOK_RESULT"; fi',
         'exit "$gspot_status"',
     ].join('; ');
 }
 
-/** The owned command in each supported Lefthook hook. */
+/**
+ * The owned command in each supported Lefthook hook.
+ * @param runner
+ * @param binaryPath
+ */
 export function lefthookBlock(runner: string | undefined, binaryPath?: string): LefthookBlock {
     return Object.fromEntries(
         HOOK_FILES.map((name) => [
@@ -164,7 +203,12 @@ export function lefthookBlock(runner: string | undefined, binaryPath?: string): 
     );
 }
 
-/** Select the authored Lefthook file and own only the gspot commands. */
+/**
+ * Select the authored Lefthook file and own only the gspot commands.
+ * @param root
+ * @param runner
+ * @param binary
+ */
 export function lefthookConfiguration(
     root: string,
     runner: string | undefined,

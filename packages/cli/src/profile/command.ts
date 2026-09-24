@@ -1,12 +1,12 @@
 // Saves a reusable policy profile.
 import { relative, resolve, sep } from 'node:path';
-import type { CommandResult } from '#cli/types/execution.ts';
+import { parseProfile } from '#cli/profile/read.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { readPolicy } from '#cli/policy/read-policy.ts';
+import { exportedProfile } from '#cli/profile/export.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
 import { mutationTarget } from '#cli/filesystem/confined.ts';
 import { withLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { parseProfile } from '#cli/profile/read.ts';
-import { exportedProfile } from '#cli/profile/export.ts';
-import { readPolicy } from '#cli/policy/read-policy.ts';
 
 /**
  * Writes a profile from the policy of this repository.

@@ -1,15 +1,110 @@
 import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
+import { rejects } from 'node:assert/strict';
+import { engineInput } from '#cli/run/engines.ts';
+import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import { planRun } from '#cli/run/plan.ts';
+import { emitAll } from '#cli/emit/targets.ts';
 import { describe, expect, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { isToolBroken, checkedFindings } from '#cli/run/broken-tool.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
 import { parseOutput, ToolOutputError } from '#cli/run/parse-output.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { emitAll } from '#cli/emit/targets.ts';
+
+test('native image reports distinguish a generated test key, invalid configuration, and a clean image', async () => {
+    await using sandbox = await testdir();
+    const prefix = `gspot-image-acceptance-${randomUUID()}`;
+    const tags = [`${prefix}:defect`, `${prefix}:corrected`];
+    const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({
+        type: 'pkcs1',
+        format: 'pem',
+    });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["docker"]\n',
+        'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
+        'payload.pem': privateKey,
+        '.gspot/config/trivy.yaml': 'severity: [HIGH, CRITICAL]\n',
+    });
+    const session = await openSession(sandbox.path);
+    const spec = session.manifests.get('docker')!.checks.find((entry) => entry.name === 'docker/trivy-image')!;
+    const input = engineInput(session, { scope: session.scopes[0]!, spec, files: session.repository.files });
+    try {
+        for (const [index, tag] of tags.entries()) {
+            if (index === 1) await Bun.write(join(sandbox.path, 'payload.pem'), 'No credentials in this image.\n');
+            const archive = Bun.spawnSync(['tar', '-cf', '-', 'payload.pem'], { cwd: sandbox.path });
+            expect(archive.exitCode, archive.stderr.toString()).toBe(0);
+            const imported = Bun.spawnSync(['docker', 'import', '-', tag], { stdin: archive.stdout });
+            expect(imported.exitCode, imported.stderr.toString()).toBe(0);
+        }
+        const findings = await trivyImage(input);
+        expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
+        expect(findings).toMatchObject([
+            { file: 'compose.yaml', line: 1, rule: 'image', message: expect.stringContaining('private-key') },
+        ]);
+        await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [');
+        await rejects(trivyImage(input), /Trivy could not scan/u);
+        expect(await Bun.file(join(sandbox.path, 'compose.yaml')).text()).toBe(
+            `services: {app: {image: "${tags[0]}"}}\n`,
+        );
+        await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [HIGH, CRITICAL]\n');
+        await Bun.write(join(sandbox.path, 'compose.yaml'), `services: {app: {image: "${tags[1]}"}}\n`);
+        const corrected = await openSession(sandbox.path);
+        expect(
+            await trivyImage(
+                engineInput(corrected, {
+                    scope: corrected.scopes[0]!,
+                    spec,
+                    files: corrected.repository.files,
+                }),
+            ),
+        ).toStrictEqual([]);
+    } finally {
+        for (const tag of tags) Bun.spawnSync(['docker', 'image', 'rm', '--force', tag]);
+    }
+}, 120_000);
 
 describe('tool output across platforms', () => {
+    test.each([
+        '403 API rate limit exceeded',
+        '429 Too Many Requests',
+        '503 Service Unavailable',
+        'dial tcp: no such host',
+    ])('pin verification treats %s as an execution error and accepts a completed observation', async (failure) => {
+        await using sandbox = await testdir();
+        const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+            '.github/workflows/check.yml': workflow,
+        });
+        const session = await openSession(sandbox.path);
+        const planned = (await planRun(session, { stage: 'push', skips: [], only: ['configs/actions-pins'] }))[0]!;
+        const result = {
+            code: 1,
+            stdout: '',
+            stderr: `ERROR failed to handle a line: GET https://api.github.com/repos/actions/checkout/commits/v4: ${failure}`,
+            missing: false,
+            duration: 1,
+        };
+        expect(() => checkedFindings(planned, result, [sandbox.path, sandbox.path])).toThrow(ToolOutputError);
+        expect(
+            checkedFindings(planned, { ...result, stderr: 'invalid action pin: .github/workflows/check.yml:4' }, [
+                sandbox.path,
+                sandbox.path,
+            ]),
+        ).toStrictEqual([
+            expect.objectContaining({
+                check: 'configs/actions-pins',
+                message: 'invalid action pin: .github/workflows/check.yml:4',
+            }),
+        ]);
+        expect(
+            checkedFindings(planned, { ...result, code: 0, stderr: '' }, [sandbox.path, sandbox.path]),
+        ).toStrictEqual([]);
+        expect(await Bun.file(join(sandbox.path, '.github/workflows/check.yml')).text()).toBe(workflow);
+    });
+
     test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
         await using sandbox = await testdir();
         const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
@@ -19,7 +114,9 @@ describe('tool output across platforms', () => {
             ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
         });
         const session = await openSession(sandbox.path);
-        const configuration = emitAll(session).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
+        const configuration = emitAll(session).files.find(
+            ({ path }) => path === '.gspot/config/markdownlint-cli2.mjs',
+        )!;
         await Bun.write(join(sandbox.path, configuration.path), configuration.content);
         const planned = (await planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] }))[0]!;
         const command = [
@@ -42,7 +139,7 @@ describe('tool output across platforms', () => {
         const { manifest: _manifest, ...declared } = planned;
         const result = { stdout: failed.stdout.toString(), stderr: '', code: 1, missing: false, duration: 1 };
         for (const check of [planned, declared]) {
-            expect(checkedFindings(check, result, [sandbox.path, sandbox.path])).toEqual(findings);
+            expect(checkedFindings(check, result, [sandbox.path, sandbox.path])).toStrictEqual(findings);
             expect(() => checkedFindings(check, { ...result, code: 2 }, [sandbox.path, sandbox.path])).toThrow(
                 ToolOutputError,
             );
@@ -53,7 +150,7 @@ describe('tool output across platforms', () => {
         for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');
         const corrected = Bun.spawnSync(command, { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
         expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
-        expect(parseOutput(planned.spec, corrected.stdout.toString(), '', sandbox.path)).toEqual([]);
+        expect(parseOutput(planned.spec, corrected.stdout.toString(), '', sandbox.path)).toStrictEqual([]);
     });
 
     test('invalid Markdown records remain execution errors and valid records parse', async () => {
@@ -107,7 +204,9 @@ describe('tool output across platforms', () => {
         await Bun.write(join(sandbox.path, 'sample.txt'), 'permitted\n');
         const corrected = Bun.spawnSync(command, { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
         expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
-        expect(parseOutput(spec, corrected.stdout.toString(), corrected.stderr.toString(), sandbox.path)).toEqual([]);
+        expect(parseOutput(spec, corrected.stdout.toString(), corrected.stderr.toString(), sandbox.path)).toStrictEqual(
+            [],
+        );
     });
     test('spelling distinguishes native findings from fatal exits for configuration and declared checks', async () => {
         await using sandbox = await testdir();
@@ -140,9 +239,9 @@ describe('tool output across platforms', () => {
             expect(() => checkedFindings(check, { ...result, stdout: '' }, [sandbox.path, sandbox.path])).toThrow(
                 ToolOutputError,
             );
-            expect(checkedFindings(check, { ...result, stdout: '', code: 0 }, [sandbox.path, sandbox.path])).toEqual(
-                [],
-            );
+            expect(
+                checkedFindings(check, { ...result, stdout: '', code: 0 }, [sandbox.path, sandbox.path]),
+            ).toStrictEqual([]);
         }
     });
     test('native spelling JSON retains filename delimiters and Unicode character columns', async () => {
@@ -291,7 +390,7 @@ test('a syntax diagnostic cannot promise an automatic fix when its check has no 
         .get('configs')!
         .checks.find((check) => check.name === 'configs/toml')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
-    expect(findings).toEqual([
+    expect(findings).toStrictEqual([
         {
             check: 'configs/toml',
             file: 'settings.toml',
@@ -304,7 +403,11 @@ test('a syntax diagnostic cannot promise an automatic fix when its check has no 
     ]);
 });
 
-test.each(['javascript', 'typescript'].flatMap((configuration) => ['recommended', 'all'].map((level) => ({ configuration, level }))))(
+test.each(
+    ['javascript', 'typescript'].flatMap((configuration) =>
+        ['recommended', 'all'].map((level) => ({ configuration, level })),
+    ),
+)(
     '$configuration at $level keeps source text naming module errors as an ESLint finding',
     async ({ configuration, level }) => {
         await using sandbox = await testdir();
@@ -355,7 +458,7 @@ test.each([
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
     expect(() => parseOutput(spec, text, '', '/repo')).toThrow(ToolOutputError);
-    expect(parseOutput(spec, '[]', '', '/repo')).toEqual([]);
+    expect(parseOutput(spec, '[]', '', '/repo')).toStrictEqual([]);
 });
 
 test.each([
@@ -370,4 +473,140 @@ test.each([
         { filePath: path, messages: [{ ruleId: null, severity: 2, message: 'Invalid syntax.', line: 1, column: 2 }] },
     ]);
     expect(parseOutput(spec, stdout, '', root)).toMatchObject([{ file: expected, line: 1, column: 2 }]);
+});
+
+test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {
+    await using sandbox = await testdir();
+    const source = '#!/usr/bin/env bash\necho $unquoted\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'sample.sh': source,
+    });
+    const session = await openSession(sandbox.path);
+    const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['bash/shellcheck'] }))[0]!;
+    const command = ['shellcheck', '--norc', '--format=gcc', 'sample.sh'];
+    const roots: [string, string] = [sandbox.path, sandbox.path];
+    const broken = Bun.spawnSync([...command, 'missing.sh'], { cwd: sandbox.path });
+    expect(broken.exitCode, broken.stderr.toString()).toBe(2);
+    expect(broken.stdout.toString()).toContain('SC2086');
+    const result = {
+        code: broken.exitCode,
+        stdout: broken.stdout.toString(),
+        stderr: broken.stderr.toString(),
+        missing: false,
+        duration: 1,
+    };
+    expect(() => checkedFindings(planned, result, roots)).toThrow(ToolOutputError);
+    const defect = Bun.spawnSync(command, { cwd: sandbox.path });
+    expect(defect.exitCode).toBe(1);
+    expect(
+        checkedFindings(
+            planned,
+            { ...result, code: defect.exitCode, stdout: defect.stdout.toString(), stderr: defect.stderr.toString() },
+            roots,
+        ),
+    ).toContainEqual(expect.objectContaining({ file: 'sample.sh', line: 2, rule: 'SC2086' }));
+    expect(await Bun.file(join(sandbox.path, 'sample.sh')).text()).toBe(source);
+    await Bun.write(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
+    const corrected = Bun.spawnSync(command, { cwd: sandbox.path });
+    expect(corrected.exitCode).toBe(0);
+    expect(
+        checkedFindings(
+            planned,
+            {
+                ...result,
+                code: corrected.exitCode,
+                stdout: corrected.stdout.toString(),
+                stderr: corrected.stderr.toString(),
+            },
+            roots,
+        ),
+    ).toStrictEqual([]);
+});
+
+test.each(['def broken(:\n', 'value = "\u0000"\n'])(
+    'Vulture rejects incomplete analysis of %j even when dead-code findings set exit 3',
+    async (brokenSource) => {
+        await using sandbox = await testdir();
+        const source = 'import os\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["python"]\n',
+            'sample.py': source,
+            'broken.py': brokenSource,
+        });
+        const session = await openSession(sandbox.path);
+        const planned = (await planRun(session, { stage: 'push', skips: [], only: ['python/vulture'] }))[0]!;
+        const command = ['vulture', '--min-confidence', '80', 'sample.py', 'broken.py'];
+        const roots: [string, string] = [sandbox.path, sandbox.path];
+        const broken = Bun.spawnSync(command, { cwd: sandbox.path });
+        expect(broken.exitCode, broken.stderr.toString()).toBe(3);
+        expect(broken.stdout.toString()).toContain("unused import 'os'");
+        const result = {
+            code: broken.exitCode,
+            stdout: broken.stdout.toString(),
+            stderr: broken.stderr.toString(),
+            missing: false,
+            duration: 1,
+        };
+        expect(() => checkedFindings(planned, result, roots)).toThrow(ToolOutputError);
+        expect(await Bun.file(join(sandbox.path, 'broken.py')).text()).toBe(brokenSource);
+        await Bun.write(join(sandbox.path, 'broken.py'), 'print("Ready")\n');
+        const defect = Bun.spawnSync(command, { cwd: sandbox.path });
+        expect(defect.exitCode).toBe(3);
+        expect(
+            checkedFindings(
+                planned,
+                {
+                    ...result,
+                    code: defect.exitCode,
+                    stdout: defect.stdout.toString(),
+                    stderr: defect.stderr.toString(),
+                },
+                roots,
+            ),
+        ).toContainEqual(
+            expect.objectContaining({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }),
+        );
+        expect(await Bun.file(join(sandbox.path, 'sample.py')).text()).toBe(source);
+        await Bun.write(join(sandbox.path, 'sample.py'), 'print("Ready")\n');
+        const corrected = Bun.spawnSync(command, { cwd: sandbox.path });
+        expect(corrected.exitCode).toBe(0);
+        expect(
+            checkedFindings(
+                planned,
+                {
+                    ...result,
+                    code: corrected.exitCode,
+                    stdout: corrected.stdout.toString(),
+                    stderr: corrected.stderr.toString(),
+                },
+                roots,
+            ),
+        ).toStrictEqual([]);
+    },
+);
+
+test.each(['$/', '"$/', '"\\u0024/', '|- # $comment\n            $/'])('Actionlint accepts self-repository scalar %s while retaining expression errors and source bytes', async (prefix) => {
+    await using sandbox = await testdir();
+    const suffix = prefix.startsWith('"') ? '"' : '';
+    const reference = `${prefix}.github/workflows/called.yml${suffix}`;
+    const workflow = `name: Caller\non: workflow_dispatch\npermissions: {}\njobs:\n    caller:\n        uses: ${reference}\n        with:\n            greeting: \${{ unknown.value }}\n`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+        '.github/workflows/caller.yml': workflow,
+        '.github/workflows/called.yml': 'name: Called\non:\n    workflow_call:\n        inputs:\n            greeting:\n                type: string\n                required: true\npermissions: {}\njobs:\n    greet:\n        runs-on: ubuntu-latest\n        steps:\n            - run: echo "$GREETING"\n              env:\n                  GREETING: ${{ inputs.greeting }}\n',
+        'unrelated.yaml': '42\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = (await planRun(session, {stage: 'commit', skips: [], only: ['configs/actions']}))[0]!;
+    const failed = await planned.run(session, planned);
+    expect(failed.status, JSON.stringify(failed)).toBe('fail');
+    expect(failed.findings).toContainEqual(expect.objectContaining({file: '.github/workflows/caller.yml', rule: 'expression', line: prefix.startsWith('|') ? 9 : 8}));
+    expect(failed.findings.some((finding) => finding.rule === 'workflow-call')).toBe(false);
+    expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
+    await Bun.write(join(sandbox.path, '.github/workflows/caller.yml'), workflow.replace('${{ unknown.value }}', 'Hello'));
+    const corrected = await openSession(sandbox.path);
+    const valid = (await planRun(corrected, {stage: 'commit', skips: [], only: ['configs/actions']}))[0]!;
+    expect((await valid.run(corrected, valid)).status).toBe('ok');
+    expect(await Bun.file(join(sandbox.path, 'unrelated.yaml')).text()).toBe('42\n');
 });

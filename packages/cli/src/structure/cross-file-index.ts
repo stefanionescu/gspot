@@ -36,10 +36,10 @@ function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string
     return names;
 }
 
-async function readScriptFile(root: string, file: TrackedFile): Promise<ScriptFile> {
-    const text = readSource(root, file.path).toString('utf8');
+async function readScriptFile(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
+    const text = readSource(input.root, file.path, input.observations).toString('utf8');
     const lines = text.split('\n');
-    const functions = await scriptFunctions(text);
+    const functions = await scriptFunctions(text, input);
     return {
         path: file.path,
         text,
@@ -53,7 +53,7 @@ async function readScriptFile(root: string, file: TrackedFile): Promise<ScriptFi
 
 async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
     const read: ScriptFile[] = [];
-    for (const file of files) read.push(await readScriptFile(input.root, file));
+    for (const file of files) read.push(await readScriptFile(input, file));
     const owners = new Map<string, string>();
     for (const file of read)
         for (const entry of file.functions) if (!owners.has(entry.name)) owners.set(entry.name, file.path);
@@ -67,10 +67,10 @@ async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIn
  * @returns the index
  */
 export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
-    let perScope = cache.get(input.runKey);
+    let perScope = cache.get(input.observations);
     if (perScope === undefined) {
         perScope = new Map();
-        cache.set(input.runKey, perScope);
+        cache.set(input.observations, perScope);
     }
     const key = JSON.stringify([input.scope, files.map((file) => file.path)]);
     let index = perScope.get(key);

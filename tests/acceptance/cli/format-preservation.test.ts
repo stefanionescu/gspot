@@ -1,9 +1,9 @@
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
@@ -48,7 +48,7 @@ test.each([
     }
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+    expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
 });
 
 test('apply removes its owned pointers when an authored formatter configuration is introduced', async () => {
@@ -68,5 +68,5 @@ test('apply removes its owned pointers when an authored formatter configuration 
     expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(text);
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+    expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
 });

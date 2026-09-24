@@ -1,12 +1,12 @@
 // The project file against the tree: test plans, sources in no target, references to files that are gone, and symlinks.
 import { posix } from 'node:path';
-import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
-import type { TestPlan } from '#cli/checks/xcode/types.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { TestPlan } from '#cli/checks/xcode/types.ts';
+import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
 
 const PROJECT_FILE = '.xcodeproj/project.pbxproj';
 const SYMLINK_MODE = '120000';
@@ -17,6 +17,10 @@ function folderOf(projectFile: string): string {
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
 }
 
+/**
+ *
+ * @param input
+ */
 export function orphanSources(input: EngineInput): Finding[] {
     const projects = trackedEnding(input, [PROJECT_FILE]).map((path) => ({
         path,
@@ -105,7 +109,7 @@ export function testPlans(input: EngineInput): Finding[] {
 export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedEnding(input, [PROJECT_FILE]).map((path) => folderOf(path));
     if (folders.length === 0 || !input.hasGit) return [];
-    const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal);
+    const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.observations);
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&

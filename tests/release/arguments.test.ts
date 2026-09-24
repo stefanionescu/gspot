@@ -47,7 +47,7 @@ describe('read-only script arguments', () => {
                         ? readFileSync(join(sandbox.path, path), 'utf8')
                         : treeContents(join(sandbox.path, path)),
                 ),
-            ).toEqual(before);
+            ).toStrictEqual(before);
         }
         for (const flag of ['--help', '--version']) {
             const result = Bun.spawnSync([process.execPath, join(sandbox.path, entry), flag], {
@@ -64,7 +64,7 @@ describe('read-only script arguments', () => {
                         ? readFileSync(join(sandbox.path, path), 'utf8')
                         : treeContents(join(sandbox.path, path)),
                 ),
-            ).toEqual(before);
+            ).toStrictEqual(before);
         }
     });
 });
@@ -152,7 +152,7 @@ const argv = process.argv.slice(2);
                         ? readFileSync(join(sandbox.path, path), 'utf8')
                         : treeContents(join(sandbox.path, path)),
                 ),
-            ).toEqual(before);
+            ).toStrictEqual(before);
             expect(existsSync(join(sandbox.path, 'compiler.jsonl'))).toBe(false);
         }
         const result = execute(['--target', 'bun-linux-arm64', 'bun-linux-x64-baseline']);
@@ -165,7 +165,7 @@ const argv = process.argv.slice(2);
             commands
                 .filter((command) => command.some((argument) => argument.endsWith('/compile.ts')))
                 .map((command) => command.find((argument) => argument.startsWith('--target='))),
-        ).toEqual(['--target=bun-linux-arm64', '--target=bun-linux-x64-baseline']);
+        ).toStrictEqual(['--target=bun-linux-arm64', '--target=bun-linux-x64-baseline']);
     });
 });
 
@@ -247,7 +247,7 @@ const argv = process.argv.slice(2);
             ]) {
                 const result = execute(args);
                 expect(result.exitCode, result.stderr.toString()).toBe(2);
-                expect(treeContents(join(sandbox.path, 'dist'))).toEqual(before);
+                expect(treeContents(join(sandbox.path, 'dist'))).toStrictEqual(before);
                 expect(existsSync(join(sandbox.path, 'publisher.jsonl'))).toBe(false);
             }
             const result = execute(['--tag', tag, '--registry', registry, '--dry-run']);
@@ -294,13 +294,13 @@ describe('plugin build arguments', () => {
         ]) {
             const result = execute(args);
             expect(result.exitCode, result.stderr.toString()).toBe(2);
-            expect(treeContents(sandbox.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toStrictEqual(before);
         }
         for (const flag of ['--help', '--version']) {
             const result = execute([flag]);
             expect(result.exitCode, result.stderr.toString()).toBe(0);
             expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
-            expect(treeContents(sandbox.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toStrictEqual(before);
         }
     });
 });

@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test';
+import { policySchema } from '#cli/schemas/policy.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { functionsOf as swiftFunctions } from '#cli/structure/swift/sources.ts';
 import { executableStatements, trivialFile } from '#cli/structure/statements.ts';
 import { functionsOf as pythonFunctions } from '#cli/structure/python/modules.ts';
-import { functionsOf as swiftFunctions } from '#cli/structure/swift/sources.ts';
-import { trivialFunctions as pythonTrivial } from '#cli/structure/python/functions.ts';
 import { trivialFunctions as swiftTrivial } from '#cli/structure/swift/bodies.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
+import { trivialFunctions as pythonTrivial } from '#cli/structure/python/functions.ts';
 
 for (const language of ['python', 'swift', 'bash'] as const) {
     test.each([0, 1, 2, 3])(`${language} counts %i executable statements`, async (count) => {
@@ -46,8 +46,8 @@ test('Python counts nested control flow and reports decorated methods and anonym
             lines: text.split('\n'),
             statements: tree.rootNode.namedChildren,
         });
-        expect(pythonTrivial(functions, 2).map((entry) => entry.line)).toEqual([3, 5, 10]);
-        expect(pythonTrivial(functions, 3).map((entry) => entry.line)).toEqual([3, 5, 6, 10, 11]);
+        expect(pythonTrivial(functions, 2).map((entry) => entry.line)).toStrictEqual([3, 5, 10]);
+        expect(pythonTrivial(functions, 3).map((entry) => entry.line)).toStrictEqual([3, 5, 6, 10, 11]);
     } finally {
         tree.delete();
     }

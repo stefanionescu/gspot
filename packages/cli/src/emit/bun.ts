@@ -1,8 +1,11 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { Session } from '#cli/types/execution.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
 
-/** Manage Bun installation safeguards while preserving unrelated authored fields. */
+/**
+ * Manage Bun installation safeguards while preserving unrelated authored fields.
+ * @param session
+ */
 export function bunConfiguration(session: Session): ConfigurationOutput[] {
     const files = openConfinedRoot(session.root);
     try {

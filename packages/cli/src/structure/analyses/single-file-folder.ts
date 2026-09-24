@@ -24,7 +24,7 @@ export const singleFileFolder: Analysis = (context) => {
     );
     const tree = directoryTree(input.files);
     const checked = new Set(context.files.map((file) => directoryOf(file.path)));
-    const findings = [...checked].flatMap((directory) => {
+    return [...checked].flatMap((directory) => {
         if (isSkipped(directory, isAllowed)) return [];
         const entries = tree.get(directory) ?? [];
         if (entries.some((entry) => entry.kind === 'dir')) return [];
@@ -42,5 +42,4 @@ export const singleFileFolder: Analysis = (context) => {
             ),
         ];
     });
-    return findings;
 };

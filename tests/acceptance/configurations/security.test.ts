@@ -1,10 +1,10 @@
-// Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = [
     'init',

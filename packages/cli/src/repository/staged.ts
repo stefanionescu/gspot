@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 // Staged files for the commit stage, and the honest note about unstaged changes.
@@ -112,6 +112,7 @@ async function fetchedObjects(root: string, remote: string | undefined, cancelSi
 /**
  * Staged paths include deletions and both sides of renames. Count paths with unstaged changes.
  * @param root the repository root
+ * @param cancelSignal
  * @returns the staged paths, sorted, and the unstaged count
  */
 export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Promise<StagedSet> {
@@ -126,6 +127,7 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
  * Files changed relative to a ref, for the pull-request form.
  * @param root the repository root
  * @param reference the git ref to compare against
+ * @param cancelSignal
  * @returns the selected reference and sorted paths
  */
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
@@ -157,6 +159,7 @@ export async function changedFiles(root: string, reference: string, cancelSignal
 /**
  * Where a push starts: the merge base with the upstream branch, or the root commit when the branch has none.
  * @param root the repository root
+ * @param cancelSignal
  * @returns the commit the pushed range starts after
  */
 export async function pushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
@@ -171,7 +174,13 @@ export async function pushBase(root: string, cancelSignal?: AbortSignal): Promis
     return first;
 }
 
-/** Resolve the exact objects supplied by Git's pre-push protocol before running source checks. */
+/**
+ * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
+ * @param root
+ * @param input
+ * @param remote
+ * @param cancelSignal
+ */
 export async function pushedRevisions(
     root: string,
     input: string,
@@ -292,11 +301,7 @@ export async function pushedRevisions(
         const duplicate = result.revisions.find(
             (entry) => entry.tree === tree && JSON.stringify(entry.paths) === JSON.stringify(selected),
         );
-        if (duplicate !== undefined) {
-            duplicate.refs.push(localRef);
-            duplicate.historyComplete &&= historyComplete;
-            duplicate.commits = [...new Set([...duplicate.commits, ...history])];
-        } else
+        if (duplicate === undefined) {
             result.revisions.push({
                 object,
                 tree,
@@ -305,6 +310,11 @@ export async function pushedRevisions(
                 historyComplete,
                 ...(selected === undefined ? {} : { paths: selected }),
             });
+        } else {
+            duplicate.refs.push(localRef);
+            duplicate.historyComplete &&= historyComplete;
+            duplicate.commits = [...new Set([...duplicate.commits, ...history])];
+        }
     }
     return result;
 }

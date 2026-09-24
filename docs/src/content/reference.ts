@@ -1,19 +1,18 @@
-import type { Loader } from 'astro/loaders';
-import { docsLoader } from '@astrojs/starlight/loaders';
-import { parse as parseYaml } from 'yaml';
-import { isDeepStrictEqual } from 'node:util';
+import plugin from '#plugin/plugin.ts';
 import type { Command } from 'commander';
-import { buildProgram } from '@gspot/cli/src/program.ts';
-import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
-import { configurationManifests } from '@gspot/cli/src/configurations/read-manifests.ts';
-import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
-import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
-import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/types/configurations.ts';
-import type { JSONSchema } from 'zod/v4/core';
-import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
-import plugin from '../../../packages/eslint-plugin/src/plugin.ts';
-
+import { parse as parseYaml } from 'yaml';
+import type { Loader } from 'astro/loaders';
 import { sourceRevision } from './revision';
+import type { JSONSchema } from 'zod/v4/core';
+import { isDeepStrictEqual } from 'node:util';
+import { docsLoader } from '@astrojs/starlight/loaders';
+import { buildProgram } from '@gspot/cli/src/program.ts';
+import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
+import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
+import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
+import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
+import { configurationManifests } from '@gspot/cli/src/configurations/read-manifests.ts';
+import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/types/configurations.ts';
 
 /**
  * Label generated documentation with its version, source owner, and source attribution.
@@ -128,11 +127,15 @@ function cell(text: string): string {
 }
 
 function commandPage(command: Command, name: string): string {
-    const rootCommand = name.split(' ')[0]!;
-    const owner = rootCommand === 'completion' ? 'output/completion.ts'
-        : ['init', 'doctor', 'uninstall'].includes(rootCommand) ? `commands/${rootCommand}/command.ts`
-        : ['add', 'remove'].includes(rootCommand) ? 'commands/configurations.ts'
-        : `commands/${rootCommand}.ts`;
+    const rootCommand = name.split(' ', 1)[0]!;
+    const owner =
+        rootCommand === 'completion'
+            ? 'output/completion.ts'
+            : ['init', 'doctor', 'uninstall'].includes(rootCommand)
+              ? `commands/${rootCommand}/command.ts`
+              : ['add', 'remove'].includes(rootCommand)
+                ? 'commands/configurations.ts'
+                : `commands/${rootCommand}.ts`;
     const helper = command.createHelp();
     helper.showGlobalOptions = true;
     const usage = helper.commandUsage(command);
@@ -162,7 +165,7 @@ function commandPage(command: Command, name: string): string {
     } finally {
         command.configureOutput(output);
     }
-    const details = help.split('\nEffects:\n')[1];
+    const details = help.split('\nEffects:\n', 2)[1];
     if (details === undefined || !details.includes('\n\nExit codes:\n') || !details.includes('\n\nExample:\n'))
         throw new Error(`Command ${name} has no effects, exits, or example documentation.`);
     const behavior = `\n## Effects and prerequisites\n\n${details
@@ -351,6 +354,9 @@ ${table(
     return `${referenceHeader('Engines', 'The checks gspot runs itself, by engine: structure, naming, prose and integrity.', 'packages/cli/src/run/engines.ts')}gspot runs external tools for what they do well and its own engines for the rest. Each engine is a set of checks; every check explains itself on its own page.\n\n${sections.join('\n')}`;
 }
 
+/**
+ *
+ */
 export function referencePages(): Map<string, string> {
     const pages = new Map<string, string>();
     const add = (path: string, content: string): void => {
@@ -371,7 +377,15 @@ export function referencePages(): Map<string, string> {
         .values()
         .toArray()
         .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
-    const kinds = [['language', 'Languages'], ['framework', 'Frameworks'], ['tool', 'Tools'], ['library', 'Libraries'], ['platform', 'Platforms'], ['database', 'Databases'], ['policy', 'Repository checks']];
+    const kinds = [
+        ['language', 'Languages'],
+        ['framework', 'Frameworks'],
+        ['tool', 'Tools'],
+        ['library', 'Libraries'],
+        ['platform', 'Platforms'],
+        ['database', 'Databases'],
+        ['policy', 'Repository checks'],
+    ];
     add(
         'configurations/index.md',
         referenceHeader(
@@ -395,9 +409,11 @@ export function referencePages(): Map<string, string> {
                 )
                 .join(''),
     );
-    for (const manifest of manifests) add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest));
+    for (const manifest of manifests)
+        add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest));
     const checks = allChecks();
-    for (const { check, configuration } of checks.values()) add(`rules/${check.name}.md`, rulePage(check, configuration));
+    for (const { check, configuration } of checks.values())
+        add(`rules/${check.name}.md`, rulePage(check, configuration));
     add('settings.md', settingsPage(manifests));
     add(
         'configuration.md',

@@ -84,7 +84,7 @@ descendants.
 ## Check project resources
 
 Supabase configuration checks read `supabase/config.toml` within each policy scope.
-`tools.supabase.functions_dir`, `tools.supabase.admin_key_paths`, and
+`tools.supabase.functions_directory`, `tools.supabase.admin_key_files`, and
 `tools.i18n.translations.directory` are relative to that scope. Locale messages, static-site
 headers, and asset references in a child scope do not satisfy checks in its parent scope.
 Project-wide checks receive the files owned by their scope, including configuration and binary resources.

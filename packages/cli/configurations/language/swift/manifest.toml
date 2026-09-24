@@ -73,6 +73,8 @@ provider = "host"
 template = "semgrep/ios.yml"
 target = ".gspot/config/semgrep/ios.yml"
 rules_path = ["rules"]
+needs = "security"
+per_scope = true
 
 [[configs]]
 template = "swiftlint.yml.tmpl"
@@ -99,7 +101,8 @@ title = "SwiftLint"
 example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
 level = "all"
 stage = "commit"
-command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
+tool = "swiftlint"
+analysis = "swiftlint"
 fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"
@@ -118,6 +121,7 @@ example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`
 level = "all"
 stage = "commit"
 command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
+findings_exit_codes = [1]
 fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
 fix_order = "format"
 claims = {extensions = [".swift"]}

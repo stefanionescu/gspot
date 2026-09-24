@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { readFileSync, symlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, symlinkSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';
@@ -38,7 +38,7 @@ describe('development assets', () => {
             stderr: 'pipe',
         });
         expect(result.exitCode, result.stderr.toString()).toBe(0);
-        expect(JSON.parse(result.stdout.toString())).toEqual({
+        expect(JSON.parse(result.stdout.toString())).toStrictEqual({
             text: CONFIGURATION,
             files: ['packages/cli/configurations/language/bash/manifest.toml'],
         });

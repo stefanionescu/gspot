@@ -1,16 +1,16 @@
 import { PRIVATE_PATHS } from '#cli/platform/layout.ts';
 // Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
 import type { BlockStyle } from '#cli/types/generation.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import {
-    HASH_BLOCK_END,
-    HASH_BLOCK_START,
-    MANAGED_BLOCK_END,
-    MANAGED_BLOCK_START,
-} from '#cli/emit/markers.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
-/** Locate one complete block, refusing ambiguous or malformed markers. */
+import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_START } from '#cli/emit/markers.ts';
+
+/**
+ * Locate one complete block, refusing ambiguous or malformed markers.
+ * @param text
+ * @param style
+ */
 export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
     const markersForStyle =
         style === 'markdown'
@@ -22,8 +22,8 @@ export function blockSpan(text: string, style: BlockStyle): { start: number; end
     if (
         start === -1 ||
         closing < start ||
-        text.indexOf(markersForStyle.start, start + markersForStyle.start.length) !== -1 ||
-        text.indexOf(markersForStyle.end, closing + markersForStyle.end.length) !== -1
+        text.includes(markersForStyle.start, start + markersForStyle.start.length) ||
+        text.includes(markersForStyle.end, closing + markersForStyle.end.length)
     ) {
         throw new Error('Managed block markers are incomplete or repeated. Preserve the file and resolve its markers.');
     }
@@ -33,7 +33,12 @@ export function blockSpan(text: string, style: BlockStyle): { start: number; end
     return { start, end };
 }
 
-/** Replace a complete block or append it, preserving authored bytes around it. */
+/**
+ * Replace a complete block or append it, preserving authored bytes around it.
+ * @param existing
+ * @param block
+ * @param style
+ */
 export function applyBlock(existing: string, block: string, style: BlockStyle): string {
     const { start, end } =
         style === 'markdown'
@@ -65,8 +70,11 @@ export function currentBlock(text: string, style: BlockStyle): string | undefine
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.
+ * @param manifests
  * @returns the block body
  */
-export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values()): string {
+export function gitignoreBlock(
+    manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values(),
+): string {
     return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }

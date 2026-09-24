@@ -1,7 +1,11 @@
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
-
 import { fileURLToPath } from 'node:url';
+import { parse as parseToml } from 'smol-toml';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 
 import {
     chmodSync,
@@ -13,16 +17,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-
-import { describe, expect, test } from 'bun:test';
-
-import { createFileTree, testdir } from 'testdirs';
-
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-
-import { parse as parseToml } from 'smol-toml';
 
 const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
@@ -40,7 +34,7 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
         expect(readFileSync(join(directory.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
         owner.applyProposal(owner.proposeConfiguration('mise.toml', 'toml', changes));
         const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
-        expect(parseToml(installed)).toEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
+        expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
         writeFileSync(join(directory.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
         expect(owner.restore('mise.toml')).toBe('preserved');
         expect(readFileSync(join(directory.path, 'mise.toml'), 'utf8')).toContain('authored check');
@@ -112,12 +106,12 @@ test('a prepared configuration does not write and cannot overwrite a subsequent 
             true,
         );
         expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe(original);
-        expect(owner.installedPaths()).toEqual([]);
+        expect(owner.installedPaths()).toStrictEqual([]);
         const edited = '{"extends":"./authored.json","strict":false}\n';
         writeFileSync(join(directory.path, 'tsconfig.json'), edited);
         expect(() => owner.applyProposal(proposal)).toThrow('changed after its proposal');
         expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe(edited);
-        expect(owner.installedPaths()).toEqual([]);
+        expect(owner.installedPaths()).toStrictEqual([]);
     } finally {
         owner.close();
     }
@@ -141,7 +135,7 @@ test('overlapping configuration fields are refused without changing authored byt
             ),
         ).toThrow('fields overlap');
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
-        expect(owner.installedPaths()).toEqual([]);
+        expect(owner.installedPaths()).toStrictEqual([]);
     } finally {
         owner.close();
     }
@@ -164,11 +158,11 @@ test.each(['replacement', 'block'] as const)(
                           true,
                       )
                     : owner.proposeBlock('config.txt', 'managed content', 'hash');
-            expect(owner.read('config.txt')).toEqual({ bytes: Buffer.from('authored\n'), mode: 0o640 });
+            expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('authored\n'), mode: 0o640 });
             writeFileSync(join(directory.path, 'config.txt'), 'edited after proposal\n');
             expect(() => owner.applyProposal(proposal)).toThrow('File changed after its proposal');
             expect(owner.restore('config.txt')).toBe('preserved');
-            expect(owner.read('config.txt')).toEqual({ bytes: Buffer.from('edited after proposal\n'), mode: 0o640 });
+            expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('edited after proposal\n'), mode: 0o640 });
         } finally {
             owner.close();
         }
@@ -187,7 +181,7 @@ test('a batch validates every proposal before publishing any file', async () => 
         expect(() => owner.applyProposals(proposals)).toThrow('File changed after its proposal: last.txt');
         expect(readFileSync(join(directory.path, 'first.txt'), 'utf8')).toBe('original first');
         expect(readFileSync(join(directory.path, 'last.txt'), 'utf8')).toBe('authored after proposal');
-        expect(owner.installedPaths()).toEqual([]);
+        expect(owner.installedPaths()).toStrictEqual([]);
     } finally {
         owner.close();
     }
@@ -245,7 +239,7 @@ test('takeover removal proposals retain every original when a later observation 
         expect(() => owner.applyProposals(proposals)).toThrow('File changed after its proposal: second.json');
         expect(readFileSync(join(directory.path, 'first.json'), 'utf8')).toBe('{}\n');
         expect(readFileSync(join(directory.path, 'second.json'), 'utf8')).toBe('{"edited":true}\n');
-        expect(owner.paths()).toEqual([]);
+        expect(owner.paths()).toStrictEqual([]);
         owner.applyProposals(
             ['first.json', 'second.json'].map((path) => owner.proposeRetirement(path, owner.read(path)!)),
         );
@@ -267,9 +261,9 @@ test('installation refuses a linked output root before publication and accepts a
     symlinkSync(outside.path, join(installation.path, 'node_modules'), 'dir');
     const owner = openLifecycleOwner(repository.path);
     try {
-        expect(() => publishInstalledFiles(owner, join(installation.path, 'node_modules'), 'npm')).toThrow(
-            'Unsafe lifecycle destination',
-        );
+        expect(() => {
+            publishInstalledFiles(owner, join(installation.path, 'node_modules'), 'npm');
+        }).toThrow('Unsafe lifecycle destination');
         expect(owner.read('.gspot/node_modules/package/file.js')).toBeUndefined();
         expect(readFileSync(join(outside.path, 'package/file.js'), 'utf8')).toBe('external bytes');
         unlinkSync(join(installation.path, 'node_modules'));
@@ -299,7 +293,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                     'config',
                 ),
             ).toThrow();
-            expect(owner.paths()).toEqual([]);
+            expect(owner.paths()).toStrictEqual([]);
             expect(readlinkSync(join(project, 'tool'))).toBe('../outside');
             expect(readFileSync(join(directory.path, 'outside'), 'utf8')).toBe('authored');
             expect(owner.replace('valid', { bytes: Buffer.from('corrected input'), mode: 0o644 }, 'config')).toBe(
@@ -361,12 +355,12 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 expect(() => owner.proposeRetirement('authored.json', observed)).toThrow(
                     'changed after takeover was planned',
                 );
-                expect(owner.read('authored.json')).toEqual(edited);
+                expect(owner.read('authored.json')).toStrictEqual(edited);
                 if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });
                 const refreshed = owner.read('authored.json')!;
                 expect(owner.applyProposal(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
                 expect(owner.restore('authored.json')).toBe('changed');
-                expect(owner.read('authored.json')).toEqual(refreshed);
+                expect(owner.read('authored.json')).toStrictEqual(refreshed);
             } finally {
                 owner.close();
             }

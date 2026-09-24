@@ -1,16 +1,14 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { pushReportSchema } from '#cli/schemas/reports.ts';
-import { gspot } from '#tests/support/cli/command.ts';
+import { delimiter, join } from 'node:path';
 // Planted repository for the secrets configuration: a staged key, a pushed key, a tracked environment file and a baseline with no reason.
 import { describe, expect, test } from 'bun:test';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { pushReportSchema } from '#cli/schemas/reports.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = [
     'init',
@@ -218,7 +216,7 @@ test(
             expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
             const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
             const findings = report.revisions[0]?.report.checks[0]?.findings ?? [];
-            expect(findings.map((finding) => finding.file).sort()).toEqual(['first.txt', 'second.txt']);
+            expect(findings.map((finding) => finding.file).sort()).toStrictEqual(['first.txt', 'second.txt']);
             expect(findings.every((finding) => finding.message.includes(leaked))).toBe(true);
             expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([firstToken]) } });
             expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([secondToken]) } });
@@ -248,7 +246,7 @@ test(
             expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe(
                 'ok',
             );
-            expect(requests).toEqual([]);
+            expect(requests).toStrictEqual([]);
             expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
         } finally {
             verifier.stop(true);

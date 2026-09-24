@@ -1,11 +1,17 @@
-import { trivialFile } from '#cli/structure/statements.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 // The Python structure checks, each one analysis of the integrity engine.
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { trivialFile } from '#cli/structure/statements.ts';
 import type { StructureReader } from '#cli/structure/python/types.ts';
 import { importCycles, singletons } from '#cli/structure/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/structure/python/modules.ts';
 
+import {
+    longFunctions,
+    longModules,
+    placeholderDocstrings,
+    trivialFunctions,
+} from '#cli/structure/python/functions.ts';
 import {
     exportsAtBottom,
     lazyExports,
@@ -13,12 +19,6 @@ import {
     privateBeforePublic,
     privatePrefixes,
 } from '#cli/structure/python/exports.ts';
-import {
-    longFunctions,
-    longModules,
-    placeholderDocstrings,
-    trivialFunctions,
-} from '#cli/structure/python/functions.ts';
 
 const DEFAULT_FILE_LINES = 300;
 const DEFAULT_FUNCTION_LINES = 60;

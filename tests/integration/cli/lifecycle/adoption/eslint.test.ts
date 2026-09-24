@@ -1,28 +1,16 @@
-import { join } from 'node:path';
-
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-
-import { expect, test } from 'bun:test';
-
-import { createFileTree, testdir } from 'testdirs';
-
-import { stringify } from 'smol-toml';
-
 import { ESLint } from 'eslint';
-
+import { join } from 'node:path';
+import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-
-import { initCommand } from '#cli/commands/init/command.ts';
-
-import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
-
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
-
-import { openSession } from '#cli/run/session.ts';
-
 import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 
@@ -39,8 +27,8 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
     symlinkSync(modules, join(directory.path, 'node_modules'));
     const original = readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8');
     const carried = await evaluateEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
-    expect(carried.adopted[1]?.files).toEqual(['src/**/*.js']);
-    expect(carried.adopted[1]?.plugins).toEqual({ custom: { module: './rules.mjs', export: 'default' } });
+    expect(carried.adopted[1]?.files).toStrictEqual(['src/**/*.js']);
+    expect(carried.adopted[1]?.plugins).toStrictEqual({ custom: { module: './rules.mjs', export: 'default' } });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
@@ -97,7 +85,7 @@ test('unsupported native rule options remain untouched and prevent successful ad
         [],
     );
     expect(carried.unread[0]?.note).toContain('custom_rules');
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(readFileSync(join(directory.path, '.swiftlint.yml'), 'utf8')).toBe(original);
 });
 
@@ -145,7 +133,7 @@ test.each(['object', 'named'])(
         symlinkSync(modules, join(directory.path, 'node_modules'));
         const carried = await evaluateEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
         expect(carried.adopted[0]?.basePath).toBe('src');
-        expect(carried.adopted[0]?.processor).toEqual(
+        expect(carried.adopted[0]?.processor).toStrictEqual(
             representation === 'object'
                 ? { module: './processing.mjs', export: 'default', members: ['processors', processorName] }
                 : `custom/${processorName}`,
@@ -173,7 +161,7 @@ test.each(['object', 'named'])(
         const corrected = await eslint.lintText('export const permitted = 1;\n', { filePath: 'src/future.js' });
         expect(
             corrected.flatMap((file) => file.messages).filter((finding) => finding.ruleId === 'custom/sentinel'),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     },
 );
 
@@ -201,7 +189,7 @@ test.each([
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
         const carried = await evaluateEslint({ root: directory.path, paths: [], flat: true });
-        expect(carried.adopted[0]?.plugins?.['inherited']).toEqual({
+        expect(carried.adopted[0]?.plugins?.['inherited']).toStrictEqual({
             module: './shared.cjs',
             export: 'default',
             members: ['0', 'plugins', 'inherited'],
@@ -223,7 +211,7 @@ test.each([
         const corrected = await eslint.lintText('export const allowed = 1;', { filePath: 'future.js' });
         expect(
             corrected.flatMap((file) => file.messages).filter((finding) => finding.ruleId === 'inherited/sentinel'),
-        ).toEqual([]);
+        ).toStrictEqual([]);
         const native = await run(
             [
                 'node',
@@ -246,7 +234,7 @@ test.each([
         expect(native.code).toBe(0);
         const [nativeFailures, nativeCorrected] = JSON.parse(native.stdout);
         expect(nativeFailures).toMatchObject([{ ruleId: 'inherited/sentinel', line: 1, column: 14 }]);
-        expect(nativeCorrected).toEqual([]);
+        expect(nativeCorrected).toStrictEqual([]);
     },
 );
 
@@ -264,7 +252,7 @@ test.each(['namespace', 'named export with dots'])(
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
         const carried = await evaluateEslint({ root: directory.path, paths: [], flat: true });
-        expect(carried.adopted[0]?.plugins?.['custom']).toEqual({
+        expect(carried.adopted[0]?.plugins?.['custom']).toStrictEqual({
             module: './plugin.mjs',
             export: kind === 'namespace' ? '*' : 'custom.plugin',
         });
@@ -410,13 +398,13 @@ test('legacy adoption proposes retirement only after native configuration valida
     };
     const rejected = await collectCarried(directory.path, tooling, new Set(['javascript']), ['source.js']);
     expect(rejected.unread).toHaveLength(1);
-    expect(rejected.removed).toEqual([]);
+    expect(rejected.removed).toStrictEqual([]);
     expect(readFileSync(join(directory.path, '.eslintrc.yaml'), 'utf8')).toContain('invalid-option');
     writeFileSync(join(directory.path, '.eslintrc.yaml'), 'root: true\nrules:\n  eqeqeq: [error, always]\n');
     const accepted = await collectCarried(directory.path, tooling, new Set(['javascript']), ['source.js']);
-    expect(accepted.unread).toEqual([]);
-    expect(accepted.removed.map((entry) => entry.path)).toEqual(['.eslintrc.yaml']);
-    expect(accepted.tools.get('eslint')?.settings['adopted']).toEqual(
+    expect(accepted.unread).toStrictEqual([]);
+    expect(accepted.removed.map((entry) => entry.path)).toStrictEqual(['.eslintrc.yaml']);
+    expect(accepted.tools.get('eslint')?.settings['adopted']).toStrictEqual(
         expect.arrayContaining([
             expect.objectContaining({ rules: expect.objectContaining({ eqeqeq: expect.anything() }) }),
         ]),
@@ -448,10 +436,10 @@ test('legacy package ESLint adoption preserves shared manifest bytes', async () 
         new Set(['javascript']),
         ['source.js'],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed).toEqual([]);
-    expect(carried.retained.map((entry) => entry.path)).toEqual(['package.json']);
-    expect(carried.tools.get('eslint')?.settings['adopted']).toEqual(
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed).toStrictEqual([]);
+    expect(carried.retained.map((entry) => entry.path)).toStrictEqual(['package.json']);
+    expect(carried.tools.get('eslint')?.settings['adopted']).toStrictEqual(
         expect.arrayContaining([
             expect.objectContaining({ rules: expect.objectContaining({ eqeqeq: expect.anything() }) }),
         ]),
@@ -493,8 +481,8 @@ test('cascading legacy ESLint preserves root resets and directory-relative overr
         new Set(['javascript']),
         [],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map((entry) => entry.path)).toEqual(Object.keys(configs));
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -523,8 +511,7 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
     await createFileTree(directory.path, {
         'package.json': '{"type":"module"}',
         '.eslintignore': 'reviewed/**\n',
-        '.eslintrc.cjs':
-            'require("node:fs").writeFileSync(require("node:path").join(__dirname, ".eslintignore"), "changed/**\\n"); module.exports = {root: true, rules: {eqeqeq: "error"}};',
+        '.eslintrc.cjs': String.raw`require("node:fs").writeFileSync(require("node:path").join(__dirname, ".eslintignore"), "changed/**\n"); module.exports = {root: true, rules: {eqeqeq: "error"}};`,
         'source.js': 'var value = 1;\n',
     });
     symlinkSync(modules, join(directory.path, 'node_modules'));
@@ -562,12 +549,16 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
         new Set(['javascript']),
         ['source.js'],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map((entry) => entry.path).toSorted()).toEqual(['.eslintignore', '.eslintrc.cjs']);
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map((entry) => entry.path).toSorted()).toStrictEqual(['.eslintignore', '.eslintrc.cjs']);
     expect(carried.observed.get('.eslintignore')?.bytes.toString()).toBe('changed/**\n');
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried.tools.get('eslint')!.settings } }),
+        stringify({
+            version: 1,
+            configurations: ['javascript'],
+            tools: { eslint: carried.tools.get('eslint')!.settings },
+        }),
     );
     const generated = emitAll(await openSession(directory.path), carried.observed).files.find(
         (file) => file.path === '.gspot/config/eslint.config.mjs',

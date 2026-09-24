@@ -1,9 +1,9 @@
 // Where a scope keeps what a command names: its own copy of a configuration, and whether the package manager knows it.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
+import { CONFIGURATION_DIRECTORY } from '#cli/platform/layout.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 
-import { CONFIGURATION_DIRECTORY } from '#cli/platform/layout.ts';
 const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
 
 /**
@@ -26,7 +26,7 @@ export function targetInScope(scope: string, config: ConfigurationTarget): strin
  * @returns true for a scope that holds a package.json
  */
 export function isWorkspace(root: string, scope: string): boolean {
-    return scope !== '' && existsSync(join(root, scope, 'package.json'));
+    return scope !== '' && (statSync(join(root, scope, 'package.json'), { throwIfNoEntry: false }) !== undefined);
 }
 
 /**

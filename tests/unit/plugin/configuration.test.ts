@@ -1,9 +1,9 @@
+import { Linter } from 'eslint';
+import { join } from 'node:path';
+import { renameSync } from 'node:fs';
 import plugin from '#plugin/plugin.ts';
 import parser from '@typescript-eslint/parser';
 import { describe, expect, test } from 'bun:test';
-import { Linter } from 'eslint';
-import { renameSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import clientExample from '../../../docs/src/components/home/client-environment.json';
 
@@ -11,8 +11,8 @@ describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {
         const linter = new Linter({ configType: 'flat' });
         const config: object[] = [{ plugins: { gspot: plugin }, rules: { 'gspot/no-client-environment': 'error' } }];
-        expect<unknown>(linter.verify(clientExample.broken, config, { filename: 'search.js' })).toEqual(clientExample.findings);
-        expect(linter.verify(clientExample.corrected, config, { filename: 'search.js' })).toEqual(clientExample.clean);
+        expect<unknown>(linter.verify(clientExample.broken, config, { filename: 'search.js' })).toStrictEqual(clientExample.findings);
+        expect(linter.verify(clientExample.corrected, config, { filename: 'search.js' })).toStrictEqual(clientExample.clean);
     });
 
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {
@@ -31,7 +31,7 @@ describe('the plugin', () => {
                 line: entry.line,
                 column: entry.column,
             })),
-        ).toEqual([{ ruleId: 'gspot/no-trivial-functions', messageId: 'trivial', line: 1, column: 1 }]);
+        ).toStrictEqual([{ ruleId: 'gspot/no-trivial-functions', messageId: 'trivial', line: 1, column: 1 }]);
     });
 });
 
@@ -48,7 +48,7 @@ test.each(['recommended', 'all'] as const)(
         const config: object[] = [{ ...plugin.configs[level], files: ['**/*.ts'], languageOptions: { parser } }];
         const filename = join(sandbox.path, 'feature/only.ts');
         const findings = linter.verify('interface Order { total: number }', config, { filename });
-        if (level === 'recommended') expect(findings).toEqual([]);
+        if (level === 'recommended') expect(findings).toStrictEqual([]);
         else {
             expect(findings.find((finding) => finding.ruleId === 'gspot/no-single-file-folders')).toMatchObject({
                 messageId: 'lone',
@@ -59,7 +59,7 @@ test.each(['recommended', 'all'] as const)(
         }
         const card = join(sandbox.path, 'cards/asset-card.ts');
         const collisions = linter.verify('export const value = 1;', config, { filename: card });
-        if (level === 'recommended') expect(collisions).toEqual([]);
+        if (level === 'recommended') expect(collisions).toStrictEqual([]);
         else {
             expect(collisions.find((finding) => finding.ruleId === 'gspot/no-prefix-collisions')).toMatchObject({
                 messageId: 'collision',
@@ -69,8 +69,8 @@ test.each(['recommended', 'all'] as const)(
         }
         await Bun.write(join(sandbox.path, 'feature/second.ts'), '');
         renameSync(join(sandbox.path, 'cards/asset-list.ts'), join(sandbox.path, 'cards/other.ts'));
-        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename })).toEqual([]);
-        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename: card })).toEqual([]);
+        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename })).toStrictEqual([]);
+        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename: card })).toStrictEqual([]);
     },
 );
 
@@ -88,7 +88,7 @@ test.each(['recommended', 'all'] as const)(
             alias
                 .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
                 .map(({ line, column, messageId }) => ({ line, column, messageId })),
-        ).toEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
+        ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
         const defect = linter.verify("'use client';\nexport const value = process.env.SECRET;", config, {
             filename: join(sandbox.path, 'example.js'),
         });
@@ -98,6 +98,6 @@ test.each(['recommended', 'all'] as const)(
         const corrected = linter.verify("'use client';\nexport const value = 'public';", config, {
             filename: join(sandbox.path, 'example.js'),
         });
-        expect(corrected).toEqual([]);
+        expect(corrected).toStrictEqual([]);
     },
 );

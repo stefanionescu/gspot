@@ -2,8 +2,6 @@
 export const CONFIGURATION_DIRECTORY = '.gspot/config';
 export const STATE_DIRECTORY = '.gspot/state';
 export const OWNERSHIP_FILE = `${STATE_DIRECTORY}/ownership.json`;
-export const WRITER_LOCK = `${STATE_DIRECTORY}/writer.lock`;
-export const RECOVERY_DIRECTORY = `${STATE_DIRECTORY}/recovery`;
 export const REPORT_DIRECTORY = '.gspot/reports';
 export const CACHE_DIRECTORY = '.gspot/cache';
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';

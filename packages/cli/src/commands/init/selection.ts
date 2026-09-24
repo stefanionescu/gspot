@@ -1,13 +1,13 @@
+import { nearMatches } from '#cli/policy/near.ts';
+import * as messages from '#cli/policy/messages.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { ConfigurationReason } from '#cli/types/ownership.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import type { ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
 // What init selects: configurations at the root and per scope from detection and flags, then the closure of requires.
 import type { InitContext, InitInputs, InitSelection } from '#cli/commands/init/types.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import type { ConfigurationReason } from '#cli/types/ownership.ts';
-import type { ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
 
 const NO_CONFIGURATIONS = 'none';
 

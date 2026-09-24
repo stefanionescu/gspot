@@ -1,12 +1,13 @@
+import { createFileTree } from 'testdirs';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import { createFileTree } from 'testdirs';
 
 /** Select source files for an isolated site build owned by the test resource stack. */
 export async function siteInput(root: string, paths: string[], resources: DisposableStack): Promise<EngineInput> {
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml':
+            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
     });
     const session = await openSession(root);
     session.resources = resources;

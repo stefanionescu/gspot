@@ -1,10 +1,10 @@
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 
 function git(root: string, ...argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -46,8 +46,8 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
     const selected = await run(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = reportSchema.parse(JSON.parse(selected.stdout));
-    expect(report.comparison).toEqual({ content: 'working-tree', reference: 'refs/heads/base' });
-    expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toEqual([
+    expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
+    expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
     const explicit = await run(sandbox.path, ['check', '--changed=base', '--json']);
@@ -57,9 +57,9 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
         all.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
-    ).toEqual(['api/source.txt', 'web/source.txt']);
+    ).toStrictEqual(['api/source.txt', 'web/source.txt']);
     const saved = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-    expect(saved.comparison).toEqual(all.comparison);
+    expect(saved.comparison).toStrictEqual(all.comparison);
     const invalid = await run(sandbox.path, ['check', '--changed=missing-ref', '--json']);
     expect(invalid.code).toBe(2);
     expect((JSON.parse(invalid.stdout) as { message: string }).message).toContain('Git merge-base failed');

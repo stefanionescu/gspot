@@ -1,18 +1,20 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import type { MergedView } from '#cli/types/policy.ts';
-import { commandConfigurations, perFileCommands, substitute, substituteValue } from '#cli/run/command-expansion.ts';
+import { isAbsolute, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
 import { TOOL_DEADLINE } from '#cli/run/settings.ts';
+import type { MergedView } from '#cli/types/policy.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
+import { ToolOutputError } from '#cli/run/parse-output.ts';
+import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import type { CheckResult, Finding } from '#cli/types/reports.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/run/broken-tool.ts';
-import { fileBatches } from '#cli/run/file-batches.ts';
-import { createFileWorkspace } from '#cli/run/file-workspace.ts';
-import { ToolOutputError } from '#cli/run/parse-output.ts';
+import { commandConfigurations, perFileCommands, substitute, substituteValue } from '#cli/run/command-expansion.ts';
+
 import type {
     EngineInput,
     PlannedCheck,
@@ -21,14 +23,16 @@ import type {
     Substitutions,
     ToolInvocation,
 } from '#cli/types/execution.ts';
-import { isAbsolute, join } from 'node:path';
 /** What one tool run accumulates across its spawns. */
 type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 const FILES_PLACEHOLDER = '{files}';
 const MILLISECONDS = 1000;
-/** Resolve the shared deadline for checks, adapters, corrections, and installation commands. */
+/**
+ * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
+ * @param view
+ */
 export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
     return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
 }
@@ -41,6 +45,7 @@ function firstLine(result: SpawnResult, placeholder: string): string {
         placeholder
     );
 }
+
 function missingNote(
     tool: ToolPin,
     probe: {
@@ -56,32 +61,38 @@ function missingNote(
         ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. ${hint}`
         : `${tool.name}${version} is not installed. ${hint}`;
 }
+
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
     const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
 }
+
 function relativizer(session: Session, planned: PlannedCheck, cwd: string): (path: string) => string {
     const scopePath = planned.scope.scope.path;
     if (scopePath === '' || cwd === session.root) return (path) => path;
     return (path) => path.slice(scopePath.length + 1);
 }
+
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)
         if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
             finding.file = `${scopePath}/${finding.file}`;
 }
+
 function countMatches(spec: CheckSpec, result: SpawnResult): number {
     if (spec.count_regex === undefined) return 0;
     const pattern = new RegExp(spec.count_regex, 'gu');
     return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
 }
+
 function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
     const text = file === undefined ? toolOutputDetail(result, placeholder) : firstLine(result, placeholder);
     const { name, help } = spec;
     return { check: name, file: file?.replaceAll('\\', '/') ?? '', message: text, help, fixable: false };
 }
+
 function markFailure(
     spec: CheckSpec,
     tool: ToolPin,
@@ -97,6 +108,7 @@ function markFailure(
     state.isFailed = true;
     if (parsed.length === 0) state.findings.push(unexplainedFailure(spec, tool, result, undefined));
 }
+
 function collect(
     planned: PlannedCheck,
     invocation: ToolInvocation,
@@ -115,6 +127,7 @@ function collect(
     state.findings.push(...parsed);
     markFailure(spec, tool, result, parsed, state);
 }
+
 function batchedCommands(
     session: Session,
     planned: PlannedCheck,
@@ -134,6 +147,7 @@ function batchedCommands(
         return perFileCommands(argv, files);
     });
 }
+
 function finished(
     base: CheckResult,
     spec: CheckSpec,
@@ -149,6 +163,7 @@ function finished(
     const status = state.isFailed || findings.length > 0 ? 'fail' : 'ok';
     return { ...base, status, duration: performance.now() - started, findings, command: argv };
 }
+
 async function runCommands(
     session: Session,
     planned: PlannedCheck,

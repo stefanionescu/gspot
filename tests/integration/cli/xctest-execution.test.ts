@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { buildFolder } from '#cli/platform/paths.ts';
-import { rmSync, chmodSync, existsSync, writeFileSync, readFileSync, mkdirSync, symlinkSync } from 'node:fs';
-import { afterEach, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { afterEach, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { buildFolder } from '#cli/platform/paths.ts';
+import { rmSync, chmodSync, existsSync, writeFileSync, readFileSync, mkdirSync, symlinkSync } from 'node:fs';
 
 const caches = new Set<string>();
 afterEach(() => {

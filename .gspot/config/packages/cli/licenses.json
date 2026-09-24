@@ -16,6 +16,21 @@
     ],
     "packages_allowed": [
         {
+            "package": "@csstools/selector-specificity@5.0.0",
+            "license": "MIT-0",
+            "reason": "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
+        },
+        {
+            "package": "@fontsource-variable/geist@5.3.0",
+            "license": "OFL-1.1",
+            "reason": "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
+        },
+        {
+            "package": "@fontsource-variable/geist-mono@5.3.0",
+            "license": "OFL-1.1",
+            "reason": "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
+        },
+        {
             "package": "eslint-plugin-sonarjs@4.2.0",
             "license": "LGPL-3.0-only",
             "reason": "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."

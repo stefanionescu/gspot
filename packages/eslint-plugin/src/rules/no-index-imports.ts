@@ -1,6 +1,6 @@
-import { createRule } from '#plugin/rules/definition.ts';
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '#plugin/rules/definition.ts';
 // An import path that names an index file or a barrel.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';

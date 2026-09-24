@@ -1,13 +1,18 @@
-import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
-import type { OwnershipState } from '#cli/types/ownership.ts';
 import { createHash } from 'node:crypto';
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import type { OwnershipState } from '#cli/types/ownership.ts';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
 
-/** Translate only validated journal fields; filenames alone never establish ownership. */
+/**
+ * Translate only validated journal fields; filenames alone never establish ownership.
+ * @param record
+ * @param prefix
+ * @param stateDirectory
+ */
 export function legacyOwnership(
     record: FileSnapshot,
     prefix: string,
@@ -31,7 +36,11 @@ export function legacyOwnership(
     return ownershipSchema.parse(state);
 }
 
-/** Merge a resumed conversion only when duplicated records agree exactly. */
+/**
+ * Merge a resumed conversion only when duplicated records agree exactly.
+ * @param current
+ * @param legacy
+ */
 export function mergeOwnership(current: OwnershipState, legacy: OwnershipState): OwnershipState {
     const files = new Map(current.files.map((entry) => [entry.path, entry]));
     for (const entry of legacy.files) {
@@ -56,7 +65,12 @@ export function mergeOwnership(current: OwnershipState, legacy: OwnershipState):
     });
 }
 
-/** Convert repository and formerly nested hook journals under both old and new writer locks. */
+/**
+ * Convert repository and formerly nested hook journals under both old and new writer locks.
+ * @param files
+ * @param root
+ * @param stateDirectory
+ */
 export function migrateState(files: ConfinedRoot, root: string, stateDirectory = STATE_DIRECTORY): string[] {
     const converted: string[] = [];
     const OWNERSHIP_FILE = `${stateDirectory}/ownership.json`;
@@ -132,7 +146,10 @@ export function migrateState(files: ConfinedRoot, root: string, stateDirectory =
     return converted;
 }
 
-/** Resolve the old hook writer boundary from Git instead of searching for journal filenames. */
+/**
+ * Resolve the old hook writer boundary from Git instead of searching for journal filenames.
+ * @param root
+ */
 export function legacyPrefixes(root: string): string[] {
     const prefixes = new Set(['', '.gspot']);
     const repository = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: root });

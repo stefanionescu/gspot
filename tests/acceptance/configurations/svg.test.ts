@@ -1,9 +1,9 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { install } from '#tests/support/cli/tools.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { install } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test(
     'native SVG byte savings use the selected level and exact file inputs',
@@ -39,7 +39,7 @@ test(
         await Bun.write(join(root, 'icon.svg'), native.stdout + ' '.repeat(Buffer.byteLength(native.stdout)));
         const large = await run(root, command);
         expect(large.code, large.stdout + large.stderr).toBe(1);
-        expect(JSON.parse(large.stdout).checks[0].findings).toEqual([
+        expect(JSON.parse(large.stdout).checks[0].findings).toStrictEqual([
             expect.objectContaining({ file: 'icon.svg', rule: 'svg' }),
         ]);
         await Bun.write(join(root, 'icon.svg'), `${native.stdout} `);

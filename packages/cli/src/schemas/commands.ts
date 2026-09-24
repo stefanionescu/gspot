@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Nonzero statuses documented by a correction tool as remaining source findings. */
+/** Nonzero statuses documented by a checker or correction tool as source findings. */
 export const findingExitCodesSchema = z.array(z.number().int().min(1).max(255));
 
 /** Argument vectors require an executable and preserve empty arguments after it. */

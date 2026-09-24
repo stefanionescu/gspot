@@ -1,14 +1,14 @@
-import { readSource } from '#cli/repository/tracked.ts';
-import { join, posix } from 'node:path';
 // nginx -t in a container over every main configuration file.
 import { tmpdir } from 'node:os';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput, EngineOutcome } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
+import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
+import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
+import type { EngineInput, EngineOutcome } from '#cli/types/execution.ts';
 
 const MAIN_FILE = 'nginx.conf';
 const DEFAULT_IMAGE = 'nginx:stable-alpine';
@@ -22,7 +22,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     for (const entry of pending) {
         if (configurations.has(entry.target)) continue;
         const source = join(directory, `${String(configurations.size)}.conf`);
-        const bytes = readSource(input.root, entry.path);
+        const bytes = readSource(input.root, entry.path, input.observations);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });

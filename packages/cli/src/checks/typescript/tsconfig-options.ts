@@ -1,10 +1,10 @@
 // Are the required compiler options on in every tsconfig the scope's TypeScript files belong to?
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import type { CompilerOptions } from 'typescript';
-import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
 function isTsconfigName(path: string): boolean {
     const name = path.slice(path.lastIndexOf('/') + 1);
@@ -35,7 +35,7 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
         scopeTsconfig,
         ...input.files.map((file) => file.path).filter((path) => isTsconfigName(path)),
     ]);
-    const findings = [...candidates].flatMap((path) => {
+    return [...candidates].flatMap((path) => {
         const parsed = getTsconfig(input.root, join(input.root, path));
         if (parsed !== undefined) return missingOptions(input, path, parsed.options);
         if (path !== scopeTsconfig) return [];
@@ -49,5 +49,4 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
             },
         ];
     });
-    return findings;
 }

@@ -88,6 +88,7 @@ stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
 fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
 fix_order = "codemod"
+findings_exit_codes = [2]
 fix_findings_exit_codes = [2]
 coverage = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}

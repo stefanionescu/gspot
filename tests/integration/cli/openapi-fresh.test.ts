@@ -1,11 +1,11 @@
-import { openapiFresh } from '#cli/checks/express/openapi.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { openapiFresh } from '#cli/checks/express/openapi.ts';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const POLICY =
     'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\\"\\\" \\\"two words\\\""\n';
@@ -45,7 +45,7 @@ for (const isFailure of [false, true]) {
         });
         if (isFailure) await expect(openapiFresh(input)).rejects.toThrow('Generation failed');
         else {
-            expect(await openapiFresh(input)).toEqual([
+            expect(await openapiFresh(input)).toStrictEqual([
                 {
                     check: spec.name,
                     file: 'openapi.json',
@@ -56,7 +56,7 @@ for (const isFailure of [false, true]) {
                 },
             ]);
             writeFileSync(join(directory.path, 'schema.json'), edited);
-            expect(await openapiFresh(input)).toEqual([]);
+            expect(await openapiFresh(input)).toStrictEqual([]);
         }
         expect(readFileSync(document, 'utf8')).toBe(edited);
         expect(statSync(document).mode).toBe(mode);

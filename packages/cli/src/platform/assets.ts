@@ -3,7 +3,7 @@ import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { GRAMMAR_SOURCES } from '#cli/parsers/grammars.ts';
 
 type EmbeddedIndex = Record<string, string>;
@@ -18,7 +18,7 @@ const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: stri
 function findRepoRoot(): string {
     let dir = dirname(fileURLToPath(new URL(import.meta.url)));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
-        if (existsSync(join(dir, 'packages/cli/configurations')) && existsSync(join(dir, 'packages'))) return dir;
+        if ((statSync(join(dir, 'packages/cli/configurations'), { throwIfNoEntry: false }) !== undefined) && (statSync(join(dir, 'packages'), { throwIfNoEntry: false }) !== undefined)) return dir;
         dir = dirname(dir);
     }
     throw new Error('The configurations folder is not beside the source tree.');
@@ -77,10 +77,10 @@ export function grammarPath(name: string): string {
     const root = developmentRoot();
     const vendored = join(root, 'packages', 'cli', 'grammars', name);
     const source = GRAMMAR_SOURCES[name];
-    if (source === undefined && existsSync(vendored)) return vendored;
+    if (source === undefined && (statSync(vendored, { throwIfNoEntry: false }) !== undefined)) return vendored;
     if (source === undefined) throw new Error(`No grammar is called ${name}.`);
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
-    const found = candidates.find((candidate) => existsSync(candidate));
+    const found = candidates.find((candidate) => (statSync(candidate, { throwIfNoEntry: false }) !== undefined));
     if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);
     return found;
 }
@@ -97,7 +97,7 @@ export function listAssets(prefix: string): string[] {
             .filter((key) => key.startsWith(prefix))
             .toSorted((a, b) => a.localeCompare(b));
     const dir = join(developmentRoot(), prefix);
-    if (!existsSync(dir)) return [];
+    if (!(statSync(dir, { throwIfNoEntry: false }) !== undefined)) return [];
     return globbySync('**/*', { cwd: dir, dot: true })
         .map((path) => toPosix(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));

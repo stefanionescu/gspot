@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { hasPackages } from '#cli/prose/vale.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();

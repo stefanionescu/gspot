@@ -9,7 +9,7 @@ boundaries, declaration order, and file organization. The plugin runs without th
 to install it in a disposable project. Local package builds do not establish npm availability.
 The plugin requires ESLint 9.38.0 or newer.
 
-## Configure ESLint
+## ESLint setup
 
 Add the recommended flat configuration to `eslint.config.mjs`:
 

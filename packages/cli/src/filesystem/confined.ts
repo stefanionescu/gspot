@@ -1,7 +1,11 @@
+import { randomUUID } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/repository/patterns.ts';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
-import { randomUUID } from 'node:crypto';
+import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
+
 import {
+    type Stats,
     chmodSync,
     closeSync,
     fchmodSync,
@@ -20,12 +24,14 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
 
 const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 
-/** Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag. */
+/**
+ * Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag.
+ * @param file
+ * @param platform
+ */
 export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
     if (file.isLink || (file.mode & 0o200) !== 0) return 0o666;
@@ -39,7 +45,10 @@ function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot |
     return isDeepStrictEqual(observed, requested);
 }
 
-/** Reject path spellings that have different meanings on supported operating systems. */
+/**
+ * Reject path spellings that have different meanings on supported operating systems.
+ * @param path
+ */
 export function mutationPath(path: string): string[] {
     const parts = path.split('/');
     if (
@@ -48,7 +57,7 @@ export function mutationPath(path: string): string[] {
                 part === '' ||
                 part === '.' ||
                 part === '..' ||
-                /[\\:<>"|?*\u0000-\u001f\u007f]/u.test(part) ||
+                /[\\:<>"|?*\u0000-\u001F\u007F]/u.test(part) ||
                 /[. ]$/u.test(part) ||
                 DEVICE_NAME.test(part),
         )
@@ -58,7 +67,10 @@ export function mutationPath(path: string): string[] {
     return parts;
 }
 
-/** Snapshot names reject path traversal and null bytes. */
+/**
+ * Snapshot names reject path traversal and null bytes.
+ * @param path
+ */
 function nativePath(path: string): string[] {
     if (process.platform === 'win32') return mutationPath(path);
     const parts = path.split('/');
@@ -73,13 +85,20 @@ function privateTarget(path: string): void {
     }
 }
 
-/** Public mutation proposals cannot target the owner's journal, lock, or recovery files. */
+/**
+ * Public mutation proposals cannot target the owner's journal, lock, or recovery files.
+ * @param path
+ */
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);
 }
 
-/** Check paths before each operation. Concurrent hostile directory replacement is outside this contract. */
+/**
+ * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
+ * @param root
+ * @param pathFormat
+ */
 export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native' = 'portable'): ConfinedRoot {
     const canonical = realpathSync(root);
     const partsOf = pathFormat === 'portable' ? mutationPath : nativePath;
@@ -90,14 +109,18 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         let directory = canonical;
         for (const part of parts) {
             directory = join(directory, part);
-            if (create) {
+            let stat: Stats;
+            try {
+                stat = lstatSync(directory);
+            } catch (error) {
+                if (!create || (error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
                 try {
                     mkdirSync(directory);
-                } catch (error) {
-                    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+                } catch (creationError) {
+                    if ((creationError as NodeJS.ErrnoException).code !== 'EEXIST') throw creationError;
                 }
+                stat = lstatSync(directory);
             }
-            const stat = lstatSync(directory);
             if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle parent: ${path}`);
         }
         return join(directory, leaf);
@@ -136,7 +159,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             !Buffer.from(target).equals(value.bytes) ||
             target === '' ||
             target.startsWith('/') ||
-            (pathFormat === 'portable' ? /[\\:\u0000-\u001f\u007f]/u.test(target) : target.includes('\0'))
+            (pathFormat === 'portable' ? /[\\:\u0000-\u001F\u007F]/u.test(target) : target.includes('\0'))
         )
             throw new Error(`Unsafe lifecycle link target: ${path}`);
         const destination = posix.join(posix.dirname(path), target);
@@ -156,11 +179,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         let staged = false;
         let removed = false;
         try {
-            if (link !== undefined) {
-                symlinkSync(link, temporary);
-                staged = true;
-                if (process.platform === 'darwin') lchmodSync(temporary, value.mode);
-            } else {
+            if (link === undefined) {
                 const file = openSync(temporary, 'wx', 0o600);
                 staged = true;
                 try {
@@ -170,6 +189,10 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
                 } finally {
                     closeSync(file);
                 }
+            } else {
+                symlinkSync(link, temporary);
+                staged = true;
+                if (process.platform === 'darwin') lchmodSync(temporary, value.mode);
             }
             if (!sameSnapshot(readEntry(path, expected?.isLink === true), expected))
                 throw new Error(`Lifecycle destination changed during the operation: ${path}`);
@@ -267,7 +290,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
                     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
                 }
                 const current = readEntry(path, false);
-                const pid = Number(current?.bytes.toString('utf8').split(':')[0]);
+                const pid = Number(current?.bytes.toString('utf8').split(':', 1)[0]);
                 if (!Number.isSafeInteger(pid) || pid <= 0)
                     throw new Error(
                         `Incomplete lifecycle lock: ${path}. Remove it after checking that no writer is running.`,

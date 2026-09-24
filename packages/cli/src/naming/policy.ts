@@ -1,8 +1,8 @@
-import { CATEGORY_PARENTS } from '#cli/naming/categories.ts';
 import { compileTerms } from '#cli/naming/match.ts';
 // The shipped policy plus [naming] in gspot.toml: terms, exemptions, rules and the per-language ceilings and cases.
 import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
+import { CATEGORY_PARENTS } from '#cli/naming/categories.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
 import type { NamingSettings, NamingRule, Policy, ExposedSettings } from '#cli/types/policy.ts';
 

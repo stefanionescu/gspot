@@ -41,15 +41,13 @@ export type RunnerTaskNames = z.infer<typeof runnerTasksSchema>;
 export const runnerSchema = z
     .strictObject({
         tool: z
-            .enum(['mise', 'npm', 'bun', 'pnpm', 'yarn', 'uv'])
+            .enum(['mise', 'npm', 'bun', 'pnpm', 'yarn'])
             .describe('The runner that receives generated tasks.'),
         tasks: runnerTasksSchema
             .optional()
             .describe('Accepted names for generated check, fix, apply, and doctor tasks.'),
     })
     .superRefine((runner, context) => {
-        if (runner.tool === 'uv' && Object.keys(runner.tasks ?? {}).length > 0)
-            context.addIssue({ code: 'custom', path: ['tasks'], message: 'uv does not support task mappings.' });
         if (runner.tool !== 'mise')
             for (const [task, name] of Object.entries(runner.tasks ?? {}))
                 if (name !== undefined && PACKAGE_LIFECYCLE.has(name))

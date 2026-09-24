@@ -1,8 +1,8 @@
 // The string files and the asset folders of a project: every string has every locale, and every image set has an image that exists and that code names.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { statSync } from 'node:fs';
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
@@ -12,8 +12,9 @@ const NAMED_SETS = ['.imageset/Contents.json', '.colorset/Contents.json'];
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
+    const text = textOf(input, path);
     try {
-        return { value: JSON.parse(textOf(input, path)) as unknown, error: undefined };
+        return { value: JSON.parse(text) as unknown, error: undefined };
     } catch (error) {
         return { value: undefined, error: error instanceof Error ? error.message : 'The file is not JSON.' };
     }
@@ -59,12 +60,12 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
     if (names.length === 0) return [xcodeFinding(input, at, 'empty-set', 'This image set names no image file.')];
     const folder = path.slice(0, path.lastIndexOf('/'));
     return names
-        .filter((name) => !existsSync(join(input.root, folder, name)))
+        .filter((name) => !(statSync(join(input.root, folder, name), { throwIfNoEntry: false }) !== undefined))
         .map((name) => xcodeFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
 }
 
 function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
-    if (input.view.tool('xcode')['orphan_assets'] === false) return [];
+    if (input.policyFiles.policy.level !== 'all') return [];
     const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) => textOf(input, path));
     return sets
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))

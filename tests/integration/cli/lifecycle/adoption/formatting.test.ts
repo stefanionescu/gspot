@@ -1,24 +1,14 @@
-import { join } from 'node:path';
-
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-
-import { expect, test } from 'bun:test';
-
-import { createFileTree, testdir } from 'testdirs';
-
-import { stringify } from 'smol-toml';
-
 import prettier from 'prettier';
-
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
-
-import { evaluateFormat } from '#cli/evaluation/format.ts';
-
-import { openSession } from '#cli/run/session.ts';
-
+import { join } from 'node:path';
+import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { evaluateFormat } from '#cli/evaluation/format.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 
@@ -35,7 +25,7 @@ test('Prettier adoption preserves override selectors for new files', async () =>
         from: '.prettierrc.json',
         source,
     });
-    expect(carried.extra?.['overrides']).toEqual(source.overrides);
+    expect(carried.extra?.['overrides']).toStrictEqual(source.overrides);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -88,8 +78,8 @@ test('nested Prettier configurations reset parent options and preserve ordered f
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toEqual(Object.keys(configs));
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map(({ path }) => path)).toStrictEqual(Object.keys(configs));
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -196,8 +186,8 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toEqual(['.prettierrc.json', '.prettierignore']);
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['.prettierrc.json', '.prettierignore']);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -280,8 +270,8 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map((entry) => entry.path)).toEqual(Object.keys(configs));
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -292,14 +282,14 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
     );
     const generated = emitAll(await openSession(directory.path), carried.observed);
     const editors = generated.files.filter((file) => file.path.endsWith('.editorconfig'));
-    expect(editors.map((file) => file.path).sort()).toEqual(Object.keys(configs).sort());
+    expect(editors.map((file) => file.path).sort()).toStrictEqual(Object.keys(configs).sort());
     for (const file of editors) writeFileSync(join(directory.path, file.path), file.content);
     const after = await Promise.all(
         paths.map((path) =>
             prettier.resolveConfig(join(directory.path, path), { editorconfig: true, useCache: false }),
         ),
     );
-    expect(after).toEqual(before);
+    expect(after).toStrictEqual(before);
     expect(after[1]).toMatchObject({ tabWidth: 3 });
     expect(after[3]).toMatchObject({ tabWidth: 5, useTabs: true });
 });
@@ -355,7 +345,7 @@ test('combined formatter adoption preserves EditorConfig precedence and nested p
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toEqual([]);
+    expect(carried.unread).toStrictEqual([]);
     expect(carried.formatter?.nativeDefaults).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),

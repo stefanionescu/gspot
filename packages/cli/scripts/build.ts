@@ -4,11 +4,11 @@ import { globbySync } from 'globby';
 import { familySync } from 'detect-libc';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
-import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { grammarPath } from '#cli/platform/assets.ts';
 import { GRAMMAR_SOURCES } from '#cli/parsers/grammars.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { binaryNotices, dependencyNotices } from './notices.ts';
+import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
 import { existsSync, mkdirSync, rmSync, writeFileSync, copyFileSync } from 'node:fs';
 

@@ -1,9 +1,9 @@
 import { join, sep } from 'node:path';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { normalizePath, readDirectory } from '#plugin/files.ts';
-import { describe, expect, test } from 'bun:test';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 
 describe('plugin file paths', () => {
     test('a file URL resolves the original file through spaces, percent signs, and Unicode', async () => {
@@ -22,10 +22,10 @@ test('directory inspection propagates a missing path and observes files after co
     const path = join(directory.path, 'source');
     expect(() => readDirectory(path)).toThrow();
     mkdirSync(path);
-    expect(readDirectory(path)).toEqual([]);
+    expect(readDirectory(path)).toStrictEqual([]);
     writeFileSync(join(path, 'source.ts'), 'export const value = 1;\n');
     mkdirSync(join(path, 'nested'));
-    expect(readDirectory(path)).toEqual([
+    expect(readDirectory(path)).toStrictEqual([
         { name: 'nested', kind: 'dir' },
         { name: 'source.ts', kind: 'file' },
     ]);
@@ -36,5 +36,5 @@ test('directory inspection refuses a regular file instead of returning no entrie
     const path = join(directory.path, 'source.ts');
     writeFileSync(path, 'export const value = 1;\n');
     expect(() => readDirectory(path)).toThrow();
-    expect(readDirectory(directory.path)).toEqual([{ name: 'source.ts', kind: 'file' }]);
+    expect(readDirectory(directory.path)).toStrictEqual([{ name: 'source.ts', kind: 'file' }]);
 });

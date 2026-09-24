@@ -1,7 +1,12 @@
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { trivialFile } from '#cli/structure/statements.ts';
 import type { Analysis } from '#cli/types/structure.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { trivialFile } from '#cli/structure/statements.ts';
 
+/**
+ *
+ * @param context
+ * @param scripts
+ */
 export const trivialFunction: Analysis = async (context, scripts) => {
     const threshold = context.limit('trivial_statements', 'bash') ?? 2;
     const index = await scripts();
@@ -19,9 +24,8 @@ export const trivialFunction: Analysis = async (context, scripts) => {
                 : [],
         ),
     );
-    const parser = await parserFor('bash');
     for (const file of index.files) {
-        const tree = parser.parse(file.text);
+        const tree = await parseSource('bash', file.text, context.input);
         if (tree === null) throw new Error(`Cannot parse Bash source ${file.path}.`);
         try {
             if (trivialFile(tree.rootNode, 'bash', threshold))

@@ -1,5 +1,17 @@
 #!/bin/bash
-# macOS and Linux, Bash 3.2 or later. Resolve source without changing the caller directory.
+#
+# Run the source CLI without changing the caller directory.
+# Runtime: Bash 3.2+, macOS and Linux.
 set -euo pipefail
-source_root="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
-exec bun "${source_root}/packages/cli/src/main.ts" "$@"
+
+main() {
+    local source_root
+    source_root="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)" || return 2
+    if ! command -v bun >/dev/null 2>&1; then
+        printf '%s\n' 'Bun is unavailable. Run mise install before using the source CLI.' >&2
+        return 2
+    fi
+    exec bun "${source_root}/packages/cli/src/main.ts" "$@"
+}
+
+main "$@"

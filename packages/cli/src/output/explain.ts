@@ -1,17 +1,17 @@
 // Explain a check, tool rule, configuration, setting, or file path.
 import { explainPath } from '#cli/output/file.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { probeTool } from '#cli/tools/tool-probe.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
-import type { ResolvedSetting } from '#cli/types/policy.ts';
-import { allChecks, toRow } from '#cli/configurations/listing.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { repositoryCheckSpec } from '#cli/run/plan.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import type { Session } from '#cli/types/execution.ts';
+import type { ResolvedSetting } from '#cli/types/policy.ts';
+import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { allChecks, toRow } from '#cli/configurations/listing.ts';
+import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;
@@ -53,7 +53,9 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
 };
 
 function isSelected(session: Session, configurationName: string): boolean {
-    return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.configuration.name === configurationName));
+    return session.scopes.some((scope) =>
+        scope.selected.some((manifest) => manifest.configuration.name === configurationName),
+    );
 }
 
 function checkExplanation(session: Session | undefined, checkName: string): Explanation | undefined {
@@ -68,7 +70,8 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
     const rules = Object.values(configuration?.rule_files ?? {}).flat();
-    const owner = configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`;
+    const owner =
+        configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`;
     const lines = [
         `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -103,7 +106,9 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         text: `${lines.join('\n')}\n`,
         data: {
             check: checkName,
-            ...(configuration === undefined ? { command: own?.command, paths: own?.paths } : { configuration: configuration.configuration.name }),
+            ...(configuration === undefined
+                ? { command: own?.command, paths: own?.paths }
+                : { configuration: configuration.configuration.name }),
             stage,
             level: check.level,
             summary,
@@ -175,7 +180,10 @@ function configurationExplanation(configurationName: string): Explanation | { er
     const manifest = configurationManifests().get(configurationName);
     if (!manifest)
         return {
-            error: messages.unknownConfiguration(configurationName, nearMatches(configurationName, configurationManifests().keys().toArray())),
+            error: messages.unknownConfiguration(
+                configurationName,
+                nearMatches(configurationName, configurationManifests().keys().toArray()),
+            ),
         };
     const row = toRow(manifest);
     const { detect, claims } = manifest;
@@ -279,7 +287,7 @@ function explainSlashed(session: Session | undefined, subject: string): Explanat
 function explainDotted(session: Session | undefined, subject: string): Explanation | { error: string } {
     const setting = settingExplanation(session, subject);
     if (setting) return setting;
-    const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]) ?? [])];
+    const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]))];
     return { error: messages.settingNotExposed(subject, nearMatches(subject, known)) };
 }
 

@@ -1,17 +1,17 @@
 // Planted repository for the markdown, docs and prose configurations: every check fires on its planted defect.
 
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Copy the installed Vale packages so the fixture has private offline styles.
 import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'config', 'vale', 'styles');
@@ -142,7 +142,9 @@ describe('the markdown, docs and prose configurations', () => {
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text()) as RunReport;
+                const report = JSON.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text(),
+                ) as RunReport;
                 const result = report.checks.find((entry) => entry.check === planted.check);
                 expect(result?.status, outcome.stdout).toBe('fail');
                 const finding = result?.findings.find(
@@ -164,7 +166,9 @@ describe('the markdown, docs and prose configurations', () => {
                 const skipped = await run(sandbox.path, ['check', '--only', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');
             }
-            rmSync(join(sandbox.path, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), { recursive: true });
+            rmSync(join(sandbox.path, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
+                recursive: true,
+            });
             const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
             expect(broken.stdout).toContain('error');

@@ -1,15 +1,15 @@
-import { commandArguments } from '#cli/policy/settings.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { createHash } from 'node:crypto';
 // The build of a static site: run once for each scope in a session, because every output check reads the same folder.
 import { join, relative } from 'node:path';
-import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { createHash } from 'node:crypto';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { scratchCopy } from '#cli/run/fixers.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { rmSync, statSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
+import { commandArguments } from '#cli/policy/settings.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
-import { existsSync, rmSync, statSync } from 'node:fs';
+import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 /** The output of one isolated static-site build. */
 export type SiteBuild = {
@@ -39,7 +39,9 @@ async function built(input: EngineInput): Promise<SiteBuild> {
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
     );
-    input.resources.defer(() => rmSync(scratch, { recursive: true, force: true }));
+    input.resources.defer(() => {
+        rmSync(scratch, { recursive: true, force: true });
+    });
     const cwd = join(scratch, input.scope);
     const command = text(input, 'build', DEFAULT_BUILD);
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
@@ -68,7 +70,7 @@ function digests(folder: string): Map<string, string> {
  * @returns the relative paths
  */
 export function filesUnder(folder: string): string[] {
-    if (!existsSync(folder)) return [];
+    if (!(statSync(folder, { throwIfNoEntry: false }) !== undefined)) return [];
     const files = openConfinedRoot(folder, 'native');
     const found: string[] = [];
     const directories = [''];
@@ -94,8 +96,8 @@ export function filesUnder(folder: string): string[] {
  */
 export function siteBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
-    const scopeBuilds = builds.get(input.runKey) ?? new Map<string, Promise<SiteBuild>>();
-    builds.set(input.runKey, scopeBuilds);
+    const scopeBuilds = builds.get(input.observations) ?? new Map<string, Promise<SiteBuild>>();
+    builds.set(input.observations, scopeBuilds);
     const running = scopeBuilds.get(key) ?? built(input);
     scopeBuilds.set(key, running);
     return running;

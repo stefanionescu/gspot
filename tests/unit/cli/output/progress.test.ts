@@ -38,7 +38,7 @@ test('quiet terminal progress hides successful checks but retains execution erro
         findings: [],
     };
     report(result);
-    expect(lines).toEqual([]);
+    expect(lines).toStrictEqual([]);
     report({ ...result, status: 'error' });
-    expect(lines).toEqual(['root  example/check  error\n']);
+    expect(lines).toStrictEqual(['root  example/check  error\n']);
 });

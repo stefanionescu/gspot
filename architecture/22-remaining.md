@@ -13,7 +13,7 @@ Current verification and remaining failures are consolidated under
 [Guides and site acceptance](#guides-and-site-acceptance), and
 [Packaging and installed-product acceptance](#packaging-and-installed-product-acceptance).
 Those dispositions supersede earlier aggregate totals and audit/capture limitations.
-Complete per-example execution, download-blocked journeys, assistive-technology review, and
+Complete per-example execution, download-blocked journeys, and
 unavailable native-platform evidence remain open. The Sweet spot continuation below records
 the SQLFluff lifecycle repair and the current rendered verification.
 Updating architecture does not close those product requirements. The cleanup continuation below
@@ -149,7 +149,7 @@ at all four sizes. Search finds readable titles and exact IDs in content. Mobile
 visible keyboard focus, copy feedback, theme persistence, 200% browser zoom, reduced motion,
 and content with JavaScript disabled were exercised. Reduced-motion emulation reports no active
 animations. README artwork was reviewed in a local HTML presentation of the authored images;
-this does not establish GitHub rendering or assistive-technology acceptance. The local review
+this does not establish GitHub rendering. The local review
 server and browser tab were stopped after inspection.
 
 Source acceptance completed before release verification. The full run reported 227 passes and
@@ -225,7 +225,7 @@ visible keyboard focus, mobile navigation, copy success feedback, and theme pers
 Reduced-motion emulation reported zero transition duration; sandboxed pages without scripts
 retained readable content, code, and navigation links. Root README artwork and wrapping tool
 cards were inspected in light and dark local renders. This is local browser evidence, not a
-screen-reader audit or proof of every native platform. Earlier K-149 evidence and K-222's
+proof of every native platform. Earlier K-149 evidence and K-222's
 outstanding verification remain unchanged.
 
 ## Development readiness and next work
@@ -239,12 +239,12 @@ their owning behavior; this is not a claim that every remaining implementation i
 The next non-lint work is ordered below. These entries route work to existing dispositions;
 they do not close acceptance IDs or create a second backlog.
 
-| Next work | Owner and completion evidence |
-| --- | --- |
-| Retain process-supervision regressions | [Process execution](#process-execution-and-failure-reporting): the Darwin reaping repair passes SQLFluff and the native suite. Keep permission errors visible and verify native behavior on the remaining platforms. |
-| Complete acquisition-blocked consumer journeys | [Tool installation](#tool-installation) and [packaging](#packaging-and-installed-product-acceptance): resolve or document the EditorConfig Checker HTTP 403, then rerun the affected native, source acceptance, and release cases sequentially. Preserve the earlier failures until replacement evidence exists. |
-| Finish documentation acceptance | [Reference examples](#reference-content-loaders) and [site acceptance](#guides-and-site-acceptance): execute the remaining reference defect/correction examples and verify screen-reader operation. Final README cards, actual browser zoom, and reduced motion have local evidence. |
-| Resume product implementation in dependency order | Use the [implementation order](#implementation-order-after-cleanup) and the owning group's unresolved requirements. Keep native-platform evidence, publication, external adoption, and paused CI separate from local implementation. |
+| Next work                                         | Owner and completion evidence                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Retain process-supervision regressions            | [Process execution](#process-execution-and-failure-reporting): the Darwin reaping repair passes SQLFluff and the native suite. Keep permission errors visible and verify native behavior on the remaining platforms.                                                                                             |
+| Complete acquisition-blocked consumer journeys    | [Tool installation](#tool-installation) and [packaging](#packaging-and-installed-product-acceptance): resolve or document the EditorConfig Checker HTTP 403, then rerun the affected native, source acceptance, and release cases sequentially. Preserve the earlier failures until replacement evidence exists. |
+| Finish documentation acceptance                   | [Reference examples](#reference-content-loaders) and [site acceptance](#guides-and-site-acceptance): execute the remaining reference defect/correction examples. Final README cards, actual browser zoom, and reduced motion have local evidence.                             |
+| Resume product implementation in dependency order | Use the [implementation order](#implementation-order-after-cleanup) and the owning group's unresolved requirements. Keep native-platform evidence, publication, external adoption, and paused CI separate from local implementation.                                                                             |
 
 The follow-up review checked task ownership, moved-path references, central test placement,
 and the earlier confirmed deletion targets. It found stale imperative cleanup instructions in
@@ -312,23 +312,21 @@ The home link has an accessible name, Geist loads locally, keyboard focus and sk
 work, search returns results and closes with Escape, and code copying announces success.
 Desktop and mobile Lighthouse snapshots report accessibility 100 with no failed audits after
 matching the search button's name to its visible label. The accessibility tree exposes named
-landmarks and controls. CSS 200% reflow passes on the build guide; actual browser zoom and
-screen-reader operation remain unverified. Reduced-motion CSS is reviewed, but an operating
-system media-preference session remains outstanding. These results do not replace assistive
-technology review or complete execution of every reference example.
+landmarks and controls. CSS 200% reflow passes on the build guide; actual browser zoom remains unverified. Reduced-motion CSS is reviewed, but an operating
+system media-preference session remains outstanding. These results do not establish complete execution of every reference example.
 
 Earlier local verification, superseded where the Sweet spot continuation records a newer run:
 
-| Verification | Result | Remaining limits |
-| --- | --- | --- |
-| Routine unit/plugin/integration with coverage | 1,288 pass, zero failures, 5,145 assertions, 143 files; 67.85% functions, 75.62% lines | Measurement does not replace product file-coverage enforcement |
-| Native suite | 323 pass, two failures, 3,015 assertions, 30 files | One EditorConfig Checker HTTP 403 and one SQLFluff process-group cleanup `EPERM` |
-| Moved native site-output cases | Three pass | Linkinator, HTML Validate, and PurgeCSS run their actual pinned executables |
-| Source acceptance | 269 pass, 44 failures, 2,733 assertions, 81 files | All 44 failures stop at rate-limited EditorConfig Checker downloads |
-| Source-backed installed hooks | One selected journey passes with 23 assertions | Covers staged defects, correction, and a fresh clone; two unrelated cases are filtered out |
-| Release | Eight pass, one failure, 281 assertions, four files | Installed-consumer tool setup stops at the same download limit; isolated host independence and installed plugin pass |
-| Types, schema, and configuration | Workspace/docs/tests types and schema freshness pass; apply preview has no drift | No repository lint run |
-| Packages and documentation | All seven CLI targets build; plugin modules/declarations work in an installed consumer; 317 site pages build with valid links and fragments | Cross-compilation does not establish native platform execution |
+| Verification                                  | Result                                                                                                                                      | Remaining limits                                                                                                     |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Routine unit/plugin/integration with coverage | 1,288 pass, zero failures, 5,145 assertions, 143 files; 67.85% functions, 75.62% lines                                                      | Measurement does not replace product file-coverage enforcement                                                       |
+| Native suite                                  | 323 pass, two failures, 3,015 assertions, 30 files                                                                                          | One EditorConfig Checker HTTP 403 and one SQLFluff process-group cleanup `EPERM`                                     |
+| Moved native site-output cases                | Three pass                                                                                                                                  | Linkinator, HTML Validate, and PurgeCSS run their actual pinned executables                                          |
+| Source acceptance                             | 269 pass, 44 failures, 2,733 assertions, 81 files                                                                                           | All 44 failures stop at rate-limited EditorConfig Checker downloads                                                  |
+| Source-backed installed hooks                 | One selected journey passes with 23 assertions                                                                                              | Covers staged defects, correction, and a fresh clone; two unrelated cases are filtered out                           |
+| Release                                       | Eight pass, one failure, 281 assertions, four files                                                                                         | Installed-consumer tool setup stops at the same download limit; isolated host independence and installed plugin pass |
+| Types, schema, and configuration              | Workspace/docs/tests types and schema freshness pass; apply preview has no drift                                                            | No repository lint run                                                                                               |
+| Packages and documentation                    | All seven CLI targets build; plugin modules/declarations work in an installed consumer; 317 site pages build with valid links and fragments | Cross-compilation does not establish native platform execution                                                       |
 
 The final routine run follows a clean dependency installation and the corrected native test
 classification. Source acceptance and release ran sequentially. The source runner streamed
@@ -340,7 +338,7 @@ pass in native verification.
 
 The earlier SQLFluff `EPERM` was reproduced in the write-failure case. The Sweet spot
 continuation records its diagnosed Darwin lifecycle cause and repaired verification.
-Download-blocked journeys, full per-example execution, assistive-technology review, and
+Download-blocked journeys, full per-example execution, and
 unavailable Windows/Linux gates remain open. Earlier K-149
 evidence and K-222's outstanding verification remain unchanged. No repository lint, commit,
 public publication, deployment, DNS change, external-repository edit, subagent, or CI execution
@@ -377,17 +375,17 @@ release runs received GitHub's explicit API rate-limit response for the pinned v
 No installer version, integrity contract, authentication setting, or executable source was
 changed. Troubleshooting describes the rate limit and retry after its reset.
 
-| Verification | Current result |
-| --- | --- |
-| Routine coverage | 1,295 pass, zero failures, 5,173 assertions across 143 files; 67.75% functions and 75.55% lines |
-| Focused process supervision | 29 pass, zero failures, 137 assertions |
-| Native compatibility on this macOS host | 328 pass, zero failures, 3,048 assertions across 31 files |
-| Focused native acquisition | Six pass, zero failures, 333 assertions |
-| Source acceptance | 264 pass, 49 failures, 2,629 assertions across 81 files; all failures stop at the pinned EditorConfig Checker rate limit |
-| Release, run after source acceptance | Eight pass, one failure, 281 assertions across four files; installed-consumer acquisition stops at the same rate limit |
-| Types and schema | Workspace, documentation, and test type checks pass; schema freshness passes |
-| Packages | All seven CLI targets build; plugin build passes; both prepared npm payloads contain consumer READMEs with absolute links and no relative image assets |
-| Documentation | 17 tests pass with 970 assertions; 318 pages build with valid local links and fragments |
+| Verification                            | Current result                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Routine coverage                        | 1,295 pass, zero failures, 5,173 assertions across 143 files; 67.75% functions and 75.55% lines                                                        |
+| Focused process supervision             | 29 pass, zero failures, 137 assertions                                                                                                                 |
+| Native compatibility on this macOS host | 328 pass, zero failures, 3,048 assertions across 31 files                                                                                              |
+| Focused native acquisition              | Six pass, zero failures, 333 assertions                                                                                                                |
+| Source acceptance                       | 264 pass, 49 failures, 2,629 assertions across 81 files; all failures stop at the pinned EditorConfig Checker rate limit                               |
+| Release, run after source acceptance    | Eight pass, one failure, 281 assertions across four files; installed-consumer acquisition stops at the same rate limit                                 |
+| Types and schema                        | Workspace, documentation, and test type checks pass; schema freshness passes                                                                           |
+| Packages                                | All seven CLI targets build; plugin build passes; both prepared npm payloads contain consumer READMEs with absolute links and no relative image assets |
+| Documentation                           | 17 tests pass with 970 assertions; 318 pages build with valid local links and fragments                                                                |
 
 The JavaScript guide commands were executed with the built plugin and ESLint. Its captured
 private-environment finding and clean correction are asserted in the owning rule and plugin
@@ -408,10 +406,10 @@ Local GitHub-compatible README previews were inspected in both themes. This is n
 from the live GitHub or npm renderer. The final change from a single tool strip to six wrapping
 cards remains visually unverified: ScreenCaptureKit returned error -3812 during the final
 capture and reconnection attempts. The earlier successful captures remain valid for their
-reviewed revisions. Actual screen-reader navigation remains unverified.
+reviewed revisions.
 
 Remaining acceptance includes the final README card capture, all shipped reference-example
-execution, assistive-technology review, download-blocked consumer journeys, and unavailable
+execution, download-blocked consumer journeys, and unavailable
 Windows/Linux native gates. Public source links for new files require those files to land;
 no package or site publication occurred. K-149 evidence and K-222's outstanding verification
 remain unchanged. No repository lint, subagent, commit, deployment, DNS change, external-repository
@@ -627,6 +625,13 @@ identified. The refreshed confinement and ownership suite passes 65 cases with 4
 This local evidence does not establish native Windows behavior or a frozen candidate.
 
 ### Ownership and recovery
+
+September 24 runner round-trip repair: shared-configuration removal iterated the same field
+array it shortened, leaving alternating generated scripts behind. Removal now visits a stable
+field list. JSON, YAML, and TOML cases remove consecutive fields and preserve a later edited
+field before publication. The ownership batch passes 62 tests with 387 assertions. A real
+simple-git-hooks clone switches to Bun and back, restores package bytes, and passes staged
+commit enforcement: one test with 60 assertions. All three TypeScript checks pass.
 
 Open. Complete common ownership routing, proposal publication, pruning, and interrupted recovery across init, apply, remove, and uninstall. Preserve unowned files, later edits, original bytes and modes, and fresh-clone files.
 
@@ -1031,11 +1036,27 @@ configuration adoption and candidate acceptance remain open.
 
 ### Tool installation
 
+September 24 repair: `init` returns inability code 2 after a managed-tool installation
+failure while preserving written configuration and the retry instruction. Missing, outdated,
+and failed-download mise cases retain authored bytes; a corrected installation returns 0
+without changing policy. Installation help already defines inability code 2. The CLI and
+toolchain contracts use that same code. Other installation acceptance remains open.
+
 Open. Verify immutable installation under each supported package manager, workspace and private-registry configuration. Complete manifest-owned install metadata, missing-host advice, isolation, retries, and tracked-file preservation. Resolve changed locks only during apply.
 
-Open acceptance IDs: K-180, K-240, K-237, K-264, K-265, K-266, K-283, K-267, K-268, K-297.
+Open acceptance IDs: K-237, K-264, K-265, K-266, K-283, K-267, K-268, K-297.
 
-Source and retained evidence: [packages/cli/src/tools/install-command.ts](../packages/cli/src/tools/install-command.ts), [tests/integration/cli/install.test.ts](../tests/integration/cli/install.test.ts).
+Locally implemented IDs: K-180, K-240.
+
+The runner schema, initialization choices, generated schema, and guide follow the five-runner
+contract. `uv` is the Python installer, not a task runner. `init --runner uv` exits 2 before
+writes and lists the five accepted runners. Python initialization without task integration
+preserves its project. Native uv installation reads both supported configuration locations,
+installs and corrects the pinned checker, preserves locks and authored environments, and
+repeats installation in a fresh clone. All three native cases pass with 126 assertions.
+The source acceptance download failures remain open independently of this runner correction.
+
+Source and retained evidence: [packages/cli/src/commands/install.ts](../packages/cli/src/commands/install.ts), [tests/integration/cli/install.test.ts](../tests/integration/cli/install.test.ts).
 
 Acceptance: [K-264](11-toolchain.md#acceptance-k-264), [K-267](03-configuration.md#acceptance-k-267), [K-297](11-toolchain.md#acceptance-k-297), [K-180](04-configurations.md#acceptance-k-180), [K-237](03-configuration.md#acceptance-k-237), [K-268](03-configuration.md#acceptance-k-268).
 
@@ -1088,15 +1109,38 @@ and native-platform installation gates remain open.
 
 Open. Complete project and dependency detection, grouped configuration selection, detected defaults, and one read-only proposal. Initialize new and existing repositories without running checks; a missing tool differs from invalid configuration or failed lock resolution.
 
-Open acceptance IDs: K-182, K-214, K-247, K-126, K-128, K-53, K-93, K-40, K-64.
+Open acceptance IDs: K-182, K-214, K-247, K-53, K-93, K-40, K-64.
 
-Locally implemented IDs: K-127.
+Locally implemented IDs: K-127, K-126, K-128.
+
+Python detection reads Poetry root and group dependencies, Pipfile package tables, and
+requirements files alongside PEP 621 and dependency groups. The shared Python package identity
+owner applies PEP 503 normalization. Invalid typed dependency data and inaccessible discovered
+manifests fail with the source path. Source bytes survive detection, and removing dependencies
+removes their framework proposals. Root and scoped proposals retain their source evidence and
+do not leak into sibling scopes. Vue and Svelte files carry their language and source tags;
+Java and Kotlin remain unsupported languages identified through Linguist. The K-128 contract
+now names the two component endings explicitly, as its original retained requirement did.
+The focused manifest, tag, initialization, and storage batch passes 53 tests with 288 assertions.
+Workspace, documentation, and test types pass after schema regeneration.
 
 Source and retained evidence: [packages/cli/src/commands/init/command.ts](../packages/cli/src/commands/init/command.ts).
 
 Acceptance: [K-182](04-configurations.md#acceptance-k-182), [K-126](03-configuration.md#acceptance-k-126), [K-128](03-configuration.md#acceptance-k-128), [K-53](05-engines.md#acceptance-k-53), [K-93](04-configurations.md#acceptance-k-93), [K-40](04-configurations.md#acceptance-k-40), [K-64](02-cli.md#acceptance-k-64).
 
 ### Configuration and scopes
+
+The public setting vocabulary uses `functions_directory`, `migrations_directory`,
+`admin_key_files`, `entitlements_allowed`, and `copy_allowed`. Their focused consumer and
+schema cases pass 95 tests with 385 assertions; five obsolete-name rejection cases pass
+40 assertions. The historical naming table also requires `sitemap_allowed`, `route_files`,
+`test_files`, and `server_files`. Those declarations and readers now agree; the stale
+`architecture.allow` manifest entry now names the existing `architecture.edges_allowed`
+schema and template owner. Runtime and editor validation reject old tool keys in root and
+scope tables. The expanded schema and route suite passes 90 tests with 332 assertions.
+Direct HTML copy and Supabase key consumers pass two cases with 10 assertions, covering
+permitted paths, unrelated findings, corrections, and preserved policy and source bytes.
+Broader configuration and candidate acceptance remain open.
 
 Open. Complete readable comment-preserving writes, deepest-scope selection, consistent formatting settings, canonical setting names, and destination-safe serialization. Separate syntax failure from recoverable policy findings.
 
@@ -1157,9 +1201,18 @@ cases pass with 30 assertions; the broader serialization and takeover run passes
 with 368 assertions. Native formatter override, preservation, and EditorConfig adoption
 acceptance passes 11 cases with 182 assertions. Frozen-candidate acceptance remains open.
 
-Open acceptance IDs: K-147, K-238, K-51, K-88, K-215, K-224, K-228, K-48.
+K-228 is locally implemented. The Xcode asset check uses the contracted `xcode/asset-catalogs`
+identity. Orphan assets are checked at `all`. The dedicated `orphan_assets` and `readme_shape`
+off switches are removed; exceptions use tracked rule ignores. Runtime validation rejects both
+removed settings with source locations, and the generated editor schema closes tool tables
+against their manifest-owned setting names. Detailed rule/adoption schemas and tool `extra`
+tables remain supported. The schema suite passes 61 cases with 186 assertions; the scoped
+engine cases cover both asset levels, sibling isolation, corrections, and tracked exceptions.
+Workspace, documentation, and test types pass after schema regeneration.
 
-Locally implemented IDs: K-222.
+Open acceptance IDs: K-147, K-238, K-51, K-88, K-215, K-224, K-48.
+
+Locally implemented IDs: K-222, K-228.
 
 Source and retained evidence: [packages/cli/src/schemas/policy.ts](../packages/cli/src/schemas/policy.ts), [tests/native/policy/takeover.test.ts](../tests/native/policy/takeover.test.ts).
 
@@ -1458,6 +1511,12 @@ Vitest passed in the preceding affected run. These runs do not close full accept
 
 ### Immutable Git selection
 
+September 24 snapshot repair: Vale package lookup derives the policy root from the current
+configuration depth. Root and nested snapshots copy verified installed packages instead of
+reading ownership from the managed output directory. The native snapshot suite passes all
+21 cases with 285 assertions, including changed configuration, edited packages, original-byte
+preservation, Python launchers, editable dependencies, gitlinks, and nested policies.
+
 Open. Complete exact staged and pushed object selection, all ref pairs, first pushes, deleted branches, shallow clones, submodules, linked worktrees, and config below the Git root. Keep whole-project findings and failures for affected scopes; no-Git mode remains supported.
 
 Open acceptance IDs: K-70, K-293, K-294, K-295, K-271, K-272.
@@ -1569,6 +1628,54 @@ whitespace pass. Native Windows acceptance and other executable editable-loader 
 open.
 
 ### Process execution and failure reporting
+
+Finding exits are also declared for Ruff lint/format, basedpyright, pytest, ShellCheck,
+and Prettier. Their upstream contracts distinguish findings (1) from execution failures:
+[Ruff](https://docs.astral.sh/ruff/linter/#exit-codes),
+[Ruff format](https://docs.astral.sh/ruff/formatter/#exit-codes),
+[basedpyright](https://docs.basedpyright.com/latest/configuration/command-line/#pyright-exit-codes),
+[pytest](https://docs.pytest.org/en/stable/reference/exit-codes.html),
+[ShellCheck](https://github.com/koalaman/shellcheck/blob/master/shellcheck.1.md#return-values),
+and [Prettier](https://prettier.io/docs/cli#exit-codes). A native ShellCheck case emits a
+real SC2086 finding alongside an unreadable selected file, exits 2, and is rejected as an
+execution error. Removing the missing input yields findings; correcting the script passes.
+That case passes eight assertions, including source preservation and line accuracy.
+The remaining native exit contracts still require their applicable acceptance.
+
+September 24 Trivy repair: image scans reserve exit 10 for findings and validate the native
+JSON report before accepting success or failure. Fatal exits and malformed or contradictory
+reports become execution errors. Findings identify vulnerabilities or secret rules without
+including matched secret bytes. The adapter cases cover six failed-report forms and source
+preservation. Pinned Trivy 0.69.3 scans two disposable imported images: a newly generated test
+key produces a finding, malformed configuration fails, and an image without the key passes.
+All owned image tags are removed after the test. This native journey passes eight assertions.
+The output-parser and adapter batch passes 33 tests with 151 assertions. The Windows path
+fixture uses a normal string because Bun 1.3.11 escapes Unicode in tagged raw templates.
+
+September 24 finding-exit audit: ESLint checks for JavaScript, TypeScript, Vue, and Svelte
+declare exit 1 for findings. Stylelint declares exit 2. The pinned native implementations
+distinguish these statuses from configuration or execution errors. Five native journeys pass
+with 40 assertions, covering invalid configuration, preserved source, partial fixes, and final
+corrections. The runner, failure-classification, and corrected Compose observation batch passes
+19 tests with 277 assertions. Other tools still require their individual exit-contract audit.
+
+Filesystem presence probes use `statSync` with `throwIfNoEntry: false`: absent paths remain
+absent, while permission and observation failures propagate as execution errors. The focused
+storage, tool-probe, and static-site build batch passes 62 cases with 269 assertions. Native
+fixer, snapshot, profile, and output-tail checks pass in the broader 93-pass batch; its sole
+failure was fixture Git refusing removal of an index entry different from the working link.
+The corrected Xcode project suite passes all nine cases with 24 assertions. No production
+failure remains in that batch.
+
+Xcode resource and project readers run per scope. Six defect/correction journeys verify
+root, nested, deepest-child, and sibling separation. The staged symlink journey verifies the
+indexed target and deepest scope while preserving a different working link and policy bytes.
+These checks supplement the existing scoped project membership acceptance.
+
+Xcode resource readers distinguish an unreadable source from malformed JSON. Directory
+replacement produces execution exit 2 without syntax findings, malformed JSON produces exit 1
+at the source path and line, and corrected resources produce exit 0. The reader preserves the
+failed input and corrected bytes. These cases pass in the 53-test focused detection/storage batch.
 
 Local cleanup evidence: required JSON arrays and finding objects are validated; absent, malformed,
 and message-less reports throw and become inability. Static-site adapters validate native shapes
@@ -1686,6 +1793,46 @@ unverified.
 
 ### Session observations and parsing
 
+September 24 shared-source repair: execution owns source-byte observations and replaces them
+for each run and after fixes. Engines, structural indexes, cache hashes, and suppression
+filtering share those bytes. Reads from isolated generation directories remain fresh, and
+failed reads are not cached. Unicode and newline paths retain their identity. Reusing an
+opened session after malformed input or a successful fixer observes the corrected source.
+The focused engine, scope, structure, storage, native fixer, and Swift security batch passes
+110 tests with 590 assertions. The generation, Swift build, and schema batch passes 106 tests
+with 352 assertions. All three TypeScript checks pass. The direct Cloudflare engine test
+opens a new session after correction, matching the lifetime of its source observations.
+SQL syntax, function, naming, and migration analyses also share prepared file parses within
+the observation lifetime. Concurrent requests retain one promise. Malformed input keeps its
+original location, corrected text parses independently, and a fresh observation reparses.
+The SQL, migration, history, and engine batch passes 29 tests with 127 assertions, and all
+three TypeScript checks pass.
+
+Tree-sitter analyses now share a grammar-and-source parse under the existing execution
+resource owner. Readers receive independently disposable tree handles, and completion releases
+the shared trees. Standalone parsing retains caller ownership. Naming and structure consume
+the shared observation for Python, Swift, Bash, JavaScript, and TypeScript; HTML and Swift test
+analysis use the same owner. The focused language and native batch passes 88 tests with 325
+assertions. Cross-analysis defect/correction, failed-parse recovery, grammar separation, and
+tree-disposal cases pass 17 tests with 97 assertions.
+
+Xcode scope checks reuse one run-owned index observation. A changed index remains outside the
+current observation, while a later observation sees corrected links or corrupt-index failure.
+The snapshot, scoped Xcode, and SQL history batch passes 34 tests with 336 assertions. The
+strengthened Xcode refresh and recovery case passes eight assertions. All three TypeScript
+checks pass. Three additional Unicode fixtures use ordinary strings instead of Bun-escaped
+raw templates; their SQL, structure, and serialization batch passes 26 tests with 129 assertions.
+Repository classification before execution and the complete candidate matrix remain separate
+evidence.
+
+September 24 SQL repair: syntax, naming, and function analysis share psql preparation in the
+SQL source owner. Client commands and variables preserve character positions. Quoted SQL,
+escaped strings, dollar-quoted bodies, casts, and nested comments retain their SQL meaning.
+Naming excludes substituted declaration names. PostgreSQL error cursors are converted from
+Unicode characters, while statement locations retain their byte-offset conversion. SQL
+function bodies use strict server parsing without client substitutions. The installed SQL
+consumer passes its clean and planted-defect journey through normal tool installation.
+
 Local cleanup: Compose image scanning uses the existing YAML parser with merge-key support.
 Flow mappings, folded scalars, and aliases resolve service images. Extension fields are excluded,
 images are deduplicated, interpolation remains excluded, and unreadable documents fail with their
@@ -1745,6 +1892,40 @@ Source and retained evidence: [packages/cli/src/run/session.ts](../packages/cli/
 Acceptance: [K-138](05-engines.md#acceptance-k-138), [K-162](05-engines.md#acceptance-k-162), [K-176](05-engines.md#acceptance-k-176), [K-24](12-repository-layout.md#acceptance-k-24).
 
 ### Cache correctness and performance
+
+The strengthened 5,000-file acceptance now passes through normal fresh installation and
+consumer checks: initialization 10,089 ms, cold staged check 5,194 ms, warm staged check
+4,736 ms. Both checks exit 0, the warm syntax result is cached, and no check reports missing
+or error. The single case passes 21 assertions through the isolated registry. This replaces
+the blocked strengthened-benchmark observation, without closing the full K-196 configuration
+matrix or the fixed-candidate timing gate.
+
+September 24 revision-cache verification passes 30 focused cases with 150 assertions. Staged
+and pushed snapshots use the owning repository's result storage while hashing selected revision
+bytes, configuration, and tool identity. Temporary tool paths are normalized for the key;
+executable bytes, modes, and versions remain part of identity. Index changes and additions to
+declared inputs invalidate results; uncommitted working-tree changes do not replace index input.
+Dry runs do not create cache, report, or ownership files.
+
+Snapshot materialization avoids failed directory-creation calls for existing parents while
+retaining every parent check. Dependency copying uses eight bounded independent child copies,
+awaits every result before failure cleanup, and validates links only after all trees exist.
+The confinement/snapshot batch passes 35 cases with 437 assertions; snapshot and real CLI
+cancellation pass 30 cases with 387 assertions. A separate cancellation case verifies all
+copies have drained, the snapshot is removed, and installed source remains unchanged.
+The 5,000-file journey passes normal initialization and ten-file staged checks: initialization
+9,633 ms, cold 4,998 ms, warm 4,755 ms, against the unchanged 60,000/30,000/5,000 ms limits.
+The complete configuration-wide K-196 timing matrix and fixed-candidate rerun remain open.
+
+
+September 24 native Xcode verification uses Xcode 26.5 on macOS. The existing Swift build
+suite now builds a real macOS target, confirms unchanged object timestamps on the second
+build, reports a later type error at the original file and column, and accepts its correction.
+Project bytes and authored content remain unchanged; build products stay in the platform cache.
+The focused Swift build suite passes 21 tests with 68 assertions. A separate execution test
+confirms that compiler failure without source diagnostics returns exit 2 and that a later
+successful invocation recovers. These results replace the earlier unavailable-Xcode statement
+for this local build scenario; cross-platform execution and performance gates remain open.
 
 Local cleanup evidence: shell observation keys use JSON serialization of the scope and filename
 list. A regression with colliding newline-containing filename lists returns distinct files and
@@ -1857,6 +2038,28 @@ Source and retained evidence: [packages/cli/src/structure/engine.ts](../packages
 Acceptance: [K-102](05-engines.md#acceptance-k-102), [K-208](05-engines.md#acceptance-k-208), [K-50](06-enforcement-ledger.md#acceptance-k-50), [K-87](06-enforcement-ledger.md#acceptance-k-87), [K-186](06-enforcement-ledger.md#acceptance-k-186), [K-189](06-enforcement-ledger.md#acceptance-k-189), [K-137](06-enforcement-ledger.md#acceptance-k-137), [K-49](06-enforcement-ledger.md#acceptance-k-49).
 
 ### Planned integrations and configuration coverage
+
+The Bash Semgrep pack is connected to its manifest and uses `gspot.bash.*` rule identities.
+Previously it was shipped as an unused asset, so both unsafe shell forms passed. Native
+installed consumers now find the curl-to-shell and eval defects at their exact source lines
+and accept corrections at recommended and all (two cases, 12 assertions). Security packs
+emit per scope, and a scoped dependency is required in that scope. Swift pack emission also
+requires the security selection. Nine focused emission/native cases pass with 30 assertions,
+including Express rules inherited by a child and absent from unrelated root/sibling code.
+
+Scoped Semgrep exclusions use the existing planner exclusion field because explicitly named
+files bypass native ignore filters in pinned Semgrep 1.178.0. Scoped native ignore files are
+also generated for directory scans. The final framework journey verifies inherited exclusions,
+sibling findings, corrections, malformed-rule execution exit 2, recovery, and preservation
+(10 assertions). Semgrep declares findings exit 1 and uses strict native execution. The shared
+runner honors optional `findings_exit_codes` before accepting partial reports; per-file and
+file-list failures pass in the 15-case process suite with 248 assertions. All three type checks
+and owned schema generation pass. Other tool exit contracts remain under process execution.
+
+Nested Bash safety ownership uses the resolved leaf settings, preserving inherited lists and
+scoped additions. Its regression initially reported the authorized nested owner as a defect.
+The repaired scope/settings batch passes 42 tests with 146 assertions, including child and
+sibling findings, correction, and unchanged authorized scripts and policy bytes.
 
 Open. Implement every explicitly agreed ledger capability, including the planned Jest configuration and remaining nginx acceptance. Complete framework accessibility and test integrations, scoped security packs, non-npm licenses, database lint, and Swift test overrides. Do not expand this into adding every available linter.
 
@@ -2026,14 +2229,15 @@ The affected documentation-rule, XCTest, apply-preview, and reference run passes
 with 1,050 assertions. Types pass. Inline documentation trivia still requires audit under
 K-248. These results do not close the broad enforcement group.
 
-The inline documentation audit confirms a native SwiftLint 0.63.2 limitation. Custom-rule
-syntax filtering examines the entire regex match, including code before the captured slash.
-Changing to excluded string/comment kinds catches an inline enum-case comment but reports a
-false positive for a triple-slash example after code. It also misses a documentation block
-after a string or an ordinary comment. No weaker rule replaced the current one. This part of
-K-248 remains open. Native fixtures remain under `/tmp` via the system temporary directory:
-`gspot-swift-inline-vlsshjbh` and `gspot-swift-inline-cases-ra18jzdr`. The behavior follows the
-[SwiftLint custom-rule matcher](https://github.com/realm/SwiftLint/blob/0.63.2/Source/SwiftLintCore/Extensions/SwiftLintFile%2BRegex.swift).
+Swift inline documentation is enforced under the existing `swift/swiftlint` check and
+`doc_comment_style` rule. The Swift grammar excludes string contents and ordinary comments.
+A disposable comment-only copy lets the pinned native rule apply its own nested configuration,
+file selection, and suppression directives. Authored bytes and modes remain unchanged.
+Native documentation, manifest, and reference verification passes 61 cases with 1,765 assertions.
+Coverage includes inline enum documentation, comments after strings and ordinary comments,
+triple-slash examples, nested disabled rules, reasoned policy exceptions, read-only source, and
+cleanup after an invalid native JSON report. Native leading-comment diagnostics remain intact.
+This closes the recorded inline-comment defect; broad K-248 and frozen-candidate evidence remain open.
 
 The missing Swift Semgrep pack is implemented at `configurations/language/swift/semgrep/ios.yml`, through its
 configuration configuration owner. It preserves all 14 rule IDs from the read-only reference iOS
@@ -2081,7 +2285,7 @@ Types, changed-file formatting, schema freshness, and whitespace checks pass. `x
 `all`. The Xcode group-path work and final local K-144 evidence are recorded under
 domain-specific scope behavior below. Candidate acceptance remains open.
 
-Source and retained evidence: [configurations](../configurations).
+Source and retained evidence: [configurations](../packages/cli/configurations).
 
 Acceptance: [K-211](06-enforcement-ledger.md#acceptance-k-211), [K-233](06-enforcement-ledger.md#acceptance-k-233), [K-236](06-enforcement-ledger.md#acceptance-k-236), [K-248](06-enforcement-ledger.md#acceptance-k-248), [K-256](06-enforcement-ledger.md#acceptance-k-256), [K-218](04-configurations.md#acceptance-k-218).
 
@@ -2172,6 +2376,26 @@ Acceptance: [K-207](05-engines.md#acceptance-k-207), [K-206](11-toolchain.md#acc
 
 ### Domain-specific scope behavior
 
+The tRPC boundary uses the shared resolved import graph instead of line-prefix matching.
+The graph retains source positions and uses the run-owned syntax trees. Type-only imports
+produce no runtime edges; value imports, re-exports, literal dynamic imports, and `require`
+resolve actual files, including package aliases. A declared server architecture element
+owns the boundary; otherwise the canonical `server_files` setting supplies its globs.
+Six import-form cases pass 36 assertions. A nested-scope case passes seven assertions
+covering architecture selection, original line numbers, malformed-source exit 2, correction,
+and preserved policy and unrelated source. Existing route resolution passes four tests with
+10 assertions, and all three type checks pass. These focused results do not close the
+remaining domain-specific or fixed-candidate acceptance.
+
+September 24 Docker scope repair: Hadolint and Trivy configurations render per scope. Trivy
+configuration checks scan an isolated copy of each deepest scope, with their declared ignore
+file copied through the existing command-configuration owner. Image scans select only Compose
+files in their own scope. Manifest validation accepts isolated per-scope commands that name
+the isolated root, retaining the file-list requirement for argument prefixing. A native scan
+verifies root, child, deepest-child, and sibling findings, inherited advisory exceptions, and
+preservation of ignored untracked files. It passes six assertions. Manifest and adapter checks
+pass 39 tests with 104 assertions. Broader Docker acceptance remains required.
+
 Open. Complete per-scope inputs and layout-independent behavior for Python, Swift, SQL dialects, Docker, and route tests. Preserve TypeScript project references, statement locations, Bash/Zsh/Bats distinctions, and external protocol names.
 
 Open acceptance IDs: K-155, K-163, K-90, K-150, K-153, K-160, K-184, K-191.
@@ -2237,6 +2461,16 @@ Source and retained evidence: [packages/cli/src/checks](../packages/cli/src/chec
 Acceptance: [K-149](06-enforcement-ledger.md#acceptance-k-149), [K-144](06-enforcement-ledger.md#acceptance-k-144), [K-153](06-enforcement-ledger.md#acceptance-k-153), [K-160](06-enforcement-ledger.md#acceptance-k-160), [K-184](06-enforcement-ledger.md#acceptance-k-184), [K-191](06-enforcement-ledger.md#acceptance-k-191), [K-172](06-enforcement-ledger.md#acceptance-k-172), [K-178](06-enforcement-ledger.md#acceptance-k-178), [K-226](06-enforcement-ledger.md#acceptance-k-226), [K-254](06-enforcement-ledger.md#acceptance-k-254), [K-134](06-enforcement-ledger.md#acceptance-k-134), [K-192](06-enforcement-ledger.md#acceptance-k-192).
 
 ### Manifest and schema ownership
+
+Manifest setting kinds now validate authored values before merging. Root and scoped tool
+settings reject the wrong number, string, boolean, list, or table shape. Nested setting
+containers resolve their declared leaves, including `tools.bash.safety.owners`, while unknown
+siblings and malformed containers retain source-located errors. Published tool schemas derive
+known keys and generic value shapes from the same manifest and schema owners, preserving
+existing detailed native-rule schemas and reason wrappers. The focused policy batch passes
+193 tests with 645 assertions; the final schema/container suite passes 71 tests with 238
+assertions. Generated schema and all three type checks pass. Configuration-specific semantic
+acceptance and the fixed candidate remain separate gates.
 
 Further local deletion: `prose/engine.ts` is removed. Its two analysis selections and unknown
 analysis error now belong to the existing engine registry. The documentation schema renderer
@@ -2629,8 +2863,58 @@ Acceptance: [K-96](10-hooks-ci-runners.md#acceptance-k-96), [K-276](10-hooks-ci-
 
 ### Behavioral acceptance quality
 
-Open for complete executable example evidence, download-blocked journeys, the unresolved
-process-cleanup failure, and supported-platform acceptance. The source, test, and support reading
+The current native development run completes 345 tests: 343 pass, with failures in the
+Supabase correction fixture and simple-git-hooks runner restoration. The Supabase test now
+opens fresh observations after edits and passes both cases with seven assertions. The real
+hook failure is repaired in the ownership owner and passes its 60-assertion clone journey.
+These focused corrections do not turn the earlier aggregate into a full passing run.
+
+The September 24 development source-acceptance run was interrupted after a new isolated
+per-scope Docker declaration encountered the existing manifest restriction. Earlier tests in
+that run passed, but later manifest-loading failures invalidate the run as full-suite evidence.
+The restriction is repaired and covered by the focused Docker tests above. Restart the full
+source suite after the functional batch is complete.
+
+The latest routine source run passes 1,354 tests with 6,224 assertions across 145 files.
+It includes the Xcode, JavaScript scope, stage-selection, filesystem observation, and initial
+editor-schema repairs. Later manifest-kind validation and security-pack repairs have focused
+results recorded under their owning groups and require the final full rerun.
+
+The latest September 24 source acceptance run finishes with 276 passes, 38 failures, and
+2,809 assertions across 81 files in 1,446.61 seconds. This supersedes the earlier
+281-pass, 32-failure aggregate. Every failure block reports the EditorConfig Checker
+v3.4.0 release lookup returning GitHub HTTP 403 after earlier successful acquisitions.
+This is incomplete installation evidence, not an accepted skip. The native run reports
+320 passes and 11 failures across 31 files. Four scoped configuration assertions and two
+Vale fixture paths still used the retired generated layout; their corrected native consumers
+pass. The SwiftLint syntax adapter initially bypassed cache reuse; its selected-source and
+native-configuration inputs now retain caching, including nested configuration invalidation.
+The focused scope, XCTest, and Deno batch passes 28 tests with 214 assertions, and the Vale
+batch passes eight tests with 54 assertions. Deno succeeds under the pinned mise environment;
+the direct tests-directory login shell had selected Homebrew Deno 2.9.7 instead of 2.6.6.
+The native npm wrapper installation also remains blocked by the same GitHub rate limit.
+These runs precede the completed candidate and do not close the full native or source gates.
+
+September 24 repair verification supersedes the recorded SQL, HTML, spelling-message, and
+clean-SVG fixture failures for these focused journeys. All four corrected SQL, HTML,
+TypeScript, and static-site journeys pass with 106 assertions through the isolated registry
+and normal private-tool installation. The HTML manifest uses its generated target placeholder
+for the editor pointer. Its previous hard-coded path caused a configuration-load failure.
+The inline-script and Typos expectations match actual diagnostics; the clean SVG matches
+pinned SVGO output. This does not close the complete source or release suites.
+
+The routine suite initially reported 1,311 passes and four failures. The Next.js preservation
+fixture intercepted Git ownership queries as version probes. Its process mock delegates Git
+queries to the real boundary, retaining all preservation and diagnostic assertions. The
+corrected focused run passes 60 tests with 430 assertions. The routine coverage run then
+passes 1,315 tests with 5,980 assertions across 145 files. Final SQL verification passes
+16 tests with 43 assertions, including dollar signs in identifiers. Workspace, documentation,
+and test type checks pass. Schema freshness and apply preview pass without generated drift.
+These results cover the repair batch, not a frozen release candidate. The remaining grouped
+requirements and final candidate gates stay open.
+
+Open for complete executable example evidence, download-blocked journeys, and supported-platform
+acceptance. The earlier process-cleanup failure has a corrected native pass recorded below. The source, test, and support reading
 is complete for the September 23 cleanup. Reading and check-ID presence do not establish that
 every documented defect and correction has been executed successfully.
 
@@ -2668,16 +2952,16 @@ ordinary filename normalization; the regression reports the defect and accepts t
 
 Latest local verification on September 23, 2026:
 
-| Suite or check | Result | Limits |
-| --- | --- | --- |
-| Routine unit/plugin/integration | 1,279 pass, 5,114 assertions, 137 files | Deterministic source behavior; not native or installed acceptance |
-| Coverage | The same 1,279 cases pass; 67.10% functions, 75.20% lines | Measurement only; strict product file coverage remains enabled |
-| Native | 324 pass, one failure, 3,021 assertions | EditorConfig Checker download receives GitHub HTTP 403 |
-| Source acceptance | 268 pass, 45 failures, 2,725 assertions | 44 download failures and one Markdown takeover fixture failure |
-| Release | Seven pass, one failure, 278 assertions | Installed CLI stops at the same EditorConfig Checker download |
-| Configuration/docs/repository focused batch | 69 pass, 1,083 assertions | Includes missing-example rejection and nonempty diagnostic expectations |
-| Types and schemas | Workspace, docs, tests, and schema freshness pass | No repository lint run |
-| Build | All seven binaries and the site build pass | Building a target is not native execution evidence |
+| Suite or check                              | Result                                                    | Limits                                                                  |
+| ------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Routine unit/plugin/integration             | 1,279 pass, 5,114 assertions, 137 files                   | Deterministic source behavior; not native or installed acceptance       |
+| Coverage                                    | The same 1,279 cases pass; 67.10% functions, 75.20% lines | Measurement only; strict product file coverage remains enabled          |
+| Native                                      | 324 pass, one failure, 3,021 assertions                   | EditorConfig Checker download receives GitHub HTTP 403                  |
+| Source acceptance                           | 268 pass, 45 failures, 2,725 assertions                   | 44 download failures and one Markdown takeover fixture failure          |
+| Release                                     | Seven pass, one failure, 278 assertions                   | Installed CLI stops at the same EditorConfig Checker download           |
+| Configuration/docs/repository focused batch | 69 pass, 1,083 assertions                                 | Includes missing-example rejection and nonempty diagnostic expectations |
+| Types and schemas                           | Workspace, docs, tests, and schema freshness pass         | No repository lint run                                                  |
+| Build                                       | All seven binaries and the site build pass                | Building a target is not native execution evidence                      |
 
 The Markdown takeover fixture now commits dependency setup before initialization. Its focused
 rerun stops at the download limit, so the corrected native journey remains unverified. An earlier
@@ -2706,6 +2990,56 @@ Source and retained evidence: [tests/support/cli/planted.ts](../tests/support/cl
 Acceptance: [T-27](12-repository-layout.md#acceptance-t-27), [T-24](12-repository-layout.md#acceptance-t-24), [T-3](12-repository-layout.md#acceptance-t-3), [T-28](12-repository-layout.md#acceptance-t-28), [T-29](12-repository-layout.md#acceptance-t-29), [T-23](12-repository-layout.md#acceptance-t-23), [K-28](12-repository-layout.md#acceptance-k-28), [T-36](12-repository-layout.md#acceptance-t-36), [T-22](12-repository-layout.md#acceptance-t-22), [T-20](12-repository-layout.md#acceptance-t-20).
 
 ### Repository checks and tooling
+
+September 24 repository verification remains incomplete. The preliminary full check reports
+153 records, 10,865 findings, and exit 1. Its apparent absence of execution errors was inaccurate:
+Pinact HTTP 403 output was classified as findings. The manifest now treats authentication,
+rate-limit, server, and transport failures as execution errors. Four native boundary cases pass
+with 16 assertions, retaining ordinary invalid-pin findings and successful observations.
+
+Repository autofix applied formatting, imports, and lint corrections. Review caught a Gixy
+selector parsing regression and an altered insecure-URL security fixture. The parser again
+prioritizes explicit delimiters; the deliberate HTTP defect has a narrow reasoned exception.
+The updated Semgrep 1.178.0 pin removes the obsolete transitive pins. Native Swift security
+acceptance passes at both levels, including all 14 defects and their corrections (44 assertions).
+Locked npm and Python installation succeeds through the isolated local registry. No package
+was published publicly. Workspace, documentation, and test type checks and schema freshness pass.
+
+The required Bun checks both pass through the CLI: `tests/unit` at push and `tests/coverage`
+at manual. Vulnerability scanning, license checks, Knip, rule-guide lint, and Semgrep pass
+across their selected scopes. The 1,001 strengthened equality assertions then pass the
+routine coverage suite: 1,318 tests, 6,002 assertions, 68.89% functions, and 76.45% lines.
+Coverage includes loaded fixture configurations and is a measurement, not a percentage quota.
+
+Naming-policy validation runs once over the complete source inventory. Each authored root
+or scope layer validates within its subtree using the selected language of each file. The
+repair removes false unused declarations from unrelated scopes and checks scoped declarations
+that were previously omitted. Twenty focused tests pass with 84 assertions, including narrowed
+selection, genuine unused entries, unmatched paths, corrections, and policy preservation.
+The repository naming-policy check and all three type checks pass.
+
+JavaScript checking inherits authored `jsconfig.json` resolution and file selection. Its compiler
+uses the repository's effective ambient type roots instead of private tooling dependencies.
+Default and inherited native consumers pass both defect and correction cases, retain exact
+source diagnostics, reject malformed configuration with exit 2, and preserve authored build
+metadata and configuration. Per-scope emission and execution retain nested compiler options,
+ambient type roots, and deepest-scope source selection. Three native JavaScript cases pass with
+29 assertions, including a malformed nested configuration and preserved authored metadata.
+The CLI prints the actual error message instead of relying on Bun stack text that can omit it.
+TypeScript, JavaScript, Python, and Next.js type checkers run at push, matching K-196; Deno
+already ran at push. Explicit check selection remains available. The stage, Next.js, and
+reference batch passes 25 tests with 1,757 assertions. The earlier repository CheckJS pass
+precedes these scope changes and requires a candidate rerun.
+These changes remain subject to the complete source, native, and fixed-candidate gates.
+
+The process boundary already places helpers beside a resolved executable first on PATH.
+Focused tests retain that behavior for both probes and execution. Bounded diagnostic output
+now retains the final 20 lines of each stream, so a failed suite includes its failure summary.
+The probe/output batch passes 35 tests with 96 assertions. The generated instruction owner
+removes an extra blank line; its Markdown formatting acceptance passes two tests with eight
+assertions. Font dependency and license declarations identify their actual CSS consumer and
+copied license artifacts. Remaining lint findings and the final candidate gate stay open.
+The real Git index remains unchanged; the earlier staged run used a disposable index.
 
 Open. Finish template validation at both levels, meaningful unit/plugin push checks, and required prerequisite failures. Keep Bun and mise, feature-owned constants, schemas and assets with consumers, and no source/test symmetry or new private packages.
 
@@ -2787,7 +3121,14 @@ Acceptance: [K-205](21-documentation.md#acceptance-k-205), [K-303](21-documentat
 
 ### Guides and site acceptance
 
-Open for assistive-technology review, complete example execution, and release-matched public
+September 24 continuation: the prescribed `bun --bun astro build` builds 319 pages, and
+`bun scripts/links.ts` validates their local links and fragments. Launching Astro under Node
+instead fails at a CommonJS import; that invocation is not the repository task. The homepage
+accessibility tree exposes its skip link, heading hierarchy, navigation, search, and theme labels.
+Screen-reader acceptance is removed from scope at the user's instruction. VoiceOver is
+confirmed off, and VoiceOver Utility and System Settings are closed.
+
+Open for complete example execution, and release-matched public
 acceptance. The local visual matrix, keyboard interactions, reduced motion, and native browser
 zoom checks have local evidence. Native capture was restored during the September 24
 continuation above, which completes the previously blocked README card inspection.
@@ -2825,7 +3166,7 @@ and visual viewport scale 1; document widths remain 712 pixels. This supersedes 
 emulated-only zoom evidence. The owned Chrome and preview processes were stopped after review.
 
 The current site build produces 318 pages and passes local links and fragments. This establishes
-build and navigation integrity, not complete content, screen-reader, or platform acceptance.
+build and navigation integrity, not complete content or platform acceptance.
 Publication, deployment, DNS, and external-repository changes remain deferred. K-149 and K-222
 retain their separate evidence and outstanding requirements.
 
@@ -2941,6 +3282,15 @@ and ownership recovery tests. Platform and complete candidate acceptance remain 
 
 ### Repository CI definitions
 
+The paused release workflow uses the self-repository reference `$/...` for its local
+reusable CI workflow, as required by the pinned Zizmor audit. The previous reference
+reported `self-repository`; the corrected file passes Zizmor 1.30.1 offline. The existing
+manual trigger and `GSPOT_CI_ENABLED` condition remain in place. No remote workflow ran.
+See the [upstream audit contract](https://docs.zizmor.sh/audits/#self-repository).
+Actionlint 1.7.12 rejects that valid self-repository reference as `workflow-call`. Its
+current published release still lacks this syntax. This tool compatibility conflict
+remains unresolved; the Zizmor pass does not establish complete workflow acceptance.
+
 Local deletion: `tests/ci-affected.ts` and its forwarding mise task are removed. The authored
 workflow validates the event base and invokes the existing push-object protocol directly, with
 live command output and the existing job timeout. Its regression executes the actual YAML step
@@ -3016,8 +3366,8 @@ native Windows execution evidence.
 
 The earlier reference review covered inherited Commander options and conflicting settings.
 The Astro content loader and local visual, keyboard, reduced-motion, and native zoom review
-are now verified under their grouped owners. Complete executable example evidence,
-screen-reader review, and live deployment acceptance remain open. Page totals and intermediate
+are now verified under their grouped owners. Complete executable example evidence
+and live deployment acceptance remain open. Page totals and intermediate
 timings are not acceptance evidence.
 
 The historical full three-platform run at `b553f9d7b8d25640da0d8dbb4c799966f2aed9ec`
@@ -3072,9 +3422,10 @@ remain external gates.
 Implement coherent batches against the owning contracts, then run focused verification.
 Resolve missing implementation details with those owners; no separate patch paperwork is required.
 
-Record the source revision, candidate version, artifact hashes, command exit statuses, and CI
+Record the base revision, complete source digest, candidate version, artifact hashes, command exit statuses, and CI
 run URL (or the active bypass and deferred evidence) as evidence for this gate. All results
-must refer to the same candidate revision:
+must refer to the same candidate source. A source change requires rebuilding artifacts and
+repeating affected acceptance:
 
 1. Close the applicable behavior acceptance criteria, including unit, integration, planted-repository,
    lifecycle recovery, snapshot, hook, documentation, and release-package tests. Run the full
@@ -3087,8 +3438,13 @@ must refer to the same candidate revision:
 1. Exercise supported-platform checks in CI when enabled. During the active bypass, record
    this evidence as deferred. A local macOS pass is not Windows or Linux evidence.
 1. Run the candidate binary on gspot itself, with `level = "all"`, strict check coverage,
-   no ignore entries, no local skip file, and no temporary rule disabling. Run
+   no ignore entries except the Bun coverage substitution below, no local skip file, and no
+   temporary rule disabling. Run
    `gspot check --no-cache`, `gspot check --stage manual --no-cache`, and `gspot doctor`.
+1. The repository substitutes `tests/unit` and `tests/coverage` for `jest/coverage` because
+   its tests use the Bun test runner. Both replacement checks must execute successfully.
+   `tools.jest.global_package` continues to control lint imports only. This is the only
+   permitted coverage substitution.
 1. Every required check must execute and pass. A missing tool, setup error, or skipped required
    check is not a clean result. Any fixes invalidate the previous result until rerun.
 1. Verify apply is idempotent and install preserves tracked content in a disposable clean
@@ -3431,7 +3787,7 @@ The following owners have additional implementation and regression evidence:
 | ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | Confined managed observations   | `emit/`, `policy/read-policy.ts`, `run/version-pin.ts`             | Preview rejects external symlinks in generated and shared configuration, policy, and pins. Malformed shared JSON and YAML fail without replacing originals.                          | Complete the lifecycle routing and recovery audit under K-298 and K-299.                              |
 | Markdown configuration adoption | `lifecycle/carry.ts`, `policy/propose.ts`, `run/file-workspace.ts` | Rule choices survive root and disjoint nested adoption. Native checks use isolated selected files; scoped editor pointers preserve inheritance.                                      | Complete unsupported inheritance, custom rules, overlapping configurations, and candidate acceptance. |
-| Scoped plugin configuration     | `configurations/language/javascript/eslint.config.js.tmpl`                         | Root and nested JavaScript files execute actual ESLint configuration at both levels without the obsolete structural-rule option.                                                     | Complete framework parity and the enforcement ledger.                                                 |
+| Scoped plugin configuration     | `configurations/language/javascript/eslint.config.js.tmpl`         | Root and nested JavaScript files execute actual ESLint configuration at both levels without the obsolete structural-rule option.                                                     | Complete framework parity and the enforcement ledger.                                                 |
 | ESLint process results          | JavaScript and TypeScript manifests, `run/parse-output.ts`         | Crash text inside linted source stays a finding result. Malformed output fails explicitly. Empty results and paths with Windows separators or sibling root prefixes parse correctly. | Complete other parsers, process execution, revision selection, and caching.                           |
 
 The current workspace suite passes 858 tests with 3,715 assertions across 132 files. Reported

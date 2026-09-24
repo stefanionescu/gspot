@@ -1,11 +1,11 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import { jestCoverage } from '#cli/checks/jest/run.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
 import * as processes from '#cli/platform/spawn.ts';
+import { jestCoverage } from '#cli/checks/jest/run.ts';
 
 const failures = [
     'missing tests',
@@ -31,11 +31,15 @@ test.each(failures)('Jest refuses %s, cleans isolated artifacts, and accepts a c
     });
     const session = await openSession(sandbox.path);
     const spec = session.manifests.get('jest')!.checks[0]!;
-    const input = engineInput(session, { scope: session.scopes.find((entry) => entry.scope.path === '')!, spec: spec, files: session.repository.files });
+    const input = engineInput(session, {
+        scope: session.scopes.find((entry) => entry.scope.path === '')!,
+        spec: spec,
+        files: session.repository.files,
+    });
     let broken = true;
     const artifacts: string[] = [];
     const process = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
-        const source = options!.cwd!;
+        const source = options.cwd;
         const output = argv[argv.indexOf('--outputFile') + 1]!;
         const coverage = argv[argv.indexOf('--coverageDirectory') + 1]!;
         artifacts.push(source, dirname(output));
@@ -91,7 +95,7 @@ test.each(failures)('Jest refuses %s, cleans isolated artifacts, and accepts a c
         expect(artifacts.every((path) => !existsSync(path))).toBe(true);
         expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
         broken = false;
-        expect(await jestCoverage(input)).toEqual([]);
+        expect(await jestCoverage(input)).toStrictEqual([]);
         expect(artifacts.every((path) => !existsSync(path))).toBe(true);
         expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
     } finally {

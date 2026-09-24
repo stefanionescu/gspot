@@ -1,18 +1,26 @@
 import { createRule } from '#plugin/rules/definition.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 // process.env, import.meta.env, Bun.env and Deno.env read outside the declared configuration owner.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';
-
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
 
+/**
+ *
+ * @param node
+ */
 export function memberName(node: TSESTree.MemberExpression): string | undefined {
     if (node.computed) return node.property.type === AST_NODE_TYPES.Literal ? String(node.property.value) : undefined;
     return node.property.type === AST_NODE_TYPES.Identifier ? node.property.name : undefined;
 }
 
+/**
+ *
+ * @param context
+ * @param node
+ */
 export function isGlobalEnvironmentHost(
     context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
     node: TSESTree.Node,

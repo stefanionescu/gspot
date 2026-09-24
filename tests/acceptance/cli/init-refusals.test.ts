@@ -1,15 +1,15 @@
+import { delimiter, join } from 'node:path';
 // Planted repositories: what init refuses before it writes, and that every hook runs under the Bash macOS ships.
 import { hookBody } from '#cli/emit/hooks.ts';
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { chmodSync, existsSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync, existsSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const SYSTEM_BASH = '/bin/bash';
 const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
@@ -24,7 +24,9 @@ describe('init refusals', () => {
             const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...QUIET];
             const result = await run(sandbox.path, flags);
             expect(result.code, result.stdout + result.stderr).toBe(0);
-            expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --configurations <ids>\./u);
+            expect(result.stdout + result.stderr).toMatch(
+                /Selected: [^\n]*bash[^\n]*Change with --configurations <ids>\./u,
+            );
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
             const json = await run(sandbox.path, [...flags, '--json']);
             expect(json.code, json.stdout + json.stderr).toBe(0);
@@ -86,9 +88,13 @@ describe('init refusals', () => {
             expect(refused.code).toBe(2);
             expect(refused.stderr).toContain('--allow-dirty');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-            const allowed = await run(sandbox.path, ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...QUIET], {
-                PATH: `${join(import.meta.dir, '../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
-            });
+            const allowed = await run(
+                sandbox.path,
+                ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...QUIET],
+                {
+                    PATH: `${join(import.meta.dir, '../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
+                },
+            );
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
@@ -193,7 +199,7 @@ test('initialization flags control integrations and formatter carryover in the p
     expect(shipped.code, shipped.stdout + shipped.stderr).toBe(0);
     const shippedProposal = JSON.parse(shipped.stdout) as { policy: string };
     const shippedPolicy = parsePolicyText(shippedProposal.policy, 'gspot.toml');
-    expect(shippedPolicy.format).toEqual({});
+    expect(shippedPolicy.format).toStrictEqual({});
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });
@@ -212,5 +218,5 @@ test.each([
     const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...QUIET]);
     expect(result.code, result.stdout + result.stderr).not.toBe(0);
     expect(result.stdout + result.stderr).toContain(path);
-    expect(treeContents(sandbox.path)).toEqual(before);
+    expect(treeContents(sandbox.path)).toStrictEqual(before);
 });

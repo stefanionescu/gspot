@@ -1,9 +1,9 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // The install configuration: a minimum release age, and the security scanner where the package manager has one.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { statSync } from 'node:fs';
 import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 
 type Reporter = (file: string, rule: string, text: string) => Finding;
@@ -13,7 +13,7 @@ const DEFAULT_AGE_DAYS = 7;
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
-    if (!existsSync(path)) return undefined;
+    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) return undefined;
     const parsed = Bun.TOML.parse(readSource(root, BUNFIG).toString('utf8')) as { install?: Record<string, unknown> };
     return parsed.install ?? {};
 }

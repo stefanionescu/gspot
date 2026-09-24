@@ -1,17 +1,17 @@
-import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { openSession } from '#cli/run/session.ts';
-import { expect, test } from 'bun:test';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { parse, stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
 import { parse as parseYaml } from 'yaml';
+import { parse, stringify } from 'smol-toml';
+import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { parse as parseJsonc } from 'jsonc-parser';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
+import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
@@ -29,12 +29,12 @@ test('typos output preserves quoted keys and paths without creating settings', a
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     const parsed = parse(target!.content);
-    expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toEqual([
+    expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'default',
         'files',
         'type',
     ]);
-    expect(parsed['type']).toEqual({
+    expect(parsed['type']).toStrictEqual({
         'gspot-policy': {
             'extend-glob': ['gspot.toml'],
             'extend-words': Object.fromEntries(words.map((word) => [word, word])),
@@ -81,7 +81,7 @@ test('profile spelling values use the same TOML emission path', async () => {
 });
 
 test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
-    const text = String.raw`café "quoted" \value # comment`;
+    const text = "café \"quoted\" \\value # comment";
     const path = 'docs/"draft"/**';
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
     const option = 'custom."option"';
@@ -106,7 +106,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
     );
-    expect(parsed.get('.gspot/config/gitleaks.toml')).toEqual({
+    expect(parsed.get('.gspot/config/gitleaks.toml')).toStrictEqual({
         extend: { useDefault: true },
         allowlists: [{ description: text, paths: [path], regexes: [text] }],
     });
@@ -118,7 +118,9 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     });
     expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
     expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
-    expect(parsed.get('.gspot/config/squawk.toml')).toMatchObject({ excluded_paths: ['migrations/20260101_initial.sql'] });
+    expect(parsed.get('.gspot/config/squawk.toml')).toMatchObject({
+        excluded_paths: ['migrations/20260101_initial.sql'],
+    });
 });
 
 test('an OSV expiry cannot inject another TOML table', async () => {
@@ -178,7 +180,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         }
         const ignored = output.files.find((file) => file.path === '.gspot/config/trivyignore');
         expect(ignored).toBeDefined();
-        expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toEqual([
+        expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toStrictEqual([
             'CVE-2026-12345',
         ]);
         const vale = output.files.find((file) => file.path === '.gspot/config/vale.ini');

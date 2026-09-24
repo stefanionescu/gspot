@@ -1,7 +1,6 @@
+import { z } from 'zod';
 
 export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'] as const;
-
-import { z } from 'zod';
 
 export const LEFTHOOK_MIN_VERSION = '2.0.13';
 

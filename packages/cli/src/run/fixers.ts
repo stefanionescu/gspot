@@ -1,31 +1,18 @@
-// Corrections run in order; dry runs use a scratch copy and return diffs.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { tmpdir } from 'node:os';
+import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
-import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
-import { executionFailure, hasToolError } from '#cli/run/broken-tool.ts';
-import { commandConfigurations } from '#cli/run/command-expansion.ts';
+// Corrections run in order; dry runs use a scratch copy and return diffs.
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
+import { commandConfigurations } from '#cli/run/command-expansion.ts';
+import { executionFailure, hasToolError } from '#cli/run/broken-tool.ts';
 import { prepareCommand, runToolCommand, toolDeadlineSeconds } from '#cli/run/tool-runner.ts';
 import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution.ts';
-import { createTwoFilesPatch } from 'diff';
-import {
-    constants,
-    cpSync,
-    existsSync,
-    mkdirSync,
-    mkdtempSync,
-    readdirSync,
-    readFileSync,
-    realpathSync,
-    rmSync,
-    statSync,
-    symlinkSync,
-    unlinkSync,
-    writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+
+import { constants, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
 
@@ -250,7 +237,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         );
         for (const path of copied) {
             const source = join(root, path);
-            if (!existsSync(source)) continue;
+            if (!(statSync(source, { throwIfNoEntry: false }) !== undefined)) continue;
             const resolved = files.source(path);
             mkdirSync(dirname(join(scratch, path)), { recursive: true });
             cpSync(resolved, join(scratch, path), { dereference: true });
@@ -259,7 +246,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         const pending: { source: string; target: string }[] = [];
         const fileLinks: { source: string; target: string }[] = [];
         for (const dir of dependencies) {
-            if (!existsSync(join(root, dir))) continue;
+            if (!(statSync(join(root, dir), { throwIfNoEntry: false }) !== undefined)) continue;
             const source = realpathSync(join(root, dir));
             const target = join(scratch, dir);
             copies.set(source, target);
@@ -286,7 +273,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
                     }
                     const destination = relocated(original);
                     unlinkSync(target);
-                    if (destination !== undefined && existsSync(destination)) {
+                    if (destination !== undefined && (statSync(destination, { throwIfNoEntry: false }) !== undefined)) {
                         symlinkSync(relative(dirname(target), destination), target, 'dir');
                     } else {
                         copies.set(original, target);
@@ -303,7 +290,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         for (const { source, target } of fileLinks) {
             const destination = relocated(source);
             unlinkSync(target);
-            if (destination !== undefined && existsSync(destination))
+            if (destination !== undefined && (statSync(destination, { throwIfNoEntry: false }) !== undefined))
                 symlinkSync(relative(dirname(target), destination), target, 'file');
             else cpSync(source, target);
         }

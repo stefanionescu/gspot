@@ -1,14 +1,14 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import { codeql } from '#cli/checks/security/codeql.ts';
+import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { codeql } from '#cli/checks/security/codeql.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
+test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'CodeQL refuses output language %s before spawning and accepts a corrected language',
     async (language) => {
         await using directory = await testdir();
@@ -58,7 +58,7 @@ test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
                         files: corrected.repository.files,
                     }),
                 ),
-            ).toEqual([]);
+            ).toStrictEqual([]);
             expect(run).toHaveBeenCalledTimes(3);
             expect(existsSync(join(directory.path, 'generated.py'))).toBe(false);
             expect(copies.every((copy) => !existsSync(copy))).toBe(true);
@@ -90,7 +90,7 @@ test('CodeQL uses native language names and pinned packs once and maps isolated 
                     extractors: { javascript: [{}] },
                 }),
             };
-        const cwd = options.cwd!;
+        const cwd = options.cwd;
         expect(cwd).not.toBe(directory.path);
         if (argv.includes('create')) expect(argv).toContain('--language=javascript');
         else if (argv.includes('analyze')) {

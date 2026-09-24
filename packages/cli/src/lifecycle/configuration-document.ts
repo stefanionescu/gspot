@@ -1,9 +1,9 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { patch as patchToml } from '@decimalturn/toml-patch';
-import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
+import { isMap, parseDocument } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { isMap, parseDocument } from 'yaml';
+import { patch as patchToml } from '@decimalturn/toml-patch';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 
 function jsonDocument(text: string) {
     const errors: ParseError[] = [];
@@ -13,7 +13,14 @@ function jsonDocument(text: string) {
     return tree;
 }
 
-/** Inspect shared fields through the same parser used by lifecycle proposals. */
+/**
+ * Inspect shared fields through the same parser used by lifecycle proposals.
+ * @param root
+ * @param output
+ * @param output.path
+ * @param output.format
+ * @param output.changes
+ */
 export function hasConfiguration(
     root: string,
     output: {
@@ -33,7 +40,12 @@ export function hasConfiguration(
     }
 }
 
-/** Read and edit declared keys through the parser that owns their file format. */
+/**
+ * Read and edit declared keys through the parser that owns their file format.
+ * @param source
+ * @param format
+ * @param created
+ */
 export function configurationDocument(source: string, format: 'json' | 'yaml' | 'toml', created = false) {
     if (format === 'toml') {
         const document: Record<string, unknown> = parseToml(source);

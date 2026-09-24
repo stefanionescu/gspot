@@ -1,11 +1,13 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { run, runBinary } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { copyDependencies, copyProsePackages } from '#cli/repository/snapshot-dependencies.ts';
-import type { GitEntry, SnapshotSource } from '#cli/types/repository.ts';
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import { run, runBinary } from '#cli/platform/spawn.ts';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { SelectionError } from '#cli/configurations/select.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { GitEntry, SnapshotSource, SourceObservations } from '#cli/types/repository.ts';
+import { copyDependencies, copyProsePackages } from '#cli/repository/snapshot-dependencies.ts';
+
+const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
 
 const MATERIALIZATION_BATCH_SIZE = 64;
 const NEWLINE = 10;
@@ -135,7 +137,7 @@ export async function gitBlobs(
  * @param cancelSignal command cancellation
  * @returns validated entries
  */
-export async function gitEntries(
+async function readEntries(
     root: string,
     source: SnapshotSource,
     cancelSignal?: AbortSignal,
@@ -157,6 +159,35 @@ export async function gitEntries(
         .split('\0')
         .filter(Boolean)
         .map((line) => parseEntry(line, source.kind));
+}
+
+/**
+ * Share an immutable Git entry observation between checks in the same run.
+ * @param root repository directory
+ * @param source index or full commit object to inspect
+ * @param cancelSignal command cancellation
+ * @param observations optional run-owned observations, absent during snapshot preparation
+ * @returns validated index or tree entries
+ */
+export function gitEntries(
+    root: string,
+    source: SnapshotSource,
+    cancelSignal?: AbortSignal,
+    observations?: SourceObservations,
+): Promise<GitEntry[]> {
+    if (observations === undefined) return readEntries(root, source, cancelSignal);
+    let entries = entryObservations.get(observations);
+    if (entries === undefined) {
+        entries = new Map();
+        entryObservations.set(observations, entries);
+    }
+    const key = JSON.stringify([root, source]);
+    let observed = entries.get(key);
+    if (observed === undefined) {
+        observed = readEntries(root, source, cancelSignal);
+        entries.set(key, observed);
+    }
+    return observed;
 }
 
 /**

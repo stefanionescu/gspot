@@ -1,12 +1,12 @@
-import * as toolRunner from '#cli/run/tool-runner.ts';
-import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
-import { siteBuild } from '#cli/checks/static-site/build.ts';
-import * as processes from '#cli/platform/spawn.ts';
-import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import * as toolRunner from '#cli/run/tool-runner.ts';
+import { siteBuild } from '#cli/checks/static-site/build.ts';
+import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
+import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
 
 test.each([
     ['links', internalLinks],
@@ -37,14 +37,14 @@ test.each([
     const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async (_input, argv, options) =>
         processes.run([join(import.meta.dir, '../../../node_modules/.bin', argv[0]!), ...argv.slice(1)], {
             ...options,
-            timeoutMs: 10000,
+            timeoutMs: 10_000,
         }),
     );
     try {
         const findings = await analyze(request);
         expect(findings.length).toBeGreaterThan(0);
         writeFileSync(join(build.output, 'index.html'), page('<p class="unused">Example</p>'));
-        expect(await analyze(request)).toEqual([]);
+        expect(await analyze(request)).toStrictEqual([]);
     } finally {
         command.mockRestore();
     }

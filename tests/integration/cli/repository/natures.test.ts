@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readRepository } from '#cli/repository/tree.ts';
 
@@ -41,7 +41,7 @@ describe('natures', () => {
         });
         const repo = await readRepository(sandbox.path, [], [], []);
         expect(repo.hasGit).toBe(false);
-        expect(repo.files.map((file) => file.path)).toEqual(['.gitignore', 'kept.txt']);
+        expect(repo.files.map((file) => file.path)).toStrictEqual(['.gitignore', 'kept.txt']);
         expect(repo.scopes[0]?.path).toBe('');
     });
 });

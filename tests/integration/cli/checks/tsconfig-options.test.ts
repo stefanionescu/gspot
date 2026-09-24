@@ -1,10 +1,10 @@
-import { engineInput } from '#cli/run/engines.ts';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
@@ -108,7 +108,7 @@ test.each(['tsconfig.json', 'strict.json'])(
         });
         const input = await inputFor(sandbox.path);
         const inherited = await tsconfigOptions(input);
-        expect(inherited.filter((finding) => finding.rule === 'strict')).toEqual([]);
+        expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
         fs.writeFileSync(
             join(sandbox.path, 'apps/web/tsconfig.json'),
             '{"extends":"@example/config","compilerOptions":{"strict":false}}',
@@ -118,7 +118,7 @@ test.each(['tsconfig.json', 'strict.json'])(
             overridden
                 .filter((finding) => finding.rule === 'strict')
                 .map(({ check, file, rule }) => ({ check, file, rule })),
-        ).toEqual([
+        ).toStrictEqual([
             { check: 'integrity/tsconfig-options', file: 'tsconfig.json', rule: 'strict' },
             { check: 'integrity/tsconfig-options', file: 'apps/web/tsconfig.json', rule: 'strict' },
         ]);

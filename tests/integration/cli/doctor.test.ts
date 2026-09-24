@@ -1,14 +1,14 @@
-import { createFileTree, testdir } from 'testdirs';
 import { join } from 'node:path';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { applyAll } from '#cli/lifecycle/apply.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
-import { installHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
-import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
 import { expect, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { doctorCommand } from '#cli/commands/doctor/command.ts';
+import { installHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();
@@ -85,7 +85,10 @@ stage = "commit"
 
 test('doctor reports local configuration and version', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', 'README.md': '# Example\n' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'README.md': '# Example\n',
+    });
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.exitCode).toBe(0);
     expect(result.json).toMatchObject({ version: { running: expect.any(String) } });

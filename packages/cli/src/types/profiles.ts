@@ -1,6 +1,6 @@
+import type { z } from 'zod';
 // Type aliases of the profile modules.
 import type { profileSchema } from '#cli/schemas/profiles.ts';
-import type { z } from 'zod';
 
 /** A profile as the schema accepts it. */
 export type ProfileTables = z.infer<typeof profileSchema>;

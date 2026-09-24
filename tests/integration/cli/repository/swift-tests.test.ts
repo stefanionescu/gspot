@@ -1,11 +1,11 @@
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { readRepository } from '#cli/repository/tree.ts';
+import { expect, test } from 'bun:test';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 test.each([
     { source: 'import XCTest\n', selected: true },
@@ -22,9 +22,11 @@ test.each([
     await createFileTree(sandbox.path, { 'Examples/Checks.swift': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
-    expect(detectConfigurations(repository.files, configurationManifests(), []).some(({ configuration }) => configuration === 'xctest')).toBe(
-        selected,
-    );
+    expect(
+        detectConfigurations(repository.files, configurationManifests(), []).some(
+            ({ configuration }) => configuration === 'xctest',
+        ),
+    ).toBe(selected);
 });
 
 test.each([true, false])('Swift package test targets are executable declarations: %s', async (declared) => {
@@ -35,9 +37,11 @@ test.each([true, false])('Swift package test targets are executable declarations
             : '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    expect(detectConfigurations(repository.files, configurationManifests(), []).some(({ configuration }) => configuration === 'xctest')).toBe(
-        declared,
-    );
+    expect(
+        detectConfigurations(repository.files, configurationManifests(), []).some(
+            ({ configuration }) => configuration === 'xctest',
+        ),
+    ).toBe(declared);
 });
 
 test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {
@@ -51,7 +55,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     const command = ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(JSON.parse(broken.stdout).checks[0].findings).toEqual([
+    expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
         expect.objectContaining({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
     ]);
     await Bun.write(
@@ -66,7 +70,7 @@ test.each([
     { body: 'try XCTSkip()', missing: true },
     { body: 'try XCTSkip("")', missing: true },
     { body: 'try XCTSkip("   ")', missing: true },
-    { body: 'try XCTSkip("\\n")', missing: true },
+    { body: String.raw`try XCTSkip("\n")`, missing: true },
     { body: 'try XCTSkip(#""#)', missing: true },
     { body: 'try XCTSkip(nil)', missing: true },
     { body: 'try XCTSkip("CI")', missing: false },
@@ -115,7 +119,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
             scope: check.scope,
             findings: check.findings,
         })),
-    ).toEqual([
+    ).toStrictEqual([
         { scope: '', findings: [expect.objectContaining({ file: 'Examples/Checks.swift', rule: 'sleep' })] },
         { scope: 'integration', findings: [] },
     ]);
@@ -150,7 +154,7 @@ test.each([
     if (count > 0) {
         await Bun.write(`${sandbox.path}/Examples/Checks.swift`, source('#expect(true)'));
         const corrected = await inspect();
-        expect(corrected.report.checks.flatMap((entry) => entry.findings)).toEqual([]);
+        expect(corrected.report.checks.flatMap((entry) => entry.findings)).toStrictEqual([]);
     }
 });
 
@@ -178,7 +182,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
             scope: check.scope,
             findings: check.findings,
         })),
-    ).toEqual([
+    ).toStrictEqual([
         { scope: '', findings: [expect.objectContaining({ file: 'second/__Snapshots__/Checks/title.1.png' })] },
         { scope: 'custom', findings: [expect.objectContaining({ file: 'custom/References/Missing-title.png' })] },
     ]);

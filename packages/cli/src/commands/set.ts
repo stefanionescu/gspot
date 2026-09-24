@@ -1,10 +1,22 @@
-import { quoteArgument } from '#cli/platform/arguments.ts';
-import { isLoosening } from '#cli/policy/loosening.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { openSession } from '#cli/run/session.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
+import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
+import { openSession } from '#cli/run/session.ts';
+import * as messages from '#cli/policy/messages.ts';
+import type { Mutation } from '#cli/types/policy.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { isLoosening } from '#cli/policy/loosening.ts';
+import { PolicyError } from '#cli/policy/read-policy.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
+import { settingValue, specFor } from '#cli/policy/settings.ts';
+import type { CommandResult, ScopeSelection, Session } from '#cli/types/execution.ts';
+// gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
+import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
+import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
+
 type SetOptions = {
     cwd: string;
     key: string;
@@ -15,14 +27,6 @@ type SetOptions = {
     remove: boolean;
     toDefault: boolean;
 };
-// gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
-import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
-import { PolicyError } from '#cli/policy/read-policy.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
-import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { CommandResult, ScopeSelection, Session } from '#cli/types/execution.ts';
-import type { Mutation } from '#cli/types/policy.ts';
 
 const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;
@@ -190,11 +194,6 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     };
     return commitPolicy(root, mutation, false, `${shown} back to the shipped default`);
 }
-
-import type { Command } from 'commander';
-
-import { directoryOf, textEntry } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
 
 /**
  * Registers set.

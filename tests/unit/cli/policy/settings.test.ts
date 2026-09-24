@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
+import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { commandArguments, exposedSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
@@ -45,7 +45,7 @@ describe('conflicting configuration defaults', () => {
     test('reports both configurations until an explicit root value settles their scalar', () => {
         const source = 'version = 1\nconfigurations = ["sql"]\n';
         const policy = parsePolicyText(source, 'gspot.toml');
-        expect(validateAgainstSurface(settings, policy)).toEqual([
+        expect(validateAgainstSurface(settings, policy)).toStrictEqual([
             {
                 path: ['configurations'],
                 message:
@@ -53,7 +53,7 @@ describe('conflicting configuration defaults', () => {
             },
         ]);
         const corrected = parsePolicyText(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`, 'gspot.toml');
-        expect(validateAgainstSurface(settings, corrected)).toEqual([]);
+        expect(validateAgainstSurface(settings, corrected)).toStrictEqual([]);
         expect(settingValue(settings, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
             value: 'sqlite',
             source: 'gspot.toml',
@@ -65,7 +65,7 @@ describe('conflicting configuration defaults', () => {
             'version = 1\nconfigurations = []\n[[scope]]\npath = "db"\nconfigurations = ["sql"]\n',
             'gspot.toml',
         );
-        expect(validateAgainstSurface(exposedSettings([]), policy, new Map([['db', settings]]))).toEqual([
+        expect(validateAgainstSurface(exposedSettings([]), policy, new Map([['db', settings]]))).toStrictEqual([
             { path: ['scope', 0, 'configurations'], message: settings.problems[0]!.message },
         ]);
     });
@@ -76,7 +76,7 @@ describe('conflicting configuration defaults', () => {
             'gspot.toml',
         );
         const scopes = new Map(policy.scopes.map(({ path }) => [path, settings]));
-        expect(validateAgainstSurface(exposedSettings([]), policy, scopes)).toEqual([
+        expect(validateAgainstSurface(exposedSettings([]), policy, scopes)).toStrictEqual([
             { path: ['scope', 2, 'configurations'], message: settings.problems[0]!.message },
         ]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
@@ -110,9 +110,9 @@ describe('the settings surface', () => {
         ['postgres', 'postgres', 'postgres'],
         ['supabase', 'postgres', 'postgres'],
     ])('the %s dialect default identifies its owning configuration', (configuration, dialect, owner) => {
-        const settings = exposedSettings(selectConfigurations([configuration!], configurationManifests()));
+        const settings = exposedSettings(selectConfigurations([configuration], configurationManifests()));
         const policy = parsePolicyText(`version = 1\nconfigurations = ["${configuration}"]\n`, 'gspot.toml');
-        expect(validateAgainstSurface(settings, policy)).toEqual([]);
+        expect(validateAgainstSurface(settings, policy)).toStrictEqual([]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
             value: dialect,
             source: `configuration ${owner}`,
@@ -141,7 +141,7 @@ describe('the settings surface', () => {
             'version = 1\nconfigurations = ["bash"]\n[naming]\nbanned_terms = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["dispatcher", "orchestrator"]\n',
             'gspot.toml',
         );
-        expect(settingValue(surface, policy, 'naming.banned_terms', 'api')?.value).toEqual([
+        expect(settingValue(surface, policy, 'naming.banned_terms', 'api')?.value).toStrictEqual([
             'dispatcher',
             'orchestrator',
         ]);
@@ -162,13 +162,13 @@ describe('the settings surface', () => {
             'version = 1\nconfigurations = ["naming"]\n[naming]\nbanned_terms = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["orchestrator", "handler"]\n',
             'gspot.toml',
         );
-        expect(settingValue(defaults, policy, 'naming.banned_terms', 'api')?.value).toEqual([
+        expect(settingValue(defaults, policy, 'naming.banned_terms', 'api')?.value).toStrictEqual([
             'dispatcher',
             'orchestrator',
             'manager',
             'handler',
         ]);
-        expect(validateAgainstSurface(defaults, policy)).toEqual([]);
+        expect(validateAgainstSurface(defaults, policy)).toStrictEqual([]);
     });
 
     test('scoped rules inherit unrelated rules and replace complete options for the same rule', () => {
@@ -177,11 +177,11 @@ describe('the settings surface', () => {
             'version = 1\nconfigurations = ["css"]\n[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "warning" }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
             'gspot.toml',
         );
-        expect(settingValue(settings, policy, 'tools.stylelint.rules', 'app')?.value).toEqual({
+        expect(settingValue(settings, policy, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
             'selector-max-id': 0,
             'color-named': ['always-where-possible'],
         });
-        expect(settingValue(settings, policy, 'tools.stylelint.rules')?.value).toEqual({
+        expect(settingValue(settings, policy, 'tools.stylelint.rules')?.value).toStrictEqual({
             'selector-max-id': 0,
             'color-named': ['never', { severity: 'warning' }],
         });
@@ -197,8 +197,11 @@ describe('the settings surface', () => {
     });
 
     test('lowering a ceiling needs no reason', () => {
-        const policy = parsePolicyText('version = 1\nconfigurations = ["bash"]\n[limits]\nfile_lines = 200\n', 'gspot.toml');
-        expect(validateAgainstSurface(surface, policy)).toEqual([]);
+        const policy = parsePolicyText(
+            'version = 1\nconfigurations = ["bash"]\n[limits]\nfile_lines = 200\n',
+            'gspot.toml',
+        );
+        expect(validateAgainstSurface(surface, policy)).toStrictEqual([]);
     });
 
     test('a setting no configuration exposes is refused with the keys that exist', () => {
@@ -237,7 +240,7 @@ test.each(['min_lines', 'min_tokens'])(
         expect(
             validateAgainstSurface(settings, policy(shipped + 1)).some((problem) => problem.message.includes(key)),
         ).toBe(true);
-        expect(validateAgainstSurface(settings, policy(shipped - 1))).toEqual([]);
+        expect(validateAgainstSurface(settings, policy(shipped - 1))).toStrictEqual([]);
     },
 );
 
@@ -256,7 +259,7 @@ test.each([-1, 101])('Jest rejects coverage percentage %s and accepts bounded fl
     ).not.toThrow();
 });
 
-test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
+test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'Jest refuses escaping support directory %s and accepts an owned directory',
     (path) => {
         expect(() =>
@@ -275,7 +278,7 @@ test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
 );
 
 test('configured commands preserve quoted paths, empty arguments, and escaped spaces', () => {
-    expect(commandArguments(`bun "scripts/build site.js" "" 'two words'`)).toEqual([
+    expect(commandArguments(`bun "scripts/build site.js" "" 'two words'`)).toStrictEqual([
         'bun',
         'scripts/build site.js',
         '',

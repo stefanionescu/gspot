@@ -1,6 +1,6 @@
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 
 const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;
 const CONFIG_FILE = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;
@@ -39,7 +39,7 @@ export function routeSegments(input: EngineInput): Finding[] {
         held.set(groups['kind'] ?? '', path);
         kinds.set(folder, held);
     }
-    const found = kinds
+    return kinds
         .entries()
         .filter(([, held]) => held.has('page') && held.has('route'))
         .map(([folder, held]) =>
@@ -52,7 +52,6 @@ export function routeSegments(input: EngineInput): Finding[] {
             ),
         )
         .toArray();
-    return found;
 }
 
 /**
@@ -61,10 +60,10 @@ export function routeSegments(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function nextjsConfiguration(input: EngineInput): Finding[] {
-    const found = paths(input)
+    return paths(input)
         .filter((path) => CONFIG_FILE.test(path))
         .flatMap((path) => {
-            const text = readSource(input.root, path).toString('utf8');
+            const text = readSource(input.root, path, input.observations).toString('utf8');
             const off = text
                 .matchAll(SWITCHED_OFF)
                 .map((match) =>
@@ -91,7 +90,6 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
                 );
             return [...off, ...secrets];
         });
-    return found;
 }
 
 /**
@@ -101,8 +99,8 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
  */
 export function dependencyAlignment(input: EngineInput): Finding[] {
     const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
-    const found = manifests.flatMap((path) => {
-        const parsed = JSON.parse(readSource(input.root, path).toString('utf8')) as {
+    return manifests.flatMap((path) => {
+        const parsed = JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as {
             dependencies?: Record<string, string>;
             devDependencies?: Record<string, string>;
         };
@@ -120,5 +118,4 @@ export function dependencyAlignment(input: EngineInput): Finding[] {
             ),
         );
     });
-    return found;
 }

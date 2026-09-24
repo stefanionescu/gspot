@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
+import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { claimedByClaims, isClaimed, pathMatcher } from '#cli/configurations/claims.ts';
 import { detectConfigurations, shebangInterpreter, unknownLanguages } from '#cli/configurations/detect.ts';
@@ -40,7 +40,7 @@ describe('claims', () => {
         const selected = selectConfigurations(['bash'], manifests);
         const structure = manifests.get('structure')!;
         const claimed = claimedByClaims(structure.claims, selected, [file('a.sh'), file('README.md')], '');
-        expect(claimed.map((entry) => entry.path)).toEqual(['a.sh']);
+        expect(claimed.map((entry) => entry.path)).toStrictEqual(['a.sh']);
     });
 
     test('a scope narrows the file set', () => {
@@ -49,7 +49,7 @@ describe('claims', () => {
             claimedByClaims(manifests.get('bash')!.claims, selected, [file('api/a.sh'), file('b.sh')], 'api').map(
                 (entry) => entry.path,
             ),
-        ).toEqual(['api/a.sh']);
+        ).toStrictEqual(['api/a.sh']);
     });
 
     test('path selectors: ** crosses directories, ! negates', () => {
@@ -70,15 +70,15 @@ describe('detection', () => {
 
     test('names a language gspot has no configuration for through Linguist', () => {
         const unknown = unknownLanguages([file('main.kt'), file('lib.kt'), file('x.sh')], manifests);
-        expect(unknown[0]).toEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
+        expect(unknown[0]).toStrictEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
     });
 
     test('names unsupported source languages and disambiguates a module filename', () => {
         const module = file('go.mod');
         const proposals = detectConfigurations([module], manifests, []);
-        expect(proposals.filter((proposal) => proposal.kind === 'language')).toEqual([]);
+        expect(proposals.filter((proposal) => proposal.kind === 'language')).toStrictEqual([]);
         const unknown = unknownLanguages([module, file('main.go'), file('lib.rs'), file('app.rb')], manifests);
-        expect(unknown).toEqual([
+        expect(unknown).toStrictEqual([
             { language: 'Go Module', extensions: ['.mod'], count: 1 },
             { language: 'Go', extensions: ['.go'], count: 1 },
             { language: 'Rust', extensions: ['.rs'], count: 1 },
@@ -104,5 +104,5 @@ test('security combines language claims with plist inputs', () => {
         [file('App.swift'), file('Info.plist'), file('notes.md')],
         '',
     );
-    expect(claimed.map((entry) => entry.path)).toEqual(['App.swift', 'Info.plist']);
+    expect(claimed.map((entry) => entry.path)).toStrictEqual(['App.swift', 'Info.plist']);
 });

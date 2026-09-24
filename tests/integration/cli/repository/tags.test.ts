@@ -1,7 +1,9 @@
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 
 describe('tags', () => {
@@ -23,4 +25,31 @@ describe('tags', () => {
         expect(files.get('binary.js')!.nature).toBe('binary');
         expect(files.get('Dockerfile')!.tags).toContain('dockerfile');
     });
+});
+
+test('Vue and Svelte keep source tags while unsupported JVM languages remain detectable', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'View.vue': '<template><p>Ready</p></template>\n',
+        'View.svelte': '<p>Ready</p>\n',
+        'Main.kt': 'fun main() {}\n',
+        'Main.java': 'class Main {}\n',
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const files = new Map(repository.files.map((file) => [file.path, file]));
+    for (const language of ['vue', 'svelte']) {
+        const component = files.get(`View.${language}`)!;
+        expect(component.nature).toBe('source');
+        for (const tag of [language, 'source', 'text']) expect(component.tags).toContain(tag);
+    }
+    const manifests = configurationManifests();
+    expect(unknownLanguages(repository.files, manifests)).toStrictEqual([
+        { language: 'Java', extensions: ['.java'], count: 1 },
+        { language: 'Kotlin', extensions: ['.kt'], count: 1 },
+    ]);
+    const selected = detectConfigurations(repository.files, manifests, []).map((entry) => entry.configuration);
+    expect(selected).toContain('vue');
+    expect(selected).toContain('svelte');
+    expect(selected).not.toContain('java');
+    expect(selected).not.toContain('kotlin');
 });

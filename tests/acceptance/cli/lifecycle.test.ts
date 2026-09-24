@@ -1,14 +1,15 @@
-import { applyBlock } from '#cli/emit/managed-blocks.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
-import { run as spawn } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { run as spawn } from '#cli/platform/spawn.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { applyBlock } from '#cli/emit/managed-blocks.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const INIT = [
     'init',
@@ -21,6 +22,46 @@ const INIT = [
     '--no-rules',
     '--no-install',
 ];
+
+test('initialization and cold and warm staged checks stay within the 5000-file performance limits', async () => {
+    await using directory = await testdir();
+    const sources = Object.fromEntries(
+        Array.from({ length: 5000 }, (_, index) => [`scripts/task-${String(index)}.sh`, script]),
+    );
+    await createFileTree(directory.path, sources);
+    commitAll(directory.path);
+    const started = performance.now();
+    const initialized = await run(directory.path, ['init', '--yes', '--runner', 'bun']);
+    const initMs = performance.now() - started;
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(initMs).toBeLessThan(60_000);
+    expect(git(directory.path, ['add', '-A']).code).toBe(0);
+    expect(git(directory.path, ['-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'Initialize fixture']).code).toBe(0);
+    for (let index = 0; index < 10; index += 1) {
+        const path = `scripts/task-${String(index)}.sh`;
+        writeFileSync(join(directory.path, path), `${script}# Updated source.\n`);
+        expect(git(directory.path, ['add', path]).code).toBe(0);
+    }
+    const measurements: number[] = [];
+    for (const ceiling of [30_000, 5000]) {
+        const start = performance.now();
+        const checked = await run(directory.path, ['check', '--staged', '--json']);
+        const elapsed = performance.now() - start;
+        measurements.push(elapsed);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const report = JSON.parse(checked.stdout);
+        if (measurements.length === 2)
+            expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe('cache');
+        console.log(`5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${ceiling} ms`);
+        expect(elapsed).toBeLessThan(ceiling);
+        expect(report.checks.some((check: { status: string }) => ['error', 'missing'].includes(check.status))).toBe(
+            false,
+        );
+    }
+    console.log(
+        `5000 files: init ${initMs.toFixed(0)} ms; staged cold ${measurements[0]!.toFixed(0)} ms; warm ${measurements[1]!.toFixed(0)} ms`,
+    );
+}, 120_000);
 
 test('apply and uninstall preserve later edits and unowned content while restoring a takeover original', async () => {
     await using directory = await testdir();
@@ -82,7 +123,9 @@ test('a generated proposal cannot overwrite lifecycle recovery data', async () =
     const refused = await run(directory.path, ['apply']);
     expect(refused.code, refused.stdout + refused.stderr).not.toBe(0);
     expect(refused.stdout + refused.stderr).toContain('Lifecycle metadata is not a generated target');
-    expect(readFileSync(join(directory.path, '.gspot/state/recovery/authored.txt'), 'utf8')).toBe('preserve recovery\n');
+    expect(readFileSync(join(directory.path, '.gspot/state/recovery/authored.txt'), 'utf8')).toBe(
+        'preserve recovery\n',
+    );
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
 });
 
@@ -94,7 +137,9 @@ test('apply previews missing outputs without writing and rejects obsolete mutati
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as { isDryRun: boolean; drift: { path: string; kind: string }[] };
     expect(result.isDryRun).toBe(true);
-    expect(result.drift).toContainEqual(expect.objectContaining({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
+    expect(result.drift).toContainEqual(
+        expect.objectContaining({ path: '.gspot/config/shellcheckrc', kind: 'missing' }),
+    );
     for (const flags of [['--check'], ['--lower-baselines'], ['--baseline', 'bash/syntax']]) {
         const rejected = await run(directory.path, ['apply', ...flags]);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
@@ -149,7 +194,7 @@ test('a configuration below the Git root owns only its own project writes and ch
     const checked = await run(source, ['check', '--changed=HEAD', '--only', 'sql/syntax', '--no-cache', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const checks = (JSON.parse(checked.stdout) as { checks: { check: string; files: number }[] }).checks;
-    expect(checks.map(({ check, files }) => ({ check, files }))).toEqual([{ check: 'sql/syntax', files: 1 }]);
+    expect(checks.map(({ check, files }) => ({ check, files }))).toStrictEqual([{ check: 'sql/syntax', files: 1 }]);
 });
 
 test('malformed shared YAML refuses apply before any generated configuration is published', async () => {
@@ -197,17 +242,17 @@ test('a fresh Git clone adopts exact generated bytes without changing checkout p
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(
         (JSON.parse(applied.stdout) as { notes: string[] }).notes.filter((note) => note.includes('shellcheckrc')),
-    ).toEqual([]);
-    expect(readFileSync(config)).toEqual(bytes);
+    ).toStrictEqual([]);
+    expect(readFileSync(config)).toStrictEqual(bytes);
     expect(statSync(config).mode & 0o777).toBe(0o644);
     const repeated = await run(clone.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as { written: string[] }).written).toEqual([]);
+    expect((JSON.parse(repeated.stdout) as { written: string[] }).written).toStrictEqual([]);
     const unchanged = await spawn(['git', 'diff', '--exit-code'], { cwd: clone.path });
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
     const removed = await run(clone.path, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readFileSync(config)).toEqual(bytes);
+    expect(readFileSync(config)).toStrictEqual(bytes);
     expect(statSync(config).mode & 0o777).toBe(0o644);
     expect(readFileSync(join(clone.path, '.gspot/authored.txt'), 'utf8')).toBe('authored sentinel\n');
 });
@@ -228,12 +273,12 @@ test('untracked exact generated content survives uninstall and later apply adopt
     );
     const removed = await run(directory.path, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readFileSync(config)).toEqual(bytes);
+    expect(readFileSync(config)).toStrictEqual(bytes);
     const applied = await run(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const restored = await run(directory.path, ['uninstall', '--yes']);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    expect(readFileSync(config)).toEqual(bytes);
+    expect(readFileSync(config)).toStrictEqual(bytes);
     expect(statSync(config).mode & 0o777).toBe(mode);
 });
 
@@ -290,7 +335,7 @@ test.each(['before', 'after'] as const)(
         const preview = await run(directory.path, ['uninstall', '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as { plan: { remove: string[] } }).plan.remove).toContain(path);
-        expect(ownershipSchema.parse(JSON.parse(readFileSync(recordPath, 'utf8'))).pending).toEqual(state.pending);
+        expect(ownershipSchema.parse(JSON.parse(readFileSync(recordPath, 'utf8'))).pending).toStrictEqual(state.pending);
         const removed = await run(directory.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(existsSync(join(directory.path, path))).toBe(false);

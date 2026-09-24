@@ -1,44 +1,50 @@
+import type { z } from 'zod';
+import { Option } from 'commander';
+import type { Command } from 'commander';
+import { isDeepStrictEqual } from 'node:util';
+import { emitAll } from '#cli/emit/targets.ts';
+import { ciSchema } from '#cli/schemas/policy.ts';
+import { openSession } from '#cli/run/session.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { compact } from '#cli/policy/normalize.ts';
+import { readProfile } from '#cli/profile/read.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { proposeText } from '#cli/policy/propose.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import type { Profile } from '#cli/types/profiles.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
+import { hooksSchema } from '#cli/repository/hooks.ts';
+import { runnerSchema } from '#cli/schemas/runners.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { initPlanText } from '#cli/output/plan-text.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
+import { askConfirmation } from '#cli/output/prompts.ts';
+import { detectionText } from '#cli/output/detection.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { installTools } from '#cli/tools/install-tools.ts';
+import type { TakeoverPlan } from '#cli/types/ownership.ts';
+import { workspaceScopes } from '#cli/repository/scopes.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import { colors, note, print } from '#cli/output/messages.ts';
 import { InstallationError } from '#cli/tools/install-error.ts';
-// init: read the repository, propose a policy, print the plan, write it after a yes, install the tools.
-import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
-import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
+import { proposedRunnerTasks } from '#cli/emit/runner-tasks.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { unknownLanguages } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
-import { proposedRunnerTasks } from '#cli/emit/runner-tasks.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { collectCarried, ownedTools, retireReplaced, unownedTools } from '#cli/lifecycle/takeover.ts';
-import { detectionText } from '#cli/output/detection.ts';
-import { colors, note, print } from '#cli/output/messages.ts';
-import { initPlanText } from '#cli/output/plan-text.ts';
-import { askConfirmation } from '#cli/output/prompts.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { compact } from '#cli/policy/normalize.ts';
-import { proposeText } from '#cli/policy/propose.ts';
-import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
-import { readProfile } from '#cli/profile/read.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
-import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { openSession } from '#cli/run/session.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { installTools } from '#cli/tools/install-tools.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import type { TomlTable } from '#cli/types/policy.ts';
-import type { Profile } from '#cli/types/profiles.ts';
-import { isDeepStrictEqual } from 'node:util';
-
+// init: read the repository, propose a policy, print the plan, write it after a yes, install the tools.
+import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
+import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
+import { collectCarried, ownedTools, retireReplaced, unownedTools } from '#cli/lifecycle/takeover.ts';
 import type { InitInputs, InitOptions, InitPrepared, InitResult, InitSelection } from '#cli/commands/init/types.ts';
-import type { TakeoverPlan } from '#cli/types/ownership.ts';
 
 const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
@@ -154,7 +160,7 @@ async function write(
     root: string,
     options: InitOptions,
     prepared: InitPrepared,
-): Promise<{ lines: string[]; installNote: string }> {
+): Promise<{ lines: string[]; installNote: string; exitCode: number }> {
     return withLifecycleOwner(root, async (owner) => {
         for (const [path, original] of prepared.observed)
             if (!isDeepStrictEqual(owner.read(path), original))
@@ -184,6 +190,7 @@ async function write(
             ),
         );
         let installNote: string;
+        let exitCode = 0;
         try {
             installNote = await installTools(session, options.install);
         } catch (error) {
@@ -194,11 +201,16 @@ async function write(
                 )
             )
                 throw error;
+            exitCode = 2;
             installNote = `${error.message}\nSetup was written; tool installation is incomplete. Run: gspot install`;
         }
         const { dim } = colors;
         const version = `gspot ${GSPOT_VERSION}`;
-        return { lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, dim(version), ''], installNote };
+        return {
+            lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, dim(version), ''],
+            installNote,
+            exitCode,
+        };
     });
 }
 
@@ -239,17 +251,9 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
             policy: policyText,
             install: written.installNote,
         },
-        exitCode: 0,
+        exitCode: written.exitCode,
     };
 }
-
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
-import { ciSchema } from '#cli/schemas/policy.ts';
-import { runnerSchema } from '#cli/schemas/runners.ts';
-import type { Command } from 'commander';
-import { Option } from 'commander';
-import type { z } from 'zod';
 
 function integrationChoice<Value extends string>(
     flags: Record<string, unknown>,

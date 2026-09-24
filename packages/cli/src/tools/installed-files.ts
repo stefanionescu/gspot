@@ -1,11 +1,16 @@
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
-import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
 import type { LifecycleOwner } from '#cli/types/ownership.ts';
+import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
+import { mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/layout.ts';
 
-/** Publish an isolated native installation through the shared ownership journal. */
+/**
+ * Publish an isolated native installation through the shared ownership journal.
+ * @param owner
+ * @param directory
+ * @param kind
+ */
 export function publishInstalledFiles(owner: LifecycleOwner, directory: string, kind: 'npm' | 'python'): void {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
     const outputs: { path: string; file: FileSnapshot }[] = [];

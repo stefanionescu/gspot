@@ -8,7 +8,7 @@ describe('parseJson', () => {
             format: 'json' as const,
             fields: { file: 'path', line: 'line', rule: 'plugin', message: 'summary' },
         };
-        expect(parseJson('nginx/gixy', output, stdout, 'help')).toEqual([
+        expect(parseJson('nginx/gixy', output, stdout, 'help')).toStrictEqual([
             {
                 check: 'nginx/gixy',
                 file: 'nginx.conf',
@@ -32,7 +32,7 @@ describe('parseJson', () => {
             fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
         };
         const [finding] = parseJson('sql/sqlfluff', output, stdout, 'help');
-        expect([finding?.file, finding?.line, finding?.rule]).toEqual(['a.sql', 3, 'LT01']);
+        expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
     });
 
     test('a tool that counts lines from zero names its base', () => {
@@ -43,7 +43,7 @@ describe('parseJson', () => {
             fields: { file: 'file', line: 'line', column: 'column', rule: 'rule_name', message: 'message' },
         };
         const [finding] = parseJson('postgres/squawk', output, stdout, 'help');
-        expect([finding?.line, finding?.column]).toEqual([1, 19]);
+        expect([finding?.line, finding?.column]).toStrictEqual([1, 19]);
     });
 
     test('lists nested two levels down read the file from the top and join several message paths', () => {
@@ -67,7 +67,7 @@ describe('parseJson', () => {
             fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
         };
         const [finding] = parseJson('dependencies/osv', output, stdout, 'help');
-        expect([finding?.file, finding?.rule, finding?.message]).toEqual([
+        expect([finding?.file, finding?.rule, finding?.message]).toStrictEqual([
             'bun.lock',
             'GHSA-1',
             'qs 6.15.3 Denial of service.',
@@ -79,7 +79,7 @@ describe('parseJson', () => {
     });
 
     test('valid empty reports remain clean and missing nested lists are rejected', () => {
-        expect(parseJson('x/y', { format: 'json' }, '[]', 'help')).toEqual([]);
+        expect(parseJson('x/y', { format: 'json' }, '[]', 'help')).toStrictEqual([]);
         expect(() => parseJson('x/y', { format: 'json' }, '[null]', 'help')).toThrow();
         expect(() => parseJson('x/y', { format: 'json', fields: { message: 'message' } }, '[{}]', 'help')).toThrow();
         expect(() => parseJson('x/y', { format: 'json', children: 'messages' }, '[{}]', 'help')).toThrow();

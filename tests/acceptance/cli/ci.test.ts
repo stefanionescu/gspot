@@ -1,11 +1,11 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { gspot, run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { gspot, run } from '#tests/support/cli/command.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['gitlab', 'github'] as const)(
     'the generated %s job verifies its download, checks exact changed objects, retains reports, and accepts corrections',
@@ -116,7 +116,7 @@ process.exit(child.exitCode);
                         GITHUB_PATH: join(executables.path, 'github-path'),
                         NO_COLOR: '1',
                     },
-                    timeoutMs: 30000,
+                    timeoutMs: 30_000,
                 });
             const invalid = await execute(base);
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
@@ -126,7 +126,11 @@ process.exit(child.exitCode);
             expect(failed.revisions[0].report.checks[0].status).toBe('fail');
             expect(invalid.stdout).toContain('changed.sh');
             expect(JSON.stringify(failed.revisions[0].report.checks[0].findings)).not.toContain('legacy.sh');
-            for (const path of ['.gspot/reports/report.json', '.gspot/reports/report.sarif', '.gspot/reports/report.codequality.json'])
+            for (const path of [
+                '.gspot/reports/report.json',
+                '.gspot/reports/report.sarif',
+                '.gspot/reports/report.codequality.json',
+            ])
                 expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
             if (provider === 'gitlab') {
                 expect(generated.gspot.artifacts.when).toBe('always');
@@ -156,20 +160,20 @@ process.exit(child.exitCode);
             const malformed = await execute('$(touch injected)');
             expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
             expect(malformed.stderr).toContain('Invalid CI comparison object');
-            expect(readFileSync(reportPath)).toEqual(held);
+            expect(readFileSync(reportPath)).toStrictEqual(held);
             const missing = await execute('f'.repeat(40));
             expect(missing.code).not.toBe(0);
-            expect(readFileSync(reportPath)).toEqual(held);
+            expect(readFileSync(reportPath)).toStrictEqual(held);
             corrupt = true;
             const refused = await execute(base);
             expect(refused.code).toBe(1);
             expect(refused.stderr).toContain('checksum does not match');
-            expect(readFileSync(reportPath)).toEqual(held);
+            expect(readFileSync(reportPath)).toStrictEqual(held);
             corrupt = false;
             const policyBefore = readFileSync(join(repository.path, 'gspot.toml'));
             const invalidSetting = await run(repository.path, ['set', 'ci.run', 'unknown']);
             expect(invalidSetting.code).toBe(2);
-            expect(readFileSync(join(repository.path, 'gspot.toml'))).toEqual(policyBefore);
+            expect(readFileSync(join(repository.path, 'gspot.toml'))).toStrictEqual(policyBefore);
             for (const args of [['set', 'ci.run', 'all'], ['set', 'ci.sarif', 'false'], ['apply']]) {
                 const changed = await run(repository.path, args);
                 expect(changed.code, changed.stdout + changed.stderr).toBe(0);
@@ -190,7 +194,7 @@ process.exit(child.exitCode);
             server.stop(true);
         }
     },
-    120000,
+    120_000,
 );
 
 test.each([

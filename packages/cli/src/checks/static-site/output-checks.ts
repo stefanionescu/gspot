@@ -1,14 +1,14 @@
 import { z } from 'zod';
-// The checks that read the built output of a static site.
-import { isAbsolute, join, relative as relativePath } from 'node:path';
-import { mutationPath } from '#cli/filesystem/confined.ts';
 import { gzipSync } from 'node:zlib';
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { SiteBuild } from '#cli/checks/static-site/build.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import { mutationPath } from '#cli/filesystem/confined.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { SiteBuild } from '#cli/checks/static-site/build.ts';
+// The checks that read the built output of a static site.
+import { isAbsolute, join, relative as relativePath } from 'node:path';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 
 type SizeLimit = { paths: string[]; kb: number; reason?: string };
@@ -212,7 +212,7 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
     const isLeftOut = pathMatcher(
-        (input.view.tool('site')['sitemap_excluded'] as string[] | undefined) ?? ['404.html'],
+        (input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html'],
     );
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))

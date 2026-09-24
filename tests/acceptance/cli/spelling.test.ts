@@ -1,11 +1,11 @@
-import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { RunReport } from '#cli/types/reports.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 
 test(
     'spelling corrections return findings when an ambiguous word needs a manual choice',
@@ -139,14 +139,14 @@ test(
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = JSON.parse(checked.stdout) as RunReport;
         const findings = report.checks.flatMap((check) => check.findings);
-        expect(findings).toEqual(
+        expect(findings).toStrictEqual(
             expect.arrayContaining([
                 expect.objectContaining({ file: 'sample.txt' }),
                 expect.objectContaining({ file: 'nested/keep.skip' }),
                 expect.objectContaining({ file: 'nested/rogue/sample.txt' }),
             ]),
         );
-        expect(findings, JSON.stringify(report.checks)).not.toEqual(
+        expect(findings, JSON.stringify(report.checks)).not.toStrictEqual(
             expect.arrayContaining([expect.objectContaining({ file: 'nested/src/ignored.txt' })]),
         );
         const fixed = await run(sandbox.path, [...args, '--fix'], environment);
@@ -163,7 +163,7 @@ test(
         const broken = await run(sandbox.path, args, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(2);
         const brokenReport = JSON.parse(broken.stdout) as RunReport;
-        expect(brokenReport.checks).toEqual(
+        expect(brokenReport.checks).toStrictEqual(
             expect.arrayContaining([
                 expect.objectContaining({ check: 'spelling/typos', scope: 'nested', status: 'error', findings: [] }),
             ]),

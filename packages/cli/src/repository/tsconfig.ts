@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import ts from 'typescript';
+import { readFileSync } from 'node:fs';
 import { dirname, relative, sep } from 'node:path';
 import { openConfinedRoot, mutationPath } from '#cli/filesystem/confined.ts';
-import { readFileSync } from 'node:fs';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 const EMPTY_FILES = 18_002;
@@ -14,7 +14,7 @@ function configurationText(root: string, path: string): string | undefined {
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf('node_modules');
-        if (dependency >= 0 && segments[0] !== '.gspot') {
+        if (dependency !== -1 && segments[0] !== '.gspot') {
             mutationPath(local);
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');

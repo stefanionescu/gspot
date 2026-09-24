@@ -1,8 +1,9 @@
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Every environment variable the code reads appears in the environment template.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
+
 import {
     ENV_KEY_LINE,
     ENV_READ_EXTENSIONS,
@@ -24,8 +25,8 @@ function isTemplate(file: TrackedFile, names: string[]): boolean {
     return names.includes(base);
 }
 
-function keysOfTemplate(root: string, file: TrackedFile): string[] {
-    const lines = readSource(root, file.path).toString('utf8').split('\n');
+function keysOfTemplate(input: EngineInput, file: TrackedFile): string[] {
+    const lines = readSource(input.root, file.path, input.observations).toString('utf8').split('\n');
     return lines.flatMap((line) => {
         const key = ENV_KEY_LINE.exec(line.trim())?.[KEY_GROUP];
         return key === undefined ? [] : [key];
@@ -60,8 +61,8 @@ function readsOnLine(line: string, number: number, patterns: RegExp[]): EnvRead[
     );
 }
 
-function readsIn(root: string, file: TrackedFile, patterns: RegExp[]): EnvRead[] {
-    const lines = readSource(root, file.path).toString('utf8').split('\n');
+function readsIn(input: EngineInput, file: TrackedFile, patterns: RegExp[]): EnvRead[] {
+    const lines = readSource(input.root, file.path, input.observations).toString('utf8').split('\n');
     return lines.flatMap((line, index) => readsOnLine(line, index + 1, patterns));
 }
 
@@ -84,11 +85,11 @@ export function envExample(input: EngineInput): Finding[] {
     const inScope = input.files.filter((file) => isInScope(file, input.scope));
     const templates = inScope.filter((file) => isTemplate(file, names));
     if (templates.length === 0) return [];
-    const known = new Set(templates.flatMap((file) => keysOfTemplate(input.root, file)));
+    const known = new Set(templates.flatMap((file) => keysOfTemplate(input, file)));
     const patterns = readPatterns(input);
     const searched = inScope.filter((entry) => isSearched(entry));
-    const findings = searched.flatMap((file) =>
-        firstMissing(readsIn(input.root, file, patterns), known).map((read) => ({
+    return searched.flatMap((file) =>
+        firstMissing(readsIn(input, file, patterns), known).map((read) => ({
             check: input.spec.name,
             file: file.path,
             line: read.line,
@@ -97,5 +98,4 @@ export function envExample(input: EngineInput): Finding[] {
             fixable: false,
         })),
     );
-    return findings;
 }

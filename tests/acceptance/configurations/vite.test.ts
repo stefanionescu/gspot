@@ -1,12 +1,12 @@
-import type { RunReport } from '#cli/types/reports.ts';
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { expect, test } from 'bun:test';
-import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { RunReport } from '#cli/types/reports.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));
@@ -75,7 +75,7 @@ test(
         const initial = await run(sandbox.path, ['apply']);
         expect(initial.code, initial.stdout + initial.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        expect(await trivialFiles(sandbox.path)).toEqual([
+        expect(await trivialFiles(sandbox.path)).toStrictEqual([
             'api/src/main.js',
             'api/src/task.js',
             'src/main.js',
@@ -84,7 +84,7 @@ test(
         writeFileSync(join(sandbox.path, 'gspot.toml'), POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'));
         const inherited = await run(sandbox.path, ['apply']);
         expect(inherited.code, inherited.stdout + inherited.stderr).toBe(0);
-        expect(await trivialFiles(sandbox.path)).toEqual([
+        expect(await trivialFiles(sandbox.path)).toStrictEqual([
             'api/src/main.js',
             'api/src/task.js',
             'src/main.js',
@@ -96,7 +96,7 @@ test(
         );
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await trivialFiles(sandbox.path)).toEqual([
+        expect(await trivialFiles(sandbox.path)).toStrictEqual([
             'api/src/main.js',
             'api/src/task.js',
             'src/main.js',
@@ -130,7 +130,7 @@ test(
             const rules = report.checks.flatMap((check) => check.findings).map((finding) => finding.rule);
             expect(rules).toContain('gspot/no-trivial-functions');
             expect(rules).toContain('gspot/no-trivial-files');
-            expect(await trivialFiles(sandbox.path)).toEqual([
+            expect(await trivialFiles(sandbox.path)).toStrictEqual([
                 'api/src/main.js',
                 'api/src/task.js',
                 'src/main.js',

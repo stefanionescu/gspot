@@ -1,14 +1,14 @@
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { dirname } from 'node:path';
+import { carryFrom } from '#cli/lifecycle/carry.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { collectEslint } from '#cli/lifecycle/carry-eslint.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { collectFormatting } from '#cli/lifecycle/carry-formatting.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 // Observe configuration carryover before retiring supported inputs through the lifecycle owner.
 import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import { carryFrom } from '#cli/lifecycle/carry.ts';
-import { collectFormatting } from '#cli/lifecycle/carry-formatting.ts';
-import { collectEslint } from '#cli/lifecycle/carry-eslint.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
 import type { CarriedConfiguration, TakeoverPlan, TakeoverRemovalResult } from '#cli/types/ownership.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
 
 function sortedUnique(items: string[]): string[] {
     return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
@@ -32,6 +32,7 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * @param root the repository root
  * @param tooling the configuration files, hooks and lint folders found
  * @param selected the ids of the selected configurations
+ * @param paths
  * @returns the lists to write into gspot.toml and the files takeover replaces
  */
 export async function collectCarried(
@@ -139,7 +140,12 @@ export function noLongerRuns(
     return list;
 }
 
-/** Retire explicitly replaced files after saving recoverable originals; retain directories. */
+/**
+ * Retire explicitly replaced files after saving recoverable originals; retain directories.
+ * @param root
+ * @param removed
+ * @param observed
+ */
 export function retireReplaced(
     root: string,
     removed: { path: string }[],

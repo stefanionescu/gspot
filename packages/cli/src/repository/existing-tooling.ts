@@ -1,13 +1,13 @@
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
 import picomatch from 'picomatch';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
 import { parse as parseYaml } from 'yaml';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { readGitSetting } from '#cli/platform/spawn.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { configurationSection } from '#cli/repository/configuration-section.ts';
 import type { ExistingTool, ExistingTooling, ManifestFacts, TrackedFile } from '#cli/types/repository.ts';
 
 import {
@@ -33,8 +33,8 @@ const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
     { file: 'yarn.lock', runner: 'yarn' },
     { file: 'package-lock.json', runner: 'npm' },
     { file: 'package.json', runner: 'npm' },
-    { file: 'uv.lock', runner: 'uv' },
-    { file: 'pyproject.toml', runner: 'uv' },
+    { file: 'uv.lock', runner: 'none' },
+    { file: 'pyproject.toml', runner: 'none' },
 ];
 
 function listDir(root: string, rel: string): string[] {
@@ -48,7 +48,7 @@ function listDir(root: string, rel: string): string[] {
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
-    if (hooksPath === dir || !(listDir(root, dir).length > 0)) return undefined;
+    if (hooksPath === dir || listDir(root, dir).length === 0) return undefined;
     if (dir === '.husky') return { kind: 'husky', path: dir, files: listDir(root, dir) };
     return { kind: 'githooks', path: dir, files: listDir(root, dir) };
 }
@@ -80,10 +80,15 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
     if (lock === undefined) return { runner: 'none' };
-    return { runner: lock.runner, runnerFile: lock.runner === 'uv' ? 'pyproject.toml' : 'package.json' };
+    return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
 }
 
-/** Discover configuration sections declared by the tools that own them. */
+/**
+ * Discover configuration sections declared by the tools that own them.
+ * @param root
+ * @param paths
+ * @param selected
+ */
 export function declaredConfigurations(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
@@ -181,7 +186,11 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
     };
 }
 
-/** Identify authored lint jobs before proposing another CI job. */
+/**
+ * Identify authored lint jobs before proposing another CI job.
+ * @param root
+ * @param paths
+ */
 export function ciLintJobs(root: string, paths: string[]): string[] {
     const files = openConfinedRoot(root);
     try {

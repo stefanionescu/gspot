@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { mkdirSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import { mkdirSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
 
 test.each([
     { 'package.json': '{"workspaces":["packages/*"]}' },
@@ -24,8 +24,8 @@ test.each([
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     const found = workspaceScopes(sandbox.path, readManifests(sandbox.path, repository.files));
-    expect(found.scopes.map((scope) => scope.path)).toEqual(['packages/api']);
-    expect(found.lintOnly).toEqual(['packages/lint/package.json']);
+    expect(found.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
+    expect(found.lintOnly).toStrictEqual(['packages/lint/package.json']);
 });
 
 test('workspace discovery stays within the requested root', async () => {
@@ -40,10 +40,10 @@ test('workspace discovery stays within the requested root', async () => {
     for (const directory of ['child', 'empty']) {
         const root = join(sandbox.path, directory);
         const repository = await readRepository(root, [], [], []);
-        expect(workspaceScopes(root, readManifests(root, repository.files)).scopes).toEqual([]);
+        expect(workspaceScopes(root, readManifests(root, repository.files)).scopes).toStrictEqual([]);
     }
     writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
-    expect(workspaceScopes(join(sandbox.path, 'empty'), []).scopes).toEqual([]);
+    expect(workspaceScopes(join(sandbox.path, 'empty'), []).scopes).toStrictEqual([]);
 });
 
 test.each(['pnpm-workspace.yaml', 'lerna.json', 'rush.json'])(
@@ -76,7 +76,7 @@ test.each(['../outside', 'packages/*', 'packages/**/app', '{../outside,packages/
         unlinkSync(join(root, 'packages/linked'));
         writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
         await createFileTree(root, { 'packages/app/package.json': '{"name":"inside"}' });
-        expect(workspaceScopes(root, []).scopes.map((scope) => scope.path)).toEqual(['packages/app']);
+        expect(workspaceScopes(root, []).scopes.map((scope) => scope.path)).toStrictEqual(['packages/app']);
     },
 );
 
@@ -88,5 +88,5 @@ test('workspace selection does not parse an inactive lower-priority configuratio
         'lerna.json': 'malformed inactive configuration',
         'packages/app/package.json': '{"name":"inside"}',
     });
-    expect(workspaceScopes(directory.path, []).scopes.map((scope) => scope.path)).toEqual(['packages/app']);
+    expect(workspaceScopes(directory.path, []).scopes.map((scope) => scope.path)).toStrictEqual(['packages/app']);
 });

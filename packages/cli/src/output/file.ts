@@ -1,10 +1,10 @@
-import type { Explanation } from '#cli/output/explain.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/execution.ts';
+import type { Explanation } from '#cli/output/explain.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { claimedInputs, configuredChecks } from '#cli/run/plan.ts';
 // File explanations: claims, checks, and ignores within the selected scope.
 import { claimants, pathMatcher } from '#cli/configurations/claims.ts';
-import { claimedInputs, configuredChecks } from '#cli/run/plan.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
     if (file.nature === 'binary') return 'binary: eligible for secrets and size checks';
@@ -94,7 +94,9 @@ function pathText(report: PathExplanation): string {
         ...(report.configurations.length === 0 ? [] : [`claimed by: ${report.configurations.join(', ')}`]),
         ...section(
             'checks:',
-            report.checks.map((check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`),
+            report.checks.map(
+                (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
+            ),
         ),
         ...section(
             'ignores:',

@@ -14,7 +14,7 @@ describe('rule lint', () => {
 
     test('a clean file has no findings', () => {
         const report = lintRules([file('general/code/A.md', '- Name things well.\n- Or not.\n')]);
-        expect(report.findings).toEqual([]);
+        expect(report.findings).toStrictEqual([]);
     });
 
     test('fences, links, em dashes, boundary words and corruption are reported', () => {

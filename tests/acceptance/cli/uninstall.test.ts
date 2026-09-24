@@ -1,11 +1,11 @@
-// Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { describe, expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 describe('uninstall', () => {
     test(
@@ -44,8 +44,8 @@ describe('uninstall', () => {
                 scripts: Record<string, string>;
                 devDependencies: Record<string, string>;
             };
-            expect(manifest.scripts).toEqual({ build: 'true' });
-            expect(manifest.devDependencies).toEqual({ 'left-pad': '1.3.0' });
+            expect(manifest.scripts).toStrictEqual({ build: 'true' });
+            expect(manifest.devDependencies).toStrictEqual({ 'left-pad': '1.3.0' });
             const lefthook = readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8');
             expect(lefthook).toContain('mine');
             expect(lefthook).not.toContain('gspot');

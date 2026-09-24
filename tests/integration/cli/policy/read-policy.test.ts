@@ -1,9 +1,9 @@
-import { parsePolicyText, PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
-import { describe, expect, test } from 'bun:test';
-import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
+import { parsePolicyText, PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
 
 const minimal = 'version = 1\nconfigurations = ["bash"]\n';
 
@@ -27,7 +27,7 @@ describe('parsePolicyText', () => {
         expect(found[0]).toStartWith('gspot.toml:4:');
         expect(found[0]).toContain('executable module is missing');
         await createFileTree(sandbox.path, { 'processing.mjs': 'export default {};\n' });
-        expect(problems(text, sandbox.path)).toEqual([]);
+        expect(problems(text, sandbox.path)).toStrictEqual([]);
     });
     test.each([
         {
@@ -56,7 +56,7 @@ describe('parsePolicyText', () => {
         expect(found).toHaveLength(1);
         expect(found[0]).toStartWith(`gspot.toml:${String(line)}:`);
         const corrected = before === '' ? text + after : text.replace(before, after);
-        expect(problems(corrected)).toEqual([]);
+        expect(problems(corrected)).toStrictEqual([]);
     });
     test.each([
         {
@@ -100,7 +100,7 @@ describe('parsePolicyText', () => {
         expect(found).toHaveLength(1);
         expect(found[0]).toStartWith(`gspot.toml:${String(line)}:`);
         if (name === 'a quoted key') expect(found[0]).toContain('expected boolean, received string');
-        expect(problems(text.replace(correction[0]!, correction[1]!))).toEqual([]);
+        expect(problems(text.replace(correction[0], correction[1]))).toStrictEqual([]);
     });
     test.each(['\n', '\r\n'])(
         'syntax errors name their location without copying neighboring source with %j lines',
@@ -111,7 +111,7 @@ describe('parsePolicyText', () => {
             expect(found[0]).toMatch(/^gspot\.toml:3:\d+ is not valid TOML:/u);
             expect(found[0]).not.toContain('private fixture marker');
             expect(found[0]).not.toContain('\n');
-            expect(problems(invalid.replace('configurations = ?', 'configurations = []'))).toEqual([]);
+            expect(problems(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
         },
     );
     test.each(['linked', 'linked/nested'])('scope %s cannot follow an external directory symlink', async (path) => {
@@ -130,12 +130,12 @@ describe('parsePolicyText', () => {
             `${minimal}[limits]\nfile_lines = 300\nfunction_lines = { value = 80, reason = "Route tables are one ordered list each." }\n[limits.python]\nfile_lines = 400\n`,
             'gspot.toml',
         );
-        expect(policy.limits.root['file_lines']).toEqual({ value: 300 });
-        expect(policy.limits.root['function_lines']).toEqual({
+        expect(policy.limits.root['file_lines']).toStrictEqual({ value: 300 });
+        expect(policy.limits.root['function_lines']).toStrictEqual({
             value: 80,
             reason: 'Route tables are one ordered list each.',
         });
-        expect(policy.limits.groups['python']?.['file_lines']).toEqual({ value: 400 });
+        expect(policy.limits.groups['python']?.['file_lines']).toStrictEqual({ value: 400 });
     });
 
     test('normalizes per-language naming tables and categories', () => {
@@ -143,8 +143,8 @@ describe('parsePolicyText', () => {
             `${minimal}[naming]\nbanned_terms = ["dispatcher"]\n[naming.python]\nmax_words = 4\n[naming.python.parameters]\nmax_words = { value = 3, reason = "Handler signatures read as one line." }\n`,
             'gspot.toml',
         );
-        expect(policy.naming.banned_terms).toEqual(['dispatcher']);
-        expect(policy.naming.languages['python']?.max_words).toEqual({ value: 4 });
+        expect(policy.naming.banned_terms).toStrictEqual(['dispatcher']);
+        expect(policy.naming.languages['python']?.max_words).toStrictEqual({ value: 4 });
         expect(policy.naming.languages['python']?.categories['parameters']?.max_words?.reason).toBe(
             'Handler signatures read as one line.',
         );
@@ -176,7 +176,7 @@ describe('parsePolicyText', () => {
         const found = problems(
             `${minimal}[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["scripts"]\nreason = "One launcher script per environment."\n`,
         );
-        expect(found).toEqual([]);
+        expect(found).toStrictEqual([]);
     });
 
     test('a rule slot set to off names the ignore line', () => {
@@ -215,7 +215,7 @@ describe('parsePolicyText', () => {
                 `${minimal}[[scope]]\npath = "api"\n[[scope]]\npath = "api/inner"\n[[scope]]\npath = "missing"\n`,
                 sandbox.path,
             ),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     });
 
     test('a vendored declaration needs a reason when required', () => {
@@ -232,7 +232,7 @@ describe('readPolicy', () => {
             'gspot.toml': minimal,
         });
         const files = readPolicy(sandbox.path);
-        expect(files.policy.configurations).toEqual(['bash']);
+        expect(files.policy.configurations).toStrictEqual(['bash']);
     });
 
     test('a missing gspot.toml points at init', async () => {
@@ -258,13 +258,13 @@ fix_order = "imports"
             'gspot.toml',
         );
         expect(policy.checks[0]?.help).toBe('Review the tool output.');
-        expect(policy.checks[0]?.fix_command).toEqual(['tool', 'correct']);
+        expect(policy.checks[0]?.fix_command).toStrictEqual(['tool', 'correct']);
         expect(policy.checks[0]?.fix_order).toBe('imports');
     });
 
     test('refuses incomplete executable corrections', () => {
         expect(problems(`${check}fix_command = ["tool"]`)[0]).toContain('fix_order');
-        expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toEqual([]);
+        expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toStrictEqual([]);
     });
 });
 
@@ -324,7 +324,10 @@ test.each([
     'paths = ["src"]\nrulez = {eqeqeq = "error"}',
 ])('invalid ESLint override refuses configuration: %s', (entry) => {
     expect(() =>
-        parsePolicyText(`version = 1\nconfigurations = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
+        parsePolicyText(
+            `version = 1\nconfigurations = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`,
+            'gspot.toml',
+        ),
     ).toThrow();
 });
 
@@ -366,12 +369,12 @@ test.each(["author's name", 'two words', '$(printf injected); *', 'line\nbreak']
         const found = problems(stringify({ version: 1, require_reasons: true, naming: { allowed: [{ name }] } }));
         const message = found.find((problem) => problem.includes('gspot set naming.allowed'))!;
         const command = message.slice(message.indexOf('gspot set naming.allowed')).replace(/`?\.?$/u, '');
-        const executed = Bun.spawnSync(['sh', '-c', 'gspot() { printf "%s\\0" "$@"; }; ' + command], {
+        const executed = Bun.spawnSync(['sh', '-c', String.raw`gspot() { printf "%s\0" "$@"; }; ` + command], {
             stdout: 'pipe',
             stderr: 'pipe',
         });
         expect(executed.exitCode, executed.stderr.toString()).toBe(0);
-        expect(executed.stdout.toString().split('\0').slice(0, 3)).toEqual([
+        expect(executed.stdout.toString().split('\0').slice(0, 3)).toStrictEqual([
             'set',
             'naming.allowed',
             JSON.stringify({ name }),

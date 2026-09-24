@@ -112,17 +112,17 @@ found, not proposed
 
 Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every proposal.
 
-| Question                               | Proposal                                                    | Flag                      |
-| -------------------------------------- | ----------------------------------------------------------- | ------------------------- |
-| Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`    |
-| Languages and frameworks found         | all found                                                   | `--configurations`, `--without`  |
-| Tools found                            | all found                                                   | `--configurations`, `--without`  |
-| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--configurations`, `--without`  |
-| Where the gspot line of the hooks goes | the task the hook calls, then the hook file, then new hooks | `--hooks`, `--no-hooks`   |
-| Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`         |
-| Install rule files for agents?         | yes                                                         | `--no-rules`              |
-| Which task names call gspot            | a new body for `lint` and `format` where they exist         | `--runner`, `--no-runner` |
-| Keep your formatting?                  | keep, asked only where it differs from the shipped format   | `--format keep`           |
+| Question                               | Proposal                                                    | Flag                            |
+| -------------------------------------- | ----------------------------------------------------------- | ------------------------------- |
+| Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`          |
+| Languages and frameworks found         | all found                                                   | `--configurations`, `--without` |
+| Tools found                            | all found                                                   | `--configurations`, `--without` |
+| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--configurations`, `--without` |
+| Where the gspot line of the hooks goes | the task the hook calls, then the hook file, then new hooks | `--hooks`, `--no-hooks`         |
+| Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`               |
+| Install rule files for agents?         | yes                                                         | `--no-rules`                    |
+| Which task names call gspot            | a new body for `lint` and `format` where they exist         | `--runner`, `--no-runner`       |
+| Keep your formatting?                  | keep, asked only where it differs from the shipped format   | `--format keep`                 |
 
 The level is not asked. `init` writes `level = "recommended"`.
 
@@ -232,7 +232,7 @@ scripts, and does not inject itself into a setup task. A clone that is not set u
 tool each print `Run: gspot install`. `check` never installs by itself.
 
 A missing tool never blocks the setup. `install` runs every step, lists what is left
-with the command for each, and exits 1 when a tool gspot installs itself did not install. The npm tools install with the package manager of
+with the command for each, and exits 2 when a tool gspot installs itself did not install. The npm tools install with the package manager of
 the repository, and with bun or npm where the repository has none.
 
 ## `check`
@@ -353,12 +353,12 @@ value comes from.
 
 One verb that says what a thing is. It takes:
 
-| Argument                                    | Prints                                                                                                |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Argument                                    | Prints                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | a check name (`structure/trivial-function`) | `summary`, `why`, and `help`; its configuration and level; its settings; the `ignore` line that turns it off |
-| a tool rule (`markdownlint/MD024`)          | the summary of the tool where it has one, the page of the rule, and the check that runs it            |
-| a configuration name (`python`)                    | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files    |
-| a setting name (`limits.function_lines`)    | meaning, default, the value in every scope that holds it, and the `set` line that changes it          |
+| a tool rule (`markdownlint/MD024`)          | the summary of the tool where it has one, the page of the rule, and the check that runs it                   |
+| a configuration name (`python`)             | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files           |
+| a setting name (`limits.function_lines`)    | meaning, default, the value in every scope that holds it, and the `set` line that changes it                 |
 | a path (`api/src/routes/turn.ts`)           | the configurations that claim the file, and the checks that read it at each stage                            |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
@@ -498,10 +498,10 @@ beside `--from` win over the profile.
 
 ## Exit codes
 
-| Code | Meaning                                                                                                                |
-| ---- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0    | every check ran and passed, or the command completed                                                                   |
-| 1    | findings, a generated file that drifted, or a missing tool                                                             |
+| Code | Meaning                                                                                                                       |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 0    | every check ran and passed, or the command completed                                                                          |
+| 1    | findings, a generated file that drifted, or a missing tool                                                                    |
 | 2    | gspot did not run: unreadable `gspot.toml`, unknown configuration, unknown command, unanswered question, version pin mismatch |
 
 ## Acceptance contracts

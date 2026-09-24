@@ -1,21 +1,21 @@
-import { registerInstall } from '#cli/commands/install.ts';
-// The commander program: every command from commands/, the global flags, and the run over argv.
-import { registerAdd } from '#cli/commands/configurations.ts';
-import { registerList } from '#cli/commands/list.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
 import { PromptError } from '#cli/output/prompts.ts';
-import { registerInit } from '#cli/commands/init/command.ts';
-import type { OutputOptions } from '#cli/output/messages.ts';
+import { registerList } from '#cli/commands/list.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerCheck } from '#cli/commands/check.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
-import { registerRemove } from '#cli/commands/configurations.ts';
 import { registerExplain } from '#cli/commands/explain.ts';
+import { registerInstall } from '#cli/commands/install.ts';
+import type { OutputOptions } from '#cli/output/messages.ts';
+import { registerInit } from '#cli/commands/init/command.ts';
 import { installCompletion } from '#cli/output/completion.ts';
+// The commander program: every command from commands/, the global flags, and the run over argv.
+import { registerAdd } from '#cli/commands/configurations.ts';
+import { registerDoctor } from '#cli/commands/doctor/command.ts';
+import { registerRemove } from '#cli/commands/configurations.ts';
 import { registerUninstall } from '#cli/commands/uninstall/command.ts';
 import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 
@@ -29,7 +29,7 @@ function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity
 function exitCodeFor(error: unknown): number {
     if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : 2;
     if (error instanceof PromptError) fail(error.message);
-    else fail(`gspot did not run: ${(error as Error).stack ?? (error as Error).message}`);
+    else fail(`gspot did not run: ${error instanceof Error ? error.message : String(error)}`);
     return 2;
 }
 

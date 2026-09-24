@@ -27,26 +27,26 @@ preserve unsupported authored input with an explicit limitation rather than gues
 
 ## Files
 
-| Path                                                    | Owner                         | Tracked | Purpose                                                                                                                   |
-| ------------------------------------------------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `gspot.toml`                                            | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand                                         |
-| `.gspot/<tool-file>`                                    | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                                                          |
-| `.gspot/package.json`, its lockfile                     | gspot                         | yes     | the npm lint tools gspot pins                                                                                             |
-| `.gspot/pyproject.toml`, `uv.lock`                      | gspot                         | yes     | the Python lint tools gspot pins                                                                                          |
-| `.gspot/node_modules/`, `.gspot/.venv/`                 | gspot                         | no      | where those tools install                                                                                                 |
-| `.gspot/version`                                        | gspot                         | yes     | the gspot version this repository runs, one line                                                                          |
-| `.gspot/rules/**`                                       | gspot                         | yes     | the installed rule files                                                                                                  |
-| `.gspot/state/recovery/**`, `.gspot/state/ownership.json`           | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                   |
-| `.gspot/cache/**`                                       | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                                     |
-| `.gspot/reports/report.json`, `report.sarif`                    | gspot                         | no      | the last run                                                                                                              |
-| `.mise/conf.d/gspot-tools.toml`                         | gspot                         | yes     | tool pins under the mise runner                                                                                           |
-| `.editorconfig`                                         | gspot                         | yes     | written whole from `[format]`, because editors read no other place                                                        |
-| a root pointer                                          | gspot                         | yes     | for a tool with an include form: a re-export, `extends`, `extend`, or `parent_config`                                     |
-| `.gitignore`, `.gitattributes`                          | gspot, one managed block each | yes     | the untracked paths of gspot alone; `.gspot/** linguist-generated` and `.gspot/** text eol=lf`                            |
-| `AGENTS.md`, and the agent files the repository holds   | gspot, one managed block each | yes     | the index of rule files: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                                    |
-| the hook or task a hook calls                           | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file of the repository, or in `.git/hooks/` of each clone |
-| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | gspot                         | yes     | the CI job, when enabled                                                                                                  |
-| `packages/cli/schemas/gspot.schema.json`                 | gspot                         | yes      | the JSON Schema of `gspot.toml`, published with each release                                                              |
+| Path                                                      | Owner                         | Tracked | Purpose                                                                                                                   |
+| --------------------------------------------------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `gspot.toml`                                              | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand                                         |
+| `.gspot/<tool-file>`                                      | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                                                          |
+| `.gspot/package.json`, its lockfile                       | gspot                         | yes     | the npm lint tools gspot pins                                                                                             |
+| `.gspot/pyproject.toml`, `uv.lock`                        | gspot                         | yes     | the Python lint tools gspot pins                                                                                          |
+| `.gspot/node_modules/`, `.gspot/.venv/`                   | gspot                         | no      | where those tools install                                                                                                 |
+| `.gspot/version`                                          | gspot                         | yes     | the gspot version this repository runs, one line                                                                          |
+| `.gspot/rules/**`                                         | gspot                         | yes     | the installed rule files                                                                                                  |
+| `.gspot/state/recovery/**`, `.gspot/state/ownership.json` | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                   |
+| `.gspot/cache/**`                                         | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                                     |
+| `.gspot/reports/report.json`, `report.sarif`              | gspot                         | no      | the last run                                                                                                              |
+| `.mise/conf.d/gspot-tools.toml`                           | gspot                         | yes     | tool pins under the mise runner                                                                                           |
+| `.editorconfig`                                           | gspot                         | yes     | written whole from `[format]`, because editors read no other place                                                        |
+| a root pointer                                            | gspot                         | yes     | for a tool with an include form: a re-export, `extends`, `extend`, or `parent_config`                                     |
+| `.gitignore`, `.gitattributes`                            | gspot, one managed block each | yes     | the untracked paths of gspot alone; `.gspot/** linguist-generated` and `.gspot/** text eol=lf`                            |
+| `AGENTS.md`, and the agent files the repository holds     | gspot, one managed block each | yes     | the index of rule files: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                                    |
+| the hook or task a hook calls                             | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file of the repository, or in `.git/hooks/` of each clone |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`   | gspot                         | yes     | the CI job, when enabled                                                                                                  |
+| `packages/cli/schemas/gspot.schema.json`                  | gspot                         | yes     | the JSON Schema of `gspot.toml`, published with each release                                                              |
 
 The only shared-manifest writes are the `gspot` launcher and explicitly accepted lint task
 entries. gspot never writes tool dependencies or package lifecycle scripts into the developer's
@@ -265,7 +265,7 @@ A profile is a TOML file with the schema of `gspot.toml` and three differences:
 
 | Difference | Rule                                                                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `configurations`                                |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `configurations`                         |
 | Left out   | `[[scope]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused. An `[[ignore]]` with no `paths` travels |
 | Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                                               |
 
@@ -322,12 +322,12 @@ Every tracked path is one of four kinds: source, generated, vendored, or binary.
 are `[[generated]]` and `[[vendored]]`, `.gitattributes`, a banner the configuration knows, and the
 first bytes of the file, in that order.
 
-| Kind      | Checks that apply                                          |
-| --------- | ---------------------------------------------------------- |
+| Kind      | Checks that apply                                                 |
+| --------- | ----------------------------------------------------------------- |
 | source    | everything the selected configurations claim for its kind of file |
-| generated | secrets                                                    |
-| vendored  | secrets, licenses, security                                |
-| binary    | secrets, and the size limit unless the file is under LFS   |
+| generated | secrets                                                           |
+| vendored  | secrets, licenses, security                                       |
+| binary    | secrets, and the size limit unless the file is under LFS          |
 
 A source file that no check reads is unchecked, and `doctor` lists it. With
 `[coverage] strict = true` it fails `check`. A kind of file that gets no format, syntax, style,
@@ -778,7 +778,7 @@ Unit tests with one test repository for each form, each naming `FastAPI` in anot
 
 ### Acceptance K-128
 
-Both endings carry their own tag and the tag `source`.
+The `.vue` and `.svelte` endings carry their own language tag and the tag `source`.
 
 Two table rows. `.kt` and `.java` stay unknown, because no configuration reads them, and
 detection names their language through `linguist-languages`.

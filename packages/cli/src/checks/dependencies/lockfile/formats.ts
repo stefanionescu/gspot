@@ -1,4 +1,3 @@
-
 export const LOCKFILES: Record<string, string> = {
     'bun.lock': 'bun',
     'bun.lockb': 'bun',

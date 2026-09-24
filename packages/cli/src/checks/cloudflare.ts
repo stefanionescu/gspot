@@ -1,13 +1,13 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // The files Cloudflare reads by name: the headers file, the redirects file, the wrangler configuration, and the generated environment types.
 import { join } from 'node:path';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { rmSync } from 'node:fs';
+import { parse as parseToml } from 'smol-toml';
 import { scratchCopy } from '#cli/run/fixers.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;
@@ -30,7 +30,7 @@ function named(input: EngineInput, name: string): string[] {
 }
 
 function lines(input: EngineInput, path: string): { text: string; number: number }[] {
-    return readSource(input.root, path)
+    return readSource(input.root, path, input.observations)
         .toString('utf8')
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
@@ -56,7 +56,7 @@ function wranglerTable(
     input: EngineInput,
     path: string,
 ): { table: Record<string, unknown>; problem: string | undefined } {
-    const text = readSource(input.root, path).toString('utf8');
+    const text = readSource(input.root, path, input.observations).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
         const errors: ParseError[] = [];
@@ -74,13 +74,13 @@ function wranglerTable(
 // Compares a copied types file with the output of wrangler in the same isolated directory.
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-    const before = readSource(input.root, path);
+    const before = readSource(input.root, path, input.observations);
     const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
         cwd: join(input.root, folder),
     });
     if (result.code !== 0)
         throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return !before.equals(readSource(input.root, path));
+    return !before.equals(readSource(input.root, path, input.observations));
 }
 
 /**
@@ -122,12 +122,11 @@ export function redirectProblems(entries: { text: string; number: number }[]): {
  * @returns the findings
  */
 export function headersSyntax(input: EngineInput): Finding[] {
-    const found = named(input, '_headers').flatMap((path) =>
+    return named(input, '_headers').flatMap((path) =>
         headerProblems(lines(input, path)).map((entry) =>
             finding(input, path, entry.number, 'headers-syntax', entry.text),
         ),
     );
-    return found;
 }
 
 /**
@@ -136,12 +135,11 @@ export function headersSyntax(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function redirectsSyntax(input: EngineInput): Finding[] {
-    const found = named(input, '_redirects').flatMap((path) =>
+    return named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
             finding(input, path, entry.number, 'redirects-syntax', entry.text),
         ),
     );
-    return found;
 }
 
 /**
@@ -151,7 +149,7 @@ export function redirectsSyntax(input: EngineInput): Finding[] {
  */
 export function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
-    const found = paths.flatMap((path): Finding[] => {
+    return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
         if (problem !== undefined) return [finding(input, path, 1, 'parse', problem)];
         const unnamed =
@@ -173,7 +171,6 @@ export function wranglerFile(input: EngineInput): Finding[] {
                   ];
         return [...unnamed, ...undated];
     });
-    return found;
 }
 
 /**

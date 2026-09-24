@@ -138,6 +138,7 @@ level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
+findings_exit_codes = [1]
 fix_command = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_order = "format"
 coverage = ["format"]

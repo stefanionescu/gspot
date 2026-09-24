@@ -1,9 +1,9 @@
-import type { CoverageReport } from '#cli/types/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import type { CoverageReport } from '#cli/types/reports.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
     await using directory = await testdir();
@@ -18,7 +18,7 @@ test('doctor and list name unsupported endings and retain different coverage wit
     expect(listed.code, listed.stderr).toBe(0);
     const coverage = (JSON.parse(listed.stdout) as { coverage: CoverageReport }).coverage;
     const doctor = await run(directory.path, ['doctor', '--json']);
-    expect(JSON.parse(doctor.stdout).coverage).toEqual(coverage);
+    expect(JSON.parse(doctor.stdout).coverage).toStrictEqual(coverage);
     const shells = coverage.endings.filter((entry: { ending: string }) => entry.ending === '.sh');
     expect(shells).toHaveLength(2);
     expect(shells.filter((entry: { kinds: string[] }) => entry.kinds.includes('syntax'))).toHaveLength(1);
@@ -31,7 +31,7 @@ test('doctor and list name unsupported endings and retain different coverage wit
     const corrected = await run(directory.path, ['list', '--json']);
     expect(
         JSON.parse(corrected.stdout).coverage.endings.filter((entry: { ending: string }) => entry.ending === '.sh'),
-    ).toEqual([{ ending: '.sh', scope: '', files: 2, kinds: expect.arrayContaining(['syntax']) }]);
+    ).toStrictEqual([{ ending: '.sh', scope: '', files: 2, kinds: expect.arrayContaining(['syntax']) }]);
 });
 
 test('list shows selected policy states, detected configurations, and setting values without writing', async () => {

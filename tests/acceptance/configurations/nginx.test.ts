@@ -1,13 +1,13 @@
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the nginx configuration: a proxy target the request chooses.
 import { reportSchema } from '#cli/schemas/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = [
     'init',
@@ -53,7 +53,7 @@ test(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(corrected.stdout));
         expect(report.checks).toMatchObject([{ scope: 'proxy', files: 3 }]);
-        expect(report.checks[0]!.checkedFiles?.toSorted()).toEqual([
+        expect(report.checks[0]!.checkedFiles?.toSorted()).toStrictEqual([
             'proxy/conf.d/server.conf',
             'proxy/nginx.conf',
             'proxy/tls#local.conf',

@@ -1,9 +1,9 @@
-import type { TSESLint } from '@typescript-eslint/utils';
 // Index and barrel detection, file classes, directory reads and the small glob matcher the rules share.
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const INDEX_BASENAMES = new Set([

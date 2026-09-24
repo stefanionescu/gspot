@@ -1,10 +1,10 @@
-import { join } from 'node:path';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { ESLint } from 'eslint';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
 
@@ -21,7 +21,7 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
     )!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
-    const rules = ['max-lines', 'max-lines-per-function', 'max-statements'];
+    const rules = new Set(['max-lines', 'max-lines-per-function', 'max-statements']);
     const source = `export function count() {\n${Array.from({ length: 9 }, (_, index) => `    const value${index} = ${index};`).join('\n')}\n    return value0;\n}\n`;
     const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
     for (const rule of rules)
@@ -29,9 +29,7 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
     const corrected = await eslint.lintText('export function count() { return 1; }\n', {
         filePath: 'sample.test.js',
     });
-    expect(
-        corrected.flatMap((file) => file.messages).filter((message) => rules.includes(message.ruleId ?? '')),
-    ).toEqual([]);
+    expect(corrected.flatMap((file) => file.messages).filter((message) => rules.has(message.ruleId ?? ''))).toStrictEqual([]);
 });
 
 test.each([
@@ -62,7 +60,7 @@ test.each([
     const corrected = await eslint.lintText(source(maximum), { filePath: 'sample.test.js' });
     expect(
         corrected.flatMap((file) => file.messages).filter((message) => message.ruleId === 'jest/valid-expect'),
-    ).toEqual([]);
+    ).toStrictEqual([]);
 });
 
 test.each([
@@ -99,7 +97,7 @@ test.each([
             .flatMap((file) => file.messages)
             .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
             .map(({ line, column, messageId }) => ({ line, column, messageId })),
-    ).toEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
+    ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
     const corrected = await eslint.lintText("'use client';\nexport const value = 'public';\n", {
         filePath,
     });
@@ -110,7 +108,7 @@ test.each([
                 ({ ruleId }) =>
                     ruleId === 'gspot/no-client-environment' || ruleId === 'gspot/no-exported-alias-constants',
             ),
-    ).toEqual([]);
+    ).toStrictEqual([]);
 });
 
 test.each(['recommended', 'all'])(
@@ -139,7 +137,7 @@ test.each(['recommended', 'all'])(
             javascript
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'jsdoc/no-types' || fatal),
-        ).toEqual([]);
+        ).toStrictEqual([]);
         const planted = await eslint.lintFiles(['client.ts']);
         expect(
             planted.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jsdoc/no-types'),
@@ -152,7 +150,7 @@ test.each(['recommended', 'all'])(
             corrected
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'jsdoc/no-types' || fatal),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     },
 );
 
@@ -232,14 +230,14 @@ test.each(['recommended', 'all'])(
                 expect(
                     failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === `jest/${rule}`),
                     `${globalPackage}: ${rule}`,
-                ).not.toEqual([]);
+                ).not.toStrictEqual([]);
                 const fixed = await eslint.lintText(prefix + corrected, { filePath: 'sample.test.js' });
                 expect(
                     fixed
                         .flatMap((file) => file.messages)
                         .filter(({ ruleId, fatal }) => ruleId === `jest/${rule}` || fatal),
                     `${globalPackage}: ${rule}`,
-                ).toEqual([]);
+                ).toStrictEqual([]);
             }
         }
     },
@@ -272,7 +270,7 @@ test.each(['js', 'jsx'])(
         const focused =
             "import { test, expect } from 'bun:test';\ntest.only('counts', () => { expect(1).toBe(1); });\n";
         const root = await eslint.lintText(focused, { filePath: `root.test.${extension}` });
-        expect(root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/'))).toEqual([]);
+        expect(root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/'))).toStrictEqual([]);
         const nested = await eslint.lintText(focused, { filePath: `app/sample.test.${extension}` });
         expect(
             nested.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jest/no-focused-tests'),
@@ -284,7 +282,7 @@ test.each(['js', 'jsx'])(
             corrected
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'jest/no-focused-tests' || fatal),
-        ).toEqual([]);
+        ).toStrictEqual([]);
         const misplaced = await eslint.lintFiles(['app/tests/unit/helpers.js']);
         expect(
             misplaced
@@ -296,7 +294,7 @@ test.each(['js', 'jsx'])(
             support
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'gspot/tests-directory-contents' || fatal),
-        ).toEqual([]);
+        ).toStrictEqual([]);
         const runtime = await eslint.lintFiles(['app/src/runtime.js']);
         expect(
             runtime.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-direction'),
@@ -308,7 +306,7 @@ test.each(['js', 'jsx'])(
             correctedRuntime
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'gspot/import-direction' || fatal),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     },
 );
 
@@ -343,7 +341,7 @@ test.each(['recommended', 'all'])(
                     .filter(
                         ({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions',
                     ),
-            ).toEqual([]);
+            ).toStrictEqual([]);
         }
     },
 );

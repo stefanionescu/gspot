@@ -1,13 +1,17 @@
-import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-
 import type { Session } from '#cli/types/execution.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 
-/** Identify authored tool configuration using recorded bytes and permissions. */
+/**
+ * Identify authored tool configuration using recorded bytes and permissions.
+ * @param session
+ * @param tools
+ * @param takeover
+ */
 export function retainedConfigurationPaths(
     session: Session,
     tools: string[],

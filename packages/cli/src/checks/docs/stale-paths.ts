@@ -1,15 +1,13 @@
-import { readSource } from '#cli/repository/tracked.ts';
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 // Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-
-
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 
 type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
 
@@ -32,9 +30,9 @@ function knownPaths(input: EngineInput): Set<string> {
     return known;
 }
 
-function miseTasks(root: string, file: string): string[] {
+function miseTasks(input: EngineInput, file: string): string[] {
     try {
-        const parsed = parseToml(readSource(root, file).toString('utf8')) as { tasks?: Record<string, unknown> };
+        const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as { tasks?: Record<string, unknown> };
         return Object.keys(parsed.tasks ?? {});
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
@@ -42,9 +40,9 @@ function miseTasks(root: string, file: string): string[] {
     }
 }
 
-function packageScripts(root: string): string[] {
+function packageScripts(input: EngineInput): string[] {
     try {
-        const manifest = JSON.parse(readSource(root, 'package.json').toString('utf8')) as {
+        const manifest = JSON.parse(readSource(input.root, 'package.json', input.observations).toString('utf8')) as {
             scripts?: Record<string, unknown>;
         };
         return Object.keys(manifest.scripts ?? {});
@@ -54,19 +52,19 @@ function packageScripts(root: string): string[] {
     }
 }
 
-function tasksOf(root: string): Set<string> {
+function tasksOf(input: EngineInput): Set<string> {
     return new Set([
-        ...[...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: root, dot: true })])].flatMap(
-            (file) => miseTasks(root, file),
+        ...[...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: input.root, dot: true })])].flatMap(
+            (file) => miseTasks(input, file),
         ),
-        ...packageScripts(root),
+        ...packageScripts(input),
     ]);
 }
 
 function proseLines(text: string): ProseLine[] {
     const ignored = new Set<number>();
     visit(fromMarkdown(text), 'code', (node) => {
-        if (!FREE_TEXT_FENCES.includes(node.lang ?? '') || node.position === undefined) return;
+        if (!FREE_TEXT_FENCES.has(node.lang ?? '') || node.position === undefined) return;
         for (let line = node.position.start.line; line <= node.position.end.line; line += 1) ignored.add(line);
     });
     return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, line }]));
@@ -135,15 +133,14 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
 export function stalePaths(input: EngineInput): Finding[] {
     const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
-    const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input.root), isException };
-    const findings = input.files
+    const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input), isException };
+    return input.files
         .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>
-            proseLines(readSource(input.root, file.path).toString('utf8')).flatMap((prose) =>
+            proseLines(readSource(input.root, file.path, input.observations).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
             ),
         );
-    return findings;
 }
 
 const PATH_CHARS = /^[\w./-]+$/u;
@@ -152,7 +149,7 @@ const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
 
 const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
 
-const FREE_TEXT_FENCES = ['text', 'plaintext', 'console', 'diff'];
+const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
 
 const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 

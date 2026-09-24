@@ -1,8 +1,8 @@
-import type { CheckResult, Finding, RunReport } from '#cli/types/reports.ts';
-import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
 import type { ToolContext } from '#cli/types/tools.ts';
+import type { CheckResult, Finding, RunReport } from '#cli/types/reports.ts';
 // Type aliases of the run modules.
 import type { CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
+import type { Repository, ScopeEntry, TrackedFile, SourceObservations } from '#cli/types/repository.ts';
 import type { ExposedSettings, IgnoreEntry, MergedView, PolicyFiles } from '#cli/types/policy.ts';
 
 export type CacheKeyInput = {
@@ -44,7 +44,7 @@ export type EngineInput = {
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;
-    runKey: object;
+    observations: SourceObservations;
     resources?: DisposableStack;
     cancelSignal?: AbortSignal;
     scopeRoot: string;
@@ -126,6 +126,9 @@ export type ScopeSelection = {
 };
 
 export type Session = ToolContext & {
+    observations: SourceObservations;
+    /** Persistent result storage for a disposable revision snapshot. */
+    cacheRoot?: string;
     resources?: DisposableStack;
     packageManager?: import('zod').infer<typeof import('#cli/emit/tool-packages.ts').packageManagerSchema>;
     cancelSignal?: AbortSignal;

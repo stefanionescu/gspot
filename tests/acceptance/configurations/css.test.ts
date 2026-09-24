@@ -1,14 +1,14 @@
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/schemas/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [
@@ -54,8 +54,8 @@ test(
                 .filter((finding) => finding.rule === 'color-named')
                 .map((finding) => finding.file)
                 .sort(),
-        ).toEqual(['app/site.css', 'site.css']);
-        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toEqual(
+        ).toStrictEqual(['app/site.css', 'site.css']);
+        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
             expect.arrayContaining([expect.objectContaining({ file: 'app/site.css', rule: 'selector-max-id' })]),
         );
         await Bun.write(join(sandbox.path, 'site.css'), 'a {\n    color: #f00;\n}\n');

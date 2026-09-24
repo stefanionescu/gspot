@@ -1,20 +1,21 @@
-import type { PolicyFiles } from '#cli/types/policy.ts';
-import { toolPackageManager } from '#cli/emit/tool-packages.ts';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
+import type { PolicyFiles } from '#cli/types/policy.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 // One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
 import { readPolicy } from '#cli/policy/read-policy.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
+import { toolPackageManager } from '#cli/emit/tool-packages.ts';
+import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 
 /**
  * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
  * @param root the repository root
+ * @param policyFiles
  * @returns the session
  */
 export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {
@@ -55,5 +56,6 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         repository: repo,
         scopes,
         probes: new Map(),
+        observations: { root, sources: new Map() },
     };
 }

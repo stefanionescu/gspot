@@ -1,12 +1,16 @@
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { pushBase } from '#cli/repository/staged.ts';
-import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
 import type { CheckResult } from '#cli/types/reports.ts';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { Session, PlannedCheck } from '#cli/types/execution.ts';
+import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
 
-/** Check every selected commit message, including empty commits with identical source trees. */
+/**
+ * Check every selected commit message, including empty commits with identical source trees.
+ * @param session
+ * @param planned
+ */
 export async function checkCommitMessages(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {

@@ -1,10 +1,10 @@
-import { join } from 'node:path';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { ESLint } from 'eslint';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../node_modules');
 

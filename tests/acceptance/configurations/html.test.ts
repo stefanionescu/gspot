@@ -1,13 +1,13 @@
 import { symlinkSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the html configuration: an image with no text alternative, an inline handler, and copy written into a template.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [
@@ -44,7 +44,7 @@ const CASES: PlantedCase[] = [
     {
         check: 'html/scripts',
         files: { 'pages/home.html': page('        <script>window.go = 1;</script>\n') },
-        expected: 'An inline script runs only under a policy',
+        expected: 'Move executable inline script to a script file.',
     },
     {
         check: 'html/copy',

@@ -1,14 +1,14 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { isAbsolute, join, relative, sep } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
 import { z } from 'zod';
-import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { tmpdir } from 'node:os';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import { isAbsolute, join, relative, sep } from 'node:path';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
 const reportSchema = z.object({
@@ -37,7 +37,10 @@ const coverageSchema = z.object({
     total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
 });
 
-/** Run repository-owned Jest against disposable sources and retain test and coverage failures as findings. */
+/**
+ * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
+ * @param input
+ */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));
     const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings[`coverage_${name}`]]));

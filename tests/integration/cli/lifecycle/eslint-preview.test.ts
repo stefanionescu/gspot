@@ -1,14 +1,13 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
-
-import { openSession } from '#cli/run/session.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { applyCommand } from '#cli/commands/apply.ts';
 import { ESLint } from 'eslint';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
+import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();
@@ -33,11 +32,7 @@ test('apply preview names a generated ESLint rule change using installed depende
         'gspot.toml': policy + ignored,
         '.gspot/config/.keep': '',
     });
-    symlinkSync(
-        join(import.meta.dir, '../../../../node_modules'),
-        join(directory.path, '.gspot/node_modules'),
-        'dir',
-    );
+    symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(directory.path, '.gspot/node_modules'), 'dir');
     const original = emitAll(await openSession(directory.path)).files.find(
         (file) => file.path === '.gspot/config/eslint.config.mjs',
     )!;
@@ -61,11 +56,11 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(nativeAfter.rules['no-console'][0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });
-    expect(allowed!.messages.filter((message) => message.ruleId === 'no-console')).toEqual([]);
+    expect(allowed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
     const [defect] = await eslint.lintText('console.log("message");\n', { filePath: 'src/line\nbreak.js' });
-    expect(defect!.messages).toEqual(expect.arrayContaining([expect.objectContaining({ ruleId: 'no-console' })]));
+    expect(defect!.messages).toStrictEqual(expect.arrayContaining([expect.objectContaining({ ruleId: 'no-console' })]));
     const [fixed] = await eslint.lintText('export const greeting = "message";\n', { filePath: 'src/line\nbreak.js' });
-    expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toEqual([]);
+    expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
     expect((await applyCommand({ cwd: directory.path, isDryRun: true })).text).not.toContain(
         'rules: changed no-console',
     );
@@ -92,9 +87,9 @@ export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 
             sources: [before, before.replace('...rules,', "...rules, 'no-eval': 'off',")],
         }),
     );
-    expect(result[0]?.['no-eval']).toEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'error' }]);
-    expect(result[1]?.['no-eval']).toEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'off' }]);
-    expect(result[0]?.['example/root']).toEqual([
+    expect(result[0]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'error' }]);
+    expect(result[1]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'off' }]);
+    expect(result[0]?.['example/root']).toStrictEqual([
         { files: ['**/*.js'], ignores: ['tests/**'], setting: ['error', { root: `${directory.path}/` }] },
     ]);
     expect(readFileSync(join(directory.path, '.gspot/config/eslint.config.mjs'), 'utf8')).toBe(installed);

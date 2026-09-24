@@ -1,13 +1,17 @@
-import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '#plugin/rules/definition.ts';
 import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
 
 const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
 const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
 
-/** Count executable statements without entering nested functions or type declarations. */
+/**
+ * Count executable statements without entering nested functions or type declarations.
+ * @param node
+ * @param visitorKeys
+ */
 export function statementCount(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
-    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare === true)) return 0;
+    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;
     if (FUNCTIONS.has(node.type)) return node.type === 'FunctionDeclaration' ? 1 : 0;
     const own =
         (node.type.endsWith('Statement') && node.type !== 'BlockStatement' && node.type !== 'EmptyStatement') ||

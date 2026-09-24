@@ -1,10 +1,10 @@
-// Snapshot references belong to a semantic Swift test file beside their configured layout.
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
 import { xcodeFinding } from '#cli/checks/xcode/files.ts';
+// Snapshot references belong to a semantic Swift test file beside their configured layout.
+import type { EngineInput } from '#cli/types/execution.ts';
 
 function escapePattern(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+    return text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
 }
 
 /**
@@ -34,7 +34,7 @@ export function referenceOwners(input: EngineInput): Finding[] {
         patterns.push(new RegExp(`^${pattern.replace('(?<file>[^/]+)', () => escapePattern(name))}$`, 'u'));
         owners.set(base, patterns);
     }
-    const findings = input.files.flatMap(({ path }): Finding[] => {
+    return input.files.flatMap(({ path }): Finding[] => {
         const match = reference.exec(path);
         if (!match?.groups) return [];
         const base = match.groups['base'] ?? '';
@@ -49,5 +49,4 @@ export function referenceOwners(input: EngineInput): Finding[] {
             ),
         ];
     });
-    return findings;
 }

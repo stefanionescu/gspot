@@ -2,7 +2,7 @@
 name = "gspot-tools"
 version = "0.0.0"
 requires-python = ">=3.11"
-dependencies = [ "pip-licenses==5.5.5", "semgrep==1.152.0", "yamllint==1.38.0", "zizmor==1.30.1" ]
+dependencies = [ "pip-licenses==5.5.5", "semgrep==1.178.0", "yamllint==1.38.0", "zizmor==1.30.1" ]
 
 [tool.uv]
 package = false

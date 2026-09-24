@@ -6,14 +6,14 @@ const root = join(import.meta.dir, '../../..');
 const acceptance = join(root, 'tests/acceptance');
 
 test('acceptance selection keeps its default suite when filtering names', () => {
-    expect(acceptanceArguments(['-t', 'findings'])).toEqual([
+    expect(acceptanceArguments(['-t', 'findings'])).toStrictEqual([
         '--timeout',
         '60000',
         '--test-name-pattern',
         'findings',
         acceptance,
     ]);
-    expect(acceptanceArguments([join(acceptance, 'cli/checks.test.ts')])).toEqual([
+    expect(acceptanceArguments([join(acceptance, 'cli/checks.test.ts')])).toStrictEqual([
         '--timeout',
         '60000',
         join(acceptance, 'cli/checks.test.ts'),

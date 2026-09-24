@@ -1,17 +1,18 @@
 import * as os from 'node:os';
-import { dirname, join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { dirname, join } from 'node:path';
 import { planRun } from '#cli/run/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { executeRun } from '#cli/run/execute.ts';
 import { explain } from '#cli/output/explain.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, spyOn, test } from 'bun:test';
-import type { Session, PlannedCheck, RunOptions } from '#cli/types/execution.ts';
-import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
+import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import type { Session, PlannedCheck, RunOptions } from '#cli/types/execution.ts';
+
 import {
     copyFileSync,
     chmodSync,
@@ -124,7 +125,7 @@ test.each([
     const spec = configurationManifests()
         .get(entry.configuration)!
         .checks.find((check) => check.name === entry.check)!;
-    const executable = Bun.which(entry.command[0]!);
+    const executable = Bun.which(entry.command[0]);
     if (executable === null) throw new Error(`The native fixer test requires ${entry.command[0]}.`);
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
@@ -188,6 +189,7 @@ test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
                         fix_command: [...command, '--fix', '{files}'],
                         fix_order: spec.fix_order!,
                         fix_findings_exit_codes: spec.fix_findings_exit_codes!,
+                        findings_exit_codes: spec.findings_exit_codes!,
                         output: spec.output!,
                         paths: [path],
                         stage: 'commit',
@@ -197,6 +199,19 @@ test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
             [config]: nativeConfiguration,
             [path]: isCss ? 'a { color: #ffffff; unknown: 1; }\n' : 'missing()\n',
         });
+        const source = readFileSync(join(sandbox.path, path), 'utf8');
+        writeFileSync(join(sandbox.path, config), isCss ? '{' : 'throw new Error("Invalid native configuration");');
+        const invalid = await executeRun(await openSession(sandbox.path), {
+            stage: 'all',
+            skips: [],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+        });
+        expect(invalid.report.exitCode).toBe(2);
+        expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
+        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(source);
+        writeFileSync(join(sandbox.path, config), nativeConfiguration);
         const session = await openSession(sandbox.path);
         const explanation = explain(session, 'project/native');
         expect(explanation).toMatchObject({ data: { fix_findings_exit_codes: [isCss ? 2 : 1] } });
@@ -232,7 +247,10 @@ test.each([
     '$check fixes available defects while unresolved findings remain status 1',
     async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`, [path]: defect });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+            [path]: defect,
+        });
         if (configuration === 'python') {
             const ruff = Bun.which('ruff');
             if (ruff === null) throw new Error('The native fixer test requires the pinned Ruff executable.');
@@ -274,7 +292,7 @@ test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ 
         rmSync(join(sandbox.path, 'source.txt'));
         writeFileSync(join(sandbox.path, 'source.txt'), 'original');
         const corrected = await applyFixers(session, [planned], preview);
-        expect(corrected.changed).toEqual(['source.txt']);
+        expect(corrected.changed).toStrictEqual(['source.txt']);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'changed');
     },
 );
@@ -384,7 +402,7 @@ describe('correction outcomes', () => {
         const result = await runFixer(session, planned, sandbox.path);
         expect(result.status).toBe(status);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
-        expect(result.changed).toEqual(content === 'original' ? [] : ['source.txt']);
+        expect(result.changed).toStrictEqual(content === 'original' ? [] : ['source.txt']);
     });
     test.each([
         { script: 'process.exitCode = 0', status: 'unchanged', after: 'original' },
@@ -402,7 +420,7 @@ describe('correction outcomes', () => {
         const result = await runFixer(session, await correction(session, script), sandbox.path);
         expect(result.status).toBe(status);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
-        expect(result.changed).toEqual(after === 'original' ? [] : ['source.txt']);
+        expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
         if (result.status === 'failed') expect(result.note).toContain('exited 3');
     });
 
@@ -414,8 +432,8 @@ describe('correction outcomes', () => {
         const planned = await correction(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
         const result = await runFixer(session, planned, sandbox.path);
         expect(result.status).toBe('changed');
-        expect(result.changed).toEqual(['source.txt']);
-        expect(readFileSync(join(sandbox.path, 'source.txt'))).toEqual(Buffer.from([0xfe]));
+        expect(result.changed).toStrictEqual(['source.txt']);
+        expect(readFileSync(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
     });
 
     test('counts deletion of an empty file as a change', async () => {
@@ -425,7 +443,7 @@ describe('correction outcomes', () => {
         const planned = await correction(session, "require('node:fs').unlinkSync('source.txt')");
         const result = await runFixer(session, planned, sandbox.path);
         expect(result.status).toBe('changed');
-        expect(result.changed).toEqual(['source.txt']);
+        expect(result.changed).toStrictEqual(['source.txt']);
         expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
     });
 
@@ -496,7 +514,7 @@ describe('correction outcomes', () => {
         expect(scratch).toContain('gspot-fix-');
         expect(existsSync(scratch)).toBe(false);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-        expect(report.changed).toEqual(['source.txt']);
+        expect(report.changed).toStrictEqual(['source.txt']);
         expect(report.diffs.join('\n')).toContain('+partial');
     });
 
@@ -511,7 +529,7 @@ describe('correction outcomes', () => {
         const files = paths.map((path) => ({ ...source, path }));
         const prepared = prepareCommand(session, { ...planned, files }, ['tool', '{files}'], process.execPath);
         expect(prepared.commands.length).toBeGreaterThan(1);
-        expect(prepared.commands.flatMap((command) => command.argv.slice(1))).toEqual(paths);
+        expect(prepared.commands.flatMap((command) => command.argv.slice(1))).toStrictEqual(paths);
         for (const command of prepared.commands)
             expect(Buffer.byteLength(command.argv.join(' '))).toBeLessThan(100_000);
     });
@@ -540,7 +558,7 @@ test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', as
             failure = error;
         }
         expect(failure).toBeInstanceOf(Error);
-        expect(readdirSync(temporary)).toEqual([]);
+        expect(readdirSync(temporary)).toStrictEqual([]);
     } finally {
         temporaryDirectory.mockRestore();
     }
@@ -645,13 +663,18 @@ test.each(['canceled', 'timeout'].flatMap((failure) => [false, true].map((isolat
         const controller = new AbortController();
         const planned = await correction(session, "await Bun.write('source.txt', 'partial'); await Bun.sleep(10000);");
         planned.spec.isolated_files = isolated;
-        const timer = failure === 'canceled' ? setTimeout(() => controller.abort(), 500) : undefined;
+        const timer =
+            failure === 'canceled'
+                ? setTimeout(() => {
+                      controller.abort();
+                  }, 500)
+                : undefined;
         try {
             const result = await runFixer({ ...session, cancelSignal: controller.signal }, planned, sandbox.path);
             expect(result.status).toBe('failed');
             if (result.status !== 'failed') throw new Error('The correction did not report its process failure.');
             expect(result.note).toContain(failure === 'canceled' ? 'was canceled' : 'ran past 1 seconds');
-            expect(result.changed).toEqual(['source.txt']);
+            expect(result.changed).toStrictEqual(['source.txt']);
             expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');
         } finally {
             clearTimeout(timer);

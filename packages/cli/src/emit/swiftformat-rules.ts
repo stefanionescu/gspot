@@ -11,7 +11,10 @@ function content(line: string): string {
     return line.trim();
 }
 
-/** Read the unfiltered rule lists emitted in SwiftFormat configuration. */
+/**
+ * Read the unfiltered rule lists emitted in SwiftFormat configuration.
+ * @param text
+ */
 export function swiftformatRules(text: string): Record<string, string[]> {
     const rules: Record<string, string[]> = { enable: [], disable: [], rules: [], 'lint-only': [] };
     const lines = text.split(/\r?\n/u);

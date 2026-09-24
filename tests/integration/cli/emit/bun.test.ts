@@ -1,9 +1,9 @@
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { openSession } from '#cli/run/session.ts';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
@@ -21,10 +21,10 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     const owner = openLifecycleOwner(repository.path);
     owner.applyProposal(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
     const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');
-    expect(Bun.TOML.parse(installed)).toEqual({
+    expect(Bun.TOML.parse(installed)).toStrictEqual({
         install: {
             exact: true,
-            minimumReleaseAge: 1209600,
+            minimumReleaseAge: 1_209_600,
             security: { scanner: '@socketsecurity/bun-security-scanner' },
         },
     });

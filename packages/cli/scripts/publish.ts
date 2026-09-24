@@ -4,8 +4,8 @@ import { valid } from 'semver';
 import { execaSync } from 'execa';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { releaseTargets } from '#cli/platform/release-targets.ts';
 import packageManifest from '#package' with { type: 'json' };
+import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
 // Usage: bun packages/cli/scripts/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
 import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync, chmodSync } from 'node:fs';
@@ -125,7 +125,10 @@ try {
         .option('--dry-run', 'Ask npm to report publication without uploading packages')
         .allowExcessArguments(false)
         .showHelpAfterError()
-        .addHelpText('after', `\nExample: bun packages/cli/scripts/publish.ts --tag v${packageManifest.version} --dry-run`)
+        .addHelpText(
+            'after',
+            `\nExample: bun packages/cli/scripts/publish.ts --tag v${packageManifest.version} --dry-run`,
+        )
         .exitOverride()
         .parse();
     const { tag: version, registry, dryRun } = script.opts<{ tag: string; registry?: string; dryRun?: boolean }>();

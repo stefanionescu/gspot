@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import { mkdirSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/schemas/reports.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
+import { mkdirSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'a.sh': 'echo 1\n# gspot-ignore structure/call-through -- The public name is the stable one.\nx() { y; }\nz() { w; } # gspot-ignore structure/call-through\n',
     });
-    const inline = inlineIgnores(sandbox.path, 'a.sh');
-    expect(inline).toEqual([
+    const inline = inlineIgnores({ root: sandbox.path, sources: new Map() }, 'a.sh');
+    expect(inline).toStrictEqual([
         { line: 3, check: 'structure/call-through', reason: 'The public name is the stable one.' },
         { line: 4, check: 'structure/call-through' },
     ]);
@@ -50,7 +50,7 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     writeFileSync(path, '// gspot-ignore swift/trivial-function\n' + source);
     const unexplained = await executeRun(await openSession(sandbox.path), options);
     expect(unexplained.report.exitCode).toBe(0);
-    expect(unexplained.report.checks[0]!.findings).toEqual([]);
+    expect(unexplained.report.checks[0]!.findings).toStrictEqual([]);
 });
 
 test('inline engine comments do not suppress external-tool findings', async () => {
@@ -59,7 +59,7 @@ test('inline engine comments do not suppress external-tool findings', async () =
         'a.sh': '# gspot-ignore structure/custom -- Deliberate.\necho "$1"\n',
     });
     const finding = { check: 'structure/custom', file: 'a.sh', line: 2, message: 'External finding', fixable: false };
-    expect(applyInlineIgnores(sandbox.path, [finding])).toEqual([finding]);
+    expect(applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
 });
 
 test('missing finding paths have no inline ignores but failed reads remain errors', async () => {
@@ -72,9 +72,9 @@ test('missing finding paths have no inline ignores but failed reads remain error
         message: 'Required source is missing.',
         fixable: false,
     };
-    expect(applyInlineIgnores(sandbox.path, [finding])).toEqual([finding]);
+    expect(applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
     mkdirSync(join(sandbox.path, 'missing.ts'));
-    expect(() => applyInlineIgnores(sandbox.path, [finding])).toThrow();
+    expect(() => applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toThrow();
 });
 
 test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comment'])(
@@ -130,10 +130,10 @@ test.each(['source.sh', '../outside/source.sh'])(
             message: 'Finding',
             fixable: false,
         };
-        expect(() => applyInlineIgnores(root, [finding])).toThrow();
+        expect(() => applyInlineIgnores({ root: root, sources: new Map() }, [finding])).toThrow();
         expect(await Bun.file(join(sandbox.path, 'outside/source.sh')).text()).toBe(comment);
         unlinkSync(join(root, 'source.sh'));
         writeFileSync(join(root, 'source.sh'), comment);
-        expect(applyInlineIgnores(root, [{ ...finding, file: 'source.sh' }])).toEqual([]);
+        expect(applyInlineIgnores({ root: root, sources: new Map() }, [{ ...finding, file: 'source.sh' }])).toStrictEqual([]);
     },
 );

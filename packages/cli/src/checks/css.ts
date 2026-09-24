@@ -1,10 +1,10 @@
-import { readSource } from '#cli/repository/tracked.ts';
 import { parse } from 'postcss';
-// CSS modules against the code that imports them: every class defined is read, and every class read is defined.
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+// CSS modules against the code that imports them: every class defined is read, and every class read is defined.
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const MODULE_SUFFIX = /\.module\.(?:css|scss|pcss)$/u;
 const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;
@@ -89,11 +89,11 @@ export function cssModuleUsage(input: EngineInput): Finding[] {
     const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
     const code = paths
         .filter((path) => CODE_SUFFIX.test(path))
-        .map((path) => ({ path, text: readSource(input.root, path).toString('utf8') }));
+        .map((path) => ({ path, text: readSource(input.root, path, input.observations).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
     for (const sheet of sheets) {
-        const defined = definedClasses(readSource(input.root, sheet).toString('utf8'), sheet);
+        const defined = definedClasses(readSource(input.root, sheet, input.observations).toString('utf8'), sheet);
         findings.push(...sheetFindings(input, sheet, defined, code));
     }
     return findings;

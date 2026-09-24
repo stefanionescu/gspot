@@ -26,7 +26,7 @@ describe('nginxTestArguments', () => {
             certificate: '/work/certificate.pem',
             key: '/work/key.pem',
         };
-        expect(nginxTestArguments(CONFIG, mounts, 'nginx:1.29.3-alpine')).toEqual([
+        expect(nginxTestArguments(CONFIG, mounts, 'nginx:1.29.3-alpine')).toStrictEqual([
             'run',
             '--rm',
             '--add-host',

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
+import { planRun } from '#cli/run/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
+import { valeFindings } from '#cli/prose/vale.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/tools/tool-probe.ts';
-import { valeFindings } from '#cli/prose/vale.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -15,7 +15,7 @@ for (const extension of ['md', 'sh']) {
         await createFileTree(directory.path, {
             'gspot.toml': 'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n',
             '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
-            '.gspot/styles/Example/Concrete.yml':
+            '.gspot/config/styles/Example/Concrete.yml':
                 'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
             [path]: '# We delve into the records.\n',
         });
@@ -23,7 +23,7 @@ for (const extension of ['md', 'sh']) {
         const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
         const defect = await runEngineCheck(session, valeFindings, planned!);
         expect(defect.status, defect.note).toBe('fail');
-        expect(defect.findings).toEqual([expect.objectContaining({ file: path, line: 1, rule: 'Example.Concrete' })]);
+        expect(defect.findings).toStrictEqual([expect.objectContaining({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
         const corrected = await runEngineCheck(session, valeFindings, planned!);
         expect(corrected.status, corrected.note).toBe('ok');
@@ -36,7 +36,8 @@ for (const extension of ['md', 'sh']) {
             const path = `sample.${extension}`;
             const source = '# Example text\n';
             await createFileTree(directory.path, {
-                'gspot.toml': 'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
+                'gspot.toml':
+                    'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
                 '.gspot/config/vale.ini': 'Packages =\n',
                 [path]: source,
             });
@@ -60,7 +61,7 @@ for (const extension of ['md', 'sh']) {
             try {
                 const failed = await runEngineCheck(session, valeFindings, planned!);
                 expect(failed.status).toBe(failure === 'outdated' ? 'missing' : 'error');
-                expect(failed.findings).toEqual([]);
+                expect(failed.findings).toStrictEqual([]);
                 probe.mockReturnValue({ name: 'vale', state: 'ok', path: process.execPath });
                 spawn.mockImplementation(async (command, options) => {
                     expect(options.timeoutMs).toBe(1000);
@@ -90,7 +91,7 @@ for (const extension of ['md', 'sh']) {
                 });
                 const corrected = await runEngineCheck(session, valeFindings, planned!);
                 expect(corrected.status).toBe('fail');
-                expect(corrected.findings).toEqual([
+                expect(corrected.findings).toStrictEqual([
                     expect.objectContaining({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
                 ]);
                 spawn.mockResolvedValue({ code: 0, stdout: '{}', stderr: '', missing: false, duration: 1 });

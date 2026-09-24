@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { openBuildCache } from '#cli/platform/build-cache.ts';
+import { expect, test } from 'bun:test';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
+import { openBuildCache } from '#cli/platform/build-cache.ts';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('build state is platform-local, stable for one repository, and distinct between repositories', async () => {
     await using first = await testdir();

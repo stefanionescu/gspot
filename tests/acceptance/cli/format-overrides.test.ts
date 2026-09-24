@@ -1,12 +1,12 @@
+import prettier from 'prettier';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/reports.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import prettier from 'prettier';
-import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = `version = 1
 level = "all"
@@ -77,7 +77,7 @@ test('formatter overrides agree between direct tool configuration, editor discov
     const before = await run(directory.path, [...args, '--', ...files]);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     const report = JSON.parse(before.stdout) as RunReport;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted()).toEqual(
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted()).toStrictEqual(
         files.toSorted(),
     );
     const corrected = await run(directory.path, [...args, '--fix', '--', ...files]);

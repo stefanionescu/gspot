@@ -1,8 +1,9 @@
+import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
 // The checks on a normalized policy that the schema cannot state: reasons present, selectors precise, scopes real.
 import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import * as messages from '#cli/policy/messages.ts';
+
 import type {
     EditorconfigAdoption,
     EslintAdoption,

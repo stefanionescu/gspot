@@ -1,9 +1,9 @@
 // Which selected configuration claims which file, per scope.
 import picomatch from 'picomatch';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { Claims, Manifest } from '#cli/types/configurations.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import type { PathExpressions, TrackedFile } from '#cli/types/repository.ts';
-import type { Claims, Manifest } from '#cli/types/configurations.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 
 const GLOB_CHARS = /[*?{]/u;
 
@@ -34,7 +34,10 @@ export function pathMatcher(patterns: string[]): (path: string) => boolean {
     return isMatch;
 }
 
-/** Compile the same directory, inclusion, and exclusion selectors for CLI and generated tool configurations. */
+/**
+ * Compile the same directory, inclusion, and exclusion selectors for CLI and generated tool configurations.
+ * @param patterns
+ */
 export function pathExpressions(patterns: string[]): PathExpressions {
     const expanded = expandedPaths(patterns);
     return {
@@ -109,7 +112,10 @@ export function claimants(file: TrackedFile, selected: Manifest[]): Manifest[] {
     });
 }
 
-/** Expand literal directory selectors while retaining their inclusion or exclusion polarity. */
+/**
+ * Expand literal directory selectors while retaining their inclusion or exclusion polarity.
+ * @param patterns
+ */
 export function expandedPaths(patterns: string[]): string[] {
     return patterns.flatMap((pattern) => {
         const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;

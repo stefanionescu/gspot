@@ -1,15 +1,19 @@
-import { quoteArgument } from '#cli/platform/arguments.ts';
+import type { Command } from 'commander';
+import { nearMatches } from '#cli/policy/near.ts';
+import * as messages from '#cli/policy/messages.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
 // gspot ignore: one [[ignore]] entry with its reason, or the removal of the entries that match.
 import { allChecks } from '#cli/configurations/listing.ts';
-import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import { PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
-import { appendEntry, removeEntries } from '#cli/policy/write.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
 import type { CommandResult } from '#cli/types/execution.ts';
-import type { TomlTable } from '#cli/types/policy.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { appendEntry, removeEntries } from '#cli/policy/write.ts';
+import { PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
+import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
+import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
+
 type IgnoreOptions = {
     cwd: string;
     check: string;
@@ -86,11 +90,6 @@ export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     const { entry, lines } = ignoreEntry(o);
     return commitPolicy(root, appendEntry('ignore', entry), false, lines.join('\n'));
 }
-
-import { printCommand } from '#cli/commands/print-result.ts';
-import type { Command } from 'commander';
-
-import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
 
 /**
  * Registers ignore.

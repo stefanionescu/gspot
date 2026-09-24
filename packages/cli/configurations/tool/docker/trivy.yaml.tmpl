@@ -6,4 +6,4 @@ severity:
         - node_modules
         - .gspot
         - .git
-ignorefile: .gspot/config/trivyignore
+ignorefile: <%= json('.gspot/config/' + (scope === '' ? '' : scope + '/') + 'trivyignore', 0) %>

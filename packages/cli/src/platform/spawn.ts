@@ -1,9 +1,9 @@
+import { onExit } from 'signal-exit';
 // Execa owns capture and platform shims; this boundary supervises each asynchronous process tree.
 import { execa, execaSync, type Result } from 'execa';
-import { onExit } from 'signal-exit';
 import type { ChildProcess } from 'node:child_process';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { delimiter, dirname, isAbsolute } from 'node:path';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/types/platform.ts';
 
 const MISSING_CODE = 127;

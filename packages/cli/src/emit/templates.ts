@@ -1,26 +1,26 @@
-import { prettierConfig, editorconfigOverrides } from '#cli/emit/format.ts';
-import { markdownlintRules } from '#cli/emit/markdownlint.ts';
-import { scopeIgnorePatterns } from '#cli/emit/ignore-patterns.ts';
-import { pathExpressions } from '#cli/configurations/claims.ts';
-import { eslintRuleBlocks } from '#cli/emit/eslint.ts';
 // Render a configuration template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
 import { styleNames } from '#cli/prose/vale.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
+import { eslintRuleBlocks } from '#cli/emit/eslint.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { extensionOf, toPosix } from '#cli/platform/paths.ts';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/syntax.ts';
+import { markdownlintRules } from '#cli/emit/markdownlint.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { pathExpressions } from '#cli/configurations/claims.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { scopeIgnorePatterns } from '#cli/emit/ignore-patterns.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/syntax.ts';
+import type { ScopeSelection, Session } from '#cli/types/execution.ts';
+import { prettierConfig, editorconfigOverrides } from '#cli/emit/format.ts';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
 import type { JsonFormat, TemplateInputs, EslintRuleBlock } from '#cli/types/generation.ts';
+import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
 const JSON_INDENT = 4;
 
@@ -89,6 +89,29 @@ function tsconfigAliases(session: Session, prefix: string): Record<string, strin
 function aliasesFor(session: Session, scope: string): Record<string, string> {
     const prefix = scope === '' ? '' : `${scope}/`;
     return { ...packageAliases(session.root, prefix), ...tsconfigAliases(session, prefix) };
+}
+
+// Inherit authored resolution and file selection. A default input glob belongs to the repository,
+// not the generated configuration directory.
+function javascriptConfig(session: Session, target: string, scope: string): Record<string, unknown> {
+    const config = getTsconfig(session.root, join(session.root, scope, 'jsconfig.json'));
+    const prefix = toPosix(relative(dirname(target), scope || '.')) + '/';
+    const defaults = config === undefined ? {
+        target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext',
+        skipLibCheck: true, resolveJsonModule: true,
+    } : {};
+    return {
+        ...(config === undefined ? {} : { extends: `${prefix}jsconfig.json` }),
+        compilerOptions: { ...defaults, checkJs: true, allowJs: true, strict: true, noEmit: true },
+        ...(config?.raw.files !== undefined || config?.raw.include !== undefined ? {} : {
+            include: ['js', 'mjs', 'cjs', 'jsx'].map((extension) => `${prefix}**/*.${extension}`),
+        }),
+        ...(config === undefined ? { exclude: [
+            '**/node_modules/**', '.gspot/**', '**/eslint.config.mjs', '**/eslint.config.js',
+            '**/eslint.config.cjs', '**/dist/**', '**/build/**', '**/coverage/**', '**/.build/**',
+            '**/DerivedData/**', ...session.policyFiles.policy.declarations.flatMap((entry) => entry.paths),
+        ].map((path) => `${prefix}${path}`) } : {}),
+    };
 }
 
 function commented(lines: string[], mark: string): string {
@@ -222,6 +245,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .filter((file) => file.path.endsWith(extension) && file.nature === 'source')
             .map((file) => file.path);
     return {
+        javascriptConfig: (targetPath) => javascriptConfig(session, targetPath, selection.scope.path),
         prettierConfig: (targetPath) => prettierConfig(session, targetPath, view.extra('prettier')),
         markdownlintRules: markdownlintRules(view),
         scopeIgnorePatterns,
@@ -275,7 +299,9 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         has: (configuration) =>
             view.configurations.includes(configuration) ||
             (selection.scope.path === '' &&
-                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === configuration))),
+                session.scopes.some((entry) =>
+                    entry.selected.some((manifest) => manifest.configuration.name === configuration),
+                )),
         importAliases: (scope) => aliasesFor(session, scope),
         tools: toolNames(session),
         toolPackages: toolPackages(session),

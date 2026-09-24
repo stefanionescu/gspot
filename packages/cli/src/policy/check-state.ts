@@ -2,7 +2,12 @@ import type { Policy } from '#cli/types/policy.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { ScopeSelection } from '#cli/types/execution.ts';
 
-/** Describe the persistent policy selection independently of files or tool availability. */
+/**
+ * Describe the persistent policy selection independently of files or tool availability.
+ * @param policy
+ * @param scope
+ * @param spec
+ */
 export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpec): string {
     if (policy.level !== 'all' && spec.level !== 'recommended' && !policy.extraChecks.includes(spec.name))
         return 'off (level)';
@@ -16,7 +21,11 @@ export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpe
     return setting === undefined ? 'on' : `waits for ${setting}`;
 }
 
-/** The unmet setting declared by a check, if any. */
+/**
+ * The unmet setting declared by a check, if any.
+ * @param scope
+ * @param spec
+ */
 export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
     const setting = spec.waits_for;
     if (setting === undefined) return undefined;

@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Message files: every one parses as ICU MessageFormat, none is empty, and every locale holds every key of the base.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 
 type Translations = { directory?: string; base?: string };
@@ -53,7 +53,7 @@ export function localeFiles(input: EngineInput): Finding[] {
             (path) => path.startsWith(`${posix.join(input.scope, named.directory ?? '')}/`) && path.endsWith('.json'),
         );
     const raw = new Map(
-        files.map((path) => [path, JSON.parse(readSource(input.root, path).toString('utf8')) as unknown]),
+        files.map((path) => [path, JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as unknown]),
     );
     const held = new Map([...raw].map(([path, value]) => [path, flat(value)]));
     const basePath = files.find((path) => path.slice(path.lastIndexOf('/') + 1) === `${base}.json`);
@@ -67,7 +67,7 @@ export function localeFiles(input: EngineInput): Finding[] {
         message: text,
         fixable: false,
     });
-    const found = held
+    return held
         .entries()
         .flatMap(([path, messages]) => {
             const broken = [...messages].flatMap(([key, text]) => {
@@ -85,5 +85,4 @@ export function localeFiles(input: EngineInput): Finding[] {
             return [...broken, ...missing, ...dotted];
         })
         .toArray();
-    return found;
 }

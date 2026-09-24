@@ -1,6 +1,6 @@
+import { z } from 'zod';
 import { execa } from 'execa';
 import manifest from '@gspot/cli/package.json' with { type: 'json' };
-import { z } from 'zod';
 
 const variables = process.env;
 const tag = variables['DOCS_RELEASE_TAG'] ?? '';

@@ -31,7 +31,9 @@ try {
     const stale = targets.filter((target) => !isCurrent(join(root, target.relative), target.wanted));
     if (isCheck && stale.length > 0) {
         const lines = stale.map((target) => `schema/generated  changed  ${target.relative}`);
-        console.log([...lines, 'Run bun packages/cli/scripts/generate-schema.ts to rewrite the schema files.'].join('\n'));
+        console.log(
+            [...lines, 'Run bun packages/cli/scripts/generate-schema.ts to rewrite the schema files.'].join('\n'),
+        );
         process.exitCode = 1;
     }
     if (!isCheck)

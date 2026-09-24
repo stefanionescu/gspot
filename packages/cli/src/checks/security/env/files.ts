@@ -1,8 +1,8 @@
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
 // git tracks no environment file except the templates.
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
 
 /**
@@ -13,7 +13,7 @@ import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patte
 export function envFiles(input: EngineInput): Finding[] {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
     const tracked = indexedPaths(input.root);
-    const findings = tracked
+    return tracked
         .filter(
             (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
         )
@@ -25,5 +25,4 @@ export function envFiles(input: EngineInput): Finding[] {
             message: `${path} is tracked; an environment file holds the values of one machine.`,
             fixable: false,
         }));
-    return findings;
 }

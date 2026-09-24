@@ -1,11 +1,14 @@
 import { readFileSync } from 'node:fs';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
-import { Language, Parser } from 'web-tree-sitter';
+import { Language, Parser, type Tree } from 'web-tree-sitter';
 import { grammarPath } from '#cli/platform/assets.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { SourceObservations } from '#cli/types/repository.ts';
 
 export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 
 const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
+const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {
     isReady: undefined,
@@ -37,6 +40,38 @@ export function parserFor(name: GrammarName): Promise<Parser> {
         state.parsers.set(name, parser);
     }
     return parser;
+}
+
+/**
+ * Shares a run-owned parse while giving each reader its own disposable tree handle.
+ * @param name the grammar that gives the source its meaning
+ * @param text the exact source to parse
+ * @param context execution observations and their existing resource owner, when running checks
+ * @returns a caller-owned tree copy, or null when parsing cannot produce a tree
+ */
+export async function parseSource(
+    name: GrammarName,
+    text: string,
+    context?: Pick<EngineInput, 'observations' | 'resources'>,
+): Promise<Tree | null> {
+    const parser = await parserFor(name);
+    if (context?.resources === undefined) return parser.parse(text);
+    let trees = observations.get(context.observations);
+    if (trees === undefined) {
+        trees = new Map();
+        observations.set(context.observations, trees);
+    }
+    const key = JSON.stringify([name, text]);
+    const held = trees.get(key);
+    if (held !== undefined) return held.copy();
+    const tree = parser.parse(text);
+    if (tree === null) return null;
+    trees.set(key, tree);
+    context.resources.defer(() => {
+        trees.delete(key);
+        tree.delete();
+    });
+    return tree.copy();
 }
 
 /**

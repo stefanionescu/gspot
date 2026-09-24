@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { isToolBroken, toolOutputDetail } from '#cli/run/broken-tool.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import { isToolBroken } from '#cli/run/broken-tool.ts';
 
 const base = {
     name: 'sandbox/diagnostic',
@@ -14,6 +14,15 @@ const base = {
     help: '',
 } satisfies CheckSpec;
 const here = import.meta.dir;
+
+test('bounded failure output retains the final diagnostic from both streams', () => {
+    const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');
+    const detail = toolOutputDetail({ code: 1, stdout: `${progress}\nstdout failure`, stderr: `${progress}\nstderr failure`, missing: false, duration: 1 }, 'empty');
+    expect(detail).toContain('stdout failure');
+    expect(detail).toContain('stderr failure');
+    expect(detail).not.toContain('progress 0\n');
+    expect(detail.split('\n')).toHaveLength(40);
+});
 
 describe('isToolBroken', () => {
     test('a finding on no real file is a crash, and one on a real file is a finding', () => {

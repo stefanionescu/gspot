@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { stripVTControlCharacters } from 'node:util';
 import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { stripVTControlCharacters } from 'node:util';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const SHOWN_LINES = 3;
 const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;

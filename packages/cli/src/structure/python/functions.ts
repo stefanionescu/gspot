@@ -1,13 +1,17 @@
 import { docstringOf } from '#cli/structure/python/modules.ts';
+import { executableStatements } from '#cli/structure/statements.ts';
 import type { PythonFunction, PythonModule, StructureProblem } from '#cli/structure/python/types.ts';
 
-import { executableStatements } from '#cli/structure/statements.ts';
 const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
-/** Report every implemented function at or below the configured statement threshold. */
+/**
+ * Report every implemented function at or below the configured statement threshold.
+ * @param functions
+ * @param threshold
+ */
 export function trivialFunctions(functions: PythonFunction[], threshold: number): StructureProblem[] {
     return functions.flatMap((fn) => {
         const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'python');

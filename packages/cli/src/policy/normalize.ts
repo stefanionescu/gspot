@@ -164,14 +164,13 @@ export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['a
  * @returns the structure configuration
  */
 export function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
-    const filled = defaulted<Policy['structure']>(raw, {
+    return defaulted<Policy['structure']>(raw, {
         reexports: 'none',
         single_file_folder_allowed: [],
         prefix_collision_allowed: [],
         folder_name_allowed: [],
         python: {},
     });
-    return filled;
 }
 
 /**
@@ -190,7 +189,10 @@ export function normalize(raw: RawPolicy): Policy {
         extraChecks: raw.extra_checks,
         exclude: raw.exclude,
         configurations: raw.configurations ?? [],
-        scopes: scopes.map((scope) => ({ path: trimTrailingSlashes(scope.path), configurations: scope.configurations ?? [] })),
+        scopes: scopes.map((scope) => ({
+            path: trimTrailingSlashes(scope.path),
+            configurations: scope.configurations ?? [],
+        })),
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
         architecture: normalizeArchitecture(raw.architecture),
@@ -204,20 +206,19 @@ export function normalize(raw: RawPolicy): Policy {
             ...raw.vendored.map((entry) => ({ ...entry, nature: 'vendored' as const })),
         ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
-        ...{
-            ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
-            ...(raw.ci === undefined ? {} : { ci: raw.ci }),
-            rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
-            coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
-            ...(raw.runner === undefined
-                ? {}
-                : {
-                      runner: {
-                          tool: raw.runner.tool,
-                          ...(raw.runner.tasks === undefined ? {} : { tasks: raw.runner.tasks }),
-                      },
-                  }),
-        },
+
+        ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
+        ...(raw.ci === undefined ? {} : { ci: raw.ci }),
+        rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
+        coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
+        ...(raw.runner === undefined
+            ? {}
+            : {
+                  runner: {
+                      tool: raw.runner.tool,
+                      ...(raw.runner.tasks === undefined ? {} : { tasks: raw.runner.tasks }),
+                  },
+              }),
         scopeTables,
     };
 }

@@ -1,5 +1,5 @@
-import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {
     check: string;

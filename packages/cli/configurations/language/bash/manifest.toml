@@ -52,6 +52,13 @@ name = "bats"
 provider = "host"
 
 [[configs]]
+template = "semgrep/hooks.yml"
+target = ".gspot/config/semgrep/bash.yml"
+rules_path = ["rules"]
+needs = "security"
+per_scope = true
+
+[[configs]]
 template = "shellcheckrc.tmpl"
 target = ".gspot/config/shellcheckrc"
 rules_path = ["enable", "disable"]
@@ -111,6 +118,7 @@ stage = "commit"
 runs = "per-file-list"
 claims = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
+findings_exit_codes = [1]
 coverage = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
 summary = "Runs ShellCheck over shell scripts and sourced files, adding opt-in rules at level all."

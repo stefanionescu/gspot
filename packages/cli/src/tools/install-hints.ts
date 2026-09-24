@@ -1,6 +1,6 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
 // Managed tools use the clone installer; host tools retain platform guidance.
 import { MISE_BACKENDS } from '#cli/tools/installers.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 
 const HOST_HINTS: Record<string, string> = {
     xcodebuild: 'install Xcode from the App Store',
@@ -23,7 +23,10 @@ function platformHint(installers: ToolPin['installers']): string | undefined {
     return match === undefined ? undefined : `${match.command} ${installers[match.installer]?.name ?? ''}`;
 }
 
-/** The installation command for managed tools, or platform guidance for a host tool. */
+/**
+ * The installation command for managed tools, or platform guidance for a host tool.
+ * @param tool
+ */
 export function installHint(tool: ToolPin): string {
     if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
     if (MISE_BACKENDS.some(({ installer }) => tool.installers[installer] !== undefined)) return 'Run: gspot install';

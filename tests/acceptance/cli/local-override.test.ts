@@ -1,10 +1,10 @@
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 
 test('a leftover local file cannot hide ShellCheck while an explicit skip applies only to that run', async () => {
     await using directory = await testdir();
@@ -20,12 +20,12 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     const command = ['check', '--only', 'bash/shellcheck', '--no-cache', '--json'];
     const checked = await run(directory.path, command, environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(checked.stdout)).checks[0]?.findings).toEqual([
+    expect(reportSchema.parse(JSON.parse(checked.stdout)).checks[0]?.findings).toStrictEqual([
         expect.objectContaining({ file: 'entry.sh', line: 2, rule: 'SC2086' }),
     ]);
     const skipped = await run(directory.path, [...command, '--skip', 'bash/shellcheck'], environment);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(skipped.stdout)).skips).toEqual([
+    expect(reportSchema.parse(JSON.parse(skipped.stdout)).skips).toStrictEqual([
         { check: 'bash/shellcheck', source: 'flag' },
     ]);
     const doctor = await run(directory.path, ['doctor', '--json'], environment);
@@ -33,7 +33,7 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     const report = JSON.parse(doctor.stdout) as {
         changes: { configurationNotOwned: { path: string; note: string }[] };
     };
-    expect(report.changes.configurationNotOwned.filter(({ path }) => path === 'gspot.local.toml')).toEqual([
+    expect(report.changes.configurationNotOwned.filter(({ path }) => path === 'gspot.local.toml')).toStrictEqual([
         expect.objectContaining({
             path: 'gspot.local.toml',
             note: 'No command reads this file. Use --skip for one run.',

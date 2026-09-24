@@ -1,14 +1,18 @@
-import { parse as parseToml } from 'smol-toml';
+import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
-import { z } from 'zod';
+import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
 
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });
 
-/** Read resolved package identities from supported textual dependency lockfiles. */
+/**
+ * Read resolved package identities from supported textual dependency lockfiles.
+ * @param filename
+ * @param text
+ */
 export function lockedPackages(filename: string, text: string): Set<string> {
     if (['uv.lock', 'poetry.lock', 'pdm.lock'].includes(filename)) {
         const lock = z.object({ package: z.array(PACKAGE) }).parse(parseToml(text));
@@ -75,7 +79,7 @@ export function lockedPackages(filename: string, text: string): Set<string> {
         return new Set(
             Object.entries(lock).flatMap(([descriptors, entry]) => {
                 if (entry.version === undefined) return [];
-                const descriptor = entry.resolution ?? descriptors.split(/,\s*/u)[0]!;
+                const descriptor = entry.resolution ?? descriptors.split(/,\s*/u, 1)[0]!;
                 const separator = descriptor.indexOf('@', 1);
                 if (separator < 1) throw new Error('Cannot read a resolved package identity from the Yarn lockfile.');
                 const reference = descriptor.slice(separator + 1);

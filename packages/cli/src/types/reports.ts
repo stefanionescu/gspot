@@ -1,4 +1,8 @@
+import type { z } from 'zod';
+import type { Defined } from '#cli/types/policy.ts';
 import type { ToolProbe } from '#cli/types/tools.ts';
+// The report schema owns both the public document and its parsed types.
+import type { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
 
 // What doctor reports.
 
@@ -46,11 +50,6 @@ export type Finding = Defined<z.infer<typeof reportSchema.shape.checks.element.s
 export type CheckResult = Defined<Omit<z.infer<typeof reportSchema.shape.checks.element>, 'findings'>> & {
     findings: Finding[];
 };
-
-// The report schema owns both the public document and its parsed types.
-import type { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
-import type { Defined } from '#cli/types/policy.ts';
-import type { z } from 'zod';
 
 export type RunReport = Defined<Omit<z.infer<typeof reportSchema>, 'checks' | 'ignores' | 'coverage'>> & {
     checks: CheckResult[];

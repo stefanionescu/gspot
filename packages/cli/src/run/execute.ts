@@ -1,26 +1,25 @@
+import pLimit from 'p-limit';
+import { cpus } from 'node:os';
+import { isAbsolute, join, relative, sep } from 'node:path';
+import { applyFixers } from '#cli/run/fixers.ts';
+import { writeReport } from '#cli/output/report.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import { reproduceLine } from '#cli/run/reproduce.ts';
 import type { IgnoreEntry } from '#cli/types/policy.ts';
+import { prepareCommand } from '#cli/run/tool-runner.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { jobsWanted } from '#cli/platform/environment.ts';
+import type { TrackedFile, SourceObservations } from '#cli/types/repository.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
+import { commandConfigurations } from '#cli/run/command-expansion.ts';
+import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
+import type { RunReport, CheckResult, Finding } from '#cli/types/reports.ts';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
-import type { CheckResult, Finding } from '#cli/types/reports.ts';
-import type { RunReport } from '#cli/types/reports.ts';
-import { writeReport } from '#cli/output/report.ts';
-import { jobsWanted } from '#cli/platform/environment.ts';
-import { probeTool } from '#cli/tools/tool-probe.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { cacheInputs, cacheKey, fileHash, pruneCache, readCached, textHash, writeCached } from '#cli/run/cache.ts';
-import { commandConfigurations } from '#cli/run/command-expansion.ts';
-import { applyFixers } from '#cli/run/fixers.ts';
-import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
-import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
-import { reproduceLine } from '#cli/run/reproduce.ts';
-import { prepareCommand } from '#cli/run/tool-runner.ts';
-import { cpus } from 'node:os';
-import pLimit from 'p-limit';
-
 import type { FixReport, IgnoreUse, PlannedCheck, RunOptions, RunOutcome, Session } from '#cli/types/execution.ts';
+import { cacheInputs, cacheKey, fileHash, pruneCache, readCached, textHash, writeCached } from '#cli/run/cache.ts';
 
 /** File observations shared by cached checks within one execution pass. */
 type RunHashes = {
@@ -48,8 +47,11 @@ function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashe
     const path = realpathSync(probe.path);
     let identity = hashes.tools.get(path);
     if (identity === undefined) {
+        const local = relative(session.root, path);
+        const identityPath = session.cacheRoot !== undefined && !isAbsolute(local) && local !== '..' && !local.startsWith(`..${sep}`)
+            ? join(session.cacheRoot, local) : path;
         identity = JSON.stringify({
-            path,
+            path: identityPath,
             mode: statSync(path).mode,
             hash: new Bun.CryptoHasher('sha256').update(readFileSync(path)).digest('hex'),
         });
@@ -61,7 +63,7 @@ function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashe
 function observedHash(session: Session, path: string, hashes: RunHashes): string {
     const held = hashes.files.get(path);
     if (held !== undefined) return held;
-    const hash = fileHash(session.root, path);
+    const hash = fileHash(session.root, path, session.observations);
     hashes.files.set(path, hash);
     return hash;
 }
@@ -86,8 +88,13 @@ function keyFor(session: Session, planned: PlannedCheck, config: RunHashes): str
             : undefined;
     // Repository paths select a check, but only explicit inputs authorize caching its result.
     if (planned.manifest === undefined && declared === undefined) return undefined;
-    // Built-in analyses can read undeclared files and run multiple tools. Their complete inputs are not recorded.
-    if (planned.spec.engine !== undefined || planned.spec.analysis !== undefined) return undefined;
+    // SwiftLint's syntax supplement reads only selected sources and the same native configurations.
+    // Other analyses can read undeclared files and run multiple tools.
+    if (
+        planned.spec.engine !== undefined ||
+        (planned.spec.analysis !== undefined && planned.spec.analysis !== 'swiftlint')
+    )
+        return undefined;
     if (NEVER_CACHED.has(planned.check) || planned.spec.requires !== undefined) return undefined;
     if (planned.spec.runs !== 'per-file-list' && planned.files.length === 0) return undefined;
     const inputs = declared === undefined ? [] : cacheInputs(session.root, declared);
@@ -138,10 +145,16 @@ async function runOne(
     const early = unrunnable(session, planned, base);
     if (early) return early;
     const key = options.noCache === true ? undefined : keyFor(session, planned, config);
-    const cached = key === undefined ? undefined : cachedResult(session.root, key, planned);
+    const cached = key === undefined ? undefined : cachedResult(session.cacheRoot ?? session.root, key, planned);
     if (cached) return cached;
     const result = await planned.run(session, planned, staged);
-    if (key !== undefined && RAN_STATUSES.has(result.status)) writeCached(session.root, key, result);
+    if (key !== undefined && !options.isDryRun && RAN_STATUSES.has(result.status)) {
+        const stored = session.cacheRoot === undefined || result.command === undefined ? result : {
+            ...result,
+            command: result.command.map((part) => part.replaceAll(session.root, () => session.cacheRoot!)),
+        };
+        writeCached(session.cacheRoot ?? session.root, key, stored);
+    }
     return result;
 }
 
@@ -175,12 +188,12 @@ function ignoreRows(uses: Map<string, IgnoreUse>): RunReport['ignores'] {
 
 // What is left of one result after the inline ignores and the ignores of the policy.
 function withoutIgnored(
-    root: string,
+    observations: SourceObservations,
     sifted: Sifted,
     filtering: FilterInputs,
     uses: Map<string, IgnoreUse>,
 ): Finding[] {
-    const inline = applyInlineIgnores(root, sifted.result.findings);
+    const inline = applyInlineIgnores(observations, sifted.result.findings);
     const ignored = applyIgnores(
         inline,
         filtering.ignores.filter((entry) => entry.check === sifted.check.check),
@@ -190,7 +203,7 @@ function withoutIgnored(
 }
 
 function filterAll(
-    root: string,
+    observations: SourceObservations,
     active: PlannedCheck[],
     results: CheckResult[],
     filtering: FilterInputs,
@@ -202,7 +215,7 @@ function filterAll(
         return check === undefined ? [] : [{ check, result, remaining: [] }];
     });
     const ran = paired.filter((entry) => RAN_STATUSES.has(entry.result.status));
-    for (const entry of ran) entry.remaining = withoutIgnored(root, entry, filtering, uses);
+    for (const entry of ran) entry.remaining = withoutIgnored(observations, entry, filtering, uses);
     for (const { check, result, remaining } of ran) {
         const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
         result.findings = remaining;
@@ -234,6 +247,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     using resources = new DisposableStack();
     const session = {
         ...opened,
+        observations: { root: opened.root, sources: new Map<string, Buffer>() },
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };
@@ -245,6 +259,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         const { declarations, scopes, exclude } = session.policyFiles.policy;
         session.repository = await readRepository(session.root, declarations, scopes, exclude);
         opened.repository = session.repository;
+        session.observations = { root: session.root, sources: new Map() };
         session.probes.clear();
         planned = await planRun(session, options);
     }
@@ -259,7 +274,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         active.map((check) =>
             limiter(async () => {
                 const result = await runOne(session, check, options, config, staged);
-                filterAll(session.root, [check], [result], filtering, uses, options);
+                filterAll(session.observations, [check], [result], filtering, uses, options);
                 options.onResult?.(result);
                 return result;
             }),
@@ -316,6 +331,6 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     };
     if (!options.isDryRun && options.stage !== 'message') writeReport(session.root, report);
     if (!options.isDryRun && options.noCache !== true && options.stage === 'all' && !report.narrowed)
-        pruneCache(session.root);
+        pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }

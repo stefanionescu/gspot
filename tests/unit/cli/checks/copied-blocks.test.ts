@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
-import type { CloneReport } from '#cli/checks/docs/copied-blocks.ts';
 import { cloneFindings } from '#cli/checks/docs/copied-blocks.ts';
+import type { CloneReport } from '#cli/checks/docs/copied-blocks.ts';
 
 describe('clone findings', () => {
     test('native absolute and relative paths retain claimed copies and exclude other files', () => {
@@ -24,7 +24,7 @@ describe('clone findings', () => {
                 ],
             };
             const shape = { check: 'duplication/jscpd', root, ceiling: 4, claimed: new Set(['scripts/café.sh']) };
-            expect(cloneFindings(report, shape)).toEqual([
+            expect(cloneFindings(report, shape)).toStrictEqual([
                 {
                     check: 'duplication/jscpd',
                     file: 'scripts/café.sh',
@@ -35,7 +35,7 @@ describe('clone findings', () => {
                     fixable: false,
                 },
             ]);
-            expect(cloneFindings(report, { ...shape, ceiling: 12 })).toEqual([]);
+            expect(cloneFindings(report, { ...shape, ceiling: 12 })).toStrictEqual([]);
         }
     });
 });

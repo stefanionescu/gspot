@@ -1,5 +1,5 @@
-import { policySchema } from '#cli/schemas/policy.ts';
 import { z } from 'zod';
+import { policySchema } from '#cli/schemas/policy.ts';
 
 export const eslintPreviewRequest = z.strictObject({
     root: z.string().min(1),

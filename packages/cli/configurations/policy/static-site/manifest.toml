@@ -151,7 +151,7 @@ analysis = "site-sitemap"
 coverage = ["consistency"]
 summary = "Compares the sitemap with the output: every listed route is a built page, and every built page is listed."
 why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
-help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_excluded."
+help = "Add the page to the sitemap, remove the dead entry, or leave a page out under tools.site.sitemap_allowed."
 
 [[checks]]
 name = "static-site/dead-assets"
@@ -235,7 +235,7 @@ default = []
 summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
 
 [[settings]]
-name = "tools.site.sitemap_excluded"
+name = "tools.site.sitemap_allowed"
 kind = "list"
 direction = "neutral"
 default = ["404.html"]

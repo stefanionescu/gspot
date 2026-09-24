@@ -1,12 +1,12 @@
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the express configuration: an OpenAPI document with a hole, a stale document, and a route with no test.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 const INIT = [
@@ -51,7 +51,7 @@ paths:
                     description: The service is up.
 `;
 const POLICY =
-    '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n\n[tools.express]\nroute_glob = ["src/routes/*.js"]\n';
+    '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n\n[tools.express]\nroute_files = ["src/routes/*.js"]\n';
 const WRITER = (text: string): string => `await Bun.write('openapi.yaml', ${JSON.stringify(text)});\n`;
 const HEALTH = 'export function health(_request, response) {\n    response.sendStatus(204);\n}\n';
 

@@ -1,8 +1,8 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/schemas/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test(
     'levels preserve defect checks and require an explicit opt-in for naming preferences',
@@ -16,8 +16,8 @@ test(
         const recommended = await run(sandbox.path, command);
         expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(recommended.stdout));
-        expect(report.skips).toEqual([]);
-        expect(report.checks.map(({ check, status }) => ({ check, status }))).toEqual([
+        expect(report.skips).toStrictEqual([]);
+        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
             { check: 'bash/syntax', status: 'ok' },
         ]);
         await Bun.write(join(sandbox.path, 'entry.sh'), 'if then\n');
@@ -34,8 +34,8 @@ test(
         const strict = await run(sandbox.path, command);
         expect(strict.code, strict.stdout + strict.stderr).toBe(1);
         const strictReport = reportSchema.parse(JSON.parse(strict.stdout));
-        expect(strictReport.skips).toEqual([]);
-        expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toEqual([
+        expect(strictReport.skips).toStrictEqual([]);
+        expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
             { check: 'bash/syntax', status: 'ok' },
             { check: 'naming/identifiers', status: 'fail' },
         ]);
@@ -56,7 +56,7 @@ test(
         expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
         const accepted = await run(sandbox.path, command);
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks[1]?.findings).toEqual([]);
+        expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks[1]?.findings).toStrictEqual([]);
         const removed = await run(sandbox.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         const restored = await run(sandbox.path, command);

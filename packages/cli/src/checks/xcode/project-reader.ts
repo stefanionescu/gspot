@@ -1,6 +1,6 @@
+import { z } from 'zod';
 // Read OpenStep project structure before resolving source membership through its groups.
 import { posix } from 'node:path';
-import { z } from 'zod';
 
 type Plist = string | Plist[] | { [key: string]: Plist };
 type Token = { text: string; quoted: boolean; at: number };
@@ -37,7 +37,7 @@ function tokens(text: string): Token[] {
         if (!/^\s|^\/\//u.test(raw) && !raw.startsWith('/*')) {
             const quoted = raw.startsWith('"');
             const value = quoted
-                ? raw.slice(1, -1).replace(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
+                ? raw.slice(1, -1).replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
                       if (escaped.startsWith('U')) return String.fromCharCode(Number.parseInt(escaped.slice(1), 16));
                       if (/^[0-7]/u.test(escaped)) return String.fromCharCode(Number.parseInt(escaped, 8));
                       return (
@@ -98,7 +98,11 @@ function parse(text: string): Plist {
     return result;
 }
 
-/** Resolve the Swift sources and synchronized folders that belong to project targets. */
+/**
+ * Resolve the Swift sources and synchronized folders that belong to project targets.
+ * @param text
+ * @param directory
+ */
 export function readProject(
     text: string,
     directory: string,
@@ -130,16 +134,29 @@ export function readProject(
         const entry = object(id);
         const tree = entry.sourceTree ?? '<group>';
         let base: string;
-        if (tree === 'SOURCE_ROOT') base = directory;
-        else if (tree === '<absolute>') base = '/';
-        else if (tree === '<group>') {
-            if (id === root.mainGroup) base = posix.join(directory, root.projectDirPath ?? '');
-            else {
-                const parent = parents.get(id);
-                if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
-                base = resolve(parent);
+        switch (tree) {
+            case 'SOURCE_ROOT': {
+                base = directory;
+                break;
             }
-        } else throw new Error(`Cannot resolve Xcode source tree ${tree} without build settings.`);
+            case '<absolute>': {
+                base = '/';
+                break;
+            }
+            case '<group>': {
+                if (id === root.mainGroup) base = posix.join(directory, root.projectDirPath ?? '');
+                else {
+                    const parent = parents.get(id);
+                    if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
+                    base = resolve(parent);
+                }
+
+                break;
+            }
+            default: {
+                throw new Error(`Cannot resolve Xcode source tree ${tree} without build settings.`);
+            }
+        }
         const path = entry.path ?? '';
         if (/\$[({]/u.test(path)) throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
         visiting.delete(id);
@@ -177,7 +194,10 @@ export function readProject(
     return { sources, folders };
 }
 
-/** Read test-target names without requiring source paths to resolve build settings. */
+/**
+ * Read test-target names without requiring source paths to resolve build settings.
+ * @param text
+ */
 export function projectTestTargets(text: string): string[] {
     const project = projectSchema.parse(parse(text));
     const root = project.objects[project.rootObject];

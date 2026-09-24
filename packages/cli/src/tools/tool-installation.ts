@@ -1,6 +1,10 @@
 import type { ToolPin } from '#cli/types/configurations.ts';
 
-/** Select the private installation used by both generated projects and tool resolution. */
+/**
+ * Select the private installation used by both generated projects and tool resolution.
+ * @param tool
+ * @param runner
+ */
 export function privateToolInstallation(
     tool: ToolPin,
     runner?: string,

@@ -25,7 +25,7 @@ function coversScope(paths: string[], scope: string): boolean {
             `${segments
                 .slice(0, index + 1)
                 .join('/')
-                .replaceAll(/[?*\[\]{}]/gu, '\\$&')}/**`,
+                .replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`)}/**`,
         ),
     );
 }
@@ -59,8 +59,15 @@ function toolTables(policy: Policy, scope: string, name: string): Record<string,
 function settingSlots(settings: Record<string, unknown>, name: string): Record<string, unknown> {
     const prefix = `${TOOL_PREFIX}${name}.`;
     const merged: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(settings))
-        if (key.startsWith(prefix)) merged[key.slice(prefix.length)] = value;
+    for (const [key, value] of Object.entries(settings)) {
+        if (!key.startsWith(prefix)) continue;
+        const segments = key.slice(prefix.length).split('.');
+        let table = merged;
+        for (const [index, segment] of segments.entries()) {
+            if (index === segments.length - 1) table[segment] = value;
+            else table = (table[segment] ??= {}) as Record<string, unknown>;
+        }
+    }
     return merged;
 }
 

@@ -1,9 +1,9 @@
-import { run } from '#cli/platform/spawn.ts';
-import { startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { describe, expect, test } from 'bun:test';
-import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { run } from '#cli/platform/spawn.ts';
+import { describe, expect, test } from 'bun:test';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import pluginPackage from '../../packages/eslint-plugin/package.json' with { type: 'json' };
 
 const root = fileURLToPath(new URL('../..', import.meta.url));

@@ -1,6 +1,9 @@
 import type { CoverageReport } from '#cli/types/reports.ts';
 
-/** Shared source-ending coverage rows for doctor and the configuration listing. */
+/**
+ * Shared source-ending coverage rows for doctor and the configuration listing.
+ * @param report
+ */
 export function coverageLines(report: CoverageReport): string[] {
     if (report.endings.length === 0) return [];
     return [

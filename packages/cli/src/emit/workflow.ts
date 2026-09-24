@@ -1,9 +1,9 @@
-import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { stringify } from 'yaml';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 // GitHub workflows and GitLab includes share installation and exact-object selection.
 import { headerFor } from '#cli/emit/templates.ts';
+import { releaseTargets } from '#cli/platform/release-targets.ts';
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
 const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';
@@ -223,7 +223,10 @@ function scanJob(jobs: string[]): string[] {
     ];
 }
 
-/** Generate independent check and manual jobs with retained reports and restricted scanning permissions. */
+/**
+ * Generate independent check and manual jobs with retained reports and restricted scanning permissions.
+ * @param shape
+ */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
     const jobs = platforms.flatMap((platform) => ['check', 'manual'].map((stage) => `${stage}-${platform}`));
@@ -247,7 +250,10 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
     return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };
 }
 
-/** Generate a GitLab include without changing the authored pipeline. */
+/**
+ * Generate a GitLab include without changing the authored pipeline.
+ * @param shape
+ */
 export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';
     const setup = shape.isMise
@@ -275,7 +281,11 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
             artifacts: {
                 when: 'always',
                 expire_in: '14 days',
-                paths: ['.gspot/reports/report.json', '.gspot/reports/report.sarif', '.gspot/reports/report.codequality.json'],
+                paths: [
+                    '.gspot/reports/report.json',
+                    '.gspot/reports/report.sarif',
+                    '.gspot/reports/report.codequality.json',
+                ],
                 reports: { codequality: '.gspot/reports/report.codequality.json' },
             },
         },

@@ -1,13 +1,13 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { rejects } from 'node:assert/strict';
 import { join } from 'node:path';
-import { mkdirSync, symlinkSync, writeFileSync, readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { rejects } from 'node:assert/strict';
 import { emitAll } from '#cli/emit/targets.ts';
+import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
+import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/types/execution.ts';
+import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
+import { mkdirSync, symlinkSync, writeFileSync, readFileSync } from 'node:fs';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
@@ -37,7 +37,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
         config,
         "import { appendFileSync } from 'node:fs';\nappendFileSync('loads.txt', 'loaded\\n');\nimport base from './base.mjs';\nexport default [...base, { files: ['z.js'], rules: { eqeqeq: 'off' } }];\n",
     );
-    expect(await requiredRules(input)).toEqual([
+    expect(await requiredRules(input)).toStrictEqual([
         {
             check: 'integrity/required-rules',
             file: '.gspot/config/eslint.config.mjs',
@@ -49,7 +49,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
     ]);
     expect(readFileSync(join(sandbox.path, 'loads.txt'), 'utf8')).toBe('loaded\n');
     writeFileSync(config, generated.content);
-    expect(await requiredRules(input)).toEqual([]);
+    expect(await requiredRules(input)).toStrictEqual([]);
     writeFileSync(config, 'export default { rules: { missing: true } };\n');
     await rejects(requiredRules(input), { message: /Tool configuration evaluation failed/u });
     input.cancelSignal = AbortSignal.abort();

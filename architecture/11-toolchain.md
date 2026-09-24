@@ -222,14 +222,14 @@ first JavaScript project, bun or npm on the machine, then bun from the mise file
 `emit/mise.ts` pins bun only in that last case, and pins uv where a Python tool is selected.
 
 Each step of the install runs even when an earlier one failed. The command ends with one list of what
-is left, each entry with its command. It exits 1 when a tool gspot installs itself is on the
-list, and a host tool such as Xcode leaves the exit code alone. `init` exits 0
-once the config is written, and prints the same list.
+is left, each entry with its command. It exits 2 when a tool gspot installs itself is on the
+list, and a host tool such as Xcode leaves the exit code alone. `init` preserves the written
+configuration, prints the same list, and exits 2 when managed-tool installation fails. Successful initialization exits 0.
 
 Three planted machines, each a `PATH` with tools left out. A Swift repository with
 mise and no Node installs the npm tools through bun. A Python repository with no mise and no uv
-ends `install` with exit 1 and one line for uv. A repository with nothing but gspot finishes
-`init` with exit 0.
+ends `install` with exit 2 and one line for uv. A repository with nothing but gspot preserves
+its configuration and reports any managed-tool installation failure with exit 2.
 
 ### Acceptance K-206
 

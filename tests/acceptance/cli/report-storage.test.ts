@@ -1,7 +1,10 @@
-import type { RunReport } from '#cli/types/reports.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import type { RunReport } from '#cli/types/reports.ts';
+
 import {
     chmodSync,
     existsSync,
@@ -13,8 +16,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
     'staged $flags preserves the previous reports',
@@ -40,9 +41,9 @@ test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(checked.stderr).not.toContain('Could not write');
         expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.check).toBe(
-            flags.some((flag) => flag === 'message') ? undefined : 'project/commit',
+            (flags as readonly string[]).includes('message') ? undefined : 'project/commit',
         );
-        expect(paths.map((path) => readFileSync(path))).toEqual(previous);
+        expect(paths.map((path) => readFileSync(path))).toStrictEqual(previous);
     },
 );
 
@@ -110,7 +111,7 @@ test.each(['directory', 'report', 'cache'])(
             expect(result.stderr).toContain('Could not write');
         }
         expect(readFileSync(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
-        expect(readdirSync(outside.path)).toEqual(['sentinel']);
+        expect(readdirSync(outside.path)).toStrictEqual(['sentinel']);
     },
 );
 
@@ -153,7 +154,7 @@ test('runtime ownership preserves authored reports and edited cache results thro
 test.each(['before', 'after'])('an interrupted report %s publication recovers on the next check', async (point) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=(await Bun.file("source.txt").text()) === "corrected\\n" ? 0 : 1'])}\n`,
+        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`])}\n`,
         'source.txt': 'defect\n',
     });
     const first = await run(sandbox.path, ['check', '--json']);
@@ -186,13 +187,13 @@ await import(${JSON.stringify(cli)});
     else expect((JSON.parse(published) as RunReport).exitCode).toBe(0);
     const pending = JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8'));
     expect(pending.pending[0].path).toBe('.gspot/reports/report.json');
-    expect(pending.pending.map((entry: { path: string }) => entry.path)).toEqual([
+    expect(pending.pending.map((entry: { path: string }) => entry.path)).toStrictEqual([
         '.gspot/reports/report.json',
         '.gspot/reports/report.sarif',
     ]);
     const retry = await run(sandbox.path, ['check', '--json']);
     expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toEqual(
+    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
         JSON.parse(retry.stdout),
     );
     expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')).pending).toBeUndefined();
@@ -226,7 +227,7 @@ test('GitLab reports retain located findings, stable fingerprints, and correctio
         JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0].invocations[0]
             .executionSuccessful,
     ).toBe(true);
-    expect(quality.map(({ fingerprint, ...entry }) => entry)).toEqual(
+    expect(quality.map(({ fingerprint, ...entry }) => entry)).toStrictEqual(
         findings
             .filter((finding) => finding.file !== '')
             .map((finding) => ({
@@ -242,11 +243,11 @@ test('GitLab reports retain located findings, stable fingerprints, and correctio
     );
     const repeated = await run(sandbox.path, command);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual(quality);
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toStrictEqual(quality);
     writeFileSync(join(sandbox.path, source), 'echo corrected\n');
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual([]);
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toStrictEqual([]);
 });
 
 test('SARIF identifies missing execution separately from a completed scan with no findings', async () => {
@@ -261,7 +262,7 @@ test('SARIF identifies missing execution separately from a completed scan with n
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.status).toBe('missing');
     const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
-    expect(sarif.runs[0].results).toEqual([]);
+    expect(sarif.runs[0].results).toStrictEqual([]);
     expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(false);
     expect(sarif.runs[0].invocations[0].toolExecutionNotifications[0].message.text).toContain('project/missing');
 });

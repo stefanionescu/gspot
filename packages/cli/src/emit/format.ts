@@ -1,10 +1,10 @@
-import { compact } from '#cli/policy/normalize.ts';
 import { dirname, relative } from 'node:path';
+import { compact } from '#cli/policy/normalize.ts';
 import type { Session } from '#cli/types/execution.ts';
+import { expandedPaths } from '#cli/configurations/claims.ts';
+import { shippedFormat } from '#cli/configurations/listing.ts';
 import type { FormatSettings, Policy } from '#cli/types/policy.ts';
 import type { EditorconfigOverride, ScopedFormat } from '#cli/types/generation.ts';
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import { expandedPaths } from '#cli/configurations/claims.ts';
 
 type NativeOverride<Options> = {
     files: string | string[];
@@ -12,7 +12,12 @@ type NativeOverride<Options> = {
     options: Options;
 };
 
-/** Relocate native selectors while retaining Prettier's separate basename and relative-path matching. */
+/**
+ * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
+ * @param entries
+ * @param base
+ * @param prefix
+ */
 export function relocatedOverrides<Options>(
     entries: NativeOverride<Options>[],
     base: string,
@@ -74,6 +79,10 @@ function formatEntries(policy: Policy): ScopedFormat[] {
     return [...base, ...overrides];
 }
 
+/**
+ *
+ * @param format
+ */
 export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),
@@ -86,8 +95,12 @@ export function prettierOptions(format: Partial<FormatSettings>): Record<string,
     };
 }
 
+/**
+ *
+ * @param path
+ */
 export function literalGlob(path: string): string {
-    return path.replace(/[\\*?{}[\]()!+@,]/gu, '\\$&');
+    return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
 }
 
 function editorconfigOptions(format: Partial<FormatSettings>): Record<string, string | number | boolean> {
@@ -99,7 +112,12 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
     };
 }
 
-/** Generate each Prettier configuration relative to its own output path. */
+/**
+ * Generate each Prettier configuration relative to its own output path.
+ * @param session
+ * @param targetPath
+ * @param extra
+ */
 export function prettierConfig(
     session: Session,
     targetPath: string,
@@ -144,7 +162,10 @@ export function prettierConfig(
     };
 }
 
-/** Emit representable EditorConfig selectors without expanding the current file inventory. */
+/**
+ * Emit representable EditorConfig selectors without expanding the current file inventory.
+ * @param session
+ */
 export function editorconfigOverrides(session: Session): EditorconfigOverride[] {
     return formatEntries(session.policyFiles.policy).flatMap(({ scope, paths, format }) => {
         const options = editorconfigOptions(format);

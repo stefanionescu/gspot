@@ -1,12 +1,14 @@
 import type { MergedView } from '#cli/types/policy.ts';
 
-/** Share effective Markdown rules between native editor and structured CLI configurations. */
+/**
+ * Share effective Markdown rules between native editor and structured CLI configurations.
+ * @param view
+ */
 export function markdownlintRules(view: MergedView): Record<string, unknown> {
     const rules = (view.tool('markdownlint')['rules'] ?? {}) as Record<string, unknown>;
     const defaults =
-        rules['default'] !== undefined
-            ? {}
-            : {
+        rules['default'] === undefined
+            ? {
                   default: true,
                   MD007: { indent: view.format.indent_width },
                   MD013: false,
@@ -19,7 +21,8 @@ export function markdownlintRules(view: MergedView): Record<string, unknown> {
                   MD049: { style: 'underscore' },
                   MD050: { style: 'asterisk' },
                   MD060: false,
-              };
+              }
+            : {};
     return {
         ...defaults,
         ...rules,

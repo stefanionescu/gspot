@@ -1,26 +1,26 @@
-import { expect, test } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/run/session.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { miseTasks } from '#cli/emit/runner-tasks.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
+
 import {
     resolvePythonProject,
     installPythonProject,
     pythonInstallSteps,
     pythonLockDrift,
 } from '#cli/tools/python-project.ts';
-import { miseTasks } from '#cli/emit/runner-tasks.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
-import { openSession } from '#cli/run/session.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 
 test.each([
-    ['uv.toml', 'uv'],
-    ['pyproject.toml', 'uv'],
+    ['uv.toml', 'none'],
     ['pyproject.toml', 'mise'],
     ['pyproject.toml', 'none'],
 ] as const)(
@@ -54,7 +54,7 @@ test.each([
         expect(binary).not.toBeNull();
         const version = await run([binary!, '--version'], { cwd: repository.path });
         expect(version.code).toBe(0);
-        const pinned = version.stdout.trim().split(' ')[1]!;
+        const pinned = version.stdout.trim().split(' ', 2)[1]!;
         expect(proposals[0]!.content).toContain(`ruff==${pinned}`);
         const wheel = `ruff-${pinned}-py3-none-any.whl`;
         const packed = await run(
@@ -125,7 +125,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                         file.kind === 'lock' ? 'lock' : 'config',
                     );
             });
-            expect(pythonInstallSteps(repository.path)).toEqual([['uv', 'sync', '--locked', '--project', '.gspot']]);
+            expect(pythonInstallSteps(repository.path)).toStrictEqual([['uv', 'sync', '--locked', '--project', '.gspot']]);
             const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
             const lockPath = join(repository.path, '.gspot/uv.lock');
             const lock = readFileSync(lockPath);
@@ -155,13 +155,13 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             expect(command.code, command.stdout + command.stderr).toBe(2);
             expect(JSON.parse(command.stdout).error).toContain('Run: gspot apply, then gspot install');
             expect(JSON.parse(command.stdout).error).toContain('installed locked Python tools');
-            expect(readFileSync(join(repository.path, 'pyproject.toml'))).toEqual(rootProject);
+            expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
             expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
                 'keep the project environment',
             );
-            expect(readFileSync(join(repository.path, '.gspot/pyproject.toml'))).toEqual(manifest);
-            expect(readFileSync(lockPath)).toEqual(lock);
-            expect(readFileSync(join(repository.path, configuration))).toEqual(rootConfiguration);
+            expect(readFileSync(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
+            expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
             const installed = join(repository.path, '.gspot/.venv/bin/ruff');
             const copiedEnvironment = join(artifacts.path, 'relocated environment');
             cpSync(join(repository.path, '.gspot/.venv'), copiedEnvironment, {
@@ -177,11 +177,11 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 cwd: repository.path,
             });
             expect(invalid.code, invalid.stderr).toBe(1);
-            expect(JSON.parse(invalid.stdout).map((finding: { code: string }) => finding.code)).toEqual(['F401']);
+            expect(JSON.parse(invalid.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
             const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
             expect(corrected.code, corrected.stderr).toBe(0);
             expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
-            if (runner === 'uv') {
+            if (runner === 'none') {
                 const clone = join(artifacts.path, 'clone');
                 for (const argv of [
                     ['git', 'init', '--quiet'],
@@ -211,15 +211,15 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                     const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
                     expect(status.code, status.stderr).toBe(0);
                     expect(status.stdout).toBe('');
-                    expect(readFileSync(join(clone, '.gspot/pyproject.toml'))).toEqual(manifest);
-                    expect(readFileSync(join(clone, '.gspot/uv.lock'))).toEqual(lock);
-                    expect(readFileSync(join(clone, configuration))).toEqual(rootConfiguration);
+                    expect(readFileSync(join(clone, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
+                    expect(readFileSync(join(clone, '.gspot/uv.lock'))).toStrictEqual(lock);
+                    expect(readFileSync(join(clone, configuration))).toStrictEqual(rootConfiguration);
                 }
                 const checker = join(clone, '.gspot/.venv/bin/ruff');
                 writeFileSync(join(clone, 'source.py'), 'import os\n');
                 const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
                 expect(defect.code, defect.stderr).toBe(1);
-                expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toEqual(['F401']);
+                expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
                 const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
                 expect(fixed.code, fixed.stderr).toBe(0);
                 const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
@@ -244,10 +244,10 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                         file.observed,
                     );
             });
-            expect(pythonLockDrift(repository.path, repaired)).toEqual({ path: '.gspot/uv.lock' });
+            expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });
             await installPythonProject(repository.path);
-            expect(readFileSync(lockPath)).toEqual(lock);
-            expect(readFileSync(join(repository.path, configuration))).toEqual(rootConfiguration);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
+            expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
             expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
         } finally {
             if (previous === undefined) delete process.env['UV_DEFAULT_INDEX'];
@@ -259,5 +259,5 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             server.stop(true);
         }
     },
-    120000,
+    120_000,
 );

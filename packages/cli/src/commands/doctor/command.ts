@@ -1,11 +1,13 @@
+import type { Command } from 'commander';
+import { openSession } from '#cli/run/session.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { pinnedVersion } from '#cli/run/version-pin.ts';
+import type { DoctorOptions } from '#cli/types/reports.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 // Reports problems with the configured repository.
 import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { openSession } from '#cli/run/session.ts';
-import { pinnedVersion } from '#cli/run/version-pin.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
-import type { DoctorOptions } from '#cli/types/reports.ts';
 
 /**
  * Reports configuration, tool, and coverage problems.
@@ -18,9 +20,6 @@ export async function doctorCommand(options: DoctorOptions): Promise<CommandResu
     const report = doctorReport(session, pinnedVersion(root));
     return { text: doctorText(report), json: report, exitCode: report.exitCode };
 }
-
-import { directoryOf } from '#cli/commands/flags.ts';
-import type { Command } from 'commander';
 
 /**
  * Registers doctor.

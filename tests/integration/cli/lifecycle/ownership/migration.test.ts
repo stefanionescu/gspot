@@ -1,8 +1,8 @@
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { createHash } from 'node:crypto';
+import { testdir, createFileTree } from 'testdirs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 const backup = '.gspot/recovery/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222.original';
@@ -62,7 +62,7 @@ test('legacy interrupted replacement recovers a missing file and refuses a later
         }),
     });
     const owner = openLifecycleOwner(directory.path);
-    expect(owner.read('config.txt')).toEqual({ bytes: Buffer.from('original\n'), mode: 0o640 });
+    expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('original\n'), mode: 0o640 });
     owner.close();
     expect(readOwnership(directory.path).pending).toBeUndefined();
     await createFileTree(directory.path, {
@@ -116,7 +116,9 @@ test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'proje
                 ],
             }),
         });
-        const location = hookLocation(destination.startsWith('project/') ? join(repository.path, 'project') : repository.path);
+        const location = hookLocation(
+            destination.startsWith('project/') ? join(repository.path, 'project') : repository.path,
+        );
         const owner = openLifecycleOwner(location.root, location.stateDirectory);
         const path = `${location.directory}/pre-commit`;
         expect(() => openLifecycleOwner(location.root, location.stateDirectory)).toThrow();

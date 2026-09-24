@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 
 const OPTIONS = {
     stage: 'all' as const,
@@ -17,7 +17,7 @@ const POLICY = `version = 1
 level = "all"
 configurations = ["express"]
 [tools.express]
-route_glob = ["routes/*.ts"]
+route_files = ["routes/*.ts"]
 [[scope]]
 path = "api"
 configurations = ["express"]
@@ -39,14 +39,14 @@ test('route imports must resolve to the route in the same scope', async () => {
         untested.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.file))
             .toSorted((a, b) => a.localeCompare(b)),
-    ).toEqual(['api/routes/users.ts', 'routes/users.ts']);
+    ).toStrictEqual(['api/routes/users.ts', 'routes/users.ts']);
     writeFileSync(join(sandbox.path, 'users.test.ts'), "import { users } from './routes/users.js'; users();\n");
     writeFileSync(
         join(sandbox.path, 'api/users.test.ts'),
         "const { users } = await import('./routes/users.ts'); users();\n",
     );
     const tested = await executeRun(await openSession(sandbox.path), OPTIONS);
-    expect(tested.report.checks.map((check) => check.scope).toSorted((a, b) => a.localeCompare(b))).toEqual([
+    expect(tested.report.checks.map((check) => check.scope).toSorted((a, b) => a.localeCompare(b))).toStrictEqual([
         '',
         'api',
     ]);
@@ -61,7 +61,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["express"]\n[tools.express]\nroute_glob = ["routes/*.ts"]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["express"]\n[tools.express]\nroute_files = ["routes/*.ts"]\n',
         'package.json': '{"imports":{"#routes/*":"./routes/*.ts"}}',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@routes/*":["./routes/*"]}}}',
         'routes/users.ts': ROUTE,

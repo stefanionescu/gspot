@@ -1,5 +1,5 @@
-import { environmentVariables } from '#cli/platform/environment.ts';
 import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**
  * Runs git with a throwaway identity.

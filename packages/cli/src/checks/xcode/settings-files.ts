@@ -1,6 +1,6 @@
-import type { EngineInput } from '#cli/types/execution.ts';
 // Build settings, entitlements and transport security: the files that decide what the app may do.
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
@@ -20,7 +20,7 @@ function isSetting(line: string): boolean {
  * @returns the findings
  */
 export function xcconfigLines(input: EngineInput): Finding[] {
-    const findings = trackedEnding(input, ['.xcconfig']).flatMap((path) =>
+    return trackedEnding(input, ['.xcconfig']).flatMap((path) =>
         textOf(input, path)
             .split('\n')
             .flatMap((raw, index): Finding[] => {
@@ -38,17 +38,16 @@ export function xcconfigLines(input: EngineInput): Finding[] {
                       ];
             }),
     );
-    return findings;
 }
 
 /**
- * One finding for each entitlement outside tools.xcode.allowed_entitlements. The planner requires a configured list.
+ * One finding for each entitlement outside tools.xcode.entitlements_allowed. The planner requires a configured list.
  * @param input the engine input
  * @returns the findings
  */
 export function entitlementsPolicy(input: EngineInput): Finding[] {
-    const allowed = new Set(input.view.tool('xcode')['allowed_entitlements'] as string[] | undefined);
-    const findings = trackedEnding(input, ['.entitlements']).flatMap((path) => {
+    const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
+    return trackedEnding(input, ['.entitlements']).flatMap((path) => {
         const text = textOf(input, path);
         return text
             .matchAll(PLIST_KEY)
@@ -64,7 +63,6 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
             })
             .toArray();
     });
-    return findings;
 }
 
 /**
@@ -73,7 +71,7 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function transportSecurity(input: EngineInput): Finding[] {
-    const findings = trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
+    return trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
         const text = textOf(input, path);
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
@@ -87,5 +85,4 @@ export function transportSecurity(input: EngineInput): Finding[] {
             ),
         ];
     });
-    return findings;
 }

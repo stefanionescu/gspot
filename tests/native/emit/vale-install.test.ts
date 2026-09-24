@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { installPackages, parseAlerts, hasPackages } from '#cli/prose/vale.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { installPackages, parseAlerts, hasPackages } from '#cli/prose/vale.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 // A ZIP containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(
@@ -55,11 +55,11 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         const adopted = readOwnership(clone.path).files.find((file) => file.path === installed)!;
         expect(adopted.installed).toBeDefined();
         expect(adopted.original).toBeDefined();
-        expect(readFileSync(join(clone.path, installed))).toEqual(original);
+        expect(readFileSync(join(clone.path, installed))).toStrictEqual(original);
         const command = ['vale', '--config', '.gspot/config/vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'];
         const checked = await run(command, { cwd: directory.path });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(parseAlerts(checked.stdout)).toEqual([
+        expect(parseAlerts(checked.stdout)).toStrictEqual([
             expect.objectContaining({
                 file: 'guide.md',
                 line: 1,
@@ -70,7 +70,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         writeFileSync(join(directory.path, 'guide.md'), 'Clear writing.\n');
         const corrected = await run(command, { cwd: directory.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(parseAlerts(corrected.stdout)).toEqual([]);
+        expect(parseAlerts(corrected.stdout)).toStrictEqual([]);
         const stale = '.gspot/config/vale/styles/Retired/terms.yml';
         const staleOwner = openLifecycleOwner(directory.path);
         try {
@@ -82,7 +82,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         const beforeRefresh = readFileSync(join(directory.path, installed));
         expect(await installPackages(directory.path)).toContain(`preserved edited or unowned ${stale}`);
         expect(readFileSync(join(directory.path, stale), 'utf8')).toBe('edited old rule\n');
-        expect(readFileSync(join(directory.path, installed))).toEqual(beforeRefresh);
+        expect(readFileSync(join(directory.path, installed))).toStrictEqual(beforeRefresh);
         writeFileSync(join(directory.path, stale), 'installed old rule\n');
         expect(await installPackages(directory.path)).toBeUndefined();
         expect(existsSync(join(directory.path, stale))).toBe(false);

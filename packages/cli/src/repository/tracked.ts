@@ -1,14 +1,15 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/repository/patterns.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { SourceObservations } from '#cli/types/repository.ts';
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore, { type Ignore } from 'ignore';
 import { dirname, join, resolve } from 'node:path';
-import type { SpawnResult } from '#cli/types/platform.ts';
-import type { RawEntry } from '#cli/types/repository.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { existsSync, lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
+import type { RawEntry } from '#cli/types/repository.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/repository/patterns.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
 const HEAD_BYTES = 2048;
@@ -146,7 +147,7 @@ export function findRoot(start: string, markers = ['gspot.toml']): string {
     if (gitRoot === undefined && !isOutsideGit(directory))
         throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = directory;
-    while (!markers.some((marker) => existsSync(join(current, marker)))) {
+    while (!markers.some((marker) => (statSync(join(current, marker), { throwIfNoEntry: false }) !== undefined))) {
         if (current === gitRoot) return gitRoot;
         const parent = dirname(current);
         if (parent === current) return directory;
@@ -167,7 +168,10 @@ export function indexedPaths(root: string): string[] {
     throw new Error(`Git index listing failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`);
 }
 
-/** List gitlinks without opening submodule directories or reading their configuration. */
+/**
+ * List gitlinks without opening submodule directories or reading their configuration.
+ * @param root
+ */
 export function submodulePaths(root: string): string[] {
     const listed = runBlocking(['git', 'ls-files', '--stage', '-z'], { cwd: root });
     if (listed.code === 0)
@@ -186,6 +190,7 @@ export function submodulePaths(root: string): string[] {
 /**
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
+ * @param exclude
  * @returns the entries with size, executable bit and symlink flag
  */
 export async function trackedEntries(root: string, exclude: string[] = []): Promise<RawEntry[]> {
@@ -248,11 +253,21 @@ export function head(root: string, path: string, bytes = HEAD_BYTES): string {
     return readPrefix(root, path, bytes).toString('utf8');
 }
 
-/** Read required repository content through the source confinement boundary. */
-export function readSource(root: string, path: string): Buffer {
+/**
+ * Read required content, reusing source bytes only within the observed repository.
+ * @param root the directory being read
+ * @param path the source path relative to that directory
+ * @param observations optional run-owned bytes; isolated generated output remains fresh
+ */
+export function readSource(root: string, path: string, observations?: SourceObservations): Buffer {
+    const observed = observations?.root === root ? observations.sources : undefined;
+    const held = observed?.get(path);
+    if (held !== undefined) return held;
     const files = openConfinedRoot(root, 'native');
     try {
-        return readFileSync(files.source(path));
+        const bytes = readFileSync(files.source(path));
+        observed?.set(path, bytes);
+        return bytes;
     } finally {
         files.close();
     }

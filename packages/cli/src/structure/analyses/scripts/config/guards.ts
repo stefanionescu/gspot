@@ -1,7 +1,7 @@
 // Every configuration owner opens with one include guard that no other owner shares. Searched: shellcheck; no such rule.
 import type { Finding } from '#cli/types/reports.ts';
-import { CONFIG_GUARD } from '#cli/structure/patterns.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
+import { CONFIG_GUARD } from '#cli/structure/patterns.ts';
 import type { Analysis, CodeLine, ScriptFile, StructureContext } from '#cli/types/structure.ts';
 
 function markProblems(

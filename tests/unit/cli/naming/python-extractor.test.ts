@@ -34,14 +34,14 @@ describe('pythonIdentifiers', () => {
         const found = await identifiersOf('shop/orders.py', SOURCE, 'python');
         const names = (category: string): string[] =>
             found.filter((entry) => entry.category === category).map((entry) => entry.name);
-        expect(names('constants')).toEqual(['MAX_ITEMS']);
-        expect(names('variables')).toEqual(['default_name', 'local_total']);
-        expect(names('type_aliases')).toEqual(['OrderId']);
-        expect(names('exceptions')).toEqual(['OrderError']);
-        expect(names('classes')).toEqual(['Order_Book']);
-        expect(names('attributes')).toEqual(['limit']);
-        expect(names('methods')).toEqual(['addItem']);
-        expect(names('functions')).toEqual(['make_order']);
-        expect(names('parameters')).toEqual(['owner', 'extra', 'flags', 'item_name', 'count', 'name', 'size']);
+        expect(names('constants')).toStrictEqual(['MAX_ITEMS']);
+        expect(names('variables')).toStrictEqual(['default_name', 'local_total']);
+        expect(names('type_aliases')).toStrictEqual(['OrderId']);
+        expect(names('exceptions')).toStrictEqual(['OrderError']);
+        expect(names('classes')).toStrictEqual(['Order_Book']);
+        expect(names('attributes')).toStrictEqual(['limit']);
+        expect(names('methods')).toStrictEqual(['addItem']);
+        expect(names('functions')).toStrictEqual(['make_order']);
+        expect(names('parameters')).toStrictEqual(['owner', 'extra', 'flags', 'item_name', 'count', 'name', 'size']);
     });
 });

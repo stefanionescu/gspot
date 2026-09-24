@@ -1,10 +1,9 @@
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { eslintCoverageResponse } from '#cli/schemas/evaluation.ts';
 // integrity/required-rules: the configuration ESLint resolves for a file still turns on every rule a configuration requires.
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { eslintCoverageResponse } from '#cli/schemas/evaluation.ts';
-
-import { scopeOf } from '#cli/repository/scopes.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 
 const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
 const LINT_CHECKS = ['javascript/eslint', 'typescript/eslint'];

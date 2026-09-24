@@ -1,15 +1,17 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { z } from 'zod';
+import pLimit from 'p-limit';
+import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { constants, readFileSync, statSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
+import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
-import { createHash } from 'node:crypto';
-import { constants, existsSync, readFileSync } from 'node:fs';
-import { cp, readdir, realpath, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
-import { z } from 'zod';
 
+const COPY_CONCURRENCY = 8;
 const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
 
@@ -54,9 +56,17 @@ const PYTHON_PATH_SPANS = z.array(
     z.object({ start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), path: z.string() }),
 );
 
+/**
+ *
+ * @param root
+ * @param snapshot
+ * @param paths
+ */
 export function copyProsePackages(root: string, snapshot: string, paths: string[]): void {
-    for (const config of paths.filter((path) => path === '.gspot/config/vale.ini' || path.endsWith('/.gspot/config/vale.ini'))) {
-        const folder = dirname(dirname(config));
+    for (const config of paths.filter(
+        (path) => path === '.gspot/config/vale.ini' || path.endsWith('/.gspot/config/vale.ini'),
+    )) {
+        const folder = dirname(dirname(dirname(config)));
         const installed = openConfinedRoot(join(root, folder));
         const destination = openConfinedRoot(join(snapshot, folder));
         try {
@@ -119,6 +129,13 @@ async function validateCopiedLinks(
     }
 }
 
+/**
+ *
+ * @param root
+ * @param snapshot
+ * @param paths
+ * @param cancelSignal
+ */
 export async function copyDependencies(
     root: string,
     snapshot: string,
@@ -141,7 +158,7 @@ export async function copyDependencies(
         if (
             inputs.some(
                 (path) =>
-                    !existsSync(join(root, path)) ||
+                    !(statSync(join(root, path), { throwIfNoEntry: false }) !== undefined) ||
                     !readFileSync(installed.source(path)).equals(readFileSync(selected.source(path))),
             )
         )
@@ -162,19 +179,28 @@ export async function copyDependencies(
             assertDependencyReady(snapshot, folder, dependency, pending);
             const source = join(root, folder, dependency);
             const target = join(snapshot, folder, dependency);
-            if (existsSync(target))
+            if ((statSync(target, { throwIfNoEntry: false }) !== undefined))
                 throw new SelectionError([
                     'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
                 ]);
-            await cp(source, target, {
-                recursive: true,
-                verbatimSymlinks: true,
-                mode: constants.COPYFILE_FICLONE,
-                filter: () => {
-                    cancelSignal?.throwIfAborted();
-                    return true;
-                },
-            });
+            const sourceMode = (await stat(source)).mode & 0o7777;
+            await mkdir(target, { mode: 0o700 });
+            const copy = pLimit(COPY_CONCURRENCY);
+            // Each child has its own destination. Drain every copy before cleanup or link validation.
+            const copied = await Promise.allSettled((await readdir(source)).map((name) => copy(async () => {
+                cancelSignal?.throwIfAborted();
+                await cp(join(source, name), join(target, name), {
+                    recursive: true,
+                    verbatimSymlinks: true,
+                    mode: constants.COPYFILE_FICLONE,
+                    filter: () => {
+                        cancelSignal?.throwIfAborted();
+                        return true;
+                    },
+                });
+            })));
+            for (const result of copied) if (result.status === 'rejected') throw result.reason;
+            await chmod(target, sourceMode);
             if (dependency === '.venv') {
                 const config =
                     selected.read(posix.join(folder, dependency, 'pyvenv.cfg'))?.bytes.toString('utf8') ?? '';
@@ -272,10 +298,10 @@ export async function copyDependencies(
                         const header = headers.find((candidate) => {
                             const offset = current.bytes.indexOf(candidate);
                             return (
-                                offset >= 0 &&
+                                offset !== -1 &&
                                 current.bytes
                                     .subarray(offset + candidate.length, offset + candidate.length + 4)
-                                    .equals(Buffer.from('PK\x03\x04'))
+                                    .equals(Buffer.from('PK\u0003\u0004'))
                             );
                         });
                         if (header === undefined) continue;
@@ -381,8 +407,8 @@ function assertDependencyReady(snapshot: string, folder: string, dependency: str
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
     if (
-        !LOCKS.some((lock) => existsSync(join(snapshot, folder, lock))) &&
-        !LOCKS.some((lock) => existsSync(join(snapshot, lock)))
+        !LOCKS.some((lock) => (statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined)) &&
+        !LOCKS.some((lock) => (statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined))
     )
         throw new SelectionError([
             'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',

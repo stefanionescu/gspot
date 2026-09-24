@@ -1,17 +1,19 @@
-import { SelectionError } from '#cli/configurations/select.ts';
-import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
-import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
-import { checkCommitMessages } from '#cli/checks/commits/messages.ts';
-import { prettierInputs } from '#cli/run/prettier-inputs.ts';
-import { checkState, waitingSetting } from '#cli/policy/check-state.ts';
+import { checkActions } from '#cli/checks/actions.ts';
 import { toolPin } from '#cli/tools/tool-probe.ts';
-import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
-import { checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
-import { configurationName } from '#cli/run/scope-paths.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import type { RepositoryCheck } from '#cli/types/policy.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
+import { configurationName } from '#cli/run/scope-paths.ts';
+import { prettierInputs } from '#cli/run/prettier-inputs.ts';
+import { checkSwiftlint } from '#cli/structure/swift/lint.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
+import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
+import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
+import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
+import { checkCommitMessages } from '#cli/checks/commits/messages.ts';
+import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
+import { checkState, waitingSetting } from '#cli/policy/check-state.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
 import { claimedByClaims, isInScope, pathMatcher } from '#cli/configurations/claims.ts';
 
@@ -54,7 +56,10 @@ function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Sessi
     return toolPin(session.manifests.values(), name);
 }
 
-/** Normalize a repository command into the check definition used by planning and explanations. */
+/**
+ * Normalize a repository command into the check definition used by planning and explanations.
+ * @param entry
+ */
 export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;
     return {
@@ -78,7 +83,8 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
 
 // A policy check that reads a scoped configuration must run against that scope's file partition.
 function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope') return false;
+    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope')
+        return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>
@@ -202,7 +208,7 @@ function filesFor(
 }
 
 function platformSkipFor(spec: CheckSpec, tool: ToolPin | undefined, platform: string): PlannedCheck['skip'] {
-    if (spec.platform && !spec.platform.some((candidate) => candidate === platform))
+    if (spec.platform && !(spec.platform as readonly string[]).includes(platform))
         return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${platform}` };
     if (platform === 'windows' && tool && !tool.windows)
         return { source: 'platform', note: `${tool.name} has no Windows build` };
@@ -248,6 +254,9 @@ function runnerFor(spec: CheckSpec): CheckRunner {
     if (spec.analysis === 'gitleaks-history') return checkSecretHistory;
     if (spec.analysis === 'commit-messages') return checkCommitMessages;
     if (spec.analysis === 'typescript') return checkTypescript;
+    if (spec.analysis === 'javascript') return checkJavascript;
+    if (spec.analysis === 'swiftlint') return checkSwiftlint;
+    if (spec.analysis === 'actions') return checkActions;
     if (spec.reported_by !== undefined)
         return async (_session, planned) => ({
             check: spec.name,
@@ -351,7 +360,10 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     });
 }
 
-/** Whether a planned check has source input, a deleted trigger, or a commit message to inspect. */
+/**
+ * Whether a planned check has source input, a deleted trigger, or a commit message to inspect.
+ * @param check
+ */
 export function isActive(check: PlannedCheck): boolean {
     return (
         check.files.length > 0 ||
@@ -361,7 +373,10 @@ export function isActive(check: PlannedCheck): boolean {
     );
 }
 
-/** Checks enabled by persistent policy, before evaluating executable tool configurations. */
+/**
+ * Checks enabled by persistent policy, before evaluating executable tool configurations.
+ * @param session
+ */
 export function configuredChecks(session: Session): PlannedCheck[] {
     const only = [
         ...session.scopes.flatMap((scope) =>
@@ -374,7 +389,11 @@ export function configuredChecks(session: Session): PlannedCheck[] {
         .filter((check) => isActive(check) && check.skip === undefined);
 }
 
-/** Source claims of a planned check, separate from inputs supplied to project-wide analysis. */
+/**
+ * Source claims of a planned check, separate from inputs supplied to project-wide analysis.
+ * @param session
+ * @param check
+ */
 export function claimedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
     const claims = check.spec.claims ?? check.manifest?.claims;
     const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];

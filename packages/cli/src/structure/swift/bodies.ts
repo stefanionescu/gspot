@@ -1,12 +1,16 @@
-import type { StructureProblem } from '#cli/structure/python/types.ts';
 import type { SwiftFunction } from '#cli/structure/swift/types.ts';
-
 import { executableStatements } from '#cli/structure/statements.ts';
+import type { StructureProblem } from '#cli/structure/python/types.ts';
+
 function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
-/** Report every implemented function at or below the configured statement threshold. */
+/**
+ * Report every implemented function at or below the configured statement threshold.
+ * @param functions
+ * @param threshold
+ */
 export function trivialFunctions(functions: SwiftFunction[], threshold: number): StructureProblem[] {
     return functions.flatMap((fn) => {
         const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'swift');

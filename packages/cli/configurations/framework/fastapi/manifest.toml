@@ -23,6 +23,7 @@ target = ".gspot/config/spectral.yaml"
 template = "semgrep-fastapi.yml.tmpl"
 target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]
+per_scope = true
 needs = "security"
 
 [[checks]]

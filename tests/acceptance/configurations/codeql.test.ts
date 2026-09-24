@@ -1,10 +1,10 @@
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const python = {
     language: 'python',
@@ -49,7 +49,7 @@ test.each(['recommended', 'all'].flatMap((level) => [python, javascript].map((fi
         const fixed = await run(directory.path, command, environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         const fixedReport = reportSchema.parse(JSON.parse(fixed.stdout));
-        expect(fixedReport.checks.flatMap((check) => check.findings)).toEqual([]);
+        expect(fixedReport.checks.flatMap((check) => check.findings)).toStrictEqual([]);
         expect(readFileSync(join(directory.path, file), 'utf8')).toBe(corrected);
         expect(readFileSync(join(directory.path, 'authored.txt'), 'utf8')).toBe('Preserve this file.\n');
     },

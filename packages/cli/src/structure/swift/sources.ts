@@ -1,8 +1,8 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // The parsed Swift files of one run, and the functions they declare.
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';
 
 function modifiersOf(node: Node): Node[] {
@@ -31,14 +31,13 @@ export function visibilityOf(node: Node): string {
  * @param input the engine input
  * @returns the sources
  */
-export async function swiftSources(input: EngineInput): Promise<SwiftSource[]> {
-    const parser = await parserFor('swift');
+export async function swiftSources(input: Pick<EngineInput, 'root' | 'files' | 'observations' | 'resources'>): Promise<SwiftSource[]> {
     const sources: SwiftSource[] = [];
     try {
         for (const file of input.files) {
             if (file.nature !== 'source' || !file.path.endsWith('.swift')) continue;
-            const text = readSource(input.root, file.path).toString('utf8');
-            const tree = parser.parse(text);
+            const text = readSource(input.root, file.path, input.observations).toString('utf8');
+            const tree = await parseSource('swift', text, input);
             if (tree === null) throw new Error('The Swift parser returned no tree.');
             sources.push({ path: file.path, text, lines: text.split('\n'), tree });
         }

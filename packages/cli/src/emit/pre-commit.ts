@@ -1,11 +1,11 @@
+import { z } from 'zod';
+import { parse as parseYaml } from 'yaml';
+import { isDeepStrictEqual } from 'node:util';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { isDeepStrictEqual } from 'node:util';
-import { parse as parseYaml } from 'yaml';
-import { z } from 'zod';
 
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({
@@ -18,7 +18,12 @@ const configurationSchema = z.object({
         .default([]),
 });
 
-/** Own one local pre-commit entry while preserving every unrelated repository node. */
+/**
+ * Own one local pre-commit entry while preserving every unrelated repository node.
+ * @param root
+ * @param runner
+ * @param binary
+ */
 export function preCommitConfiguration(
     root: string,
     runner: string | undefined,
@@ -64,10 +69,15 @@ export function preCommitConfiguration(
             'Retained an authored pre-commit hook named gspot. Rename it before selecting the gspot integration.',
         );
     const index = owned?.path[1] ?? (matching === -1 ? config.repos.length : matching);
-    return { path: PATH, format: 'yaml', changes: [{ path: ['repos', index!], value }] };
+    return { path: PATH, format: 'yaml', changes: [{ path: ['repos', index], value }] };
 }
 
-/** Verify the selected local entry before preparing native hooks. */
+/**
+ * Verify the selected local entry before preparing native hooks.
+ * @param root
+ * @param runner
+ * @param binary
+ */
 export function preCommitReady(root: string, runner: string | undefined, binary: string | undefined): boolean {
     return hasConfiguration(root, preCommitConfiguration(root, runner, binary));
 }

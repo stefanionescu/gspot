@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { statSync, writeFileSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readRepository } from '#cli/repository/tree.ts';
@@ -21,7 +21,7 @@ describe('repository file discovery', () => {
         fs.symlinkSync('../outside.ts', join(root, 'excluded.ts'));
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: root }).code).toBe(0);
         const repository = await readRepository(root, [], [], ['excluded.ts']);
-        expect(repository.files.map((file) => file.path)).toEqual(['local.ts']);
+        expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
         await rejects(readRepository(root, [], [], []), { message: /Source link leaves the repository/u });
         expect(fs.readFileSync(join(sandbox.path, 'outside.ts'), 'utf8')).toBe('private external bytes');
     });
@@ -32,7 +32,7 @@ describe('repository file discovery', () => {
         expect(processes.runBlocking(['git', 'init'], { cwd: sandbox.path }).code).toBe(0);
         expect(processes.runBlocking(['git', 'add', 'source.ts'], { cwd: sandbox.path }).code).toBe(0);
         fs.rmSync(join(sandbox.path, 'source.ts'));
-        expect(await trackedEntries(sandbox.path)).toEqual([]);
+        expect(await trackedEntries(sandbox.path)).toStrictEqual([]);
     });
 
     test.each(['lstatSync', 'statSync'] as const)(
@@ -127,7 +127,7 @@ describe('repository file discovery', () => {
             'ignored.ts': 'export {};\n',
         });
         const entries = await trackedEntries(sandbox.path);
-        expect(entries.map((entry) => entry.path)).toEqual(['.gitignore', 'source.ts']);
+        expect(entries.map((entry) => entry.path)).toStrictEqual(['.gitignore', 'source.ts']);
     });
 
     test('reports a corrupt Git index instead of switching to a directory walk', async () => {
@@ -143,7 +143,7 @@ describe('repository file discovery', () => {
         expect(actualRoot.dev).toBe(expectedRoot.dev);
         expect(actualRoot.ino).toBe(expectedRoot.ino);
         const entries = await trackedEntries(cwd);
-        expect(entries.map((entry) => entry.path)).toEqual(['source.ts']);
+        expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
         writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
         await rejects(trackedEntries(cwd), { message: /Git ls-files failed/u });
     });
@@ -246,7 +246,7 @@ test('source reads refuse an escape introduced after inventory and accept an int
     });
     const root = join(sandbox.path, 'project');
     const repository = await readRepository(root, [], [], []);
-    expect(repository.files.map((file) => file.path)).toEqual(['source.ts']);
+    expect(repository.files.map((file) => file.path)).toStrictEqual(['source.ts']);
     fs.unlinkSync(join(root, 'source.ts'));
     fs.symlinkSync('../outside.ts', join(root, 'source.ts'));
     expect(() => readSource(root, repository.files[0]!.path)).toThrow('Source link leaves the repository');
@@ -303,23 +303,23 @@ test('a non-Git walk preserves newline directories, nested negations, pruning, a
     fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
     fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
     const entries = await trackedEntries(root);
-    expect(entries.map((entry) => entry.path).sort()).toEqual([
+    expect(entries.map((entry) => entry.path).sort()).toStrictEqual([
         '.gitignore',
         'source\nfiles/.gitignore',
         'source\nfiles/code.ts',
         'source\nfiles/keep.log',
     ]);
     fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
-    expect((await trackedEntries(root)).map((entry) => entry.path)).toEqual(entries.map((entry) => entry.path));
+    expect((await trackedEntries(root)).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     fs.unlinkSync(join(root, 'external.ts'));
-    expect((await trackedEntries(root)).map((entry) => entry.path)).toEqual(entries.map((entry) => entry.path));
+    expect((await trackedEntries(root)).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
 });
 
 test.skipIf(process.platform === 'win32')('a non-Git walk omits named pipes from readable source files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    expect((await trackedEntries(sandbox.path)).map((entry) => entry.path)).toEqual(['source.ts']);
+    expect((await trackedEntries(sandbox.path)).map((entry) => entry.path)).toStrictEqual(['source.ts']);
 });
 
 test.skipIf(process.platform === 'win32')(
@@ -341,10 +341,10 @@ test.skipIf(process.platform === 'win32')(
         };
         const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);
-        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toEqual(paths);
+        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toStrictEqual(paths);
         for (const path of paths) writeFileSync(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
-        expect(corrected.report.checks[0]!.findings).toEqual([]);
+        expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     },
 );

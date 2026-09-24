@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { existsSync, writeFileSync } from 'node:fs';
+import { planRun } from '#cli/run/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/tools/tool-probe.ts';
-import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
+import { existsSync, writeFileSync } from 'node:fs';
 import { runEngineCheck } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
+import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 
 test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal exit', 'deadline', 'cancellation'])(
     'duplication rejects %s, removes temporary reports, and accepts a corrected report',
@@ -54,7 +54,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
         try {
             const failed = await runEngineCheck(session, copiedBlocks, planned!);
             expect(failed.status).toBe('error');
-            expect(failed.findings).toEqual([]);
+            expect(failed.findings).toStrictEqual([]);
             expect(directories).toHaveLength(1);
             expect(directories.every((path) => !existsSync(path))).toBe(true);
             corrected = true;

@@ -1,13 +1,13 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { gitignoreBlock, applyBlock } from '#cli/emit/managed-blocks.ts';
-import { parseManifest, configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
 import { applyAll } from '#cli/lifecycle/apply.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
 import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { gitignoreBlock, applyBlock } from '#cli/emit/managed-blocks.ts';
+import { parseManifest, configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const CONFIGURATION =
     '\n[configuration]\nname = "local"\nkind = "policy"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
@@ -42,7 +42,7 @@ test.each([true, false])(
             stdin: '.gspot/state/ownership.json\0.gspot/state/recovery/original\0.gspot/authored.json\0source.md\0',
         });
         expect(retained.code, retained.stderr).toBe(0);
-        expect(retained.stdout.split('\0').filter(Boolean)).toEqual([
+        expect(retained.stdout.split('\0').filter(Boolean)).toStrictEqual([
             '.gspot/state/ownership.json',
             '.gspot/state/recovery/original',
         ]);
@@ -78,7 +78,7 @@ test('manifest-owned tool directories are ignored while generated rules and auth
         stdin: [...ignored, ...tracked].join('\0') + '\0',
     });
     expect(checked.code, checked.stderr).toBe(0);
-    expect(checked.stdout.split('\0').filter(Boolean)).toEqual(ignored);
+    expect(checked.stdout.split('\0').filter(Boolean)).toStrictEqual(ignored);
 });
 
 test.each([
@@ -90,6 +90,10 @@ test.each([
     '.gspot/downloads/\nsource/',
     '.gspot\\downloads\\',
 ])('a manifest cannot hide authored paths through %s', (path) => {
-    expect(() => parseManifest(`untracked = [${JSON.stringify(path)}]\n` + CONFIGURATION, 'configurations/local')).toThrow();
-    expect(() => parseManifest('untracked = [".gspot/downloads/"]\n' + CONFIGURATION, 'configurations/local')).not.toThrow();
+    expect(() =>
+        parseManifest(`untracked = [${JSON.stringify(path)}]\n` + CONFIGURATION, 'configurations/local'),
+    ).toThrow();
+    expect(() =>
+        parseManifest('untracked = [".gspot/downloads/"]\n' + CONFIGURATION, 'configurations/local'),
+    ).not.toThrow();
 });

@@ -49,7 +49,7 @@ name = "typescript/tsc"
 title = "TypeScript"
 example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
-stage = "commit"
+stage = "push"
 runs = "per-scope"
 cwd = "scope"
 tool = "tsc"
@@ -70,6 +70,7 @@ runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
+findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 coverage = ["style", "structure", "security"]

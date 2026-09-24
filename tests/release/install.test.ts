@@ -1,10 +1,16 @@
+import prettier from 'prettier';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { run } from '#cli/platform/spawn.ts';
+import { describe, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { releaseTargets } from '#cli/platform/release-targets.ts';
 // Installs built packages from an isolated registry and checks a fresh consumer.
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { run } from '#cli/platform/spawn.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
 import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { describe, expect, test } from 'bun:test';
+import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+
 import {
     copyFileSync,
     cpSync,
@@ -17,11 +23,6 @@ import {
     symlinkSync,
     writeFileSync,
 } from 'node:fs';
-import { createRequire } from 'node:module';
-import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import prettier from 'prettier';
-import { releaseTargets } from '../../packages/cli/src/platform/release-targets.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -200,7 +201,7 @@ describe('the installed consumer', () => {
                     const errors = new Response(child.stderr).text();
                     let toolPid: number | undefined;
                     try {
-                        const deadline = performance.now() + 10000;
+                        const deadline = performance.now() + 10_000;
                         while (!existsSync(join(cancellation, marker)) && performance.now() < deadline)
                             await Bun.sleep(20);
                         expect(existsSync(join(cancellation, marker))).toBe(true);
@@ -285,17 +286,19 @@ describe('the installed consumer', () => {
                 expect(checked.code, checked.stdout + checked.stderr).toBe(1);
                 const report = reportSchema.parse(JSON.parse(checked.stdout));
                 expect(report.exitCode).toBe(1);
-                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toEqual(report);
+                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
                 const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8'));
                 expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
-                const quality = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'));
+                const quality = JSON.parse(
+                    readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'),
+                );
                 expect(quality).toHaveLength(report.checks[0]?.findings.length ?? 0);
                 expect(quality[0]).toMatchObject({
                     check_name: 'bash/syntax',
                     severity: 'major',
                     location: { path: 'broken.sh', lines: { begin: 1 } },
                 });
-                expect(report.skips).toEqual([]);
+                expect(report.skips).toStrictEqual([]);
                 expect(report.checks).toHaveLength(1);
                 expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'fail', files: 1 });
                 expect(
@@ -305,7 +308,7 @@ describe('the installed consumer', () => {
                         line,
                         message,
                     })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         check: 'bash/syntax',
                         file: 'broken.sh',
@@ -322,8 +325,10 @@ describe('the installed consumer', () => {
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 const clean = reportSchema.parse(JSON.parse(corrected.stdout));
                 expect(clean.exitCode).toBe(0);
-                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'))).toEqual([]);
-                expect(clean.skips).toEqual([]);
+                expect(
+                    JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8')),
+                ).toStrictEqual([]);
+                expect(clean.skips).toStrictEqual([]);
                 expect(clean.checks).toHaveLength(1);
                 expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });
                 const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
@@ -335,7 +340,7 @@ describe('the installed consumer', () => {
                 );
                 expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
                 const acceptedName = reportSchema.parse(JSON.parse(renamed.stdout));
-                expect(acceptedName.skips).toEqual([]);
+                expect(acceptedName.skips).toStrictEqual([]);
                 expect(acceptedName.checks).toHaveLength(1);
                 expect(acceptedName.checks[0]).toMatchObject({
                     check: 'naming/identifiers',
@@ -363,7 +368,7 @@ describe('the installed consumer', () => {
                 const ambiguous = await run(proseCommand, options);
                 expect(ambiguous.code, ambiguous.stdout + ambiguous.stderr).toBe(1);
                 const proseReport = reportSchema.parse(JSON.parse(ambiguous.stdout));
-                expect(proseReport.skips).toEqual([]);
+                expect(proseReport.skips).toStrictEqual([]);
                 expect(proseReport.checks).toHaveLength(1);
                 expect(proseReport.checks[0]).toMatchObject({
                     check: 'prose/vale',
@@ -386,7 +391,7 @@ describe('the installed consumer', () => {
                 const clearDate = await run(proseCommand, options);
                 expect(clearDate.code, clearDate.stdout + clearDate.stderr).toBe(0);
                 const clearReport = reportSchema.parse(JSON.parse(clearDate.stdout));
-                expect(clearReport.skips).toEqual([]);
+                expect(clearReport.skips).toStrictEqual([]);
                 expect(clearReport.checks).toHaveLength(1);
                 expect(clearReport.checks[0]).toMatchObject({
                     check: 'prose/vale',
@@ -414,14 +419,14 @@ describe('the installed consumer', () => {
                     string,
                     { Check: string; Line: number; Message: string }[]
                 >;
-                expect(alerts['vocabulary.md']?.map(({ Check, Line, Message }) => ({ Check, Line, Message }))).toEqual([
+                expect(alerts['vocabulary.md']?.map(({ Check, Line, Message }) => ({ Check, Line, Message }))).toStrictEqual([
                     { Check: 'Vale.Terms', Line: 1, Message: "Use 'TypeScript' instead of 'typescript'." },
                     { Check: 'Vale.Terms', Line: 1, Message: "Use 'NebulaKit' instead of 'nebulakit'." },
                 ]);
                 writeFileSync(join(consumer, 'vocabulary.md'), 'TypeScript supports NebulaKit.\n');
                 const correctedTerms = await run(termsCommand, options);
                 expect(correctedTerms.code, correctedTerms.stdout + correctedTerms.stderr).toBe(0);
-                expect(JSON.parse(correctedTerms.stdout)).toEqual({});
+                expect(JSON.parse(correctedTerms.stdout)).toStrictEqual({});
                 const ruffPin = configurationManifests()
                     .get('python')!
                     .tools.find((tool) => tool.name === 'ruff')!;
@@ -441,7 +446,7 @@ describe('the installed consumer', () => {
                 const undefinedName = await run(pythonCommand, options);
                 expect(undefinedName.code, undefinedName.stdout + undefinedName.stderr).toBe(1);
                 const pythonReport = reportSchema.parse(JSON.parse(undefinedName.stdout));
-                expect(pythonReport.skips).toEqual([]);
+                expect(pythonReport.skips).toStrictEqual([]);
                 expect(pythonReport.checks).toHaveLength(1);
                 expect(pythonReport.checks[0]).toMatchObject({
                     check: 'python/ruff',
@@ -462,7 +467,7 @@ describe('the installed consumer', () => {
                 const definedName = await run(pythonCommand, options);
                 expect(definedName.code, definedName.stdout + definedName.stderr).toBe(0);
                 const definedReport = reportSchema.parse(JSON.parse(definedName.stdout));
-                expect(definedReport.skips).toEqual([]);
+                expect(definedReport.skips).toStrictEqual([]);
                 expect(definedReport.checks).toHaveLength(1);
                 expect(definedReport.checks[0]).toMatchObject({
                     check: 'python/ruff',
@@ -483,7 +488,7 @@ describe('the installed consumer', () => {
                 );
                 expect(unquoted.code, unquoted.stdout + unquoted.stderr).toBe(1);
                 const quoting = reportSchema.parse(JSON.parse(unquoted.stdout));
-                expect(quoting.skips).toEqual([]);
+                expect(quoting.skips).toStrictEqual([]);
                 expect(quoting.checks).toHaveLength(1);
                 expect(quoting.checks[0]).toMatchObject({
                     check: 'bash/shellcheck',
@@ -507,7 +512,7 @@ describe('the installed consumer', () => {
                 );
                 expect(quoted.code, quoted.stdout + quoted.stderr).toBe(0);
                 const acceptedQuoting = reportSchema.parse(JSON.parse(quoted.stdout));
-                expect(acceptedQuoting.skips).toEqual([]);
+                expect(acceptedQuoting.skips).toStrictEqual([]);
                 expect(acceptedQuoting.checks).toHaveLength(1);
                 expect(acceptedQuoting.checks[0]).toMatchObject({
                     check: 'bash/shellcheck',
@@ -530,7 +535,7 @@ describe('the installed consumer', () => {
                 const invalidSwift = await run(swiftCommand, options);
                 expect(invalidSwift.code, invalidSwift.stdout + invalidSwift.stderr).toBe(1);
                 const swiftReport = reportSchema.parse(JSON.parse(invalidSwift.stdout));
-                expect(swiftReport.skips).toEqual([]);
+                expect(swiftReport.skips).toStrictEqual([]);
                 expect(swiftReport.checks).toHaveLength(1);
                 expect(swiftReport.checks[0]).toMatchObject({ check: 'naming/identifiers', status: 'fail', files: 1 });
                 expect(
@@ -541,7 +546,7 @@ describe('the installed consumer', () => {
                         column,
                         message,
                     })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         rule: 'banned-term',
                         file: 'Account.swift',
@@ -554,7 +559,7 @@ describe('the installed consumer', () => {
                 const correctedSwift = await run(swiftCommand, options);
                 expect(correctedSwift.code, correctedSwift.stdout + correctedSwift.stderr).toBe(0);
                 const acceptedSwift = reportSchema.parse(JSON.parse(correctedSwift.stdout));
-                expect(acceptedSwift.skips).toEqual([]);
+                expect(acceptedSwift.skips).toStrictEqual([]);
                 expect(acceptedSwift.checks).toHaveLength(1);
                 expect(acceptedSwift.checks[0]).toMatchObject({
                     check: 'naming/identifiers',
@@ -566,7 +571,9 @@ describe('the installed consumer', () => {
                 const detected = await run([...command, 'list', '--json'], options);
                 expect(detected.code, detected.stdout + detected.stderr).toBe(0);
                 const available = JSON.parse(detected.stdout) as { detected: { name: string; command: string }[] };
-                expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
+                expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe(
+                    'gspot add sql',
+                );
                 const added = await run([...command, 'add', 'sql'], setupOptions);
                 expect(added.code, added.stdout + added.stderr).toBe(0);
                 const sql = await run(
@@ -575,7 +582,7 @@ describe('the installed consumer', () => {
                 );
                 expect(sql.code, sql.stdout + sql.stderr).toBe(0);
                 const sqlReport = reportSchema.parse(JSON.parse(sql.stdout));
-                expect(sqlReport.skips).toEqual([]);
+                expect(sqlReport.skips).toStrictEqual([]);
                 expect(sqlReport.checks).toHaveLength(1);
                 expect(sqlReport.checks[0]).toMatchObject({
                     check: 'sql/syntax',
@@ -662,13 +669,13 @@ describe('the installed consumer', () => {
                 expect(JSON.parse(toolInstall.stdout).error).toContain('Install mise 2026.8.8 or newer');
                 expect(JSON.parse(toolInstall.stdout).error).toContain('installed locked npm tools');
                 expect(readFileSync(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
-                expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toEqual(toolManifest);
-                expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toEqual(toolLock);
+                expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
+                expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);
                 const formatterArgs = ['check', 'source.js', '--only', 'formatting/prettier', '--no-cache', '--json'];
                 const invalidFormat = await run([...command, ...formatterArgs], toolOptions);
                 expect(invalidFormat.code, invalidFormat.stdout + invalidFormat.stderr).toBe(1);
                 const formatReport = reportSchema.parse(JSON.parse(invalidFormat.stdout));
-                expect(formatReport.skips).toEqual([]);
+                expect(formatReport.skips).toStrictEqual([]);
                 expect(formatReport.checks).toHaveLength(1);
                 expect(formatReport.checks[0]).toMatchObject({
                     check: 'formatting/prettier',
@@ -677,7 +684,7 @@ describe('the installed consumer', () => {
                 });
                 expect(
                     formatReport.checks[0]!.findings.map(({ check, file, message }) => ({ check, file, message })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         check: 'formatting/prettier',
                         file: 'source.js',
@@ -732,7 +739,7 @@ describe('the installed consumer', () => {
                 const unformattedToml = await run(tomlFormat, wrapperOptions);
                 expect(unformattedToml.code, unformattedToml.stdout + unformattedToml.stderr).toBe(1);
                 const tomlReport = reportSchema.parse(JSON.parse(unformattedToml.stdout));
-                expect(tomlReport.skips).toEqual([]);
+                expect(tomlReport.skips).toStrictEqual([]);
                 expect(tomlReport.checks).toHaveLength(1);
                 expect(tomlReport.checks[0]).toMatchObject({
                     check: 'configs/toml-format',
@@ -746,7 +753,7 @@ describe('the installed consumer', () => {
                         message,
                         fixable,
                     })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         check: 'configs/toml-format',
                         file: 'settings.toml',
@@ -778,7 +785,7 @@ describe('the installed consumer', () => {
                 const invalidToml = await run(tomlSyntax, wrapperOptions);
                 expect(invalidToml.code, invalidToml.stdout + invalidToml.stderr).toBe(1);
                 const syntaxReport = reportSchema.parse(JSON.parse(invalidToml.stdout));
-                expect(syntaxReport.skips).toEqual([]);
+                expect(syntaxReport.skips).toStrictEqual([]);
                 expect(syntaxReport.checks).toHaveLength(1);
                 expect(syntaxReport.checks[0]).toMatchObject({ check: 'configs/toml', status: 'fail', files: 1 });
                 expect(
@@ -790,7 +797,7 @@ describe('the installed consumer', () => {
                         message,
                         fixable,
                     })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         check: 'configs/toml',
                         file: 'settings.toml',
@@ -818,7 +825,7 @@ describe('the installed consumer', () => {
                 const trailingWhitespace = await run(whitespaceCommand, wrapperOptions);
                 expect(trailingWhitespace.code, trailingWhitespace.stdout + trailingWhitespace.stderr).toBe(1);
                 const whitespaceReport = reportSchema.parse(JSON.parse(trailingWhitespace.stdout));
-                expect(whitespaceReport.skips).toEqual([]);
+                expect(whitespaceReport.skips).toStrictEqual([]);
                 expect(whitespaceReport.checks).toHaveLength(1);
                 expect(whitespaceReport.checks[0]).toMatchObject({
                     check: 'formatting/editorconfig-checker',
@@ -833,7 +840,7 @@ describe('the installed consumer', () => {
                         message,
                         fixable,
                     })),
-                ).toEqual([
+                ).toStrictEqual([
                     {
                         check: 'formatting/editorconfig-checker',
                         file: 'notes.json',

@@ -1,6 +1,18 @@
-import { InstallationError } from '#cli/tools/install-error.ts';
-import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+import { z } from 'zod';
+import { tmpdir } from 'node:os';
+import { parse, stringify } from 'smol-toml';
+import { isDeepStrictEqual } from 'node:util';
+import { join, resolve, isAbsolute } from 'node:path';
+import { runToolCommand } from '#cli/run/tool-runner.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { LifecycleOwner } from '#cli/types/ownership.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { InstallationError } from '#cli/tools/install-error.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+
 import {
     mkdtempSync,
     readFileSync,
@@ -12,17 +24,6 @@ import {
     copyFileSync,
     chmodSync,
 } from 'node:fs';
-import { join, resolve, isAbsolute } from 'node:path';
-import { tmpdir } from 'node:os';
-import { isDeepStrictEqual } from 'node:util';
-import { parse, stringify } from 'smol-toml';
-import { z } from 'zod';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { LifecycleOwner } from '#cli/types/ownership.ts';
 
 const PROJECT = '.gspot/pyproject.toml';
 const LOCK = '.gspot/uv.lock';
@@ -85,7 +86,12 @@ const INDEX_SETTINGS = new Set([
     'offline',
 ]);
 
-/** Preserve repository index settings while uv owns user configuration and environment precedence. */
+/**
+ * Preserve repository index settings while uv owns user configuration and environment precedence.
+ * @param root
+ * @param owner
+ * @param work
+ */
 function pythonSettings(root: string, owner: LifecycleOwner, work: string): string[] {
     const configuration = owner.read('uv.toml');
     const project = configuration === undefined ? owner.read('pyproject.toml') : undefined;
@@ -145,7 +151,12 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
         throw new Error('uv included repository index credentials in its lock. Existing files were preserved.');
 }
 
-/** Resolve Python tool requirements outside the repository before publishing generated files. */
+/**
+ * Resolve Python tool requirements outside the repository before publishing generated files.
+ * @param root
+ * @param files
+ * @param owner
+ */
 export async function resolvePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
     const project = files.find((file) => file.path === PROJECT);
     if (project === undefined) return;
@@ -173,7 +184,11 @@ export async function resolvePythonProject(root: string, files: GeneratedFile[],
     });
 }
 
-/** Observe Python lock drift without resolving dependencies or creating ownership state. */
+/**
+ * Observe Python lock drift without resolving dependencies or creating ownership state.
+ * @param root
+ * @param generated
+ */
 export function pythonLockDrift(
     root: string,
     generated: GeneratedFile[],
@@ -190,7 +205,10 @@ export function pythonLockDrift(
     }
 }
 
-/** Validate immutable Python inputs for a read-only installation preview. */
+/**
+ * Validate immutable Python inputs for a read-only installation preview.
+ * @param root
+ */
 export function pythonInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
     try {
@@ -206,7 +224,11 @@ export function pythonInstallSteps(root: string): string[][] {
     }
 }
 
-/** Install Python tools immutably and publish the relocatable environment through lifecycle ownership. */
+/**
+ * Install Python tools immutably and publish the relocatable environment through lifecycle ownership.
+ * @param root
+ * @param executable
+ */
 export async function installPythonProject(root: string, executable = 'uv'): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {
         const project = owner.read(PROJECT);

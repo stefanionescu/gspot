@@ -37,7 +37,7 @@ template = "html-validate-templates.json.tmpl"
 target = ".gspot/config/html-validate-templates.json"
 rules_path = ["rules"]
 header = false
-stub = {path = ".htmlvalidate.json", body = "{\n    \"extends\": [\"./.gspot/html-validate-templates.json\"]\n}\n"}
+stub = {path = ".htmlvalidate.json", body = "{\n    \"extends\": [\"{target}\"]\n}\n"}
 
 [[configs]]
 template = "html-validate-built.json.tmpl"
@@ -82,7 +82,7 @@ analysis = "html-copy"
 coverage = ["structure"]
 summary = "In the template files named by tools.html.template_files, checks that text a person reads is a placeholder and never a literal."
 why = "Copy written into a template is copy no translator and no content file ever sees."
-help = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_excluded with a reason."
+help = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_allowed with a reason."
 
 [[settings]]
 name = "tools.html.template_files"
@@ -92,7 +92,7 @@ default = []
 summary = "The HTML files that are templates filled from content; empty turns the copy check off."
 
 [[settings]]
-name = "tools.html.copy_excluded"
+name = "tools.html.copy_allowed"
 kind = "list"
 direction = "loosening"
 default = []

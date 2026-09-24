@@ -1,7 +1,11 @@
-import ts from 'typescript';
 import JSON5 from 'json5';
+import ts from 'typescript';
 
-/** Read a single static JavaScript configuration export without executing any code. */
+/**
+ * Read a single static JavaScript configuration export without executing any code.
+ * @param path
+ * @param text
+ */
 export function javascriptRules(path: string, text: string): unknown {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
     const [statement] = source.statements;
@@ -23,5 +27,5 @@ export function javascriptRules(path: string, text: string): unknown {
     }
     if (expression === undefined || !ts.isObjectLiteralExpression(expression))
         throw new Error('JavaScript rule comparison requires a static object export.');
-    return JSON5.parse(expression.getText(source)) as unknown;
+    return JSON5.parse(expression.getText(source));
 }

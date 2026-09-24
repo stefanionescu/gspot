@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { compileTerms } from '#cli/naming/match.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import type { EffectivePolicy, Identifier } from '#cli/types/naming.ts';
 
 function caseFor(language: string, category: string): string[] {
@@ -73,7 +73,7 @@ function identifier(name: string, category = 'functions', file = 'src/a.ts', lan
 describe('nameProblems', () => {
     test('reports every problem a name has, with the policy source', () => {
         const rules = nameProblems(identifier('enhancedHandler2UserUser'), plain).map((problem) => problem.rule);
-        expect(rules).toEqual(['digits', 'length', 'words', 'duplicate-words', 'banned-term']);
+        expect(rules).toStrictEqual(['digits', 'length', 'words', 'duplicate-words', 'banned-term']);
         expect(
             nameProblems(identifier('enhancedHandler2UserUser'), plain).find(
                 (problem) => problem.rule === 'banned-term',
@@ -88,34 +88,34 @@ describe('nameProblems', () => {
                 ...plain,
                 policy: { ...policy, limitsFor: () => ({ caseNames: ['kebab'], maxChars: 35, maxWords: 4 }) },
             }),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     });
 
     test('path exclusions, digit allowances and structural prefixes apply', () => {
-        expect(nameProblems(identifier('i', 'variables'), plain)).toEqual([]);
-        expect(nameProblems(identifier('user2', 'variables', 'tests/acceptance/a.ts'), plain)).toEqual([]);
-        expect(nameProblems(identifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toEqual([]);
+        expect(nameProblems(identifier('i', 'variables'), plain)).toStrictEqual([]);
+        expect(nameProblems(identifier('user2', 'variables', 'tests/acceptance/a.ts'), plain)).toStrictEqual([]);
+        expect(nameProblems(identifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toStrictEqual([]);
     });
 
     test('external names and file-specific contracts bypass naming checks', () => {
-        expect(nameProblems(identifier('requestAnimationFrame'), plain)).toEqual([]);
-        expect(nameProblems(identifier('enhancedThing'), plain)).toEqual([]);
-        expect(nameProblems(identifier('Content-Type', 'properties', 'api/route.ts'), plain)).toEqual([]);
+        expect(nameProblems(identifier('requestAnimationFrame'), plain)).toStrictEqual([]);
+        expect(nameProblems(identifier('enhancedThing'), plain)).toStrictEqual([]);
+        expect(nameProblems(identifier('Content-Type', 'properties', 'api/route.ts'), plain)).toStrictEqual([]);
         expect(
             nameProblems(identifier('Content-Type', 'properties', 'api/internal.ts'), plain).map(
                 (problem) => problem.rule,
             ),
-        ).toEqual(['case']);
+        ).toStrictEqual(['case']);
     });
 
     test('a reserved term is allowed only in its named uses', () => {
-        expect(nameProblems(identifier('config', 'variables'), plain)).toEqual([]);
+        expect(nameProblems(identifier('config', 'variables'), plain)).toStrictEqual([]);
         expect(nameProblems(identifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
     });
 
     test('handle leads a name only in a React file', () => {
         expect(nameProblems(identifier('handleSubmit'), plain)[0]?.rule).toBe('callback-verb');
-        expect(nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false })).toEqual([]);
+        expect(nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false })).toStrictEqual([]);
     });
 });
 

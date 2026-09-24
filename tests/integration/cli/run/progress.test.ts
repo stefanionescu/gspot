@@ -1,10 +1,10 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
 import { stringify } from 'smol-toml';
-import { openSession } from '#cli/run/session.ts';
+import { expect, test } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import type { CheckResult } from '#cli/types/reports.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
@@ -53,7 +53,7 @@ test('completion callbacks publish filtered results before the remaining check f
         },
     });
     expect(result.report.exitCode).toBe(0);
-    expect(completed.map((entry) => entry.check)).toEqual(['project/fast', 'project/waiting']);
+    expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
     expect(completed[0]).toMatchObject({ status: 'ok', findings: [] });
     expect(result.report.ignores[0]?.matched).toBe(1);
 });

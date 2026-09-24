@@ -1,24 +1,26 @@
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import { LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
-import { hookPrefix, huskyLines, huskyReady, lefthookCommand, lefthookConfiguration } from '#cli/emit/hooks.ts';
-import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { simpleGitHookCommand, simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { installHooks } from '#cli/lifecycle/hooks.ts';
-import type { FileSnapshot } from '#cli/types/filesystem.ts';
-import type { PreparedHook } from '#cli/types/ownership.ts';
+import { z } from 'zod';
+import semver from 'semver';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { probeTool } from '#cli/tools/tool-probe.ts';
-import { runToolCommand } from '#cli/run/tool-runner.ts';
 import type { Session } from '#cli/types/execution.ts';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import semver from 'semver';
-import { z } from 'zod';
+import { installHooks } from '#cli/lifecycle/hooks.ts';
+import { preCommitReady } from '#cli/emit/pre-commit.ts';
+import { runToolCommand } from '#cli/run/tool-runner.ts';
+import type { PreparedHook } from '#cli/types/ownership.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { hookPrefix, huskyLines, huskyReady, lefthookCommand, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { simpleGitHookCommand, simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
 
-/** Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner. */
+/**
+ * Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner.
+ * @param session
+ */
 export async function installHookManager(session: Session): Promise<string> {
     const manager = session.policyFiles.policy.hooks?.tool;
     if (
@@ -33,11 +35,11 @@ export async function installHookManager(session: Session): Promise<string> {
     const ready =
         manager === 'husky'
             ? huskyReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
-            : lefthook !== undefined
-              ? hasConfiguration(session.root, lefthook)
-              : manager === 'simple-git-hooks'
-                ? simpleGitHooksReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
-                : preCommitReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath());
+            : lefthook === undefined
+              ? manager === 'simple-git-hooks'
+                  ? simpleGitHooksReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
+                  : preCommitReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
+              : hasConfiguration(session.root, lefthook);
     if (!ready) throw new Error(`${manager} integration is missing or edited. Run gspot apply before installing.`);
     const tool = probeTool(session, {
         name: manager,
@@ -69,8 +71,10 @@ export async function installHookManager(session: Session): Promise<string> {
         let resolved: Record<string, unknown>;
         try {
             resolved = z.record(z.string(), z.unknown()).parse(JSON.parse(dumped.stdout));
-        } catch (cause) {
-            throw new Error('Cannot load Lefthook configuration. Correct it before running gspot install.', { cause });
+        } catch (error) {
+            throw new Error('Cannot load Lefthook configuration. Correct it before running gspot install.', {
+                cause: error,
+            });
         }
         // Native dump resolves these sources; preparation must not load them again from its temporary root.
         for (const field of ['extends', 'remotes', 'remote']) Reflect.deleteProperty(resolved, field);
@@ -129,14 +133,14 @@ export async function installHookManager(session: Session): Promise<string> {
                         "trap 'exit 143' TERM",
                         'export GSPOT_PRE_COMMIT_RESULT="$gspot_work/result"',
                         `if ! '${executable.replaceAll("'", "'\"'\"'")}' validate-config '${installedConfig.replaceAll("'", "'\"'\"'")}'; then`,
-                        '    printf "%s\\n" "Cannot load pre-commit configuration. Check the dependency and configuration, then run gspot install." >&2',
+                        String.raw`    printf "%s\n" "Cannot load pre-commit configuration. Check the dependency and configuration, then run gspot install." >&2`,
                         '    exit 2',
                         'fi',
                         ...(name === 'pre-commit'
                             ? [
                                   'gspot_unmerged=$(git ls-files --unmerged) || exit 2',
-                                  'if [ -n "$gspot_unmerged" ]; then printf "%s\\n" "Unmerged index entries prevent pre-commit checks. Resolve the conflicts before checking." >&2; exit 2; fi',
-                                  `if ! git diff --quiet --no-ext-diff -- '${installedConfig.replaceAll("'", "'\"'\"'")}'; then printf "%s\\n" "Cannot use pre-commit configuration from the index. Stage the configuration and retry." >&2; exit 2; fi`,
+                                  String.raw`if [ -n "$gspot_unmerged" ]; then printf "%s\n" "Unmerged index entries prevent pre-commit checks. Resolve the conflicts before checking." >&2; exit 2; fi`,
+                                  String.raw`if ! git diff --quiet --no-ext-diff -- '${installedConfig.replaceAll("'", "'\"'\"'")}'; then printf "%s\n" "Cannot use pre-commit configuration from the index. Stage the configuration and retry." >&2; exit 2; fi`,
                               ]
                             : []),
                         'gspot_native_status=0',
@@ -151,7 +155,7 @@ export async function installHookManager(session: Session): Promise<string> {
                         'fi',
                         ...(name === 'pre-commit'
                             ? [
-                                  'if [ "$gspot_native_status" -eq 0 ] && [ ! -s "$GSPOT_PRE_COMMIT_RESULT" ]; then printf "%s\\n" "The pre-commit integration did not run gspot. Run gspot apply, then gspot install." >&2; exit 2; fi',
+                                  String.raw`if [ "$gspot_native_status" -eq 0 ] && [ ! -s "$GSPOT_PRE_COMMIT_RESULT" ]; then printf "%s\n" "The pre-commit integration did not run gspot. Run gspot apply, then gspot install." >&2; exit 2; fi`,
                               ]
                             : []),
                         'case "$gspot_native_status" in 3|126|127) exit 2 ;; *) exit "$gspot_native_status" ;; esac',
@@ -201,7 +205,7 @@ export async function installHookManager(session: Session): Promise<string> {
                               : []),
                         'gspot_native_status=0',
                         `SKIP_SIMPLE_GIT_HOOKS=0 sh -c '${native.replaceAll("'", "'\"'\"'")}' "$0" "$@"${name === 'pre-push' ? ' < "$GSPOT_SIMPLE_INPUT"' : ''} || gspot_native_status=$?`,
-                        'case "$gspot_native_status" in 126|127) printf "%s\\n" "The hook integration is unavailable. Run gspot apply, then gspot install." >&2; exit 2 ;; esac',
+                        String.raw`case "$gspot_native_status" in 126|127) printf "%s\n" "The hook integration is unavailable. Run gspot apply, then gspot install." >&2; exit 2 ;; esac`,
                         'if [ "$gspot_native_status" -ne 0 ]; then exit "$gspot_native_status"; fi',
                         'if [ -f "$GSPOT_SIMPLE_ENTERED" ]; then exit 0; fi',
                         `bash -c '${fallback.replaceAll("'", "'\"'\"'")}' "$0" "$@"${name === 'pre-push' ? ' < "$GSPOT_SIMPLE_INPUT"' : ''}`,
@@ -221,7 +225,7 @@ export async function installHookManager(session: Session): Promise<string> {
                     const script = join(session.root, '.husky', name);
                     text = [
                         '#!/usr/bin/env bash',
-                        `if [ ! -f '${script.replaceAll("'", "'\"'\"'")}' ]; then printf "%s\\n" "Husky integration is missing. Run gspot apply, then gspot install." >&2; exit 2; fi`,
+                        String.raw`if [ ! -f '${script.replaceAll("'", "'\"'\"'")}' ]; then printf "%s\n" "Husky integration is missing. Run gspot apply, then gspot install." >&2; exit 2; fi`,
                         'gspot_work=$(mktemp -d "${TMPDIR:-/tmp}/gspot-husky.XXXXXXXX") || exit 2',
                         `trap 'rm -rf "\${gspot_work}"' EXIT`,
                         "trap 'exit 129' HUP",
@@ -283,14 +287,14 @@ export async function installHookManager(session: Session): Promise<string> {
                         'export GSPOT_LEFTHOOK_RESULT="$gspot_work/result"',
                         'if ! "$LEFTHOOK_BIN" dump --format json > "$gspot_work/config"; then',
                         '    cat "$gspot_work/config" >&2',
-                        '    printf "%s\\n" "Cannot load Lefthook configuration. Check the dependency and configuration, then run gspot install." >&2',
+                        String.raw`    printf "%s\n" "Cannot load Lefthook configuration. Check the dependency and configuration, then run gspot install." >&2`,
                         '    exit 2',
                         'fi',
                         ...(name === 'pre-push' ? ['cat > "$gspot_work/input" || exit 2'] : []),
                         'gspot_native_status=0',
                         `bash -c '${native.replaceAll("'", "'\"'\"'")}' "$0" "$@"${name === 'pre-push' ? ' < "$gspot_work/input"' : ''} || gspot_native_status=$?`,
                         'if [ "$gspot_native_status" -eq 126 ] || [ "$gspot_native_status" -eq 127 ]; then',
-                        '    printf "%s\\n" "The repository Lefthook executable is unavailable. Install the dependency, then run: gspot install" >&2',
+                        String.raw`    printf "%s\n" "The repository Lefthook executable is unavailable. Install the dependency, then run: gspot install" >&2`,
                         '    exit 2',
                         'fi',
                         'if [ -s "$GSPOT_LEFTHOOK_RESULT" ]; then',

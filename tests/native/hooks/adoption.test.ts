@@ -1,12 +1,12 @@
-import { applyCommand } from '#cli/commands/apply.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 
@@ -74,7 +74,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained differing native hook');
         expect(readFileSync(join(location.absolute, 'commit-msg'), 'utf8')).toBe(edited);
         for (const [index, name] of names.entries()) {
-            if (name !== 'commit-msg') expect(original[index]).toEqual(readFileSync(join(location.absolute, name)));
+            if (name !== 'commit-msg') expect(original[index]).toStrictEqual(readFileSync(join(location.absolute, name)));
             expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
             expect(existsSync(join(location.absolute, `${name}.gspot-original`))).toBe(false);
         }
@@ -85,7 +85,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
             const config = join(root, 'lefthook.yml');
             writeFileSync(config, readFileSync(config, 'utf8') + '\nrc: ./native-init.sh\n');
             await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained differing native hook');
-            expect(readFileSync(join(location.absolute, 'commit-msg'))).toEqual(message);
+            expect(readFileSync(join(location.absolute, 'commit-msg'))).toStrictEqual(message);
         }
         const regenerated = await run(prepare, options);
         expect(regenerated.code, regenerated.stdout + regenerated.stderr).toBe(0);
@@ -103,7 +103,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(readFileSync(join(root, 'observed'), 'utf8')).toBe('x');
-        expect(readFileSync(join(root, '.git/config'))).toEqual(gitConfig);
+        expect(readFileSync(join(root, '.git/config'))).toStrictEqual(gitConfig);
     },
     90_000,
 );

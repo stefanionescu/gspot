@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { planRun } from '#cli/run/plan.ts';
-import type { Session } from '#cli/types/execution.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 
@@ -102,26 +102,26 @@ test.each([
             : { changed: (await changedFiles(sandbox.path, 'HEAD')).paths };
     const planned = await planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
-    expect(api.files).toEqual([]);
+    expect(api.files).toStrictEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
     const fileChecks = await planRun(session, { ...options, only: ['sandbox/files'], ...revision });
-    expect(fileChecks.flatMap((check) => check.triggerPaths)).toEqual([]);
-    expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toEqual(
+    expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
+    expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
     );
     const outcome = await executeRun(session, { ...options, ...revision, fix: false, isDryRun: false, noCache: true });
     expect(outcome.report.exitCode).toBe(1);
-    expect(outcome.report.checks.map((check) => check.scope)).toEqual(
+    expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
         operation === 'delete' ? ['api'] : ['api', 'web'],
     );
     expect(
         outcome.report.checks.every((check) => check.findings.some((finding) => finding.message === 'Project finding')),
     ).toBe(true);
     const preview = await applyFixers(session, [api], true);
-    expect(preview.changed).toEqual(['api/source.ts']);
+    expect(preview.changed).toStrictEqual(['api/source.ts']);
     expect(existsSync(join(sandbox.path, 'api/source.ts'))).toBe(false);
     const applied = await applyFixers(session, [api], false);
-    expect(applied.changed).toEqual(['api/source.ts']);
+    expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(readFileSync(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
 
@@ -137,8 +137,8 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     projectChecks(session);
     const planned = await planRun(session, { ...options, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
-    expect(affected.map((check) => check.scope.scope.path)).toEqual(['api']);
-    expect(affected[0]?.files.map((file) => file.path)).toEqual(['api/caller.ts', 'api/source.ts']);
+    expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
+    expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);
     const outcome = await executeRun(session, {
         ...options,
         paths: ['api/source.ts'],

@@ -1,9 +1,9 @@
-import type { RunReport } from '#cli/types/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { renameSync } from 'node:fs';
 import { join } from 'node:path';
+import { renameSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();
@@ -16,7 +16,7 @@ test('the selected naming configuration rejects banned terms in declarations and
     const refused = await run(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toEqual([
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['naming/identifiers', 'fail'],
         ['naming/paths', 'fail'],
     ]);
@@ -46,7 +46,7 @@ test('ordinary service and generation names pass the naming checks in code and p
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toEqual([
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['naming/identifiers', 'ok'],
         ['naming/paths', 'ok'],
     ]);

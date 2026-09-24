@@ -1,4 +1,14 @@
 import { join } from 'node:path';
+import { planRun } from '#cli/run/plan.ts';
+import { describe, expect, test } from 'bun:test';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { astGrepMatches } from '#cli/structure/ast-grep.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
+import { fileMode, mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
+
 import {
     linkSync,
     readFileSync,
@@ -9,15 +19,6 @@ import {
     chmodSync,
     writeFileSync,
 } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { fileMode, mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { astGrepMatches } from '#cli/structure/ast-grep.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import { openSession } from '#cli/run/session.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { engineInput } from '#cli/run/engines.ts';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
@@ -26,12 +27,14 @@ test('native replacement and removal preserve read-only identities', async () =>
     const replacement = { bytes: Buffer.from('replacement'), mode: fileMode({ mode: 0o644 }) };
     try {
         root.write('config/input', original, undefined);
-        expect(root.read('config/input')).toEqual(original);
+        expect(root.read('config/input')).toStrictEqual(original);
         root.write('config/input', replacement, original);
-        expect(root.read('config/input')).toEqual(replacement);
+        expect(root.read('config/input')).toStrictEqual(replacement);
         root.write('config/input', original, replacement);
-        expect(() => root.remove('config/input', replacement)).toThrow('changed');
-        expect(root.read('config/input')).toEqual(original);
+        expect(() => {
+            root.remove('config/input', replacement);
+        }).toThrow('changed');
+        expect(root.read('config/input')).toStrictEqual(original);
         root.remove('config/input', original);
         expect(root.read('config/input')).toBeUndefined();
     } finally {
@@ -68,13 +71,17 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
         try {
             const original = { bytes: Buffer.from([0, 255, 10]), mode: 0o640 };
             root.write('config/input', original, undefined);
-            expect(root.read('config/input')).toEqual(original);
+            expect(root.read('config/input')).toStrictEqual(original);
             const next = { bytes: Buffer.from('replacement\n'), mode: 0o444 };
             root.write('config/input', next, original);
-            expect(root.read('config/input')).toEqual(next);
-            expect(() => root.write('config/input', original, original)).toThrow('changed');
-            expect(() => root.remove('config/input', original)).toThrow('changed');
-            expect(root.read('config/input')).toEqual(next);
+            expect(root.read('config/input')).toStrictEqual(next);
+            expect(() => {
+                root.write('config/input', original, original);
+            }).toThrow('changed');
+            expect(() => {
+                root.remove('config/input', original);
+            }).toThrow('changed');
+            expect(root.read('config/input')).toStrictEqual(next);
             root.remove('config/input', next);
             expect(root.read('config/input')).toBeUndefined();
         } finally {
@@ -95,8 +102,12 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
             const root = openConfinedRoot(project, format);
             try {
                 for (const path of ['escape/sentinel', 'linked', 'hardlinked']) {
-                    expect(() => root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined)).toThrow();
-                    expect(() => root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 })).toThrow();
+                    expect(() => {
+                        root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
+                    }).toThrow();
+                    expect(() => {
+                        root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
+                    }).toThrow();
                     expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
                 }
                 root.mkdir('.gspot/state/recovery', 0o700);
@@ -114,17 +125,19 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
         const original = { bytes: Buffer.from('inside'), mode: 0o640 };
         try {
             root.write(path, original, undefined);
-            expect(root.read(path)).toEqual(original);
+            expect(root.read(path)).toStrictEqual(original);
             expect(() => mutationPath(path)).toThrow('Unsafe lifecycle path');
             const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
             root.write('linked', link, undefined);
-            expect(root.readEntry('linked')).toEqual(link);
+            expect(root.readEntry('linked')).toStrictEqual(link);
             for (const unsafe of ['../outside', '/outside', 'folder/../outside', 'nul\0suffix']) {
-                expect(() => root.write(unsafe, original, undefined)).toThrow('Unsafe lifecycle path');
+                expect(() => {
+                    root.write(unsafe, original, undefined);
+                }).toThrow('Unsafe lifecycle path');
             }
-            expect(() =>
-                root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined),
-            ).toThrow('Lifecycle metadata');
+            expect(() => {
+                root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined);
+            }).toThrow('Lifecycle metadata');
         } finally {
             root.close();
         }
@@ -147,17 +160,17 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
                 '.gspot/state/ownership.json',
                 'missing',
                 'target\u0000outside',
-                'C:\\outside',
+                String.raw`C:\outside`,
             ]) {
-                expect(() =>
-                    root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined),
-                ).toThrow();
+                expect(() => {
+                    root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
+                }).toThrow();
                 expect(root.read('tool')).toBeUndefined();
                 expect(readFileSync(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
             }
             const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
             root.write('tool', next, undefined);
-            expect(root.readEntry('tool')).toEqual(next);
+            expect(root.readEntry('tool')).toStrictEqual(next);
             expect(readFileSync(join(project, 'tool'), 'utf8')).toBe('inside');
             root.remove('tool', next);
             expect(root.read('tool')).toBeUndefined();
@@ -173,9 +186,13 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
         const second = openConfinedRoot(directory.path);
         try {
             first.lock('.gspot/mutation.lock');
-            expect(() => second.lock('.gspot/mutation.lock')).toThrow('Another lifecycle writer');
+            expect(() => {
+                second.lock('.gspot/mutation.lock');
+            }).toThrow('Another lifecycle writer');
             first.close();
-            expect(() => second.lock('.gspot/mutation.lock')).not.toThrow();
+            expect(() => {
+                second.lock('.gspot/mutation.lock');
+            }).not.toThrow();
         } finally {
             first.close();
             second.close();
@@ -192,8 +209,8 @@ test('mutation paths reject portable escapes and preserve ordinary Unicode names
         'a/./b',
         'C:relative',
         'C:/absolute',
-        '\\\\server\\share',
-        'a\\b',
+        String.raw`\\server\share`,
+        String.raw`a\b`,
         'nul.txt',
         'a/COM1',
         'a.',
@@ -203,7 +220,7 @@ test('mutation paths reject portable escapes and preserve ordinary Unicode names
     ]) {
         expect(() => mutationPath(path)).toThrow('Unsafe lifecycle path');
     }
-    expect(mutationPath('documents/équipe 50%.md')).toEqual(['documents', 'équipe 50%.md']);
+    expect(mutationPath('documents/équipe 50%.md')).toStrictEqual(['documents', 'équipe 50%.md']);
 });
 
 test('Windows file identities retain read-only changes without inventing POSIX permissions', () => {
@@ -236,7 +253,8 @@ test('structural rule caching confines writes and preserves later rule edits', a
     const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
     const input = engineInput(session, planned!);
     symlinkSync('../../outside', cache);
-    const run = () => astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['example.sh']);
+    const run = () =>
+        astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['example.sh']);
     await expect(run()).rejects.toThrow('Unsafe lifecycle parent');
     expect(readFileSync(join(directory.path, 'outside/ast-grep/bash-branches.yml'), 'utf8')).toBe('external rule\n');
     unlinkSync(cache);
@@ -257,13 +275,19 @@ test('empty-directory removal confines parents and preserves nonempty directorie
     symlinkSync('../outside', join(root, 'linked'));
     const files = openConfinedRoot(root);
     try {
-        expect(() => files.rmdir('linked/kept')).toThrow('Unsafe lifecycle parent');
-        expect(() => files.rmdir('../outside/kept')).toThrow('Unsafe lifecycle path');
+        expect(() => {
+            files.rmdir('linked/kept');
+        }).toThrow('Unsafe lifecycle parent');
+        expect(() => {
+            files.rmdir('../outside/kept');
+        }).toThrow('Unsafe lifecycle path');
         files.mkdir('cache/empty', 0o700);
         files.rmdir('cache/empty');
         expect(files.stat('cache/empty')).toBeUndefined();
         files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 }, undefined);
-        expect(() => files.rmdir('cache/kept')).toThrow();
+        expect(() => {
+            files.rmdir('cache/kept');
+        }).toThrow();
         expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
         expect(readFileSync(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
     } finally {

@@ -1,15 +1,15 @@
-import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/tools/tool-probe.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
-import { astGrepMatches } from '#cli/structure/ast-grep.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { renameSync } from 'node:fs';
 import { join } from 'node:path';
+import { renameSync } from 'node:fs';
+import { planRun } from '#cli/run/plan.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { executeRun } from '#cli/run/execute.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();
@@ -44,9 +44,13 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         };
     });
     try {
-        const matches = await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', files);
-        expect(received).toEqual(files);
-        expect(matches?.map((match) => match.file)).toEqual(files);
+        const matches = await astGrepMatches(
+            input,
+            'packages/cli/configurations/language/bash/rules/bash-branches.yml',
+            files,
+        );
+        expect(received).toStrictEqual(files);
+        expect(matches?.map((match) => match.file)).toStrictEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
     } finally {
         processRun.mockRestore();
@@ -97,12 +101,16 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
         });
         try {
             await expect(
-                astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['source.sh']),
+                astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [
+                    'source.sh',
+                ]),
             ).rejects.toThrow();
             processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
-            expect(await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['source.sh'])).toEqual(
-                [],
-            );
+            expect(
+                await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [
+                    'source.sh',
+                ]),
+            ).toStrictEqual([]);
         } finally {
             processRun.mockRestore();
             probe.mockRestore();
@@ -135,7 +143,7 @@ test('folder checks count code files and preserve allowed and nested directories
         only: ['structure/single-file-folder'],
     });
     expect(result.report.exitCode).toBe(1);
-    expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toEqual([
+    expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
         'lone/only.ts',
         'typed/one.ts',
     ]);
@@ -232,7 +240,7 @@ test.each([
     renameSync(join(sandbox.path, list), join(sandbox.path, `cards/other.${extension}`));
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.checks).toHaveLength(2);
-    expect(corrected.report.checks.flatMap((check) => check.findings)).toEqual([]);
+    expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     expect(corrected.report.exitCode).toBe(0);
 });
 
@@ -255,7 +263,7 @@ test.skipIf(process.platform === 'win32')(
             only: ['structure/prefix-collisions'],
         };
         const initial = await executeRun(await openSession(sandbox.path), options);
-        expect(initial.report.checks[0]!.findings.map((finding) => finding.file).sort()).toEqual(
+        expect(initial.report.checks[0]!.findings.map((finding) => finding.file).sort()).toStrictEqual(
             [paths[0]!, paths[2]!].sort(),
         );
         renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
@@ -263,6 +271,6 @@ test.skipIf(process.platform === 'win32')(
         commitAll(sandbox.path);
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
-        expect(corrected.report.checks[0]!.findings).toEqual([]);
+        expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     },
 );

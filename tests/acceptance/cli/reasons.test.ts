@@ -1,8 +1,8 @@
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test('ignore and loosened settings accept omitted reasons by default and enforce the repository preference', async () => {
     for (const required of [false, true]) {
@@ -64,7 +64,7 @@ test(
             const report = JSON.parse(restored.stdout) as {
                 checks: { findings: { file: string; line: number; rule: string }[] }[];
             };
-            expect(report.checks[0]?.findings).toEqual([
+            expect(report.checks[0]?.findings).toStrictEqual([
                 expect.objectContaining({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
             ]);
         }
@@ -84,7 +84,7 @@ test.each([false, true])(
         const missing = await run(directory.path, command);
         expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
         const report = JSON.parse(missing.stdout);
-        expect(report.checks[0].findings).toEqual(
+        expect(report.checks[0].findings).toStrictEqual(
             required
                 ? [
                       expect.objectContaining({
@@ -106,7 +106,7 @@ test.each([false, true])(
         );
         const explained = await run(directory.path, command);
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout).checks[0].findings).toEqual([]);
+        expect(JSON.parse(explained.stdout).checks[0].findings).toStrictEqual([]);
         expect(JSON.parse(explained.stdout).suppressions['shellcheck']).toBe(1);
     },
 );
@@ -146,7 +146,7 @@ test.each([
         const failed = await run(directory.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout);
-        expect(report.checks[0].findings).toEqual([
+        expect(report.checks[0].findings).toStrictEqual([
             expect.objectContaining({
                 check: 'integrity/suppressions',
                 file: path,
@@ -158,8 +158,8 @@ test.each([
         await Bun.write(join(directory.path, path), `${clean}\n`);
         const corrected = await run(directory.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).checks[0].findings).toEqual([]);
-        expect(JSON.parse(corrected.stdout).suppressions).toEqual({});
+        expect(JSON.parse(corrected.stdout).checks[0].findings).toStrictEqual([]);
+        expect(JSON.parse(corrected.stdout).suppressions).toStrictEqual({});
     },
 );
 
@@ -174,14 +174,14 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout);
-    expect(report.checks[0].findings).toEqual(
+    expect(report.checks[0].findings).toStrictEqual(
         expect.arrayContaining([
             expect.objectContaining({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),
             expect.objectContaining({ file: 'entry.py', rule: 'ruff-no-reason' }),
         ]),
     );
     expect(report.checks[0].findings).toHaveLength(2);
-    expect(report.suppressions).toEqual({ sqlfluff: 1, ruff: 1 });
+    expect(report.suppressions).toStrictEqual({ sqlfluff: 1, ruff: 1 });
 });
 
 test.each([false, true])(

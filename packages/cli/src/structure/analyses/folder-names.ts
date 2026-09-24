@@ -1,7 +1,7 @@
 import type { Analysis } from '#cli/types/structure.ts';
+import { directoryOf } from '#cli/structure/directories.ts';
 // A folder named after a container word or a language. Searched: ls-lint; it checks case, not meaning.
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import { directoryOf } from '#cli/structure/directories.ts';
 import { BANNED_FOLDER_NAMES, IGNORED_FOLDERS } from '#cli/structure/patterns.ts';
 
 /**
@@ -14,7 +14,7 @@ export const folderNames: Analysis = (context) => {
         context.input.policyFiles.policy.structure.folder_name_allowed.flatMap((entry) => entry.paths),
     );
     const seen = new Set<string>();
-    const findings = context.files.flatMap((file) => {
+    return context.files.flatMap((file) => {
         const segments = directoryOf(file.path)
             .split('/')
             .filter((segment) => segment !== '');
@@ -38,5 +38,4 @@ export const folderNames: Analysis = (context) => {
             ];
         });
     });
-    return findings;
 };

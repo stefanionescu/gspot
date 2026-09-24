@@ -1,19 +1,17 @@
 import { join } from 'node:path';
 import { computeDrift } from '#cli/emit/drift.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { valeFindings } from '#cli/prose/vale.ts';
-import { sourceBans } from '#cli/prose/source-bans.ts';
 import { resolveNaming } from '#cli/naming/engine.ts';
-// Dispatch to the built-in engines by `engine =` in the manifest.
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import { sourceBans } from '#cli/prose/source-bans.ts';
 import type { CheckResult } from '#cli/types/reports.ts';
 import { resolveIntegrity } from '#cli/checks/dispatch.ts';
 import { resolveStructure } from '#cli/structure/engine.ts';
+// Dispatch to the built-in engines by `engine =` in the manifest.
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
+import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import type { EngineInput, Engine, Session, PlannedCheck } from '#cli/types/execution.ts';
-
-const runKeys = new WeakMap<Session, object>();
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
     integrity: resolveIntegrity,
@@ -33,13 +31,12 @@ function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | '
     return { status: 'error', note: `the ${name} engine failed: ${(error as Error).message}` };
 }
 
-/** Supply execution services and selected files without exposing the repository session. */
+/**
+ * Supply execution services and selected files without exposing the repository session.
+ * @param session
+ * @param planned
+ */
 export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'spec' | 'files'>): EngineInput {
-    let runKey = runKeys.get(session);
-    if (runKey === undefined) {
-        runKey = {};
-        runKeys.set(session, runKey);
-    }
     const input: EngineInput = {
         root: session.root,
         scope: planned.scope.scope.path,
@@ -54,7 +51,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
         scopeEntries: session.repository.scopes,
         attributes: session.repository.attributes,
         hasGit: session.repository.hasGit,
-        runKey,
+        observations: session.observations,
         ...(session.resources === undefined ? {} : { resources: session.resources }),
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     };
@@ -120,7 +117,10 @@ export async function runEngineCheck(
     }
 }
 
-/** Resolve a built-in implementation without executing its preparation or inspecting source files. */
+/**
+ * Resolve a built-in implementation without executing its preparation or inspecting source files.
+ * @param spec
+ */
 export function resolveEngine(spec: CheckSpec & { engine: NonNullable<CheckSpec['engine']> }): Engine {
     return engines[spec.engine](spec);
 }

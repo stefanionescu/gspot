@@ -1,15 +1,15 @@
-import { directoryOf } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { computeDrift } from '#cli/emit/drift.ts';
-import { eslintRuleDiff } from '#cli/emit/eslint-rule-diff.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { openSession } from '#cli/run/session.ts';
-import { GSPOT_VERSION, pinnedVersion } from '#cli/run/version-pin.ts';
-import type { CommandResult, Session } from '#cli/types/execution.ts';
-import type { ApplyReport, DriftEntry } from '#cli/types/generation.ts';
 import type { Command } from 'commander';
+import { emitAll } from '#cli/emit/targets.ts';
+import { computeDrift } from '#cli/emit/drift.ts';
+import { openSession } from '#cli/run/session.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { eslintRuleDiff } from '#cli/emit/eslint-rule-diff.ts';
+import type { CommandResult, Session } from '#cli/types/execution.ts';
+import { GSPOT_VERSION, pinnedVersion } from '#cli/run/version-pin.ts';
+import type { ApplyReport, DriftEntry } from '#cli/types/generation.ts';
 
 /**
  * Registers apply.

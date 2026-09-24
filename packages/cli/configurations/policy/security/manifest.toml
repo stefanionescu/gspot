@@ -12,7 +12,7 @@ extensions = [".plist"]
 [[tools]]
 name = "semgrep"
 suppression = {marker = "\\bnosemgrep\\b", reason = "(?<reason>never)", forbidden = true}
-version = "1.152.0"
+version = "1.178.0"
 floor = "1.100.0"
 pypi = "semgrep"
 mise = "pipx:semgrep"
@@ -43,15 +43,18 @@ query_packs = {actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7
 template = "semgrep-node.yml.tmpl"
 target = ".gspot/config/semgrep/node.yml"
 rules_path = ["rules"]
+per_scope = true
 
 [[configs]]
 template = "semgrep-secrets.yml.tmpl"
 target = ".gspot/config/semgrep/secrets.yml"
 rules_path = ["rules"]
+per_scope = true
 
 [[configs]]
 template = "semgrepignore.tmpl"
 target = ".semgrepignore"
+per_scope = true
 
 [[checks]]
 name = "security/semgrep"
@@ -60,8 +63,10 @@ example = "Code matching a selected local Semgrep rule reports that rule ID and 
 level = "recommended"
 stage = "push"
 runs = "per-file-list"
+exclude_setting = "tools.semgrep.ignore"
+findings_exit_codes = [1]
 platform = ["macos", "linux"]
-command = ["semgrep", "scan", "--config", "{root}/.gspot/config/semgrep", "{each:--config:tools.semgrep.rules}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
+command = ["semgrep", "scan", "--strict", "--config", "{root}/.gspot/config/{scope}/semgrep", "{each:--config:tools.semgrep.rules}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
 coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
@@ -75,9 +80,11 @@ example = "Code matching a configured Semgrep registry rule reports its upstream
 level = "recommended"
 stage = "manual"
 runs = "per-file-list"
+exclude_setting = "tools.semgrep.ignore"
+findings_exit_codes = [1]
 requires = "network"
 platform = ["macos", "linux"]
-command = ["semgrep", "scan", "{each:--config:tools.semgrep.registry}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--vim", "{files}"]
+command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--vim", "{files}"]
 tool = "semgrep"
 coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}

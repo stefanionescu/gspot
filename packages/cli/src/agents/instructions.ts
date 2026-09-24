@@ -1,7 +1,7 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { Session } from '#cli/types/execution.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {
     agent: 'How to work here',
@@ -50,7 +50,6 @@ function indexLines(session: Session, files: RuleFile[]): string[] {
             ...guides.map((guide) => `- ${guide}`),
             '',
         ]),
-        '',
     ];
 }
 

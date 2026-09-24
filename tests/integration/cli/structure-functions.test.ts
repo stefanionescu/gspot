@@ -1,11 +1,11 @@
+import { expect, spyOn, test } from 'bun:test';
+import { executeRun } from '#cli/run/execute.ts';
 import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { swiftSources } from '#cli/structure/swift/sources.ts';
 import { pythonModules } from '#cli/structure/python/modules.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/run/session.ts';
-import { executeRun } from '#cli/run/execute.ts';
 
 for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {
@@ -13,6 +13,8 @@ for (const threshold of [1, 2, 3]) {
         await createFileTree(sandbox.path, {
             'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${threshold}\n`,
             'functions.sql': [
+                "\\set account '前言'",
+                'SELECT :account::int;',
                 'CREATE FUNCTION one() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;',
                 'CREATE FUNCTION two() RETURNS void LANGUAGE plpgsql AS $$ BEGIN PERFORM 1; PERFORM 2; END $$;',
                 'CREATE FUNCTION three() RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF true THEN PERFORM 1; PERFORM 2; END IF; END $$;',
@@ -45,7 +47,7 @@ for (const threshold of [1, 2, 3]) {
             overridden.report.checks
                 .flatMap((check) => check.findings)
                 .filter((finding) => finding.rule === 'function-parameters'),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     });
 }
 
@@ -65,13 +67,13 @@ test('SQL atomic bodies count each statement and reject files containing only tr
         isDryRun: false,
     });
     const findings = result.report.checks.flatMap((check) => check.findings);
-    expect(findings.filter(({ file }) => file === 'owner.sql')).toEqual([]);
+    expect(findings.filter(({ file }) => file === 'owner.sql')).toStrictEqual([]);
     expect(
         findings
             .filter(({ file }) => file === 'wrapper.sql')
             .map(({ rule }) => rule)
             .sort(),
-    ).toEqual(['trivial-file', 'trivial-function']);
+    ).toStrictEqual(['trivial-file', 'trivial-function']);
 });
 
 test.each([
@@ -105,4 +107,29 @@ test.each([
     const corrected = await read(request);
     expect(corrected).toHaveLength(2);
     for (const source of corrected) source.tree.delete();
+});
+
+test('SQL function analysis keeps quoted bodies strict and preserves psql source bytes', async () => {
+    await using sandbox = await testdir();
+    const source = "\\set label '前言'\nCREATE FUNCTION value() RETURNS int LANGUAGE sql AS $$ SELECT :value $$;\n";
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["sql"]\n',
+        'functions.sql': source,
+    });
+    const options = { stage: 'all' as const, skips: [], only: ['sql/functions'], fix: false, isDryRun: false };
+    const broken = await executeRun(await openSession(sandbox.path), options);
+    expect(broken.report.checks[0]?.status).toBe('error');
+    expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);
+    const corrected = source.replace('SELECT :value', 'SELECT 1');
+    await Bun.write(`${sandbox.path}/functions.sql`, corrected);
+    const checked = await executeRun(await openSession(sandbox.path), options);
+    expect(
+        checked.report.checks
+            .flatMap(({ findings }) => findings)
+            .map(({ rule, line, column }) => ({ rule, line, column })),
+    ).toStrictEqual([
+        { rule: 'trivial-function', line: 2, column: 1 },
+        { rule: 'trivial-file', line: 1, column: undefined },
+    ]);
+    expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(corrected);
 });

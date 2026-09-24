@@ -1,10 +1,13 @@
-import { applyCommand } from '#cli/commands/apply.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
+
 import {
     chmodSync,
     existsSync,
@@ -15,8 +18,6 @@ import {
     utimesSync,
     writeFileSync,
 } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['custom', 'native'])(
     'native Lefthook preserves a %s hook and delivers exact Git input',
@@ -80,7 +81,7 @@ test.each(['custom', 'native'])(
         };
         const checked = await run(command, options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
             args: ['check', '--push', '--', 'origin', 'remote'],
             input,
         });
@@ -125,11 +126,11 @@ test.each(['custom', 'native'])(
         writeFileSync(join(root, 'hook-init-updated.sh'), 'printf updated > rc-ran\n');
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init-updated.sh\n');
         await installHookManager(await openSession(root));
-        expect(readFileSync(join(location.absolute, 'pre-commit'))).toEqual(dispatcher);
+        expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
         expect(hookStatus(await openSession(root)).ready).toBe(true);
         if (existing === 'native' && originalHelper !== undefined) {
             const repaired = readFileSync(helperPath);
-            expect(repaired).not.toEqual(originalHelper);
+            expect(repaired).not.toStrictEqual(originalHelper);
             writeFileSync(helperPath, '#!/bin/sh\nexit 0\n');
             expect(hookStatus(await openSession(root)).ready).toBe(false);
             await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained edited hook');
@@ -148,7 +149,7 @@ test.each(['custom', 'native'])(
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
         if (existing === 'custom') expect(readFileSync(join(root, 'original-ran'), 'utf8')).toBe('retained');
         expect(readFileSync(join(root, 'rc-ran'), 'utf8')).toBe('updated');
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toEqual(['check', '--staged']);
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual(['check', '--staged']);
         const changedAt = new Date(Date.now() + 2000);
         utimesSync(join(root, 'lefthook.yml'), changedAt, changedAt);
         const committed = await run(
@@ -169,13 +170,13 @@ test.each(['custom', 'native'])(
             expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nprintf retained > helper-ran\n');
             expect(readFileSync(join(root, 'helper-ran'), 'utf8')).toBe('retained');
         }
-        expect(readFileSync(join(location.absolute, 'pre-commit'))).toEqual(dispatcher);
+        expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
         writeFileSync(join(root, 'failed'), 'finding');
         const messagePath = 'message with spaces "quotes" $dollar `literal`';
         writeFileSync(join(root, messagePath), 'test: fixture\n');
         const message = await run(['git', 'hook', 'run', 'commit-msg', '--', messagePath], { ...options, stdin: '' });
         expect(message.code, message.stdout + message.stderr).toBe(1);
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toEqual([
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual([
             'check',
             '--stage',
             'message',
@@ -193,7 +194,7 @@ test.each(['custom', 'native'])(
             },
         );
         expect(pushed.code, pushed.stdout + pushed.stderr).toBe(1);
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
             args: ['check', '--push', '--', 'origin', remote],
             input,
         });
@@ -222,11 +223,11 @@ test.each(['custom', 'native'])(
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(code);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
             if (calls !== '')
-                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
                     args: ['check', '--push', '--', 'origin', remote],
                     input,
                 });
-            expect(readdirSync(join(root, 'scratch'))).toEqual(['.keep']);
+            expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
         }
         expect(readFileSync(join(root, 'rc-input'), 'utf8')).toBe(input);
         writeFileSync(join(root, 'hook-init-updated.sh'), 'printf updated > rc-ran\n');
@@ -274,7 +275,7 @@ test.each(['custom', 'native'])(
         );
         expect(unchangedPush.code, unchangedPush.stdout + unchangedPush.stderr).toBe(1);
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toEqual({
+        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
             args: ['check', '--push', '--', 'origin', remote],
             input,
         });
@@ -293,15 +294,18 @@ test.each(['custom', 'native'])(
         } finally {
             renameSync(`${executable}.retained`, executable);
         }
-        expect(readdirSync(join(root, 'scratch'))).toEqual(['.keep']);
+        expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
 
-        expect(readFileSync(join(location.absolute, 'pre-commit'))).toEqual(dispatcher);
+        expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
         expect((await run(['git', 'config', '--get', 'core.hooksPath'], { cwd: root })).code).toBe(1);
         expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);
-        if (originalHelper !== undefined) expect(readFileSync(helperPath)).toEqual(originalHelper);
-        else expect(existsSync(helperPath)).toBe(false);
+        if (originalHelper === undefined) {
+            expect(existsSync(helperPath)).toBe(false);
+        } else {
+            expect(readFileSync(helperPath)).toStrictEqual(originalHelper);
+        }
     },
     60_000,
 );

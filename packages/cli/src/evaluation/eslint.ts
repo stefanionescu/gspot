@@ -1,17 +1,15 @@
-import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
-import {
-    eslintCoverageRequest,
-    eslintCoverageResponse,
-    eslintRequest,
-    eslintResponse,
-} from '#cli/schemas/evaluation.ts';
-import type { LegacyEslintApi, LegacyEslintCriteria } from '#cli/types/ownership.ts';
-import type { EslintAdoption, EslintRegistration } from '#cli/types/policy.ts';
+import { z } from 'zod';
+import ts from 'typescript';
+import { pathToFileURL } from 'node:url';
 import { createRequire, isBuiltin } from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import ts from 'typescript';
-import { z } from 'zod';
+import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { EslintAdoption, EslintRegistration } from '#cli/types/policy.ts';
+import type { LegacyEslintApi, LegacyEslintCriteria } from '#cli/types/ownership.ts';
+
+import { eslintResponse } from '#cli/schemas/evaluation.ts';
+import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/schemas/evaluation.ts';
+
 async function registerEslintModule(
     root: string,
     configPath: string,
@@ -20,7 +18,7 @@ async function registerEslintModule(
 ): Promise<void> {
     const resolved = createRequire(configPath).resolve(name);
     const specifier =
-        name.startsWith('.') || isAbsolute(name) ? `./${relative(root, resolved).split('\\').join('/')}` : name;
+        name.startsWith('.') || isAbsolute(name) ? `./${relative(root, resolved).replaceAll('\\', '/')}` : name;
     if (specifier.startsWith('./../'))
         throw new Error(`ESLint conversion cannot register a module outside the repository: ${name}`);
     const imported = (await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href)) as Record<
@@ -93,7 +91,8 @@ async function legacyEntries(
     const directories = [...new Set(['.', ...configPaths.map((path) => dirname(path))])].sort(
         (left, right) => left.length - right.length,
     );
-    const literalDirectory = (directory: string): string => directory.replace(/[\\*?{}[\]()!+@,]/gu, '\\$&');
+    const literalDirectory = (directory: string): string =>
+        directory.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
     const configurations = new Map(
         directories.map((directory) => [directory, factory.loadInDirectory(resolve(root, directory))]),
     );
@@ -188,7 +187,10 @@ async function legacyEntries(
     return result;
 }
 
-/** Import native ESLint configuration while preserving selectors and repository-owned executable modules. */
+/**
+ * Import native ESLint configuration while preserving selectors and repository-owned executable modules.
+ * @param request
+ */
 export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Promise<z.infer<typeof eslintResponse>> {
     if (!request.flat && request.from === undefined)
         throw new Error('Legacy ESLint adoption requires a configuration path.');
@@ -224,9 +226,14 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
         );
         const imports = new Set<string>();
         const collectImport = (expression: ts.Expression): void => {
-            if (ts.isAwaitExpression(expression) || ts.isParenthesizedExpression(expression))
-                return collectImport(expression.expression);
-            if (ts.isPropertyAccessExpression(expression)) return collectImport(expression.expression);
+            if (ts.isAwaitExpression(expression) || ts.isParenthesizedExpression(expression)) {
+                collectImport(expression.expression);
+                return;
+            }
+            if (ts.isPropertyAccessExpression(expression)) {
+                collectImport(expression.expression);
+                return;
+            }
             if (!ts.isCallExpression(expression)) return;
             const [specifier] = expression.arguments;
             if (
@@ -277,10 +284,10 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
         if (request.flat && (entry['basePath'] !== undefined || dirname(configPath) !== request.root)) {
             if (entry['basePath'] !== undefined && typeof entry['basePath'] !== 'string')
                 throw new Error(`ESLint configuration ${index}: basePath must be a directory path.`);
-            const base = relative(
-                request.root,
-                resolve(dirname(configPath), (entry['basePath'] as string | undefined) ?? '.'),
-            ).replaceAll('\\', '/');
+            const base = relative(request.root, resolve(dirname(configPath), entry['basePath'] ?? '.')).replaceAll(
+                '\\',
+                '/',
+            );
             if (base === '') delete entry['basePath'];
             else {
                 mutationPath(base);
@@ -322,7 +329,7 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
         const serialized = JSON.stringify(entry, (_key, value: unknown) => {
             if (
                 value === null ||
-                typeof value === 'undefined' ||
+                value === undefined ||
                 (typeof value === 'number' && !Number.isFinite(value)) ||
                 typeof value === 'function' ||
                 typeof value === 'symbol' ||
@@ -340,7 +347,10 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
     for (const path of request.paths) await eslint.calculateConfigForFile(join(request.root, path));
     return result;
 }
-/** Resolve every selected file with one native ESLint instance in an isolated configuration process. */
+/**
+ * Resolve every selected file with one native ESLint instance in an isolated configuration process.
+ * @param request
+ */
 export async function evaluateRuleCoverage(
     request: z.infer<typeof eslintCoverageRequest>,
 ): Promise<z.infer<typeof eslintCoverageResponse>> {

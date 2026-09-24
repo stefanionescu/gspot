@@ -1,17 +1,17 @@
 // Planted repository for the typescript configuration and what it brings: every check fires on its planted defect.
 
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -39,7 +39,7 @@ test(
                     finding.rule === '@typescript-eslint/consistent-type-definitions' ||
                     finding.rule === 'gspot/types-placement',
             );
-        expect(findings.map(({ check, file, line, column, rule }) => ({ check, file, line, column, rule }))).toEqual([
+        expect(findings.map(({ check, file, line, column, rule }) => ({ check, file, line, column, rule }))).toStrictEqual([
             {
                 check: 'typescript/eslint',
                 file: 'src/order.ts',
@@ -98,7 +98,7 @@ test.each([
             correctedReport.checks
                 .flatMap((check) => check.findings)
                 .filter((finding) => finding.rule === 'gspot/no-reexports' || finding.rule === 'import-x/export'),
-        ).toEqual([]);
+        ).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -238,7 +238,7 @@ const CASES: FindingCase[] = [
             file: 'src/orders/typo.ts',
             line: 1,
             column: 4,
-            message: `error: \`${MISSPELLED}\` should be \`The\``,
+            message: `\`${MISSPELLED}\` should be \`The\``,
         },
     },
     {
@@ -310,7 +310,9 @@ describe('the typescript configuration', () => {
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text()) as RunReport;
+                const report = JSON.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text(),
+                ) as RunReport;
                 const result = report.checks.find((entry) => entry.check === planted.check);
                 expect(result?.status, outcome.stdout).toBe('fail');
                 const finding = result?.findings.find(
@@ -396,7 +398,8 @@ for (const scope of ['', 'api/']) {
                 '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'gspot.toml': scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\nconfigurations = ["typescript"]\n',
+                'gspot.toml':
+                    scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\nconfigurations = ["typescript"]\n',
                 '.gitignore': 'node_modules/\n.gspot/\n',
                 'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
                 'root.ts': 'export const root = 1;',
@@ -425,7 +428,7 @@ for (const scope of ['', 'api/']) {
                     .filter((finding) => finding.rule === 'TS2322')
                     .map((finding) => finding.file)
                     .toSorted((left, right) => left.localeCompare(right)),
-            ).toEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
+            ).toStrictEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
             writeFileSync(join(sandbox.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
             writeFileSync(
                 join(sandbox.path, `${scope}users/user.ts`),
@@ -436,7 +439,7 @@ for (const scope of ['', 'api/']) {
             const output = ['orders', 'users'].flatMap((folder) =>
                 readdirSync(join(sandbox.path, scope, folder), { recursive: true }).map(String),
             );
-            expect(output.filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toEqual([]);
+            expect(output.filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toStrictEqual([]);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -556,7 +559,7 @@ test.each(['absolute', 'symlink'])(
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
-        expect(readdirSync(join(sandbox.path, 'app')).sort()).toEqual(['tsconfig.json', 'value.ts']);
+        expect(readdirSync(join(sandbox.path, 'app')).sort()).toStrictEqual(['tsconfig.json', 'value.ts']);
     },
     PLANTED_TIMEOUT_MS,
 );

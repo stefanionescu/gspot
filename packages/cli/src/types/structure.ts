@@ -1,6 +1,6 @@
-import type { EngineInput } from '#cli/types/execution.ts';
 // Type aliases of the structure engine.
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 
 /** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
@@ -54,4 +54,8 @@ export type ScriptReport = (line: number, rule: string, message: string) => void
 /** A line of a shell script with its comment stripped, keyed by its one-based number. */
 export type CodeLine = { number: number; code: string };
 
-export type ImportIndex = { paths: string[]; importers: Map<string, Set<string>> };
+export type ImportIndex = {
+    paths: string[];
+    importers: Map<string, Set<string>>;
+    edges: { from: string; to: string; source: string; line: number; column: number }[];
+};

@@ -1,13 +1,12 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
-
+import { expect, test } from 'bun:test';
 import { emitAll } from '#cli/emit/targets.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 const SWIFT =
     [
@@ -16,6 +15,7 @@ const SWIFT =
         'let secret = Bundle.main.object(forInfoDictionaryKey: "PrivateKey")',
         'let key = "sk-' + 'a'.repeat(22) + '"',
         'let credentials = "https://alice:example@example.com"',
+        // eslint-disable-next-line sonarjs/no-clear-text-protocols -- reason: The insecure URL is the defect exercised by the native security rule.
         'let address = "http://localhost.example.com"',
         'let pointer = UnsafeRawPointer(value)',
         'let hash = Insecure.MD5.hash(data: data)',
@@ -57,7 +57,9 @@ test.each(['recommended', 'all'])(
         const files = emitAll(await openSession(root)).files.filter(
             ({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml',
         );
-        await withLifecycleOwner(root, async (owner) => await resolvePythonProject(root, files, owner));
+        await withLifecycleOwner(root, async (owner) => {
+            await resolvePythonProject(root, files, owner);
+        });
         for (const file of files) await Bun.write(join(root, file.path), file.content);
         await installPythonProject(root);
         const native = async () =>
@@ -82,8 +84,8 @@ test.each(['recommended', 'all'])(
         const broken = await native();
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = JSON.parse(broken.stdout);
-        expect(report.errors).toEqual([]);
-        expect(report.results.map((entry: { check_id: string }) => entry.check_id).sort()).toEqual([...IDS].sort());
+        expect(report.errors).toStrictEqual([]);
+        expect(report.results.map((entry: { check_id: string }) => entry.check_id).sort()).toStrictEqual([...IDS].sort());
         for (const [index, rule] of IDS.entries()) {
             const path = index < 11 ? 'Value.swift' : index === 11 ? 'Info.plist' : 'scripts/build.js';
             const line = index < 11 ? index + 1 : index === 11 ? 1 : index - 11;
@@ -99,7 +101,7 @@ test.each(['recommended', 'all'])(
                 .map((finding: { rule: string }) => finding.rule)
                 .filter((id: string) => id.startsWith('ios-'))
                 .sort(),
-        ).toEqual([...IDS].sort());
+        ).toStrictEqual([...IDS].sort());
         await Bun.write(
             join(root, 'Value.swift'),
             'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\nUserDefaults.standard.set(value, forKey: "theme")\nlet name = Bundle.main.object(forInfoDictionaryKey: "DisplayName")\nlet address = "https://example.com"\nlet local = "http://localhost:8080"\nlet hash = SHA256.hash(data: data)\nlet web = WKWebView()\nconfiguration.preferences.javaScriptEnabled = false\nprint("Operation completed")\n',
@@ -111,7 +113,7 @@ test.each(['recommended', 'all'])(
         );
         const corrected = await native();
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).results).toEqual([]);
+        expect(JSON.parse(corrected.stdout).results).toStrictEqual([]);
         const clean = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     },

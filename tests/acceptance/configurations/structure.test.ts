@@ -1,14 +1,14 @@
+import { join } from 'node:path';
+import { mkdirSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the structure configuration: each repository-shape check fires on its planted defect.
 import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'bash', '--runner', 'npm', '--no-ci', '--no-rules', '--no-install'];
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
@@ -86,7 +86,9 @@ describe('the structure configuration', () => {
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text()) as RunReport;
+                const report = JSON.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).text(),
+                ) as RunReport;
                 const result = report.checks.find((entry) => entry.check === planted.check);
                 expect(result?.status, outcome.stdout).toBe('fail');
                 const finding = result?.findings.find(

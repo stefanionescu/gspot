@@ -30,7 +30,7 @@ Every check declares one stage.
 
 | Stage     | Holds                                                                                                                        |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `commit`  | a check that takes the staged files, or that ends within five seconds on the planted repository of its configuration                |
+| `commit`  | a check that takes the staged files, or that ends within five seconds on the planted repository of its configuration         |
 | `push`    | a check that reads a whole scope: type checkers, dead code, dependency audits, link checks                                   |
 | `manual`  | a check that builds, tests, or scans a whole project: the Swift build and analyzer, Periphery, coverage, CodeQL, image scans |
 | `message` | commitlint                                                                                                                   |

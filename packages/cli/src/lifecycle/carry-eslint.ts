@@ -1,12 +1,17 @@
-import { carriedTool } from '#cli/lifecycle/carry.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { eslintResponse } from '#cli/schemas/evaluation.ts';
-
-import type { CarriedConfiguration } from '#cli/types/ownership.ts';
-import type { ExistingTooling } from '#cli/types/repository.ts';
 import { basename } from 'node:path';
+import { carriedTool } from '#cli/lifecycle/carry.ts';
+import { eslintResponse } from '#cli/schemas/evaluation.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
+import type { CarriedConfiguration } from '#cli/types/ownership.ts';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
-/** Convert ESLint selectors and module registrations from observed configuration. */
+/**
+ * Convert ESLint selectors and module registrations from observed configuration.
+ * @param root
+ * @param configs
+ * @param paths
+ * @param lists
+ */
 export async function collectEslint(
     root: string,
     configs: ExistingTooling['configs'],

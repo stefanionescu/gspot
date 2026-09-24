@@ -1,13 +1,14 @@
-import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/platform/layout.ts';
+import type { Command } from 'commander';
+import { relative, resolve } from 'node:path';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { askConfirmation } from '#cli/output/prompts.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import type { OwnershipState } from '#cli/types/ownership.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/platform/layout.ts';
 import { hookLocation, proposeHookRestorations } from '#cli/lifecycle/hooks.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { askConfirmation } from '#cli/output/prompts.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
-import type { OwnershipState } from '#cli/types/ownership.ts';
-
-import { relative, resolve } from 'node:path';
 
 function planText(plan: UninstallPlan): string {
     return [
@@ -128,9 +129,6 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
         exitCode: 0,
     };
 }
-
-import { directoryOf } from '#cli/commands/flags.ts';
-import type { Command } from 'commander';
 
 /**
  * Registers uninstall.

@@ -6,7 +6,10 @@ function value(text: string): unknown {
     return text;
 }
 
-/** Read SQLFluff's case-sensitive INI sections without loading paths or templaters. */
+/**
+ * Read SQLFluff's case-sensitive INI sections without loading paths or templaters.
+ * @param text
+ */
 export function sqlfluffConfiguration(text: string): Map<string, Map<string, string>> {
     const sections = new Map<string, Map<string, string>>();
     let section: Map<string, string> | undefined;
@@ -43,7 +46,10 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
     return sections;
 }
 
-/** Extract rule collections from the parsed SQLFluff configuration. */
+/**
+ * Extract rule collections from the parsed SQLFluff configuration.
+ * @param text
+ */
 export function sqlfluffRules(text: string): Record<string, unknown> {
     const sections = sqlfluffConfiguration(text);
     const defaults = sections.get('DEFAULT') ?? new Map<string, string>();

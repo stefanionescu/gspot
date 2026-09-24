@@ -1,14 +1,15 @@
-import type { Manifest, Proposal } from '#cli/types/configurations.ts';
+import type { Policy } from '#cli/types/policy.ts';
+import type { Profile } from '#cli/types/profiles.ts';
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import type { Manifest, Proposal } from '#cli/types/configurations.ts';
+import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
+
 import type {
     CarriedConfiguration,
     CarriedFormatter,
     ConfigurationReason,
     TakeoverPlan,
 } from '#cli/types/ownership.ts';
-import type { Policy } from '#cli/types/policy.ts';
-import type { Profile } from '#cli/types/profiles.ts';
-import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
 
 export type InitOptions = {
     cwd: string;

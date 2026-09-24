@@ -1,10 +1,10 @@
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
@@ -32,7 +32,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
         reportSchema
             .parse(JSON.parse(before.stdout))
             .checks[0]?.findings.map(({ file, rule, line }) => ({ file, rule, line })),
-    ).toEqual([
+    ).toStrictEqual([
         { file: 'archive.md', rule: 'gspot.dates', line: 3 },
         { file: 'guide.md', rule: 'gspot.dates', line: 3 },
     ]);
@@ -45,7 +45,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     const after = await run(directory.path, command, environment);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const report = reportSchema.parse(JSON.parse(after.stdout));
-    expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toEqual([
+    expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'guide.md', rule: 'gspot.dates' },
     ]);
     expect(report.ignores).toContainEqual(

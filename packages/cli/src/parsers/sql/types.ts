@@ -33,6 +33,8 @@ export type SqlStatementView = { kind: string; fields: SqlNode; start: number };
 
 /** A parsed file: the statements, or the error with its line and column. */
 export type SqlFile = {
+    source: string;
+    variables: { start: number; end: number }[];
     statements: SqlStatementView[];
     error: { text: string; line: number; column: number } | undefined;
 };

@@ -1,7 +1,10 @@
+import { join } from 'node:path';
 // An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 /** A local npm registry the release tests publish into. */
 export type Registry = {
     url: string;
@@ -10,10 +13,6 @@ export type Registry = {
     assertRunning: () => void;
     stop: () => Promise<void>;
 };
-
-import { environmentVariables } from '#cli/platform/environment.ts';
-import type { SpawnOutcome } from '#tests/support/cli/command.ts';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const serverEntry = fileURLToPath(new URL('server.ts', import.meta.url));

@@ -1,24 +1,22 @@
-import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { licenseResponse } from '#cli/schemas/evaluation.ts';
-
-import { stylelintRequest, stylelintResponse, stylelintSource } from '#cli/schemas/evaluation.ts';
-
-import { toolPin } from '#cli/tools/tool-probe.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import type { ExistingTool } from '#cli/types/repository.ts';
-// The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
-import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
-import type { CarriedConfiguration, CarriedIgnore, CarryPush, CarrySource } from '#cli/types/ownership.ts';
-import { CARRIED_REASON } from '#cli/policy/reasons.ts';
-import { policySchema } from '#cli/schemas/policy.ts';
-import type { TomlTable } from '#cli/types/policy.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import { z } from 'zod';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import parseLicense from 'spdx-expression-parse';
-import { z } from 'zod';
+import { toolPin } from '#cli/tools/tool-probe.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
+import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import type { ExistingTool } from '#cli/types/repository.ts';
+import type { stylelintRequest } from '#cli/schemas/evaluation.ts';
+// The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
+import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
+import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
+import { licenseResponse, stylelintResponse, stylelintSource } from '#cli/schemas/evaluation.ts';
+import type { CarriedConfiguration, CarriedIgnore, CarryPush, CarrySource } from '#cli/types/ownership.ts';
 
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
 
@@ -111,7 +109,7 @@ function carryTypos(source: CarrySource, path: string, lists: CarriedConfigurati
             const directory = bare.endsWith('/');
             const selector = directory ? bare.slice(0, -1) : bare;
             const rooted = selector.startsWith('/') || selector.includes('/');
-            const prefix = base.replaceAll(/[?*\[\]{}]/gu, '\\$&');
+            const prefix = base.replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`);
             return `${negated ? '!' : ''}${prefix}/${rooted ? '' : '**/'}${selector.replace(/^\//u, '')}${directory ? '/' : ''}`;
         });
     if (paths.length > 0) settings['exclude'] = [{ paths, reason: reasonFor(path) }];
@@ -205,10 +203,10 @@ async function carryLicenses(
             const parsed = parseLicense(license);
             if (typeof parsed !== 'object' || parsed === null || !('license' in parsed))
                 throw new Error('Compound approved licenses require explicit conversion.');
-        } catch (cause) {
+        } catch (error) {
             throw new Error(
                 `${path}: license allowance ${JSON.stringify(license)} cannot be represented as one approved SPDX license.`,
-                { cause },
+                { cause: error },
             );
         }
     }
@@ -458,7 +456,13 @@ function carryMarkdownlint(source: CarrySource, path: string, lists: CarriedConf
         });
 }
 
-/** Resolve static inheritance from observed files, retaining every input for publication-time validation. */
+/**
+ * Resolve static inheritance from observed files, retaining every input for publication-time validation.
+ * @param root
+ * @param path
+ * @param source
+ * @param lists
+ */
 function stylelintRules(
     root: string,
     path: string,
@@ -487,7 +491,14 @@ function stylelintRules(
     return resolve(path, source);
 }
 
-/** Validate the complete rule table before recording settings or authorizing retirement. */
+/**
+ * Validate the complete rule table before recording settings or authorizing retirement.
+ * @param source
+ * @param path
+ * @param lists
+ * @param root
+ * @param check
+ */
 async function carryStylelint(
     source: CarrySource,
     path: string,
@@ -519,7 +530,7 @@ async function carryStylelint(
         scope.tools['stylelint'] = { rules: enabled };
         lists.scopes.set(base, scope);
     }
-    const paths = base === '.' ? undefined : [`${base.replaceAll(/[?*\[\]{}]/gu, '\\$&')}/**`];
+    const paths = base === '.' ? undefined : [`${base.replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`)}/**`];
     for (const rule of disabled)
         carried.ignores.push({ check, rule, reason: reasonFor(path), ...(paths === undefined ? {} : { paths }) });
 }
@@ -550,7 +561,11 @@ function appendSetting(lists: CarriedConfiguration, tool: string, key: string, e
     settings[key] = [...asList(settings[key]), ...entries];
 }
 
-/** The entries owned by one adopted tool, shared by readers, policy emission, and the plan. */
+/**
+ * The entries owned by one adopted tool, shared by readers, policy emission, and the plan.
+ * @param lists
+ * @param tool
+ */
 export function carriedTool(
     lists: CarriedConfiguration,
     tool: string,
@@ -566,6 +581,9 @@ export function carriedTool(
  * @param tool the tool the file configures
  * @param path the file, relative to the root
  * @param lists the lists the entries are added to
+ * @param root
+ * @param reader
+ * @param check
  */
 export async function carryFrom(
     source: CarrySource,

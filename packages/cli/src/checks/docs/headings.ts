@@ -1,11 +1,10 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // A Markdown heading from the banned list: an inventory where an explanation belongs.
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 /**
  * One finding per heading that matches the banned list or [tools.docs] banned_headings.
@@ -18,7 +17,7 @@ export function docsHeadings(input: EngineInput): Finding[] {
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.path.endsWith('.md')) continue;
-        const tree = fromMarkdown(readSource(input.root, file.path).toString('utf8'));
+        const tree = fromMarkdown(readSource(input.root, file.path, input.observations).toString('utf8'));
         visit(tree, 'heading', (heading) => {
             const text = toString(heading).trim().toLowerCase();
             if (banned.has(text))

@@ -1,8 +1,8 @@
 // Every scope has a README, and the root has a license.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { statSync } from 'node:fs';
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
 
@@ -15,14 +15,14 @@ export function readmePresent(input: EngineInput): Finding[] {
     const isLicenseRequired = input.view.tool('docs')['require_license'] !== false;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
-    if (!existsSync(join(input.root, readme)))
+    if (!(statSync(join(input.root, readme), { throwIfNoEntry: false }) !== undefined))
         findings.push({
             check: input.spec.name,
             file: readme,
             message: `The scope ${input.scope === '' ? 'root' : input.scope} has no README.md.`,
             fixable: false,
         });
-    if (isLicenseRequired && input.scope === '' && LICENSE_NAMES.every((name) => !existsSync(join(input.root, name))))
+    if (isLicenseRequired && input.scope === '' && LICENSE_NAMES.every((name) => !(statSync(join(input.root, name), { throwIfNoEntry: false }) !== undefined)))
         findings.push({
             check: input.spec.name,
             file: 'LICENSE',

@@ -170,7 +170,7 @@ default = "none"
 summary = "The version through which migrations have run everywhere: none, all, or a version. Squawk skips them, and they may not change."
 
 [[settings]]
-name = "tools.postgres.migrations_dir"
+name = "tools.postgres.migrations_directory"
 kind = "string"
 direction = "neutral"
 default = ""

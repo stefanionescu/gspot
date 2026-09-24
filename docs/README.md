@@ -4,7 +4,7 @@ The manual uses Astro Starlight with four navigation sections: Get started, Guid
 and Development. Authored guides teach workflows; references come from the
 CLI, policy schema, configuration manifests, and standalone plugin definitions.
 
-## Preview and verify
+## Setup and preview
 
 Complete the [source installation](src/content/docs/guides/install.md), then run from the repository root:
 
@@ -94,7 +94,7 @@ to Astro components. The [MIT notice](public/licenses/turborepo.txt) ships with 
 Starlight owns navigation, search, theme persistence, and code-copy behavior.
 
 The Sweet spot mark and dimensional hero were created with the built-in image generator.
-Their source PNGs are `public/brand/identity/mark-generated.png` and `public/brand/home/hero.png`.
+Their source images are `public/brand/identity/mark-generated.png` and `public/brand/home/hero.png`.
 The SVG variants and diagrams remain editable. Keep purpose, release status, and commands
 as selectable text beside artwork. `public/brand/` also holds README banners and local badges.
 

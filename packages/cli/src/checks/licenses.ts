@@ -1,16 +1,16 @@
+import { z } from 'zod';
 // Installed dependency licenses, compared with the allowlist and exact-version exceptions.
 import { join } from 'node:path';
-import { statSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { z } from 'zod';
 import satisfies from 'spdx-satisfies';
+import { isDeepStrictEqual } from 'node:util';
+import parseExpression from 'spdx-expression-parse';
+import type { Finding } from '#cli/types/reports.ts';
+import { statSync, mkdtempSync, rmSync } from 'node:fs';
+import { targetInScope } from '#cli/run/scope-paths.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import parseExpression from 'spdx-expression-parse';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import { targetInScope } from '#cli/run/scope-paths.ts';
-import { isDeepStrictEqual } from 'node:util';
 import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
 
 export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];

@@ -1,8 +1,8 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // The parsed Python modules of one run, and the functions they define.
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import type { PythonFunction, PythonModule } from '#cli/structure/python/types.ts';
 
 function isDocstring(statement: Node | undefined): boolean {
@@ -22,13 +22,12 @@ function exportList(statement: Node): Node | undefined {
  * @returns the modules
  */
 export async function pythonModules(input: EngineInput): Promise<PythonModule[]> {
-    const parser = await parserFor('python');
     const modules: PythonModule[] = [];
     try {
         for (const file of input.files) {
             if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
-            const text = readSource(input.root, file.path).toString('utf8');
-            const tree = parser.parse(text);
+            const text = readSource(input.root, file.path, input.observations).toString('utf8');
+            const tree = await parseSource('python', text, input);
             if (tree === null) throw new Error('The Python parser returned no tree.');
             const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
             modules.push({

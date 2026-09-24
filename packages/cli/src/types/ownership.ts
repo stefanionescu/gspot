@@ -1,7 +1,7 @@
 import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import type { Policy, RawPolicy, TomlTable } from '#cli/types/policy.ts';
 // Ownership proposals, adopted settings, and restoration records.
 import type { Manifest, Proposal, UnknownLanguage } from '#cli/types/configurations.ts';
-import type { Policy, RawPolicy, TomlTable } from '#cli/types/policy.ts';
 import type { ExistingTooling, ScopeEntry, TrackedFile } from '#cli/types/repository.ts';
 
 export type PreparedHook = { generated: string; installed: string };

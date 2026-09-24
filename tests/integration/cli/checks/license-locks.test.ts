@@ -42,11 +42,11 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
             }),
         );
     };
-    expect(await check()).toEqual([
+    expect(await check()).toStrictEqual([
         expect.objectContaining({ rule: 'unlocked-package', message: expect.stringContaining('example@2.0.0') }),
     ]);
     await Bun.write(`${repository.path}/gspot.toml`, policy('1.2.3'));
-    expect(await check()).toEqual([]);
+    expect(await check()).toStrictEqual([]);
 });
 
 test.each(LOCKS)('malformed %s cannot prove exception membership', (filename) => {
@@ -80,7 +80,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     };
     await expect(check()).rejects.toThrow('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);
-    expect(await check()).toEqual([]);
+    expect(await check()).toStrictEqual([]);
 });
 
 test('npm lockfiles retain resolved alias names, scoped names, and nested versions', () => {
@@ -102,7 +102,7 @@ test('npm lockfiles retain resolved alias names, scoped names, and nested versio
         },
     });
     const identities = lockedPackages('package-lock.json', classic);
-    expect(identities).toEqual(lockedPackages('package-lock.json', modern));
+    expect(identities).toStrictEqual(lockedPackages('package-lock.json', modern));
     expect(identities.has('is-number@7.0.0')).toBe(true);
     expect(identities.has('named-alias@7.0.0')).toBe(false);
     expect(identities.has('example@1.0.0')).toBe(true);
@@ -118,7 +118,7 @@ test('Yarn classic aliases retain resolved names instead of installation names',
 "@types/is-number@7.0.5":
   version "7.0.5"
 `;
-    expect(lockedPackages('yarn.lock', lock)).toEqual(new Set(['is-number@7.0.0', '@types/is-number@7.0.5']));
+    expect(lockedPackages('yarn.lock', lock)).toStrictEqual(new Set(['is-number@7.0.0', '@types/is-number@7.0.5']));
 });
 
 test.each(['root', 'nested', 'combined'])(

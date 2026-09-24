@@ -1,7 +1,7 @@
+import { z } from 'zod';
 // The zod schema of manifest.toml, and the refusals the loader applies.
 import { outputSchema } from '#cli/schemas/check-output.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/schemas/commands.ts';
-import { z } from 'zod';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -154,6 +154,7 @@ const checkFields = z.strictObject({
     fix_command: commandSchema.optional(),
     fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
     fix_findings_exit_codes: findingExitCodesSchema.optional(),
+    findings_exit_codes: findingExitCodesSchema.optional(),
     engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
@@ -187,7 +188,7 @@ const checkSchema = z.union(
         checkFields.extend({ command: commandSchema, engine: absent, analysis: absent, reported_by: absent }),
         checkFields.extend({
             tool: z.string().min(1),
-            analysis: z.enum(['typescript', 'commit-messages', 'gitleaks-history', 'verified-secrets']),
+            analysis: z.enum(['typescript', 'javascript', 'commit-messages', 'gitleaks-history', 'verified-secrets', 'swiftlint', 'actions']),
             command: absent,
             engine: absent,
             reported_by: absent,

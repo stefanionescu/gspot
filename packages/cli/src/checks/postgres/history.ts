@@ -1,9 +1,9 @@
-// The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
-import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+// The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
+import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
 
 const FROZEN_NONE = 'none';
 const FROZEN_ALL = 'all';
@@ -35,10 +35,10 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
 }
 
 function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let observed = history.get(input.runKey);
+    let observed = history.get(input.observations);
     if (observed === undefined) {
         observed = readCommittedText(input);
-        history.set(input.runKey, observed);
+        history.set(input.observations, observed);
     }
     return observed;
 }

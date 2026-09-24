@@ -1,21 +1,37 @@
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { note, warn } from '#cli/output/messages.ts';
+import { readFileSync } from 'node:fs';
+import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/run/session.ts';
+import { runText } from '#cli/output/reporter.ts';
 import { progress } from '#cli/output/progress.ts';
 import { writeReport } from '#cli/output/report.ts';
-import { runText } from '#cli/output/reporter.ts';
-import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import { executeRun } from '#cli/run/execute.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { note, warn } from '#cli/output/messages.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
-import { openSession } from '#cli/run/session.ts';
-import type { Stage } from '#cli/types/configurations.ts';
-import type { CheckOptions, StageFilter } from '#cli/types/execution.ts';
 import type { PushReport } from '#cli/types/reports.ts';
+import type { Stage } from '#cli/types/configurations.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+// check: open the session, honor the pin, run, render, decide the exit code.
+import { SelectionError } from '#cli/configurations/select.ts';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { Command, InvalidArgumentError, Option } from 'commander';
-import { readFileSync } from 'node:fs';
+import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
+import type { ChangedSet, StagedSet } from '#cli/types/repository.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/staged.ts';
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
+import type {
+    CheckOptions,
+    StageFilter,
+    CheckCommandResult,
+    CommandResult,
+    FixReport,
+    RunOptions,
+    Session,
+} from '#cli/types/execution.ts';
+
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {
         operands: string[];
@@ -36,6 +52,7 @@ function stageArgument(value: string): Stage {
     if (stage === undefined) throw new InvalidArgumentError(`Choose ${PUBLIC_STAGES.join(', ')}.`);
     return stage;
 }
+
 function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Record<string, unknown>): CheckOptions {
     const stage = textFlag(flags, 'stage') as StageFilter | undefined;
     const only = listFlag(flags, 'only');
@@ -88,14 +105,16 @@ export function registerCheck(program: Command): void {
             const options = optionsFrom(paths, flags, global);
             if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
             const controller = new AbortController();
-            const cancel = (): void => controller.abort();
+            const cancel = (): void => {
+                controller.abort();
+            };
             process.on('SIGINT', cancel);
             process.on('SIGTERM', cancel);
             try {
                 await printCommand(async () => {
                     try {
                         if (flags['push'] === true) {
-                            if (paths.length !== 0 && paths.length !== 2)
+                            if (paths.length > 0 && paths.length !== 2)
                                 throw new InvalidArgumentError(
                                     'Pre-push expects the remote name and URL supplied by Git.',
                                 );
@@ -138,14 +157,6 @@ export function registerCheck(program: Command): void {
             }
         });
 }
-// check: open the session, honor the pin, run, render, decide the exit code.
-import { SelectionError } from '#cli/configurations/select.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
-import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/staged.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { CheckCommandResult, CommandResult, FixReport, RunOptions, Session } from '#cli/types/execution.ts';
-import type { ChangedSet, StagedSet } from '#cli/types/repository.ts';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
 const CHANGED_SHOWN = 8;
 function stagedEnvironmentFiles(staged: string[]): string[] {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
@@ -153,6 +164,7 @@ function stagedEnvironmentFiles(staged: string[]): string[] {
         (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
     );
 }
+
 function isReadable(path: string): boolean {
     try {
         readFileSync(path, 'utf8');
@@ -161,6 +173,7 @@ function isReadable(path: string): boolean {
         return false;
     }
 }
+
 function runOptions(
     options: CheckOptions,
     stage: StageFilter,
@@ -186,6 +199,7 @@ function runOptions(
         ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
 }
+
 function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
     const failures = fixes.results.filter((result) => result.status === 'failed');
     for (const result of failures) warn(`a fixer failed: ${result.check}: ${result.note}`);
@@ -204,6 +218,7 @@ function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
     }
     return text;
 }
+
 function refusalFor(
     options: CheckOptions,
     stage: StageFilter,
@@ -224,6 +239,7 @@ function refusalFor(
         };
     return undefined;
 }
+
 function selectedPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
     const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
@@ -240,6 +256,7 @@ function selectedPaths(session: Session, options: CheckOptions, changed: string[
     }
     return [...selected];
 }
+
 function unknownSelection(session: Session, only: string[] | undefined): CommandResult | undefined {
     const known = new Set([
         ...session.scopes.flatMap((scope) =>
@@ -256,6 +273,7 @@ function unknownSelection(session: Session, only: string[] | undefined): Command
               exitCode: 2,
           };
 }
+
 async function revisionSelection(
     session: Session,
     options: CheckOptions,
@@ -265,6 +283,7 @@ async function revisionSelection(
         throw new SelectionError(['Revision selection requires a Git repository.']);
     return options.changed === undefined ? undefined : changedFiles(session.root, options.changed, signal);
 }
+
 function resultFor(
     options: CheckOptions,
     outcome: Awaited<ReturnType<typeof executeRun>>,
@@ -278,9 +297,20 @@ function resultFor(
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
 }
+
 /**
  * Runs check and returns what to print.
+ * @param root
  * @param options the parsed flags
+ * @param signal
+ * @param revision
+ * @param revision.commits
+ * @param revision.historyComplete
+ * @param revision.content
+ * @param revision.reference
+ * @param revision.reportRoot
+ * @param revision.staged
+ * @param revision.changed
  * @returns the text, the run report and the exit code
  */
 async function checkContent(
@@ -291,6 +321,7 @@ async function checkContent(
         commits?: string[];
         historyComplete?: boolean;
         content: 'index' | 'commit';
+        cacheRoot: string;
         reference: string;
         reportRoot?: string;
         staged?: StagedSet;
@@ -299,6 +330,7 @@ async function checkContent(
 ): Promise<CheckCommandResult> {
     assertPinMatches(root);
     const session = await openSession(root);
+    if (revision !== undefined) session.cacheRoot = revision.cacheRoot;
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;
     if (revision?.content !== 'commit') {
@@ -336,7 +368,11 @@ async function checkContent(
             if (check.reproduce !== undefined) check.reproduce = reproduceLine(check.check, check.scope, options);
     return resultFor(options, outcome, set.unstaged, revision?.reportRoot);
 }
-/** Check the working tree or an isolated, exact snapshot of the staged index. */
+/**
+ * Check the working tree or an isolated, exact snapshot of the staged index.
+ * @param options
+ * @param signal
+ */
 export async function checkCommand(options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     if ((options.staged || options.push !== undefined) && !isGitRepository(root))
@@ -367,6 +403,7 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
                             commits: revision.commits,
                             historyComplete: revision.historyComplete,
                             content: 'commit',
+                            cacheRoot: root,
                             reference: revision.object,
                             ...(revision.paths === undefined ? {} : { changed: revision.paths }),
                         }),
@@ -424,6 +461,7 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
             const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
             return checkContent(snapshot, { ...options, cwd: snapshot, paths }, signal, {
                 content: 'index',
+                cacheRoot: root,
                 reference: tree,
                 staged: set,
                 reportRoot: root,

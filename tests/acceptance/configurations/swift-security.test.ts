@@ -1,8 +1,8 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test(
     'Swift security initializes with the candidate plugin and retains immutable tool locks',
@@ -33,14 +33,14 @@ test(
         const files = ['.gspot/package.json', '.gspot/bun.lock', '.gspot/pyproject.toml', '.gspot/uv.lock'];
         const before = await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()));
         await installPrivateTools(root);
-        expect(await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()))).toEqual(before);
+        expect(await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()))).toStrictEqual(before);
         expect(
             await Bun.file(join(root, '.gspot/node_modules/@gspot/eslint-plugin/package.json')).json(),
         ).toMatchObject({ name: '@gspot/eslint-plugin' });
         const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(JSON.parse(broken.stdout).checks[0].findings).toEqual([
+        expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
             expect.objectContaining({ rule: 'ios-weak-hash-algorithm', file: 'Value.swift', line: 2 }),
         ]);
         await Bun.write(join(root, 'Value.swift'), 'import CryptoKit\nlet digest = SHA256.hash(data: data)\n');

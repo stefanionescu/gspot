@@ -1,15 +1,15 @@
-import { readRepository } from '#cli/repository/tree.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { join } from 'node:path';
-import { symlinkSync, unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import type { ExistingTooling } from '#cli/types/repository.ts';
-import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import { askInitQuestions } from '#cli/commands/init/questions.ts';
-import { proposeText } from '#cli/policy/propose.ts';
-import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { symlinkSync, unlinkSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
+import { proposeText } from '#cli/policy/propose.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { collectCarried } from '#cli/lifecycle/takeover.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
+import { askInitQuestions } from '#cli/commands/init/questions.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' as const }],
@@ -26,7 +26,7 @@ test('formatter choices use the captured observation and a fresh failed observat
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.prettierrc.json': '{"semi":false,"tabWidth":8}\n' });
     const carried = await collectCarried(sandbox.path, tooling, new Set(['formatting']), ['source.js']);
-    expect(carried.unread).toEqual([]);
+    expect(carried.unread).toStrictEqual([]);
     await Bun.write(join(sandbox.path, '.prettierrc.json'), 'invalid JSON');
     const answers = await askInitQuestions(
         sandbox.path,
@@ -48,8 +48,8 @@ test('formatter choices use the captured observation and a fresh failed observat
     );
     expect(answers.formatter?.format).toMatchObject({ indent_width: 8, semicolons: false });
     const refreshed = await collectCarried(sandbox.path, tooling, new Set(['formatting']), ['source.js']);
-    expect(refreshed.unread.map((entry) => entry.path)).toEqual(['.prettierrc.json']);
-    expect(refreshed.removed).toEqual([]);
+    expect(refreshed.unread.map((entry) => entry.path)).toStrictEqual(['.prettierrc.json']);
+    expect(refreshed.removed).toStrictEqual([]);
 });
 
 test('takeover refuses a configuration symlink and preserves its outside target', async () => {
@@ -59,8 +59,8 @@ test('takeover refuses a configuration symlink and preserves its outside target'
     await createFileTree(outside.path, { 'authored.json': original });
     symlinkSync(join(outside.path, 'authored.json'), join(repository.path, '.prettierrc.json'));
     const carried = await collectCarried(repository.path, tooling, new Set(['formatting']), ['source.js']);
-    expect(carried.removed).toEqual([]);
-    expect(carried.unread.map(({ path }) => path)).toEqual(['.prettierrc.json']);
+    expect(carried.removed).toStrictEqual([]);
+    expect(carried.unread.map(({ path }) => path)).toStrictEqual(['.prettierrc.json']);
     expect(await Bun.file(join(outside.path, 'authored.json')).text()).toBe(original);
 });
 
@@ -76,8 +76,8 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     });
     const discovered = existingTooling(sandbox.path, (await readRepository(sandbox.path, [], [], [])).files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
-    expect(carried.unread).toEqual([]);
-    expect(carried.removed.map(({ path }) => path).sort()).toEqual([
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.removed.map(({ path }) => path).sort()).toStrictEqual([
         'guide/.markdownlint.jsonc',
         'reference/.markdownlint.jsonc',
     ]);
@@ -130,7 +130,7 @@ test('overlapping Markdown sources remain intact before any policy is carried', 
     expect(carried.unread).toContainEqual(
         expect.objectContaining({ path: '.markdownlint.jsonc', note: expect.stringContaining('Overlapping') }),
     );
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(carried.scopes.size).toBe(0);
     expect(await Bun.file(join(sandbox.path, '.markdownlint.jsonc')).text()).toBe(original);
     expect(await Bun.file(join(sandbox.path, 'guide/.markdownlint.jsonc')).text()).toBe(original);
@@ -167,10 +167,10 @@ test.each([false, true])(
             new Set(['markdown']),
             ['sample.md'],
         );
-        expect(carried.unread).toEqual([]);
+        expect(carried.unread).toStrictEqual([]);
         if (inherited) {
-            expect(carried.removed.map(({ path }) => path)).toEqual(['.markdownlint.jsonc']);
-            expect(carried.retained.map(({ path }) => path).toSorted()).toEqual([
+            expect(carried.removed.map(({ path }) => path)).toStrictEqual(['.markdownlint.jsonc']);
+            expect(carried.retained.map(({ path }) => path).toSorted()).toStrictEqual([
                 'config/base.jsonc',
                 'config/parent.yaml',
             ]);
@@ -241,7 +241,7 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
         new Set(['markdown']),
         ['sample.md'],
     );
-    expect(carried.unread).toEqual([]);
+    expect(carried.unread).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
@@ -293,8 +293,8 @@ test.each(['cycle', 'escape', 'external link', 'unsupported parent'])(
             configs: [{ tool: 'markdownlint-cli2', path: '.markdownlint-cli2.jsonc', carries: 'rules-table' as const }],
         };
         const refused = await collectCarried(sandbox.path, discover, new Set(['markdown']), []);
-        expect(refused.unread.map(({ path }) => path)).toEqual(['.markdownlint-cli2.jsonc']);
-        expect(refused.removed).toEqual([]);
+        expect(refused.unread.map(({ path }) => path)).toStrictEqual(['.markdownlint-cli2.jsonc']);
+        expect(refused.removed).toStrictEqual([]);
         expect(refused.tools.get('markdownlint')?.settings['rules']).toBeUndefined();
         expect(await Bun.file(join(sandbox.path, '.markdownlint-cli2.jsonc')).text()).toBe(original);
         if (defect === 'external link') {
@@ -303,8 +303,8 @@ test.each(['cycle', 'escape', 'external link', 'unsupported parent'])(
         }
         await Bun.write(join(sandbox.path, 'config/base.jsonc'), validParent);
         const corrected = await collectCarried(sandbox.path, discover, new Set(['markdown']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.tools.get('markdownlint')?.settings['rules']).toEqual({
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.tools.get('markdownlint')?.settings['rules']).toStrictEqual({
             default: false,
             MD009: true,
             MD033: true,
@@ -325,14 +325,14 @@ test.each([
         new Set(['markdown']),
         ['README.md'],
     );
-    expect(carried.unread).toEqual([]);
-    expect(carried.tools.get('markdownlint')?.settings['rules']).toEqual({
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.tools.get('markdownlint')?.settings['rules']).toStrictEqual({
         default: true,
         MD013: false,
         MD033: true,
         MD007: { indent: 4 },
     });
-    expect(carried.removed.map((entry) => entry.path)).toEqual([path]);
+    expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(text);
 });
 
@@ -350,8 +350,8 @@ test.each([
         new Set(['markdown']),
         ['README.md'],
     );
-    expect(carried.unread.map((entry) => entry.path)).toEqual([path]);
-    expect(carried.removed).toEqual([]);
+    expect(carried.unread.map((entry) => entry.path)).toStrictEqual([path]);
+    expect(carried.removed).toStrictEqual([]);
     expect(carried.tools.get('markdownlint')?.settings['rules']).toBeUndefined();
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(text);
 });
@@ -366,20 +366,20 @@ test.each(['setup.cfg', 'tox.ini'])(
             const repository = await readRepository(sandbox.path, [], [], []);
             const discovered = existingTooling(sandbox.path, repository.files, []);
             const carried = await collectCarried(sandbox.path, discovered, new Set(['sql']), ['query.sql']);
-            expect(carried.unread).toEqual([]);
-            expect(carried.removed).toEqual([]);
+            expect(carried.unread).toStrictEqual([]);
+            expect(carried.removed).toStrictEqual([]);
             expect(
                 [...carried.tools.values()].flatMap((tool) => tool.ignores).map(({ check, rule }) => ({ check, rule })),
-            ).toEqual([
+            ).toStrictEqual([
                 { check: 'sql/sqlfluff', rule: 'LT01' },
                 { check: 'sql/sqlfluff', rule: 'RF01' },
             ]);
-            expect(carried.retained).toEqual([{ path, note: expect.stringContaining('remove that section manually') }]);
+            expect(carried.retained).toStrictEqual([{ path, note: expect.stringContaining('remove that section manually') }]);
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         }
         await Bun.write(join(sandbox.path, path), '[flake8]\nignore = E501\n');
         const repository = await readRepository(sandbox.path, [], [], []);
-        expect(existingTooling(sandbox.path, repository.files, []).configs).toEqual([]);
+        expect(existingTooling(sandbox.path, repository.files, []).configs).toStrictEqual([]);
     },
 );
 
@@ -394,11 +394,11 @@ test('nested SQLFluff exclusions stay inside their configuration directory', asy
         new Set(['sql']),
         ['database/query.sql', 'other/query.sql'],
     );
-    expect(carried.unread).toEqual([]);
-    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toEqual([
+    expect(carried.unread).toStrictEqual([]);
+    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([
         { check: 'sql/sqlfluff', rule: 'LT01', paths: ['database/**'], reason: expect.any(String) },
     ]);
-    expect(carried.removed.map((entry) => entry.path)).toEqual([path]);
+    expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
 });
 
 test.each(['.sqlfluff', 'setup.cfg'])(
@@ -411,14 +411,14 @@ test.each(['.sqlfluff', 'setup.cfg'])(
         const repository = await readRepository(sandbox.path, [], [], []);
         const detected = existingTooling(sandbox.path, repository.files, []);
         const adopted = await collectCarried(sandbox.path, detected, new Set(['sql']), []);
-        expect(adopted.unread).toEqual([]);
-        expect(adopted.tools.get('sqlfluff')!.ignores.map((entry) => entry.rule)).toEqual(['LT01', 'RF01']);
+        expect(adopted.unread).toStrictEqual([]);
+        expect(adopted.tools.get('sqlfluff')!.ignores.map((entry) => entry.rule)).toStrictEqual(['LT01', 'RF01']);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         const invalid = `${prefix}[sqlfluff]\nexclude_rules = LT01\nexclude_rules = RF01\n`;
         await Bun.write(join(sandbox.path, path), invalid);
         const refused = await collectCarried(sandbox.path, detected, new Set(['sql']), []);
         expect(refused.unread).toMatchObject([{ path, note: expect.stringContaining('Duplicate SQLFluff option') }]);
-        expect(refused.removed).toEqual([]);
+        expect(refused.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(invalid);
     },
 );
@@ -434,58 +434,64 @@ test.each([
         { tool: 'sqlfluff', check: 'sql/sqlfluff', path, table: 'sqlfluff', shared: true, carries: 'rules-table' },
     ] as const;
     const carried = await collectCarried(sandbox.path, { ...tooling, configs: [...configs] }, new Set(['sql']), []);
-    expect(carried.unread.map((entry) => entry.path)).toEqual([path]);
-    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toEqual([]);
-    expect(carried.removed).toEqual([]);
+    expect(carried.unread.map((entry) => entry.path)).toStrictEqual([path]);
+    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([]);
+    expect(carried.removed).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     await Bun.write(join(sandbox.path, path), '[sqlfluff]\nexclude_rules = LT01\n');
     const corrected = await collectCarried(sandbox.path, { ...tooling, configs: [...configs] }, new Set(['sql']), []);
-    expect(corrected.unread).toEqual([]);
-    expect([...corrected.tools.values()].flatMap((tool) => tool.ignores).map((entry) => entry.rule)).toEqual(['LT01']);
-    expect(corrected.removed).toEqual([]);
+    expect(corrected.unread).toStrictEqual([]);
+    expect([...corrected.tools.values()].flatMap((tool) => tool.ignores).map((entry) => entry.rule)).toStrictEqual(['LT01']);
+    expect(corrected.removed).toStrictEqual([]);
 });
 
 test.each([
     ['.sqlfluffignore', 'sql', 'sqlfluff', 'exclude'],
     ['.semgrepignore', 'security', 'semgrep', 'ignore'],
-] as const)('declared %s adoption keeps nested selectors and refuses negation', async (name, configuration, tool, key) => {
-    await using sandbox = await testdir();
-    const path = `nested/${name}`;
-    const original = '# Generated fixtures\nfixtures/\n';
-    await createFileTree(sandbox.path, { [path]: original });
-    const repository = await readRepository(sandbox.path, [], [], []);
-    const discovered = existingTooling(sandbox.path, repository.files, []);
-    const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
-    expect(carried.unread).toEqual([]);
-    expect(carried.tools.get(tool)?.settings[key]).toEqual([
-        { paths: ['nested/**/fixtures/**'], reason: expect.any(String) },
-    ]);
-    expect(carried.removed.map((entry) => entry.path)).toEqual([path]);
-    const unsupported = `${original}!fixtures/checked.sql\n`;
-    await Bun.write(join(sandbox.path, path), unsupported);
-    const refused = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
-    expect(refused.unread.map((entry) => entry.path)).toEqual([path]);
-    expect(refused.tools.get(tool)?.settings[key] ?? []).toEqual([]);
-    expect(refused.removed).toEqual([]);
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe(unsupported);
-});
+] as const)(
+    'declared %s adoption keeps nested selectors and refuses negation',
+    async (name, configuration, tool, key) => {
+        await using sandbox = await testdir();
+        const path = `nested/${name}`;
+        const original = '# Generated fixtures\nfixtures/\n';
+        await createFileTree(sandbox.path, { [path]: original });
+        const repository = await readRepository(sandbox.path, [], [], []);
+        const discovered = existingTooling(sandbox.path, repository.files, []);
+        const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
+        expect(carried.unread).toStrictEqual([]);
+        expect(carried.tools.get(tool)?.settings[key]).toStrictEqual([
+            { paths: ['nested/**/fixtures/**'], reason: expect.any(String) },
+        ]);
+        expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
+        const unsupported = `${original}!fixtures/checked.sql\n`;
+        await Bun.write(join(sandbox.path, path), unsupported);
+        const refused = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
+        expect(refused.unread.map((entry) => entry.path)).toStrictEqual([path]);
+        expect(refused.tools.get(tool)?.settings[key] ?? []).toStrictEqual([]);
+        expect(refused.removed).toStrictEqual([]);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(unsupported);
+    },
+);
 
 test.each([
     ['gitleaks.toml', 'secrets', '[allowlist]\nregexes = ["example-token"]\n'],
     ['osv-scanner.toml', 'dependencies', '[[IgnoredVulns]]\nid = "GO-2022-0968"\n'],
     ['.license-checker.json', 'licenses', '{"onlyAllow":"MIT"}\n'],
-] as const)('nested %s cannot silently widen settings to the whole repository', async (name, configuration, original) => {
-    await using sandbox = await testdir();
-    const path = `nested/${name}`;
-    await createFileTree(sandbox.path, { [path]: original });
-    const repository = await readRepository(sandbox.path, [], [], []);
-    const discovered = existingTooling(sandbox.path, repository.files, []);
-    const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
-    expect(carried.unread.map((entry) => entry.path)).toEqual([path]);
-    expect(carried.tools.size).toBe(0);
-    expect(carried.removed).toEqual([]);
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
-});
+] as const)(
+    'nested %s cannot silently widen settings to the whole repository',
+    async (name, configuration, original) => {
+        await using sandbox = await testdir();
+        const path = `nested/${name}`;
+        await createFileTree(sandbox.path, { [path]: original });
+        const repository = await readRepository(sandbox.path, [], [], []);
+        const discovered = existingTooling(sandbox.path, repository.files, []);
+        const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
+        expect(carried.unread.map((entry) => entry.path)).toStrictEqual([path]);
+        expect(carried.tools.size).toBe(0);
+        expect(carried.removed).toStrictEqual([]);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
+    },
+);
 
 test.each([false, true])(
     'nested spelling adoption writes a local policy table with an existing scope of %s',
@@ -516,9 +522,9 @@ test.each([false, true])(
         const repository = await readRepository(sandbox.path, [], [], []);
         const discovered = existingTooling(sandbox.path, repository.files, []);
         const carried = await collectCarried(sandbox.path, discovered, new Set(['spelling']), []);
-        expect(carried.unread).toEqual([]);
+        expect(carried.unread).toStrictEqual([]);
         expect(carried.tools.has('typos')).toBe(false);
-        expect(carried.removed.map(({ path }) => path)).toEqual(['nested/typos.toml']);
+        expect(carried.removed.map(({ path }) => path)).toStrictEqual(['nested/typos.toml']);
         const policy = proposeText({
             configurations: ['spelling'],
             scopes: existing ? [{ path: 'nested', configurations: ['markdown'] }] : [],
@@ -530,7 +536,7 @@ test.each([false, true])(
         });
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
-        expect(session.policyFiles.policy.scopes).toEqual([
+        expect(session.policyFiles.policy.scopes).toStrictEqual([
             { path: 'nested', configurations: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);
         const outputs = emitAll(session).files.filter(
@@ -585,14 +591,14 @@ test.each(['typos.toml', 'nested/typos.toml'])(
         const detected = existingTooling(sandbox.path, repository.files, []);
         const refused = await collectCarried(sandbox.path, detected, new Set(['spelling']), []);
         expect(refused.unread).toMatchObject([{ path }]);
-        expect(refused.removed).toEqual([]);
+        expect(refused.removed).toStrictEqual([]);
         expect(refused.tools.size).toBe(0);
         expect(refused.scopes.size).toBe(0);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         await Bun.write(join(sandbox.path, path), '[default]\nlocale = "en-ca"\n');
         const corrected = await collectCarried(sandbox.path, detected, new Set(['spelling']), []);
-        expect(corrected.unread).toEqual([]);
-        expect(corrected.removed.map((entry) => entry.path)).toEqual([path]);
+        expect(corrected.unread).toStrictEqual([]);
+        expect(corrected.removed.map((entry) => entry.path)).toStrictEqual([path]);
     },
 );
 
@@ -609,10 +615,10 @@ test('overlapping spelling configurations remain intact without partial adoption
         new Set(['spelling']),
         [],
     );
-    expect(carried.unread.map(({ path }) => path)).toEqual(['typos.toml']);
+    expect(carried.unread.map(({ path }) => path)).toStrictEqual(['typos.toml']);
     expect(carried.tools.size).toBe(0);
     expect(carried.scopes.size).toBe(0);
-    expect(carried.removed).toEqual([]);
+    expect(carried.removed).toStrictEqual([]);
 });
 
 test('disabled-rule adoption carries the declared destination and refuses an undeclared destination', async () => {
@@ -623,12 +629,12 @@ test('disabled-rule adoption carries the declared destination and refuses an und
     const declared = detected.configs.find((entry) => entry.tool === 'shellcheck')!;
     declared.check = 'shell-policy/lint';
     const adopted = await collectCarried(sandbox.path, detected, new Set(['bash']), []);
-    expect(adopted.unread).toEqual([]);
+    expect(adopted.unread).toStrictEqual([]);
     expect(adopted.tools.get('shellcheck')!.ignores).toMatchObject([{ check: declared.check, rule: 'SC2086' }]);
     delete declared.check;
     const refused = await collectCarried(sandbox.path, detected, new Set(['bash']), []);
     expect(refused.unread).toMatchObject([{ path: '.shellcheckrc' }]);
-    expect(refused.removed).toEqual([]);
+    expect(refused.removed).toStrictEqual([]);
     expect(refused.tools.has('shellcheck')).toBe(false);
 });
 
@@ -639,7 +645,7 @@ test('ShellCheck adoption separates comments and quotes from every disabled code
     const repository = await readRepository(sandbox.path, [], [], []);
     const detected = existingTooling(sandbox.path, repository.files, []);
     const carried = await collectCarried(sandbox.path, detected, new Set(['bash']), []);
-    expect(carried.unread).toEqual([]);
-    expect(carried.tools.get('shellcheck')!.ignores.map((entry) => entry.rule)).toEqual(['SC2086', 'SC2002']);
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.tools.get('shellcheck')!.ignores.map((entry) => entry.rule)).toStrictEqual(['SC2086', 'SC2002']);
     expect(await Bun.file(join(sandbox.path, '.shellcheckrc')).text()).toBe(original);
 });

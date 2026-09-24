@@ -1,16 +1,16 @@
 import { randomUUID } from 'node:crypto';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { RunReport } from '#cli/types/reports.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import type { TakeoverPlan } from '#cli/types/ownership.ts';
-import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync, symlinkSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const OWNER_WRITES = 0o644;
 const MODULES = join(import.meta.dir, '../../../node_modules');
@@ -39,7 +39,7 @@ test.each(['none', 'index-only'])(
         const findings = report.checks
             .flatMap((check) => check.findings)
             .filter((finding) => finding.rule === 'gspot/no-reexports');
-        expect(findings.map(({ file, line }) => ({ file, line }))).toEqual(
+        expect(findings.map(({ file, line }) => ({ file, line }))).toStrictEqual(
             mode === 'none'
                 ? [
                       { file: 'app/forward.ts', line: 1 },

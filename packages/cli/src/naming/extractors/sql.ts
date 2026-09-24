@@ -1,8 +1,9 @@
 // Identifiers a SQL file declares: schemas, tables, columns, functions, parameters, indexes, triggers and policies.
+import type { SourceObservations } from '#cli/types/repository.ts';
 import type { Identifier } from '#cli/types/naming.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
+import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 
 function columns(elements: unknown): SqlNamed[] {
     return nodesOf(elements, 'ColumnDef').map((column) => ({ category: 'columns', name: textOf(column['colname']) }));
@@ -49,20 +50,25 @@ const READERS: Record<string, (fields: SqlNode) => SqlNamed[]> = {
     ],
 };
 
-function identifiers(file: string, source: string, statement: SqlStatementView): Identifier[] {
+function identifiers(file: string, source: string, statement: SqlStatementView, parsed: SqlFile): Identifier[] {
     const named = READERS[statement.kind]?.(statement.fields) ?? [];
+    let offset = statement.start;
     return named
         .filter((entry) => entry.name !== '')
-        .map((entry) => {
-            const found = source.indexOf(entry.name, statement.start);
-            return {
-                file,
-                ...positionAt(source, found === -1 ? statement.start : found),
-                language: 'sql',
-                category: entry.category,
-                kind: `sql ${LABELS[entry.category] ?? entry.category}`,
-                name: entry.name,
-            };
+        .flatMap((entry): Identifier[] => {
+            const found = parsed.source.indexOf(entry.name, offset);
+            if (found !== -1) offset = found + entry.name.length;
+            if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
+            return [
+                {
+                    file,
+                    ...positionAt(source, found === -1 ? statement.start : found),
+                    language: 'sql',
+                    category: entry.category,
+                    kind: `sql ${LABELS[entry.category] ?? entry.category}`,
+                    name: entry.name,
+                },
+            ];
         });
 }
 
@@ -70,11 +76,16 @@ function identifiers(file: string, source: string, statement: SqlStatementView):
  * The identifiers a valid SQL file declares. Parse failures stop the analysis.
  * @param file the file path
  * @param source the file text
+ * @param observations optional execution observations shared by SQL checks
  * @returns the identifiers
  */
-export async function sqlIdentifiers(file: string, source: string): Promise<Identifier[]> {
-    const parsed = await sqlFile(source);
+export async function sqlIdentifiers(
+    file: string,
+    source: string,
+    observations?: SourceObservations,
+): Promise<Identifier[]> {
+    const parsed = await sqlFile(source, observations);
     if (parsed.error !== undefined)
         throw new Error(`SQL parse failed at ${parsed.error.line}:${parsed.error.column}: ${parsed.error.text}`);
-    return parsed.statements.flatMap((statement) => identifiers(file, source, statement));
+    return parsed.statements.flatMap((statement) => identifiers(file, source, statement, parsed));
 }

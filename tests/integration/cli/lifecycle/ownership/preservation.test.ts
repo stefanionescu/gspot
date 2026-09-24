@@ -1,7 +1,13 @@
-import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
-
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+import { parse as parseToml } from 'smol-toml';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { applyBlock } from '#cli/emit/managed-blocks.ts';
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 import {
     chmodSync,
@@ -14,20 +20,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-
-import { describe, expect, test } from 'bun:test';
-
-import { createFileTree, testdir } from 'testdirs';
-
-import { applyBlock } from '#cli/emit/managed-blocks.ts';
-
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-
-import { parse as parseToml } from 'smol-toml';
-
-import { parse as parseYaml } from 'yaml';
 
 const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
@@ -60,8 +52,8 @@ test.each([false, true])(
                 writeFileSync(join(directory.path, 'mise.toml'), installed + '\n[env]\nAPP_MODE = "authored"\n');
             expect(owner.restore('mise.toml')).toBe('changed');
             const restored = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
-            expect(parseToml(restored)['tasks']).toEqual(parseToml(original)['tasks']);
-            if (edited) expect(parseToml(restored)['env']).toEqual({ APP_MODE: 'authored' });
+            expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
+            if (edited) expect(parseToml(restored)['env']).toStrictEqual({ APP_MODE: 'authored' });
             else expect(restored).toBe(original);
         } finally {
             owner.close();
@@ -91,7 +83,7 @@ try {
         stderr: 'pipe',
     });
     expect(child.exitCode, child.stderr.toString()).toBe(0);
-    expect(JSON.parse(child.stdout.toString())).toEqual({
+    expect(JSON.parse(child.stdout.toString())).toStrictEqual({
         first: 'changed',
         repeated: 'unchanged',
         restored: 'changed',
@@ -164,7 +156,7 @@ test('removing a block restores an originally empty file instead of deleting it'
     try {
         expect(owner.replaceBlock('AGENTS.md', 'instructions', 'markdown')).toBe('changed');
         expect(owner.restore('AGENTS.md')).toBe('changed');
-        expect(owner.read('AGENTS.md')?.bytes).toEqual(Buffer.alloc(0));
+        expect(owner.read('AGENTS.md')?.bytes).toStrictEqual(Buffer.alloc(0));
     } finally {
         owner.close();
     }
@@ -335,7 +327,7 @@ test('identical unrecorded blocks and configuration fields survive adoption, lat
             instructions + 'Later authored instructions.\n',
         );
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(configuration.replace('true', 'false'));
-        expect(owner.paths()).toEqual([]);
+        expect(owner.paths()).toStrictEqual([]);
     } finally {
         owner.close();
     }
@@ -355,25 +347,33 @@ test.each([
         const fields = [
             { path: ['created', 'nested', 'first'], value: 1 },
             { path: ['created', 'nested', 'second'], value: 2 },
+            { path: ['created', 'nested', 'third'], value: 3 },
+            { path: ['created', 'nested', 'fourth'], value: 4 },
             { path: ['kept', 'owned'], value: true },
         ];
         try {
             owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
+            const installed = owner.read(path)!.bytes.toString('utf8');
+            const edited = installed.replace('4', '99');
+            writeFileSync(join(directory.path, path), edited);
+            expect(owner.applyProposal(owner.proposeConfiguration(path, format, []))).toBe('preserved');
+            expect(owner.read(path)!.bytes.toString('utf8')).toBe(edited);
+            writeFileSync(join(directory.path, path), installed);
             owner.applyProposal(owner.proposeConfiguration(path, format, [fields[1]!]));
-            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({
                 authored: true,
                 kept: {},
                 created: { nested: { second: 2 } },
             });
             owner.applyProposal(owner.proposeConfiguration(path, format, []));
-            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({ authored: true, kept: {} });
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: true, kept: {} });
             owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
             writeFileSync(
                 join(directory.path, path),
                 owner.read(path)!.bytes.toString('utf8').replace('true', 'false'),
             );
             expect(owner.restore(path)).toBe('changed');
-            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({ authored: false, kept: {} });
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: false, kept: {} });
         } finally {
             owner.close();
         }
@@ -394,7 +394,9 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 owner.replace(target, { bytes: Buffer.from('installed executable'), mode: 0o644 }, 'dependency');
                 owner.replace(obstructed, { bytes: Buffer.from('installed file'), mode: 0o644 }, 'dependency');
                 writeFileSync(join(directory.path, obstructed), 'authored edit');
-                expect(() => publishInstalledFiles(owner, staged.path, 'npm')).toThrow('Preserved edited or unowned');
+                expect(() => {
+                    publishInstalledFiles(owner, staged.path, 'npm');
+                }).toThrow('Preserved edited or unowned');
                 expect(owner.read(target)?.bytes.toString()).toBe('installed executable');
                 expect(owner.read(obstructed)?.bytes.toString()).toBe('authored edit');
                 writeFileSync(join(directory.path, obstructed), 'installed file');
@@ -427,9 +429,9 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             owner.close();
             owner = openLifecycleOwner(directory.path);
             expect(owner.restore('config.txt')).toBe('changed');
-            expect(owner.read('config.txt')).toEqual({ bytes: original, mode: 0o640 });
+            expect(owner.read('config.txt')).toStrictEqual({ bytes: original, mode: 0o640 });
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
-            expect(owner.paths()).toEqual([]);
+            expect(owner.paths()).toStrictEqual([]);
             expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(0o600);
             expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(0o700);
         } finally {

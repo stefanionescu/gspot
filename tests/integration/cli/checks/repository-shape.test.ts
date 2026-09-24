@@ -1,17 +1,17 @@
+import { describe, expect, test } from 'bun:test';
 // The repository-shape integrity analyses: suppressions, policy patterns, large files and configuration purity.
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { EngineInput, Session } from '#cli/types/execution.ts';
-import { readAttributes } from '#cli/repository/file-classification.ts';
-import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
+import { largeFiles } from '#cli/checks/repository/large-files.ts';
+import type { EngineInput, Session } from '#cli/types/execution.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
-import type { MergedView, NamingSettings, Policy } from '#cli/types/policy.ts';
+import { readAttributes } from '#cli/repository/file-classification.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
+import type { MergedView, NamingSettings, Policy } from '#cli/types/policy.ts';
 
 function tracked(path: string, size = 1): TrackedFile {
     return { path, prefix: Buffer.alloc(0), nature: 'source', tags: ['text'], executable: false, size };
@@ -68,7 +68,7 @@ describe('the repository-shape analyses', () => {
             .find((check) => check.name === 'integrity/suppressions')!;
         const observation = engineInput(session, { scope, spec, files: session.repository.files });
         const found = await suppressions(observation);
-        expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toEqual([
+        expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
             'a.ts:2 eslint-no-reason',
             'b.sh:2 semgrep',
         ]);
@@ -79,7 +79,7 @@ describe('the repository-shape analyses', () => {
         await createFileTree(sandbox.path, { 'src/a.ts': '', 'data/x.bin': '', 'docs/a.md': '' });
         const files = [tracked('src/a.ts'), tracked('data/x.bin'), tracked('docs/a.md')];
         const found = await allowlistsMatch(input(sandbox.path, files, policy));
-        expect(found.map((finding) => finding.message)).toEqual([
+        expect(found.map((finding) => finding.message)).toStrictEqual([
             'gone/** under [[ignore]] matches no tracked file or folder.',
         ]);
     });
@@ -89,7 +89,7 @@ describe('the repository-shape analyses', () => {
         await createFileTree(sandbox.path, { 'big.bin': '', 'data/big.bin': '' });
         const files = [tracked('big.bin', 2_000_000), tracked('data/big.bin', 2_000_000), tracked('small.txt', 10)];
         const found = await largeFiles(input(sandbox.path, files, policy));
-        expect(found.map((finding) => finding.file)).toEqual(['big.bin']);
+        expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
     });
 
     test('a configuration module with a function or a call is reported; literals pass', async () => {
@@ -102,7 +102,7 @@ describe('the repository-shape analyses', () => {
         });
         const files = [tracked('config/pure.ts'), tracked('config/logic.ts')];
         const found = await configurationPurity(input(sandbox.path, files, policy));
-        expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toEqual([
+        expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
             'config/logic.ts:1',
             'config/logic.ts:3',
             'config/logic.ts:4',

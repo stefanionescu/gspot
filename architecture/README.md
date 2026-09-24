@@ -33,7 +33,7 @@ open requirements, historical completion claims, and deferred verification.
 | [01-product.md](01-product.md)                       | Who gspot is for, what it promises, what it refuses to do                                                                                   |
 | [02-cli.md](02-cli.md)                               | Every command, flag, output line, and exit code                                                                                             |
 | [03-configuration.md](03-configuration.md)           | The one file a person edits, and the files gspot owns                                                                                       |
-| [04-configurations.md](04-configurations.md)                       | The unit of selection: manifest format, detection, catalog                                                                                  |
+| [04-configurations.md](04-configurations.md)         | The unit of selection: manifest format, detection, catalog                                                                                  |
 | [05-engines.md](05-engines.md)                       | The six things that produce findings                                                                                                        |
 | [06-enforcement-ledger.md](06-enforcement-ledger.md) | Every rule and check carried from the reference repositories, and where it lands                                                            |
 | [07-slop-drift.md](07-slop-drift.md)                 | New enforcement: what LLM slop and repository drift look like and how gspot catches them                                                    |
@@ -54,7 +54,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 
 | Term           | Meaning                                                                                                                   |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| configuration         | A named bundle of tools, config, checks, settings, and agent rule files.                                                  |
+| configuration  | A named bundle of tools, config, checks, settings, and agent rule files.                                                  |
 | check          | One external command or built-in analysis that produces findings.                                                         |
 | rule           | A named diagnostic within a check, such as an ESLint rule. Not an agent instruction file.                                 |
 | finding        | A message from a check, optionally with a file location and tool rule name.                                               |
@@ -63,7 +63,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 | engine         | The implementation that executes a class of checks.                                                                       |
 | config         | The repository's choices in `gspot.toml`. Internal `Policy` names are implementation names, not public synonyms.          |
 | ignore         | A tracked exception for a check or one of its rules, optionally restricted by paths. Reasons follow `require_reasons`.    |
-| scope          | A config-relative subtree with its own configuration selection and settings.                                                     |
+| scope          | A config-relative subtree with its own configuration selection and settings.                                              |
 | stage          | When a check runs: commit, push, manual, or the hook-only message stage.                                                  |
 | level          | Which checks are enabled by default: recommended or all. Not a stage.                                                     |
 | rule file      | Markdown instructions an agent reads. Use the full phrase to distinguish it from a diagnostic rule.                       |
@@ -82,8 +82,11 @@ One word, one meaning, everywhere in this folder, and in the code.
 | takeover       | Accepted replacement of existing tooling, with configuration carryover and saved originals.                               |
 | setting        | One named configuration choice with a type, scope, and default.                                                           |
 | allowed list   | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
+| directory setting | A single folder uses `_directory`, including `functions_directory`, `migrations_directory`, and `harness_directory`. |
+| file pattern setting | File globs use `_files`, including `route_files`, `test_files`, `server_files`, and `admin_key_files`. |
+| tool option | An external tool owns its option names, including `tools.knip.ignore` and `tools.typos.exclude`. |
 | profile        | Portable config without repository-specific paths.                                                                        |
-| policy         | The manifest configuration kind for checks that span languages; public prose says what the configuration checks.                        |
+| policy         | The manifest configuration kind for checks that span languages; public prose says what the configuration checks.          |
 
 [Configuration definitions](04-configurations.md#names-across-the-public-contract) and
 [execution results](05-engines.md#actions-and-their-results) own exact public fields. File ownership and

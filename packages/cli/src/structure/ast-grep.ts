@@ -1,13 +1,13 @@
-import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
+import { z } from 'zod';
+import { toPosix } from '#cli/platform/paths.ts';
+import { readAsset } from '#cli/platform/assets.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
 // The ast-grep runner: a configuration rule over files, its matches as JSON, counted per enclosing function.
 import { isAbsolute, join, relative } from 'node:path';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { readAsset } from '#cli/platform/assets.ts';
+import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { fileBatches } from '#cli/run/file-batches.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import { toPosix } from '#cli/platform/paths.ts';
-import { z } from 'zod';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;
 const positionSchema = z.object({ line: z.number().int().nonnegative() });

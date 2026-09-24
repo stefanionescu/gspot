@@ -1,15 +1,15 @@
-import type { Engine, EngineInput } from '#cli/types/execution.ts';
+import { countFindings } from '#cli/structure/counts.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import { countFindings } from '#cli/structure/counts.ts';
 import { DOCUMENT_EXTENSIONS } from '#cli/structure/patterns.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
+import type { Engine, EngineInput } from '#cli/types/execution.ts';
 import { docComment } from '#cli/structure/analyses/doc-comment.ts';
 import { fileLength } from '#cli/structure/analyses/file/length.ts';
-import type { Analysis, StructureContext } from '#cli/types/structure.ts';
 import { folderNames } from '#cli/structure/analyses/folder-names.ts';
 import { scriptEmbeds } from '#cli/structure/analyses/scripts/embeds.ts';
 import { scriptSafety } from '#cli/structure/analyses/scripts/safety.ts';
+import type { Analysis, StructureContext } from '#cli/types/structure.ts';
 import { privatePrefix } from '#cli/structure/analyses/private/prefix.ts';
 import { deadParameters } from '#cli/structure/analyses/dead-parameters.ts';
 import { functionLength } from '#cli/structure/analyses/function-length.ts';
@@ -82,7 +82,10 @@ function contextFor(input: EngineInput): StructureContext {
     };
 }
 
-/** Resolve the structure analysis while retaining source indexing at execution time. */
+/**
+ * Resolve the structure analysis while retaining source indexing at execution time.
+ * @param spec
+ */
 export function resolveStructure(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';
     const analysis: Analysis | undefined = COUNT_ANALYSES.has(name)

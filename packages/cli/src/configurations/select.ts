@@ -1,9 +1,9 @@
+import { nearMatches } from '#cli/policy/near.ts';
 // Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
 import type { Policy } from '#cli/types/policy.ts';
-import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { Session } from '#cli/types/execution.ts';
-import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
+import type { Session } from '#cli/types/execution.ts';
+import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 
 type SelectionWalk = {
@@ -125,7 +125,9 @@ export function languageConfigurations(selected: Manifest[]): Manifest[] {
  * @returns the source policy owners
  */
 export function sourceConfigurations(selected: Manifest[]): Manifest[] {
-    return selected.filter((manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework');
+    return selected.filter(
+        (manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework',
+    );
 }
 
 /**

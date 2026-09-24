@@ -1,7 +1,7 @@
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
@@ -10,7 +10,7 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
-    const lines = readSource(input.root, path).toString('utf8').split('\n');
+    const lines = readSource(input.root, path, input.observations).toString('utf8').split('\n');
     return lines.flatMap((text, index) =>
         text
             .matchAll(LOCKFILE_URL)

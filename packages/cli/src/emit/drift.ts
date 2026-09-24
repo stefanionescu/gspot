@@ -1,19 +1,19 @@
+import { createTwoFilesPatch } from 'diff';
+import { emitAll } from '#cli/emit/targets.ts';
+import { ruleDiff } from '#cli/emit/rule-diff.ts';
+import type { Policy } from '#cli/types/policy.ts';
+import { isMergeStubHeld } from '#cli/emit/stubs.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { packageLockDrift } from '#cli/tools/package-project.ts';
-import { pythonLockDrift } from '#cli/tools/python-project.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
-import { ruleDiff } from '#cli/emit/rule-diff.ts';
-import { isMergeStubHeld } from '#cli/emit/stubs.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import type { DriftEntry, GeneratedProposal } from '#cli/types/generation.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
-import type { Policy } from '#cli/types/policy.ts';
-import type { Session } from '#cli/types/execution.ts';
-import { createTwoFilesPatch } from 'diff';
+import { pythonLockDrift } from '#cli/tools/python-project.ts';
+import { packageLockDrift } from '#cli/tools/package-project.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import type { DriftEntry, GeneratedProposal } from '#cli/types/generation.ts';
 
 const NEVER_STRAY = new Set([
     'gspot.toml',
@@ -104,6 +104,7 @@ function knownPaths(rendered: GeneratedProposal): Set<string> {
 /**
  * Every generated file that differs from its render, is missing, or is a stray gspot file. Blocks and merges count too.
  * @param session the session
+ * @param rendered
  * @returns the drift entries in path order
  */
 export function computeDrift(session: Session, rendered: GeneratedProposal = emitAll(session)): DriftEntry[] {

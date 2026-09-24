@@ -1,13 +1,13 @@
+import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',
@@ -69,13 +69,13 @@ const CASES: PlantedCase[] = [
         expected: '"bye" has no translation for de',
     },
     {
-        check: 'xcode/asset-catalogues',
+        check: 'xcode/asset-catalogs',
         files: {},
         removed: ['App/Assets.xcassets/Logo.imageset/logo.png'],
         expected: 'The image logo.png is not in the set',
     },
     {
-        check: 'xcode/asset-catalogues',
+        check: 'xcode/asset-catalogs',
         files: { 'App/Assets.xcassets/Unused.colorset/Contents.json': '{\n    "colors": []\n}\n' },
         expected: 'No source names the asset Unused',
     },
@@ -98,7 +98,7 @@ const CASES: PlantedCase[] = [
     {
         check: 'xcode/entitlements-policy',
         files: { 'App/App.entitlements': ENTITLED },
-        policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nallowed_entitlements = ["aps-environment"]\n'],
+        policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nentitlements_allowed = ["aps-environment"]\n'],
         expected: 'com.apple.developer.healthkit is not an allowed entitlement',
     },
     {

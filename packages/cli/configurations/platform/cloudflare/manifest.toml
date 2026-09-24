@@ -23,6 +23,7 @@ npm = "wrangler"
 template = "semgrep-workers.yml.tmpl"
 target = ".gspot/config/semgrep/workers.yml"
 rules_path = ["rules"]
+per_scope = true
 needs = "security"
 
 [[checks]]

@@ -1,15 +1,15 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { pushReportSchema } from '#cli/schemas/reports.ts';
 import { pathToFileURL } from 'node:url';
+import { delimiter, join } from 'node:path';
+import { git } from '#tests/support/cli/git.ts';
+import { chmodSync, readFileSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { script } from '#tests/support/cli/planted.ts';
+import { pushReportSchema } from '#cli/schemas/reports.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync, readFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const INIT = ['init', '--yes', '--configurations', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
@@ -106,7 +106,7 @@ test(
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
         expect(report.revisions).toHaveLength(1);
-        expect(new Set(report.revisions[0]?.commits)).toEqual(new Set([good, bad]));
+        expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
         expect(
             report.revisions[0]?.report.checks[0]?.findings.some(
                 (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
@@ -129,7 +129,8 @@ test(
         await using sandbox = await testdir();
         const source = join(sandbox.path, 'source');
         await createFileTree(source, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash", "commits"]\n[rules]\ninstall = false\n',
+            'gspot.toml':
+                'version = 1\nlevel = "all"\nconfigurations = ["bash", "commits"]\n[rules]\ninstall = false\n',
             'source.sh': 'echo base\n',
         });
         expect(git(source, ['init', '-q']).code).toBe(0);
@@ -164,7 +165,7 @@ test(
         expect(completed.code, completed.stdout + completed.stderr).toBe(0);
         const report = pushReportSchema.parse(JSON.parse(completed.stdout));
         expect(report.revisions[0]?.historyComplete).toBe(true);
-        expect(new Set(report.revisions[0]?.commits)).toEqual(new Set([base, selected]));
+        expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([base, selected]));
         expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);
         expect(readFileSync(join(checkout, 'source.sh'), 'utf8')).toBe('echo selected\n');

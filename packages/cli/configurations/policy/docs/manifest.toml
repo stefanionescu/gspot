@@ -111,7 +111,7 @@ analysis = "readme-shape"
 coverage = ["structure"]
 summary = "Checks the shape of every README: one H1, an opening paragraph, a Contents list when long, a section on getting started."
 why = "A README with the right shape answers what this is and how to start before the reader scrolls."
-help = "Add the missing piece; turn the check off with a reason under tools.docs.readme_shape when the shape does not fit."
+help = "Add the missing piece; use a tracked check exception with a reason when the shape does not fit."
 
 [[settings]]
 name = "tools.lychee.exclude_paths"
@@ -140,13 +140,6 @@ kind = "boolean"
 direction = "neutral"
 default = true
 summary = "Whether the root must carry a LICENSE file."
-
-[[settings]]
-name = "tools.docs.readme_shape"
-kind = "boolean"
-direction = "loosening"
-default = true
-summary = "Whether the README shape check runs; false with a reason turns it off."
 
 [[settings]]
 name = "tools.docs.contents_threshold"

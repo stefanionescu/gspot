@@ -8,7 +8,7 @@ description = "Python sources: Ruff for lint and layout, basedpyright for types,
 
 [detect]
 extensions = [".py"]
-filenames = ["pyproject.toml"]
+filenames = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 shebangs = ["python", "python3"]
 
 [claims]
@@ -109,6 +109,7 @@ example = "The expression `eval(user_input)` reports S307 when that rule is sele
 level = "recommended"
 stage = "commit"
 command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--output-format", "json", "{files}"]
+findings_exit_codes = [1]
 fix_command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
 fix_order = "codemod"
 fix_findings_exit_codes = [1]
@@ -126,6 +127,7 @@ example = "The Python assignment `value=1` differs from Ruff formatting. Format 
 level = "all"
 stage = "commit"
 command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
+findings_exit_codes = [1]
 fix_command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
 fix_order = "format"
 claims = {extensions = [".py", ".pyi"]}
@@ -140,10 +142,11 @@ name = "python/basedpyright"
 title = "Check Python types"
 example = "The annotated assignment `count: int = \"one\"` reports an incompatible value type. Use `count: int = 1` when the value is a number, or correct the annotation if the contract requires text."
 level = "recommended"
-stage = "commit"
+stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["basedpyright", "--outputjson"]
+findings_exit_codes = [1]
 claims = {extensions = [".py", ".pyi"]}
 coverage = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
@@ -207,6 +210,8 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["vulture", ".", "--min-confidence", "80", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
+findings_exit_codes = [3]
+tool_errors = '^(?:Error:|.+: invalid source code |.+:None: |.+:[0-9]+: .+ at ")'
 claims = {extensions = [".py"]}
 coverage = ["structure"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}

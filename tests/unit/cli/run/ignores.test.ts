@@ -1,6 +1,6 @@
-import type { Finding } from '#cli/types/reports.ts';
 import { describe, expect, test } from 'bun:test';
 import { applyIgnores } from '#cli/run/ignores.ts';
+import type { Finding } from '#cli/types/reports.ts';
 
 const finding = (file: string, rule = 'r1', check = 'c/x'): Finding => ({
     check,
@@ -22,6 +22,6 @@ describe('ignores', () => {
             { check: 'bash/shellcheck', rule: 'SC2086', reason: 'why' },
         ]);
         expect(result.kept).toHaveLength(1);
-        expect(result.uses.map((use) => use.matched)).toEqual([1, 1]);
+        expect(result.uses.map((use) => use.matched)).toStrictEqual([1, 1]);
     });
 });

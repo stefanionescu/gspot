@@ -1,13 +1,13 @@
+import { delimiter, join } from 'node:path';
+import { readFileSync, rmSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync, rmSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 const INIT = [
@@ -132,7 +132,7 @@ test.each(['recommended', 'all'])(
         });
         const reapplied = await run(root, ['apply']);
         expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
-        expect(readFileSync(generatedPath)).toEqual(generated);
+        expect(readFileSync(generatedPath)).toStrictEqual(generated);
         await installPrivateTools(root);
         const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--no-cache', '--json'];
         const unavailable = await run(root, command);

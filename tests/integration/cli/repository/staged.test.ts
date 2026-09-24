@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { changedFiles, stagedFiles, pushBase } from '#cli/repository/staged.ts';
@@ -22,9 +22,9 @@ describe('Git change observation', () => {
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         git(sandbox.path, 'init');
         git(sandbox.path, 'add', 'source.ts');
-        expect(await stagedFiles(sandbox.path)).toEqual({ staged: ['source.ts'], unstaged: 0 });
+        expect(await stagedFiles(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 0 });
         writeFileSync(join(sandbox.path, 'source.ts'), 'export const answer = 42;\n');
-        expect(await stagedFiles(sandbox.path)).toEqual({ staged: ['source.ts'], unstaged: 1 });
+        expect(await stagedFiles(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 1 });
     });
 
     test('keeps deletion paths in staged and reference comparisons', async () => {
@@ -32,8 +32,8 @@ describe('Git change observation', () => {
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         commit(sandbox.path);
         git(sandbox.path, 'rm', 'source.ts');
-        expect((await stagedFiles(sandbox.path)).staged).toEqual(['source.ts']);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toEqual(['source.ts']);
+        expect((await stagedFiles(sandbox.path)).staged).toStrictEqual(['source.ts']);
+        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual(['source.ts']);
     });
 
     test('keeps both paths of a rename across directories', async () => {
@@ -41,8 +41,8 @@ describe('Git change observation', () => {
         await createFileTree(sandbox.path, { 'api/source.ts': 'export {};\n', 'web/kept.ts': 'export {};\n' });
         commit(sandbox.path);
         git(sandbox.path, 'mv', 'api/source.ts', 'web/source.ts');
-        expect((await stagedFiles(sandbox.path)).staged).toEqual(['api/source.ts', 'web/source.ts']);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toEqual(['api/source.ts', 'web/source.ts']);
+        expect((await stagedFiles(sandbox.path)).staged).toStrictEqual(['api/source.ts', 'web/source.ts']);
+        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
     });
 
     test('reports corrupt or absent Git state instead of an empty staged set', async () => {
@@ -57,7 +57,7 @@ describe('Git change observation', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         commit(sandbox.path);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toEqual([]);
+        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual([]);
         await expect(changedFiles(sandbox.path, 'missing-reference')).rejects.toThrow('Git merge-base failed');
         await expect(changedFiles(sandbox.path, '--output=outside.txt')).rejects.toThrow('Git merge-base failed');
         expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);

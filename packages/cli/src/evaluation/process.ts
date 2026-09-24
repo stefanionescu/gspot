@@ -1,21 +1,22 @@
+import { z } from 'zod';
+import { basename, dirname } from 'node:path';
+import { evaluateLicenses } from '#cli/evaluation/license.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';
+import { evaluateEslintPreview } from '#cli/evaluation/eslint-preview.ts';
 import { evaluateEslint, evaluateRuleCoverage } from '#cli/evaluation/eslint.ts';
 import { evaluateFormat, evaluateIgnoredPaths } from '#cli/evaluation/format.ts';
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+
 import {
+    eslintResponse,
+    eslintPreviewResponse,
+    licenseResponse,
+    stylelintResponse,
     configurationRequest,
     eslintCoverageResponse,
     formatResponse,
     ignoredPathsResponse,
 } from '#cli/schemas/evaluation.ts';
-import { basename, dirname } from 'node:path';
-import { z } from 'zod';
-
-import { eslintResponse } from '#cli/schemas/evaluation.ts';
-
-import { evaluateEslintPreview } from '#cli/evaluation/eslint-preview.ts';
-import { evaluateLicenses } from '#cli/evaluation/license.ts';
-import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';
-import { eslintPreviewResponse, licenseResponse, stylelintResponse } from '#cli/schemas/evaluation.ts';
 
 try {
     const request = configurationRequest.parse(

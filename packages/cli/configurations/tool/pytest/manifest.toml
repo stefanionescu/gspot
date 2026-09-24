@@ -11,7 +11,7 @@ filenames = ["conftest.py", "pytest.ini"]
 
 [[tools]]
 name = "pytest"
-suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
+suppression = {marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 floor = "7.0.0"
 pypi = "pytest"
 version_regex = "(\\d+\\.\\d+\\.\\d+)"
@@ -25,6 +25,7 @@ stage = "push"
 runs = "per-scope"
 cwd = "scope"
 command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:tools.pytest.coverage}", "--no-header", "-p", "no:cacheprovider"]
+findings_exit_codes = [1]
 claims = {extensions = [".py"]}
 coverage = ["coverage"]
 output = {format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$"}

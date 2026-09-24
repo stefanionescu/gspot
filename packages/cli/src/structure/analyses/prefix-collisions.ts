@@ -1,6 +1,6 @@
+import type { Analysis } from '#cli/types/structure.ts';
 // Sibling entries sharing a name prefix at or above the limit. Searched: ls-lint, eslint-plugin-unicorn; neither compares siblings.
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { Analysis } from '#cli/types/structure.ts';
 import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/structure/patterns.ts';
 import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/structure/directories.ts';
 
@@ -75,7 +75,11 @@ export const prefixCollisions: Analysis = (context) => {
             return [];
         const peers = tree.get(directory)!.filter((entry) => {
             if (entry.kind === 'dir')
-                return !entry.name.startsWith('.') && !IGNORED_FOLDERS.includes(entry.name) && prefixOf(entry.name) === prefix;
+                return (
+                    !entry.name.startsWith('.') &&
+                    !IGNORED_FOLDERS.includes(entry.name) &&
+                    prefixOf(entry.name) === prefix
+                );
             if (isNest && isNestName(entry.name)) return false;
             const peerStem = stemOf(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;

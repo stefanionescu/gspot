@@ -1,22 +1,22 @@
+import type { Finding } from '#cli/types/reports.ts';
+import { scopeImports } from '#cli/structure/imports.ts';
 // Each governed route has an importing test in its own scope.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import { scopeImports } from '#cli/structure/imports.ts';
 
 /**
  * Reports routes without a test that imports their resolved module in the same scope.
  * @param input the engine input
  * @returns the findings
  */
-export function routesTested(input: EngineInput): Finding[] {
+export async function routesTested(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool('express');
-    const routes = tool['route_glob'] as string[];
-    const tests = tool['test_glob'] as string[];
+    const routes = tool['route_files'] as string[];
+    const tests = tool['test_files'] as string[];
     if (routes.length === 0 || tests.length === 0) return [];
     const isRoute = pathMatcher(routes);
     const isTest = pathMatcher(tests);
-    const index = scopeImports(input);
+    const index = await scopeImports(input);
     const local = (path: string): string => (input.scope === '' ? path : path.slice(input.scope.length + 1));
     const untested = index.paths.filter(
         (path) =>

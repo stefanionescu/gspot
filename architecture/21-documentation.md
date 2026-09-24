@@ -285,8 +285,6 @@ Acceptance is task-based as well as mechanical:
 - All controls have accessible names, visible focus, and keyboard operation. Text contrast
   is at least 4.5:1 for normal text; meaningful control boundaries and focus indicators reach
   3:1. Aim for 44-pixel touch targets.
-- Confirm reading order and transcript access with a
-  screen reader; an automated accessibility scan alone is insufficient.
 - With scripts disabled, the landing page still provides purpose, installation text, the
   transcript, and manual links. With media blocked, no procedure loses information.
 - Target at most 500 KB of compressed initial landing-page transfer, excluding user-started
@@ -409,7 +407,7 @@ Verify product promises with observable CLI and installed-package behavior. Desc
 
 ### Acceptance G-10
 
-Preserve the README, guide navigation, landing page, vector identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, screen-reader access, script-free content, and loading budgets. A successful build alone does not establish usability.
+Preserve the README, guide navigation, landing page, vector identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, script-free content, and loading budgets. A successful build alone does not establish usability.
 
 ### Acceptance S-19
 

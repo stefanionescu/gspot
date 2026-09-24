@@ -1,10 +1,9 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // An ignore file beside every Dockerfile, with the entries that keep history, dependencies and secrets out of the build.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { statSync } from 'node:fs';
 import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
-
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 function isDockerfile(path: string): boolean {
     const name = path.slice(path.lastIndexOf('/') + 1);
@@ -33,9 +32,9 @@ export function dockerignore(input: EngineInput): Finding[] {
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
         const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
         const base = { check: input.spec.name, line: 1, fixable: false };
-        if (!existsSync(join(input.root, path)))
+        if (!(statSync(join(input.root, path), { throwIfNoEntry: false }) !== undefined))
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
-        const missing = missingEntries(readSource(input.root, path).toString('utf8'));
+        const missing = missingEntries(readSource(input.root, path, input.observations).toString('utf8'));
         if (missing.length === 0) return [];
         return [
             { ...base, file: path, rule: 'entries', message: `The ignore file lets through: ${missing.join(', ')}.` },

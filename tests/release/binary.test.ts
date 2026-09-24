@@ -1,20 +1,20 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded configurations, rules and grammars, not the source tree.
 
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { releaseTargets } from '../../packages/cli/src/platform/release-targets.ts';
-// The explicit release suite requires a built binary under dist/.
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { createRequire } from 'node:module';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { releaseTargets } from '#cli/platform/release-targets.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+// The explicit release suite requires a built binary under dist/.
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -61,7 +61,7 @@ describe('the compiled binary', () => {
             expect(binary(sandbox.path, ['check', '--only', 'bash/shellcheck']).code).toBe(0);
             const preview = binary(sandbox.path, ['apply', '--dry-run', '--json']);
             expect(preview.code, preview.stdout).toBe(0);
-            expect((JSON.parse(preview.stdout) as { drift: unknown[] }).drift).toEqual([]);
+            expect((JSON.parse(preview.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -95,7 +95,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const built = await runProcess([process.execPath, 'packages/cli/scripts/build.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
-    copyFileSync(join(checkout, 'dist', host!.binary), executable);
+    copyFileSync(join(checkout, 'dist', host.binary), executable);
     rmSync(checkout, { recursive: true });
     const consumer = join(sandbox.path, 'consumer');
     mkdirSync(consumer);

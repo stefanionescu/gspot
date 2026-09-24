@@ -1,16 +1,16 @@
-import { directoryOf } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { coverageLines } from '#cli/output/coverage.ts';
-import { checkState } from '#cli/policy/check-state.ts';
-import { settingRows } from '#cli/policy/settings-list.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CommandResult, Session } from '#cli/types/execution.ts';
 import { Argument, type Command } from 'commander';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { checkState } from '#cli/policy/check-state.ts';
+import { coverageLines } from '#cli/output/coverage.ts';
+import { settingRows } from '#cli/policy/settings-list.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import type { CommandResult, Session } from '#cli/types/execution.ts';
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;
@@ -83,7 +83,10 @@ function configurationsResult(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { installed, detected, available, coverage }, exitCode: 0 };
 }
 
-/** List configurations and effective settings without executing checks or mutating the project. */
+/**
+ * List configurations and effective settings without executing checks or mutating the project.
+ * @param program
+ */
 export function registerList(program: Command): void {
     program
         .command('list')

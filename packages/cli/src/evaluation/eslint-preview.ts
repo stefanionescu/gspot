@@ -1,10 +1,10 @@
-import { mutationPath } from '#cli/filesystem/confined.ts';
-import { eslintPreviewRequest, eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
-import { writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import ts from 'typescript';
 import { z } from 'zod';
+import ts from 'typescript';
+import { writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { mutationPath } from '#cli/filesystem/confined.ts';
+import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
 
 function moduleSource(path: string, text: string): string {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -65,7 +65,11 @@ function ruleData(value: unknown): z.infer<typeof eslintPreviewResponse>[number]
     return z.record(z.string(), z.json()).parse(JSON.parse(serialized));
 }
 
-/** Resolve rule declarations in the configuration process without replacing either configuration on disk. */
+/**
+ * Resolve rule declarations in the configuration process without replacing either configuration on disk.
+ * @param request
+ * @param work
+ */
 export async function evaluateEslintPreview(
     request: z.infer<typeof eslintPreviewRequest>,
     work: string,

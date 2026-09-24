@@ -1,17 +1,17 @@
-import { everyManifest } from '#cli/configurations/select.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import semver from 'semver';
+import type { Session } from '#cli/types/execution.ts';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
 import { UV_INSTALLER } from '#cli/tools/installers.ts';
-import { InstallationError } from '#cli/tools/install-error.ts';
-import semver from 'semver';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
-import { installPythonProject } from '#cli/tools/python-project.ts';
-import { installPackageProject } from '#cli/tools/package-project.ts';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
-import { packageEnvironment } from '#cli/tools/package-environment.ts';
+import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { InstallationError } from '#cli/tools/install-error.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
-import type { Session } from '#cli/types/execution.ts';
+import { installPythonProject } from '#cli/tools/python-project.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { installPackageProject } from '#cli/tools/package-project.ts';
+import { packageEnvironment } from '#cli/tools/package-environment.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];

@@ -1,13 +1,13 @@
+import { join } from 'node:path';
+import { unlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/run/plan.ts';
 import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { unlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
 const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n';
@@ -33,7 +33,7 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     const broken = await run(root, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const findings = JSON.parse(broken.stdout).checks.flatMap((check: { findings: unknown[] }) => check.findings);
-    expect(findings).toEqual(
+    expect(findings).toStrictEqual(
         expect.arrayContaining([
             expect.objectContaining({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
             expect.objectContaining({ file: `${prefix}Sources/Value.swift`, rule: 'missing_docs' }),
@@ -83,7 +83,7 @@ test.each(
         { cwd: join(sandbox.path, scope) },
     );
     expect(native.code, native.stdout + native.stderr).toBe(0);
-    expect(JSON.parse(native.stdout)).toEqual([]);
+    expect(JSON.parse(native.stdout)).toStrictEqual([]);
     const result = await run(sandbox.path, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
 });

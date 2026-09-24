@@ -1,6 +1,6 @@
+import { posix } from 'node:path';
 // What nginx -t needs to accept a file outside its server: the certificate paths it opens and the upstream names it resolves.
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
-import { posix } from 'node:path';
 
 const LOCAL_NAMES = new Set(['localhost', 'unix']);
 

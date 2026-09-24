@@ -1,21 +1,21 @@
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { readPolicy } from '#cli/policy/read-policy.ts';
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import prettier from 'prettier';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 // Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { readPolicy } from '#cli/policy/read-policy.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import prettier from 'prettier';
-import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',
@@ -242,14 +242,14 @@ describe('takeover', () => {
                 'source.js': 'const greeting = "hello";\n',
             });
             const command = join(import.meta.dir, '../../../packages/cli/src/commands/init/command.ts');
-            const child = `
+            const child = String.raw`
             import { mock } from 'bun:test';
             import { writeFileSync } from 'node:fs';
             Object.defineProperty(process.stdin, 'isTTY', { value: true });
             Object.defineProperty(process.stdout, 'isTTY', { value: true });
             delete process.env.CI;
             mock.module(${JSON.stringify(Bun.resolveSync('@clack/prompts', command))}, () => ({
-                confirm: async () => { writeFileSync('.prettierrc.json', '{"semi":true}\\n'); return true; },
+                confirm: async () => { writeFileSync('.prettierrc.json', '{"semi":true}\n'); return true; },
                 select: async () => { throw new Error('Unexpected selection'); },
                 multiselect: async () => { throw new Error('Unexpected selection'); },
             }));
@@ -288,11 +288,11 @@ describe('takeover', () => {
             const preview = await run(sandbox.path, [...INIT, '--no-hooks', '--dry-run']);
             expect(preview.code, preview.stdout + preview.stderr).toBe(0);
             expect(preview.stdout).toContain('not read and not deleted');
-            expect(treeContents(sandbox.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toStrictEqual(before);
             const result = await run(sandbox.path, [...INIT, '--no-hooks']);
             expect(result.code, result.stdout + result.stderr).toBe(2);
             expect(result.stdout).toContain('Cannot apply takeover');
-            expect(treeContents(sandbox.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toStrictEqual(before);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -357,7 +357,7 @@ describe('takeover', () => {
             expect(readFileSync(filepath, 'utf8')).toBe(source);
             const reapplied = await run(sandbox.path, ['apply', '--dry-run', '--json']);
             expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
-            expect(JSON.parse(reapplied.stdout).drift).toEqual([]);
+            expect(JSON.parse(reapplied.stdout).drift).toStrictEqual([]);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -427,7 +427,7 @@ describe('takeover', () => {
                         registry.npmrc,
                         '--ignore-scripts',
                     ],
-                    { cwd: registry.work, timeoutMs: 30000 },
+                    { cwd: registry.work, timeoutMs: 30_000 },
                 );
                 expect(published.code, published.stdout + published.stderr).toBe(0);
                 await using sandbox = await testdir();
@@ -459,7 +459,9 @@ describe('takeover', () => {
                 expect(policy).toContain('carried from .shellcheckrc at init');
                 expect(policy).toContain('MD013');
                 expect(policy).toContain('MD033 = true');
-                const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/config/markdownlint.jsonc'), 'utf8'));
+                const markdown = parseJsonc(
+                    readFileSync(join(sandbox.path, '.gspot/config/markdownlint.jsonc'), 'utf8'),
+                );
                 expect(markdown).toMatchObject({ MD013: false, MD033: true });
                 for (const stub of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
                     expect(readFileSync(join(sandbox.path, stub), 'utf8')).toContain('gspot');
@@ -471,7 +473,7 @@ describe('takeover', () => {
                 expect(existsSync(join(sandbox.path, '.markdownlint.jsonc'))).toBe(false);
                 expect(existsSync(join(sandbox.path, 'quality', 'lint.sh'))).toBe(true);
                 const applied = await run(sandbox.path, ['apply', '--dry-run', '--json']);
-                expect((JSON.parse(applied.stdout) as { drift: unknown[] }).drift).toEqual([]);
+                expect((JSON.parse(applied.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
                 expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             } finally {
                 await registry.stop();
@@ -505,7 +507,7 @@ test.each(['setup.cfg', 'tox.ini'])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const policy = readPolicy(sandbox.path).policy;
-        expect(policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule)).toEqual([
+        expect(policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule)).toStrictEqual([
             'LT01',
             'RF01',
         ]);

@@ -1,16 +1,16 @@
-import { expect, test } from 'bun:test';
+import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { expect, test } from 'bun:test';
 import { planRun } from '#cli/run/plan.ts';
-import { runEngineCheck } from '#cli/run/engines.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
+import { executeRun } from '#cli/run/execute.ts';
+import { explain } from '#cli/output/explain.ts';
+import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { runEngineCheck } from '#cli/run/engines.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { explain } from '#cli/output/explain.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
 
 test('a root project check does not supply a disabled child scope with coverage', async () => {
@@ -64,13 +64,13 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     const failed = await executeRun(session, { ...options, skips: [] });
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.coverage.unchecked).toBe(coverageReport(session).unchecked.length);
-    expect(failed.report.coverage.findings.map((entry) => entry.file)).toEqual(['source.sh']);
+    expect(failed.report.coverage.findings.map((entry) => entry.file)).toStrictEqual(['source.sh']);
     expect(runText(failed.report, { quiet: true, verbose: false })).toContain('1 finding,');
     expect(runText(failed.report, { quiet: true, verbose: false })).toEndWith('(failed)\n');
     expect(JSON.parse(sarifText(failed.report))).toHaveProperty('runs.0.results.0.ruleId', 'coverage.strict');
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8'))).toMatchObject([
-        { check_name: 'coverage.strict', location: { path: 'source.sh' } },
-    ]);
+    expect(
+        JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8')),
+    ).toMatchObject([{ check_name: 'coverage.strict', location: { path: 'source.sh' } }]);
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
         stringify({
@@ -92,7 +92,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
         skips: [],
         paths: ['source.sh'],
     });
-    expect(corrected.report.coverage).toEqual({ checked: 1, unchecked: 0, findings: [] });
+    expect(corrected.report.coverage).toStrictEqual({ checked: 1, unchecked: 0, findings: [] });
     expect(corrected.report.exitCode).toBe(0);
 });
 
@@ -120,7 +120,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     expect(failed.report.coverage.findings.map((entry) => entry.file)).toContain('gspot.toml');
     const message = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
     expect(message.report.exitCode).toBe(0);
-    expect(message.report.coverage.findings).toEqual([]);
+    expect(message.report.coverage.findings).toStrictEqual([]);
 });
 
 test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {
@@ -176,7 +176,7 @@ test('a per-scope check runs only where that scope owns a claimed source', async
     });
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks).toMatchObject([{ check: 'bash/syntax', scope: 'app', status: 'ok' }]);
-    expect(outcome.report.coverage).toEqual({ checked: 1, unchecked: 2, findings: [] });
+    expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 2, findings: [] });
 });
 
 test('a project-wide check covers its claimed sources without claiming unrelated project inputs', async () => {
@@ -204,7 +204,7 @@ test('a project-wide check covers its claimed sources without claiming unrelated
         noCache: true,
     });
     expect(outcome.report.checks).toMatchObject([{ check: 'bash/syntax', status: 'ok' }]);
-    expect(outcome.report.coverage).toEqual({ checked: 1, unchecked: 2, findings: [] });
+    expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 2, findings: [] });
 });
 
 test.each([
@@ -243,5 +243,5 @@ test.each([
         noCache: true,
     });
     expect(outcome.report.checks).toMatchObject([{ check, status }]);
-    expect(outcome.report.coverage).toEqual({ checked, unchecked: scenario === 'ignore' ? 2 : 1, findings: [] });
+    expect(outcome.report.coverage).toStrictEqual({ checked, unchecked: scenario === 'ignore' ? 2 : 1, findings: [] });
 });

@@ -1,7 +1,7 @@
-// Does every generated file match its render? Runs apply --dry-run in memory.
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
 import type { DriftEntry } from '#cli/types/generation.ts';
+// Does every generated file match its render? Runs apply --dry-run in memory.
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
@@ -19,7 +19,7 @@ const STRAY_HELP = 'Delete the file, or add the configuration that renders it.';
  */
 export function generatedDrift(input: EngineInput): Finding[] {
     if (input.generatedDrift === undefined) throw new Error('Generated drift requires once-only execution.');
-    const findings = input.generatedDrift().map((entry) => ({
+    return input.generatedDrift().map((entry) => ({
         check: input.spec.name,
         file: entry.path,
         rule: entry.kind,
@@ -27,5 +27,4 @@ export function generatedDrift(input: EngineInput): Finding[] {
         help: entry.kind === 'stray' ? STRAY_HELP : MOVE_HELP,
         fixable: true,
     }));
-    return findings;
 }

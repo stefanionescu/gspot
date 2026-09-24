@@ -1,14 +1,13 @@
+import { rmSync } from 'node:fs';
+import type { Finding } from '#cli/types/reports.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 // The build of a Swift scope, the analyzer over its log, and Periphery over the project.
 import { join, relative as relativePath } from 'node:path';
-import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { rmSync } from 'node:fs';
 import type { ConfinedRoot } from '#cli/types/filesystem.ts';
-
+import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
 
 /** The observed build status and its compiler output. */
 type SwiftBuildOutput = { code: number; output: string };
@@ -102,9 +101,9 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
 
 // Share the compiler log within a command; a later command must observe the current source.
 function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    const { runKey } = input;
-    const scopes = builds.get(runKey) ?? new Map<string, Promise<SwiftBuildOutput>>();
-    builds.set(runKey, scopes);
+    const { observations } = input;
+    const scopes = builds.get(observations) ?? new Map<string, Promise<SwiftBuildOutput>>();
+    builds.set(observations, scopes);
     const running = scopes.get(plan.folder) ?? ranBuild(input, plan);
     scopes.set(plan.folder, running);
     return running;
@@ -121,9 +120,10 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
     const originalPaths = output.replaceAll(join(plan.folder, 'source'), input.root);
     const found = diagnostics(input, originalPaths, new Set(['error']), 'compiler');
     if (code === 0 || found.length > 0) return found;
-    const detail = output.trim().split('\n').at(-1) ?? '';
-    const text = detail === '' ? `The Swift build exited ${String(code)} without diagnostics.` : detail;
-    return [{ check: input.spec.name, file: '', line: 1, rule: 'build', message: text, fixable: false }];
+    const detail = output.trim();
+    throw new Error(
+        `The Swift build exited ${String(code)} without source diagnostics.${detail === '' ? '' : `\n${detail}`}`,
+    );
 }
 
 /**

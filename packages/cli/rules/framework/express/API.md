@@ -7,7 +7,7 @@ title: Express API
 # Express API
 
 Code fragments assume application-owned contracts, response helpers, and domain operations.
-Express and gspot do not provide helpers such as `validateRequest` or `sendOk`.
+Express does not provide helpers such as `validateRequest` or `sendOk`.
 Use the application's existing owners for those responsibilities.
 
 ## Core API philosophy

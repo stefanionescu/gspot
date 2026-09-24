@@ -1,13 +1,15 @@
+import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { readSource } from '#cli/repository/tracked.ts';
-import { mkdirSync, readdirSync, statSync, lstatSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import { cacheHome } from '#cli/platform/environment.ts';
 import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { mkdirSync, readdirSync, statSync, lstatSync } from 'node:fs';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
 
-
-/** Prepare and lock one compiler directory without following existing output links. */
+/**
+ * Prepare and lock one compiler directory without following existing output links.
+ * @param folder
+ */
 export function openBuildCache(folder: string): ConfinedRoot {
     const home = cacheHome();
     mkdirSync(home, { recursive: true });
@@ -36,7 +38,13 @@ export function openBuildCache(folder: string): ConfinedRoot {
     }
 }
 
-/** Restore selected sources in a stable compiler directory while retaining unchanged timestamps. */
+/**
+ * Restore selected sources in a stable compiler directory while retaining unchanged timestamps.
+ * @param root
+ * @param paths
+ * @param folder
+ * @param files
+ */
 export function prepareBuildSources(root: string, paths: string[], folder: string, files: ConfinedRoot): string {
     const source = openConfinedRoot(root, 'native');
     const desired = new Map<string, FileSnapshot>();

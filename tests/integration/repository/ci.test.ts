@@ -1,13 +1,13 @@
-import { run } from '#cli/platform/spawn.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { parse, stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { delimiter, join } from 'node:path';
+import { parse, stringify } from 'smol-toml';
+import { run } from '#cli/platform/spawn.ts';
+import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const workflow = Bun.YAML.parse(readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8')) as {
@@ -73,7 +73,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     for (const invalid of ['$(touch injected)', 'f'.repeat(40)]) {
         const refused = await execute(invalid);
         expect(refused.code).toBe(2);
-        expect(readFileSync(report)).toEqual(held);
+        expect(readFileSync(report)).toStrictEqual(held);
     }
     commit();
     const corrected = await execute(base);

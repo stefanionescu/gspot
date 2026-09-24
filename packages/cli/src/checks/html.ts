@@ -1,9 +1,9 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // HTML files read through the embedded grammar: no inline script or handler, and templates that hold placeholders in place of copy.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 
 type MarkupProblem = { node: Node; rule: string; text: string };
@@ -117,10 +117,9 @@ async function findings(
     paths: string[],
     read: (root: Node) => MarkupProblem[],
 ): Promise<Finding[]> {
-    const parser = await parserFor('html');
     const found: Finding[] = [];
     for (const path of paths) {
-        const tree = parser.parse(readSource(input.root, path).toString('utf8'));
+        const tree = await parseSource('html', readSource(input.root, path, input.observations).toString('utf8'), input);
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const problem of read(tree.rootNode))
@@ -159,7 +158,7 @@ export function htmlCopy(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['template_files'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
-    const excluded = ((tool['copy_excluded'] as { paths: string[] }[] | undefined) ?? []).flatMap(
+    const excluded = ((tool['copy_allowed'] as { paths: string[] }[] | undefined) ?? []).flatMap(
         (entry) => entry.paths,
     );
     const isTemplate = pathMatcher(templates);

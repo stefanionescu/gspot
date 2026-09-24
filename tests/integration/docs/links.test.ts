@@ -1,8 +1,8 @@
 import { test } from 'bun:test';
-import { rejects } from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
 import { validateSiteLinks } from '../../../docs/scripts/links';
 

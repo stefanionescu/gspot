@@ -1,9 +1,9 @@
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 // Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/types/execution.ts';
+import { statSync } from 'node:fs';
 import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 type BaselineReason = { fingerprint: string; reason: string };
 
@@ -32,12 +32,12 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
     const entries = JSON.parse(bytes.toString('utf8')) as GitleaksFinding[];
     const reasons = (input.view.tool('gitleaks')['baseline_reasons'] as BaselineReason[] | undefined) ?? [];
     const explained = new Set(reasons.map((entry) => entry.fingerprint));
-    const findings = entries.flatMap((entry) => [
+    return entries.flatMap((entry) => [
         ...(explained.has(entry.Fingerprint)
             ? []
             : [finding(input, 'no-reason', `The baseline entry ${entry.Fingerprint} has no reason.`)]),
         // An entry with a commit is a finding in history: the file may be gone, and the commit still holds the value.
-        ...((entry.Commit ?? '') !== '' || existsSync(join(input.root, entry.File))
+        ...((entry.Commit ?? '') !== '' || (statSync(join(input.root, entry.File), { throwIfNoEntry: false }) !== undefined)
             ? []
             : [
                   finding(
@@ -47,5 +47,4 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
                   ),
               ]),
     ]);
-    return findings;
 }

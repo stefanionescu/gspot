@@ -1,12 +1,12 @@
-// Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
-import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+// Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
+import type { RunReport } from '#cli/types/reports.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = [
     'init',
@@ -147,7 +147,7 @@ describe('the python configuration', () => {
             const refused = await run(sandbox.path, command, environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
             const report = JSON.parse(refused.stdout) as RunReport;
-            expect(report.checks.map((check) => [check.check, check.status])).toEqual([
+            expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
                 ['python/basedpyright', 'fail'],
             ]);
             expect(report.checks[0]?.findings).toContainEqual(
@@ -160,7 +160,7 @@ describe('the python configuration', () => {
             const corrected = await run(sandbox.path, command, environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const accepted = JSON.parse(corrected.stdout) as RunReport;
-            expect(accepted.checks.map((check) => [check.check, check.status])).toEqual([
+            expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
                 ['python/basedpyright', 'ok'],
             ]);
         },

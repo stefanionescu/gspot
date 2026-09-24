@@ -1,13 +1,13 @@
-import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
+import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
+import { expect, spyOn, test } from 'bun:test';
 import * as tools from '#cli/tools/tool-probe.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { rejects } from 'node:assert/strict';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
 const content = readFileSync('bindings.txt', 'utf8');
@@ -51,7 +51,7 @@ for (const scope of ['', 'workers/api']) {
             try {
                 if (isFailure) await rejects(envTypesFresh(input), { message: /Types generation failed/u });
                 else {
-                    expect(await envTypesFresh(input)).toEqual([
+                    expect(await envTypesFresh(input)).toStrictEqual([
                         {
                             check: spec.name,
                             file: path('cloudflare-env.d.ts').replaceAll('\\', '/'),
@@ -62,7 +62,7 @@ for (const scope of ['', 'workers/api']) {
                         },
                     ]);
                     writeFileSync(join(directory.path, path('bindings.txt')), edited);
-                    expect(await envTypesFresh(input)).toEqual([]);
+                    expect(await envTypesFresh(input)).toStrictEqual([]);
                 }
                 expect(readFileSync(target, 'utf8')).toBe(edited);
                 expect(statSync(target).mode).toBe(mode);
@@ -90,7 +90,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
         files: session.repository.files,
     });
     const found = await headersSyntax(input);
-    expect(found).toEqual([
+    expect(found).toStrictEqual([
         {
             check: spec.name,
             file: '_headers',
@@ -100,7 +100,16 @@ test('Cloudflare header checks report only files in their owning scope', async (
             fixable: false,
         },
     ]);
-    expect(await headersSyntax({ ...input, scope: 'workers/api' })).toEqual([]);
+    expect(await headersSyntax({ ...input, scope: 'workers/api' })).toStrictEqual([]);
     writeFileSync(join(directory.path, '_headers'), '/*\n  X-Frame-Options: DENY\n');
-    expect(await headersSyntax(input)).toEqual([]);
+    const corrected = await openSession(directory.path);
+    expect(
+        await headersSyntax(
+            engineInput(corrected, {
+                scope: corrected.scopes.find((entry) => entry.scope.path === '')!,
+                spec,
+                files: corrected.repository.files,
+            }),
+        ),
+    ).toStrictEqual([]);
 });

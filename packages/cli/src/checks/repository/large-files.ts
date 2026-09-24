@@ -1,9 +1,8 @@
+import type { Finding } from '#cli/types/reports.ts';
 // A tracked file above the size limit is under LFS or declared, or it is a finding.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { isUnderLfs } from '#cli/repository/file-classification.ts';
-
 
 const KILOBYTE = 1024;
 
@@ -16,7 +15,7 @@ export function largeFiles(input: EngineInput): Finding[] {
     const limitKb = input.view.limit('file_size_kb') ?? FILE_SIZE_KB_DEFAULT;
     const isDeclared = pathMatcher(input.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
     if (input.repositoryFiles === undefined) throw new Error('Large-file validation requires once-only execution.');
-    const findings = input.repositoryFiles
+    return input.repositoryFiles
         .filter(
             (file) =>
                 file.size > limitKb * KILOBYTE && !isDeclared(file.path) && !isUnderLfs(input.attributes, file.path),
@@ -29,7 +28,6 @@ export function largeFiles(input: EngineInput): Finding[] {
             message: `${String(Math.round(file.size / KILOBYTE))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
             fixable: false,
         }));
-    return findings;
 }
 
 const FILE_SIZE_KB_DEFAULT = 1024;

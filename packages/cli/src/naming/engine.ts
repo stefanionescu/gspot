@@ -1,15 +1,16 @@
+import { isKnownCase } from '#cli/naming/cases.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { identifiersOf } from '#cli/naming/extract.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { nameProblems } from '#cli/naming/validate-name.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
 import type { Engine, EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { isKnownCase } from '#cli/naming/cases.ts';
-import { identifiersOf } from '#cli/naming/extract.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { languageConfigurations } from '#cli/configurations/select.ts';
-import { nameProblems } from '#cli/naming/validate-name.ts';
-import { isClaimed, pathMatcher } from '#cli/configurations/claims.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
+import { isClaimed, isInScope, pathMatcher } from '#cli/configurations/claims.ts';
+import { languageConfigurations, selectForScope } from '#cli/configurations/select.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/naming/paths.ts';
 import type { EffectivePolicy, Identifier, NamingContext } from '#cli/types/naming.ts';
 
@@ -20,7 +21,10 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
     const languages = languageConfigurations(input.selection.selected);
     return input.files
         .filter((file) => file.nature === 'source')
-        .map((file) => ({ file, language: languages.find((manifest) => isClaimed(manifest.claims, file))?.configuration.name }))
+        .map((file) => ({
+            file,
+            language: languages.find((manifest) => isClaimed(manifest.claims, file))?.configuration.name,
+        }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
 
@@ -42,8 +46,8 @@ function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: I
 async function identifierFindings(input: EngineInput, policy: EffectivePolicy): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
-        const text = readSource(input.root, file.path).toString('utf8');
-        const identifiers = await identifiersOf(file.path, text, language);
+        const text = readSource(input.root, file.path, input.observations).toString('utf8');
+        const identifiers = await identifiersOf(file.path, text, language, input);
         findings.push(...findingsFor(input, policy, identifiers, file.path));
     }
     return findings;
@@ -62,45 +66,73 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     });
 }
 
+// A declaration applies throughout its subtree, including children with another selected language.
+// Validate each authored layer once against the complete snapshot, not the changed-file partition.
 async function schemaFindings(input: EngineInput): Promise<Finding[]> {
-    const names = new Set(pathIdentifiers(input).map((identifier) => identifier.name));
-    for (const { file, language } of sourceFiles(input)) {
+    const policy = input.policyFiles.policy;
+    const selections = new Map(
+        input.scopeEntries.map((scope) => [
+            scope.path,
+            languageConfigurations(selectForScope(policy, scope.path, input.manifests)),
+        ]),
+    );
+    const observed: { path: string; names: string[] }[] = [];
+    for (const file of input.files) {
+        if (file.nature !== 'source') continue;
+        const scope = scopeOf(file.path, input.scopeEntries);
+        const language = selections.get(scope.path)?.find((manifest) => isClaimed(manifest.claims, file));
+        if (language === undefined) continue;
+        const name = language.configuration.name;
         const identifiers = await identifiersOf(
             file.path,
-            readSource(input.root, file.path).toString('utf8'),
-            language,
+            readSource(input.root, file.path, input.observations).toString('utf8'),
+            name,
+            input,
         );
-        for (const identifier of identifiers) names.add(identifier.name);
+        observed.push({
+            path: file.path,
+            names: [fileIdentifier(file.path, name), ...directoryIdentifiers(file.path, name), ...identifiers].map(
+                (identifier) => identifier.name,
+            ),
+        });
     }
-    const naming = input.policyFiles.policy.naming;
-    const paths = input.files.map((file) => file.path);
-    const unused = naming.allowed
-        .filter((entry) => !names.has(entry.name))
-        .map((entry) => `naming.allowed names "${entry.name}", which no identifier in this scope carries.`);
-    const dead = naming.rules
-        .filter((rule) => paths.every((path) => !pathMatcher(rule.paths)(path)))
-        .map((rule) => `A [[naming.rules]] entry matches no file: ${rule.paths.join(', ')}.`);
-    const caseNames = naming.rules
-        .flatMap((rule) => rule.case ?? [])
-        .filter((name) => !isKnownCase(name))
-        .map(
-            (name) =>
-                `A [[naming.rules]] entry names the case "${name}", which is not one of camel, pascal, pascal-plus, kebab, snake, upper-snake or snake-migration.`,
-        );
     const removable = new Set(
         Object.entries(shippedPolicy().groups)
             .filter(([, group]) => group.removable)
             .map(([name]) => name),
     );
-    const groups = naming.remove_groups
-        .filter((entry) => !removable.has(entry.group))
-        .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
-    return [...unused, ...dead, ...groups, ...caseNames].map((text) => ({
-        check: input.spec.name,
-        file: 'gspot.toml',
-        message: text,
-        fixable: false,
-    }));
+    const layers = [
+        { scope: '', naming: policy.naming },
+        ...Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
+            table.naming === undefined ? [] : [{ scope, naming: table.naming }],
+        ),
+    ];
+    return layers.flatMap(({ scope, naming }) => {
+        const files = observed.filter((file) => isInScope(file.path, scope));
+        const names = new Set(files.flatMap((file) => file.names));
+        const unused = naming.allowed
+            .filter((entry) => !names.has(entry.name))
+            .map((entry) => `naming.allowed names "${entry.name}", which no identifier in this scope carries.`);
+        const dead = naming.rules
+            .filter((rule) => files.every((file) => !pathMatcher(rule.paths)(file.path)))
+            .map((rule) => `A [[naming.rules]] entry matches no file: ${rule.paths.join(', ')}.`);
+        const cases = naming.rules
+            .flatMap((rule) => rule.case ?? [])
+            .filter((name) => !isKnownCase(name))
+            .map(
+                (name) =>
+                    `A [[naming.rules]] entry names the case "${name}", which is not one of camel, pascal, pascal-plus, kebab, snake, upper-snake or snake-migration.`,
+            );
+        const groups = naming.remove_groups
+            .filter((entry) => !removable.has(entry.group))
+            .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
+        return [...unused, ...dead, ...groups, ...cases].map((message) => ({
+            check: input.spec.name,
+            file: 'gspot.toml',
+            message: scope === '' ? message : `${message} (scope ${scope})`,
+            fixable: false,
+        }));
+    });
 }
 
 const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => Finding[] | Promise<Finding[]>> = {
@@ -110,7 +142,10 @@ const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => 
     'policy-schema': schemaFindings,
 };
 
-/** Resolve the naming analysis while retaining policy preparation at execution time. */
+/**
+ * Resolve the naming analysis while retaining policy preparation at execution time.
+ * @param spec
+ */
 export function resolveNaming(spec: CheckSpec): Engine {
     const analysis = ANALYSES[spec.analysis ?? ''];
     if (analysis === undefined) throw new Error(`No naming analysis is called ${spec.analysis ?? ''}.`);

@@ -1,17 +1,18 @@
-import { engineInput } from '#cli/run/engines.ts';
+import * as promises from 'node:fs/promises';
+import { expect, spyOn, test } from 'bun:test';
+import { dirname, join, relative } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { join, relative } from 'node:path';
-import { mkdirSync, readdirSync, symlinkSync, unlinkSync, writeFileSync, readFileSync, readlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking, run } from '#cli/platform/spawn.ts';
-import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import { openSession } from '#cli/run/session.ts';
-import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { pushedRevisions } from '#cli/repository/staged.ts';
-import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
+import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
+import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/snapshot.ts';
+import { existsSync, mkdirSync, readdirSync, symlinkSync, unlinkSync, writeFileSync, readFileSync, readlinkSync } from 'node:fs';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
@@ -54,20 +55,20 @@ test.each(['index', 'commit'] as const)(
         ]);
         mkdirSync(join(sandbox.path, 'vendor'));
         symlinkSync(outside.path, join(sandbox.path, path), 'dir');
-        expect(submodulePaths(sandbox.path)).toEqual([path]);
+        expect(submodulePaths(sandbox.path)).toStrictEqual([path]);
         const session = await openSession(sandbox.path);
-        expect(session.repository.files.map((file) => file.path)).toEqual(['gspot.toml', 'source.txt']);
+        expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
         const report = doctorReport(session, undefined);
-        expect(report.submodules).toEqual([path]);
+        expect(report.submodules).toStrictEqual([path]);
         expect(doctorText(report).split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = git(sandbox.path, ['write-tree']);
         const source = kind === 'index' ? { kind } : { kind, object: git(sandbox.path, ['rev-parse', 'HEAD']) };
         await withRevisionSnapshot(sandbox.path, source, async (snapshot, tree) => {
             expect(tree).toBe(expected);
             expect(git(snapshot, ['write-tree'])).toBe(expected);
-            expect(readdirSync(join(snapshot, path))).toEqual([]);
+            expect(readdirSync(join(snapshot, path))).toStrictEqual([]);
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe('selected source');
-            expect(submodulePaths(snapshot)).toEqual([path]);
+            expect(submodulePaths(snapshot)).toStrictEqual([path]);
         });
         expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{');
         expect(await Bun.file(join(outside.path, 'source.txt')).text()).toBe('outside source');
@@ -93,8 +94,8 @@ test('nested policies retain repository context with policy-relative index and c
     await Bun.write(join(project, 'source.txt'), 'indexed');
     git(sandbox.path, ['add', '.']);
     await Bun.write(join(project, 'source.txt'), 'working');
-    expect((await committedEntries(project)).map((entry) => entry.path)).toEqual(['source.txt']);
-    expect((await gitEntries(project, { kind: 'index' })).map((entry) => entry.path)).toEqual(['source.txt']);
+    expect((await committedEntries(project)).map((entry) => entry.path)).toStrictEqual(['source.txt']);
+    expect((await gitEntries(project, { kind: 'index' })).map((entry) => entry.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', object } as const]) {
         await withRevisionSnapshot(project, source, async (snapshot, tree) => {
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe(
@@ -105,24 +106,24 @@ test('nested policies retain repository context with policy-relative index and c
         });
     }
     const protocol = `refs/heads/main ${object} refs/heads/main ${base}\n`;
-    expect((await pushedRevisions(project, protocol)).revisions[0]?.paths).toEqual(['source.txt']);
+    expect((await pushedRevisions(project, protocol)).revisions[0]?.paths).toStrictEqual(['source.txt']);
     git(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
     git(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
     const newRef = `refs/heads/new ${object} refs/heads/new ${'0'.repeat(object.length)}\n`;
-    expect((await pushedRevisions(project, newRef, 'example')).revisions[0]?.paths).toEqual(['source.txt']);
+    expect((await pushedRevisions(project, newRef, 'example')).revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
 
 test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
     await using sandbox = await testdir();
     git(sandbox.path, ['init']);
-    expect(await committedEntries(sandbox.path)).toEqual([]);
+    expect(await committedEntries(sandbox.path)).toStrictEqual([]);
     const path = 'a\n"é.sql';
     await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
     git(sandbox.path, ['add', '.']);
     git(sandbox.path, ['-c', 'user.name=Example', '-c', 'user.email=example@example.com', 'commit', '-m', 'Fixture']);
     const entries = await committedEntries(sandbox.path);
-    expect(entries.map((entry) => entry.path)).toEqual([path]);
+    expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
     const blobs = await gitBlobs(
         sandbox.path,
         entries.map((entry) => entry.object),
@@ -160,7 +161,7 @@ test('Xcode reports exact staged symlink targets before the first commit and cle
         spec: spec,
         files: session.repository.files,
     });
-    expect(await projectSymlinks(input)).toEqual([
+    expect(await projectSymlinks(input)).toStrictEqual([
         {
             check: 'xcode/symlinks',
             file: path,
@@ -173,9 +174,19 @@ test('Xcode reports exact staged symlink targets before the first commit and cle
     unlinkSync(join(sandbox.path, path));
     writeFileSync(join(sandbox.path, path), 'let value = 1\n');
     git(sandbox.path, ['add', '.']);
-    expect(await projectSymlinks(input)).toEqual([]);
+    expect(await projectSymlinks(input)).toStrictEqual([
+        expect.objectContaining({ file: path, message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.' }),
+    ]);
+    input.observations = { root: sandbox.path, sources: new Map() };
+    expect(await projectSymlinks(input)).toStrictEqual([]);
+    const index = readFileSync(join(sandbox.path, '.git', 'index'));
     writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
+    input.observations = { root: sandbox.path, sources: new Map() };
     await rejects(projectSymlinks(input), { message: /Cannot read the Git index/u });
+    writeFileSync(join(sandbox.path, '.git', 'index'), index);
+    input.observations = { root: sandbox.path, sources: new Map() };
+    expect(await projectSymlinks(input)).toStrictEqual([]);
+    expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
 });
 
 const sourceProject = (path: string): string => `{
@@ -193,7 +204,8 @@ const sourceProject = (path: string): string => `{
 test('Xcode source membership does not mix independent nested projects', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\nconfigurations = ["xcode"]\n',
+        'gspot.toml':
+            'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\nconfigurations = ["xcode"]\n',
         'Root.xcodeproj/project.pbxproj': sourceProject('Root.swift'),
         'Root.swift': 'let root = 1\n',
         'nested/Nested.xcodeproj/project.pbxproj': sourceProject('Nested.swift'),
@@ -212,7 +224,7 @@ test('Xcode source membership does not mix independent nested projects', async (
                 files: session.repository.files,
             }),
         );
-        expect(findings).toEqual(
+        expect(findings).toStrictEqual(
             selected.scope.path === ''
                 ? []
                 : [
@@ -298,11 +310,15 @@ test('a nested revision refuses its incomplete managed dependency installation',
     git(sandbox.path, ['init']);
     git(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, 'project');
-    withLifecycleOwner(project, (owner) => owner.beginInstallation('npm'));
+    withLifecycleOwner(project, (owner) => {
+        owner.beginInstallation('npm');
+    });
     await expect(withRevisionSnapshot(project, { kind: 'index' }, async () => undefined)).rejects.toThrow(
         'Tool installation is incomplete',
     );
-    withLifecycleOwner(project, (owner) => owner.finishInstallation('npm'));
+    withLifecycleOwner(project, (owner) => {
+        owner.finishInstallation('npm');
+    });
     await withRevisionSnapshot(project, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, '.gspot/node_modules/example/index.js')).text()).toContain('value = 1');
     });
@@ -391,8 +407,8 @@ test.each([
                 expect(result.stdout.trim()).toBe('snapshot dependency');
             }
         });
-        expect(readFileSync(join(root, modulePath))).toEqual(original);
-        expect(readFileSync(join(root, '.venv/bin/pre-commit'))).toEqual(launcher);
+        expect(readFileSync(join(root, modulePath))).toStrictEqual(original);
+        expect(readFileSync(join(root, '.venv/bin/pre-commit'))).toStrictEqual(launcher);
         await createFileTree(outside.path, { 'private.txt': 'outside bytes' });
         const external = join(outside.path, 'private.txt');
         const link = join(root, '.venv/lib/escaped');
@@ -450,12 +466,12 @@ test.each([
     async (kind, backend) => {
         await using repository = await testdir();
         const root = join(repository.path, "editable's project");
-        const packageDirectory = backend !== 'setuptools' ? 'src/editable_fixture' : 'libsrc/differently_named';
+        const packageDirectory = backend === 'setuptools' ? 'libsrc/differently_named' : 'src/editable_fixture';
         const build =
-            backend !== 'setuptools'
-                ? '[build-system]\nrequires = ["hatchling==1.27.0"]\nbuild-backend = "hatchling.build"\n[tool.hatch.build.targets.wheel]\npackages = ["src/editable_fixture"]\n' +
-                  (backend === 'hatchling-exact' ? 'dev-mode-exact = true\n' : '')
-                : '[build-system]\nrequires = ["setuptools==80.9.0"]\nbuild-backend = "setuptools.build_meta"\n[tool.setuptools]\npackages = ["editable_fixture", "namespace_fixture.child"]\n[tool.setuptools.package-dir]\neditable_fixture = "libsrc/differently_named"\n"namespace_fixture.child" = "libsrc/namespace_child"\n';
+            backend === 'setuptools'
+                ? '[build-system]\nrequires = ["setuptools==80.9.0"]\nbuild-backend = "setuptools.build_meta"\n[tool.setuptools]\npackages = ["editable_fixture", "namespace_fixture.child"]\n[tool.setuptools.package-dir]\neditable_fixture = "libsrc/differently_named"\n"namespace_fixture.child" = "libsrc/namespace_child"\n'
+                : '[build-system]\nrequires = ["hatchling==1.27.0"]\nbuild-backend = "hatchling.build"\n[tool.hatch.build.targets.wheel]\npackages = ["src/editable_fixture"]\n' +
+                  (backend === 'hatchling-exact' ? 'dev-mode-exact = true\n' : '');
         await createFileTree(root, {
             '.gitignore': '.venv/\n',
             'pyproject.toml':
@@ -571,8 +587,8 @@ test.each([false, true])(
     async (quoted) => {
         await using repository = await testdir();
         const root = join(repository.path, "Windows author's project");
-        const prefix = Buffer.from('MZ\x00native executable bytes\x00');
-        const payload = Buffer.from('PK\x03\x04binary script payload\x00\xff', 'latin1');
+        const prefix = Buffer.from('MZ\u0000native executable bytes\u0000');
+        const payload = Buffer.from('PK\u0003\u0004binary script payload\u0000\u00FF', 'latin1');
         const interpreter = join(root, '.venv/Scripts/python.exe');
         const header = `#!${quoted ? `"${interpreter}"` : interpreter}\n`;
         const launcher = Buffer.concat([prefix, Buffer.from(header), payload]);
@@ -590,13 +606,53 @@ test.each([false, true])(
         git(root, ['add', '.']);
         await withRevisionSnapshot(root, { kind: 'index' }, async (snapshot) => {
             const relocated = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
-            expect(relocated).toEqual(
+            expect(relocated).toStrictEqual(
                 Buffer.concat([prefix, Buffer.from(`#!"${join(snapshot, '.venv/Scripts/python.exe')}"\n`), payload]),
             );
             expect(readFileSync(join(snapshot, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${snapshot}\n`);
             expect(readFileSync(join(snapshot, '.venv/Scripts/python.exe'), 'utf8')).toBe('MZinterpreter');
         });
-        expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toEqual(launcher);
+        expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toStrictEqual(launcher);
         expect(readFileSync(join(root, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${root}\n`);
     },
 );
+
+test('cancellation drains dependency copies before removing the snapshot and preserves installed files', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gitignore': 'node_modules/\n',
+        'package.json': '{"name":"fixture","version":"1.0.0"}\n',
+        'package-lock.json': '{"name":"fixture","lockfileVersion":3,"packages":{}}\n',
+        'source.js': 'export const value = 1;\n',
+        ...Object.fromEntries(Array.from({ length: 24 }, (_, index) => [`node_modules/item-${index}/value.js`, 'export const value = 2;\n'])),
+    });
+    git(sandbox.path, ['init', '-q']);
+    git(sandbox.path, ['add', '-A']);
+    const controller = new AbortController();
+    const original = promises.cp;
+    let pending = 0;
+    let destination: string | undefined;
+    let entered = false;
+    const copy = spyOn(promises, 'cp').mockImplementation(async (...args) => {
+        pending += 1;
+        if (typeof args[1] === 'string') destination = dirname(dirname(args[1]));
+        try {
+            await original(...args);
+            controller.abort(new Error('Canceled dependency copy'));
+        } finally {
+            pending -= 1;
+        }
+    });
+    try {
+        await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => {
+            entered = true;
+        }, controller.signal)).rejects.toThrow('Canceled dependency copy');
+        expect(pending).toBe(0);
+        expect(entered).toBe(false);
+        expect(destination).toBeDefined();
+        expect(existsSync(destination!)).toBe(false);
+        expect(readFileSync(join(sandbox.path, 'node_modules/item-0/value.js'), 'utf8')).toBe('export const value = 2;\n');
+    } finally {
+        copy.mockRestore();
+    }
+});

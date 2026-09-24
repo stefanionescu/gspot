@@ -1,8 +1,8 @@
-import { run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 
 const POLICY = `version = 1
 configurations = ["formatting"]
@@ -54,12 +54,12 @@ test('nested scopes inherit parent configurations and settings and check each fi
             checks: { check: string; scope: string; files: number; findings: { file: string }[] }[];
         }
     ).checks;
-    expect(checks.map((check) => ({ check: check.check, scope: check.scope, files: check.files }))).toEqual([
+    expect(checks.map((check) => ({ check: check.check, scope: check.scope, files: check.files }))).toStrictEqual([
         { check: 'bash/syntax', scope: 'api', files: 1 },
         { check: 'bash/syntax', scope: 'api/worker', files: 1 },
     ]);
-    expect(checks[0]?.findings.map((finding) => finding.file)).toEqual(['api/entry.sh', 'api/entry.sh']);
-    expect(checks[1]?.findings.map((finding) => finding.file)).toEqual(['api/worker/entry.sh', 'api/worker/entry.sh']);
+    expect(checks[0]?.findings.map((finding) => finding.file)).toStrictEqual(['api/entry.sh', 'api/entry.sh']);
+    expect(checks[1]?.findings.map((finding) => finding.file)).toStrictEqual(['api/worker/entry.sh', 'api/worker/entry.sh']);
     writeFileSync(join(directory.path, 'api/entry.sh'), 'echo example\n');
     writeFileSync(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
     const corrected = await run(directory.path, [

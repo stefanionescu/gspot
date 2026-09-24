@@ -23,11 +23,11 @@ why = "A value import of the router pulls the server, its secrets, and its datab
 help = "Import the router type with import type, and call the server through the client."
 
 [[settings]]
-name = "tools.trpc.server_paths"
+name = "tools.trpc.server_files"
 kind = "list"
 direction = "neutral"
 default = ["**/server/**"]
-summary = "The paths that hold the routers and everything they import."
+summary = "Server file globs used when architecture.elements has no server element. An explicit server element owns the boundary."
 
 [rule_files]
 library = ["library/trpc/TRPC.md"]

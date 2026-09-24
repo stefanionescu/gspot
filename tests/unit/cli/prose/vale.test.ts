@@ -14,7 +14,7 @@ describe('vale output', () => {
                 ],
             }),
         );
-        expect(alerts).toEqual([
+        expect(alerts).toStrictEqual([
             { file: 'docs/a.md', line: 3, column: 10, check: 'gspot.marketing', message: "Marketing word 'robust'." },
             {
                 file: 'stdin.rb',
@@ -34,7 +34,7 @@ describe('vale output', () => {
                     [path]: [{ Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: 'Marketing word.' }],
                 }) + '\r\n',
             ),
-        ).toEqual([
+        ).toStrictEqual([
             {
                 file: 'docs/café:part\nname.md',
                 line: 3,
@@ -54,6 +54,6 @@ describe('vale output', () => {
         '{"file.md":[{"Line":0,"Span":[1,2],"Check":"Rule","Message":"Finding"}]}',
     ])('malformed output %s cannot become a clean result', (output) => {
         expect(() => parseAlerts(output)).toThrow();
-        expect(parseAlerts('{}')).toEqual([]);
+        expect(parseAlerts('{}')).toStrictEqual([]);
     });
 });

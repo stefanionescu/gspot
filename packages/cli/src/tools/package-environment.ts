@@ -1,8 +1,8 @@
-import { environmentVariables } from '#cli/platform/environment.ts';
 import Config from '@npmcli/config';
-import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
-import { dirname, resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
 
 const CONNECTION_KEYS = new Set([
     'registry',
@@ -17,7 +17,10 @@ const CONNECTION_KEYS = new Set([
     'always-auth',
 ]);
 
-/** Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory. */
+/**
+ * Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory.
+ * @param root
+ */
 export async function packageEnvironment(root: string): Promise<Record<string, string>> {
     const inherited = environmentVariables();
     const npm = Bun.which('npm');

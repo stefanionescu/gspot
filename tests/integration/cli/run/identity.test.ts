@@ -1,12 +1,12 @@
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { sarifText } from '#cli/output/report.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
 import { reportSchema } from '#cli/schemas/reports.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 
 const policy = `version = 1
 configurations = []
@@ -35,9 +35,9 @@ test('serializes check definitions and references without changing external SARI
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
     expect(reportSchema.safeParse(outcome.report).success).toBe(true);
     const saved = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
-    expect(JSON.parse(saved)).toEqual(outcome.report);
+    expect(JSON.parse(saved)).toStrictEqual(outcome.report);
     expect(existsSync(join(sandbox.path, '.gspot/reports/report.sarif'))).toBe(true);
-    expect(outcome.report.coverage).toEqual({ checked: 1, unchecked: 1, findings: [] });
+    expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 1, findings: [] });
     expect(JSON.parse(sarifText(outcome.report))).toHaveProperty('runs.0.results.0.ruleId', 'sandbox/identity');
 });
 

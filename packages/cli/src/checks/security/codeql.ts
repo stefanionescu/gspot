@@ -1,17 +1,17 @@
-import { toolPin } from '#cli/tools/tool-probe.ts';
-import { mutationTarget } from '#cli/filesystem/confined.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-// CodeQL on request: one database and one analysis per language, with the accepted results taken out by rule and path.
-import { isAbsolute, join, relative, sep } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
 import { mkdtempSync, rmSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/fixers.ts';
+import { toolPin } from '#cli/tools/tool-probe.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+// CodeQL on request: one database and one analysis per language, with the accepted results taken out by rule and path.
+import { isAbsolute, join, relative, sep } from 'node:path';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { mutationTarget } from '#cli/filesystem/confined.ts';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };
 
@@ -178,7 +178,13 @@ function placeOf(
     };
 }
 
-/** Validate a CodeQL report and apply accepted results to repository-relative source locations. */
+/**
+ * Validate a CodeQL report and apply accepted results to repository-relative source locations.
+ * @param log
+ * @param check
+ * @param accepted
+ * @param source
+ */
 export function sarifFindings(log: unknown, check: string, accepted: AcceptedResult[], source: string): Finding[] {
     const parsed = sarifLog.parse(log);
     return parsed.runs.flatMap((run) => {

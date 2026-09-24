@@ -1,10 +1,12 @@
 import { z } from 'zod';
-// Readers for the manifests detection and takeover need: package.json, pyproject.toml, Package.swift and the rest.
-import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { parse as parseToml } from 'smol-toml';
+// Readers for the manifests detection and takeover need: package.json, pyproject.toml, Package.swift and the rest.
+import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#cli/types/repository.ts';
 
-const REQUIREMENT_NAME_END = /[\s<>=!~;[]/u;
+const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
+const NAMED_REQUIREMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(?=$|[\s<>=!~;[@])/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
 
 function manifestText(root: string, path: string): string {
@@ -44,8 +46,9 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
 }
 
 function requirementName(spec: string): string {
-    const end = spec.search(REQUIREMENT_NAME_END);
-    return (end === -1 ? spec : spec.slice(0, end)).toLowerCase();
+    const trimmed = spec.trim();
+    const end = trimmed.search(REQUIREMENT_NAME_END);
+    return normalizedPythonPackage(end === -1 ? trimmed : trimmed.slice(0, end));
 }
 
 function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse>): DependencyMap {
@@ -59,7 +62,34 @@ function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse
     ];
     const dependencies: DependencyMap = parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' };
     for (const spec of groups) dependencies[requirementName(spec)] = spec;
+    const poetry = parsed.tool?.poetry;
+    for (const group of [poetry?.dependencies ?? {}, ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {})]) {
+        for (const [name, value] of Object.entries(group)) {
+            if (normalizedPythonPackage(name) === 'python') continue;
+            dependencies[normalizedPythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
+        }
+    }
     return dependencies;
+}
+
+function pipfileFacts(root: string, path: string): ManifestFacts {
+    const parsed = pipfileSchema.parse(parseToml(manifestText(root, path)));
+    const dependencies: DependencyMap = {};
+    for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
+        dependencies[normalizedPythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
+    }
+    return { path, kind: 'Pipfile', dependencies, installed: dependencies, scripts: {}, workspaces: [], engines: {} };
+}
+
+function requirementsFacts(root: string, path: string): ManifestFacts {
+    const text = manifestText(root, path);
+    const dependencies: DependencyMap = {};
+    for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
+        const spec = line.trim().replace(/\s+#.*$/u, '');
+        if (!NAMED_REQUIREMENT.test(spec)) continue;
+        dependencies[requirementName(spec)] = spec;
+    }
+    return { path, kind: 'requirements.txt', dependencies, installed: dependencies, scripts: {}, workspaces: [], engines: {} };
 }
 
 function pyprojectFacts(root: string, path: string): ManifestFacts {
@@ -103,6 +133,7 @@ const READERS: Record<string, (root: string, path: string) => ManifestFacts> = {
     'package.json': packageJsonFacts,
     'pyproject.toml': pyprojectFacts,
     'Package.swift': swiftFacts,
+    Pipfile: pipfileFacts,
 };
 
 const stringList = z.array(z.string());
@@ -118,7 +149,12 @@ const pythonProject = z.object({
 });
 const uvWorkspace = z.object({ members: stringList.optional() });
 const uvTool = z.object({ workspace: uvWorkspace.optional() });
-const pythonTools = z.object({ pytest: z.unknown().optional(), uv: uvTool.optional() });
+const pythonDependencyDetail = z.record(z.string(), z.unknown());
+const pythonDependencyMap = z.record(z.string(), z.union([z.string(), pythonDependencyDetail, z.array(pythonDependencyDetail)]));
+const poetryGroup = z.object({ dependencies: pythonDependencyMap.optional() });
+const poetryTool = z.object({ dependencies: pythonDependencyMap.optional(), group: z.record(z.string(), poetryGroup).optional() });
+const pythonTools = z.object({ pytest: z.unknown().optional(), uv: uvTool.optional(), poetry: poetryTool.optional() });
+const pipfileSchema = z.object({ packages: pythonDependencyMap.optional(), 'dev-packages': pythonDependencyMap.optional() });
 const pythonManifestSchema = z.object({
     project: pythonProject.optional(),
     'dependency-groups': z.record(z.string(), dependencyGroup).optional(),
@@ -171,7 +207,7 @@ export function readManifests(root: string, files: TrackedFile[]): ManifestFacts
         )
         .flatMap((file) => {
             const base = file.path.slice(file.path.lastIndexOf('/') + 1);
-            const reader = READERS[base];
+            const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirementsFacts : READERS[base];
             if (reader === undefined) return [];
             try {
                 return [reader(root, file.path)];

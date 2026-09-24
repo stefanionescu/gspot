@@ -1,10 +1,10 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // The checks that read the source of a static site: assets nobody references, images that still compress, the manifest, and the headers file.
 import { join } from 'node:path';
+import { statSync } from 'node:fs';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import { existsSync } from 'node:fs';
 
 const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
 const ASSET_FOLDER = /(?:^|\/)assets\//u;
@@ -20,7 +20,7 @@ function finding(input: EngineInput, file: string, rule: string, text: string, l
 
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
-    const original = readSource(input.root, path).toString('utf8');
+    const original = readSource(input.root, path, input.observations).toString('utf8');
     const result = await runCheckCommand(input, ['svgo', '--input', '-', '--output', '-'], {
         cwd: input.root,
         stdin: original,
@@ -41,15 +41,14 @@ export function deadAssets(input: EngineInput): Finding[] {
     const files = input.files;
     const texts = files
         .filter((file) => TEXT_SUFFIX.test(file.path))
-        .map((file) => readSource(input.root, file.path).toString('utf8'));
-    const found = files
+        .map((file) => readSource(input.root, file.path, input.observations).toString('utf8'));
+    return files
         .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIX.test(file.path))
         .filter((file) => {
             const name = file.path.slice(file.path.lastIndexOf('/') + 1);
             return texts.every((text) => !text.includes(name));
         })
         .map((file) => finding(input, file.path, 'dead-asset', 'No page, stylesheet or script names this file.'));
-    return found;
 }
 
 /**
@@ -75,8 +74,8 @@ export function webManifest(input: EngineInput): Finding[] {
     const manifests = input.files.filter(
         (file) => file.path.endsWith('.webmanifest') || file.path.endsWith('/manifest.json'),
     );
-    const found = manifests.flatMap((file): Finding[] => {
-        const text = readSource(input.root, file.path).toString('utf8');
+    return manifests.flatMap((file): Finding[] => {
+        const text = readSource(input.root, file.path, input.observations).toString('utf8');
         let parsed: { name?: unknown; icons?: { src?: string }[] };
         try {
             parsed = JSON.parse(text) as typeof parsed;
@@ -97,11 +96,10 @@ export function webManifest(input: EngineInput): Finding[] {
                 : [finding(input, file.path, 'name', 'The manifest has no name.')];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
-            .filter((src) => !src.startsWith('http') && !existsSync(join(input.root, folder, src.replace(/^\//u, ''))))
+            .filter((src) => !src.startsWith('http') && !(statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) !== undefined))
             .map((src) => finding(input, file.path, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];
     });
-    return found;
 }
 
 /**
@@ -129,8 +127,8 @@ export function siteWideHeaders(text: string): Map<string, string> {
  */
 export function securityHeaders(input: EngineInput): Finding[] {
     const files = input.files.filter((file) => file.path === '_headers' || file.path.endsWith('/_headers'));
-    const found = files.flatMap((file) => {
-        const held = siteWideHeaders(readSource(input.root, file.path).toString('utf8'));
+    return files.flatMap((file) => {
+        const held = siteWideHeaders(readSource(input.root, file.path, input.observations).toString('utf8'));
         const hasFrameRule = /frame-ancestors/iu.test(held.get('content-security-policy') ?? '');
         return Object.entries(REQUIRED_HEADERS)
             .filter(
@@ -141,5 +139,4 @@ export function securityHeaders(input: EngineInput): Finding[] {
                 finding(input, file.path, 'missing-header', `The block for /* sets no valid ${name} header.`),
             );
     });
-    return found;
 }

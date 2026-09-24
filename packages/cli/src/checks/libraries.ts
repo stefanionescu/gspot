@@ -1,16 +1,16 @@
-import { readSource } from '#cli/repository/tracked.ts';
+import { scopeImports } from '#cli/structure/imports.ts';
+import type { ArchitectureElement } from '#cli/types/policy.ts';
+import { rmSync } from 'node:fs';
+import { globbySync } from 'globby';
+import { scratchCopy } from '#cli/run/fixers.ts';
 // Checks of two libraries that read files: what client code imports from the server, and Drizzle tables with their relations and migrations.
 import { basename, dirname, join } from 'node:path';
-import { globbySync } from 'globby';
-import { rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 
-// The source of an import statement that is no type import, read from a line that starts with import and holds its from.
-const IMPORT_SOURCE = /from ['"](?<source>[^'"]+)['"]/u;
 const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
@@ -20,20 +20,10 @@ function finding(input: EngineInput, file: string, line: number, rule: string, t
 function sources(input: EngineInput): { path: string; text: string }[] {
     return input.files
         .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
-        .map((file) => ({ path: file.path, text: readSource(input.root, file.path).toString('utf8') }));
-}
-
-function valueImports(text: string): { source: string; line: number }[] {
-    return text.split('\n').flatMap((line, index) => {
-        const isValue = line.startsWith('import ') && !line.startsWith('import type ');
-        const source = isValue ? IMPORT_SOURCE.exec(line)?.groups?.['source'] : undefined;
-        return source === undefined ? [] : [{ source, line: index + 1 }];
-    });
-}
-
-function isServerSource(source: string, isServer: (path: string) => boolean): boolean {
-    const bare = source.replace(/^[@~./]+/u, '');
-    return isServer(`x/${bare}/x`) || source.split('/').includes('server');
+        .map((file) => ({
+            path: file.path,
+            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+        }));
 }
 
 function generatedContents(cwd: string): Map<string, Buffer> {
@@ -56,24 +46,24 @@ function hasDrizzleFile(input: EngineInput): boolean {
  * @param input the engine input
  * @returns the findings
  */
-export function trpcBoundaries(input: EngineInput): Finding[] {
-    const isServer = pathMatcher((input.view.tool('trpc')['server_paths'] as string[] | undefined) ?? ['**/server/**']);
-    const found = sources(input)
-        .filter((file) => !isServer(file.path))
-        .flatMap((file) =>
-            valueImports(file.text)
-                .filter((entry) => isServerSource(entry.source, isServer))
-                .map((entry) =>
-                    finding(
-                        input,
-                        file.path,
-                        entry.line,
-                        'server-import',
-                        `${entry.source} is server code. Import its types with import type.`,
-                    ),
-                ),
-        );
-    return found;
+export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
+    const elements = (input.view.settings['architecture.elements'] ?? []) as ArchitectureElement[];
+    const server = elements.find((element) => element.name === 'server');
+    const isServer = pathMatcher(server?.paths ?? (input.view.tool('trpc')['server_files'] as string[]));
+    const local = (path: string): string => (input.scope === '' ? path : path.slice(input.scope.length + 1));
+    const index = await scopeImports(input);
+    return index.edges
+        .filter((edge) => !isServer(local(edge.from)) && isServer(local(edge.to)))
+        .map((edge) => ({
+            ...finding(
+                input,
+                edge.from,
+                edge.line,
+                'server-import',
+                `${edge.source} is server code. Import its types with import type.`,
+            ),
+            column: edge.column,
+        }));
 }
 
 /**
@@ -84,7 +74,7 @@ export function trpcBoundaries(input: EngineInput): Finding[] {
 export function drizzleRelations(input: EngineInput): Finding[] {
     const files = sources(input);
     const everything = files.map((file) => file.text).join('\n');
-    const found = files.flatMap((file) =>
+    return files.flatMap((file) =>
         file.text
             .matchAll(TABLE)
             .filter((match) => {
@@ -107,7 +97,6 @@ export function drizzleRelations(input: EngineInput): Finding[] {
             )
             .toArray(),
     );
-    return found;
 }
 
 /**

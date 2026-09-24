@@ -18,7 +18,7 @@ capitalisation = "capitalisation"
 speling = "speling"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/config/vale/", ".gspot/reports/report.json", ".gspot/reports/report.sarif", ".gspot/baselines/", "packages/cli/configurations/policy/prose/styles/gspot/us-english.yml", "packages/cli/schemas/gspot.schema.json", "packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/scripts/notices.json" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/config/vale/", ".gspot/reports/report.json", ".gspot/reports/report.sarif", ".gspot/baselines/", "packages/cli/configurations/policy/prose/styles/gspot/us-english.yml", "tests/acceptance/cli/spelling.test.ts", "tests/integration/cli/lifecycle/init.test.ts", "tests/native/emit/selection.test.ts", "tests/native/policy/takeover.test.ts", "tests/native/profile.test.ts", "tests/native/run/fixers.test.ts", "tests/native/run/parse-output.test.ts", "tests/unit/cli/sql/parser.test.ts", "packages/cli/configurations/policy/spelling/manifest.toml", "packages/cli/schemas/gspot.schema.json", "packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/scripts/notices.json" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]

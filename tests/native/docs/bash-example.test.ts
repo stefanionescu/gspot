@@ -1,11 +1,11 @@
-import { run as runCommand } from '#cli/platform/spawn.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '../../../docs/src/components/home/bash-syntax.json';
 
 test('the published syntax example produces the captured finding and accepts its correction', async () => {
@@ -31,7 +31,10 @@ test('the published syntax example produces the captured finding and accepts its
 });
 
 test('the Bash retry example preserves the final failure status', async () => {
-    const source = readFileSync(new URL('../../../packages/cli/rules/language/bash/OPERATIONS.md', import.meta.url), 'utf8');
+    const source = readFileSync(
+        new URL('../../../packages/cli/rules/language/bash/OPERATIONS.md', import.meta.url),
+        'utf8',
+    );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
         .map((match) => match[1]!)
         .find((block) => block.includes('retry_retryable()'));
@@ -46,7 +49,10 @@ test('the Bash retry example preserves the final failure status', async () => {
 });
 
 test('the Bash sentinel example preserves trailing newlines and rejects producer failure', async () => {
-    const source = readFileSync(new URL('../../../packages/cli/rules/language/bash/LANGUAGE.md', import.meta.url), 'utf8');
+    const source = readFileSync(
+        new URL('../../../packages/cli/rules/language/bash/LANGUAGE.md', import.meta.url),
+        'utf8',
+    );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
         .map((match) => match[1]!)
         .find((block) => block.includes('content_with_sentinel='));

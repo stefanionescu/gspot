@@ -1,6 +1,6 @@
-import { mutationPath, mutationTarget } from '#cli/filesystem/confined.ts';
-import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
+import { isDeepStrictEqual } from 'node:util';
+import { mutationPath, mutationTarget } from '#cli/filesystem/confined.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(0o7777);

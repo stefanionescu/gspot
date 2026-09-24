@@ -1,8 +1,8 @@
+import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 // What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
 import { DEFAULT_SCHEMA } from '#cli/checks/postgres/schema/names.ts';
-import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
-import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
+import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
 
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
@@ -100,12 +100,14 @@ const dropped: FactReader = (facts, _migration, statement) => {
     for (const item of nodesOf(statement.fields['objects'], 'List')) {
         const parts = partsOf(item['items']);
         switch (statement.fields['removeType']) {
-            case 'OBJECT_TABLE':
+            case 'OBJECT_TABLE': {
                 forgetTable(facts, named(parts));
                 break;
-            case 'OBJECT_POLICY':
+            }
+            case 'OBJECT_POLICY': {
                 facts.policies.get(named(parts.slice(0, -1)))?.delete(parts.at(-1)!);
                 break;
+            }
             case 'OBJECT_INDEX': {
                 const name = named(parts);
                 facts.indexes = facts.indexes.filter(

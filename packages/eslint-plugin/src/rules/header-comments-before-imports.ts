@@ -1,7 +1,7 @@
+import type { TSESTree } from '@typescript-eslint/utils';
 // A file comment placed after the import block.
 import { createRule } from '#plugin/rules/definition.ts';
 import { optionsSchema } from '#plugin/rules/options.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isImportLike } from '#plugin/rules/import-layout.ts';
 

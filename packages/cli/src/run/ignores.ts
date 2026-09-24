@@ -1,8 +1,9 @@
+import type { SourceObservations } from '#cli/types/repository.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { extensionOf } from '#cli/platform/paths.ts';
+import type { IgnoreEntry } from '#cli/types/policy.ts';
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import type { IgnoreEntry } from '#cli/types/policy.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import type { IgnoreUse, InlineIgnore } from '#cli/types/execution.ts';
 
@@ -20,9 +21,9 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
 }
 
-function existingText(root: string, path: string): string {
+function existingText(observations: SourceObservations, path: string): string {
     try {
-        return readSource(root, path).toString('utf8');
+        return readSource(observations.root, path, observations).toString('utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
         throw error;
@@ -70,36 +71,35 @@ export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kep
 
 /**
  * Inline gspot-ignore comments in one file, with the line each applies to (the same line, or the next when the comment stands alone).
- * @param root the repository root
+ * @param observations the source bytes shared by this execution
  * @param path the file, relative to the root
  * @returns the ignores found
  */
-export function inlineIgnores(root: string, path: string): InlineIgnore[] {
+export function inlineIgnores(observations: SourceObservations, path: string): InlineIgnore[] {
     const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(path)];
     if (style === undefined) return [];
-    const lines = existingText(root, path).split('\n');
+    const lines = existingText(observations, path).split('\n');
     return lines.map((line, index) => inlineIgnoreOf(style, line, index)).filter((entry) => entry !== undefined);
 }
 
 /**
  * Applies inline ignores to findings from the gspot engines. The suppression check owns reason validation.
- * @param root the repository root
+ * @param observations the source bytes shared by this execution
  * @param findings the findings before ignores
  * @returns the findings kept
  */
-export function applyInlineIgnores(root: string, findings: Finding[]): Finding[] {
+export function applyInlineIgnores(observations: SourceObservations, findings: Finding[]): Finding[] {
     const byFile = new Map<string, InlineIgnore[]>();
     const inlineFor = (file: string): InlineIgnore[] => {
         const known = byFile.get(file);
         if (known) return known;
-        const found = inlineIgnores(root, file);
+        const found = inlineIgnores(observations, file);
         byFile.set(file, found);
         return found;
     };
-    const kept = findings.filter(
+    return findings.filter(
         (finding) =>
             finding.engine === undefined ||
             inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
     );
-    return kept;
 }

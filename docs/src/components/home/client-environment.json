@@ -1,19 +1,19 @@
 {
-  "version": "0.1.0",
-  "broken": "\"use client\";\nexport const endpoint = process.env.PRIVATE_API_URL;\n",
-  "corrected": "\"use client\";\nexport const endpoint = \"/api/search\";\n",
-  "findings": [
-    {
-      "ruleId": "gspot/no-client-environment",
-      "severity": 2,
-      "message": "A client module may read only public environment variables (NEXT_PUBLIC_*, NODE_ENV). Keep private configuration in a server-only module.",
-      "line": 2,
-      "column": 25,
-      "nodeType": "MemberExpression",
-      "messageId": "private",
-      "endLine": 2,
-      "endColumn": 36
-    }
-  ],
-  "clean": []
+    "version": "0.1.0",
+    "broken": "\"use client\";\nexport const endpoint = process.env.PRIVATE_API_URL;\n",
+    "corrected": "\"use client\";\nexport const endpoint = \"/api/search\";\n",
+    "findings": [
+        {
+            "ruleId": "gspot/no-client-environment",
+            "severity": 2,
+            "message": "A client module may read only public environment variables (NEXT_PUBLIC_*, NODE_ENV). Keep private configuration in a server-only module.",
+            "line": 2,
+            "column": 25,
+            "nodeType": "MemberExpression",
+            "messageId": "private",
+            "endLine": 2,
+            "endColumn": 36
+        }
+    ],
+    "clean": []
 }

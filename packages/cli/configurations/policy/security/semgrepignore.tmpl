@@ -10,5 +10,5 @@ Pods/
 *.lock
 bun.lock
 package-lock.json
-<% for (const entry of settings['tools.semgrep.ignore'] ?? []) { for (const path of entry.paths ?? []) { %><%= path %>
-<% } } %>
+<% for (const path of scopeIgnorePatterns((settings['tools.semgrep.ignore'] ?? []).flatMap((entry) => entry.paths ?? []), scope)) { %><%= path %>
+<% } %>

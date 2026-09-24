@@ -1,8 +1,8 @@
-import { stylelintRequest } from '#cli/schemas/evaluation.ts';
-import { createRequire } from 'node:module';
+import { z } from 'zod';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { z } from 'zod';
+import { createRequire } from 'node:module';
+import type { stylelintRequest } from '#cli/schemas/evaluation.ts';
 
 const reportSchema = z.object({
     results: z
@@ -16,7 +16,10 @@ const reportSchema = z.object({
         .min(1),
 });
 
-/** Validate carried rule names and options with the repository's installed Stylelint before retirement. */
+/**
+ * Validate carried rule names and options with the repository's installed Stylelint before retirement.
+ * @param request
+ */
 export async function evaluateStylelint(request: z.infer<typeof stylelintRequest>): Promise<true> {
     const require = createRequire(join(request.root, 'package.json'));
     const installed = z.object({ version: z.string() }).parse(require('stylelint/package.json'));

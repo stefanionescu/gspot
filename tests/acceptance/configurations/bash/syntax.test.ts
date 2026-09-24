@@ -1,10 +1,10 @@
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test(
     'syntax checks use each file dialect and reject its broken syntax',

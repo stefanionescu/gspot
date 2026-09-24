@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
 
+import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
 import type { PgModule, SqlParse, SqlTree } from '#cli/parsers/sql/types.ts';
@@ -36,7 +36,7 @@ function readResult(module: PgModule, result: number): SqlParse {
 /**
  * Parses SQL text as Postgres reads it.
  * @param text the SQL
- * @returns the parse tree, or the error with the byte offset it points at
+ * @returns the parse tree, or the error with the Unicode character offset it points at
  */
 export async function parseSql(text: string): Promise<SqlParse> {
     const module = await pgModule();
@@ -52,7 +52,10 @@ export async function parseSql(text: string): Promise<SqlParse> {
     }
 }
 
-/** Parse procedural bodies using the same embedded PostgreSQL parser as SQL statements. */
+/**
+ * Parse procedural bodies using the same embedded PostgreSQL parser as SQL statements.
+ * @param text
+ */
 export async function parsePlpgsql(text: string): Promise<unknown> {
     const module = await pgModule();
     const query = module._malloc(module.lengthBytesUTF8(text) + 1);

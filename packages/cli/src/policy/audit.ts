@@ -1,11 +1,12 @@
+import { settingValueSchemas } from '#cli/schemas/policy.ts';
+import { nearMatches } from '#cli/policy/near.ts';
+import * as messages from '#cli/policy/messages.ts';
 // Every written key checked against the surface: unknown keys, loosenings without a reason, extra keys with a slot.
 import { shippedPolicy } from '#cli/naming/policy.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { nearMatches } from '#cli/policy/near.ts';
 import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
 import type { ExposedSettings, PathSegment, Policy, PolicyProblem, WrittenValue } from '#cli/types/policy.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
@@ -84,6 +85,8 @@ function keyProblems(
     if (!match) return [{ path: key.split('.'), message: unknownKeyProblem(surface, key) }];
     const written = policyValue(table, key);
     if (!written) return [];
+    if (!settingValueSchemas[match.spec.kind].safeParse(written.value).success)
+        return [{ path: key.split('.'), message: `The setting ${key} requires a ${match.spec.kind} value.` }];
     if (match.spec.kind === 'list') {
         const problems = listItemProblems(key, written.value, requireReasons);
         if (requireReasons && match.spec.direction === 'loosening' && Array.isArray(written.value)) {
@@ -134,7 +137,7 @@ function tableProblems(
     scope: string | undefined,
     requireReasons: boolean,
 ): PolicyProblem[] {
-    const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
+    const keys = writtenKeys(table, surface).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
     return [...keys, ...extraProblems(surface, table)];
 }
 

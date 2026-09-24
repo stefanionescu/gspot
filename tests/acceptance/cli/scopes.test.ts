@@ -1,13 +1,13 @@
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { symlinkSync, writeFileSync } from 'node:fs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { treeContents } from '#tests/support/cli/contents.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { symlinkSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const SOURCE =
@@ -114,10 +114,10 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const proposal = JSON.parse(proposed.stdout) as { policy: string };
     const policy = parsePolicyText(proposal.policy, 'gspot.toml');
-    expect(policy.scopes.map((scope) => scope.path)).toEqual(['packages/api']);
+    expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     const before = treeContents(sandbox.path);
     const refused = await run(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).not.toBe(0);
-    expect(treeContents(sandbox.path)).toEqual(before);
+    expect(treeContents(sandbox.path)).toStrictEqual(before);
 });

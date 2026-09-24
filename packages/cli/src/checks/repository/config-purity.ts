@@ -1,13 +1,11 @@
-import { readSource } from '#cli/repository/tracked.ts';
 // A configuration module holds literals: no function, no control flow, no call, no value import from outside the config roots.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/types/execution.ts';
 import type { Finding } from '#cli/types/reports.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import { grammarFor, parserFor } from '#cli/parsers/tree-sitter.ts';
-
-
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
     '.ts': 'typescript',
@@ -39,12 +37,12 @@ function isValueImportOutside(node: Node): boolean {
 
 function isAllowedCall(node: Node): boolean {
     if (node.type === 'new_expression')
-        return CONFIG_CALL_ALLOWED.includes(node.childForFieldName('constructor')?.text ?? '');
+        return CONFIG_CALL_ALLOWED.has(node.childForFieldName('constructor')?.text ?? '');
     return node.childForFieldName('arguments')?.type === 'template_string';
 }
 
 function isLogic(node: Node): boolean {
-    if (CONFIG_LOGIC_NODES.includes(node.type)) return true;
+    if (CONFIG_LOGIC_NODES.has(node.type)) return true;
     return (node.type === 'call_expression' || node.type === 'new_expression') && !isAllowedCall(node);
 }
 
@@ -59,7 +57,7 @@ function logicIn(node: Node, out: Node[]): void {
 function problemsOf(root: Node): { line: number; message: string }[] {
     const problems: { line: number; message: string }[] = [];
     for (const statement of root.namedChildren) {
-        if (!CONFIG_STATEMENTS.includes(statement.type))
+        if (!CONFIG_STATEMENTS.has(statement.type))
             problems.push({
                 line: statement.startPosition.row + 1,
                 message: `a ${statement.type.replaceAll('_', ' ')} is not a literal`,
@@ -80,8 +78,7 @@ function problemsOf(root: Node): { line: number; message: string }[] {
 async function fileFindings(input: EngineInput, file: TrackedFile, language: string): Promise<Finding[]> {
     const grammar = grammarFor(file.path, language);
     if (grammar === undefined) return [];
-    const parser = await parserFor(grammar);
-    const tree = parser.parse(readSource(input.root, file.path).toString('utf8'));
+    const tree = await parseSource(grammar, readSource(input.root, file.path, input.observations).toString('utf8'), input);
     if (tree === null) throw new Error('The source parser returned no tree.');
     try {
         return problemsOf(tree.rootNode).map((problem) => ({
@@ -113,16 +110,16 @@ export async function configurationPurity(input: EngineInput): Promise<Finding[]
     return findings;
 }
 
-const CONFIG_STATEMENTS = [
+const CONFIG_STATEMENTS = new Set([
     'import_statement',
     'export_statement',
     'lexical_declaration',
     'type_alias_declaration',
     'comment',
     'empty_statement',
-];
+]);
 
-const CONFIG_LOGIC_NODES = [
+const CONFIG_LOGIC_NODES = new Set([
     'function_declaration',
     'generator_function_declaration',
     'function_expression',
@@ -137,8 +134,8 @@ const CONFIG_LOGIC_NODES = [
     'try_statement',
     'await_expression',
     'ternary_expression',
-];
+]);
 
-const CONFIG_CALL_ALLOWED = ['Set', 'Map', 'RegExp'];
+const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
 
 const CONFIG_IMPORT_PREFIXES = ['#config/'];

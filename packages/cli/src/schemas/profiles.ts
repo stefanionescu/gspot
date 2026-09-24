@@ -1,6 +1,6 @@
+import { z } from 'zod';
 // The zod schema of a profile: the policy schema without anything that names a path, with a name and a selection mode.
 import { policySchema } from '#cli/schemas/policy.ts';
-import { z } from 'zod';
 
 /** The tables a profile never holds, because each one belongs to one repository. */
 export const REPOSITORY_TABLES = ['scope', 'generated', 'vendored', 'check', 'exclude'] as const;
@@ -27,7 +27,11 @@ const PATH_KEYS = new Set([
     'harness_directory',
 ]);
 
-/** Identify repository selectors and local executable registrations that cannot travel in a profile. */
+/**
+ * Identify repository selectors and local executable registrations that cannot travel in a profile.
+ * @param key
+ * @param value
+ */
 export function isRepositoryPath(key: string, value: unknown): boolean {
     return (
         (key === 'adopted' && typeof value === 'object' && value !== null && 'sections' in value) ||

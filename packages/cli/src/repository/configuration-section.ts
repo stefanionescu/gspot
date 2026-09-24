@@ -1,20 +1,27 @@
-import { extname } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
-import { parse as parseYaml } from 'yaml';
 import JSON5 from 'json5';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { extname } from 'node:path';
+import { parse as parseYaml } from 'yaml';
+import { parse as parseToml } from 'smol-toml';
 import { iniSection } from '#cli/repository/ini.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {
     '.json': (text) => JSON.parse(text) as unknown,
     '.jsonc': parseJsonc,
-    '.json5': (text) => JSON5.parse(text) as unknown,
+    '.json5': (text) => JSON5.parse(text),
     '.yaml': parseYaml,
     '.yml': parseYaml,
     '.toml': parseToml,
 };
 
-/** Select an owned key or table while keeping the shared document available for exact recovery. */
+/**
+ * Select an owned key or table while keeping the shared document available for exact recovery.
+ * @param text
+ * @param path
+ * @param selector
+ * @param selector.key
+ * @param selector.table
+ */
 export function configurationSection(
     text: string,
     path: string,

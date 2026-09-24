@@ -1,4 +1,8 @@
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { Command, CommanderError } from 'commander';
+import { delimiter, dirname, join, resolve } from 'node:path';
+
 import {
     copyFileSync,
     mkdirSync,
@@ -9,9 +13,6 @@ import {
     rmSync,
     writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { delimiter, dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const SOURCE = 'https://github.com/alex-pinkus/tree-sitter-swift.git';
 const REVISION = 'b8b22bffbb3441780e6471665bacfb263741c86a';

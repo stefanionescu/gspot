@@ -1,11 +1,11 @@
-import { trivialFile } from '#cli/structure/statements.ts';
+import type { Finding } from '#cli/types/reports.ts';
 // The Swift structure checks, each one analysis of the integrity engine.
 import type { EngineInput } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
+import { trivialFile } from '#cli/structure/statements.ts';
 import type { SwiftReader } from '#cli/structure/swift/types.ts';
 import { functionsOf, swiftSources } from '#cli/structure/swift/sources.ts';
-import { environmentReads, privateBeforePublic } from '#cli/structure/swift/order.ts';
 import { duplicateFunctions, trivialFunctions } from '#cli/structure/swift/bodies.ts';
+import { environmentReads, privateBeforePublic } from '#cli/structure/swift/order.ts';
 
 const DEFAULT_DUPLICATE_LINES = 4;
 

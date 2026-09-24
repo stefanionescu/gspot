@@ -2,7 +2,10 @@ const TOKENS =
     /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|#[^\n]*|[;{}]|(?:\\[\s\S]|\$\{[^}]*\}|[^\s"'{};#\\])(?:\\[\s\S]|\$\{[^}]*\}|[^\s{};\\])*/gu;
 const ESCAPES: Record<string, string> = { t: '\t', r: '\r', n: '\n', '"': '"', "'": "'", '\\': '\\' };
 
-/** Read directive arguments without changing quoted whitespace or treating comments as configuration. */
+/**
+ * Read directive arguments without changing quoted whitespace or treating comments as configuration.
+ * @param text
+ */
 export function nginxDirectives(text: string): string[][] {
     const directives: string[][] = [];
     let directive: string[] = [];
@@ -14,7 +17,7 @@ export function nginxDirectives(text: string): string[][] {
             continue;
         }
         const value = token.replace(/^(["'])([\s\S]*)\1$/u, '$2');
-        directive.push(value.replace(/\\([trn"'\\])/gu, (_, escaped: string) => ESCAPES[escaped]!));
+        directive.push(value.replaceAll(/\\([trn"'\\])/gu, (_, escaped: string) => ESCAPES[escaped]!));
     }
     return directives;
 }

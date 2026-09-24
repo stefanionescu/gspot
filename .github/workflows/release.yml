@@ -14,7 +14,7 @@ jobs:
             actions: read
             security-events: write
         if: vars.GSPOT_CI_ENABLED == 'true'
-        uses: ./.github/workflows/ci.yml
+        uses: $/.github/workflows/ci.yml
         with:
             full: true
     targets:

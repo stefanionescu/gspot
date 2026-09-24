@@ -19,7 +19,8 @@ function row(label: string, items: string[]): string | undefined {
 
 function proposalsOfKind(summary: DetectionSummary, kind: string): Proposal[] {
     return summary.proposals.filter(
-        (proposal) => proposal.kind === kind && summary.manifests.get(proposal.configuration)?.configuration.default !== true,
+        (proposal) =>
+            proposal.kind === kind && summary.manifests.get(proposal.configuration)?.configuration.default !== true,
     );
 }
 
@@ -63,7 +64,8 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
 
 function unknownRows(summary: DetectionSummary): string[] {
     return summary.unknown.map(
-        (entry) => `${'no configuration'.padEnd(LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
+        (entry) =>
+            `${'no configuration'.padEnd(LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
     );
 }
 

@@ -474,7 +474,7 @@ default = []
 summary = "The named parts of the code and the paths each covers."
 
 [[settings]]
-name = "architecture.allow"
+name = "architecture.edges_allowed"
 kind = "list"
 direction = "tightening"
 default = []

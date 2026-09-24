@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { isAbsolute, relative, resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
-import { readSource } from '#cli/repository/tracked.ts';
 import { parseJson } from '#cli/output/json.ts';
-import type { Finding } from '#cli/types/reports.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import { toPosix } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { isAbsolute, relative, resolve } from 'node:path';
 import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
@@ -299,6 +299,7 @@ function parseLines(check: string, text: string, help: string): Finding[] {
  * @param stdout what the tool printed
  * @param stderr what the tool printed on its error stream
  * @param root the repository root, to make the absolute paths ESLint prints relative
+ * @param cwd
  * @returns the findings
  */
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {

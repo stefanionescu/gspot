@@ -1,13 +1,13 @@
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
 import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { renameSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const ENTRY = String.raw`
 [[check]]
@@ -25,7 +25,11 @@ pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
 
 test.each([
     { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },
-    { scope: 'nested', policy: 'version = 1\nconfigurations = []\n[[scope]]\npath = "api"\nconfigurations = ["bas"]\n', line: 5 },
+    {
+        scope: 'nested',
+        policy: 'version = 1\nconfigurations = []\n[[scope]]\npath = "api"\nconfigurations = ["bas"]\n',
+        line: 5,
+    },
 ])(
     'unknown configurations in the $scope scope identify their declaration and accept the suggested configuration',
     async ({ policy, line }) => {
@@ -239,9 +243,9 @@ format = "lines"
     ]);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
-    expect(report.checks.map((check) => check.check)).toEqual(['sandbox/one', 'sandbox/two']);
+    expect(report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
     for (const check of report.checks)
-        expect(new Set(check.findings.map((finding) => finding.message))).toEqual(
+        expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
     const skipped = await run(sandbox.path, [
@@ -254,7 +258,7 @@ format = "lines"
     ]);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(1);
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
-    expect(skippedReport.checks.map((check) => [check.check, check.status])).toEqual([
+    expect(skippedReport.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/one', 'skipped'],
         ['sandbox/two', 'skipped'],
         ['sandbox/three', 'fail'],
@@ -262,7 +266,7 @@ format = "lines"
     const relative = await run(sandbox.path, ['-C', 'src', 'check', 'selected.ts', '--only', 'sandbox/one', '--json']);
     expect(relative.code, relative.stdout + relative.stderr).toBe(1);
     const relativeReport = JSON.parse(relative.stdout) as RunReport;
-    expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toEqual([
+    expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'src/selected.ts',
     ]);
 });
@@ -285,7 +289,7 @@ stage = "${name}"
     const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.checks.map((check) => [check.check, check.status])).toEqual([[`sandbox/${stage}`, 'ok']]);
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([[`sandbox/${stage}`, 'ok']]);
 });
 
 test('a scope path selects its checks and its reproduction command repeats the same findings', async () => {
@@ -307,13 +311,13 @@ configurations = ["javascript", "naming"]
     const selected = await run(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
-    expect(report.checks.map((check) => check.scope)).toEqual(['api']);
+    expect(report.checks.map((check) => check.scope)).toStrictEqual(['api']);
     const command = report.checks[0]?.reproduce;
     expect(command).toBeDefined();
     const repeated = await run(sandbox.path, [...command!.split(' ').slice(1), '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
-    expect(repeatedReport.checks.flatMap((check) => check.findings)).toEqual(
+    expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(
         report.checks.flatMap((check) => check.findings),
     );
 });
@@ -368,7 +372,7 @@ stage = "commit"
     expect((await run(sandbox.path, args)).code).toBe(1);
 });
 
-test.each([{ inputs: [] }, { inputs: ['../outside'] }, { inputs: ['/outside'] }, { inputs: ['state\\file'] }])(
+test.each([{ inputs: [] }, { inputs: ['../outside'] }, { inputs: ['/outside'] }, { inputs: [String.raw`state\file`] }])(
     'invalid cache inputs %j refuse the check before its command writes',
     async ({ inputs }) => {
         await using sandbox = await testdir();

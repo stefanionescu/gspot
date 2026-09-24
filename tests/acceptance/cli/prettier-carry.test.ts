@@ -1,11 +1,11 @@
-import type { RunReport } from '#cli/types/reports.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { RunReport } from '#cli/types/reports.ts';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const FILES = [
@@ -145,7 +145,7 @@ test.each([
         if (path.startsWith('package.')) expect(readFileSync(original, 'utf8')).toBe(text);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -177,7 +177,10 @@ test.each([false, true])(
         if (fails) expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(configuration);
         else expect(existsSync(join(repository.path, 'prettier.config.mjs'))).toBe(false);
         if (fails) expect(result.stdout + result.stderr).toContain('authored formatter failure');
-        else expect(JSON.parse(readFileSync(join(repository.path, '.gspot/config/prettier.json'), 'utf8')).semi).toBe(false);
+        else
+            expect(JSON.parse(readFileSync(join(repository.path, '.gspot/config/prettier.json'), 'utf8')).semi).toBe(
+                false,
+            );
     },
     PLANTED_TIMEOUT_MS,
 );

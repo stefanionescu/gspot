@@ -39,7 +39,7 @@ describe('selectConfigurations', () => {
             ['base', manifest('base')],
         ]);
         const ids = selectConfigurations(['app', 'client'], manifests).map((entry) => entry.configuration.name);
-        expect(ids).toEqual(['base', 'client', 'server', 'app']);
+        expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
     });
 
     test('a recommended configuration is not pulled in by selection; init adds it and a person can drop it', () => {
@@ -69,6 +69,9 @@ describe('parseManifest', () => {
                 '[configuration]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[checks]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "x/y"\nlevel = "recommended"\nstage = "commit"\nisolated_files = true\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n';
             expect(() => parseManifest(`${source}${command}\n`, 'configurations/x')).toThrow('isolates files');
             expect(() => parseManifest(`${source}command = ["x", "{files}"]\n`, 'configurations/x')).not.toThrow();
+            expect(() =>
+                parseManifest(`${source}runs = "per-scope"\ncommand = ["x", "{root}"]\n`, 'configurations/x'),
+            ).not.toThrow();
         },
     );
 
@@ -255,7 +258,9 @@ ${selection}
         'key = "eslintConfig"\ntable = "tool.ruff"\nshared = true',
     ])
         expect(() => parseManifest(definition(selection), 'configurations/example')).toThrow();
-    expect(() => parseManifest(definition('key = "eslintConfig"\nshared = true'), 'configurations/example')).not.toThrow();
+    expect(() =>
+        parseManifest(definition('key = "eslintConfig"\nshared = true'), 'configurations/example'),
+    ).not.toThrow();
 });
 
 test.each(['latest', '^1.2.3', '../pack'])(
@@ -283,9 +288,13 @@ test.each(['missing/check', 'bash/shfmt'])(
         const manifests = structuredClone(configurationManifests());
         const row = manifests.get('bash')!.tools.find((tool) => tool.name === 'shellcheck')!.takeover![0]!;
         row.check = destination;
-        expect(() => validateManifests(manifests)).toThrow('must execute shellcheck');
+        expect(() => {
+            validateManifests(manifests);
+        }).toThrow('must execute shellcheck');
         row.check = 'bash/shellcheck';
-        expect(() => validateManifests(manifests)).not.toThrow();
+        expect(() => {
+            validateManifests(manifests);
+        }).not.toThrow();
     },
 );
 
@@ -302,17 +311,25 @@ test('check references require one standalone built-in owner and preserve its de
         ['owner', owner],
         ['consumer', consumer],
     ]);
-    expect(() => validateManifests(manifests)).not.toThrow();
+    expect(() => {
+        validateManifests(manifests);
+    }).not.toThrow();
     consumer.configuration.check_references = ['missing/shared'];
-    expect(() => validateManifests(manifests)).toThrow('Referenced check');
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('Referenced check');
     consumer.configuration.check_references = ['owner/shared'];
     owner.checks[0] = { ...owner.checks[0]!, runs: 'per-scope' };
-    expect(() => validateManifests(manifests)).toThrow('standalone built-in');
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('standalone built-in');
     owner.checks[0] = { ...spec, name: 'owner/shared', tool: 'scanner' };
-    expect(() => validateManifests(manifests)).toThrow('standalone built-in');
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('standalone built-in');
 });
 
-test.each([undefined, '', '   '])('shipped checks reject an absent or blank example: %s', (example) => {
+test.each([undefined, '', ' '.repeat(3)])('shipped checks reject an absent or blank example: %s', (example) => {
     const definition = `[configuration]
 name = "example"
 kind = "tool"
@@ -330,6 +347,9 @@ help = "Correct the input at the reported location."
     const field = example === undefined ? '' : `example = ${JSON.stringify(example)}\n`;
     expect(() => parseManifest(definition + field, 'configurations/example')).toThrow('example');
     expect(() =>
-        parseManifest(definition + 'example = "Close the unclosed input object and rerun."\n', 'configurations/example'),
+        parseManifest(
+            definition + 'example = "Close the unclosed input object and rerun."\n',
+            'configurations/example',
+        ),
     ).not.toThrow();
 });

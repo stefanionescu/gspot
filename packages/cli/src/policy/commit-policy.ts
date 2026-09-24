@@ -1,14 +1,14 @@
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-// What every writing command ends with: one mutation of gspot.toml, validated as load does, then apply. The reason rules live here too.
-import type { Mutation } from '#cli/types/policy.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CommandResult } from '#cli/types/execution.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
 import { writePolicy } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+// What every writing command ends with: one mutation of gspot.toml, validated as load does, then apply. The reason rules live here too.
+import type { Mutation } from '#cli/types/policy.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 /**
  * Applies one mutation to gspot.toml and runs apply, or prints the change on a dry run.

@@ -1,22 +1,22 @@
-import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { stringify } from 'smol-toml';
 import { planRun } from '#cli/run/plan.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/run/execute.ts';
-import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { fileBatches } from '#cli/run/file-batches.ts';
+import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 
 describe('file batches', () => {
     test('a list that fits is one batch, and a long list splits under the budget in order', () => {
-        expect(fileBatches(['a.sh', 'b.sh'], ['tool'], 'linux')).toEqual([['a.sh', 'b.sh']]);
+        expect(fileBatches(['a.sh', 'b.sh'], ['tool'], 'linux')).toStrictEqual([['a.sh', 'b.sh']]);
         const files = Array.from({ length: 5000 }, (_, index) => `scripts/deploy/step-${String(index)}.sh`);
         const batches = fileBatches(files, ['tool'], 'linux');
         expect(batches.length).toBeGreaterThan(1);
-        expect(batches.flat()).toEqual(files);
+        expect(batches.flat()).toStrictEqual(files);
         for (const batch of batches) expect(batch.join(' ').length).toBeLessThanOrEqual(100_000);
     });
 });
@@ -30,7 +30,7 @@ test('Windows batches reserve quoted paths and the resolved executable', () => {
     ];
     const batches = fileBatches(files, fixed, 'win32');
     expect(batches.length).toBeGreaterThan(1);
-    expect(batches.flat()).toEqual(files);
+    expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches) {
         const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');
         expect(command.length).toBeLessThan(8191);
@@ -40,7 +40,7 @@ test('Windows batches reserve quoted paths and the resolved executable', () => {
 test('Unix batches count Unicode bytes and reject an argument that cannot fit', () => {
     const files = Array.from({ length: 5000 }, (_, index) => `資料/結果-${String(index)}.txt`);
     const batches = fileBatches(files, ['tool'], 'linux');
-    expect(batches.flat()).toEqual(files);
+    expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches) expect(Buffer.byteLength(['tool', ...batch].join(' '))).toBeLessThan(100_000);
     expect(() => fileBatches(['x'.repeat(100_001)], ['tool'], 'linux')).toThrow('file argument exceeds');
     expect(() => fileBatches([], ['x'.repeat(100_001)], 'linux')).toThrow('Tool arguments exceed');
@@ -65,7 +65,7 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
         expect(result.stdout).toBe(JSON.stringify(batch));
         received.push(...batch);
     }
-    expect(received).toEqual(files);
+    expect(received).toStrictEqual(files);
 });
 
 test('per-file execution preserves expanded flags and arguments after the file', async () => {
@@ -90,7 +90,7 @@ stage = "commit"
     const prepared = prepareCommand(session, planned, planned.spec.command!);
     const result = await run(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
     expect(result.code, result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual([
+    expect(JSON.parse(result.stdout)).toStrictEqual([
         'v3.4.0',
         '--config',
         join(sandbox.path, 'settings.txt'),
@@ -165,7 +165,7 @@ else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_0
         const running = executeRun(session, { ...options, cancelSignal: controller.signal });
         try {
             if (failure === 'canceled') {
-                const deadline = performance.now() + 5_000;
+                const deadline = performance.now() + 5000;
                 while (!existsSync(join(sandbox.path, 'deploy/started.txt')) && performance.now() < deadline)
                     await Bun.sleep(20);
                 expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(true);
@@ -178,7 +178,7 @@ else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_0
             expect(outcome.report.checks[0]!.note).toContain(
                 failure === 'outdated' ? 'is below 24.0.0' : failure === 'timeout' ? 'ran past 1 seconds' : 'canceled',
             );
-            expect(outcome.report.checks[0]!.findings).toEqual([]);
+            expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
             expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(failure !== 'outdated');
             writeFileSync(executable, script('26.8.0', false));
             const corrected = await executeRun(await openSession(sandbox.path), options);
@@ -273,11 +273,11 @@ test('per-file failures name the selected file when expanded arguments follow it
     planned.tool = { name: process.execPath, installers: {}, windows: true };
     const failed = await runToolCheck(session, planned);
     expect(failed.status).toBe('fail');
-    expect(failed.findings.map((finding) => finding.file)).toEqual(['inputs/café source.txt']);
+    expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
     writeFileSync(join(sandbox.path, 'inputs/café source.txt'), 'valid');
     const corrected = await runToolCheck(session, planned);
     expect(corrected.status).toBe('ok');
-    expect(corrected.findings).toEqual([]);
+    expect(corrected.findings).toStrictEqual([]);
 });
 
 test('a signaled per-file process is an execution error rather than a source finding', async () => {
@@ -302,7 +302,37 @@ test('a signaled per-file process is an execution error rather than a source fin
     planned.tool = { name: process.execPath, installers: {}, windows: true };
     const failed = await runToolCheck(session, planned);
     expect(failed.status).toBe('error');
-    expect(failed.findings).toEqual([]);
+    expect(failed.findings).toStrictEqual([]);
     planned.spec.command![2] = 'process.exitCode = 0';
     expect((await runToolCheck(session, planned)).status).toBe('ok');
+});
+
+test.each(['{file}', '{files}'])('declared findings exits distinguish partial reports from fatal %s execution', async (placeholder) => {
+    await using sandbox = await testdir();
+    const source = 'input.txt';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({ version: 1, configurations: [], check: [{
+            name: 'project/exit-contract', command: [process.execPath, 'checker.cjs', placeholder],
+            paths: [source], stage: 'commit', findings_exit_codes: [1],
+            output: { format: 'regex', pattern: '^(?<file>.+):(?<line>\\d+): (?<message>.+)$' },
+        }] }),
+        [source]: '1',
+        'checker.cjs': 'const fs = require("node:fs"); const file = process.argv[2]; const status = Number(fs.readFileSync(file, "utf8")); if (status !== 0) console.log(`${file}:1: Located defect before exit`); process.exitCode = status;',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = (await planRun(session, { stage: 'all', skips: [] }))[0]!;
+    planned.tool = { name: process.execPath, installers: {}, windows: true };
+    const finding = await runToolCheck(session, planned);
+    expect(finding.status).toBe('fail');
+    expect(finding.findings).toStrictEqual([expect.objectContaining({ file: source, line: 1, message: 'Located defect before exit' })]);
+    writeFileSync(join(sandbox.path, source), '7');
+    const fatal = await runToolCheck(session, planned);
+    expect(fatal.status).toBe('error');
+    expect(fatal.findings).toStrictEqual([]);
+    expect(fatal.note).toContain('exit 7');
+    expect(await Bun.file(join(sandbox.path, source)).text()).toBe('7');
+    writeFileSync(join(sandbox.path, source), '0');
+    const corrected = await runToolCheck(session, planned);
+    expect(corrected.status).toBe('ok');
+    expect(corrected.findings).toStrictEqual([]);
 });

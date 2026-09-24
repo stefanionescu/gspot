@@ -67,6 +67,11 @@ Run the deployment command documented in the release guide.
 Run the same check again. It exits 0 with no findings. If the script cannot read a selected
 file, resolve its filesystem error before rerunning.
 
+Set `findings_exit_codes = [1]` when the checker documents exit 1 for source findings.
+Other nonzero exits then produce execution status 2, even when the tool printed partial
+findings before failing. Use the codes documented by the checker. An empty list means every
+nonzero exit is an execution failure.
+
 By default, a nonzero command exit fails the check. The output adapter determines how diagnostics become
 findings. Use the [configuration reference](/reference/configuration/#check) for other output
 formats. For JSON, map the tool fields under `[check.output.fields]` and identify nested arrays

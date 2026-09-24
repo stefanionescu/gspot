@@ -1,9 +1,9 @@
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
-import { ESLint, loadESLint } from 'eslint';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const SOURCE = 'export const isEmpty = (value) => value == null;\n';
 const FILES = ['source.js', 'tests/[draft].js', 'tests/café note.js', 'server/source.js', 'components/source.js'];
@@ -49,7 +49,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
                     column,
                 })),
         );
-        expect(expected).toEqual([
+        expect(expected).toStrictEqual([
             { file: 'tests/[draft].js', severity: 2, line: 1, column: 41 },
             { file: 'tests/café note.js', severity: 2, line: 1, column: 41 },
             { file: 'server/source.js', severity: 1, line: 1, column: 41 },
@@ -86,24 +86,24 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
                         column,
                     })),
             ),
-        ).toEqual(expected);
+        ).toStrictEqual(expected);
         for (const file of FILES) writeFileSync(join(repository.path, file), SOURCE.replace('==', '==='));
         const corrected = await eslint.lintFiles(FILES);
-        expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toEqual([]);
+        expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toStrictEqual([]);
         writeFileSync(join(repository.path, 'tests/future.js'), SOURCE);
         const [future] = await eslint.lintFiles(['tests/future.js']);
         expect(
             future!.messages
                 .filter(({ ruleId }) => ruleId === 'eqeqeq')
                 .map(({ ruleId, severity }) => ({ ruleId, severity })),
-        ).toEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
+        ).toStrictEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
         if (path === 'package.json') expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
         else if (existsSync(join(repository.path, path)))
             expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
         expect(existsSync(join(repository.path, '.gspot/reports/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
         const removed = await run(repository.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
@@ -235,12 +235,12 @@ test(
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         const eslint = new ESLint({ cwd: repository.path });
         const [defective] = await eslint.lintFiles(['source.js']);
-        expect(defective!.messages.map(({ ruleId, line, column }) => ({ ruleId, line, column }))).toEqual([
+        expect(defective!.messages.map(({ ruleId, line, column }) => ({ ruleId, line, column }))).toStrictEqual([
             { ruleId: 'eqeqeq', line: 1, column: 41 },
         ]);
         writeFileSync(join(repository.path, 'source.js'), SOURCE.replace('==', '==='));
         const [corrected] = await eslint.lintFiles(['source.js']);
-        expect(corrected!.messages).toEqual([]);
+        expect(corrected!.messages).toStrictEqual([]);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
     },
     PLANTED_TIMEOUT_MS,

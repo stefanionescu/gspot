@@ -1,16 +1,16 @@
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { EngineInput, Session } from '#cli/types/execution.ts';
-import type { Finding } from '#cli/types/reports.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
+import type { EngineInput, Session } from '#cli/types/execution.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/emit/markers.ts';
 
 const GSPOT_SUPPRESSION = {
     marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
-    reason: ' -- (?<reason>\\S.*)',
+    reason: String.raw` -- (?<reason>\S.*)`,
 };
 
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
@@ -34,7 +34,11 @@ function commentOf(line: string, style: string): string | undefined {
     return starts.length === 0 ? undefined : line.slice(Math.min(...starts));
 }
 
-/** Observe comments once through the selected tool definitions for each file scope. */
+/**
+ * Observe comments once through the selected tool definitions for each file scope.
+ * @param session
+ * @param files
+ */
 export function suppressionComments(session: Session, files: TrackedFile[]): SuppressionComment[] {
     return files.flatMap((file) => {
         const style = styleOf(file);
@@ -66,7 +70,7 @@ export function suppressionComments(session: Session, files: TrackedFile[]): Sup
             reason: new RegExp(definition.reason, 'u'),
             forbidden: definition.forbidden === true,
         }));
-        return readSource(session.root, file.path)
+        return readSource(session.root, file.path, session.observations)
             .toString('utf8')
             .split('\n')
             .flatMap((line, index) => {
@@ -90,10 +94,13 @@ export function suppressionComments(session: Session, files: TrackedFile[]): Sup
     });
 }
 
-/** Report forbidden suppressions and missing or invalid required reasons. */
+/**
+ * Report forbidden suppressions and missing or invalid required reasons.
+ * @param input
+ */
 export function suppressions(input: EngineInput): Finding[] {
     if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
-    const findings = input.suppressions.flatMap((entry): Finding[] => {
+    return input.suppressions.flatMap((entry): Finding[] => {
         const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
         if (entry.forbidden)
             return [
@@ -113,5 +120,4 @@ export function suppressions(input: EngineInput): Finding[] {
             },
         ];
     });
-    return findings;
 }

@@ -1,10 +1,10 @@
-import { reportSchema } from '#cli/schemas/reports.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 
 test('Python dependency ownership applies only to locked scopes and accepts removal of the duplicate list', async () => {
     await using sandbox = await testdir();
@@ -26,11 +26,11 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
     expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: 'locked/requirements.txt', rule: 'requirements-file' },
     ]);
-    expect(report.checks.filter((check) => check.status === 'fail').map((check) => check.scope)).toEqual(['locked']);
+    expect(report.checks.filter((check) => check.status === 'fail').map((check) => check.scope)).toStrictEqual(['locked']);
     rmSync(join(sandbox.path, 'locked/requirements.txt'));
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks.flatMap((check) => check.findings)).toEqual([]);
+    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
 
 test('absent Python import contracts are explicit skips and malformed project files are errors', async () => {

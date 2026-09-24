@@ -1,14 +1,14 @@
-// The hook gspot installs runs the staged checks on commit.
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
-import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
+// The hook gspot installs runs the staged checks on commit.
+import { run as runProcess } from '#cli/platform/spawn.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
+import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 describe('the gspot hook', () => {
     test(
@@ -126,7 +126,7 @@ test(
         const first = JSON.parse(passing.stdout).revisions;
         expect(first).toHaveLength(1);
         const firstReport = reportSchema.parse(first[0].report);
-        expect(firstReport.comparison).toEqual({ content: 'commit', reference: reviewed });
+        expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
         expect(firstReport.checks[0]?.status).toBe('ok');
         expect(firstReport.checks[0]?.files).toBe(1);
         const failing = await runProcess(command, {
@@ -138,7 +138,7 @@ test(
             reportSchema
                 .parse(JSON.parse(failing.stdout).revisions[0].report)
                 .checks[0]?.findings.map((finding) => finding.file),
-        ).toEqual(['changed.sh', 'changed.sh']);
+        ).toStrictEqual(['changed.sh', 'changed.sh']);
         const pushText = await runProcess(
             command.filter((argument) => argument !== '--json'),
             {
@@ -168,7 +168,7 @@ test(
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
         const repeatedReport = pushReportSchema.parse(JSON.parse(repeated.stdout));
         expect(repeatedReport.revisions[0]?.object).toBe(broken);
-        expect(repeatedReport.revisions[0]?.report.checks[0]?.findings).toEqual(failedReport.checks[0]?.findings);
+        expect(repeatedReport.revisions[0]?.report.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
         const multiple = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/broken ${broken} refs/heads/one ${base}\nrefs/heads/reviewed ${reviewed} refs/heads/two ${base}\n`,
@@ -177,15 +177,15 @@ test(
         const saved = pushReportSchema.parse(
             JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')),
         );
-        expect(saved).toEqual(JSON.parse(multiple.stdout));
-        expect(saved.revisions.map((revision) => revision.report.exitCode)).toEqual([1, 0]);
+        expect(saved).toStrictEqual(JSON.parse(multiple.stdout));
+        expect(saved.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
         const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
         expect(sarif.runs).toHaveLength(2);
         expect(
             sarif.runs.map(
                 (entry: { properties: { comparison: { reference: string } } }) => entry.properties.comparison.reference,
             ),
-        ).toEqual([broken, reviewed]);
+        ).toStrictEqual([broken, reviewed]);
         expect(sarif.runs[0].results).toHaveLength(2);
         expect(sarif.runs[1].results).toHaveLength(0);
         const duplicated = await runProcess(command, {
@@ -220,7 +220,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(mapped.code, mapped.stdout + mapped.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(mapped.stdout)).revisions[0]?.commits).toEqual([reviewed]);
+        expect(pushReportSchema.parse(JSON.parse(mapped.stdout)).revisions[0]?.commits).toStrictEqual([reviewed]);
         expect(git(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']).code).toBe(0);
         const excluded = await runProcess(command, {
             cwd: sandbox.path,
@@ -231,7 +231,7 @@ test(
             pushReportSchema
                 .parse(JSON.parse(excluded.stdout))
                 .revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file),
-        ).toEqual(['legacy.sh', 'legacy.sh']);
+        ).toStrictEqual(['legacy.sh', 'legacy.sh']);
         expect(git(sandbox.path, ['config', '--unset-all', 'remote.origin.fetch']).code).toBe(0);
         expect(
             git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/main:refs/fetched/origin/main']).code,
@@ -241,7 +241,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(exact.code, exact.stdout + exact.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(exact.stdout)).revisions[0]?.commits).toEqual([reviewed]);
+        expect(pushReportSchema.parse(JSON.parse(exact.stdout)).revisions[0]?.commits).toStrictEqual([reviewed]);
         const noFetched = await runProcess(command.slice(0, -2).concat('unseen', 'unused'), {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
@@ -251,7 +251,7 @@ test(
             reportSchema
                 .parse(JSON.parse(noFetched.stdout).revisions[0].report)
                 .checks[0]?.findings.map((finding) => finding.file),
-        ).toEqual(['legacy.sh', 'legacy.sh']);
+        ).toStrictEqual(['legacy.sh', 'legacy.sh']);
         expect(git(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]).code).toBe(0);
         const tag = git(sandbox.path, ['rev-parse', 'reviewed-tag']).stdout.trim();
         const tagged = await runProcess(command, {
@@ -265,7 +265,7 @@ test(
             stdin: `(delete) ${zero} refs/heads/main ${broken}\n`,
         });
         expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
-        expect(JSON.parse(deleted.stdout).revisions).toEqual([]);
+        expect(JSON.parse(deleted.stdout).revisions).toStrictEqual([]);
         expect(JSON.parse(deleted.stdout).notApplicable[0].reason).toBe('deleted ref');
         const missing = await runProcess(command, {
             cwd: sandbox.path,
@@ -301,7 +301,7 @@ test(
             pushReportSchema
                 .parse(JSON.parse(all.stdout))
                 .revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file),
-        ).toEqual(['legacy.sh', 'legacy.sh']);
+        ).toStrictEqual(['legacy.sh', 'legacy.sh']);
     },
     PLANTED_TIMEOUT_MS,
 );

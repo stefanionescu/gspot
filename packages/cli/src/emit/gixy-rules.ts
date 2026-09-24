@@ -1,4 +1,7 @@
-/** Read Gixy's root check selectors without flattening plugin-specific sections. */
+/**
+ * Read Gixy's root check selectors without flattening plugin-specific sections.
+ * @param text
+ */
 export function gixyRules(text: string): Record<string, string[]> {
     const result: Record<string, string[]> = {};
     let section = '';
@@ -9,8 +12,8 @@ export function gixyRules(text: string): Record<string, string[]> {
             section = `${line.slice(1, -1).replaceAll('_', '-')}-`;
             continue;
         }
-        const flag = /^([^:=;#\s]+?)\s*(?:\s[;#].*)?$/u.exec(line);
-        const option = /^([^:=;#\s]+?)\s*[:=\s]\s*(.+?)\s*(?:\s[;#].*)?$/u.exec(line);
+        const flag = /^([^:=;#\s]+)\s*(?:\s[;#].*)?$/u.exec(line);
+        const option = /^([^:=;#\s]+)(?:\s*[:=]\s*|\s+)(.+?)\s*(?:\s[;#].*)?$/u.exec(line);
         if (flag === null && option === null) throw new Error('Gixy rule configuration contains an invalid option.');
         const key = flag?.[1] ?? `${section}${option?.[1]}`;
         const canonical = key.replace(/^--/u, '');

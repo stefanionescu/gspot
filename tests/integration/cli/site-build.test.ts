@@ -1,10 +1,14 @@
-import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
-import * as toolRunner from '#cli/run/tool-runner.ts';
-import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
-import { openSession } from '#cli/run/session.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import * as processes from '#cli/platform/spawn.ts';
 import { join } from 'node:path';
+import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/run/session.ts';
+import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import * as toolRunner from '#cli/run/tool-runner.ts';
+import { describe, expect, spyOn, test } from 'bun:test';
+import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
+import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';
+import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
+
 import {
     readFileSync,
     existsSync,
@@ -15,9 +19,6 @@ import {
     symlinkSync,
     unlinkSync,
 } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, spyOn, test } from 'bun:test';
-import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';
 
 describe('site build reproducibility', () => {
     test('the second build preserves the output shared with other checks', async () => {
@@ -29,7 +30,7 @@ describe('site build reproducibility', () => {
         const first = await siteBuild(request);
         const before = readFileSync(join(first.output, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
-        expect(await buildReproducible(request)).toEqual([]);
+        expect(await buildReproducible(request)).toStrictEqual([]);
         expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe(before);
         expect(readFileSync(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
         expect(statSync(join(sandbox.path, 'dist/index.html')).mode & 0o777).toBe(0o640);
@@ -73,7 +74,8 @@ test('a failed reproducibility build retains the first isolated output', async (
 test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml':
+            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'authored output',
     });
@@ -112,7 +114,7 @@ test('site output inventory refuses external links and accepts corrected assets'
     expect(() => filesUnder(join(sandbox.path, 'dist'))).toThrow('Source link leaves the repository');
     unlinkSync(link);
     symlinkSync('local.txt', link);
-    expect(filesUnder(join(sandbox.path, 'dist'))).toEqual(['linked.txt', 'local.txt']);
+    expect(filesUnder(join(sandbox.path, 'dist'))).toStrictEqual(['linked.txt', 'local.txt']);
 });
 
 test.each([
@@ -162,7 +164,7 @@ test.each([
             stdout = JSON.stringify(
                 name === 'links' ? { links: [] } : name === 'markup' ? [] : [{ file: 'style.css', rejected: [] }],
             );
-            expect(await analyze(request)).toEqual([]);
+            expect(await analyze(request)).toStrictEqual([]);
         } finally {
             command.mockRestore();
         }
