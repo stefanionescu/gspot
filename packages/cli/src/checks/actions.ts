@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { chmodSync, writeFileSync } from 'node:fs';
-import { isMap, isScalar, isSeq, parseDocument } from 'yaml';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
@@ -31,15 +31,22 @@ function actionlintSource(text: string): string {
         for (const step of composite.items) if (isMap(step)) references.push(step.get('uses', true));
     }
     let prepared = text;
-    for (const reference of references) {
+    for (const value of references) {
+        const reference = isAlias(value) ? value.resolve(document) : value;
         if (!isScalar(reference) || typeof reference.value !== 'string' || !reference.value.startsWith('$/')) continue;
         const token = reference.srcToken;
         if (token === undefined || !('source' in token)) continue;
-        const start = token.type === 'block-scalar'
-            ? token.props.reduce((end, part) => 'source' in part ? Math.max(end, part.offset + part.source.length) : end, token.offset)
-            : token.offset;
+        const start =
+            token.type === 'block-scalar'
+                ? token.props.reduce(
+                      (end, part) => ('source' in part ? Math.max(end, part.offset + part.source.length) : end),
+                      token.offset,
+                  )
+                : token.offset;
         const source = token.source;
-        const replaced = source.replace(/\$|\\x24|\\u0024|\\U00000024/u, (value) => value === '$' ? '.' : value.slice(0, -2) + '2e');
+        const replaced = source.replace(/\$|\\x24|\\u0024|\\U00000024/u, (value) =>
+            value === '$' ? '.' : value.slice(0, -2) + '2e',
+        );
         prepared = prepared.slice(0, start) + replaced + prepared.slice(start + source.length);
     }
     return prepared;
@@ -55,7 +62,12 @@ export async function checkActions(session: Session, planned: PlannedCheck): Pro
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runToolCheck(session, planned, COMMAND);
-    using workspace = createFileWorkspace(session.root, session.repository.files.map((file) => file.path));
+    using workspace = createFileWorkspace(
+        session.root,
+        session.repository.files.map((file) => file.path),
+    );
+    // Actionlint discovers local reusable workflows only inside a Git project.
+    mkdirSync(join(workspace.root, '.git'));
     for (const [path, source] of replacements) {
         const target = join(workspace.root, path);
         chmodSync(target, 0o600);

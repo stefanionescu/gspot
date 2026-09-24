@@ -198,6 +198,7 @@ stage = "commit"
 runs = "per-file-list"
 analysis = "actions"
 tool = "actionlint"
+findings_exit_codes = [1]
 claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$"}
