@@ -1,11 +1,11 @@
 import * as messages from '#cli/policy/messages.ts';
 // The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
-import type { TomlTable, Mutation, WriteResult } from '#cli/policy/types.ts';
+import type { TomlTable, Mutation, WriteResult } from '#cli/types/policy.ts';
 import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
 import { stringify as stringifyToml } from 'smol-toml';

@@ -10,7 +10,7 @@ import { openSession } from '#cli/run/session.ts';
 import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { pushedRevisions } from '#cli/repository/staged.ts';
-import { doctorReport, doctorText } from '#cli/doctor/report.ts';
+import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 
 function git(root: string, args: string[]): string {
@@ -25,7 +25,7 @@ test.each(['index', 'commit'] as const)(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
             'source.txt': 'selected source',
         });
         await createFileTree(outside.path, { 'package.json': '{', 'source.txt': 'outside source' });
@@ -140,7 +140,7 @@ test('unborn history is empty and committed blobs retain unusual filenames and b
 test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
         'App.xcodeproj/project.pbxproj': '{}\n',
         'target.swift': 'let value = 1\n',
     });
@@ -193,7 +193,7 @@ const sourceProject = (path: string): string => `{
 test('Xcode source membership does not mix independent nested projects', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["xcode"]\n[[scope]]\npath = "nested"\npresets = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\nconfigurations = ["xcode"]\n',
         'Root.xcodeproj/project.pbxproj': sourceProject('Root.swift'),
         'Root.swift': 'let root = 1\n',
         'nested/Nested.xcodeproj/project.pbxproj': sourceProject('Nested.swift'),
@@ -293,7 +293,7 @@ test('a nested revision refuses its incomplete managed dependency installation',
         'project/.gspot/package.json': '{}',
         'project/.gspot/bun.lock': '{}',
         'project/.gspot/node_modules/example/index.js': 'export const value = 1;',
-        '.gitignore': 'node_modules/\n.gspot/ownership.json\n.gspot/recovery/\n',
+        '.gitignore': 'node_modules/\n.gspot/state/ownership.json\n.gspot/state/recovery/\n',
     });
     git(sandbox.path, ['init']);
     git(sandbox.path, ['add', '.']);
@@ -310,15 +310,15 @@ test('a nested revision refuses its incomplete managed dependency installation',
 
 test.each(['', 'nested/'])('revision prose checks reuse verified installed packages under %s', async (prefix) => {
     await using sandbox = await testdir();
-    const config = `${prefix}.gspot/vale.ini`;
+    const config = `${prefix}.gspot/config/vale.ini`;
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = vale/styles\nPackages = Example\n',
-        '.gitignore': '.gspot/ownership.json\n.gspot/recovery/\n.gspot/vale/styles/Example/\n',
+        '.gitignore': '.gspot/state/ownership.json\n.gspot/state/recovery/\n.gspot/config/vale/styles/Example/\n',
     });
     git(sandbox.path, ['init']);
     git(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, prefix);
-    const packagePath = '.gspot/vale/styles/Example/rule.yml';
+    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
     withLifecycleOwner(project, (owner) => {
         owner.replace(packagePath, { bytes: Buffer.from('extends: existence\n'), mode: 0o644 }, 'config');
     });

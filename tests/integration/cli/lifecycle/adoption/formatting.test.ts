@@ -10,11 +10,11 @@ import { stringify } from 'smol-toml';
 
 import prettier from 'prettier';
 
-import { evaluateEslint } from '#cli/lifecycle/eslint-evaluation.ts';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
 
-import { evaluateFormat } from '#cli/lifecycle/format-evaluation.ts';
+import { evaluateFormat } from '#cli/evaluation/format.ts';
 
 import { openSession } from '#cli/run/session.ts';
 
@@ -40,15 +40,15 @@ test('Prettier adoption preserves override selectors for new files', async () =>
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: carried.format,
             tools: { prettier: { extra: carried.extra } },
         }),
     );
     const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/prettier.json',
+        (file) => file.path === '.gspot/config/prettier.json',
     )!;
-    mkdirSync(join(directory.path, '.gspot'));
+    mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const options = await prettier.resolveConfig(join(directory.path, 'src/future.js'), {
         config: join(directory.path, generated.path),
@@ -94,15 +94,15 @@ test('nested Prettier configurations reset parent options and preserve ordered f
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: carried.formatter?.format,
             tools: { prettier: { extra: carried.formatter?.extra } },
         }),
     );
     const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/prettier.json',
+        (file) => file.path === '.gspot/config/prettier.json',
     )!;
-    mkdirSync(join(directory.path, '.gspot'));
+    mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const text = 'function example() { return { first: "one", second: "two", third: "three" }; }';
     for (const path of [
@@ -155,15 +155,15 @@ test.each([
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: carried.format,
             tools: { prettier: { extra: carried.extra } },
         }),
     );
     const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/prettier.json',
+        (file) => file.path === '.gspot/config/prettier.json',
     )!;
-    mkdirSync(join(directory.path, '.gspot'));
+    mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const current = await prettier.resolveConfig(filepath, {
         config: join(directory.path, generated.path),
@@ -202,7 +202,7 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: carried.formatter!.format,
             tools: { prettier: { ignore_patterns: carried.formatter!.ignorePatterns } },
         }),
@@ -231,7 +231,7 @@ test('shared EditorConfig selectors govern files created after generation', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\npresets = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**/*.js"]\nindent_width = 6\n',
+            'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**/*.js"]\nindent_width = 6\n',
         'source.js': 'const value=1;',
     });
     const session = await openSession(directory.path);
@@ -244,7 +244,7 @@ test('shared EditorConfig selectors govern files created after generation', asyn
     ).toMatchObject({ tabWidth: 6 });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        'version = 1\npresets = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**", "!tests/vendor/**"]\nindent_width = 6\n',
+        'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**", "!tests/vendor/**"]\nindent_width = 6\n',
     );
     const unsupported = await openSession(directory.path);
     expect(() => emitAll(unsupported)).toThrow('EditorConfig cannot represent selector "!tests/vendor/**"');
@@ -286,7 +286,7 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             tools: { editorconfig: { adopted: carried.formatter?.editorconfig }, prettier: { native_defaults: true } },
         }),
     );
@@ -361,7 +361,7 @@ test('combined formatter adoption preserves EditorConfig precedence and nested p
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: carried.formatter?.format,
             tools: {
                 prettier: { native_defaults: carried.formatter?.nativeDefaults, extra: carried.formatter?.extra },
@@ -371,7 +371,7 @@ test('combined formatter adoption preserves EditorConfig precedence and nested p
     );
     const generated = emitAll(await openSession(directory.path), carried.observed);
     for (const file of generated.files.filter(
-        (file) => file.path.endsWith('.editorconfig') || file.path === '.gspot/prettier.json',
+        (file) => file.path.endsWith('.editorconfig') || file.path === '.gspot/config/prettier.json',
     )) {
         mkdirSync(join(directory.path, file.path, '..'), { recursive: true });
         writeFileSync(join(directory.path, file.path), file.content);
@@ -379,7 +379,7 @@ test('combined formatter adoption preserves EditorConfig precedence and nested p
     for (const [index, [path, text]] of cases.entries()) {
         const filepath = join(directory.path, path);
         const options = await prettier.resolveConfig(filepath, {
-            config: join(directory.path, '.gspot/prettier.json'),
+            config: join(directory.path, '.gspot/config/prettier.json'),
             editorconfig: true,
             useCache: false,
         });

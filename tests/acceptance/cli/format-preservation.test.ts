@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import prettier from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
 
-const POLICY = 'version = 1\npresets = ["formatting"]\n[rules]\ninstall = false\n';
+const POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const EXPECTED = 'const greeting = "hello"\nif (greeting) {\n        console.log(greeting)\n}\n';
 

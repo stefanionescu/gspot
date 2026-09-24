@@ -8,7 +8,7 @@ import { collectCarried } from '#cli/lifecycle/takeover.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { proposeText } from '#cli/policy/propose.ts';
-import type { ExistingTooling } from '#cli/repository/types.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
 const tooling: ExistingTooling = {
@@ -33,10 +33,10 @@ test.each([
         'app/deep/sample.css': 'a {}\n',
         'gspot.toml': stringify({
             version: 1,
-            presets: ['css'],
+            configurations: ['css'],
             scope: [
-                { path: 'app', presets: [] },
-                { path: 'app/deep', presets: [] },
+                { path: 'app', configurations: [] },
+                { path: 'app/deep', configurations: [] },
             ],
             ignore: [
                 {
@@ -96,8 +96,8 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
-            presets: ['css'],
-            scopes: [{ path: 'theme[1]/deep', presets: ['css'] }],
+            configurations: ['css'],
+            scopes: [{ path: 'theme[1]/deep', configurations: ['css'] }],
             carried,
             hooks: 'none',
             ci: 'none',
@@ -271,14 +271,14 @@ test.each([false, true])(
             stringify({
                 version: 1,
                 level: 'all',
-                presets: ['css'],
+                configurations: ['css'],
                 rules: { install: false },
                 tools: { stylelint: carried.tools.get('stylelint')!.settings },
                 ignore: carried.tools.get('stylelint')!.ignores,
             }),
         );
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session).files.find((file) => file.path === '.gspot/stylelint.json')!;
+        const generated = emitAll(session).files.find((file) => file.path === '.gspot/config/stylelint.json')!;
         for (const code of ['#example { color: red; }', 'a { color: #abc; }', 'a { color: #ggg; }', 'a {}']) {
             const before = await stylelint.lint({ code, configFile: join(sandbox.path, '.stylelintrc.json') });
             const after = await stylelint.lint({

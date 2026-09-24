@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { isRulePath, lintRules } from '#cli/rules/lint.ts';
+import { isRulePath, lintRules } from '#cli/agents/lint.ts';
 
 function file(path: string, body: string): { path: string; text: string } {
-    return { path, text: `---\nlayer: code\npreset: naming\ntitle: T\n---\n\n# T\n\n${body}` };
+    return { path, text: `---\nlayer: code\nconfiguration: naming\ntitle: T\n---\n\n# T\n\n${body}` };
 }
 
 describe('rule lint', () => {

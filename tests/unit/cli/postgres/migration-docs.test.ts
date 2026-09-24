@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Migration } from '#cli/checks/postgres/types.ts';
-import { DOC_SEPARATOR } from '#cli/checks/postgres/postgres-definitions.ts';
-import { sqlFile } from '#cli/readers/sql/statements.ts';
+import { DOC_SEPARATOR } from '#cli/checks/postgres/migration-docs.ts';
+import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import { docProblems } from '#cli/checks/postgres/migration-docs.ts';
 
 const SECTIONS = ['Schema', 'Tables', 'Indexes', 'Functions', 'Triggers', 'Extensions'];

@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 
-const POLICY = 'version = 1\nlevel = "all"\npresets = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
+const POLICY = 'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
 const WAITING = new Map([
     ['nextjs/build', 'tools.next.build_in_gate'],
     ['postgres/migration-docs', 'tools.postgres.migration_docs'],
@@ -58,7 +58,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });

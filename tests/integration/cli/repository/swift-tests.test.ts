@@ -1,5 +1,5 @@
-import { detectPresets } from '#cli/presets/detect.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -22,7 +22,7 @@ test.each([
     await createFileTree(sandbox.path, { 'Examples/Checks.swift': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
-    expect(detectPresets(repository.files, presetManifests(), []).some(({ preset }) => preset === 'xctest')).toBe(
+    expect(detectConfigurations(repository.files, configurationManifests(), []).some(({ configuration }) => configuration === 'xctest')).toBe(
         selected,
     );
 });
@@ -35,7 +35,7 @@ test.each([true, false])('Swift package test targets are executable declarations
             : '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    expect(detectPresets(repository.files, presetManifests(), []).some(({ preset }) => preset === 'xctest')).toBe(
+    expect(detectConfigurations(repository.files, configurationManifests(), []).some(({ configuration }) => configuration === 'xctest')).toBe(
         declared,
     );
 });
@@ -44,7 +44,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     await using sandbox = await testdir();
     const source = 'import Testing\n@Test func checks() async {\n    try await Task.sleep(for: .seconds(1))\n}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["xctest"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n',
         'Examples/Checks.swift': source,
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
@@ -84,7 +84,7 @@ test.each([
 ])('Swift skip reason belongs to its argument: $body', async ({ body, missing }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["xctest"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["xctest"]\n',
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const result = await executeRun(await openSession(sandbox.path), {
@@ -104,7 +104,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     const source = 'import Testing\n@Test func checks() { sleep(1) }\n';
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["xctest"]\n[[scope]]\npath = "integration"\n[scope.tools.xctest]\nsleep_allowed = [{ paths = ["integration/**"], reason = "Integration fixture verifies a native timeout." }]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n[[scope]]\npath = "integration"\n[scope.tools.xctest]\nsleep_allowed = [{ paths = ["integration/**"], reason = "Integration fixture verifies a native timeout." }]\n',
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
@@ -134,7 +134,7 @@ test.each([
     await using sandbox = await testdir();
     const source = (body: string): string => `import Testing\n@Test func checks() {\n    ${body}\n}\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["xctest"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n',
         'Examples/Checks.swift': source(body),
     });
     const inspect = async () =>
@@ -158,7 +158,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["xctest"]\n[[scope]]\npath = "custom"\n[scope.tools.xctest]\nreference_layout = "References/{file}-{test}.png"\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n[[scope]]\npath = "custom"\n[scope.tools.xctest]\nreference_layout = "References/{file}-{test}.png"\n',
         'first/Checks.swift': 'import Testing\n@Test func title() {}\n',
         'first/__Snapshots__/Checks/title.1.png': 'png',
         'second/Checks.swift': 'struct Checks {}\n',
@@ -197,7 +197,7 @@ test.each([
 ])('invalid snapshot layout is a policy error: %s', async (layout) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = ["xctest"]\n[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`,
+        'gspot.toml': `version = 1\nconfigurations = ["xctest"]\n[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`,
         'Checks.swift': 'import Testing\n',
     });
     const result = await run(sandbox.path, ['check', '--only', 'xctest/reference-images']);

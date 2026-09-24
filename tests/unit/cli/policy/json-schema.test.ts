@@ -1,6 +1,6 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, test } from 'bun:test';
-import { policySchema } from '#cli/policy/schema.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
 test.each([
@@ -37,7 +37,7 @@ describe('the JSON schema of gspot.toml', () => {
         expect(
             policySchema.safeParse({
                 version: 1,
-                presets: ['bash'],
+                configurations: ['bash'],
                 limits: { file_lines: 300, python: { file_lines: { value: 400, reason: 'why' } } },
             }).success,
         ).toBe(true);
@@ -188,4 +188,13 @@ test.each([
     const input = { version: 1, tools: { xctest: { reference_layout: layout } } };
     expect(policySchema.safeParse(input).success).toBe(valid);
     expect(validate(input)).toBe(valid);
+});
+
+
+test.each([
+    { version: 1, presets: ['typescript'] },
+    { version: 1, scope: [{ path: 'app', presets: ['react'] }] },
+])('legacy selection fields are rejected by runtime and published schemas: %j', (input) => {
+    expect(policySchema.safeParse(input).success).toBe(false);
+    expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(input)).toBe(false);
 });

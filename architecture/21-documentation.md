@@ -68,7 +68,7 @@ Use this ordered content brief when rewriting the root README:
    and `install`. Explain that teammates run `gspot install` after cloning; gspot does not
    inject a `prepare` script. Link the full command reference instead of listing every command.
 1. `## Choose your checks`: one runnable configuration example, one scoped exception with a
-   reason, and links to presets and profiles. Explain `recommended` versus `all`: banned names
+   reason, and links to configurations and profiles. Explain `recommended` versus `all`: banned names
    and optional house-style checks belong to `all`. Trivial-function and trivial-file checks
    remain enabled by default at both levels. Do not confuse a check name with a tool rule name.
 1. `## Adopt and remove`: summarize carryover, retained unsupported configuration, recovery
@@ -76,7 +76,7 @@ Use this ordered content brief when rewriting the root README:
    project-wide tools can report errors in unchanged files. Describe `git commit --no-verify`
    and `git push --no-verify` as bypassing local hooks. CI and server policy remain enforced.
 1. `## Support and help`: summarize verified language and platform support with links to the
-   release-matched presets. Link troubleshooting for missing tools and configuration errors.
+   release-matched configurations. Link troubleshooting for missing tools and configuration errors.
    Avoid a hand-maintained total of checks as a proxy for support quality.
 1. `## Contribute` and `## License`: link contribution instructions, the actual license,
    release notes, and a private security-reporting route once configured. Label architecture
@@ -119,17 +119,16 @@ manual under `/docs/` just to make room for a landing page.
 
 The sidebar groups are:
 
-- Start: overview at `/guides/overview/`, install, quick start, and existing repository.
-- Daily work: findings, customization, the preset catalog grouped by kind, profiles, and agents.
-- Integrate: hooks and CI, scopes and monorepos, use without mise, custom checks, tests and
-  coverage, dependency licenses, and security checks.
-- Maintain: troubleshooting, recovery and uninstall, and building and contributing.
-- Reference: commands, presets, checks, standalone plugin, settings, configuration fields,
-  and engines. Keep long lists collapsed.
+- Get started: overview at `/guides/overview/`, install, quick start, and existing repository.
+- Guides: findings, customization, profiles, agents, integrations, troubleshooting, and recovery.
+- Reference: Commands, Configurations, Checks, ESLint plugin, Settings, and Configuration file.
+  Group configurations into Languages, Frameworks, Tools, Libraries, Platforms, Databases, and
+  Repository checks. Keep long lists collapsed.
+- Development: building, contributing, and engine implementation details at `/development/engines/`.
 
 These are navigation groups, not a requirement for another index page per group. Reuse the
 existing guide that owns a task; add only missing tasks. Add a short concepts section to the
-customization guide for preset, check, tool rule, finding, level, stage, scope, and profile.
+customization guide for configuration, check, tool rule, finding, level, stage, scope, and profile.
 Use the [public vocabulary](README.md#glossary) everywhere, including search labels and `help`.
 
 A guide states starting conditions, commands, expected results, and recovery for consequential
@@ -169,8 +168,9 @@ Render the landing page through `StarlightPage` in the existing Astro project. S
 navigation, search, theme persistence, code controls, and the 404 route. Remove the separate
 site layout and duplicate scripts.
 
-State "CLI to lint and enforce rules for LLM generated codebases" in the hero introduction. Follow it with
-**Get started** and **Command reference**, linking to the existing installation and check
+Use "Lint AI generated code." as the hero heading. Explain that gspot configures linters,
+runs checks, and generates agent instructions from one repository configuration. Follow it with
+**Get started** and **View commands**, linking to the existing installation and check
 reference routes. Identify source-checkout setup explicitly. Do not present `--help` as an
 installation command.
 
@@ -179,7 +179,7 @@ Use neutral navigation selections and fine section dividers.
 
 Below the introduction, show the JavaScript client-environment defect and manual correction side by side on wide
 screens and stacked on phones. Keep the captured
-transcript in a native disclosure. Retain the paired Bash walkthrough as the lightweight first check.
+transcript in a native disclosure. Use JavaScript in the homepage setup panels.
 Show prerequisites, commands, output, and manual edits
 clearly distinguished. Link to the owning guide for the complete procedure. Remove slogans,
 repeated explanations, decorative sign-offs, and oversized terminal framing.
@@ -188,6 +188,12 @@ Exclude testimonials, usage-statistics cards, competitor graphics, and unsupport
 claims. Demonstrations record the test repository or revision, CLI version, command, platform,
 and tool availability; timing also names cold or warm caches. A check count is neither coverage
 nor correctness. Passing the gate does not prove that code has no defects.
+
+The tool strip uses equal cells: six columns on desktop, three on tablets, and two on phones.
+Feature illustrations share 40:27 frames and centered content. Feature headings and links align
+across each row. Setup code surfaces stretch to equal heights with independent horizontal
+scrolling. Homepage components own their margins, rather than inheriting article spacing.
+The generated hero artwork remains centered on a plain surface labeled LINT and CODE.
 
 ### The theme
 
@@ -299,14 +305,14 @@ Acceptance is task-based as well as mechanical:
 ## Deployment and released documentation
 
 Keep the landing page, Starlight manual, reference generator, and schema in this repository's
-`docs/` project. They share CLI and preset definitions; a second repository requires a second
+`docs/` project. They share CLI and configuration definitions; a second repository requires a second
 version-coordination mechanism without providing a product benefit.
 
 The GitHub Pages definition is `.github/workflows/site.yml`. Its presence does not establish
 that the protected environment, hosting account, domain, or live rollback has been verified.
 
 - Build from a published release tag. Use its pinned runtime and frozen repository lockfile.
-  Run the existing docs build, including reference generation from that tag's CLI and presets,
+  Run the existing docs build, including reference generation from that tag's CLI and configurations,
   and upload `docs/dist/`. Generated reference entries and staged schema copies stay in build output.
 - The build job has read-only repository access. A separate deployment job uses the protected
   `github-pages` environment and the Pages artifact. Only that job receives `pages: write`
@@ -323,7 +329,7 @@ that the protected environment, hosting account, domain, or live rollback has be
   release, never unreleased default-branch behavior. Historical release-tag artifacts remain
   downloadable; a version switcher is outside the first deployment.
 - A documentation correction is built from a reviewed docs-only commit based on the stable release, retaining its CLI and
-  preset definitions and recording both source revision and product version.
+  configuration definitions and recording both source revision and product version.
 - Keep the preceding production artifact and source revision for rollback. Redeploy that
   artifact, or rebuild its exact pinned source if retention has expired; do not roll back DNS
   for an ordinary content defect.
@@ -335,7 +341,7 @@ No deployment or DNS change is part of this architecture-editing task.
 
 ## Reference generation
 
-Render reference content from validated command, configuration, preset, and plugin definitions
+Render reference content from validated command, configuration, configuration, and plugin definitions
 through Astro's content store. Keep authored guides in their own collection and generated
 entries under separate ownership. Use the existing Astro/Starlight project and content
 configuration, with route rendering that preserves all public reference URLs and anchors.
@@ -345,7 +351,7 @@ Commands come from the registered public Commander tree, including inherited glo
 usage, choices, defaults, implicit help, and nested commands. Exclude hidden/internal commands.
 Command definitions own effects, exits, and examples in their behavioral help. The CLI and
 reference loader consume that same text. Missing behavioral help fails reference generation.
-Settings cover the complete root, scope, integration, and preset configuration contracts.
+Settings cover the complete root, scope, integration, and configuration configuration contracts.
 Matching shared settings list every owner; conflicting definitions fail the build. Include
 plugin rules, public options, and both exported levels without duplicating manually maintained
 lists. Generated pages show the release version and link to the owning source definition.
@@ -362,7 +368,7 @@ code block or maintain a separate fixture hierarchy as a condition of documentat
 
 One Astro reference loader owns rendering and source attribution. It writes content-store entries,
 not generated Markdown files. No file replacement, ownership markers, staging, or pruning remain.
-The Bash demonstration transcript lives beside its documentation component. Theme tokens,
+The JavaScript demonstration uses the same captured defect and correction exercised by documentation tests. Theme tokens,
 search, release-aligned deployment, and rollback remain part of the site contract.
 
 Architecture owns target contracts. Public reference describes released behavior and never
@@ -391,7 +397,7 @@ Authored guides and generated reference entries have separate ownership. Preserv
 
 ### Acceptance K-304
 
-Render complete public reference from validated command, configuration, preset, and plugin definitions through the Astro content store. Preserve routes and inherited command options. Include global and integration settings. Reject duplicate identities and conflicting setting definitions. Publish only release-matched behavior, with source links to definitions.
+Render complete public reference from validated command, configuration, configuration, and plugin definitions through the Astro content store. Preserve routes and inherited command options. Include global and integration settings. Reject duplicate identities and conflicting setting definitions. Publish only release-matched behavior, with source links to definitions.
 
 ### Acceptance S-4
 

@@ -1,5 +1,5 @@
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import * as manifestDefinitions from '#cli/presets/read-manifests.ts';
+import * as manifestDefinitions from '#cli/configurations/read-manifests.ts';
 import * as programDefinition from '#cli/program.ts';
 import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
@@ -11,11 +11,13 @@ test('command reference includes inherited options and nested usage while omitti
     const program = programDefinition.buildProgram();
     const parent = program
         .command('account')
+        .summary('Inspect accounts')
         .description('Inspect an account')
         .addHelpText('after', '\nEffects:\nRead an account.\n\nExit codes:\n0: complete.\n\nExample:\ngspot account')
         .option('--region <name>', 'Select a region');
     parent
         .command('show <name>')
+        .summary('Show an account')
         .description('Show an account')
         .addHelpText(
             'after',
@@ -38,21 +40,21 @@ test('command reference includes inherited options and nested usage while omitti
     }
 });
 
-test('identical setting definitions list every preset owner and global settings remain visible', () => {
+test('identical setting definitions list every configuration owner and global settings remain visible', () => {
     const settings = referencePages().get('settings.md')!;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
-    expect(shared).toContain('/reference/presets/express/');
-    expect(shared).toContain('/reference/presets/fastapi/');
+    expect(shared).toContain('/reference/configurations/express/');
+    expect(shared).toContain('/reference/configurations/fastapi/');
     expect(settings).toContain('`require_reasons`');
 });
 
 test('conflicting setting definitions stop reference generation', () => {
-    const manifests = new Map(manifestDefinitions.presetManifests());
+    const manifests = new Map(manifestDefinitions.configurationManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
     const setting = fastapi.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
     setting.kind = 'boolean';
     manifests.set('fastapi', fastapi);
-    const definitions = spyOn(manifestDefinitions, 'presetManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Conflicting setting definition: tools.openapi.produced_by');
     } finally {
@@ -60,14 +62,14 @@ test('conflicting setting definitions stop reference generation', () => {
     }
 });
 
-test('preset-specific defaults retain distinct values and their owning presets', () => {
+test('configuration-specific defaults retain distinct values and their owning configurations', () => {
     const rows = referencePages()
         .get('settings.md')!
         .split('\n')
         .filter((line) => line.includes('`tools.sqlfluff.dialect`'));
     expect(rows).toHaveLength(2);
-    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/presets/sql/');
-    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/presets/postgres/');
+    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/configurations/sql/');
+    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/configurations/postgres/');
 });
 
 test('generated source links resolve to their actual owner and display the current product version', () => {
@@ -83,11 +85,11 @@ test('generated source links resolve to their actual owner and display the curre
 });
 
 test('duplicate check identities stop reference loading instead of hiding one owner', () => {
-    const manifests = new Map(manifestDefinitions.presetManifests());
+    const manifests = new Map(manifestDefinitions.configurationManifests());
     const duplicate = structuredClone(manifests.get('sql')!);
     duplicate.checks.push(duplicate.checks[0]!);
     manifests.set('sql', duplicate);
-    const definitions = spyOn(manifestDefinitions, 'presetManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Duplicate check identity:');
     } finally {
@@ -159,4 +161,30 @@ test('plugin references reject an empty example before publishing pages', () => 
         docs.example = original;
     }
     expect(referencePages().get('plugin/no-trivial-files.md')).toContain(original);
+});
+
+test('reference titles come from their definitions and exact rule identifiers remain searchable', () => {
+    const pages = referencePages();
+    const program = programDefinition.buildProgram();
+    for (const command of program.createHelp().visibleCommands(program)) {
+        if (command.name() === 'help') continue;
+        expect(command.summary().trim().length).toBeGreaterThan(0);
+        const page = pages.get(`commands/${command.name()}.md`)!;
+        expect(page).toContain(`title: ${JSON.stringify(command.summary())}`);
+        expect(page).toContain(`gspot ${command.name()}`);
+    }
+    for (const manifest of manifestDefinitions.configurationManifests().values()) {
+        for (const check of manifest.checks) {
+            expect(check.title?.trim().length).toBeGreaterThan(0);
+            const page = pages.get(`rules/${check.name}.md`)!;
+            expect(page).toContain(check.name);
+            expect(page).toContain(`title: ${JSON.stringify(check.title)}`);
+        }
+    }
+    for (const [name, rule] of Object.entries(plugin.rules)) {
+        const page = pages.get(`plugin/${name}.md`)!;
+        expect(page).toContain(`gspot/${name}`);
+        expect(page).toContain(`title: ${JSON.stringify(rule.meta.docs!.title)}`);
+    }
+    expect([...pages.keys()].some((path) => path.startsWith('presets/'))).toBe(false);
 });

@@ -1,4 +1,4 @@
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { run } from '#cli/platform/spawn.ts';
@@ -37,7 +37,7 @@ test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'])(
                           }) + '\n',
                   }),
             'gspot.toml': `version = 1
-presets = []
+configurations = []
 [rules]
 install = false
 [hooks]
@@ -86,7 +86,7 @@ format = "lines"
             const result = await run(command, { cwd: repository.path });
             expect(result.code, result.stderr).toBe(0);
         }
-        expect(existsSync(join(clone.path, '.gspot/ownership.json'))).toBe(false);
+        expect(existsSync(join(clone.path, '.gspot/state/ownership.json'))).toBe(false);
         expect(existsSync(join(clone.path, 'node_modules'))).toBe(false);
         expect(hookStatus(await openSession(clone.path)).ready).toBe(false);
         if (manager === 'simple-git-hooks') {
@@ -207,7 +207,7 @@ format = "lines"
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(existsSync(join(clone.path, '.git/hooks/pre-commit'))).toBe(false);
         expect(existsSync(join(clone.path, '.git/hooks/pre-commit.gspot-manager'))).toBe(false);
-        expect(existsSync(join(clone.path, '.gspot/ownership.json'))).toBe(true);
+        expect(existsSync(join(clone.path, '.gspot/state/ownership.json'))).toBe(true);
         const restored = await run(['git', 'status', '--porcelain'], options);
         expect(restored.code, restored.stderr).toBe(0);
         expect(restored.stdout).toBe('');

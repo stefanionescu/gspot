@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#cli/policy/types.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { MergedView } from '#cli/types/policy.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
 
 function input(root: string, paths: string[], tracked = paths): EngineInput {
@@ -110,7 +110,7 @@ describe('fences and paths', () => {
 test('Bash examples report syntax errors, accept corrections, and stop on cancellation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'a.md': '```bash\nif then\n```\n',
     });
     const session = await openSession(sandbox.path);

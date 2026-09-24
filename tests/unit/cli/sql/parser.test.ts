@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { parseSql } from '#cli/readers/sql/parser.ts';
-import { sqlFile, positionAt } from '#cli/readers/sql/statements.ts';
+import { parseSql } from '#cli/parsers/sql/parser.ts';
+import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
@@ -34,7 +34,7 @@ test('concurrent SQL parsing initializes the WASM module once in a fresh process
     const script = `
         import { spyOn } from 'bun:test';
         import * as fs from 'node:fs';
-        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/readers/sql/parser.ts', import.meta.dir))};
+        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/parser.ts', import.meta.dir))};
         const original = fs.readFileSync;
         let loads = 0;
         spyOn(fs, 'readFileSync').mockImplementation((path, ...args) => {

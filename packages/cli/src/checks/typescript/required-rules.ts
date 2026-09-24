@@ -1,14 +1,15 @@
-// integrity/required-rules: the configuration ESLint resolves for a file still turns on every rule a preset requires.
-import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
-import { eslintCoverageResponse } from '#cli/lifecycle/eslint-evaluation.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+// integrity/required-rules: the configuration ESLint resolves for a file still turns on every rule a configuration requires.
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { eslintCoverageResponse } from '#cli/schemas/evaluation.ts';
 
-const ESLINT_FILE = '.gspot/eslint.config.mjs';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+
+const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
 const LINT_CHECKS = ['javascript/eslint', 'typescript/eslint'];
 
-// The rules the selected presets require, for each file ending they name.
+// The rules the selected configurations require, for each file ending they name.
 function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
     const selected = input.selection.selected;
     const required = new Map<string, Set<string>>();
@@ -52,7 +53,7 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
                 file: ESLINT_FILE,
                 line: 1,
                 rule: 'rule-off',
-                message: `${rule} is off for ${file.path}, and the presets require it for every .${ending} file.`,
+                message: `${rule} is off for ${file.path}, and the configurations require it for every .${ending} file.`,
                 fixable: false,
             })),
         );

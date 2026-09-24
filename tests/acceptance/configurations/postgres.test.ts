@@ -1,0 +1,130 @@
+// Planted repository for the postgres configuration: a locking migration, a repeated version, an edited migration, and a schema with holes.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+const INIT = [
+    'init',
+    '--yes',
+    '--configurations',
+    'postgres',
+    '--without',
+    'naming',
+    'spelling',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-rules',
+    '--no-install',
+];
+const FOLDER = 'supabase/migrations';
+const FIRST = `${FOLDER}/20240101000000_create_teams.sql`;
+const TEAMS = `-- The teams of the application.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '30s';
+CREATE TABLE IF NOT EXISTS public.teams (
+    id UUID PRIMARY KEY,
+    title TEXT NOT NULL
+);
+ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
+COMMIT;
+`;
+const later = (name: string): string => `${FOLDER}/20240201000000_${name}.sql`;
+const FROZEN_POLICY = '[tools.squawk]\nfrozen_through = "20240101000000"\n';
+
+const CASES: PlantedCase[] = [
+    {
+        check: 'postgres/squawk',
+        files: { [later('add_size')]: 'ALTER TABLE public.teams ADD COLUMN size INT NOT NULL;\n' },
+        expected: 'adding-required-field',
+    },
+    {
+        check: 'postgres/migration-order',
+        files: { [`${FOLDER}/20240101000000_second.sql`]: 'SELECT 1;\n' },
+        expected: 'already has the version 20240101000000',
+    },
+    {
+        check: 'postgres/migration-order',
+        files: { [`${FOLDER}/20230101000000_early.sql`]: 'SELECT 1;\n' },
+        expected: 'A new migration sorts before 20240101000000_create_teams.sql',
+    },
+    {
+        check: 'postgres/migrations-frozen',
+        files: { [FIRST]: `${TEAMS}SELECT 1;\n` },
+        policy: FROZEN_POLICY,
+        expected: 'This migration has run, and its text changed',
+    },
+    {
+        check: 'postgres/rls-present',
+        files: { [later('create_notes')]: 'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\n' },
+        expected: 'public.notes does not have row level security enabled',
+    },
+    {
+        check: 'postgres/rls-present',
+        files: {
+            [later('create_notes')]:
+                'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\nALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;\n',
+        },
+        expected: 'has no policy',
+    },
+    {
+        check: 'postgres/explicit-grants',
+        files: { [later('grant_teams')]: 'GRANT ALL ON public.teams TO anon;\n' },
+        expected: 'GRANT ALL gives every privilege',
+    },
+    {
+        check: 'postgres/security-definer-search-path',
+        files: {
+            [later('create_touch')]:
+                'CREATE FUNCTION public.touch() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n',
+        },
+        expected: 'sets no search_path',
+    },
+    {
+        check: 'postgres/index-covers-foreign-key',
+        files: {
+            [later('create_members')]:
+                'CREATE TABLE IF NOT EXISTS private.members (\n    id UUID PRIMARY KEY,\n    team_id UUID REFERENCES public.teams (id)\n);\n',
+        },
+        expected: 'private.members.team_id is a foreign key and no index leads with it',
+    },
+    {
+        check: 'postgres/migration-docs',
+        files: {},
+        policy: '[tools.postgres]\nmigration_docs = true\n',
+        expected: 'The second line is "-- Migration: 20240101000000_create_teams.sql"',
+    },
+];
+
+describe('the postgres configuration', () => {
+    test(
+        'every postgres check fires on its planted defect',
+        async () => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { [FIRST]: TEAMS });
+            commitAll(sandbox.path);
+            const environment = { PATH: toolsPath(['squawk', 'sqlfluff', 'typos', 'ec']) };
+            await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            commitAll(sandbox.path);
+            const checkIds = new Set(CASES.map((planted) => planted.check));
+            for (const id of checkIds) {
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
+                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+            }
+            for (const planted of CASES) {
+                const outcome = await runPlanted(sandbox.path, planted, environment);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
+            }
+        },
+        PLANTED_TIMEOUT_MS * 5,
+    );
+});

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { GRAMMAR_SOURCES } from '#cli/naming/grammars-definitions.ts';
+import { GRAMMAR_SOURCES } from '#cli/parsers/grammars.ts';
 
 type EmbeddedIndex = Record<string, string>;
 
@@ -18,10 +18,10 @@ const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: stri
 function findRepoRoot(): string {
     let dir = dirname(fileURLToPath(new URL(import.meta.url)));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
-        if (existsSync(join(dir, 'presets')) && existsSync(join(dir, 'packages'))) return dir;
+        if (existsSync(join(dir, 'packages/cli/configurations')) && existsSync(join(dir, 'packages'))) return dir;
         dir = dirname(dir);
     }
-    throw new Error('The presets folder is not beside the source tree.');
+    throw new Error('The configurations folder is not beside the source tree.');
 }
 
 function embeddedIndex(): EmbeddedIndex | undefined {
@@ -51,7 +51,7 @@ export function isEmbedded(): boolean {
 }
 
 /**
- * Reads one asset by its repository-relative path (`presets/language/bash/manifest.toml`).
+ * Reads one asset by its repository-relative path (`packages/cli/configurations/language/bash/manifest.toml`).
  * @param path the asset path
  * @returns the text
  */
@@ -87,7 +87,7 @@ export function grammarPath(name: string): string {
 
 /**
  * Lists asset paths under a prefix, repository-relative, sorted.
- * @param prefix the path prefix, such as `presets/`
+ * @param prefix the path prefix, such as `configurations/`
  * @returns the paths
  */
 export function listAssets(prefix: string): string[] {

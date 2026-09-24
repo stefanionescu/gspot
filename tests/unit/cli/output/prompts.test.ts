@@ -81,12 +81,12 @@ test.each([true, false])(
         const selection = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
-            expect(await askMany('Which presets?', '--presets <ids>', [], ['bash', 'markdown'], useDefaults)).toEqual([
+            expect(await askMany('Which configurations?', '--configurations <ids>', [], ['bash', 'markdown'], useDefaults)).toEqual([
                 'bash',
                 'markdown',
             ]);
             expect(selection).not.toHaveBeenCalled();
-            expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --presets <ids>.');
+            expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --configurations <ids>.');
         } finally {
             printed.mockRestore();
             selection.mockRestore();
@@ -104,15 +104,15 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
         try {
             expect(
                 await askMany(
-                    'Which presets?',
-                    '--presets <ids>',
+                    'Which configurations?',
+                    '--configurations <ids>',
                     [{ value: 'markdown', label: 'Markdown' }],
                     ['bash'],
                     false,
                 ),
             ).toEqual([...answer]);
             expect(printed).toHaveBeenCalledWith(
-                `Selected: ${answer.length === 0 ? 'none' : 'markdown'}. Change with --presets <ids>.`,
+                `Selected: ${answer.length === 0 ? 'none' : 'markdown'}. Change with --configurations <ids>.`,
             );
         } finally {
             printed.mockRestore();

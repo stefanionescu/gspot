@@ -1,11 +1,11 @@
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { FileDeclaration } from '#cli/policy/types.ts';
-import { FILE_PREFIX_BYTES } from '#cli/repository/file-tags-definitions.ts';
+import type { FileDeclaration } from '#cli/types/policy.ts';
+import { FILE_PREFIX_BYTES } from '#cli/repository/file-tags.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
-import type { Repository, TrackedFile } from '#cli/repository/types.ts';
-import { natureOf, readAttributes } from '#cli/repository/natures.ts';
+import type { Repository, TrackedFile } from '#cli/types/repository.ts';
+import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
 import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
 import { swiftTestTags } from '#cli/repository/swift-tests.ts';
 
@@ -20,7 +20,7 @@ import { swiftTestTags } from '#cli/repository/swift-tests.ts';
 export async function readRepository(
     root: string,
     declarations: FileDeclaration[],
-    scopeEntries: { path: string; presets: string[] }[],
+    scopeEntries: { path: string; configurations: string[] }[],
     exclude: string[],
 ): Promise<Repository> {
     const entries = await trackedEntries(root, exclude);

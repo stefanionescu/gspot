@@ -70,7 +70,7 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
 
 test('per-file execution preserves expanded flags and arguments after the file', async () => {
     const policy = `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "sandbox/arguments"
 command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
@@ -105,7 +105,7 @@ test('a repository command receives a declared empty argument without changing i
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             check: [
                 {
                     name: 'project/arguments',
@@ -146,7 +146,7 @@ else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_0
 `;
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\npresets = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
+                'version = 1\nlevel = "all"\nconfigurations = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
             'deploy/ansible.cfg': '[defaults]\n',
             'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
             '.gspot/.venv/bin/ansible-lint': script(version, failure !== 'outdated'),
@@ -196,7 +196,7 @@ test('an adapter observes a changed executable version on the next command inste
     const command = (version: string): string =>
         `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["ansible"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["ansible"]\n',
         '.gitignore': '.gspot/\n.venv/\n',
         'ansible.cfg': '[defaults]\n',
         'site.yml': '---\n- hosts: all\n  tasks: []\n',
@@ -221,7 +221,7 @@ test('cached results observe executable replacement and permissions in a reused 
     const script = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? 1 : 0};\n`;
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         'source.txt': 'input\n',
         checker: script(false),
     });
@@ -246,7 +246,7 @@ test('per-file failures name the selected file when expanded arguments follow it
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             check: [
                 {
                     name: 'project/file-result',
@@ -285,7 +285,7 @@ test('a signaled per-file process is an execution error rather than a source fin
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             check: [
                 {
                     name: 'project/termination',

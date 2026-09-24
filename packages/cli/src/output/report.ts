@@ -1,11 +1,11 @@
+import { REPORT_DIRECTORY } from '#cli/platform/layout.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
-import { join } from 'node:path';
-import type { Finding } from '#cli/output/finding.ts';
-import type { RunReport, PushReport } from '#cli/output/report-types.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
+import type { Finding, PushReport, RunReport } from '#cli/types/reports.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
+import { join } from 'node:path';
 
 const JSON_INDENT = 4;
 
@@ -58,14 +58,14 @@ function codeQualityText(report: RunReport | PushReport): string {
 export function writeReport(root: string, report: RunReport | PushReport): void {
     const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
     const sarif = sarifText(report);
-    const path = join(root, '.gspot', 'report.json');
+    const path = join(root, REPORT_DIRECTORY, 'report.json');
     try {
         withLifecycleOwner(root, (owner) => {
             const proposals = (
                 [
-                    ['.gspot/report.json', json],
-                    ['.gspot/report.sarif', sarif],
-                    ['.gspot/report.codequality.json', codeQualityText(report)],
+                    [`${REPORT_DIRECTORY}/report.json`, json],
+                    [`${REPORT_DIRECTORY}/report.sarif`, sarif],
+                    [`${REPORT_DIRECTORY}/report.codequality.json`, codeQualityText(report)],
                 ] as const
             ).map(([destination, content]) =>
                 owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),

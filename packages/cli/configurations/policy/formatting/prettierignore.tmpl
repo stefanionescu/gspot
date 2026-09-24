@@ -1,0 +1,19 @@
+# Editors and gspot checks use the same ordered ignore patterns.
+<% const adopted = tool('prettier').ignore_patterns; if (adopted !== undefined) { %><%= adopted.join('\n') %>
+<% } else { %>
+node_modules/
+dist/
+build/
+coverage/
+.gspot/cache/
+.gspot/reports/report.json
+.gspot/reports/report.sarif
+*.lock
+bun.lockb
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+<% for (const file of policy.declarations.flatMap((entry) => entry.paths)) { %><%= file %>
+<% } %>
+
+<% } %>

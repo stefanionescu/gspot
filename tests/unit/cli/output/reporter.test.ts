@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util';
 import { configureOutput } from '#cli/output/messages.ts';
 import { main } from '#cli/program.ts';
-import type { RunReport } from '#cli/output/report-types.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { describe, expect, test } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 

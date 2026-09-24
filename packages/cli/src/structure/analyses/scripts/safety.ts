@@ -1,8 +1,8 @@
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 // The destructive and silencing forms a script may not use outside its owners. Searched: shellcheck, semgrep; the ownership rule is original.
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { withoutComment } from '#cli/structure/code-lines.ts';
-import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#cli/structure/structure-definitions.ts';
+import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#cli/structure/patterns.ts';
 
 /**
  * One finding per line that discards a failure, sources state, sweeps processes or trees outside an owner, or changes directory unchecked.

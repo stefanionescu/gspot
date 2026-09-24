@@ -13,6 +13,7 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
     meta: {
         type: 'problem',
         docs: {
+            title: 'Tests directory contents',
             example:
                 'When `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
             summary: 'Finds a file that is not a test sitting in a folder of test files.',

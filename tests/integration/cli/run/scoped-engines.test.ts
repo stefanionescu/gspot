@@ -9,7 +9,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["static-site", "supabase", "i18n"]\n[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+            'version = 1\nconfigurations = ["static-site", "supabase", "i18n"]\n[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
         _headers: HEADERS,
         'messages/en.json': '{"title":"Home"}',
         'messages/de.json': '{"title":"Start"}',
@@ -84,7 +84,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["swift", "xctest"]\n[[scope]]\npath = "apps/second"\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["swift", "xctest"]\n[[scope]]\npath = "apps/second"\n',
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });

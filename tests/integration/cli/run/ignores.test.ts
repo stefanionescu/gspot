@@ -4,7 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { mkdirSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {
@@ -23,7 +23,7 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     const source = 'func welcome(for name: String) -> String { return greeting(for: name) }\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["swift"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n',
         'Sources/Welcome.swift': source,
         '.gitignore': '.gspot/\n',
     });
@@ -85,7 +85,7 @@ test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comme
         const source = `first_action() { printf '%s\\n' ready; }\nsecond_action() { printf '%s\\n' ready; }\n${calls}`;
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
             'actions.sh': source,
             '.gitignore': '.gspot/\n',
         });

@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // The install configuration: a minimum release age, and the security scanner where the package manager has one.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
-import { LOCKFILES, SECONDS_PER_DAY } from '#cli/checks/integrity-definitions.ts';
+import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 
 type Reporter = (file: string, rule: string, text: string) => Finding;
 
@@ -63,3 +63,5 @@ export function installPolicy(input: EngineInput): Finding[] {
         return [report('bun.lock', 'release-age', `No ${BUNFIG} sets [install] minimumReleaseAge.`)];
     return [...ageFindings(report, install, days), ...scannerFindings(report, install, scanner)];
 }
+
+const SECONDS_PER_DAY = 86_400;

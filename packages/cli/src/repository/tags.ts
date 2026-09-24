@@ -1,9 +1,9 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
-import type { Tagged, RawEntry } from '#cli/repository/types.ts';
+import type { Tagged, RawEntry } from '#cli/types/repository.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/lifecycle/patterns-definitions.ts';
-import { shebangExecutable, shebangInterpreter } from '#cli/presets/detect.ts';
-import { EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#cli/repository/file-tags-definitions.ts';
+import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/repository/patterns.ts';
+import { shebangExecutable, shebangInterpreter } from '#cli/configurations/detect.ts';
+import { EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#cli/repository/file-tags.ts';
 
 function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };

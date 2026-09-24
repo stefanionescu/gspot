@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
 import { readCached } from '#cli/run/cache.ts';
-import type { Stage } from '#cli/presets/types.ts';
+import type { Stage } from '#cli/types/configurations.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
@@ -43,14 +43,14 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
     test.each([0, 1])(`${target} write failure preserves check status %s and findings`, async (status) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = []\n',
+            'gspot.toml': 'version = 1\nconfigurations = []\n',
             'source.ts': 'export {};\n',
         });
         const session = await sessionFor(sandbox.path, status);
         fs.mkdirSync(join(sandbox.path, '.gspot'), { recursive: true });
-        const obstruction = join(sandbox.path, '.gspot', target);
+        const obstruction = join(sandbox.path, '.gspot', target === 'cache' ? target : `reports/${target}`);
         if (target === 'cache') fs.writeFileSync(obstruction, 'authored obstruction\n');
-        else fs.mkdirSync(obstruction);
+        else fs.mkdirSync(obstruction, { recursive: true });
         const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
         try {
             const outcome = await executeRun(session, {
@@ -79,11 +79,11 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
 test('the message stage preserves the prior report files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'source.ts': 'export {};\n',
-        '.gspot/report.json': 'previous JSON',
-        '.gspot/report.sarif': 'previous SARIF',
-        '.gspot/report.codequality.json': 'previous GitLab',
+        '.gspot/reports/report.json': 'previous JSON',
+        '.gspot/reports/report.sarif': 'previous SARIF',
+        '.gspot/reports/report.codequality.json': 'previous GitLab',
     });
     const session = await sessionFor(sandbox.path, 0, 'message');
     const outcome = await executeRun(session, {
@@ -95,26 +95,26 @@ test('the message stage preserves the prior report files', async () => {
     });
     expect(outcome.report.checks).toHaveLength(1);
     expect(outcome.report.exitCode).toBe(0);
-    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe('previous JSON');
-    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8')).toBe('previous SARIF');
-    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.codequality.json'), 'utf8')).toBe('previous GitLab');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')).toBe('previous JSON');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).toBe('previous SARIF');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8')).toBe('previous GitLab');
 });
 
 test.each([false, true])('unreadable selected sources reject a run with noCache=%s', async (noCache) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'source.ts': 'export {};\n',
     });
     const session = await sessionFor(sandbox.path, 0);
     const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false, noCache };
     const original = await executeRun(session, options);
     expect(original.report.exitCode).toBe(0);
-    const report = fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8');
+    const report = fs.readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
     fs.rmSync(join(sandbox.path, 'source.ts'));
     fs.mkdirSync(join(sandbox.path, 'source.ts'));
     await rejects(executeRun(session, options), { code: 'EISDIR' });
-    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe(report);
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')).toBe(report);
 });
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
@@ -122,14 +122,14 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = []\n',
+            'gspot.toml': 'version = 1\nconfigurations = []\n',
             'source.ts': 'export {};\n',
         });
         const session = await sessionFor(sandbox.path, 1);
         const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
         const initial = await executeRun(session, options);
         expect(initial.report.exitCode).toBe(1);
-        const reportPath = join(sandbox.path, '.gspot/report.json');
+        const reportPath = join(sandbox.path, '.gspot/reports/report.json');
         const cache = join(sandbox.path, '.gspot/cache');
         const [entry] = fs.readdirSync(cache);
         fs.writeFileSync(join(cache, entry!), content);
@@ -151,7 +151,7 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
 
 test('a denied owned cache read reports its path and cause', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n', 'source.ts': 'export {};\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', 'source.ts': 'export {};\n' });
     const session = await sessionFor(sandbox.path, 0);
     const initial = await executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false });
     expect(initial.report.exitCode).toBe(0);
@@ -171,7 +171,7 @@ test('a denied owned cache read reports its path and cause', async () => {
 test('checks share generated-file hashes within a run and observe edits in the next run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         '.gspot/shared.toml': 'value = 1\n',
         'source.ts': 'export {};\n',
     });

@@ -1,8 +1,8 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // Blocking calls inside an async function: they stop the event loop for every other task.
-import { parserFor } from '#cli/naming/parsers.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { Node } from 'web-tree-sitter';
 
 const BLOCKING_NAMES = new Set([

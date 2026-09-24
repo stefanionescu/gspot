@@ -1,6 +1,6 @@
-import type { Policy } from '#cli/policy/types.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
-import type { ScopeSelection } from '#cli/run/types.ts';
+import type { Policy } from '#cli/types/policy.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { ScopeSelection } from '#cli/types/execution.ts';
 
 /** Describe the persistent policy selection independently of files or tool availability. */
 export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpec): string {

@@ -1,6 +1,6 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
-import type { Finding } from '#cli/output/finding.ts';
-import type { OutputFormat } from '#cli/presets/types.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { OutputFormat } from '#cli/types/configurations.ts';
 
 const JSON_INDENT = 2;
 

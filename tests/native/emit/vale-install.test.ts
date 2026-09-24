@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackages, parseAlerts, hasPackages } from '#cli/prose/vale.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 // A ZIP containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(
@@ -18,7 +18,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
     await createFileTree(directory.path, { 'guide.md': 'An ambiguousword.\n', 'authored.txt': 'keep\n' });
     const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(PACKAGE) });
     try {
-        const pin = presetManifests()
+        const pin = configurationManifests()
             .get('prose')!
             .tools.find((tool) => tool.name === 'vale')!.version!;
         const version = await run(['vale', '--version'], { cwd: directory.path });
@@ -27,7 +27,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         const owner = openLifecycleOwner(directory.path);
         try {
             owner.replace(
-                '.gspot/vale.ini',
+                '.gspot/config/vale.ini',
                 {
                     bytes: Buffer.from(
                         `StylesPath = vale/styles\nPackages = http://127.0.0.1:${server.port}/LocalStyle.zip\n\n[*]\nBasedOnStyles = LocalStyle\n`,
@@ -41,13 +41,13 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         }
         expect(await installPackages(directory.path)).toBeUndefined();
         expect(hasPackages(directory.path, true)).toBe(true);
-        const installed = '.gspot/vale/styles/LocalStyle/terms.yml';
+        const installed = '.gspot/config/vale/styles/LocalStyle/terms.yml';
         expect(
             readOwnership(directory.path).files.some((file) => file.path === installed && file.installed !== undefined),
         ).toBe(true);
         await using clone = await testdir();
         await createFileTree(clone.path, {
-            '.gspot/vale.ini': readFileSync(join(directory.path, '.gspot/vale.ini'), 'utf8'),
+            '.gspot/config/vale.ini': readFileSync(join(directory.path, '.gspot/config/vale.ini'), 'utf8'),
             [installed]: readFileSync(join(directory.path, installed), 'utf8'),
         });
         const original = readFileSync(join(clone.path, installed));
@@ -56,7 +56,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         expect(adopted.installed).toBeDefined();
         expect(adopted.original).toBeDefined();
         expect(readFileSync(join(clone.path, installed))).toEqual(original);
-        const command = ['vale', '--config', '.gspot/vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'];
+        const command = ['vale', '--config', '.gspot/config/vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'];
         const checked = await run(command, { cwd: directory.path });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(parseAlerts(checked.stdout)).toEqual([
@@ -71,7 +71,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         const corrected = await run(command, { cwd: directory.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(parseAlerts(corrected.stdout)).toEqual([]);
-        const stale = '.gspot/vale/styles/Retired/terms.yml';
+        const stale = '.gspot/config/vale/styles/Retired/terms.yml';
         const staleOwner = openLifecycleOwner(directory.path);
         try {
             staleOwner.replace(stale, { bytes: Buffer.from('installed old rule\n'), mode: 0o644 }, 'config');
@@ -105,20 +105,20 @@ test.each(['configuration', 'package', 'nested directory'])(
         await using directory = await testdir();
         const config = 'StylesPath = vale/styles\nPackages = LocalStyle\n';
         await createFileTree(directory.path, {
-            'project/.gspot/vale.ini': config,
-            'project/.gspot/vale/styles/.keep': '',
+            'project/.gspot/config/vale.ini': config,
+            'project/.gspot/config/vale/styles/.keep': '',
             'outside/vale.ini': config,
             'outside/terms.yml': 'external bytes\n',
         });
         const root = join(directory.path, 'project');
         if (kind === 'configuration') {
-            unlinkSync(join(root, '.gspot/vale.ini'));
-            symlinkSync('../../outside/vale.ini', join(root, '.gspot/vale.ini'));
+            unlinkSync(join(root, '.gspot/config/vale.ini'));
+            symlinkSync('../../outside/vale.ini', join(root, '.gspot/config/vale.ini'));
         } else if (kind === 'package') {
-            symlinkSync('../../../../outside', join(root, '.gspot/vale/styles/LocalStyle'));
+            symlinkSync('../../../../outside', join(root, '.gspot/config/vale/styles/LocalStyle'));
         } else {
-            await createFileTree(root, { '.gspot/vale/styles/LocalStyle/.keep': '' });
-            symlinkSync('../../../../../outside', join(root, '.gspot/vale/styles/LocalStyle/nested'));
+            await createFileTree(root, { '.gspot/config/vale/styles/LocalStyle/.keep': '' });
+            symlinkSync('../../../../../outside', join(root, '.gspot/config/vale/styles/LocalStyle/nested'));
         }
         expect(() => hasPackages(root, true)).toThrow(/lifecycle/iu);
         expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');

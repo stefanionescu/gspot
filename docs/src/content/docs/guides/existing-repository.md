@@ -14,7 +14,7 @@ Preview adoption from the repository root:
 gspot init --dry-run
 ```
 
-Review the proposed presets, configuration changes, and integrations. Run `gspot init` to
+Review the proposed configurations, configuration changes, and integrations. Run `gspot init` to
 accept the proposal. Keep unsupported configuration until you have converted its behavior.
 
 If the plan lists unread configuration, `gspot init` without `--dry-run` exits with status 2 before
@@ -29,7 +29,7 @@ A tool evaluation failure is unread configuration and refuses initialization.
 
 Readable configurations of selected tools include `typos.toml`, `.shellcheckrc`,
 and `.markdownlint.jsonc`. Before replacing or removing a file, gspot saves its exact bytes
-and permissions in local recovery data under `.gspot/recovery/`. Keep that directory private
+and permissions in local recovery data under `.gspot/state/recovery/`. Keep that directory private
 and retain it until you no longer need the originals.
 
 ## Carry existing policy
@@ -38,7 +38,7 @@ Supported exception lists become explicit repository policy:
 
 - typos words and excludes;
 - rules turned off in a linter configuration, as `[[ignore]]` entries;
-- gitleaks allowlists, osv ignored advisories and license exceptions, when those presets run.
+- gitleaks allowlists, osv ignored advisories and license exceptions, when those configurations run.
 
 Carried entries retain source comments where supported. Otherwise, their reason identifies
 the source as `carried from <file> at init`. Review these reasons after adoption.
@@ -74,7 +74,7 @@ directory. Other native configuration files do not override that policy or execu
 
 Root and directory-local Stylelint rule tables retain enabled options, numeric limits, and disabled rules.
 Adoption validates rule names and options with the installed Stylelint version pinned by the
-CSS preset. Install that version before adopting its configuration. Local JSON and YAML
+CSS configuration. Install that version before adopting its configuration. Local JSON and YAML
 inheritance uses explicit `./` or `../` paths and preserves parent order and child overrides.
 Inherited files remain intact and are
 checked for changes before publication. Directory-local configuration creates a policy scope.
@@ -157,7 +157,7 @@ and failure status without changing `core.hooksPath`. Tracked hooks require inte
 their hook manager. Configure [hooks and CI](/guides/hooks-and-ci/) before replacing that setup.
 
 The proposal identifies potentially redundant lint scripts and tool dependencies for review.
-Add tools without a preset as [custom checks](/guides/custom-checks/).
+Add tools without a configuration as [custom checks](/guides/custom-checks/).
 
 ## Run the checks
 

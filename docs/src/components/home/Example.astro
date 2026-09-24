@@ -1,0 +1,37 @@
+---
+import { Code } from '@astrojs/starlight/components';
+import example from './client-environment.json';
+---
+<div class="comparison">
+    <section aria-labelledby="client-defect">
+        <p class="label">Before</p>
+        <h3 id="client-defect">Read a private variable</h3>
+        <Code code={example.broken.trimEnd()} lang="js" title="search.js" />
+        <p>ESLint reports this private environment read at line 2, column 25.</p>
+    </section>
+    <section aria-labelledby="client-correction">
+        <p class="label">After</p>
+        <h3 id="client-correction">Call an API route</h3>
+        <Code code={example.corrected.trimEnd()} lang="js" title="search.js" />
+        <p>This rule reports no finding. Implement the route on the server, where private configuration belongs.</p>
+    </section>
+</div>
+<details>
+    <summary>See the ESLint diagnostic</summary>
+    <p>gspot plugin {example.version}, ESLint 9.39.5, JavaScript module, default rule options.</p>
+    <Code code={`search.js:2:25  ${example.findings[0].ruleId}\n${example.findings[0].message}`} lang="text" />
+    <p>The corrected module produces zero findings from this rule. The application still needs an implementation for the API route.</p>
+</details>
+<style>
+    .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+    .comparison section { min-width: 0; display: grid; grid-template-rows: auto auto auto 1fr; align-content: start; gap: 16px; padding: 28px; border: 1px solid var(--sl-color-gray-5); border-radius: 8px; margin: 0; }
+    .comparison .label { color: var(--sl-color-text-accent); font-size: 0.8125rem; font-weight: 600; margin: 0; }
+    .comparison h3 { font-size: 1.25rem; margin: 0; }
+    .comparison p { margin: 0; color: var(--sl-color-gray-2); font-size: 0.9375rem; }
+    .comparison :global(.expressive-code) { min-width: 0; margin: 8px 0; }
+    .comparison :global(pre) { overflow-x: auto; }
+    details { margin-block: 24px; }
+    details > p { margin-block: 16px; }
+    details :global(.expressive-code) { margin-block: 20px; }
+    @media (max-width: 49.99rem) { .comparison { grid-template-columns: minmax(0, 1fr); gap: 24px; }.comparison section { padding: 20px; } }
+</style>

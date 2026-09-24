@@ -1,4 +1,4 @@
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -14,30 +14,30 @@ test('apply rejects injected SQLFluff dialect directives with exit 2 before chan
     await using sandbox = await testdir();
     const original = '[sqlfluff]\ndialect = postgres\n';
     const policy = (dialect: string) =>
-        `version = 1\npresets = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
+        `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': policy('sqlite\nexclude_rules = ALL'),
-        '.gspot/sqlfluff.cfg': original,
+        '.gspot/config/sqlfluff.cfg': original,
     });
     const refused = await run(sandbox.path, ['apply']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain('Use a SQLFluff dialect label');
-    expect(await Bun.file(join(sandbox.path, '.gspot/sqlfluff.cfg')).text()).toBe(original);
+    expect(await Bun.file(join(sandbox.path, '.gspot/config/sqlfluff.cfg')).text()).toBe(original);
     await Bun.write(join(sandbox.path, 'gspot.toml'), policy('sqlite'));
     const corrected = await run(sandbox.path, ['apply', '--dry-run']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await Bun.file(join(sandbox.path, '.gspot/sqlfluff.cfg')).text()).toBe(original);
+    expect(await Bun.file(join(sandbox.path, '.gspot/config/sqlfluff.cfg')).text()).toBe(original);
 });
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\npresets = ["swift"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The fixture verifies enabling a previously ignored rule."\n`,
         'Example.swift': 'let example = 1\n',
     });
     const original = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/swiftlint.yml',
+        (file) => file.path === '.gspot/config/swiftlint.yml',
     )!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
@@ -63,27 +63,27 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
 });
 
 test.each([
-    { preset: 'bash', tool: 'shellcheck', rule: 'SC2086', target: 'shellcheckrc', collection: 'disable' },
-    { preset: 'swift', tool: 'swiftformat', rule: 'consecutiveSpaces', target: 'swiftformat', collection: 'disable' },
-    { preset: 'sql', tool: 'sqlfluff', rule: 'CP01', target: 'sqlfluff.cfg', collection: 'sqlfluff.exclude_rules' },
+    { configuration: 'bash', tool: 'shellcheck', rule: 'SC2086', target: 'shellcheckrc', collection: 'disable' },
+    { configuration: 'swift', tool: 'swiftformat', rule: 'consecutiveSpaces', target: 'swiftformat', collection: 'disable' },
+    { configuration: 'sql', tool: 'sqlfluff', rule: 'CP01', target: 'sqlfluff.cfg', collection: 'sqlfluff.exclude_rules' },
     {
-        preset: 'postgres',
+        configuration: 'postgres',
         tool: 'squawk',
         rule: 'adding-required-field',
         target: 'squawk.toml',
         collection: 'excluded_rules',
     },
-    { preset: 'nginx', tool: 'gixy', rule: 'ssrf', target: 'gixy.cfg', collection: 'skips' },
+    { configuration: 'nginx', tool: 'gixy', rule: 'ssrf', target: 'gixy.cfg', collection: 'skips' },
 ])(
     'apply preview names a removed $tool suppression without changing installed rules',
-    async ({ preset, tool, rule, target, collection }) => {
+    async ({ configuration, tool, rule, target, collection }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\npresets = ["${preset}"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n[rules]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${preset}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
+            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
         });
         const original = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === `.gspot/${target}`,
+            (file) => file.path === `.gspot/config/${target}`,
         )!;
         await createFileTree(sandbox.path, { [original.path]: original.content });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
@@ -100,9 +100,9 @@ test.each([
 
 test('apply preview names added Vale styles when prose moves from recommended to all', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\npresets = ["prose"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nconfigurations = ["prose"]\n[rules]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
-    const original = emitAll(await openSession(sandbox.path)).files.find((file) => file.path === '.gspot/vale.ini')!;
+    const original = emitAll(await openSession(sandbox.path)).files.find((file) => file.path === '.gspot/config/vale.ini')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), `level = "all"\n${policy}`);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
@@ -126,19 +126,19 @@ test('apply preview names added Vale styles when prose moves from recommended to
 });
 
 test.each([
-    { preset: 'commits', check: 'commitlint', rule: 'type-case', target: 'commitlint.config.cjs' },
-    { preset: 'configs', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
-    { preset: 'html', check: 'html-validate', rule: 'no-inline-style', target: 'html-validate-templates.json' },
+    { configuration: 'commits', check: 'commitlint', rule: 'type-case', target: 'commitlint.config.cjs' },
+    { configuration: 'configs', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
+    { configuration: 'html', check: 'html-validate', rule: 'no-inline-style', target: 'html-validate-templates.json' },
 ])(
     'apply preview names an enabled $check rule and preserves installed configuration',
-    async ({ preset, check, rule, target }) => {
+    async ({ configuration, check, rule, target }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\npresets = ["${preset}"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n[rules]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${preset}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
+            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
         });
         const original = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === `.gspot/${target}`,
+            (file) => file.path === `.gspot/config/${target}`,
         )!;
         await createFileTree(sandbox.path, { [original.path]: original.content });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
@@ -156,10 +156,10 @@ test.each([
 test('apply preview names a missing Semgrep rule by ID and clears it after correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["security"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["security"]\n[rules]\ninstall = false\n',
     });
     const original = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/semgrep/node.yml',
+        (file) => file.path === '.gspot/config/semgrep/node.yml',
     )!;
     const parsed = Bun.YAML.parse(original.content) as { rules: { id: string }[] };
     const removed = parsed.rules.shift()!;
@@ -176,7 +176,7 @@ test('apply preview names a missing Semgrep rule by ID and clears it after corre
 
 test('apply previews changed pins, preserves policy, and writes the pin only after successful generation', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\npresets = []\n[rules]\ninstall = true\n';
+    const policy = 'version = 1\nconfigurations = []\n[rules]\ninstall = true\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.json).toMatchObject({ isDryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
@@ -197,7 +197,7 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
 
 test('a failed pin publication leaves the old version and succeeds after the write failure is repaired', async () => {
     await using repository = await testdir();
-    await createFileTree(repository.path, { 'gspot.toml': 'version = 1\npresets = []\n', '.gspot/version': '0.0.1\n' });
+    await createFileTree(repository.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', '.gspot/version': '0.0.1\n' });
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
         if (String(target) === join(repository.path, '.gspot/version')) throw new Error('Pin write denied');
@@ -216,15 +216,15 @@ test('a failed pin publication leaves the old version and succeeds after the wri
 test('apply preview rejects a generated destination linked outside the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\npresets = ["spelling"]\n',
-        'project/.gspot/.keep': '',
+        'project/gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n',
+        'project/.gspot/config/.keep': '',
         outside: 'authored external configuration\n',
     });
     const project = join(sandbox.path, 'project');
-    fs.symlinkSync(join(sandbox.path, 'outside'), join(project, '.gspot/typos.toml'));
+    fs.symlinkSync(join(sandbox.path, 'outside'), join(project, '.gspot/config/typos.toml'));
     await expect(applyCommand({ cwd: project, isDryRun: true })).rejects.toThrow('private regular file');
     expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe('authored external configuration\n');
-    expect(fs.existsSync(join(project, '.gspot/ownership.json'))).toBe(false);
+    expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
     expect(fs.existsSync(join(project, '.gspot/version'))).toBe(false);
 });
 
@@ -232,11 +232,11 @@ test.each(['gspot.toml', '.gspot/version'])(
     'apply preview rejects an external %s before producing configuration',
     async (path) => {
         await using sandbox = await testdir();
-        const policy = 'version = 1\npresets = []\n';
+        const policy = 'version = 1\nconfigurations = []\n';
         const original = path === 'gspot.toml' ? policy : '0.0.1\n';
         await createFileTree(sandbox.path, {
             'project/gspot.toml': policy,
-            'project/.gspot/.keep': '',
+            'project/.gspot/config/.keep': '',
             outside: original,
         });
         const project = join(sandbox.path, 'project');
@@ -244,14 +244,14 @@ test.each(['gspot.toml', '.gspot/version'])(
         fs.symlinkSync(join(sandbox.path, 'outside'), join(project, path));
         await expect(applyCommand({ cwd: project, isDryRun: true })).rejects.toThrow('private regular file');
         expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe(original);
-        expect(fs.existsSync(join(project, '.gspot/ownership.json'))).toBe(false);
+        expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
     },
 );
 
 test('apply validates obsolete output parents before publishing new configuration', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n',
+        'project/gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
         'outside/old.txt': 'outside bytes\n',
     });
     const root = join(directory.path, 'project');

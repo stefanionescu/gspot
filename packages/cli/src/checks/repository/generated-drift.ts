@@ -1,7 +1,7 @@
 // Does every generated file match its render? Runs apply --dry-run in memory.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { DriftEntry } from '#cli/emit/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { DriftEntry } from '#cli/types/generation.ts';
 
 const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
@@ -10,7 +10,7 @@ const MESSAGES: Record<DriftEntry['kind'], string> = {
 };
 const MOVE_HELP =
     'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
-const STRAY_HELP = 'Delete the file, or add the preset that renders it.';
+const STRAY_HELP = 'Delete the file, or add the configuration that renders it.';
 
 /**
  * One finding per generated file that differs from its render, is missing, or is a stray gspot file.

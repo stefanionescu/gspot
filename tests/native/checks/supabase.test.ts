@@ -3,7 +3,7 @@ import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { EngineInput, Session } from '#cli/types/execution.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
@@ -24,7 +24,7 @@ test('Supabase configurations and function discovery stay within nested project 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["supabase"]\n[[scope]]\npath = "apps/api"\npresets = ["supabase"]\n[scope.tools.supabase]\nfunctions_dir = "edge"\n',
+            'version = 1\nconfigurations = ["supabase"]\n[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n[scope.tools.supabase]\nfunctions_dir = "edge"\n',
         'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
         'apps/api/supabase/config.toml': '[functions.hello]\nverify_jwt = true\n',
@@ -47,7 +47,7 @@ test('Supabase configurations and function discovery stay within nested project 
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n[[scope]]\npath = "apps/api"\npresets = ["supabase"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n',
         'apps/api/supabase/functions/hello/index.ts': 'export function greet(value: any) { return value; }\n',
     });
     const native = Bun.which('deno', { PATH: toolsPath(['deno']) });

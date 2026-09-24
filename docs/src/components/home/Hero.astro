@@ -1,0 +1,43 @@
+---
+// Adapted from Turborepo's homepage grid. See /licenses/turborepo.txt.
+import { Code } from '@astrojs/starlight/components';
+---
+    <section class="home-hero" aria-labelledby="_top">
+        <div class="hero-copy">
+            <p class="release">Source preview · Unreleased</p>
+            <h1 id="_top">Lint AI generated code</h1>
+            <p class="purpose">gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.</p>
+            <nav class="hero-actions" aria-label="Start using gspot">
+                <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
+                <a href="/reference/commands/check/">View commands</a>
+            </nav>
+            <div class="setup-command"><p>From your source checkout</p><Code code="mise run repo:setup" lang="sh" /></div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+            <img src="/brand/home/hero.webp" alt="" width="600" height="600" fetchpriority="high" />
+        </div>
+    </section>
+
+<style>
+    .home-hero { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: center; gap: 0; padding: 72px 0 88px; }
+    .hero-copy { grid-column: span 7; padding-right: 40px; position: relative; z-index: 1; }
+    .release { display: inline-flex; align-items: center; gap: 8px; color: var(--sl-color-gray-2); font-size: 0.75rem; margin: 0 0 24px; }
+    .home-hero h1 { font-size: clamp(2.5rem, 5.5vw, 4.5rem); font-weight: 550; line-height: 1.06; letter-spacing: -0.055em; margin: 0; max-width: 15ch; }
+
+    .purpose { font-size: 1rem; color: var(--sl-color-gray-2); line-height: 1.5; margin-block: 24px 12px; max-width: 48ch; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 28px; }
+    .hero-actions a { min-height: 44px; display: inline-flex; align-items: center; gap: 24px; font-size: 0.875rem; text-decoration: none; }
+    .hero-actions a:hover { text-decoration: underline; }
+    .primary { background: var(--sl-color-white); color: var(--sl-color-black); border-radius: 999px; padding: 10px 22px; font-weight: 600; }
+    .setup-command { max-width: 330px; margin-top: 28px; }
+    .setup-command p { margin: 0; font-size: 0.75rem; color: var(--sl-color-gray-3); }
+    .setup-command :global(.expressive-code) { margin-top: 8px; }
+    .hero-visual { grid-column: span 5; aspect-ratio: 1; display: grid; place-items: center; position: relative; }
+    .hero-visual img { width: 92%; position: relative; z-index: 1; height: auto; }
+    @media (max-width: 49.99rem) {
+        .home-hero { grid-template-columns: 1fr; gap: 32px; padding: 32px 0 48px; }
+        .hero-copy, .hero-visual { grid-column: 1; padding-right: 0; }
+        .hero-visual { display: none; }
+        .home-hero h1 { font-size: 2.75rem; }
+    }
+</style>

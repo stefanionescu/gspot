@@ -2,8 +2,8 @@ import { readSource } from '#cli/repository/tracked.ts';
 // The checks that read the source of a static site: assets nobody references, images that still compress, the manifest, and the headers file.
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
 
 const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;

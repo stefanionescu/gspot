@@ -1,8 +1,8 @@
 // Every scope has a README, and the root has a license.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 
 const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
 

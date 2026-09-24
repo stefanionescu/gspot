@@ -1,5 +1,5 @@
 // File stems and directory names as identifiers: the stem without its extension, every folder on the way, Next.js segments unwrapped.
-import type { Identifier } from '#cli/naming/types.ts';
+import type { Identifier } from '#cli/types/naming.ts';
 
 const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
 const MIGRATION_DIRECTORY = /^\d{14}_/u;
@@ -28,7 +28,7 @@ function unwrapped(segment: string): { name: string; category: string } {
 /**
  * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
  * @param path the file path
- * @param language the language preset the file belongs to
+ * @param language the language configuration the file belongs to
  * @returns the identifier
  */
 export function fileIdentifier(path: string, language: string): Identifier {
@@ -49,7 +49,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 /**
  * Every directory on a file's path as an identifier, from the top down. Dot folders and migration folders are skipped.
  * @param path the file path
- * @param language the language preset the file belongs to
+ * @param language the language configuration the file belongs to
  * @returns the identifiers
  */
 export function directoryIdentifiers(path: string, language: string): Identifier[] {

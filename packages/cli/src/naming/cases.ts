@@ -1,5 +1,5 @@
 // Ordinary cases receive digitless names; migration filenames retain their timestamp and extension.
-import { MIGRATION_TIMESTAMP_DIGITS } from '#cli/naming/cases-definitions.ts';
+import { MIGRATION_TIMESTAMP_DIGITS } from '#cli/naming/categories.ts';
 
 const LOWER_WORD = /^[a-z]+$/u;
 const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;

@@ -1,5 +1,5 @@
-import { toolPin } from '#cli/platform/tool-probe.ts';
-import { mutationTarget } from '#cli/lifecycle/confined.ts';
+import { toolPin } from '#cli/tools/tool-probe.ts';
+import { mutationTarget } from '#cli/filesystem/confined.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // CodeQL on request: one database and one analysis per language, with the accepted results taken out by rule and path.
 import { isAbsolute, join, relative, sep } from 'node:path';
@@ -8,9 +8,9 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { mkdtempSync, rmSync } from 'node:fs';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };

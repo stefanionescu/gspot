@@ -1,10 +1,10 @@
 import { compact } from '#cli/policy/normalize.ts';
 import { dirname, relative } from 'node:path';
-import type { Session } from '#cli/run/types.ts';
-import type { FormatSettings, Policy } from '#cli/policy/types.ts';
-import type { EditorconfigOverride, ScopedFormat } from '#cli/emit/types.ts';
-import { shippedFormat } from '#cli/presets/listing.ts';
-import { expandedPaths } from '#cli/presets/claims.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { FormatSettings, Policy } from '#cli/types/policy.ts';
+import type { EditorconfigOverride, ScopedFormat } from '#cli/types/generation.ts';
+import { shippedFormat } from '#cli/configurations/listing.ts';
+import { expandedPaths } from '#cli/configurations/claims.ts';
 
 type NativeOverride<Options> = {
     files: string | string[];

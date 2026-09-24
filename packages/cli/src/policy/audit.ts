@@ -4,8 +4,8 @@ import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
-import type { ExposedSettings, PathSegment, Policy, PolicyProblem, WrittenValue } from '#cli/policy/types.ts';
-import { quoteArgument } from '#cli/run/reproduce.ts';
+import type { ExposedSettings, PathSegment, Policy, PolicyProblem, WrittenValue } from '#cli/types/policy.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
@@ -152,18 +152,18 @@ export function validateAgainstSurface(
 ): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
     for (const { settings, scope, path } of [
-        { settings: surface, scope: undefined, path: ['presets'] },
+        { settings: surface, scope: undefined, path: ['configurations'] },
         ...policy.scopes.map((scope, index) => ({
             settings: scopeSurfaces.get(scope.path) ?? surface,
             scope: scope.path,
-            path: ['scope', index, 'presets'],
+            path: ['scope', index, 'configurations'],
         })),
     ]) {
         const layers = policyTables(policy, scope);
         for (const { key, message } of settings.problems)
             if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
     }
-    // A root table feeds every scope, so it may hold a setting that only a preset of some scope exposes.
+    // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
     const surfaceFor = (scope: string | undefined): ExposedSettings =>
         scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);

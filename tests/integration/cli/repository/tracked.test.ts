@@ -183,7 +183,7 @@ test('opening a session reads less than one megabyte with a fifty-megabyte sourc
     const megabyte = 1024 * 1024;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(50 * megabyte),
     });
     const prefixReads = spyOn(fs, 'readSync');
@@ -261,7 +261,7 @@ test('source reads refuse an escape introduced after inventory and accept an int
 test('a managed secret baseline rejects linked bytes before evaluating entries', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\nlevel = "all"\npresets = ["secrets"]\n',
+        'project/gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["secrets"]\n',
         'project/.gspot/.keep': '',
         'baseline.json': '[]\n',
     });
@@ -328,7 +328,7 @@ test.skipIf(process.platform === 'win32')(
         await using sandbox = await testdir();
         const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
             ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
         });
         const options = {

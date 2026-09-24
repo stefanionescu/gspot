@@ -1,136 +1,18 @@
 import { applyBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import { fileMode, mutationTarget, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
-import { fileMode, mutationTarget, openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type {
-    FileProposal,
-    FileSnapshot,
-    LifecycleOwner,
-    OwnershipEntry,
-    OwnershipState,
-} from '#cli/lifecycle/types.ts';
+import { configurationFieldsSchema, identitySchema, originalSchema, ownershipSchema } from '#cli/schemas/ownership.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { FileProposal, LifecycleOwner, OwnershipEntry, OwnershipState } from '#cli/types/ownership.ts';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash, randomUUID } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 
-const RECORD = '.gspot/ownership.json';
-const RECOVERY = '.gspot/recovery';
-const LOCK = '.gspot/writer.lock';
-const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
-const modeSchema = z.number().int().min(0).max(0o7777);
-const identitySchema = z.strictObject({ hash: hashSchema, mode: modeSchema, isLink: z.literal(true).optional() });
-const originalSchema = identitySchema.extend({
-    backup: z.string().regex(/^\.gspot\/recovery\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.original$/u),
-});
-const pathSchema = z.string().superRefine((path, context) => {
-    try {
-        mutationTarget(path);
-    } catch (error) {
-        context.addIssue({ code: 'custom', message: String(error) });
-    }
-});
-const configurationPathSchema = z.array(z.union([z.string().min(1), z.number().int().nonnegative()])).min(1);
-const configurationFieldSchema = z.strictObject({
-    path: configurationPathSchema,
-    installed: z.json(),
-    original: z.json().optional(),
-});
-const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
-    for (const [index, field] of fields.entries()) {
-        for (const other of fields.slice(index + 1)) {
-            const length = Math.min(field.path.length, other.path.length);
-            if (field.path.slice(0, length).every((part, position) => part === other.path[position]))
-                context.addIssue({
-                    code: 'custom',
-                    message: `Configuration fields overlap: ${field.path.join('.')} and ${other.path.join('.')}`,
-                });
-        }
-    }
-});
-
-const entrySchema = z.strictObject({
-    path: pathSchema,
-    kind: z.enum(['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'dependency', 'runtime', 'export']),
-    installed: identitySchema.optional(),
-    original: originalSchema.optional(),
-    configuration: z
-        .strictObject({
-            format: z.enum(['json', 'yaml', 'toml']),
-            fields: configurationFieldsSchema,
-            parents: z.array(configurationPathSchema).optional(),
-            edited: z.boolean(),
-            created: z.boolean(),
-        })
-        .optional(),
-    block: z
-        .strictObject({
-            style: z.enum(['markdown', 'hash']),
-            installed: z.string().min(1),
-            original: z.string(),
-            prefix: z.string(),
-        })
-        .optional(),
-});
-
-export const ownershipSchema = z
-    .strictObject({
-        version: z.literal(1),
-        files: z.array(entrySchema),
-        installations: z.array(z.enum(['npm', 'python'])).optional(),
-        pending: z
-            .array(
-                z.strictObject({
-                    path: pathSchema,
-                    before: identitySchema.optional(),
-                    beforeBackup: originalSchema.optional(),
-                    after: identitySchema.optional(),
-                    entry: entrySchema.optional(),
-                }),
-            )
-            .min(1)
-            .optional(),
-    })
-    .superRefine((state, context) => {
-        const paths = new Set<string>();
-        for (const entry of state.files) {
-            const key = entry.path.normalize('NFC').toLowerCase();
-            if (paths.has(key))
-                context.addIssue({ code: 'custom', message: `Duplicate ownership path: ${entry.path}` });
-            paths.add(key);
-        }
-        const pendingPaths = new Set<string>();
-        for (const pending of state.pending ?? []) {
-            if (
-                pending.beforeBackup !== undefined &&
-                !isDeepStrictEqual(
-                    {
-                        hash: pending.beforeBackup.hash,
-                        mode: pending.beforeBackup.mode,
-                        ...(pending.beforeBackup.isLink ? { isLink: true } : {}),
-                    },
-                    pending.before,
-                )
-            )
-                context.addIssue({ code: 'custom', message: 'Interrupted backup has a different previous identity.' });
-            const key = pending.path.normalize('NFC').toLowerCase();
-            if (pendingPaths.has(key))
-                context.addIssue({ code: 'custom', message: `Duplicate pending path: ${pending.path}` });
-            pendingPaths.add(key);
-            if (pending.entry !== undefined && !isDeepStrictEqual(pending.entry.installed, pending.after))
-                context.addIssue({
-                    code: 'custom',
-                    message: 'Interrupted ownership entry has a different installed identity.',
-                });
-            if (pending.entry !== undefined && pending.entry.path !== pending.path)
-                context.addIssue({
-                    code: 'custom',
-                    message: 'Interrupted ownership entry has a different destination.',
-                });
-        }
-    });
-
+import { legacyOwnership, legacyPrefixes, mergeOwnership, migrateState } from '#cli/lifecycle/migrate-state.ts';
+import { STATE_DIRECTORY } from '#cli/platform/layout.ts';
 /** Preserve Git's writable checkout mode when exact generated bytes reproduce a read-only proposal. */
 export function generatedSnapshot(file: GeneratedFile, current: FileSnapshot | undefined): FileSnapshot {
     const bytes = Buffer.from(file.content);
@@ -185,10 +67,14 @@ function pruneConfigurationParents(
 }
 
 /** Serialize local lifecycle writers and recover their durable ownership journal before mutation. */
-export function openLifecycleOwner(root: string): LifecycleOwner {
+export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTORY): LifecycleOwner {
+    const RECORD = `${stateDirectory}/ownership.json`;
+    const RECOVERY = `${stateDirectory}/recovery`;
+    const LOCK = `${stateDirectory}/writer.lock`;
     const confined = openConfinedRoot(root);
     try {
         confined.lock(LOCK);
+        const converted = migrateState(confined, root, stateDirectory);
         let recorded = confined.read(RECORD);
         const state: OwnershipState =
             recorded === undefined
@@ -657,6 +543,7 @@ export function openLifecycleOwner(root: string): LifecycleOwner {
             },
             close() {
                 confined.close();
+                for (const directory of converted) if (confined.list(directory).length === 0) confined.rmdir(directory);
             },
         };
     } catch (error) {
@@ -668,14 +555,19 @@ export function openLifecycleOwner(root: string): LifecycleOwner {
 const activeMutation = new AsyncLocalStorage<Map<string, LifecycleOwner>>();
 
 /** Reuse active mutation owners and serialize each repository or Git-resolved root. */
-export function withLifecycleOwner<Result>(root: string, action: (owner: LifecycleOwner) => Result): Result {
+export function withLifecycleOwner<Result>(
+    root: string,
+    action: (owner: LifecycleOwner) => Result,
+    stateDirectory = STATE_DIRECTORY,
+): Result {
     const canonical = realpathSync(root);
+    const key = `${canonical}\0${stateDirectory}`;
     const active = activeMutation.getStore();
-    const existing = active?.get(canonical);
+    const existing = active?.get(key);
     if (existing !== undefined) return action(existing);
-    const owner = openLifecycleOwner(canonical);
+    const owner = openLifecycleOwner(canonical, stateDirectory);
     try {
-        const result = activeMutation.run(new Map([...(active ?? []), [canonical, owner]]), () => action(owner));
+        const result = activeMutation.run(new Map([...(active ?? []), [key, owner]]), () => action(owner));
         if (result instanceof Promise) return result.finally(() => owner.close()) as Result;
         owner.close();
         return result;
@@ -686,13 +578,20 @@ export function withLifecycleOwner<Result>(root: string, action: (owner: Lifecyc
 }
 
 /** Read ownership for a preview without creating a lock, directory, or journal. */
-export function readOwnership(root: string): OwnershipState {
+export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): OwnershipState {
+    const RECORD = `${stateDirectory}/ownership.json`;
     const files = openConfinedRoot(root);
     try {
         const record = files.read(RECORD);
-        return record === undefined
-            ? { version: 1, files: [] }
-            : ownershipSchema.parse(JSON.parse(record.bytes.toString('utf8')));
+        let state: OwnershipState =
+            record === undefined
+                ? { version: 1, files: [] }
+                : ownershipSchema.parse(JSON.parse(record.bytes.toString('utf8')));
+        for (const prefix of legacyPrefixes(root)) {
+            const legacy = files.read(`${prefix === '' ? '' : `${prefix}/`}.gspot/ownership.json`);
+            if (legacy !== undefined) state = mergeOwnership(state, legacyOwnership(legacy, prefix, stateDirectory));
+        }
+        return state;
     } finally {
         files.close();
     }

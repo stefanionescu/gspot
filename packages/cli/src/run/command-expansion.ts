@@ -1,8 +1,8 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import type { ConfigurationTarget } from '#cli/presets/types.ts';
+import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { configurationName, isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
-import type { CommandPart, PlannedCheck, Session, Substitutions, ToolInvocation } from '#cli/run/types.ts';
+import type { CommandPart, PlannedCheck, Session, Substitutions, ToolInvocation } from '#cli/types/execution.ts';
 import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
@@ -62,7 +62,7 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     const target = allConfigs(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
+    if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no configuration renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
 function stubPath(name: string, scope: string): string {

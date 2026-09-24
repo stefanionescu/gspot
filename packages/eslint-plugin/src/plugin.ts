@@ -61,7 +61,7 @@ const base = { meta: { name: packageManifest.name, version: packageManifest.vers
 
 const allRules = Object.fromEntries(
     Object.keys(rules)
-        // The Next.js preset selects server files. Standalone callers select them explicitly.
+        // The Next.js configuration selects server files. Standalone callers select them explicitly.
         .filter((name) => !INDEX_ONLY_RULES.has(name) && name !== 'require-server-only')
         .map((name) => [`gspot/${name}`, 'error' as const]),
 );

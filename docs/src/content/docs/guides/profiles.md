@@ -35,7 +35,7 @@ gspot init --from team.profile.toml
 ```
 
 Review and accept the plan. Initialization applies it once and runs no checks. Run `gspot check`
-after setup. A profile with `selection = "exact"` selects its preset list; `selection = "detect"`
+after setup. A profile with `selection = "exact"` selects its configuration list; `selection = "detect"`
 combines its policy with project detection.
 
 Adopting an existing tool configuration preserves the profile settings for that tool which

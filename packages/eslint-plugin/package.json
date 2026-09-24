@@ -1,7 +1,7 @@
 {
     "name": "@gspot/eslint-plugin",
     "version": "0.1.0",
-    "description": "The structural ESLint rules gspot ships for JavaScript and TypeScript: wrappers, barrels, lone files, import layout and direction, private-first order, types placement.",
+    "description": "ESLint rules for private environment reads, duplicate exports, trivial code, and file organization in JavaScript and TypeScript.",
     "license": "Apache-2.0",
     "repository": "github:stefanionescu/gspot",
     "type": "module",

@@ -2,12 +2,13 @@
 import { join, relative as relativePath } from 'node:path';
 import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { rmSync } from 'node:fs';
-import type { ConfinedRoot } from '#cli/lifecycle/types.ts';
+import type { ConfinedRoot } from '#cli/types/filesystem.ts';
+
 
 /** The observed build status and its compiler output. */
 type SwiftBuildOutput = { code: number; output: string };
@@ -134,7 +135,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const config = join(input.root, '.gspot', input.scope, 'swiftlint.yml');
+    const config = join(input.root, '.gspot', 'config', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const source = join(plan.folder, 'source');
     const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
@@ -152,7 +153,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
  */
 export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'periphery');
-    const config = join(input.root, '.gspot', input.scope, 'periphery.yml');
+    const config = join(input.root, '.gspot', 'config', input.scope, 'periphery.yml');
     const argv = [
         'periphery',
         'scan',

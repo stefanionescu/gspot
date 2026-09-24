@@ -1,4 +1,4 @@
-import { quoteArgument } from '#cli/run/reproduce.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
 // Every load and write message, in plain English. One function per message.
 
 const LIST_LIMIT = 8;
@@ -63,20 +63,20 @@ export function missingReason(where: string, command: string): string {
 }
 
 /**
- * A preset id nothing ships.
+ * A configuration id nothing ships.
  * @param name the id as written
  * @param near the closest ids that exist
  * @returns the message
  */
-export function unknownPreset(name: string, near: string[]): string {
+export function unknownConfiguration(name: string, near: string[]): string {
     const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
-    return `There is no preset called \`${name}\`.${hint} Run \`gspot explain <preset>\` to read one.`;
+    return `There is no configuration called \`${name}\`.${hint} Run \`gspot explain <configuration>\` to read one.`;
 }
 
 /**
- * A preset named in --without that a selected preset requires.
- * @param name the preset the person left out
- * @param chain the preset ids from the one selected to the one required
+ * A configuration named in --without that a selected configuration requires.
+ * @param name the configuration the person left out
+ * @param chain the configuration ids from the one selected to the one required
  * @returns the message
  */
 export function withoutRequired(name: string, chain: string[]): string {
@@ -84,13 +84,13 @@ export function withoutRequired(name: string, chain: string[]): string {
 }
 
 /**
- * A preset named in gspot remove that the list does not hold.
- * @param name the preset
+ * A configuration named in gspot remove that the list does not hold.
+ * @param name the configuration
  * @param scope the scope the command named, if any
  * @returns the message
  */
-export function presetNotListed(name: string, scope: string | undefined): string {
-    const where = scope === undefined ? 'the root presets' : `the presets of scope ${scope}`;
+export function configurationNotListed(name: string, scope: string | undefined): string {
+    const where = scope === undefined ? 'the root configurations' : `the configurations of scope ${scope}`;
     return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot list settings to see the selection.`;
 }
 
@@ -105,11 +105,11 @@ export function dirtyTree(count: number): string {
 
 /**
  * Requires that loop back on themselves.
- * @param chain the preset ids in the order they were followed
+ * @param chain the configuration ids in the order they were followed
  * @returns the message
  */
 export function circularRequires(chain: string[]): string {
-    return `The presets require each other in a circle: ${chain.join(' -> ')}. This is a bug in a preset manifest.`;
+    return `The configurations require each other in a circle: ${chain.join(' -> ')}. This is a bug in a configuration manifest.`;
 }
 
 /**
@@ -122,13 +122,13 @@ export function scopeMissing(path: string): string {
 }
 
 /**
- * A setting key no selected preset exposes.
+ * A setting key no selected configuration exposes.
  * @param key the key as written
  * @param known the keys that exist under the same table
  * @returns the message
  */
 export function settingNotExposed(key: string, known: string[]): string {
-    return `No selected preset exposes \`${key}\`. The settings that exist under that table are ${list(known)}. Run \`gspot list settings\` to see every one.`;
+    return `No selected configuration exposes \`${key}\`. The settings that exist under that table are ${list(known)}. Run \`gspot list settings\` to see every one.`;
 }
 
 /**
@@ -161,14 +161,14 @@ export function extraNeedsReason(tool: string): string {
 }
 
 /**
- * Two presets shipping different defaults for one scalar.
+ * Two configurations shipping different defaults for one scalar.
  * @param key the setting key
- * @param a the first preset id
- * @param b the second preset id
+ * @param a the first configuration id
+ * @param b the second configuration id
  * @returns the message
  */
 export function conflictingScalars(key: string, a: string, b: string): string {
-    return `The presets \`${a}\` and \`${b}\` set \`${key}\` to different values. Set it yourself in gspot.toml to decide.`;
+    return `The configurations \`${a}\` and \`${b}\` set \`${key}\` to different values. Set it yourself in gspot.toml to decide.`;
 }
 
 /**
@@ -257,7 +257,7 @@ export function limitUnknown(key: string, known: string[]): string {
 }
 
 /**
- * A setting belongs to a preset that one scope selects.
+ * A setting belongs to a configuration that one scope selects.
  * @param key the setting
  * @param scope the scope path, empty for the root
  * @returns the message
@@ -265,7 +265,7 @@ export function limitUnknown(key: string, known: string[]): string {
 export function settingInScope(key: string, scope: string): string {
     const place =
         scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${quoteArgument(scope)}`;
-    return `A preset exposes \`${key}\` in ${place}.`;
+    return `A configuration exposes \`${key}\` in ${place}.`;
 }
 
 /**

@@ -26,7 +26,7 @@ for (const language of ['javascript', 'typescript', 'python', 'swift']) {
             })
             .join('\n');
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\npresets = ["${language}"]\n${maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${maximum}\n`}`,
+            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${maximum}\n`}`,
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
@@ -35,12 +35,12 @@ for (const language of ['javascript', 'typescript', 'python', 'swift']) {
         const files = emitAll(await openSession(directory.path)).files;
         const configName =
             language === 'python'
-                ? '.gspot/ruff.toml'
+                ? '.gspot/config/ruff.toml'
                 : language === 'swift'
-                  ? '.gspot/swiftlint.yml'
-                  : '.gspot/eslint.config.mjs';
+                  ? '.gspot/config/swiftlint.yml'
+                  : '.gspot/config/eslint.config.mjs';
         const config = files.find(({ path }) => path === configName)!;
-        mkdirSync(join(directory.path, '.gspot'));
+        mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, configName), config.content);
         if (language === 'javascript' || language === 'typescript') {
             const results = await new ESLint({

@@ -1,5 +1,5 @@
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/platform/tool-probe.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { planRun } from '#cli/run/plan.ts';
@@ -19,7 +19,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     );
     const received: string[] = [];
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -44,7 +44,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         };
     });
     try {
-        const matches = await astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', files);
+        const matches = await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', files);
         expect(received).toEqual(files);
         expect(matches?.map((match) => match.file)).toEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
@@ -59,7 +59,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
             'source.sh': 'echo example\n',
         });
         const session = await openSession(sandbox.path);
@@ -97,10 +97,10 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
         });
         try {
             await expect(
-                astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['source.sh']),
+                astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['source.sh']),
             ).rejects.toThrow();
             processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
-            expect(await astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['source.sh'])).toEqual(
+            expect(await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['source.sh'])).toEqual(
                 [],
             );
         } finally {
@@ -114,7 +114,7 @@ test('folder checks count code files and preserve allowed and nested directories
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
         'lone/only.ts': '',
         'typed/one.ts': '',
         'typed/one.d.ts': '',
@@ -142,7 +142,7 @@ test('folder checks count code files and preserve allowed and nested directories
 });
 
 test('prefix checks group files and directories once and honor allowances and the threshold', async () => {
-    const policy = 'version = 1\nlevel = "all"\npresets = ["typescript"]\n';
+    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -202,14 +202,14 @@ test.each([
     ['fastapi', 'py'],
     ['xcode', 'swift'],
     ['xctest', 'swift'],
-])('%s retains shared folder enforcement and observes corrections', async (preset, extension) => {
+])('%s retains shared folder enforcement and observes corrections', async (configuration, extension) => {
     const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
     const lone = `feature/only.${extension}`;
     const card = `cards/asset-card.${extension}`;
     const list = `cards/asset-list.${extension}`;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\npresets = ["${preset}", "${language}", "structure"]\n`,
+        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${configuration}", "${language}", "structure"]\n`,
         [lone]: '',
         [card]: '',
         [list]: '',
@@ -242,7 +242,7 @@ test.skipIf(process.platform === 'win32')(
         await using sandbox = await testdir();
         const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["typescript"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n',
             ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
         });
         commitAll(sandbox.path);

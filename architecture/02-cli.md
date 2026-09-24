@@ -8,7 +8,7 @@ command exists when nothing else answers its question.
 ## Commands
 
 ```text
-gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names...>] [--without <names...>] [--scope <path=names...>]
+gspot init       [--yes] [--dry-run] [--from <profile>] [--configurations <names...>] [--without <names...>] [--scope <path=names...>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
@@ -17,12 +17,12 @@ gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
 gspot list       [settings]
-gspot explain    <check> | <tool>/<rule> | <preset> | <setting> | <path>
+gspot explain    <check> | <tool>/<rule> | <configuration> | <setting> | <path>
 gspot doctor
 gspot ignore     <check> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
 gspot set        <setting> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
-gspot add        <preset>... [--scope <path>] [--dry-run]
-gspot remove     <preset> [--scope <path>] [--dry-run]
+gspot add        <configuration>... [--scope <path>] [--dry-run]
+gspot remove     <configuration> [--scope <path>] [--dry-run]
 gspot uninstall  [--dry-run] [--yes]
 gspot export     <file>
 gspot completion <bash|zsh|fish|powershell>
@@ -39,7 +39,7 @@ and `gspot check --staged`. Four commands write one entry of `gspot.toml`: `igno
 `set`, `add`, and `remove`.
 
 Together they cover every value a finding makes a person change: a rule, a check, a limit, a
-list, a preset, a level. Four tables are written by hand, because each is a small structure
+list, a configuration, a level. Four tables are written by hand, because each is a small structure
 and no single value: `[[scope]]`, `[[check]]`, `[[naming.rules]]`, and the elements of
 `[architecture]`. A hand edit is checked on load like any other.
 
@@ -56,7 +56,7 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
   line has it: `init`, `install`, `apply`, `add`, `remove`, `uninstall`,
   and `check --fix`. `ignore` and `set` change one line of a tracked file, and `git diff` shows
   it.
-- One word names a thing: its name. A check, a preset, a rule, and a setting each have a name.
+- One word names a thing: its name. A check, a configuration, a rule, and a setting each have a name.
   Domain identity uses `name`. Structural map keys and third-party identifiers retain their
   actual terms.
 - A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`,
@@ -87,7 +87,7 @@ Reads the repository, proposes a policy, and writes it after a yes.
 6. Hooks and what each hook calls, the CI system, agent files, and the tasks of the runner.
 
 A language with a project file is proposed from that file. A language with no project file,
-such as Bash or SQL, is proposed from its files. A tool preset is proposed only where the
+such as Bash or SQL, is proposed from its files. A tool configuration is proposed only where the
 repository holds the tool.
 
 ### What it prints
@@ -115,9 +115,9 @@ Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every p
 | Question                               | Proposal                                                    | Flag                      |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------- |
 | Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`    |
-| Languages and frameworks found         | all found                                                   | `--presets`, `--without`  |
-| Tools found                            | all found                                                   | `--presets`, `--without`  |
-| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--presets`, `--without`  |
+| Languages and frameworks found         | all found                                                   | `--configurations`, `--without`  |
+| Tools found                            | all found                                                   | `--configurations`, `--without`  |
+| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--configurations`, `--without`  |
 | Where the gspot line of the hooks goes | the task the hook calls, then the hook file, then new hooks | `--hooks`, `--no-hooks`   |
 | Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`         |
 | Install rule files for agents?         | yes                                                         | `--no-rules`              |
@@ -143,7 +143,7 @@ change, after your yes
   mise.toml task lint              new body: gspot check
   .githooks/pre-commit             unchanged; it calls the task above
 
-replace (original bytes saved under .gspot/recovery/)
+replace (original bytes saved under .gspot/state/recovery/)
   .prettierrc.yaml                 one tool owns it; your tabs and 100 columns go into [format]
   ios/.swiftlint.yml               one tool owns it; 2 rules off and 1 rule on are carried
 
@@ -157,7 +157,7 @@ not carried
 
 not written
   CI                               Bitbucket found; paste these lines into your pipeline:
-                                   gspot install  ·  gspot check  ·  keep .gspot/report.json as an artifact
+                                   gspot install  ·  gspot check  ·  keep .gspot/reports/report.json as an artifact
 
 remove by hand, when ready
   .prettierignore, renovate.json   add .gspot/ so your own tools skip the files gspot writes
@@ -198,9 +198,9 @@ Hooks a repository has keep running, tracked or local to one clone, and gspot ne
 exit 2 and nothing written, in these cases:
 
 - A choice flag holds a value outside its list. The message names the flag and the values.
-- `--presets` or `--without` names a preset that does not exist, and the message names near
+- `--configurations` or `--without` names a configuration that does not exist, and the message names near
   matches.
-- `--without` names a preset that a selected preset requires, and the message prints the chain.
+- `--without` names a configuration that a selected configuration requires, and the message prints the chain.
 - The working tree has uncommitted changes and `--allow-dirty` is absent.
 - `--from` names a profile that does not load.
 
@@ -210,7 +210,7 @@ exit 2 and nothing written, in these cases:
 
 1. Validate every flag, the profile, and the proposed `gspot.toml` in memory.
 2. Validate path boundaries and save the exact bytes and permissions of every file or task
-   being replaced under `.gspot/recovery/`. Failure leaves the originals in place.
+   being replaced under `.gspot/state/recovery/`. Failure leaves the originals in place.
 3. Write the config, generated files, and managed blocks atomically. Resolve tool lockfiles
    through `apply`; `--no-install` skips environment installation, not lockfile resolution.
 4. Run `gspot install`, unless `--no-install` was given. Run no check.
@@ -341,10 +341,10 @@ policy writes.
 
 ## `list`
 
-`gspot list` prints what exists and what is on. Presets come in three groups: installed,
-found in the repository and not selected, and the rest. Under each installed preset stand its
+`gspot list` prints what exists and what is on. Configurations come in three groups: installed,
+found in the repository and not selected, and the rest. Under each installed configuration stand its
 checks with their state: `on`, `off (level)`, `off (ignore)`, or `waits for <setting>`. Each
-preset of the second group ends with its `gspot add` line.
+configuration of the second group ends with its `gspot add` line.
 
 `gspot list settings` prints every setting of the selection: the setting name, its value, and where the
 value comes from.
@@ -355,11 +355,11 @@ One verb that says what a thing is. It takes:
 
 | Argument                                    | Prints                                                                                                |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| a check name (`structure/trivial-function`) | `summary`, `why`, and `help`; its preset and level; its settings; the `ignore` line that turns it off |
+| a check name (`structure/trivial-function`) | `summary`, `why`, and `help`; its configuration and level; its settings; the `ignore` line that turns it off |
 | a tool rule (`markdownlint/MD024`)          | the summary of the tool where it has one, the page of the rule, and the check that runs it            |
-| a preset name (`python`)                    | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files    |
+| a configuration name (`python`)                    | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files    |
 | a setting name (`limits.function_lines`)    | meaning, default, the value in every scope that holds it, and the `set` line that changes it          |
-| a path (`api/src/routes/turn.ts`)           | the presets that claim the file, and the checks that read it at each stage                            |
+| a path (`api/src/routes/turn.ts`)           | the configurations that claim the file, and the checks that read it at each stage                            |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
 page of the manual.
@@ -376,7 +376,7 @@ tools
   missing   swiftlint 0.63.2         mise install
 
 files no check reads          4
-  assets/data.kt                     no preset reads Kotlin
+  assets/data.kt                     no configuration reads Kotlin
 
 file kinds with no format, syntax, style, or type check
   .vue                               gspot add vue
@@ -428,7 +428,7 @@ A suppression without a reason is a finding, in every comment style gspot reads.
 
 ## `add`, `remove`
 
-`gspot add nextjs vitest` appends presets to the root selection, or to a scope with `--scope`.
+`gspot add nextjs vitest` appends configurations to the root selection, or to a scope with `--scope`.
 It runs `apply` and `install`, and runs no check. `gspot set level all`, a rule turned
 back on, and an upgrade that brings new rules work the same way: the checks are on from the next
 run. `gspot remove vitest`
@@ -472,7 +472,7 @@ from its ownership record without loading tool configurations.
 A profile carries a setup between repositories.
 [03-configuration.md](03-configuration.md) holds the format.
 
-`gspot export <file>` writes a profile from this repository. It keeps the level, the presets,
+`gspot export <file>` writes a profile from this repository. It keeps the level, the configurations,
 `extra_checks`, `[limits]`, `[naming]` lists, `[format]`, and `[prose]`. It keeps the options and
 the rules of each tool, and the choices for hooks, CI, rules, and runner. It keeps every `[[ignore]]` that names no
 path. It leaves out every entry that names a path, and prints each one.
@@ -502,7 +502,7 @@ beside `--from` win over the profile.
 | ---- | ---------------------------------------------------------------------------------------------------------------------- |
 | 0    | every check ran and passed, or the command completed                                                                   |
 | 1    | findings, a generated file that drifted, or a missing tool                                                             |
-| 2    | gspot did not run: unreadable `gspot.toml`, unknown preset, unknown command, unanswered question, version pin mismatch |
+| 2    | gspot did not run: unreadable `gspot.toml`, unknown configuration, unknown command, unanswered question, version pin mismatch |
 
 ## Acceptance contracts
 
@@ -512,7 +512,7 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 
 The [command surface](#commands) owns supported commands and flags. Keep one implementation
 per command, with no removed-name aliases or compatibility forwarding. Explain supports paths,
-checks, presets, rules, and settings. Set writes supported generated and vendored declarations.
+checks, configurations, rules, and settings. Set writes supported generated and vendored declarations.
 Doctor performs local diagnosis without network access. Apply previews through `--dry-run`.
 
 Exercise completion for supported commands, values, and paths (T-22). Verify observable explain,
@@ -567,12 +567,12 @@ repository with an old finding in an untouched file commits a change to another 
 
 ### Acceptance K-62
 
-`gspot list` prints presets in three groups: installed, found in the repository and
-not selected, and the rest. Under each installed preset it prints its checks with their state:
+`gspot list` prints configurations in three groups: installed, found in the repository and
+not selected, and the rest. Under each installed configuration it prints its checks with their state:
 on, off by level, off by an ignore, or waiting for a setting. `gspot list settings` prints every
 setting with its value and where the value comes from.
 
-List and explain use the same effective check selection and setting prerequisites. Each preset
+List and explain use the same effective check selection and setting prerequisites. Each configuration
 found but not selected ends with its `gspot add` line. `--json` prints the same data.
 
 Exercise each effective state through list and explain, including their structured output.
@@ -590,7 +590,7 @@ initialization. Do not assert a fixed prompt-call count.
 ### Acceptance K-66
 
 The words of [public vocabulary](README.md#glossary). `[runner] surface` becomes `[runner] tool`.
-The run record becomes the report: `.gspot/report.json`.
+The run record becomes the report: `.gspot/reports/report.json`.
 
 `[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `paths`,
 and `[[vendored]]`. Policy becomes config in text a person reads.
@@ -610,7 +610,7 @@ the log, and the JSON report is written beside them.
 result on a terminal, and one line for each failed result elsewhere. A cached pass prints
 `unchanged`. The summary is one line: checks passed, checks failed, findings, and
 seconds. The workflow runs plain `gspot check`, so the findings are in the log, and it keeps
-`.gspot/report.*` as artifacts. No flag is needed, because every run writes those files.
+`.gspot/reports/report.*` as artifacts. No flag is needed, because every run writes those files.
 
 Exercise progress output through its output owner and verify live findings and report artifacts
 through the workflow behavior. Preserve terminal and nonterminal output contracts.
@@ -685,7 +685,7 @@ second repository with that rule off. A tool with every check ignored is absent 
 
 The exact definition/reference mappings of [public vocabulary](README.md#glossary) (K-308).
 
-Usage lines show `<check>`, `<preset>`, `<rule>`, and `<setting>`. `install`, `apply`, `add`,
+Usage lines show `<check>`, `<configuration>`, `<rule>`, and `<setting>`. `install`, `apply`, `add`,
 and `remove` take `--dry-run`, and each prints its plan and writes nothing,
 through the plan text `init` already has. `reason` is optional in the schema. `loosening.ts` and the
 refused reasons of `reasons.ts` apply only where `require_reasons = true`.

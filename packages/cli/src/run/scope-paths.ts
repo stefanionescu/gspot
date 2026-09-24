@@ -1,9 +1,10 @@
 // Where a scope keeps what a command names: its own copy of a configuration, and whether the package manager knows it.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { ConfigurationTarget } from '#cli/presets/types.ts';
+import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 
-const GSPOT_DIRECTORY = '.gspot/';
+import { CONFIGURATION_DIRECTORY } from '#cli/platform/layout.ts';
+const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
 
 /**
  * The path of a configuration for a check in one scope: a target written for each scope lives under that scope.

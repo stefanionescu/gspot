@@ -5,7 +5,7 @@ import { Linter } from 'eslint';
 import { renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import clientExample from '../../../docs/src/components/client-environment.json';
+import clientExample from '../../../docs/src/components/home/client-environment.json';
 
 describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {

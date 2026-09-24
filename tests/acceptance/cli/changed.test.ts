@@ -1,5 +1,5 @@
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { join } from 'node:path';
@@ -18,7 +18,7 @@ function commit(root: string): void {
 }
 
 const policy = `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "sandbox/paths"
 command = ${JSON.stringify([process.execPath, '-e', 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;', '{files}'])}
@@ -58,7 +58,7 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
     ).toEqual(['api/source.txt', 'web/source.txt']);
-    const saved = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).json());
+    const saved = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
     expect(saved.comparison).toEqual(all.comparison);
     const invalid = await run(sandbox.path, ['check', '--changed=missing-ref', '--json']);
     expect(invalid.code).toBe(2);

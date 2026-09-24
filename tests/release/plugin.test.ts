@@ -54,7 +54,7 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
  }
 const readmeCases = [
     { config: './readme-0.mjs', file: 'client.js', broken: "'use client';\nconsole.log(process.env.SECRET);", fixed: "'use client';\nconsole.log('public');", rule: 'gspot/no-client-environment' },
-    { config: './readme-1.mjs', file: 'server/example.js', broken: 'export const value = 1;', fixed: "import 'server-only'; export const value = 1;", rule: 'gspot/require-server-only' },
+    { config: './readme-3.mjs', file: 'server/example.js', broken: 'export const value = 1;', fixed: "import 'server-only'; export const value = 1;", rule: 'gspot/require-server-only' },
 ];
 for (const example of readmeCases) {
     const config = await import(example.config);

@@ -49,7 +49,7 @@ jobs:
               if: always() && !cancelled()
               with:
                   name: affected-${{ github.sha }}
-                  path: .gspot/report.*
+                  path: .gspot/reports/report.*
                   include-hidden-files: true
                   if-no-files-found: warn
                   retention-days: 14
@@ -92,7 +92,7 @@ jobs:
               if: always() && !cancelled() && steps.normal.outcome != 'skipped'
               with:
                   name: acceptance-${{ matrix.os }}-normal-${{ github.sha }}
-                  path: .gspot/report.*
+                  path: .gspot/reports/report.*
                   include-hidden-files: true
                   if-no-files-found: warn
                   retention-days: 14
@@ -104,7 +104,7 @@ jobs:
               if: always() && !cancelled() && steps.manual.outcome != 'skipped'
               with:
                   name: acceptance-${{ matrix.os }}-manual-${{ github.sha }}
-                  path: .gspot/report.*
+                  path: .gspot/reports/report.*
                   include-hidden-files: true
                   if-no-files-found: warn
                   retention-days: 14

@@ -1,9 +1,9 @@
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 // git tracks no environment file except the templates.
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-files-definitions.ts';
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
 
 /**
  * One finding for each tracked environment file that is not a template.

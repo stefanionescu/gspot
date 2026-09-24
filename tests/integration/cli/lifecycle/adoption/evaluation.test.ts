@@ -6,9 +6,9 @@ import { expect, test } from 'bun:test';
 
 import { createFileTree, testdir } from 'testdirs';
 
-import { evaluateEslint } from '#cli/lifecycle/eslint-evaluation.ts';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 
-import { evaluateFormat } from '#cli/lifecycle/format-evaluation.ts';
+import { evaluateFormat } from '#cli/evaluation/format.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

@@ -45,7 +45,7 @@ test.each([false, true])(
         const initialized = await run(repository.path, [
             'init',
             '--yes',
-            '--presets',
+            '--configurations',
             'formatting',
             '--no-runner',
             '--no-ci',
@@ -59,7 +59,7 @@ test.each([false, true])(
         for (const file of [...FILES, 'src/future.js']) {
             const filepath = join(repository.path, file);
             const options = await prettier.resolveConfig(filepath, {
-                config: join(repository.path, '.gspot/prettier.json'),
+                config: join(repository.path, '.gspot/config/prettier.json'),
                 editorconfig: true,
                 useCache: false,
             });

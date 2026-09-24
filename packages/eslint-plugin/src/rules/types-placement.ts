@@ -100,6 +100,7 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
     meta: {
         type: 'problem',
         docs: {
+            title: 'Place types with their owner',
             example:
                 'With `typesDirectory: "types"`, `type A = string;` in `src/a.ts` reports `aliasOutside`. Declare and export `A` in `types/a.ts`, then use `import type { A } from "../types/a";` where the runtime code needs it.',
             summary: 'Enforces an explicitly configured type-only directory.',

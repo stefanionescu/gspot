@@ -1,8 +1,8 @@
 import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { initCommand } from '#cli/lifecycle/init/command.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { openSession } from '#cli/run/session.ts';
 import { expect, test } from 'bun:test';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -21,12 +21,12 @@ test('typos output preserves quoted keys and paths without creating settings', a
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['spelling'],
+            configurations: ['spelling'],
             tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
         }),
     });
     const output = emitAll(await openSession(sandbox.path));
-    const target = output.files.find((file) => file.path === '.gspot/typos.toml');
+    const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     const parsed = parse(target!.content);
     expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toEqual([
@@ -53,7 +53,7 @@ test('profile spelling values use the same TOML emission path', async () => {
             version: 1,
             profile: 'house',
             selection: 'exact',
-            presets: ['spelling'],
+            configurations: ['spelling'],
             tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
         }),
     });
@@ -75,7 +75,7 @@ test('profile spelling values use the same TOML emission path', async () => {
     if (typeof policy !== 'string') throw new Error('The initialization proposal has no policy text.');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const output = emitAll(await openSession(sandbox.path));
-    const target = output.files.find((file) => file.path === '.gspot/typos.toml');
+    const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
 });
@@ -89,7 +89,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
+            configurations: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },
@@ -106,19 +106,19 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
     );
-    expect(parsed.get('.gspot/gitleaks.toml')).toEqual({
+    expect(parsed.get('.gspot/config/gitleaks.toml')).toEqual({
         extend: { useDefault: true },
         allowlists: [{ description: text, paths: [path], regexes: [text] }],
     });
-    expect(parsed.get('.gspot/osv-scanner.toml')).toMatchObject({
+    expect(parsed.get('.gspot/config/osv-scanner.toml')).toMatchObject({
         IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2026-09-20T00:00:00.000Z') }],
     });
-    expect(parsed.get('.gspot/taplo.toml')).toMatchObject({
+    expect(parsed.get('.gspot/config/taplo.toml')).toMatchObject({
         formatting: { [option]: text, column_width: 88, indent_string: '\t' },
     });
-    expect(parsed.get('.gspot/lychee.toml')).toMatchObject({ exclude: [text] });
-    expect(parsed.get('.gspot/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
-    expect(parsed.get('.gspot/squawk.toml')).toMatchObject({ excluded_paths: ['migrations/20260101_initial.sql'] });
+    expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
+    expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
+    expect(parsed.get('.gspot/config/squawk.toml')).toMatchObject({ excluded_paths: ['migrations/20260101_initial.sql'] });
 });
 
 test('an OSV expiry cannot inject another TOML table', async () => {
@@ -126,7 +126,7 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['dependencies'],
+            configurations: ['dependencies'],
             tools: {
                 osv: {
                     ignore: [
@@ -157,7 +157,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                presets: ['javascript', 'docker', 'prose'],
+                configurations: ['javascript', 'docker', 'prose'],
                 tools: {
                     eslint: { extra: { reason, name: 'custom' } },
                     trivy: { ignore: [{ id: 'CVE-2026-12345', reason }] },
@@ -166,7 +166,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
             }),
         });
         const output = emitAll(await openSession(sandbox.path));
-        const script = output.files.find((file) => file.path === '.gspot/eslint.config.mjs');
+        const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
         expect(script).toBeDefined();
         const tree = parser.parse(script!.content);
         expect(tree).not.toBeNull();
@@ -176,12 +176,12 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         } finally {
             tree!.delete();
         }
-        const ignored = output.files.find((file) => file.path === '.gspot/trivyignore');
+        const ignored = output.files.find((file) => file.path === '.gspot/config/trivyignore');
         expect(ignored).toBeDefined();
         expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toEqual([
             'CVE-2026-12345',
         ]);
-        const vale = output.files.find((file) => file.path === '.gspot/vale.ini');
+        const vale = output.files.find((file) => file.path === '.gspot/config/vale.ini');
         expect(vale).toBeDefined();
         expect(
             vale!.content
@@ -204,7 +204,7 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['typescript', 'formatting', 'markdown', 'configs', 'docker', 'swift'],
+            configurations: ['typescript', 'formatting', 'markdown', 'configs', 'docker', 'swift'],
             tools: {
                 prettier: { extra },
                 knip: { extra },
@@ -217,13 +217,13 @@ test('JSON option keys and YAML values keep their literal structure', async () =
         }),
     });
     const output = emitAll(await openSession(sandbox.path));
-    for (const path of ['.gspot/prettier.json', '.gspot/knip.json', '.gspot/markdownlint.jsonc']) {
+    for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json', '.gspot/config/markdownlint.jsonc']) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();
         const parsed: unknown = parseJsonc(file!.content);
         expect(parsed).toMatchObject({ [key]: value });
     }
-    const markdownCli = output.files.find((entry) => entry.path === '.gspot/markdownlint-cli2.mjs')!;
+    const markdownCli = output.files.find((entry) => entry.path === '.gspot/config/markdownlint-cli2.mjs')!;
     const markdownPath = join(sandbox.path, markdownCli.path);
     await Bun.write(markdownPath, markdownCli.content);
     const native = Bun.spawnSync(
@@ -242,12 +242,12 @@ test('JSON option keys and YAML values keep their literal structure', async () =
             .filter((file) => /\.ya?ml$/u.test(file.path))
             .map((file) => [file.path, parseYaml(file.content) as unknown]),
     );
-    expect(yaml.get('.gspot/periphery.yml')).toMatchObject({ project, schemes: [scheme] });
-    expect(yaml.get('.gspot/hadolint.yaml')).toMatchObject({ trustedRegistries: registries });
-    expect(yaml.get('.gspot/yamllint.yml')).toMatchObject({
+    expect(yaml.get('.gspot/config/periphery.yml')).toMatchObject({ project, schemes: [scheme] });
+    expect(yaml.get('.gspot/config/hadolint.yaml')).toMatchObject({ trustedRegistries: registries });
+    expect(yaml.get('.gspot/config/yamllint.yml')).toMatchObject({
         rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } },
     });
-    expect(yaml.get('.gspot/trivy.yaml')).toMatchObject({ timeout: '10m', severity: ['HIGH', 'CRITICAL'] });
+    expect(yaml.get('.gspot/config/trivy.yaml')).toMatchObject({ timeout: '10m', severity: ['HIGH', 'CRITICAL'] });
 });
 
 test('runtime names remain data in generated JavaScript', async () => {
@@ -257,12 +257,12 @@ test('runtime names remain data in generated JavaScript', async () => {
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                presets: ['javascript'],
+                configurations: ['javascript'],
                 tools: { eslint: { globals: { '**/*.js': runtime } } },
             }),
         });
         const output = emitAll(await openSession(sandbox.path));
-        const file = output.files.find((entry) => entry.path === '.gspot/eslint.config.mjs');
+        const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
         expect(file).toBeDefined();
         const tree = parser.parse(file!.content);
         expect(tree).not.toBeNull();

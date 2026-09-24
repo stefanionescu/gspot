@@ -7,11 +7,11 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = `version = 1
-presets = []
+configurations = []
 
 [[scope]]
 path = "api"
-presets = ["bash"]
+configurations = ["bash"]
 
 [[ignore]]
 check = "bash/shellcheck"
@@ -25,15 +25,15 @@ describe('explain', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[scope]]
 path = "api"
-presets = ["jest"]
+configurations = ["jest"]
 [scope.tools.jest]
 coverage_lines = 90
 [[scope]]
 path = "api/worker"
-presets = []
+configurations = []
 [scope.tools.jest]
 coverage_lines = 95
 `,
@@ -66,10 +66,10 @@ coverage_lines = 95
     test('path explanations include enabled repository commands and global exceptions', async () => {
         await using sandbox = await testdir();
         const policy = `version = 1
-presets = []
+configurations = []
 [[scope]]
 path = "api"
-presets = []
+configurations = []
 [[check]]
 name = "project/syntax"
 command = ["bash", "-n", "{files}"]
@@ -111,9 +111,9 @@ stage = "manual"
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
         commitAll(sandbox.path);
-        const preset = await run(sandbox.path, ['explain', 'bash', '--json']);
-        expect(preset.code, preset.stdout + preset.stderr).toBe(0);
-        expect(JSON.parse(preset.stdout)).toMatchObject({ kind: 'preset', subject: 'bash' });
+        const configuration = await run(sandbox.path, ['explain', 'bash', '--json']);
+        expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
+        expect(JSON.parse(configuration.stdout)).toMatchObject({ kind: 'configuration', subject: 'bash' });
         const file = await run(sandbox.path, ['explain', './bash', '--json']);
         expect(file.code, file.stdout + file.stderr).toBe(0);
         expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
@@ -134,8 +134,8 @@ stage = "manual"
             path: 'api/build.sh',
             scope: 'api',
             nature: 'source',
-            presets: expect.arrayContaining(['bash']),
-            checks: expect.arrayContaining([{ check: 'bash/shellcheck', stage: 'commit', preset: 'bash' }]),
+            configurations: expect.arrayContaining(['bash']),
+            checks: expect.arrayContaining([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
             ignores: [
                 {
                     check: 'bash/shellcheck',
@@ -160,12 +160,12 @@ stage = "manual"
         expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
     });
 
-    test('preset and check explanations still resolve without a policy', async () => {
+    test('configuration and check explanations still resolve without a policy', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
         commitAll(sandbox.path);
         for (const [subject, kind] of [
-            ['bash', 'preset'],
+            ['bash', 'configuration'],
             ['bash/shellcheck', 'check'],
         ] as const) {
             const result = await run(sandbox.path, ['explain', subject, '--json']);

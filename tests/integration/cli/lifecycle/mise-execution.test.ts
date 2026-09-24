@@ -4,7 +4,7 @@ import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { applyAll } from '#cli/emit/apply-command.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/run/session.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
@@ -15,7 +15,7 @@ const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import
 test('mise executes generated tasks with their arguments, and install rejects an old runner before corrected setup succeeds', async () => {
     await using repository = await testdir();
     await using state = await testdir();
-    let policy = 'version = 1\nlevel = "recommended"\npresets = []\n[rules]\ninstall = false\n';
+    let policy = 'version = 1\nlevel = "recommended"\nconfigurations = []\n[rules]\ninstall = false\n';
     await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
     await createFileTree(state.path, {
         'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',

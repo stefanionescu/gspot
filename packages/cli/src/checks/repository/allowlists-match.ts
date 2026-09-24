@@ -1,7 +1,7 @@
 // Every path pattern in the policy matches at least one tracked file or folder: an ignore, a declaration, an allowance or an exclusion that matches nothing is a leftover.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { basename, dirname } from 'node:path';

@@ -1,6 +1,6 @@
 // The directory tree as the tracked file list sees it, for the folder analyses.
-import type { TrackedFile } from '#cli/repository/types.ts';
-import type { DirectoryEntry } from '#cli/structure/types.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { DirectoryEntry } from '#cli/types/structure.ts';
 
 /**
  * The directory of a path, '' at the root.

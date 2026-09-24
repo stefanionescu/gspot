@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
-import { SUPABASE_CONFIG } from '#cli/checks/supabase/supabase-definitions.ts';
+
 import { parse } from 'smol-toml';
 import { z } from 'zod';
 
@@ -67,3 +67,5 @@ export function supabaseFinding(
 ): Finding {
     return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
+
+export const SUPABASE_CONFIG = 'supabase/config.toml';

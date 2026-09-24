@@ -11,7 +11,7 @@ import {
 } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { fileMode, mutationPath, openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { fileMode, mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
@@ -99,8 +99,8 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
                     expect(() => root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 })).toThrow();
                     expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
                 }
-                root.mkdir('.gspot/recovery', 0o700);
-                expect(statSync(join(project, '.gspot/recovery')).mode & 0o777).toBe(0o700);
+                root.mkdir('.gspot/state/recovery', 0o700);
+                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(0o700);
             } finally {
                 root.close();
             }
@@ -123,7 +123,7 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
                 expect(() => root.write(unsafe, original, undefined)).toThrow('Unsafe lifecycle path');
             }
             expect(() =>
-                root.write('private-link', { ...link, bytes: Buffer.from('.gspot/ownership.json') }, undefined),
+                root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined),
             ).toThrow('Lifecycle metadata');
         } finally {
             root.close();
@@ -144,7 +144,7 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
                 'escape/sentinel',
                 'escaped-file',
                 'escape/../target',
-                '.gspot/ownership.json',
+                '.gspot/state/ownership.json',
                 'missing',
                 'target\u0000outside',
                 'C:\\outside',
@@ -225,7 +225,7 @@ test('Windows file identities retain read-only changes without inventing POSIX p
 test('structural rule caching confines writes and preserves later rule edits', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n[runner]\ntool = "mise"\n',
+        'project/gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n[runner]\ntool = "mise"\n',
         'project/example.sh': 'if true; then echo yes; fi\n',
         'project/.gspot/.keep': '',
         'outside/ast-grep/bash-branches.yml': 'external rule\n',
@@ -236,7 +236,7 @@ test('structural rule caching confines writes and preserves later rule edits', a
     const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
     const input = engineInput(session, planned!);
     symlinkSync('../../outside', cache);
-    const run = () => astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['example.sh']);
+    const run = () => astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['example.sh']);
     await expect(run()).rejects.toThrow('Unsafe lifecycle parent');
     expect(readFileSync(join(directory.path, 'outside/ast-grep/bash-branches.yml'), 'utf8')).toBe('external rule\n');
     unlinkSync(cache);

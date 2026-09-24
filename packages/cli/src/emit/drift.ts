@@ -1,36 +1,37 @@
+import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { packageLockDrift } from '#cli/lifecycle/package-project.ts';
-import { pythonLockDrift } from '#cli/lifecycle/python-project.ts';
-import { isValePackageFile } from '#cli/repository/natures.ts';
+import { packageLockDrift } from '#cli/tools/package-project.ts';
+import { pythonLockDrift } from '#cli/tools/python-project.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
 import { ruleDiff } from '#cli/emit/rule-diff.ts';
 import { isMergeStubHeld } from '#cli/emit/stubs.ts';
 import { emitAll } from '#cli/emit/targets.ts';
-import type { DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { Policy } from '#cli/policy/types.ts';
-import type { Session } from '#cli/run/types.ts';
+import type { DriftEntry, GeneratedProposal } from '#cli/types/generation.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { Policy } from '#cli/types/policy.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { createTwoFilesPatch } from 'diff';
 
 const NEVER_STRAY = new Set([
     'gspot.toml',
     '.gitignore',
     '.gspot/version',
-    '.gspot/report.json',
-    '.gspot/report.sarif',
-    '.gspot/report.codequality.json',
-    '.gspot/ownership.json',
-    '.gspot/writer.lock',
+    '.gspot/reports/report.json',
+    '.gspot/reports/report.sarif',
+    '.gspot/reports/report.codequality.json',
+    '.gspot/state/ownership.json',
+    '.gspot/state/writer.lock',
 ]);
 const DIFF_CONTEXT = 2;
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith('.gspot/recovery/')) return false;
+    if (path.startsWith('.gspot/state/')) return false;
     if (path.startsWith('.gspot/rules/') && !policy.rules.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
-    return !(path.startsWith('.gspot/cache/') || NEVER_STRAY.has(path));
+    return !(path.startsWith(`${CACHE_DIRECTORY}/`) || NEVER_STRAY.has(path));
 }
 
 function patch(path: string, before: string, after: string, beforeName: string): string {
@@ -115,6 +116,7 @@ export function computeDrift(session: Session, rendered: GeneratedProposal = emi
         .files.filter(
             (entry) =>
                 entry.kind !== 'runtime' &&
+                entry.kind !== 'hook' &&
                 entry.kind !== 'export' &&
                 !isValePackageFile(entry.path) &&
                 (entry.kind !== 'dependency' ||

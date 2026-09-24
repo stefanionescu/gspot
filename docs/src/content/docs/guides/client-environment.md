@@ -38,7 +38,7 @@ export default [{
 }];
 ```
 
-Only this rule runs in the example. A repository using the JavaScript preset has other checks.
+Only this rule runs in the example. A repository using the JavaScript configuration has other checks.
 See the [plugin reference](/reference/plugin/no-client-environment/) for options.
 
 ## 2. Check the defect
@@ -90,5 +90,4 @@ configuration there. This example does not implement or test that route.
 The example directory path is stored in `example_root`. After inspection, leave that directory
 and remove it when you no longer need its files. Your source checkout remains available.
 
-For a CLI walkthrough without npm dependencies, follow [your first Bash check](/guides/quick-start/).
 For checks in an existing application, follow [adopt an existing repository](/guides/existing-repository/).

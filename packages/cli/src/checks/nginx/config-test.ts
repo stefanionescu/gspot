@@ -3,8 +3,8 @@ import { join, posix } from 'node:path';
 // nginx -t in a container over every main configuration file.
 import { tmpdir } from 'node:os';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput, EngineOutcome } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput, EngineOutcome } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';

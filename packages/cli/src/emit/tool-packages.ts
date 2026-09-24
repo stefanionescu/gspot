@@ -2,13 +2,13 @@ import { detectPackageManager } from 'nypm';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import semver from 'semver';
 import { z } from 'zod';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { dirname, join } from 'node:path';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
-import { everyManifest } from '#cli/presets/select.ts';
-import type { Session } from '#cli/run/types.ts';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 
 export const packageManagerSchema = z.strictObject({
     name: z.enum(['npm', 'bun', 'pnpm', 'yarn']),

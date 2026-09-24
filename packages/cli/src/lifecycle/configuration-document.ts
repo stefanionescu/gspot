@@ -1,4 +1,4 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 import { isDeepStrictEqual } from 'node:util';

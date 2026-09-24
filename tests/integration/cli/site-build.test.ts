@@ -73,7 +73,7 @@ test('a failed reproducibility build retains the first isolated output', async (
 test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'authored output',
     });

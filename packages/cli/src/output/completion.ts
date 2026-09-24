@@ -10,7 +10,8 @@ export function installCompletion(program: Command): void {
     tab(program, { completionCommandName: 'completion' });
     const completion = program.commands.find((command) => command.name() === 'completion');
     completion
-        ?.description('Print the shell completion script for bash, zsh, fish, or powershell')
+        ?.summary('Set up shell completion')
+        .description('Print the shell completion script for bash, zsh, fish, or powershell')
         .addHelpText(
             'after',
             '\nEffects:\nPrints a completion script for the chosen shell. Redirect the output to a file and load it using that shell to enable completion. Printing the script does not install it.\n\nExit codes:\n0: the completion script was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot completion bash',

@@ -8,15 +8,15 @@ const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';
 const SOURCES = [
     'packages/cli/package.json',
-    'packages/cli/src/naming/grammars-definitions.ts',
+    'packages/cli/src/parsers/grammars.ts',
     'packages/cli/src/platform/assets.ts',
     'packages/cli/src/platform/paths.ts',
     'packages/cli/src/platform/environment.ts',
-    'packages/cli/src/checks/integrity-definitions.ts',
+    'packages/cli/src/repository/hooks.ts',
 ];
-const PRESET = '[preset]\nname = "bash"\n';
+const CONFIGURATION = '[configuration]\nname = "bash"\n';
 const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
-console.log(JSON.stringify({ text: readAsset('presets/language/bash/manifest.toml'), files: listAssets('presets') }));
+console.log(JSON.stringify({ text: readAsset('packages/cli/configurations/language/bash/manifest.toml'), files: listAssets('packages/cli/configurations') }));
 `;
 
 describe('development assets', () => {
@@ -27,7 +27,7 @@ describe('development assets', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...sources,
-            [`${CHECKOUT}/presets/language/bash/manifest.toml`]: PRESET,
+            [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: CONFIGURATION,
             [`${CHECKOUT}/probe.ts`]: PROBE,
         });
         const cwd = join(sandbox.path, CHECKOUT);
@@ -39,8 +39,8 @@ describe('development assets', () => {
         });
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toEqual({
-            text: PRESET,
-            files: ['presets/language/bash/manifest.toml'],
+            text: CONFIGURATION,
+            files: ['packages/cli/configurations/language/bash/manifest.toml'],
         });
     });
 });

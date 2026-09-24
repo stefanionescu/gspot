@@ -3,18 +3,13 @@ import { parseAllDocuments } from 'yaml';
 // Every fenced code block with a language tag parses in that language.
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
-import type { GrammarName } from '#cli/naming/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import type { GrammarName } from '#cli/parsers/tree-sitter.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import {
-    ANGLE_PLACEHOLDER,
-    ELLIPSIS_ARGUMENTS,
-    ELLIPSIS_LINE,
-    FENCE_PARSERS,
-} from '#cli/checks/docs/docs-definitions.ts';
+
 
 type FencedBlock = { line: number; language: string; body: string };
 
@@ -118,3 +113,30 @@ export async function fences(input: EngineInput): Promise<Finding[]> {
     for (const file of markdown) findings.push(...(await fileFindings(input, file.path)));
     return findings;
 }
+
+const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
+
+const ELLIPSIS_ARGUMENTS = '(...)';
+
+const ANGLE_PLACEHOLDER = /<[A-Z][A-Z0-9_-]*>/gu;
+
+const FENCE_PARSERS: Record<string, 'json' | 'toml' | 'yaml' | 'bash' | 'typescript' | 'javascript' | 'python'> =
+    {
+        json: 'json',
+        jsonc: 'json',
+        toml: 'toml',
+        yaml: 'yaml',
+        yml: 'yaml',
+        bash: 'bash',
+        sh: 'bash',
+        shell: 'bash',
+        ts: 'typescript',
+        typescript: 'typescript',
+        tsx: 'typescript',
+        js: 'javascript',
+        javascript: 'javascript',
+        mjs: 'javascript',
+        cjs: 'javascript',
+        python: 'python',
+        py: 'python',
+    };

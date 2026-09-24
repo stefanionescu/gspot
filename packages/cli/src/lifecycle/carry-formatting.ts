@@ -1,8 +1,9 @@
 import { parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import { carryFormat } from '#cli/lifecycle/format-evaluation.ts';
-import type { CarriedConfiguration } from '#cli/lifecycle/types.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import type { ExistingTooling } from '#cli/repository/types.ts';
+import { compact } from '#cli/policy/normalize.ts';
+import { formatRequest, formatResponse } from '#cli/schemas/evaluation.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
+import type { CarriedConfiguration, CarriedFormatter } from '#cli/types/ownership.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
 import { parseBuffer } from 'editorconfig';
 import { basename, dirname } from 'node:path';
 
@@ -84,4 +85,43 @@ export async function collectFormatting(
     } catch (error) {
         lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
     }
+}
+
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import type { CarrySource } from '#cli/types/ownership.ts';
+async function carryFormat(
+    root: string,
+    configurations: { from: string; source?: CarrySource }[],
+    ignorePath?: string,
+    nativeDefaults = false,
+): Promise<CarriedFormatter> {
+    const base = configurations.find((entry) => !entry.from.includes('/'));
+    const from = base?.from ?? '.prettierrc.json';
+    const source = base === undefined ? { parsed: {} } : base.source;
+    const request = formatRequest.safeParse({
+        root,
+        from,
+        nativeDefaults,
+        ...(ignorePath === undefined ? {} : { ignorePath }),
+        ...(source === undefined ? {} : { source: source.parsed }),
+        nested: configurations
+            .filter((entry) => entry.from.includes('/'))
+            .toSorted((a, b) => a.from.split('/').length - b.from.split('/').length)
+            .map((entry) => ({
+                from: entry.from,
+                ...(entry.source === undefined ? {} : { source: entry.source.parsed }),
+            })),
+    });
+    if (!request.success)
+        throw new Error(
+            `Formatter configuration cannot be replaced without losing settings: ${request.error.issues.map((issue) => issue.message).join('; ')}`,
+        );
+    const parsed = formatResponse.parse(
+        await evaluateConfiguration({ ...request.data, tool: 'prettier', operation: 'format' }),
+    );
+    return compact({
+        format: compact(parsed.format),
+        ignorePatterns: parsed.ignorePatterns,
+        extra: parsed.extra === undefined ? undefined : compact(parsed.extra),
+    });
 }

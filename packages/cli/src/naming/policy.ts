@@ -1,10 +1,10 @@
-import { CATEGORY_PARENTS } from '#cli/naming/cases-definitions.ts';
+import { CATEGORY_PARENTS } from '#cli/naming/categories.ts';
 import { compileTerms } from '#cli/naming/match.ts';
 // The shipped policy plus [naming] in gspot.toml: terms, exemptions, rules and the per-language ceilings and cases.
 import { readAsset } from '#cli/platform/assets.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
-import type { NamingSettings, NamingRule, Policy, ExposedSettings } from '#cli/policy/types.ts';
+import type { NamingSettings, NamingRule, Policy, ExposedSettings } from '#cli/types/policy.ts';
 
 import type {
     CategoryLimits,
@@ -15,9 +15,9 @@ import type {
     ShippedPolicy,
     ShippedRule,
     Term,
-} from '#cli/naming/types.ts';
+} from '#cli/types/naming.ts';
 
-const POLICY_ASSET = 'presets/policy/naming/policy.json';
+const POLICY_ASSET = 'packages/cli/configurations/policy/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
 function toSet(names: string[] | undefined): Set<string> | undefined {
@@ -127,7 +127,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
 
 /**
  * The shipped policy, read once.
- * @returns the parsed presets/policy/naming/policy.json
+ * @returns the parsed packages/cli/configurations/policy/naming/policy.json
  */
 export function shippedPolicy(): ShippedPolicy {
     state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;

@@ -1,4 +1,4 @@
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 
 /** Identify Swift test declarations and package targets without matching comment or string text. */
 export async function swiftTestTags(text: string): Promise<string[]> {

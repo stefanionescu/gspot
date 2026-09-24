@@ -1,9 +1,9 @@
 import type { Explanation } from '#cli/output/explain.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import type { Session } from '#cli/run/types.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Session } from '#cli/types/execution.ts';
 // File explanations: claims, checks, and ignores within the selected scope.
-import { claimants, pathMatcher } from '#cli/presets/claims.ts';
+import { claimants, pathMatcher } from '#cli/configurations/claims.ts';
 import { claimedInputs, configuredChecks } from '#cli/run/plan.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
@@ -22,7 +22,7 @@ function checksFor(session: Session, file: TrackedFile): PathExplanation['checks
         .map((check) => ({
             check: check.check,
             stage: check.spec.stage,
-            ...(check.manifest === undefined ? {} : { preset: check.manifest.preset.name }),
+            ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
         }));
 }
 
@@ -46,7 +46,7 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.nature === 'source') {
         report.unchecked = 'no enabled check claims this file';
-        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <preset>';
+        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <configuration>';
     }
     return report;
 }
@@ -72,7 +72,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         scope: scope.path === '' ? 'root' : scope.path,
         nature: file.nature,
         tags: file.tags,
-        presets: owners.map((manifest) => manifest.preset.name),
+        configurations: owners.map((manifest) => manifest.configuration.name),
         checks: checksFor(session, file),
         ignores: ignoresFor(session, path),
     };
@@ -91,10 +91,10 @@ function pathText(report: PathExplanation): string {
         `${report.path}  (scope ${report.scope}, ${report.nature}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.presets.length === 0 ? [] : [`claimed by: ${report.presets.join(', ')}`]),
+        ...(report.configurations.length === 0 ? [] : [`claimed by: ${report.configurations.join(', ')}`]),
         ...section(
             'checks:',
-            report.checks.map((check) => `  ${check.check}  ${check.stage}  (${check.preset ?? 'repository command'})`),
+            report.checks.map((check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`),
         ),
         ...section(
             'ignores:',
@@ -130,8 +130,8 @@ type PathExplanation = {
     nature: string;
     natureSource?: string;
     tags: string[];
-    presets: string[];
-    checks: { check: string; stage: string; preset?: string }[];
+    configurations: string[];
+    checks: { check: string; stage: string; configuration?: string }[];
     ignores: { check: string; rule?: string; reason?: string }[];
     unchecked?: string;
     remedy?: string;

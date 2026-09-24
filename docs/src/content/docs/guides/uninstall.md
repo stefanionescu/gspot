@@ -50,7 +50,7 @@ outside file restoration. Uninstall is not a request to disable remote checks or
 
 ## How preservation works
 
-![Configuration preservation and recovery](/brand/recovery.svg)
+![Configuration preservation and recovery](/brand/diagrams/recovery.svg)
 
 Before writing configuration, gspot observes existing bytes and permissions. Apply records
 the changes it owns. If a managed output has been edited, the conflict preserves those edits.

@@ -1,21 +1,21 @@
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import picomatch from 'picomatch';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
 import { parse as parseYaml } from 'yaml';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { readGitSetting } from '#cli/platform/spawn.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import type { ExistingTool, ExistingTooling, ManifestFacts, TrackedFile } from '#cli/repository/types.ts';
+import type { ExistingTool, ExistingTooling, ManifestFacts, TrackedFile } from '#cli/types/repository.ts';
 
 import {
     AGENT_FILE_NAMES,
     HOOK_DIRECTORIES,
     LINT_FOLDER_NAMES,
     RULES_DIRECTORY_NAMES,
-} from '#cli/lifecycle/patterns-definitions.ts';
+} from '#cli/repository/patterns.ts';
 
 const OTHER_CI_FILES = new Set([
     'Jenkinsfile',
@@ -90,7 +90,7 @@ export function declaredConfigurations(root: string, paths: Iterable<string>, se
     );
     const files = openConfinedRoot(root);
     try {
-        return [...presetManifests().values()].flatMap((manifest) =>
+        return [...configurationManifests().values()].flatMap((manifest) =>
             manifest.tools
                 .filter((tool) => selected === undefined || selected.includes(tool.name))
                 .flatMap((tool) =>

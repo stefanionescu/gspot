@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { isInScope } from '#cli/presets/claims.ts';
+import { isInScope } from '#cli/configurations/claims.ts';
 import { dirname, join, relative } from 'node:path';
-import type { ImportIndex } from '#cli/structure/types.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { ImportIndex } from '#cli/types/structure.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;
 const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);

@@ -33,7 +33,7 @@ run = "gspot install"
 
 [tasks.build]
 description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
-run = "bun packages/cli/build.ts"
+run = "bun packages/cli/scripts/build.ts"
 
 [tasks."build:plugin"]
 description = "Build the standalone ESLint plugin and stage its license."
@@ -106,16 +106,16 @@ run = "bun docs/scripts/verify-release.ts"
 
 [tasks."release:publish"]
 description = "Validate and publish packages to the selected registry."
-run = "bun packages/cli/publish.ts"
+run = "bun packages/cli/scripts/publish.ts"
 
 [tasks."generate:schema"]
 description = "Generate the configuration schema, or validate it with --check."
-run = "bun packages/cli/schemas.ts"
+run = "bun packages/cli/scripts/generate-schema.ts"
 
 [tasks."build:grammar"]
 description = "Build the pinned Swift grammar using Docker, or compare it with --check."
 tools = {tree-sitter = "0.25.10"}
-run = "bun packages/cli/grammars/swift.build.ts"
+run = "bun packages/cli/scripts/build-swift-grammar.ts"
 
 [tasks."ci:affected"]
 description = "Check committed changes against GSPOT_CI_BASE, or all inputs for a first push."

@@ -1,8 +1,8 @@
 // ansible-lint in every folder that holds an ansible.cfg, which is where a playbook project starts.
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 
 const PROJECT_FILE = 'ansible.cfg';
 const LINT_LINE = /^(?<file>[^:]+):(?<line>\d+):[\d:]* (?<rule>[^:]+): (?<text>.*)$/u;

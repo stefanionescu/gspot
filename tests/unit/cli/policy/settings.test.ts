@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { selectPresets } from '#cli/presets/select.ts';
+import { selectConfigurations } from '#cli/configurations/select.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { commandArguments, exposedSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
-const selected = selectPresets(['bash', 'naming', 'formatting', 'spelling'], presetManifests());
+const selected = selectConfigurations(['bash', 'naming', 'formatting', 'spelling'], configurationManifests());
 const surface = exposedSettings(selected);
 
 test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[sqlfluff]', 'postgres # comment'])(
@@ -15,13 +15,13 @@ test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[s
             const scope = table.startsWith('scope.') ? '[[scope]]\npath = "db"\n' : '';
             expect(() =>
                 parsePolicyText(
-                    `version = 1\npresets = ["sql"]\n${scope}[${table}]\ndialect = ${JSON.stringify(dialect)}\n`,
+                    `version = 1\nconfigurations = ["sql"]\n${scope}[${table}]\ndialect = ${JSON.stringify(dialect)}\n`,
                     'gspot.toml',
                 ),
             ).toThrow('Use a SQLFluff dialect label');
             expect(() =>
                 parsePolicyText(
-                    `version = 1\npresets = ["sql"]\n${scope}[${table}]\ndialect = "sqlite"\n`,
+                    `version = 1\nconfigurations = ["sql"]\n${scope}[${table}]\ndialect = "sqlite"\n`,
                     'gspot.toml',
                 ),
             ).not.toThrow();
@@ -29,27 +29,27 @@ test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[s
     },
 );
 
-describe('conflicting preset defaults', () => {
-    const sql = presetManifests().get('sql')!;
+describe('conflicting configuration defaults', () => {
+    const sql = configurationManifests().get('sql')!;
     const settings = exposedSettings([
         sql,
         {
             ...sql,
-            preset: { ...sql.preset, name: 'alternate-sql' },
+            configuration: { ...sql.configuration, name: 'alternate-sql' },
             settings: sql.settings.map((spec) =>
                 spec.name === 'tools.sqlfluff.dialect' ? { ...spec, default: 'postgres' } : spec,
             ),
         },
     ]);
 
-    test('reports both presets until an explicit root value settles their scalar', () => {
-        const source = 'version = 1\npresets = ["sql"]\n';
+    test('reports both configurations until an explicit root value settles their scalar', () => {
+        const source = 'version = 1\nconfigurations = ["sql"]\n';
         const policy = parsePolicyText(source, 'gspot.toml');
         expect(validateAgainstSurface(settings, policy)).toEqual([
             {
-                path: ['presets'],
+                path: ['configurations'],
                 message:
-                    'The presets `sql` and `alternate-sql` set `tools.sqlfluff.dialect` to different values. Set it yourself in gspot.toml to decide.',
+                    'The configurations `sql` and `alternate-sql` set `tools.sqlfluff.dialect` to different values. Set it yourself in gspot.toml to decide.',
             },
         ]);
         const corrected = parsePolicyText(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`, 'gspot.toml');
@@ -60,24 +60,24 @@ describe('conflicting preset defaults', () => {
         });
     });
 
-    test('reports an unresolved conflict at the scope that selects the presets', () => {
+    test('reports an unresolved conflict at the scope that selects the configurations', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = []\n[[scope]]\npath = "db"\npresets = ["sql"]\n',
+            'version = 1\nconfigurations = []\n[[scope]]\npath = "db"\nconfigurations = ["sql"]\n',
             'gspot.toml',
         );
         expect(validateAgainstSurface(exposedSettings([]), policy, new Map([['db', settings]]))).toEqual([
-            { path: ['scope', 0, 'presets'], message: settings.problems[0]!.message },
+            { path: ['scope', 0, 'configurations'], message: settings.problems[0]!.message },
         ]);
     });
 
     test('an inherited scope value settles descendants but leaves a sibling conflict visible', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = []\n[[scope]]\npath = "app"\npresets = ["sql"]\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "app/db"\npresets = ["sql"]\n[[scope]]\npath = "other"\npresets = ["sql"]\n',
+            'version = 1\nconfigurations = []\n[[scope]]\npath = "app"\nconfigurations = ["sql"]\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "app/db"\nconfigurations = ["sql"]\n[[scope]]\npath = "other"\nconfigurations = ["sql"]\n',
             'gspot.toml',
         );
         const scopes = new Map(policy.scopes.map(({ path }) => [path, settings]));
         expect(validateAgainstSurface(exposedSettings([]), policy, scopes)).toEqual([
-            { path: ['scope', 2, 'presets'], message: settings.problems[0]!.message },
+            { path: ['scope', 2, 'configurations'], message: settings.problems[0]!.message },
         ]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
             value: 'sqlite',
@@ -90,13 +90,13 @@ describe('the settings surface', () => {
     test.each([
         ['postgres', false],
         ['supabase', true],
-    ] as const)('the %s transaction default is overridden by an explicit false value', (preset, expected) => {
-        const settings = exposedSettings(selectPresets([preset], presetManifests()));
-        const source = `version = 1\npresets = ["${preset}"]\n`;
+    ] as const)('the %s transaction default is overridden by an explicit false value', (configuration, expected) => {
+        const settings = exposedSettings(selectConfigurations([configuration], configurationManifests()));
+        const source = `version = 1\nconfigurations = ["${configuration}"]\n`;
         const policy = parsePolicyText(source, 'gspot.toml');
         expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
             value: expected,
-            source: `preset ${preset}`,
+            source: `configuration ${configuration}`,
         });
         const corrected = parsePolicyText(`${source}[tools.squawk]\nassume_in_transaction = false\n`, 'gspot.toml');
         expect(settingValue(settings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
@@ -109,13 +109,13 @@ describe('the settings surface', () => {
         ['sql', 'ansi', 'sql'],
         ['postgres', 'postgres', 'postgres'],
         ['supabase', 'postgres', 'postgres'],
-    ])('the %s dialect default identifies its owning preset', (preset, dialect, owner) => {
-        const settings = exposedSettings(selectPresets([preset!], presetManifests()));
-        const policy = parsePolicyText(`version = 1\npresets = ["${preset}"]\n`, 'gspot.toml');
+    ])('the %s dialect default identifies its owning configuration', (configuration, dialect, owner) => {
+        const settings = exposedSettings(selectConfigurations([configuration!], configurationManifests()));
+        const policy = parsePolicyText(`version = 1\nconfigurations = ["${configuration}"]\n`, 'gspot.toml');
         expect(validateAgainstSurface(settings, policy)).toEqual([]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
             value: dialect,
-            source: `preset ${owner}`,
+            source: `configuration ${owner}`,
         });
     });
 
@@ -126,19 +126,19 @@ describe('the settings surface', () => {
         expect(specFor(surface, 'limits.nope')).toBeUndefined();
     });
 
-    test('resolves preset default, root table, then scope table', () => {
+    test('resolves configuration default, root table, then scope table', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = ["bash"]\n[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\n[scope.limits]\nfile_lines = 200\n',
+            'version = 1\nconfigurations = ["bash"]\n[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\n[scope.limits]\nfile_lines = 200\n',
             'gspot.toml',
         );
         expect(settingValue(surface, policy, 'limits.file_lines')?.value).toBe(250);
         expect(settingValue(surface, policy, 'limits.file_lines', 'api')?.value).toBe(200);
-        expect(settingValue(surface, policy, 'limits.function_lines')?.source).toBe('preset structure');
+        expect(settingValue(surface, policy, 'limits.function_lines')?.source).toBe('configuration structure');
     });
 
     test('lists append and deduplicate across layers', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = ["bash"]\n[naming]\nbanned_terms = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["dispatcher", "orchestrator"]\n',
+            'version = 1\nconfigurations = ["bash"]\n[naming]\nbanned_terms = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["dispatcher", "orchestrator"]\n',
             'gspot.toml',
         );
         expect(settingValue(surface, policy, 'naming.banned_terms', 'api')?.value).toEqual([
@@ -147,19 +147,19 @@ describe('the settings surface', () => {
         ]);
     });
 
-    test('list defaults append across presets before root and scope additions', () => {
-        const naming = presetManifests().get('naming')!;
+    test('list defaults append across configurations before root and scope additions', () => {
+        const naming = configurationManifests().get('naming')!;
         const defaults = exposedSettings(
             [['dispatcher'], ['dispatcher', 'orchestrator']].map((terms, index) => ({
                 ...naming,
-                preset: { ...naming.preset, name: `naming-${String(index)}` },
+                configuration: { ...naming.configuration, name: `naming-${String(index)}` },
                 settings: naming.settings.map((spec) =>
                     spec.name === 'naming.banned_terms' ? { ...spec, default: terms } : spec,
                 ),
             })),
         );
         const policy = parsePolicyText(
-            'version = 1\npresets = ["naming"]\n[naming]\nbanned_terms = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["orchestrator", "handler"]\n',
+            'version = 1\nconfigurations = ["naming"]\n[naming]\nbanned_terms = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["orchestrator", "handler"]\n',
             'gspot.toml',
         );
         expect(settingValue(defaults, policy, 'naming.banned_terms', 'api')?.value).toEqual([
@@ -172,9 +172,9 @@ describe('the settings surface', () => {
     });
 
     test('scoped rules inherit unrelated rules and replace complete options for the same rule', () => {
-        const settings = exposedSettings(selectPresets(['css'], presetManifests()));
+        const settings = exposedSettings(selectConfigurations(['css'], configurationManifests()));
         const policy = parsePolicyText(
-            'version = 1\npresets = ["css"]\n[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "warning" }]\n[[scope]]\npath = "app"\npresets = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
+            'version = 1\nconfigurations = ["css"]\n[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "warning" }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
             'gspot.toml',
         );
         expect(settingValue(settings, policy, 'tools.stylelint.rules', 'app')?.value).toEqual({
@@ -189,7 +189,7 @@ describe('the settings surface', () => {
 
     test('raising a ceiling without a reason is a problem that names the command', () => {
         const policy = parsePolicyText(
-            'version = 1\nrequire_reasons = true\npresets = ["bash"]\n[limits]\nfile_lines = 400\n',
+            'version = 1\nrequire_reasons = true\nconfigurations = ["bash"]\n[limits]\nfile_lines = 400\n',
             'gspot.toml',
         );
         const problems = validateAgainstSurface(surface, policy);
@@ -197,23 +197,23 @@ describe('the settings surface', () => {
     });
 
     test('lowering a ceiling needs no reason', () => {
-        const policy = parsePolicyText('version = 1\npresets = ["bash"]\n[limits]\nfile_lines = 200\n', 'gspot.toml');
+        const policy = parsePolicyText('version = 1\nconfigurations = ["bash"]\n[limits]\nfile_lines = 200\n', 'gspot.toml');
         expect(validateAgainstSurface(surface, policy)).toEqual([]);
     });
 
-    test('a setting no preset exposes is refused with the keys that exist', () => {
+    test('a setting no configuration exposes is refused with the keys that exist', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = ["bash"]\n[tools.shellcheck]\nseverity = "style"\n',
+            'version = 1\nconfigurations = ["bash"]\n[tools.shellcheck]\nseverity = "style"\n',
             'gspot.toml',
         );
         expect(validateAgainstSurface(surface, policy)[0]?.message).toContain(
-            'No selected preset exposes `tools.shellcheck.severity`',
+            'No selected configuration exposes `tools.shellcheck.severity`',
         );
     });
 
     test('the marketing group cannot be removed', () => {
         const policy = parsePolicyText(
-            'version = 1\npresets = ["bash"]\n[naming]\nremove_groups = [{ group = "marketing", reason = "We like adjectives here." }]\n',
+            'version = 1\nconfigurations = ["bash"]\n[naming]\nremove_groups = [{ group = "marketing", reason = "We like adjectives here." }]\n',
             'gspot.toml',
         );
         expect(validateAgainstSurface(surface, policy)[0]?.message).toContain(
@@ -225,13 +225,13 @@ describe('the settings surface', () => {
 test.each(['min_lines', 'min_tokens'])(
     'raising duplication %s requires a reason, while lowering it tightens detection',
     (name) => {
-        const selected = selectPresets(['duplication'], presetManifests());
+        const selected = selectConfigurations(['duplication'], configurationManifests());
         const settings = exposedSettings(selected);
         const key = `limits.duplication.${name}`;
         const shipped = settings.defaults.get(key)!.value as number;
         const policy = (value: number) =>
             parsePolicyText(
-                `version = 1\nrequire_reasons = true\npresets = ["duplication"]\n[limits.duplication]\n${name} = ${String(value)}\n`,
+                `version = 1\nrequire_reasons = true\nconfigurations = ["duplication"]\n[limits.duplication]\n${name} = ${String(value)}\n`,
                 'gspot.toml',
             );
         expect(
@@ -244,13 +244,13 @@ test.each(['min_lines', 'min_tokens'])(
 test.each([-1, 101])('Jest rejects coverage percentage %s and accepts bounded floors with reasons', (percentage) => {
     expect(() =>
         parsePolicyText(
-            `version = 1\npresets = ["jest"]\n[tools.jest]\ncoverage_lines = ${String(percentage)}\n`,
+            `version = 1\nconfigurations = ["jest"]\n[tools.jest]\ncoverage_lines = ${String(percentage)}\n`,
             'gspot.toml',
         ),
     ).toThrow();
     expect(() =>
         parsePolicyText(
-            'version = 1\npresets = ["jest"]\n[tools.jest]\ncoverage_lines = {value = 75, reason = "Legacy branches are covered as their owners change."}\ncoverage_functions = 100\n',
+            'version = 1\nconfigurations = ["jest"]\n[tools.jest]\ncoverage_lines = {value = 75, reason = "Legacy branches are covered as their owners change."}\ncoverage_functions = 100\n',
             'gspot.toml',
         ),
     ).not.toThrow();
@@ -261,13 +261,13 @@ test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
     (path) => {
         expect(() =>
             parsePolicyText(
-                `version = 1\npresets = ["jest"]\n[tools.jest]\nharness_directory = ${JSON.stringify(path)}\n`,
+                `version = 1\nconfigurations = ["jest"]\n[tools.jest]\nharness_directory = ${JSON.stringify(path)}\n`,
                 'gspot.toml',
             ),
         ).toThrow();
         expect(() =>
             parsePolicyText(
-                'version = 1\npresets = ["jest"]\n[tools.jest]\nharness_directory = "tests/fixtures"\n',
+                'version = 1\nconfigurations = ["jest"]\n[tools.jest]\nharness_directory = "tests/fixtures"\n',
                 'gspot.toml',
             ),
         ).not.toThrow();

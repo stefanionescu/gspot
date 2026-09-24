@@ -1,7 +1,7 @@
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
 import { expect, test } from 'bun:test';
@@ -9,7 +9,7 @@ import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from '
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 
-const POLICY = 'version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
+const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
 test.each(['', "apps/worker's tools"])(
     'native simple-git-hooks preserves commands and restores policy directory %s',

@@ -1,6 +1,6 @@
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { fileURLToPath } from 'node:url';
 // Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
@@ -20,7 +20,7 @@ import { createFileTree, testdir } from 'testdirs';
 const INIT = [
     'init',
     '--yes',
-    '--presets',
+    '--configurations',
     'bash',
     'javascript',
     'spelling',
@@ -57,7 +57,7 @@ describe('takeover', () => {
             const initialized = await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'markdown',
                 '--without',
                 'docs',
@@ -181,7 +181,7 @@ describe('takeover', () => {
             const initialized = await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'formatting',
                 '--no-runner',
                 '--no-ci',
@@ -193,7 +193,7 @@ describe('takeover', () => {
             for (const [path, source] of Object.entries(sources)) {
                 const filepath = join(sandbox.path, path);
                 const options = await prettier.resolveConfig(filepath, {
-                    config: join(sandbox.path, '.gspot/prettier.json'),
+                    config: join(sandbox.path, '.gspot/config/prettier.json'),
                     editorconfig: true,
                     useCache: false,
                 });
@@ -241,7 +241,7 @@ describe('takeover', () => {
                 '.prettierrc.json': '{"semi":false}\n',
                 'source.js': 'const greeting = "hello";\n',
             });
-            const command = join(import.meta.dir, '../../../packages/cli/src/lifecycle/init/command.ts');
+            const command = join(import.meta.dir, '../../../packages/cli/src/commands/init/command.ts');
             const child = `
             import { mock } from 'bun:test';
             import { writeFileSync } from 'node:fs';
@@ -255,7 +255,7 @@ describe('takeover', () => {
             }));
             const { initCommand } = await import(${JSON.stringify(command)});
             try {
-                await initCommand({ cwd: process.cwd(), presets: ['formatting'], yes: false, json: false, isDryRun: false, install: false, allowDirty: true, hooks: 'none', ci: 'none', runner: 'none', rules: 'no', format: 'keep' });
+                await initCommand({ cwd: process.cwd(), configurations: ['formatting'], yes: false, json: false, isDryRun: false, install: false, allowDirty: true, hooks: 'none', ci: 'none', runner: 'none', rules: 'no', format: 'keep' });
             } catch (error) { console.error(error.message); process.exitCode = 2; }
         `;
             const result = runBlocking([process.execPath, '--eval', child], { cwd: sandbox.path });
@@ -343,7 +343,7 @@ describe('takeover', () => {
             const result = await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'formatting',
                 '--no-hooks',
                 '--no-runner',
@@ -392,7 +392,7 @@ describe('takeover', () => {
             const result = await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'formatting',
                 '--no-hooks',
                 '--no-runner',
@@ -454,12 +454,12 @@ describe('takeover', () => {
                 expect(policy).toContain('carried from typos.toml at init');
                 // The old file named no locale, which accepts every English dialect, so the repository keeps that.
                 expect(policy).toContain('locale = "en"');
-                expect(readFileSync(join(sandbox.path, '.gspot/typos.toml'), 'utf8')).toContain('locale = "en"');
+                expect(readFileSync(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toContain('locale = "en"');
                 expect(policy).toContain('SC2086');
                 expect(policy).toContain('carried from .shellcheckrc at init');
                 expect(policy).toContain('MD013');
                 expect(policy).toContain('MD033 = true');
-                const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/markdownlint.jsonc'), 'utf8'));
+                const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/config/markdownlint.jsonc'), 'utf8'));
                 expect(markdown).toMatchObject({ MD013: false, MD033: true });
                 for (const stub of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
                     expect(readFileSync(join(sandbox.path, stub), 'utf8')).toContain('gspot');
@@ -492,7 +492,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'sql',
             '--without',
             'naming',

@@ -1,6 +1,6 @@
 // Identifiers a shell script declares: functions and variables, through tree-sitter.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/naming/types.ts';
+import type { ExtractSink, Identifier } from '#cli/types/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;

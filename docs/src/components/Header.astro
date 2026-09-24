@@ -1,0 +1,29 @@
+---
+import Search from './Search.astro';
+import SiteTitle from './SiteTitle.astro';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+---
+<div class="site-header">
+    <SiteTitle />
+    <div class="search print:hidden"><Search /></div>
+    <div class="controls print:hidden">
+        <div class="social"><SocialIcons /></div>
+        <ThemeSelect />
+    </div>
+</div>
+<style>
+    .site-header { display: grid; grid-template-columns: auto minmax(0, 24rem) auto; align-items: center; justify-content: space-between; gap: 24px; height: 100%; }
+    .search { min-width: 0; width: 100%; }
+    .controls { display: flex; align-items: center; gap: 16px; }
+    .controls :global(select) { min-height: 44px; }
+    @media (max-width: 49.99rem) {
+        .site-header { grid-template-columns: minmax(0, 1fr) 44px 44px; gap: 8px; }
+        .social { display: none; }
+        .controls :global(select) { width: 44px; padding: 0; color: transparent; }
+        .controls :global(select option) { color: var(--sl-color-text); }
+        .controls :global(.caret) { display: none; }
+        .search :global(button[data-open-modal]) { width: 44px; height: 44px; padding: 10px; justify-content: center; }
+        .search :global(button[data-open-modal] > :not(svg)) { display: none; }
+    }
+</style>

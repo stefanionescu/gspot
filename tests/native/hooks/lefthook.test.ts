@@ -1,7 +1,7 @@
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
 import { expect, test } from 'bun:test';
@@ -25,7 +25,7 @@ test.each(['custom', 'native'])(
         const root = join(repository.path, "repository's tools");
         await createFileTree(root, {
             'scratch/.keep': '',
-            'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+            'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
             'package.json': '{"private":true,"devDependencies":{"lefthook":"2.0.13"}}\n',
             'hook-settings.yml': 'rc: ./hook-init.sh\n',
             'hook-init.sh': 'export GSPOT_FIXTURE_RC=retained\nprintf "%s" "$GSPOT_FIXTURE_RC" > rc-ran\n',
@@ -309,7 +309,7 @@ test.each(['custom', 'native'])(
 test('Lefthook versions without the supported installation controls retain existing hooks', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
         'package.json': '{"private":true,"devDependencies":{"lefthook":"1.11.13"}}\n',
     });
     for (const command of [

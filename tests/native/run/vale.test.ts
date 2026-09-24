@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/platform/tool-probe.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { valeFindings } from '#cli/prose/vale.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { planRun } from '#cli/run/plan.ts';
@@ -13,8 +13,8 @@ for (const extension of ['md', 'sh']) {
         await using directory = await testdir();
         const path = `sample.${extension}`;
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\npresets = ["prose", "bash", "markdown"]\n',
-            '.gspot/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n',
+            '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
             '.gspot/styles/Example/Concrete.yml':
                 'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
             [path]: '# We delve into the records.\n',
@@ -36,8 +36,8 @@ for (const extension of ['md', 'sh']) {
             const path = `sample.${extension}`;
             const source = '# Example text\n';
             await createFileTree(directory.path, {
-                'gspot.toml': 'version = 1\npresets = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
-                '.gspot/vale.ini': 'Packages =\n',
+                'gspot.toml': 'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
+                '.gspot/config/vale.ini': 'Packages =\n',
                 [path]: source,
             });
             const session = await openSession(directory.path);

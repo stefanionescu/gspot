@@ -22,7 +22,7 @@ describe('uninstall', () => {
             await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'bash',
                 '--runner',
                 'bun',
@@ -49,9 +49,9 @@ describe('uninstall', () => {
             const lefthook = readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8');
             expect(lefthook).toContain('mine');
             expect(lefthook).not.toContain('gspot');
-            expect(existsSync(join(sandbox.path, '.gspot/recovery'))).toBe(true);
-            expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('.gspot/recovery/');
-            expect(existsSync(join(sandbox.path, '.gspot/shellcheckrc'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gspot/state/recovery'))).toBe(true);
+            expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
+            expect(existsSync(join(sandbox.path, '.gspot/config/shellcheckrc'))).toBe(false);
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         },
         PLANTED_TIMEOUT_MS,

@@ -1,15 +1,10 @@
 // Every package.json: exact versions, one packageManager across the workspace, a private root, one kind of lockfile.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import type { PackageManifest } from '#cli/repository/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { PackageManifest } from '#cli/types/repository.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import {
-    DEPENDENCY_TABLES,
-    EXACT_VERSION,
-    LOCKFILES,
-    NON_REGISTRY_VERSION,
-} from '#cli/checks/integrity-definitions.ts';
+import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 
 type Reporter = (file: string, rule: string, text: string) => Finding;
 
@@ -113,3 +108,9 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     );
     return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
 }
+
+const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+
+const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
+
+const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;

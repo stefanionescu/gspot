@@ -1,25 +1,14 @@
+import { PRIVATE_PATHS } from '#cli/platform/layout.ts';
 // Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
-import type { BlockStyle } from '#cli/emit/types.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { Manifest } from '#cli/presets/types.ts';
+import type { BlockStyle } from '#cli/types/generation.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import {
     HASH_BLOCK_END,
     HASH_BLOCK_START,
     MANAGED_BLOCK_END,
     MANAGED_BLOCK_START,
-} from '#cli/emit/markers-definitions.ts';
-
-const GITIGNORE_LINES = [
-    '.gspot/node_modules/',
-    '.gspot/.venv/',
-    '.gspot/ownership.json',
-    '.gspot/writer.lock',
-    '.gspot/recovery/',
-    '.gspot/cache/',
-    '.gspot/report.json',
-    '.gspot/report.sarif',
-    '.gspot/report.codequality.json',
-];
+} from '#cli/emit/markers.ts';
 
 /** Locate one complete block, refusing ambiguous or malformed markers. */
 export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
@@ -78,6 +67,6 @@ export function currentBlock(text: string, style: BlockStyle): string | undefine
  * The .gitignore block: the paths gspot writes that git never tracks.
  * @returns the block body
  */
-export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = presetManifests().values()): string {
-    return [...new Set([...GITIGNORE_LINES, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values()): string {
+    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }

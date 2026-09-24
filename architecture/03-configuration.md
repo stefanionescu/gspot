@@ -36,9 +36,9 @@ preserve unsupported authored input with an explicit limitation rather than gues
 | `.gspot/node_modules/`, `.gspot/.venv/`                 | gspot                         | no      | where those tools install                                                                                                 |
 | `.gspot/version`                                        | gspot                         | yes     | the gspot version this repository runs, one line                                                                          |
 | `.gspot/rules/**`                                       | gspot                         | yes     | the installed rule files                                                                                                  |
-| `.gspot/recovery/**`, `.gspot/ownership.json`           | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                   |
+| `.gspot/state/recovery/**`, `.gspot/state/ownership.json`           | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                   |
 | `.gspot/cache/**`                                       | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                                     |
-| `.gspot/report.json`, `report.sarif`                    | gspot                         | no      | the last run                                                                                                              |
+| `.gspot/reports/report.json`, `report.sarif`                    | gspot                         | no      | the last run                                                                                                              |
 | `.mise/conf.d/gspot-tools.toml`                         | gspot                         | yes     | tool pins under the mise runner                                                                                           |
 | `.editorconfig`                                         | gspot                         | yes     | written whole from `[format]`, because editors read no other place                                                        |
 | a root pointer                                          | gspot                         | yes     | for a tool with an include form: a re-export, `extends`, `extend`, or `parent_config`                                     |
@@ -46,7 +46,7 @@ preserve unsupported authored input with an explicit limitation rather than gues
 | `AGENTS.md`, and the agent files the repository holds   | gspot, one managed block each | yes     | the index of rule files: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                                    |
 | the hook or task a hook calls                           | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file of the repository, or in `.git/hooks/` of each clone |
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | gspot                         | yes     | the CI job, when enabled                                                                                                  |
-| `gspot.schema.json`                                     | gspot                         | no      | the JSON Schema of `gspot.toml`, published with each release                                                              |
+| `packages/cli/schemas/gspot.schema.json`                 | gspot                         | yes      | the JSON Schema of `gspot.toml`, published with each release                                                              |
 
 The only shared-manifest writes are the `gspot` launcher and explicitly accepted lint task
 entries. gspot never writes tool dependencies or package lifecycle scripts into the developer's
@@ -75,20 +75,20 @@ extra_checks = ["structure/single-file-folder"]   # checks of the level all, tur
 # Folders and files gspot never reads. Files that git ignores are left out already.
 exclude = ["legacy", "third_party"]
 
-# The selection. Presets are bare names.
-presets = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
+# The selection. Configurations are bare names.
+configurations = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
 
-# A scope is a folder with a project file and its own selection. Root presets apply everywhere.
+# A scope is a folder with a project file and its own selection. Root configurations apply everywhere.
 [[scope]]
 path    = "api"
-presets = ["typescript", "express", "docker", "nginx", "vitest"]
+configurations = ["typescript", "express", "docker", "nginx", "vitest"]
 
 [scope.limits]
 function_lines = { value = 80, reason = "Route tables are one ordered list each." }
 
 [[scope]]
 path    = "ios"
-presets = ["swift", "xcode", "xctest"]
+configurations = ["swift", "xcode", "xctest"]
 
 # Limits. Only settings a check reads exist. A value may carry a reason.
 [limits]
@@ -165,7 +165,7 @@ paths = ["api/types/supabase.ts"]
 paths  = ["vendor"]
 reason = "Upstream source, patched only by rebase."
 
-# A script the repository already runs. It joins the run like a preset check.
+# A script the repository already runs. It joins the run like a configuration check.
 [[check]]
 name      = "sql/migration-data"
 command = ["bunx", "tsx", "supabase/scripts/migrations.ts", "check"]
@@ -203,8 +203,8 @@ strict = false                    # true: a source file no check reads fails the
 
 - Every setting has a command that writes it, and `gspot list settings` prints the setting name. A hand
   edit gives the same file and is validated on the next load.
-- A preset that does not exist fails to load, with the near matches. A setting no selected
-  preset has fails to load, with the settings that exist under that table.
+- A configuration that does not exist fails to load, with the near matches. A setting no selected
+  configuration has fails to load, with the settings that exist under that table.
 - A wrong entry does not stop `gspot check`. The run uses the rest of the file and reports the
   entry as a finding of `integrity/policy`. The writing commands and `apply` refuse such a file.
 - Unsafe paths and invalid security or execution settings stop the run with exit 2. They are
@@ -218,14 +218,14 @@ strict = false                    # true: a source file no check reads fails the
 - A `reason` is optional on an `[[ignore]]` and on a loosened setting. With
   `require_reasons = true` it is required, and `N/A`, `TBD`, `-`, and an empty string are refused.
   Text fields reject forbidden controls, and every generated value still requires destination-appropriate serialization.
-- `[limits.<language>]` and `[naming.<language>]` take the language preset names. A key there
+- `[limits.<language>]` and `[naming.<language>]` take the language configuration names. A key there
   wins over the root key for the checks of that language.
 - A rule of any tool is turned off by an `[[ignore]]` with `rule`, and nowhere else.
   `[tools.<name>.rules]` holds rule options and rules turned on.
 - The `marketing` and `defensive` term groups cannot be removed as groups.
 - A `[[check]]` has `name`, `command`, `paths`, `stage`, and optionally `inputs`, `help`, `fix_command`, `fix_order`, `output`,
   `requires`, and `platform`. It is cached only when it names `inputs`. Its `output` takes
-  every format a manifest check takes. `help` is explanatory text; `fix_command` is an argument vector and requires `fix_order`, as in a preset manifest.
+  every format a manifest check takes. `help` is explanatory text; `fix_command` is an argument vector and requires `fix_order`, as in a configuration manifest.
 - Unknown configuration names fail validation. gspot is unreleased and has no users; update names directly without aliases or version migrations.
 
 ### Names of settings
@@ -249,12 +249,12 @@ configured reports nothing.
 
 `[tools.<name>]` holds the options a person changes on that tool, under the tool's own names. A
 person who knows ESLint writes `rules = { ... }`, and a person who knows Prettier writes
-`printWidth`. An option the preset does not have fails to load and names the ones that exist.
+`printWidth`. An option the configuration does not have fails to load and names the ones that exist.
 
 A tool is turned off by ignoring its checks, and a tool whose every check is ignored whole is
 not installed. Every tool has `[tools.<name>.extra]`: a table written as it stands into the config of the
-tool, with a required `reason`, for an option the preset does not have yet. Every `extra` table
-prints with `--verbose`. A key in `extra` that the preset has fails to load and names it.
+tool, with a required `reason`, for an option the configuration does not have yet. Every `extra` table
+prints with `--verbose`. A key in `extra` that the configuration has fails to load and names it.
 
 A setting may be detected. `init` fills it from the repository, such as the build command, the
 output folder, the SQL dialect, or the Swift destination, and asks where it finds nothing.
@@ -265,13 +265,13 @@ A profile is a TOML file with the schema of `gspot.toml` and three differences:
 
 | Difference | Rule                                                                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `presets`                                |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `configurations`                                |
 | Left out   | `[[scope]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused. An `[[ignore]]` with no `paths` travels |
 | Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                                               |
 
-`selection = "exact"` installs the named presets and what they require. Detection still runs,
+`selection = "exact"` installs the named configurations and what they require. Detection still runs,
 and the plan lists what it found and did not install. `selection = "detect"` adds the detected
-presets to the named ones. A profile is read through the same schema as the config, so a value
+configurations to the named ones. A profile is read through the same schema as the config, so a value
 it carries is held to the same rules.
 
 ```toml
@@ -279,7 +279,7 @@ version   = 1
 level     = "all"
 profile   = "house-style"
 selection = "exact"
-presets   = ["typescript", "formatting", "spelling", "markdown", "commits"]
+configurations   = ["typescript", "formatting", "spelling", "markdown", "commits"]
 
 [format]
 indent_width = 2
@@ -297,14 +297,14 @@ makes every run depend on a second file and, for an address, on the network.
 For every setting:
 
 ```text
-preset default
-  → framework or platform preset, in selection order
+configuration default
+  → framework or platform configuration, in selection order
   → root table
   → scope table
 ```
 
-Lists append and drop repeats. Scalars replace. Two presets that set one scalar to two values
-fail at load with both presets named, and a root value settles it.
+Lists append and drop repeats. Scalars replace. Two configurations that set one scalar to two values
+fail at load with both configurations named, and a root value settles it.
 
 ## An old repository
 
@@ -319,12 +319,12 @@ what it finds today. An old repository adopts gspot through four things that nee
 ## What a path is
 
 Every tracked path is one of four kinds: source, generated, vendored, or binary. The sources
-are `[[generated]]` and `[[vendored]]`, `.gitattributes`, a banner the preset knows, and the
+are `[[generated]]` and `[[vendored]]`, `.gitattributes`, a banner the configuration knows, and the
 first bytes of the file, in that order.
 
 | Kind      | Checks that apply                                          |
 | --------- | ---------------------------------------------------------- |
-| source    | everything the selected presets claim for its kind of file |
+| source    | everything the selected configurations claim for its kind of file |
 | generated | secrets                                                    |
 | vendored  | secrets, licenses, security                                |
 | binary    | secrets, and the size limit unless the file is under LFS   |
@@ -361,8 +361,8 @@ that grants no write or deletion authority. This is not a sandbox for arbitrary 
 commands.
 
 Before replacing a developer file or task, save its exact bytes, mode, original path, and hash
-under `.gspot/recovery/<operation>/`. Recovery directories and metadata are owner-only because originals can contain credentials; backup content never appears in reports or CI artifacts. Store the installed hash and ownership kind in
-`.gspot/ownership.json`. Recovery is local, untracked, and required even with Git or
+under `.gspot/state/recovery/<operation>/`. Recovery directories and metadata are owner-only because originals can contain credentials; backup content never appears in reports or CI artifacts. Store the installed hash and ownership kind in
+`.gspot/state/ownership.json`. Recovery is local, untracked, and required even with Git or
 `--allow-dirty`. It is never treated as a cache or removed by cache eviction or uninstall.
 
 If recovery cannot be written, refuse that replacement. A second operation never overwrites an
@@ -450,7 +450,7 @@ No Git, unborn Git, untracked config, dirty takeover, second replacement, full d
 ### Acceptance K-217
 
 gspot never writes a lint tool into a manifest of the developer. The npm tools and
-libraries a preset pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
+libraries a configuration pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
 and its lockfile. Every check runs the binary under `.gspot/`. The ESLint of the developer, its
 config, and its plugins stay, and takeover lists them for removal by hand.
 
@@ -539,7 +539,7 @@ manifests. gspot creates the file where none exists and adds no line for the fil
 developer.
 
 The fixed lines are `.gspot/cache/`, `.gspot/node_modules/`,
-`.gspot/.venv/`, `.gspot/report.*`, `.gspot/recovery/`, and `.gspot/ownership.json`. A manifest adds a line through a field named
+`.gspot/.venv/`, `.gspot/reports/report.*`, `.gspot/state/recovery/`, and `.gspot/state/ownership.json`. A manifest adds a line through a field named
 `untracked`, and the prose manifest names the folder of each Vale package there. The block goes
 at the end of the file. In a folder with no git, `targets.ts` leaves the block out. `uninstall`
 removes the block only when no retained recovery or local state still needs its ignore entries, and deletes the file only when the block was all it held.
@@ -572,12 +572,12 @@ Unit tests for the three spellings, and for a file under a nested scope.
 
 ### Acceptance K-89
 
-A message says setting, preset, scope, and default, the words of
+A message says setting, configuration, scope, and default, the words of
 [03-configuration.md](03-configuration.md).
 
 `PolicyScopeLayer` becomes `ScopeSettings`. The settings list prints three columns:
-the key, its value, and where the value comes from. The message that says no selected preset `exposes` a key says that no
-selected preset has the setting.
+the key, its value, and where the value comes from. The message that says no selected configuration `exposes` a key says that no
+selected configuration has the setting.
 
 The message unit tests, and a test that no message function returns one of the words.
 
@@ -618,7 +618,7 @@ Generate configuration at both levels and exercise indentation through each pinn
 file of a scope sits under `.gspot/<scope>/`.
 
 The project file names come from `project_files` of the manifests (K-182), so the
-scope reader names no preset. `scopeFile(scope, name)` is the one function that builds a path of
+scope reader names no configuration. `scopeFile(scope, name)` is the one function that builds a path of
 a scope file.
 
 `init --yes` on a planted copy of the app layout proposes the three scopes with no
@@ -780,7 +780,7 @@ Unit tests with one test repository for each form, each naming `FastAPI` in anot
 
 Both endings carry their own tag and the tag `source`.
 
-Two table rows. `.kt` and `.java` stay unknown, because no preset reads them, and
+Two table rows. `.kt` and `.java` stay unknown, because no configuration reads them, and
 detection names their language through `linguist-languages`.
 
 A unit test of `repository/tags.ts` for both endings.
@@ -799,10 +799,10 @@ gspot line removed holds one.
 
 ### Acceptance K-237
 
-A lint package is a package that a tool of a selected preset names.
+A lint package is a package that a tool of a selected configuration names.
 
 The list is built from the `npm` and `pypi` names of every manifest tool, plus the
-`replaces` names a manifest gives, such as `eslint-config-*` for the javascript preset.
+`replaces` names a manifest gives, such as `eslint-config-*` for the javascript configuration.
 
 `takeover.test.ts` plants a `package.json` with `husky` and `concurrently` alone, and
 holds that the plan does not name it.

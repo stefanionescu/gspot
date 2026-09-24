@@ -3,11 +3,11 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { openSession } from '#cli/run/session.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 
-const POLICY = 'version = 1\npresets = ["typescript"]\n';
+const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
 
 async function inputFor(root: string): Promise<EngineInput> {
     const session = await openSession(root);

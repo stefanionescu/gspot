@@ -1,13 +1,13 @@
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
-import type { FixOrder, ToolPin } from '#cli/presets/types.ts';
+import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
+import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
 import { executionFailure, hasToolError } from '#cli/run/broken-tool.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 import { prepareCommand, runToolCommand, toolDeadlineSeconds } from '#cli/run/tool-runner.ts';
-import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/run/types.ts';
+import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution.ts';
 import { createTwoFilesPatch } from 'diff';
 import {
     constants,

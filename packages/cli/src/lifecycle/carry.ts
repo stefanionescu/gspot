@@ -1,16 +1,18 @@
 import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
-import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
-import { licenseResponse } from '#cli/lifecycle/license-evaluation.ts';
-import { stylelintRequest, stylelintResponse, stylelintSource } from '#cli/lifecycle/stylelint-evaluation.ts';
-import { toolPin } from '#cli/platform/tool-probe.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { ExistingTool } from '#cli/repository/types.ts';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { licenseResponse } from '#cli/schemas/evaluation.ts';
+
+import { stylelintRequest, stylelintResponse, stylelintSource } from '#cli/schemas/evaluation.ts';
+
+import { toolPin } from '#cli/tools/tool-probe.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import type { ExistingTool } from '#cli/types/repository.ts';
 // The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
-import type { CarriedConfiguration, CarriedIgnore, CarryPush, CarrySource } from '#cli/lifecycle/types.ts';
-import { CARRIED_REASON } from '#cli/policy/reasons-definitions.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import type { TomlTable } from '#cli/policy/types.ts';
+import type { CarriedConfiguration, CarriedIgnore, CarryPush, CarrySource } from '#cli/types/ownership.ts';
+import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
 import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
@@ -115,8 +117,8 @@ function carryTypos(source: CarrySource, path: string, lists: CarriedConfigurati
     if (paths.length > 0) settings['exclude'] = [{ paths, reason: reasonFor(path) }];
     if (base === '.') Object.assign(carriedTool(lists, 'typos').settings, settings);
     else {
-        const scope = lists.scopes.get(base) ?? { presets: [], tools: {} };
-        scope.presets = [...new Set([...scope.presets, 'spelling'])];
+        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
+        scope.configurations = [...new Set([...scope.configurations, 'spelling'])];
         scope.tools['typos'] = settings;
         lists.scopes.set(base, scope);
     }
@@ -190,7 +192,7 @@ async function carryLicenses(
     const parsed = source.parsed;
     const allowed = namesOf(parsed['onlyAllow']);
     const defaults = z.array(z.string()).parse(
-        presetManifests()
+        configurationManifests()
             .get('licenses')
             ?.settings.find((setting) => setting.name === 'tools.licenses.licenses_allowed')?.default,
     );
@@ -229,8 +231,8 @@ async function carryLicenses(
     if (base === '.') {
         for (const [key, values] of Object.entries(settings)) appendSetting(lists, 'licenses', key, asList(values));
     } else {
-        const scope = lists.scopes.get(base) ?? { presets: [], tools: {} };
-        scope.presets = [...new Set([...scope.presets, 'licenses'])];
+        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
+        scope.configurations = [...new Set([...scope.configurations, 'licenses'])];
         scope.tools['licenses'] = settings;
         lists.scopes.set(base, scope);
     }
@@ -444,8 +446,8 @@ function carryMarkdownlint(source: CarrySource, path: string, lists: CarriedConf
     const base = posix.dirname(path);
     if (base === '.') carriedTool(lists, 'markdownlint').settings['rules'] = rules;
     else {
-        const scope = lists.scopes.get(base) ?? { presets: [], tools: {} };
-        scope.presets = [...new Set([...scope.presets, 'markdown'])];
+        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
+        scope.configurations = [...new Set([...scope.configurations, 'markdown'])];
         scope.tools['markdownlint'] = { rules };
         lists.scopes.set(base, scope);
     }
@@ -504,7 +506,7 @@ async function carryStylelint(
     const converted = parseToml(stringifyToml({ rules: enabled }));
     if (!isDeepStrictEqual(converted['rules'], enabled))
         throw new Error(`${path}: Stylelint rule options cannot be represented without loss in TOML.`);
-    const version = z.string().min(1).parse(toolPin(presetManifests().values(), 'stylelint').version);
+    const version = z.string().min(1).parse(toolPin(configurationManifests().values(), 'stylelint').version);
     stylelintResponse.parse(
         await evaluateConfiguration({ root, tool: 'stylelint', operation: 'stylelint', version, rules }),
     );
@@ -512,8 +514,8 @@ async function carryStylelint(
     const base = posix.dirname(path);
     if (base === '.') carried.settings['rules'] = enabled;
     else {
-        const scope = lists.scopes.get(base) ?? { presets: [], tools: {} };
-        scope.presets = [...new Set([...scope.presets, 'css'])];
+        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
+        scope.configurations = [...new Set([...scope.configurations, 'css'])];
         scope.tools['stylelint'] = { rules: enabled };
         lists.scopes.set(base, scope);
     }

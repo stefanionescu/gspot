@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/run/session.ts';
-import { jestCoverage } from '#cli/checks/jest.ts';
+import { jestCoverage } from '#cli/checks/jest/run.ts';
 import * as processes from '#cli/platform/spawn.ts';
 
 const failures = [
@@ -25,7 +25,7 @@ const failures = [
 test.each(failures)('Jest refuses %s, cleans isolated artifacts, and accepts a corrected report', async (failure) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["jest"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["jest"]\n',
         'sample.js': 'const authored = true;\n',
         'node_modules/.bin/jest': '#!/usr/bin/env node\n',
     });

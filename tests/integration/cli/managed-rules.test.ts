@@ -1,12 +1,12 @@
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
-import { managedBlock } from '#cli/rules/managed-block.ts';
+import { managedBlock } from '#cli/agents/instructions.ts';
 
 describe('the managed block', () => {
     test('with no check selected it says nothing about gspot check', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n' });
+        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
         const block = managedBlock(await openSession(sandbox.path));
         expect(block).toContain('general/agent/WORKING.md');
         expect(block).toContain('These files are installed copies');
@@ -17,7 +17,7 @@ describe('the managed block', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\npresets = ["spelling"]\n\n[rules]\nexclude = ["general/code/ACCESSIBILITY.md"]\n',
+                'version = 1\nconfigurations = ["spelling"]\n\n[rules]\nexclude = ["general/code/ACCESSIBILITY.md"]\n',
         });
         const block = managedBlock(await openSession(sandbox.path));
         expect(block).toContain('Run `gspot check --staged` before committing');

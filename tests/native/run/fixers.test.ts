@@ -7,9 +7,9 @@ import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { explain } from '#cli/output/explain.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import type { Session, PlannedCheck, RunOptions } from '#cli/run/types.ts';
+import type { Session, PlannedCheck, RunOptions } from '#cli/types/execution.ts';
 import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 import {
@@ -25,7 +25,7 @@ import {
 } from 'node:fs';
 
 const policy = `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "sandbox/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
@@ -39,7 +39,7 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
     'SQLFluff write failures remain execution errors when its exit code also means findings',
     async () => {
         await using sandbox = await testdir();
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('sql')!
             .checks.find((check) => check.name === 'sql/sqlfluff')!;
         const executable = Bun.which('sqlfluff');
@@ -48,7 +48,7 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                presets: [],
+                configurations: [],
                 check: [
                     {
                         name: 'project/native',
@@ -87,11 +87,11 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
 
 test.each([
     {
-        preset: 'sql',
+        configuration: 'sql',
         check: 'sql/sqlfluff',
         path: 'sample.sql',
         config: 'native.cfg',
-        configuration: '[sqlfluff]\ndialect = postgres\nrules = LT01,AM04\n',
+        toolConfiguration: '[sqlfluff]\ndialect = postgres\nrules = LT01,AM04\n',
         command: ['sqlfluff', 'lint', '--ignore-local-config', '--config', 'native.cfg', '--format', 'json', '{files}'],
         fix: [
             'sqlfluff',
@@ -107,11 +107,11 @@ test.each([
         corrected: 'select id from foo;\n',
     },
     {
-        preset: 'markdown',
+        configuration: 'markdown',
         check: 'markdown/markdownlint',
         path: 'sample.md',
         config: 'native.mjs',
-        configuration:
+        toolConfiguration:
             'export default {config:{default:false,MD024:true,MD009:{br_spaces:0}},noBanner:true,noProgress:true,outputFormatters:[[({results,logMessage})=>logMessage(JSON.stringify(results))]]};',
         command: ['markdownlint-cli2', '--no-globs', '--config', 'native.mjs', '{files}'],
         fix: ['markdownlint-cli2', '--fix', '--no-globs', '--config', 'native.mjs', '{files}'],
@@ -121,15 +121,15 @@ test.each([
     },
 ])('$check preserves native partial corrections and accepts a manual correction', async (entry) => {
     await using sandbox = await testdir();
-    const spec = presetManifests()
-        .get(entry.preset)!
+    const spec = configurationManifests()
+        .get(entry.configuration)!
         .checks.find((check) => check.name === entry.check)!;
     const executable = Bun.which(entry.command[0]!);
     if (executable === null) throw new Error(`The native fixer test requires ${entry.command[0]}.`);
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             check: [
                 {
                     name: 'project/native',
@@ -143,7 +143,7 @@ test.each([
                 },
             ],
         }),
-        [entry.config]: entry.configuration,
+        [entry.config]: entry.toolConfiguration,
         [entry.path]: entry.defect,
     });
     const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
@@ -158,13 +158,13 @@ test.each([
 
 test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
     '%s correction status agrees with native residual diagnostics',
-    async (preset) => {
+    async (configuration) => {
         await using sandbox = await testdir();
-        const isCss = preset === 'css';
+        const isCss = configuration === 'css';
         const tool = isCss ? 'stylelint' : 'eslint';
-        const spec = presetManifests()
-            .get(preset)!
-            .checks.find((check) => check.name === `${preset}/${tool}`)!;
+        const spec = configurationManifests()
+            .get(configuration)!
+            .checks.find((check) => check.name === `${configuration}/${tool}`)!;
         const executable = join(
             dirname(Bun.resolveSync(`${tool}/package.json`, import.meta.dir)),
             'bin',
@@ -180,7 +180,7 @@ test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                presets: [],
+                configurations: [],
                 check: [
                     {
                         name: 'project/native',
@@ -213,7 +213,7 @@ test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
 
 test.each([
     {
-        preset: 'spelling',
+        configuration: 'spelling',
         check: 'spelling/typos',
         path: 'sample.txt',
         defect: 'teh wether\n',
@@ -221,7 +221,7 @@ test.each([
         corrected: 'the whether\n',
     },
     {
-        preset: 'python',
+        configuration: 'python',
         check: 'python/ruff',
         path: 'sample.py',
         defect: '"""Sample module."""\nimport os\n\nassert True\n',
@@ -230,10 +230,10 @@ test.each([
     },
 ])(
     '$check fixes available defects while unresolved findings remain status 1',
-    async ({ preset, check, path, defect, partial, corrected }) => {
+    async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': `version = 1\npresets = ["${preset}"]\n`, [path]: defect });
-        if (preset === 'python') {
+        await createFileTree(sandbox.path, { 'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`, [path]: defect });
+        if (configuration === 'python') {
             const ruff = Bun.which('ruff');
             if (ruff === null) throw new Error('The native fixer test requires the pinned Ruff executable.');
             const bin = join(sandbox.path, '.gspot/.venv', process.platform === 'win32' ? 'Scripts' : 'bin');
@@ -595,7 +595,7 @@ test('preview copies workspace dependencies and preserves executable links witho
     await using repository = await testdir();
     await using external = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'package.json': '{"private":true,"workspaces":["packages/*"]}',
         'packages/core/package.json': '{"name":"core"}',
         'packages/core/value.js': 'export default "original";',
@@ -671,7 +671,7 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     await createFileTree(sandbox.path, {
         'source.txt': 'input',
         'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "project/inventory"
 stage = "commit"

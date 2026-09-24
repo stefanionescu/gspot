@@ -11,11 +11,11 @@ test('generated vocabulary combines shipped and project words without duplicates
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
+            'version = 1\nconfigurations = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
     });
     const output = emitAll(await openSession(sandbox.path));
     const vocabulary = output.files.find(
-        (file) => file.path === '.gspot/vale/styles/config/vocabularies/gspot/accept.txt',
+        (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt',
     )!;
     const words = vocabulary.content.trimEnd().split('\n');
     expect(words).toContain('TypeScript');
@@ -27,15 +27,15 @@ test('generated vocabulary combines shipped and project words without duplicates
 
 test('package readiness follows the generated Vale configuration', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { '.gspot/vale.ini': 'Packages = Google\n' });
+    await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = Google\n' });
     expect(hasPackages(sandbox.path)).toBe(false);
-    mkdirSync(join(sandbox.path, '.gspot/vale/styles/Google'), { recursive: true });
+    mkdirSync(join(sandbox.path, '.gspot/config/vale/styles/Google'), { recursive: true });
     expect(hasPackages(sandbox.path)).toBe(true);
     expect(hasPackages(sandbox.path, true)).toBe(false);
     const owner = openLifecycleOwner(sandbox.path);
     try {
         owner.replace(
-            '.gspot/vale/styles/Google/terms.yml',
+            '.gspot/config/vale/styles/Google/terms.yml',
             { bytes: Buffer.from('extends: existence\n'), mode: 0o644 },
             'config',
         );
@@ -43,12 +43,12 @@ test('package readiness follows the generated Vale configuration', async () => {
         owner.close();
     }
     expect(hasPackages(sandbox.path, true)).toBe(true);
-    writeFileSync(join(sandbox.path, '.gspot/vale/styles/Google/terms.yml'), 'edited\n');
+    writeFileSync(join(sandbox.path, '.gspot/config/vale/styles/Google/terms.yml'), 'edited\n');
     expect(hasPackages(sandbox.path, true)).toBe(false);
 });
 
 test('a Vale configuration without external packages needs no downloaded styles', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { '.gspot/vale.ini': 'Packages = \n' });
+    await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
     expect(hasPackages(sandbox.path)).toBe(true);
 });

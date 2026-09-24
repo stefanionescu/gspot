@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { z } from 'zod';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 

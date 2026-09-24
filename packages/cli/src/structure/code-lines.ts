@@ -1,6 +1,6 @@
 // Code lines of a shell script: comments stripped with the quotes respected, blanks dropped.
-import type { CodeLine } from '#cli/structure/types.ts';
-import { DIRECTORY_CONSTANT_SIGNS, DIRECTORY_CONSTANT_START } from '#cli/structure/structure-definitions.ts';
+import type { CodeLine } from '#cli/types/structure.ts';
+import { DIRECTORY_CONSTANT_SIGNS, DIRECTORY_CONSTANT_START } from '#cli/structure/patterns.ts';
 
 const QUOTES = new Set(["'", '"']);
 const DECLARATION_WORDS = new Set(['readonly', 'export', 'declare', 'local']);

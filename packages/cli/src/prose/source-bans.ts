@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // What a source file may not say to Vale: an in-text directive in Markdown, a block comment in SQL.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#cli/prose/prose-definitions.ts';
+import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#cli/prose/syntax.ts';
 
 const MARKDOWN = new Set(['.md', '.mdx']);
 const SQL = new Set(['.sql', '.pgsql', '.psql']);

@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import { symlinkSync, unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { ExistingTooling } from '#cli/repository/types.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import { askInitQuestions } from '#cli/lifecycle/questions.ts';
+import { askInitQuestions } from '#cli/commands/init/questions.ts';
 import { proposeText } from '#cli/policy/propose.ts';
 import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
@@ -85,8 +85,8 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
-            presets: ['markdown'],
-            scopes: [{ path: 'guide/deep', presets: ['markdown'] }],
+            configurations: ['markdown'],
+            scopes: [{ path: 'guide/deep', configurations: ['markdown'] }],
             carried,
             hooks: 'none',
             ci: 'none',
@@ -180,7 +180,7 @@ test.each([false, true])(
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
             proposeText({
-                presets: ['markdown'],
+                configurations: ['markdown'],
                 scopes: [],
                 carried,
                 hooks: 'none',
@@ -190,7 +190,7 @@ test.each([false, true])(
             }),
         );
         const configuration = emitAll(await openSession(sandbox.path)).files.find(
-            ({ path }) => path === '.gspot/markdownlint.jsonc',
+            ({ path }) => path === '.gspot/config/markdownlint.jsonc',
         )!;
         await Bun.write(join(sandbox.path, 'generated.jsonc'), configuration.content);
         // Remove discovery input so the generated file alone determines the native result.
@@ -245,7 +245,7 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
-            presets: ['markdown'],
+            configurations: ['markdown'],
             scopes: [],
             carried,
             hooks: 'none',
@@ -255,7 +255,7 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
         }),
     );
     const generated = emitAll(await openSession(sandbox.path)).files.find(
-        ({ path }) => path === '.gspot/markdownlint.jsonc',
+        ({ path }) => path === '.gspot/config/markdownlint.jsonc',
     )!;
     await Bun.write(join(sandbox.path, 'generated.jsonc'), generated.content);
     unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
@@ -448,14 +448,14 @@ test.each([
 test.each([
     ['.sqlfluffignore', 'sql', 'sqlfluff', 'exclude'],
     ['.semgrepignore', 'security', 'semgrep', 'ignore'],
-] as const)('declared %s adoption keeps nested selectors and refuses negation', async (name, preset, tool, key) => {
+] as const)('declared %s adoption keeps nested selectors and refuses negation', async (name, configuration, tool, key) => {
     await using sandbox = await testdir();
     const path = `nested/${name}`;
     const original = '# Generated fixtures\nfixtures/\n';
     await createFileTree(sandbox.path, { [path]: original });
     const repository = await readRepository(sandbox.path, [], [], []);
     const discovered = existingTooling(sandbox.path, repository.files, []);
-    const carried = await collectCarried(sandbox.path, discovered, new Set([preset]), []);
+    const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
     expect(carried.unread).toEqual([]);
     expect(carried.tools.get(tool)?.settings[key]).toEqual([
         { paths: ['nested/**/fixtures/**'], reason: expect.any(String) },
@@ -463,7 +463,7 @@ test.each([
     expect(carried.removed.map((entry) => entry.path)).toEqual([path]);
     const unsupported = `${original}!fixtures/checked.sql\n`;
     await Bun.write(join(sandbox.path, path), unsupported);
-    const refused = await collectCarried(sandbox.path, discovered, new Set([preset]), []);
+    const refused = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
     expect(refused.unread.map((entry) => entry.path)).toEqual([path]);
     expect(refused.tools.get(tool)?.settings[key] ?? []).toEqual([]);
     expect(refused.removed).toEqual([]);
@@ -474,13 +474,13 @@ test.each([
     ['gitleaks.toml', 'secrets', '[allowlist]\nregexes = ["example-token"]\n'],
     ['osv-scanner.toml', 'dependencies', '[[IgnoredVulns]]\nid = "GO-2022-0968"\n'],
     ['.license-checker.json', 'licenses', '{"onlyAllow":"MIT"}\n'],
-] as const)('nested %s cannot silently widen settings to the whole repository', async (name, preset, original) => {
+] as const)('nested %s cannot silently widen settings to the whole repository', async (name, configuration, original) => {
     await using sandbox = await testdir();
     const path = `nested/${name}`;
     await createFileTree(sandbox.path, { [path]: original });
     const repository = await readRepository(sandbox.path, [], [], []);
     const discovered = existingTooling(sandbox.path, repository.files, []);
-    const carried = await collectCarried(sandbox.path, discovered, new Set([preset]), []);
+    const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
     expect(carried.unread.map((entry) => entry.path)).toEqual([path]);
     expect(carried.tools.size).toBe(0);
     expect(carried.removed).toEqual([]);
@@ -520,8 +520,8 @@ test.each([false, true])(
         expect(carried.tools.has('typos')).toBe(false);
         expect(carried.removed.map(({ path }) => path)).toEqual(['nested/typos.toml']);
         const policy = proposeText({
-            presets: ['spelling'],
-            scopes: existing ? [{ path: 'nested', presets: ['markdown'] }] : [],
+            configurations: ['spelling'],
+            scopes: existing ? [{ path: 'nested', configurations: ['markdown'] }] : [],
             carried,
             hooks: 'none',
             ci: 'none',
@@ -531,7 +531,7 @@ test.each([false, true])(
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
         expect(session.policyFiles.policy.scopes).toEqual([
-            { path: 'nested', presets: existing ? ['markdown', 'spelling'] : ['spelling'] },
+            { path: 'nested', configurations: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);
         const outputs = emitAll(session).files.filter(
             ({ path }) => path.startsWith('.gspot/') && path.endsWith('typos.toml'),
@@ -553,16 +553,16 @@ test.each([false, true])(
                 ],
                 { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' },
             );
-        const child = run('.gspot/nested/typos.toml', 'nested/sample.txt');
+        const child = run('.gspot/config/nested/typos.toml', 'nested/sample.txt');
         expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(0);
-        expect(run('.gspot/nested/typos.toml', 'nested/src/ignored.txt').exitCode).toBe(0);
-        expect(run('.gspot/nested/typos.toml', 'nested/ignored.skip').exitCode).toBe(0);
-        expect(run('.gspot/nested/typos.toml', 'nested/keep.skip').exitCode).toBe(2);
-        const root = run('.gspot/typos.toml', 'sample.txt');
+        expect(run('.gspot/config/nested/typos.toml', 'nested/src/ignored.txt').exitCode).toBe(0);
+        expect(run('.gspot/config/nested/typos.toml', 'nested/ignored.skip').exitCode).toBe(0);
+        expect(run('.gspot/config/nested/typos.toml', 'nested/keep.skip').exitCode).toBe(2);
+        const root = run('.gspot/config/typos.toml', 'sample.txt');
         expect(root.exitCode, root.stdout.toString() + root.stderr.toString()).toBe(2);
         expect(root.stdout.toString()).toContain('teh');
         await Bun.write(join(sandbox.path, 'sample.txt'), 'color the\n');
-        expect(run('.gspot/typos.toml', 'sample.txt').exitCode).toBe(0);
+        expect(run('.gspot/config/typos.toml', 'sample.txt').exitCode).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'nested/typos.toml')).text()).toBe(original);
         const editor = emitAll(session).files.find(({ path }) => path === 'nested/typos.toml')!;
         await Bun.write(join(sandbox.path, editor.path), editor.content);

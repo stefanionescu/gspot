@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // HTML files read through the embedded grammar: no inline script or handler, and templates that hold placeholders in place of copy.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 
 type MarkupProblem = { node: Node; rule: string; text: string };
 

@@ -1,0 +1,484 @@
+[configuration]
+name = "structure"
+kind = "policy"
+title = "Structure"
+description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
+
+[claims]
+from_languages = true
+
+[[tools]]
+name = "ast-grep"
+version = "0.45.3"
+npm = "@ast-grep/cli"
+mise = "ast-grep"
+brew = "ast-grep"
+cargo = "ast-grep"
+github = {name = "ast-grep/ast-grep", version = "0.45.3"}
+
+[[tools.takeover]]
+file = ".qlty"
+carries = "rules-table"
+
+[[checks]]
+name = "structure/single-file-folder"
+title = "Single file folder"
+example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
+runs = "per-scope"
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "single-file-folder"
+coverage = ["structure"]
+searched = ["eslint-plugin-unicorn", "ls-lint", "knip"]
+summary = "Finds a folder that holds one code file and nothing else."
+why = "A folder of one file adds a level to every path and promises siblings that never arrive."
+help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed."
+
+[[checks]]
+name = "structure/prefix-collisions"
+title = "Prefix collisions"
+example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
+runs = "per-scope"
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "prefix-collisions"
+limit = "limits.prefix_collisions"
+coverage = ["structure"]
+searched = ["ls-lint", "eslint-plugin-unicorn"]
+summary = "Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder."
+why = "Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix."
+help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
+
+[[checks]]
+name = "structure/file-directory-collision"
+title = "File directory collision"
+example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
+runs = "per-scope"
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "file-directory-collision"
+coverage = ["structure"]
+searched = ["ls-lint"]
+summary = "Finds a file and a folder in the same place with the same stem, like turn.ts beside turn/."
+why = "An import of ./turn names both, and a reader cannot tell which one loads."
+help = "Rename the file or the folder so their stems differ."
+
+[[checks]]
+name = "structure/folder-names"
+title = "Folder names"
+example = "A folder containing `helpers/first.sh` and `helpers/second.sh` reports `container-name` because `helpers` does not name its responsibility. Rename the folder after the operation it owns, such as `deployment`, and update every source path. A required ecosystem name needs a specific allowance."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "folder-names"
+coverage = ["structure"]
+searched = ["ls-lint"]
+summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
+why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
+help = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
+
+[[checks]]
+name = "integrity/config-purity"
+title = "Keep configuration modules declarative"
+example = "A module in the configuration role that contains executable application logic reports a purity finding. Move that logic into its source owner and retain the literal configuration in the configuration module."
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "config-purity"
+coverage = ["structure"]
+summary = "Checks that every module under the config role holds literals only: no function, no control flow, no call, no value import from outside the config roots."
+why = "A configuration module with logic in it is code nobody tests, hidden where reviewers expect a table."
+help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
+
+[[checks]]
+name = "integrity/suppressions"
+title = "Suppressions"
+example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "suppressions"
+coverage = ["structure"]
+summary = "Checks suppression reasons when require_reasons is enabled; nosemgrep is refused outright."
+why = "The suppression census makes hidden findings visible for review."
+help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+
+[[checks]]
+name = "integrity/allowlists-match"
+title = "Allowlists match"
+example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "allowlists-match"
+coverage = ["consistency"]
+summary = "Checks policy path patterns and exact-version license exceptions against tracked files and dependency locks."
+why = "An ignore, declaration, or package allowance that matches nothing misleads the next reader."
+help = "Remove the entry, correct its path or exact package version, or restore the project lockfile."
+
+[[checks]]
+name = "integrity/task-policy"
+title = "Task policy"
+example = "A generated check task or hook changed to bypass the configured command reports task-policy drift. Review the local edit, restore the policy-owned command through `gspot apply`, and rerun."
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "task-policy"
+coverage = ["consistency"]
+summary = "Checks that the task runner holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
+why = "A missing task or a hook nobody points at means the gate runs only when someone remembers to."
+help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
+
+[[checks]]
+name = "integrity/large-files"
+title = "Large files"
+example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `over-limit`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "large-files"
+coverage = ["consistency"]
+summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
+why = "A large file in plain git history stays in every clone for good."
+help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_size_kb with a reason."
+
+[[checks]]
+name = "integrity/tracked-dependencies"
+title = "Tracked dependencies"
+example = "A tracked `node_modules` directory reports committed dependency output. Add `node_modules/` to `.gitignore` and run `git rm -r --cached node_modules` to remove it from the index while preserving local installed files."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "tracked-dependencies"
+coverage = ["consistency"]
+summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
+why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
+help = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
+
+[[settings]]
+name = "limits.file_lines"
+kind = "number"
+direction = "ceiling"
+default = 300
+languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+summary = "The most lines a file may have. Bash counts code lines; the other languages count every line."
+
+[[settings]]
+name = "limits.function_lines"
+kind = "number"
+direction = "ceiling"
+default = 60
+languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+summary = "The most lines one function may have."
+
+[[settings]]
+name = "limits.function_parameters"
+kind = "number"
+direction = "ceiling"
+default = 7
+languages = ["typescript", "javascript", "python", "swift", "sql"]
+summary = "The most parameters one function may take."
+
+[[settings]]
+name = "limits.cognitive_complexity"
+kind = "number"
+direction = "ceiling"
+default = 8
+languages = ["typescript", "javascript"]
+summary = "How hard a function is to follow, by the sonarjs cognitive score."
+
+[[settings]]
+name = "limits.cyclomatic_complexity"
+kind = "number"
+direction = "ceiling"
+default = 8
+languages = ["typescript", "javascript", "python", "swift", "bash"]
+summary = "How many paths run through one function."
+
+[[settings]]
+name = "limits.nested_blocks"
+kind = "number"
+direction = "ceiling"
+default = 3
+languages = ["typescript", "javascript", "python"]
+summary = "How deep blocks may nest inside one function."
+
+[[settings]]
+name = "limits.positional_arguments"
+kind = "number"
+direction = "ceiling"
+languages = ["python"]
+summary = "The most positional arguments one Python function may take. Defaults to function_parameters when unset."
+
+[[settings]]
+name = "limits.branches"
+kind = "number"
+direction = "ceiling"
+default = 8
+languages = ["python"]
+summary = "The most branches one function may have."
+
+[[settings]]
+name = "limits.returns"
+kind = "number"
+direction = "ceiling"
+default = 4
+languages = ["python"]
+summary = "The most return statements one function may have."
+
+[[settings]]
+name = "limits.statements"
+kind = "number"
+direction = "ceiling"
+default = 30
+languages = ["typescript", "javascript", "python"]
+summary = "The most statements one function may have."
+
+[[settings]]
+name = "limits.locals"
+kind = "number"
+direction = "ceiling"
+default = 10
+languages = ["python"]
+summary = "The most local variables one function may declare."
+
+[[settings]]
+name = "limits.boolean_expressions"
+kind = "number"
+direction = "ceiling"
+default = 4
+languages = ["python"]
+summary = "The most boolean operators in one condition."
+
+[[settings]]
+name = "limits.public_methods"
+kind = "number"
+direction = "ceiling"
+default = 12
+languages = ["python"]
+summary = "The most public methods one class may have."
+
+[[settings]]
+name = "limits.nested_callbacks"
+kind = "number"
+direction = "ceiling"
+default = 3
+languages = ["typescript", "javascript"]
+summary = "How deep callbacks may nest."
+
+[[settings]]
+name = "limits.identical_functions"
+kind = "number"
+direction = "ceiling"
+default = 3
+languages = ["typescript", "javascript", "bash", "swift"]
+summary = "The fewest lines two function bodies must share before they count as identical."
+
+[[settings]]
+name = "limits.barrel_reexports"
+kind = "number"
+direction = "ceiling"
+default = 20
+languages = ["typescript", "javascript", "python"]
+summary = "The most re-exports one index file may hold."
+
+[[settings]]
+name = "limits.prefix_collisions"
+kind = "number"
+direction = "ceiling"
+default = 2
+summary = "How many sibling files may share a name prefix before it is a finding."
+
+[[settings]]
+name = "limits.trivial_statements"
+kind = "number"
+direction = "floor"
+default = 2
+languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
+summary = "Every implemented function with this many executable statements or fewer is reported. Increasing this positive integer tightens enforcement."
+
+[[settings]]
+name = "limits.file_size_kb"
+kind = "number"
+direction = "ceiling"
+default = 1024
+summary = "The largest tracked file, in kilobytes, outside LFS, or a declaration."
+
+[[settings]]
+name = "limits.bash.file_lines"
+kind = "number"
+direction = "ceiling"
+default = 140
+summary = "The most code lines a shell script may have."
+
+[[settings]]
+name = "limits.bash.function_lines"
+kind = "number"
+direction = "ceiling"
+default = 40
+summary = "The most code lines one shell function may have."
+
+[[settings]]
+name = "limits.bash.function_branches"
+kind = "number"
+direction = "ceiling"
+default = 8
+summary = "The most branches one shell function may have."
+
+[[settings]]
+name = "limits.bash.function_nesting"
+kind = "number"
+direction = "ceiling"
+default = 3
+summary = "How deep blocks may nest in one shell function."
+
+[[settings]]
+name = "limits.bash.mutable_assignments"
+kind = "number"
+direction = "ceiling"
+default = 8
+summary = "The most variable assignments one shell function may make."
+
+[[settings]]
+name = "limits.bash.duplicate_min_lines"
+kind = "number"
+direction = "ceiling"
+default = 3
+summary = "The fewest lines two shell functions must share before they count as duplicates."
+
+[[settings]]
+name = "limits.sql.function_lines"
+kind = "number"
+direction = "ceiling"
+default = 60
+summary = "The most lines one SQL function body may have."
+
+[[settings]]
+name = "limits.swift.type_body_length"
+kind = "number"
+direction = "ceiling"
+default = 300
+summary = "The most lines one Swift type body may have."
+
+[[settings]]
+name = "limits.swift.closure_body_length"
+kind = "number"
+direction = "ceiling"
+default = 60
+summary = "The most lines one Swift closure may have."
+
+[[settings]]
+name = "limits.duplication.min_lines"
+kind = "number"
+direction = "ceiling"
+default = 8
+summary = "The fewest lines a copied block has before it counts."
+
+[[settings]]
+name = "limits.duplication.min_tokens"
+kind = "number"
+direction = "ceiling"
+default = 40
+summary = "The fewest tokens a copied block has before it counts."
+
+[[settings]]
+name = "limits.duplication.threshold_percent"
+kind = "number"
+direction = "ceiling"
+default = 4
+summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
+
+[[settings]]
+name = "limits.docs.sentence_words"
+kind = "number"
+direction = "ceiling"
+default = 30
+summary = "The most words one sentence of documentation may have."
+
+[[settings]]
+name = "limits.docs.list_item_words"
+kind = "number"
+direction = "ceiling"
+default = 45
+summary = "The most words one list item may have."
+
+[[settings]]
+name = "limits.docs.paragraph_sentences"
+kind = "number"
+direction = "ceiling"
+default = 6
+summary = "The most sentences one paragraph may have."
+
+[[settings]]
+name = "limits.install.min_release_age_days"
+kind = "number"
+direction = "floor"
+default = 7
+summary = "How many days a package must have been published before the package manager installs it."
+
+[[settings]]
+name = "structure.reexports"
+kind = "string"
+direction = "tightening"
+default = "none"
+summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
+
+
+[[settings]]
+name = "structure.single_file_folder_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Folders allowed to hold one file, by path, each with a reason."
+
+[[settings]]
+name = "structure.prefix_collision_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Folders where sibling files may share a prefix, by path, each with a reason."
+
+[[settings]]
+name = "structure.folder_name_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Folder names from the banned list that this repository keeps, by path, each with a reason."
+
+[[settings]]
+name = "architecture.types_directory"
+kind = "string"
+direction = "neutral"
+summary = "The directory every type alias lives under; turns on the types placement rules."
+
+[[settings]]
+name = "architecture.roles"
+kind = "table"
+direction = "tightening"
+summary = "Which elements play the types, config, env, tests, support and runtime roles for the import direction rules."
+
+[[settings]]
+name = "architecture.elements"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "The named parts of the code and the paths each covers."
+
+[[settings]]
+name = "architecture.allow"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "Which element may import which; an element imports only itself unless a row says otherwise."
+
+[rule_files]
+general = ["general/agent/WORKING.md"]

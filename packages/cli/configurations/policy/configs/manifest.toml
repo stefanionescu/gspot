@@ -1,0 +1,347 @@
+[configuration]
+name = "configs"
+kind = "policy"
+title = "Configuration Files"
+default = true
+requires = ["formatting"]
+recommends = ["spelling"]
+description = "Checks JSON, YAML, TOML, workflows, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
+
+[claims]
+extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".properties", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib", ".webmanifest"]
+filenames = [".nvmrc", ".node-version", ".python-version", "_headers", "_redirects", ".env", ".dev.vars"]
+paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]
+natures = ["source"]
+
+[[tools]]
+name = "taplo"
+version = "0.10.0"
+floor = "0.9.0"
+mise = "taplo"
+brew = "taplo"
+cargo = "taplo-cli"
+# The npm WASM entry exits 1 after successfully printing its native version.
+npm = {name = "@taplo/cli", version = "0.7.0", version_exit_code = 1}
+github = {name = "tamasfe/taplo", version = "0.10.0"}
+
+[[tools.takeover]]
+file = "taplo.toml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".taplo.toml"
+carries = "rules-table"
+
+[[tools]]
+name = "yamllint"
+version = "1.38.0"
+mise = "pipx:yamllint"
+pypi = "yamllint"
+brew = "yamllint"
+
+[[tools.takeover]]
+file = ".yamllint"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".yamllint.yml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".yamllint.yaml"
+carries = "rules-table"
+
+[[tools]]
+name = "v8r"
+version = "6.1.0"
+mise = "npm:v8r"
+npm = "v8r"
+
+[[tools]]
+name = "actionlint"
+version = "1.7.12"
+mise = "actionlint"
+brew = "actionlint"
+github = {name = "rhysd/actionlint", version = "v1.7.12"}
+
+[[tools]]
+name = "pinact"
+version = "5.0.0"
+mise = "pinact"
+brew = "pinact"
+github = {name = "suzuki-shunsuke/pinact", version = "v5.0.0"}
+
+[[tools]]
+name = "zizmor"
+version = "1.30.1"
+mise = "zizmor"
+pypi = "zizmor"
+brew = "zizmor"
+cargo = "zizmor"
+
+[[tools]]
+name = "dotenv-linter"
+version = "4.0.0"
+mise = "dotenv-linter"
+brew = "dotenv-linter"
+cargo = "dotenv-linter"
+github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
+
+[[tools]]
+name = "plutil"
+provider = "host"
+windows = false
+
+[[tools]]
+name = "xmllint"
+provider = "host"
+
+[[configs]]
+template = "taplo.toml.tmpl"
+target = ".gspot/config/taplo.toml"
+stub = {path = ".taplo.toml", copy = true}
+
+[[configs]]
+template = "yamllint.yml.tmpl"
+target = ".gspot/config/yamllint.yml"
+rules_path = ["rules"]
+stub = {path = ".yamllint.yml", copy = true}
+
+[[configs]]
+template = "v8r.yml.tmpl"
+target = ".gspot/config/v8r.yml"
+
+[[checks]]
+name = "configs/json"
+title = "JSON"
+example = "A JSON file containing `{ \"enabled\": true, }` has an invalid trailing comma. Remove the comma to obtain `{ \"enabled\": true }`. The reporting formatter performs this delegated check."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+reported_by = "formatting/prettier"
+claims = {extensions = [".json", ".jsonc", ".json5"]}
+coverage = ["format", "syntax"]
+summary = "Parses and formats every JSON file through Prettier."
+why = "A JSON file that does not parse breaks the tool that reads it at the worst moment; one formatter keeps the diff about the values."
+help = "Run gspot check --fix, or fix the syntax error Prettier names."
+
+[[checks]]
+name = "configs/toml"
+title = "TOML"
+example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
+claims = {extensions = [".toml"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^\\s*┌─ (?<file>[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
+summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
+why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
+help = "Fix the line taplo names."
+
+[[checks]]
+name = "configs/toml-format"
+title = "TOML format"
+example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
+level = "all"
+stage = "commit"
+runs = "per-file-list"
+command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
+fix_command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
+fix_order = "format"
+claims = {extensions = [".toml"]}
+coverage = ["format"]
+output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
+summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
+why = "One formatter keeps a diff about the values, not the spacing."
+help = "Run gspot check --fix."
+
+[[checks]]
+name = "configs/yaml"
+title = "YAML"
+example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
+level = "all"
+stage = "commit"
+runs = "per-file-list"
+command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
+claims = {extensions = [".yaml", ".yml"]}
+coverage = ["syntax", "style"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
+summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
+why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
+help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
+
+[[checks]]
+name = "configs/schema"
+title = "Validate configuration schemas"
+example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
+level = "recommended"
+stage = "push"
+runs = "per-file-list"
+requires = "network"
+command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
+env = {V8R_CONFIG_FILE = "{config:v8r}"}
+claims = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
+coverage = ["schema"]
+output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
+summary = "Validates every configuration file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
+why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
+help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
+
+[[checks]]
+name = "configs/actions"
+title = "Validate GitHub Actions workflows"
+example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["actionlint", "-no-color", "{files}"]
+claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+coverage = ["syntax", "style"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$"}
+summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
+why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
+help = "Fix the line actionlint names."
+
+[[checks]]
+name = "configs/actions-pins"
+title = "Verify GitHub Actions pins"
+example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
+level = "recommended"
+stage = "push"
+runs = "per-file-list"
+requires = "network"
+command = ["pinact", "run", "--verify", "--check", "{files}"]
+claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+coverage = ["security"]
+output = {format = "lines"}
+summary = "Verifies GitHub action commits and version comments without changing workflow files."
+why = "A nonexistent action commit prevents the workflow from starting."
+help = "Replace the invalid action pin with a verified commit and its matching version comment."
+
+[[checks]]
+name = "configs/actions-security"
+title = "Audit GitHub Actions security"
+example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
+claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+coverage = ["security"]
+output = {format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$"}
+summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
+why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
+help = "Apply the fix zizmor names, or turn one audit off with gspot ignore configs/actions-security --rule <audit> and a reason."
+
+[[checks]]
+name = "configs/dotenv"
+title = "Dotenv"
+example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
+level = "all"
+stage = "commit"
+runs = "per-file-list"
+command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
+fix_command = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
+fix_order = "format"
+claims = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
+coverage = ["syntax", "style"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+) (?<rule>[A-Za-z]+): (?<message>.*)$"}
+summary = "Checks every tracked environment file: key format, duplicates, quoting, ordering, and trailing spaces."
+why = "A tracked environment file is a template other people copy; a malformed line there is copied into every machine."
+help = "Run gspot check --fix, or fix the line dotenv-linter names."
+
+[[checks]]
+name = "configs/env-example"
+title = "Environment example"
+example = "Source code reading `API_URL` while the environment template omits that key reports a missing template entry. Add `API_URL=` to `.env.example` and document the required value without committing credentials."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "env-example"
+coverage = ["consistency"]
+summary = "Checks that every environment variable the code reads appears in the environment template."
+why = "A variable missing from the template is the one a new machine lacks on its first run."
+help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."
+
+[[checks]]
+name = "configs/plist"
+title = "Property lists"
+example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+platform = ["macos"]
+command = ["plutil", "-lint", "{files}"]
+claims = {extensions = [".plist", ".entitlements"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$"}
+summary = "Parses every property list and entitlements file with plutil."
+why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
+help = "Fix the element plutil names."
+
+[[checks]]
+name = "configs/xml"
+title = "Validate XML"
+example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["xmllint", "--noout", "{files}"]
+claims = {extensions = [".xml", ".storyboard", ".xib"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
+summary = "Parses every XML file, storyboard, and xib with xmllint."
+why = "Malformed XML is refused by the reader at the worst moment."
+help = "Fix the line xmllint names."
+
+[[settings]]
+name = "tools.yamllint.rules"
+kind = "table"
+direction = "per-rule"
+summary = "Options per yamllint rule, by rule name; turning a rule off is gspot ignore --rule."
+
+[[settings]]
+name = "tools.taplo.rules"
+kind = "table"
+direction = "per-rule"
+summary = "Formatting options taplo takes, by option name, on top of the shared [format] settings."
+
+[[settings]]
+name = "tools.v8r.schemas"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema."
+
+[[settings]]
+name = "tools.dotenv.templates"
+kind = "list"
+direction = "neutral"
+default = [".env.example", ".env.template", ".env.sample", ".dev.vars.example"]
+summary = "The environment template files every key the code reads must appear in."
+
+[[settings]]
+name = "tools.dotenv.accessor"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The name of the function the code reads environment variables through, on top of process.env and os.environ; empty means those two alone."
+
+[coverage]
+".json" = ["format", "syntax", "schema", "spelling"]
+".jsonc" = ["format", "syntax", "spelling"]
+".json5" = ["format", "syntax", "spelling"]
+".toml" = ["format", "syntax", "schema", "spelling"]
+".yaml" = ["syntax", "style", "schema", "spelling"]
+".yml" = ["syntax", "style", "schema", "spelling"]
+".plist" = ["syntax"]
+".entitlements" = ["syntax"]
+".xml" = ["syntax"]
+
+[rule_files]
+general = ["general/code/CONFIGURATION.md"]
+language = ["language/YAML.md"]
+tool = ["tool/tasks/TASKS.md", "tool/github-actions/GITHUB-ACTIONS.md"]

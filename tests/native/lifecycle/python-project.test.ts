@@ -11,9 +11,9 @@ import {
     installPythonProject,
     pythonInstallSteps,
     pythonLockDrift,
-} from '#cli/lifecycle/python-project.ts';
+} from '#cli/tools/python-project.ts';
 import { miseTasks } from '#cli/emit/runner-tasks.ts';
-import { everyManifest } from '#cli/presets/select.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { openSession } from '#cli/run/session.ts';
 import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
@@ -30,7 +30,7 @@ test.each([
         await using artifacts = await testdir();
         await createFileTree(repository.path, {
             '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
-            'gspot.toml': `version = 1\nlevel = "recommended"\npresets = ["python"]\n${runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`}[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["python"]\n${runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`}[rules]\ninstall = false\n`,
             'pyproject.toml':
                 '[project]\nname = "authored"\nversion = "1.0.0"\ndependencies = ["authored-dependency"]\n',
             '.venv/authored.txt': 'keep the project environment',
@@ -205,7 +205,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                     expect(result.code, result.stdout + result.stderr).toBe(0);
                 }
                 expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
-                expect(existsSync(join(clone, '.gspot/ownership.json'))).toBe(false);
+                expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
                 for (let attempt = 0; attempt < 2; attempt++) {
                     expect(await installPythonProject(clone)).toContain('installed locked Python tools');
                     const status = await run(['git', 'status', '--porcelain'], { cwd: clone });

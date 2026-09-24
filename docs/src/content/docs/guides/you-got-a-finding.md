@@ -65,8 +65,8 @@ The final report lists failed, missing, errored, and skipped checks, followed by
 passed, failed, and skipped checks, findings, and elapsed seconds. Skipped checks do not count
 as passes. An interrupted or otherwise incomplete run is labeled `incomplete`.
 
-`gspot check --json` prints the check report. A run also writes `.gspot/report.json` and
-`.gspot/report.sarif`. It writes located findings to `.gspot/report.codequality.json` in
+`gspot check --json` prints the check report. A run also writes `.gspot/reports/report.json` and
+`.gspot/reports/report.sarif`. It writes located findings to `.gspot/reports/report.codequality.json` in
 [GitLab Code Quality format](https://docs.gitlab.com/ci/testing/code_quality/). Findings without
 file locations remain in JSON and SARIF. Repeated identical findings share a fingerprint.
 Check results refer to their check through

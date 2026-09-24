@@ -1,14 +1,14 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // Every environment variable the code reads appears in the environment template.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import {
     ENV_KEY_LINE,
     ENV_READ_EXTENSIONS,
     ENV_READ_PATTERNS,
     ENV_TEMPLATE_NAMES,
-} from '#cli/repository/env-files-definitions.ts';
+} from '#cli/repository/env-patterns.ts';
 
 type EnvRead = { key: string; line: number };
 

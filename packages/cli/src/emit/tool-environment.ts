@@ -1,10 +1,10 @@
-import { privateToolInstallation } from '#cli/platform/tool-installation.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
 import { stringify } from 'smol-toml';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
-import { everyManifest } from '#cli/presets/select.ts';
-import type { Session } from '#cli/run/types.ts';
-import type { Manifest } from '#cli/presets/types.ts';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 
 /** Select exact Python tool requirements from their implementation owners. */
 export function pythonPins(manifests: Manifest[]): string[] {

@@ -9,7 +9,7 @@ test('generated attributes preserve LF through autocrlf checkout and restore aut
     await using sandbox = await testdir();
     const original = '*.txt text\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         '.gitattributes': original,
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);

@@ -4,7 +4,7 @@ import { onExit } from 'signal-exit';
 import type { ChildProcess } from 'node:child_process';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { delimiter, dirname, isAbsolute } from 'node:path';
-import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/platform/types.ts';
+import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/types/platform.ts';
 
 const MISSING_CODE = 127;
 const FAILED_CODE = 1;

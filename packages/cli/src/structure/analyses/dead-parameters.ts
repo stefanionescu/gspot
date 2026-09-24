@@ -1,7 +1,7 @@
 // A shell function called with arguments it never reads. Searched: shellcheck; it does not follow calls.
 import { withoutComment } from '#cli/structure/code-lines.ts';
-import type { Analysis, ScriptIndex } from '#cli/structure/types.ts';
-import { CALL_ENDINGS, FLOW_PREFIX, POSITIONAL_PARAMETERS } from '#cli/structure/structure-definitions.ts';
+import type { Analysis, ScriptIndex } from '#cli/types/structure.ts';
+import { CALL_ENDINGS, FLOW_PREFIX, POSITIONAL_PARAMETERS } from '#cli/structure/patterns.ts';
 
 const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 const OPERATORS = [' && ', ' || ', ' | ', ';'];

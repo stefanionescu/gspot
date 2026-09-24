@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { isToolBroken, checkedFindings } from '#cli/run/broken-tool.ts';
 import { planRun } from '#cli/run/plan.ts';
 import { openSession } from '#cli/run/session.ts';
 import { parseOutput, ToolOutputError } from '#cli/run/parse-output.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 
 describe('tool output across platforms', () => {
@@ -15,11 +15,11 @@ describe('tool output across platforms', () => {
         const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\npresets = ["markdown"]\n[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
+                'version = 1\nlevel = "all"\nconfigurations = ["markdown"]\n[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
             ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
         });
         const session = await openSession(sandbox.path);
-        const configuration = emitAll(session).files.find(({ path }) => path === '.gspot/markdownlint-cli2.mjs')!;
+        const configuration = emitAll(session).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
         await Bun.write(join(sandbox.path, configuration.path), configuration.content);
         const planned = (await planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] }))[0]!;
         const command = [
@@ -59,7 +59,7 @@ describe('tool output across platforms', () => {
     test('invalid Markdown records remain execution errors and valid records parse', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'sample.md': '<span>Content</span>\n' });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('markdown')!
             .checks.find(({ name }) => name === 'markdown/markdownlint')!;
         const valid = {
@@ -95,7 +95,7 @@ describe('tool output across platforms', () => {
             'native.toml': '[default.extend-words]\nforbidden = ""\n',
             'sample.txt': 'forbidden\n',
         });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('spelling')!
             .checks.find((check) => check.name === 'spelling/typos')!;
         const command = ['typos', '--isolated', '--config', 'native.toml', '--format', 'json', 'sample.txt'];
@@ -109,10 +109,10 @@ describe('tool output across platforms', () => {
         expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
         expect(parseOutput(spec, corrected.stdout.toString(), corrected.stderr.toString(), sandbox.path)).toEqual([]);
     });
-    test('spelling distinguishes native findings from fatal exits for preset and declared checks', async () => {
+    test('spelling distinguishes native findings from fatal exits for configuration and declared checks', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["spelling"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n',
             'sample.txt': 'teh\n',
         });
         const session = await openSession(sandbox.path);
@@ -153,7 +153,7 @@ describe('tool output across platforms', () => {
             ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt']),
         ];
         await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [`nested/${path}`, 'café teh\n'])));
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('spelling')!
             .checks.find((check) => check.name === 'spelling/typos')!;
         const cwd = join(sandbox.path, 'nested');
@@ -201,7 +201,7 @@ describe('tool output across platforms', () => {
     ])('invalid spelling output %s is an execution error', async (stdout) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'sample.txt': 'teh\n' });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('spelling')!
             .checks.find((check) => check.name === 'spelling/typos')!;
         expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(ToolOutputError);
@@ -221,7 +221,7 @@ describe('tool output across platforms', () => {
     test('ShellCheck diagnostics retain their path, position, and rule with either line ending', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/café build.sh': 'echo $1\n' });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('bash')!
             .checks.find((check) => check.name === 'bash/shellcheck')!;
         const path = join('scripts', 'café build.sh');
@@ -237,7 +237,7 @@ describe('tool output across platforms', () => {
     test('XML diagnostics with carriage returns remain findings on real files', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/feed.xml': '<feed><entry></feed>\n' });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('configs')!
             .checks.find((check) => check.name === 'configs/xml')!;
         const findings = parseOutput(
@@ -254,7 +254,7 @@ describe('tool output across platforms', () => {
     test('Taplo reports one finding from a diff, a log entry, or both', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-        const spec = presetManifests()
+        const spec = configurationManifests()
             .get('configs')!
             .checks.find((check) => check.name === 'configs/toml-format')!;
         const path = join(sandbox.path, 'settings', 'café.toml');
@@ -275,7 +275,7 @@ describe('tool output across platforms', () => {
     test('grouped output strips line endings and relativizes native absolute paths', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-        const base = presetManifests()
+        const base = configurationManifests()
             .get('configs')!
             .checks.find((check) => check.name === 'configs/toml-format')!;
         const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
@@ -287,7 +287,7 @@ describe('tool output across platforms', () => {
 });
 
 test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
-    const spec = presetManifests()
+    const spec = configurationManifests()
         .get('configs')!
         .checks.find((check) => check.name === 'configs/toml')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
@@ -304,18 +304,18 @@ test('a syntax diagnostic cannot promise an automatic fix when its check has no 
     ]);
 });
 
-test.each(['javascript', 'typescript'].flatMap((preset) => ['recommended', 'all'].map((level) => ({ preset, level }))))(
-    '$preset at $level keeps source text naming module errors as an ESLint finding',
-    async ({ preset, level }) => {
+test.each(['javascript', 'typescript'].flatMap((configuration) => ['recommended', 'all'].map((level) => ({ configuration, level }))))(
+    '$configuration at $level keeps source text naming module errors as an ESLint finding',
+    async ({ configuration, level }) => {
         await using sandbox = await testdir();
-        const extension = preset === 'javascript' ? 'js' : 'ts';
+        const extension = configuration === 'javascript' ? 'js' : 'ts';
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["${preset}"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["${configuration}"]\n`,
             [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
         });
         const session = await openSession(sandbox.path);
-        const planned = (await planRun(session, { stage: 'all', skips: [], only: [`${preset}/eslint`] }))[0]!;
+        const planned = (await planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] }))[0]!;
         const stdout = JSON.stringify([
             {
                 filePath: join(sandbox.path, path),
@@ -351,7 +351,7 @@ test.each([
     '[{"filePath":"/repo/a.js","messages":null}]',
     '[{"filePath":"/repo/a.js","messages":[{"message":"partial"}]}]',
 ])('malformed ESLint output fails instead of becoming empty findings: %s', (text) => {
-    const spec = presetManifests()
+    const spec = configurationManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
     expect(() => parseOutput(spec, text, '', '/repo')).toThrow(ToolOutputError);
@@ -363,7 +363,7 @@ test.each([
     ['/repo', '/repository/a.js', '/repository/a.js'],
     ['C:\\repo', 'C:\\repo\\café file.js', 'café file.js'],
 ])('ESLint locations respect the root boundary %s for %s', (root, path, expected) => {
-    const spec = presetManifests()
+    const spec = configurationManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
     const stdout = JSON.stringify([

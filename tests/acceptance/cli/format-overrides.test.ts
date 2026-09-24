@@ -1,4 +1,4 @@
-import type { RunReport } from '#cli/output/report-types.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
@@ -10,7 +10,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = `version = 1
 level = "all"
-presets = ["formatting"]
+configurations = ["formatting"]
 [rules]
 install = false
 [format]
@@ -60,7 +60,7 @@ test('formatter overrides agree between direct tool configuration, editor discov
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await installPrivateTools(directory.path);
     for (const { file, ...expected } of CASES) {
-        for (const config of ['.gspot/prettier.json', '.prettierrc.json']) {
+        for (const config of ['.gspot/config/prettier.json', '.prettierrc.json']) {
             const resolved = await prettier.resolveConfig(join(directory.path, file), {
                 config: join(directory.path, config),
                 editorconfig: true,
@@ -105,7 +105,7 @@ test('formatter overrides agree between direct tool configuration, editor discov
     writeFileSync(join(directory.path, 'tests/future.js'), 'const greeting="hello";');
     expect(
         await prettier.resolveConfig(join(directory.path, 'tests/future.js'), {
-            config: join(directory.path, '.gspot/prettier.json'),
+            config: join(directory.path, '.gspot/config/prettier.json'),
             useCache: false,
         }),
     ).toMatchObject({ singleQuote: true, semi: true });

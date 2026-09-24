@@ -1,4 +1,0 @@
-{
-    "extends": <%= json('../'.repeat(scope === '' ? 1 : scope.split('/').length + 1) + (scope === '' ? '' : scope + '/') + 'tsconfig.json') %>,
-    "compilerOptions": <%= json(typescriptOptions) %>
-}

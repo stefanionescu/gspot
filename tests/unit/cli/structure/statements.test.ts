@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test';
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { executableStatements, trivialFile } from '#cli/structure/statements.ts';
 import { functionsOf as pythonFunctions } from '#cli/structure/python/modules.ts';
 import { functionsOf as swiftFunctions } from '#cli/structure/swift/sources.ts';
 import { trivialFunctions as pythonTrivial } from '#cli/structure/python/functions.ts';
 import { trivialFunctions as swiftTrivial } from '#cli/structure/swift/bodies.ts';
-import { policySchema } from '#cli/policy/schema.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
 
 for (const language of ['python', 'swift', 'bash'] as const) {
     test.each([0, 1, 2, 3])(`${language} counts %i executable statements`, async (count) => {

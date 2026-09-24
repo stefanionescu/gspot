@@ -28,7 +28,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
         '{files}',
     ];
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
+        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'mise.toml': stringify({ tasks: { 'ci:affected': tasks['ci:affected']! } }),
         'changed.txt': 'valid\n',
@@ -68,7 +68,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.stdout).toContain('changed.txt');
     expect(failed.stdout).not.toContain('legacy.txt');
-    const report = join(sandbox.path, '.gspot/report.json');
+    const report = join(sandbox.path, '.gspot/reports/report.json');
     const held = readFileSync(report);
     for (const invalid of ['$(touch injected)', 'f'.repeat(40)]) {
         const refused = await execute(invalid);

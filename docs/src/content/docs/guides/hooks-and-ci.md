@@ -146,7 +146,7 @@ gspot check --stage manual
 
 A manual-stage check does not run merely because initialization completed. Use the
 [check reference](/reference/commands/check/) for selectors and
-[check definitions](/reference/engines/) for execution behavior.
+[check definitions](/development/engines/) for execution behavior.
 
 ## Generated CI
 

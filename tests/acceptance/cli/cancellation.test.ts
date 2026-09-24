@@ -1,5 +1,5 @@
-import type { RunReport } from '#cli/output/report-types.ts';
-import { pushReportSchema } from '#cli/run/report-schema.ts';
+import type { RunReport } from '#cli/types/reports.ts';
+import { pushReportSchema } from '#cli/schemas/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
@@ -14,7 +14,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
+            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
             'source.txt': 'input\n',
         });
         const child = Bun.spawn([process.execPath, CLI, 'check', '--json', '--no-cache'], {
@@ -38,7 +38,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
             expect(report.checks[0]!.note).toContain('canceled');
             expect(report.coverage.checked).toBe(0);
             expect(
-                JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8')).runs[0].invocations[0]
+                JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0].invocations[0]
                     .executionSuccessful,
             ).toBe(false);
             expect(() => process.kill(toolPid, 0)).toThrow();
@@ -57,7 +57,7 @@ test.each(['diff', 'clone', 'cat-file'])(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -110,7 +110,7 @@ test.each(['diff', 'clone', 'cat-file'])(
 test('push cancellation retains completed reports and names references not checked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
         'source.sh': 'echo first\n',
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -155,12 +155,12 @@ test('push cancellation retains completed reports and names references not check
         expect(report.revisions[0]?.object).toBe(first);
         expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(report.canceled?.pendingRefs).toEqual(['refs/heads/second']);
-        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8'));
+        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
         expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
         expect(sarif.runs[1].invocations[0].executionSuccessful).toBe(false);
         expect(sarif.runs[1].properties.canceled.pendingRefs).toEqual(['refs/heads/second']);
         expect(report.exitCode).toBe(2);
-        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8'))).toEqual(report);
+        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toEqual(report);
         expect(existsSync(started.snapshot)).toBe(false);
         expect(() => process.kill(started.pid, 0)).toThrow();
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
@@ -177,7 +177,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -206,7 +206,7 @@ await import(${JSON.stringify(CLI)});
             child.kill(signal);
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toEqual({ error: 'canceled', exitCode: 2 });
-            expect(existsSync(join(sandbox.path, '.gspot/report.json'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
@@ -225,7 +225,7 @@ await import(${JSON.stringify(CLI)});
 test('staged cancellation during dependency copying removes partial output and preserves the installed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
         '.gitignore': 'node_modules/\n',
         'package.json': '{"name":"snapshot-consumer","private":true}\n',
         'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',

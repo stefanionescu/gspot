@@ -6,10 +6,10 @@ import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 
 const policy = `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "sandbox/identity"
 command = ${JSON.stringify([process.execPath, '-e', 'process.stdout.write("A sandbox finding."); process.exitCode = 1'])}
@@ -34,9 +34,9 @@ test('serializes check definitions and references without changing external SARI
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
     expect(reportSchema.safeParse(outcome.report).success).toBe(true);
-    const saved = readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8');
+    const saved = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
     expect(JSON.parse(saved)).toEqual(outcome.report);
-    expect(existsSync(join(sandbox.path, '.gspot/report.sarif'))).toBe(true);
+    expect(existsSync(join(sandbox.path, '.gspot/reports/report.sarif'))).toBe(true);
     expect(outcome.report.coverage).toEqual({ checked: 1, unchecked: 1, findings: [] });
     expect(JSON.parse(sarifText(outcome.report))).toHaveProperty('runs.0.results.0.ruleId', 'sandbox/identity');
 });
@@ -80,7 +80,7 @@ test.each(['{ broken', '{}', ''])(
     async (output) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', `process.stdout.write(${JSON.stringify(output)})`])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
+            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', `process.stdout.write(${JSON.stringify(output)})`])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
             'source.txt': 'original',
             '.gspot/version': GSPOT_VERSION + '\n',
         });

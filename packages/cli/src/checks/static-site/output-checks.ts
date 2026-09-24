@@ -1,14 +1,14 @@
 import { z } from 'zod';
 // The checks that read the built output of a static site.
 import { isAbsolute, join, relative as relativePath } from 'node:path';
-import { mutationPath } from '#cli/lifecycle/confined.ts';
+import { mutationPath } from '#cli/filesystem/confined.ts';
 import { gzipSync } from 'node:zlib';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { SiteBuild } from '#cli/checks/static-site/build.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 
 type SizeLimit = { paths: string[]; kb: number; reason?: string };
@@ -84,7 +84,7 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
         .filter((path) => path.endsWith('.html'))
         .map((path) => join(build.output, path));
     if (pages.length === 0) return [];
-    const config = join(input.root, '.gspot/html-validate-built.json');
+    const config = join(input.root, '.gspot/config/html-validate-built.json');
     const result = await runCheckCommand(
         input,
         ['html-validate', '--config', config, '--formatter', 'json', ...pages],

@@ -1,3 +1,4 @@
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
 
 import { fileURLToPath } from 'node:url';
@@ -8,13 +9,13 @@ import { describe, expect, test } from 'bun:test';
 
 import { createFileTree, testdir } from 'testdirs';
 
-import { openLifecycleOwner, ownershipSchema, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/lifecycle/confined.ts', import.meta.url));
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
 
 test.each(['success', 'error', 'interruption', 'edited', 'damaged backup'] as const)(
     'read-only replacement preserves recovery bytes through %s with Windows filesystem semantics',
@@ -64,7 +65,7 @@ try {
             point === 'success' || point === 'error' ? 0 : 73,
         );
         const state = ownershipSchema.parse(
-            JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+            JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
         );
         if (point === 'damaged backup') {
             const backup = state.pending![0]!.beforeBackup!.backup;
@@ -100,7 +101,7 @@ test('an inconsistent interrupted journal cannot acquire ownership of current by
     } finally {
         owner.close();
     }
-    const record = join(directory.path, '.gspot/ownership.json');
+    const record = join(directory.path, '.gspot/state/ownership.json');
     const state = ownershipSchema.parse(JSON.parse(readFileSync(record, 'utf8')));
     const entry = state.files[0]!;
     state.pending = [
@@ -255,7 +256,7 @@ mock.module(${JSON.stringify(boundary)}, () => ({
         return { ...files, write(path, next, expected) {
             if (path.endsWith('.original')) backups++;
             const point = ${JSON.stringify(point)};
-            if ((point === 'journal' && path === '.gspot/ownership.json') ||
+            if ((point === 'journal' && path === '.gspot/state/ownership.json') ||
                 (path.endsWith('.original') && backups === (point === 'first backup' ? 1 : point === 'second backup' ? 2 : 0)))
                 throw Object.assign(new Error('No space left on device'), { code: 'ENOSPC' });
             files.write(path, next, expected);
@@ -345,7 +346,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'config.txt': 'original\n',
-            '.gspot/recovery': 'authored obstruction\n',
+            '.gspot/state/recovery': 'authored obstruction\n',
         });
         const owner = openLifecycleOwner(directory.path);
         try {
@@ -353,7 +354,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 owner.replace('config.txt', { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
             ).toThrow();
             expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
-            expect(readFileSync(join(directory.path, '.gspot/recovery'), 'utf8')).toBe('authored obstruction\n');
+            expect(readFileSync(join(directory.path, '.gspot/state/recovery'), 'utf8')).toBe('authored obstruction\n');
         } finally {
             owner.close();
         }
@@ -389,7 +390,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             });
             expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(73);
             const pending = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );
             expect(pending.pending?.[0]?.path).toBe('config.txt');
             const owner = openLifecycleOwner(directory.path);
@@ -400,7 +401,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
                 } else expect(owner.paths()).toEqual([]);
                 expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
                 const recovered = ownershipSchema.parse(
-                    JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+                    JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
                 );
                 expect(recovered.pending).toBeUndefined();
             } finally {

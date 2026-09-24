@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { compileTerms } from '#cli/naming/match.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
-import type { EffectivePolicy, Identifier } from '#cli/naming/types.ts';
+import type { EffectivePolicy, Identifier } from '#cli/types/naming.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];

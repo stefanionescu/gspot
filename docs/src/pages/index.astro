@@ -2,71 +2,69 @@
 // Homepage composition adapted from Turborepo. See /licenses/turborepo.txt.
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { Code } from '@astrojs/starlight/components';
-import ClientFinding from '../components/ClientFinding.astro';
-import Finding from '../components/Finding.astro';
-import FeatureSection from '../components/FeatureSection.astro';
+import Example from '../components/home/Example.astro';
+import Features from '../components/home/Features.astro';
 
 const workflow = [
-    { title: 'Set repository policy', description: 'Choose presets and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
-    { title: 'Use the tools you know', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/toolchain.svg', href: '/reference/presets/', link: 'Browse the preset catalog' },
-    { title: 'Get a finding you can act on', description: 'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.', image: '/brand/finding.svg', href: '/guides/you-got-a-finding/', link: 'Read and resolve findings' },
+    { title: 'Choose your checks', description: 'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
+    { title: 'Run pinned tool versions', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/home/toolchain.svg', href: '/reference/configurations/', link: 'Browse the configuration catalog' },
+    { title: 'Find the code to fix', description: 'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.', image: '/brand/home/finding.svg', href: '/guides/you-got-a-finding/', link: 'Read and resolve findings' },
 ];
 const repository = [
-    { title: 'Give agents the policy', description: 'Generate rule guides and agent entry points from your selected presets. Keep instructions aligned with repository choices.', image: '/brand/agents.svg', href: '/guides/agents/', link: 'Configure agent instructions' },
-    { title: 'Configure nested projects', description: 'Use scopes for projects with different languages and settings. Run staged or changed-file checks for the work you are reviewing.', image: '/brand/scopes.svg', href: '/guides/scopes/', link: 'Work with scopes' },
-    { title: 'Preserve and recover', description: 'Preview configuration changes, adopt supported existing settings, and inspect recovery copies when generated files have local edits.', image: '/brand/preservation.svg', href: '/guides/existing-repository/', link: 'Adopt an existing repository' },
+    { title: 'Generate agent instructions', description: 'Generate rule guides and agent entry points from your selected configurations. Keep instructions aligned with repository choices.', image: '/brand/home/agents.svg', href: '/guides/agents/', link: 'Configure agent instructions' },
+    { title: 'Configure nested projects', description: 'Use scopes for projects with different languages and settings. Run staged or changed-file checks for the work you are reviewing.', image: '/brand/home/scopes.svg', href: '/guides/scopes/', link: 'Work with scopes' },
+    { title: 'Review configuration changes', description: 'Preview configuration changes, adopt supported existing settings, and inspect recovery copies when generated files have local edits.', image: '/brand/home/preservation.svg', href: '/guides/existing-repository/', link: 'Adopt an existing repository' },
 ];
 ---
 <StarlightPage frontmatter={{
-    title: 'gspot: rules for your codebase',
-    description: 'CLI to lint and enforce rules for LLM generated codebases.',
-    hero: { title: 'Your codebase. Your rules.' },
+    title: 'Lint AI generated code',
+    description: 'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.',
+    hero: { title: 'Lint AI generated code' },
     template: 'splash', editUrl: false, lastUpdated: false,
 }}>
     <div class="landing">
         <section class="tool-strip" aria-label="Selected tools supported by gspot">
-            <p>Your policy. Their checks.</p>
+            <p>Works with these tools</p>
             <ul>{[
                 ['eslint', 'ESLint'], ['prettier', 'Prettier'], ['ruff', 'Ruff'],
-                ['typescript', 'TypeScript'], ['gnubash', 'Bash'], ['git', 'Git'],
-            ].map(([icon, name]) => <li><img src={`/tools/${icon}.svg`} alt="" width="24" height="24" />{name}</li>)}</ul>
+                ['stylelint', 'Stylelint'], ['shellcheck', 'ShellCheck'], ['semgrep', 'Semgrep'],
+            ].map(([icon, name]) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
         </section>
-        <FeatureSection title="From policy to findings" description="Keep configuration choices together. Let the selected tools check the code." features={workflow} />
+        <Features title="Configure tools and check code" description="Choose checks in gspot.toml, generate tool configuration, and run them against your code." features={workflow} />
         <section class="demonstration" aria-labelledby="finding">
-            <div class="section-heading"><div><p class="eyebrow">A real rule. A concrete correction.</p><h2 id="finding">Keep private values on the server.</h2></div><a class="pill" href="/guides/client-environment/">Run this example ↗</a></div>
-            <p>A JavaScript module marked <code>"use client"</code> reads private configuration. The gspot plugin reports the boundary violation.</p>
-            <ClientFinding />
+            <div class="section-heading"><div><p class="eyebrow">JavaScript example</p><h2 id="finding">Check a JavaScript module</h2></div><a class="pill" href="/guides/client-environment/">Run this example ↗</a></div>
+            <p>The gspot ESLint plugin flags this <code>process.env</code> access in a client module. Change the client to call an API route, then run the check again.</p>
+            <Example />
         </section>
-        <FeatureSection title="Work across the repository" description="Give coding agents instructions, configure project boundaries, and review what changes." features={repository} />
+        <Features title="Configure the whole repository" description="Use the same configuration for agent instructions, nested projects, and generated files." features={repository} />
         <section class="setup" aria-labelledby="setup">
-            <div class="section-heading"><div><h2 id="setup">Start with one repository.</h2><p>Complete source installation, then choose policy, apply it, and run checks.</p></div><a class="pill" href="/guides/install/">Read the setup guide ↗</a></div>
+            <div class="section-heading"><div><h2 id="setup">Set up a repository</h2><p>Install from source, select the JavaScript configuration, and run your first checks.</p></div><a class="pill" href="/guides/install/">Get started ↗</a></div>
             <div class="setup-grid">
-                <div><Code code={'version = 1\npresets = ["bash"]\nlevel = "recommended"'} lang="toml" title="gspot.toml" /><p>1. Select a preset in your repository policy.</p></div>
+                <div><Code code={'version = 1\nconfigurations = ["javascript"]\nlevel = "recommended"'} lang="toml" title="gspot.toml" /><p>1. Select a configuration in your repository policy.</p></div>
                 <div><Code code={'gspot apply --dry-run\ngspot apply\ngspot install'} lang="sh" title="Repository root" /><p>2. Preview, generate, and install selected tools.</p></div>
-                <div><Code code={'gspot check\ngspot explain bash/syntax\ngspot doctor'} lang="sh" title="Repository root" /><p>3. Check code and diagnose findings or setup.</p></div>
+                <div><Code code={'gspot check\ngspot explain javascript/eslint\ngspot doctor'} lang="sh" title="Repository root" /><p>3. Check code and diagnose findings or setup.</p></div>
             </div>
-            <p class="setup-note">For a new configuration, <code>gspot init</code> proposes presets and integrations before applying them. Initialization runs no checks.</p>
+            <p class="setup-note">For a new configuration, <code>gspot init</code> proposes configurations and integrations before applying them. Initialization runs no checks.</p>
         </section>
-        <section class="bash-example" aria-labelledby="bash">
-            <h2 id="bash">Your first check, with Bash.</h2>
-            <p>Use the lightweight walkthrough to see a finding, make a manual correction, and rerun the check.</p>
-            <Finding />
-        </section>
-        <section class="closing" aria-label="Next steps"><h2>Put your policy to work.</h2><nav><a class="pill primary" href="/guides/install/">Get started ↗</a><a class="pill" href="/reference/commands/check/">Command reference</a></nav></section>
-        <footer class="home-footer"><span>gspot · Apache-2.0</span><a href="/guides/build/">Contribute</a><a href="/guides/uninstall/">Recovery</a><a href="/licenses/turborepo.txt">Layout attribution</a></footer>
+        <section class="closing" aria-label="Next steps"><h2>Start linting your code.</h2><nav><a class="pill primary" href="/guides/install/">Get started ↗</a><a class="pill" href="/reference/commands/check/">View commands</a></nav></section>
+        <footer class="home-footer"><span>gspot · Apache-2.0</span><a href="/guides/build/">Contribute</a></footer>
     </div>
 </StarlightPage>
 <style>
-    .landing { max-width: 1200px; }
-    .tool-strip { border-block: 1px solid var(--sl-color-gray-5); padding-block: 24px; display: flex; align-items: center; gap: 32px; }
+    .landing { max-width: 1200px; min-width: 0; }
+    .landing > *, .landing :is(section, ul, li, nav, footer) { margin-block: 0; }
+    .tool-strip { border-block: 1px solid var(--sl-color-gray-5); padding-block: 24px; display: grid; gap: 24px; }
     .tool-strip p { font-size: 0.75rem; white-space: nowrap; color: var(--sl-color-gray-3); margin: 0; }
-    .tool-strip ul { padding: 0; list-style: none; display: flex; flex-wrap: wrap; flex: 1; justify-content: space-between; gap: 20px; margin: 0; }
-    .tool-strip li { display: flex; align-items: center; gap: 8px; font-size: 0.9375rem; font-weight: 500; margin: 0; }
-    .tool-strip img { filter: invert(1); opacity: 0.8; }
-    :global([data-theme='light']) .tool-strip img { filter: none; }
-    .demonstration, .setup, .bash-example { padding-block: 56px; border-top: 1px solid var(--sl-color-gray-5); }
+    .tool-strip ul { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin: 0; }
+    .tool-strip li { display: grid; grid-template-columns: 32px minmax(0, 1fr); justify-content: start; align-items: center; gap: 12px; min-width: 0; font-size: 0.9375rem; font-weight: 500; margin: 0; }
+    .tool-strip img { width: 24px; height: 24px; object-fit: contain; justify-self: center; filter: invert(1); opacity: 0.8; }
+    .tool-strip img[src$=".png"], .tool-strip img[src$="semgrep.svg"] { filter: none; }
+    :global([data-theme='light']) .tool-strip img { width: 24px; height: 24px; object-fit: contain; justify-self: center; filter: none; }
+    .demonstration, .setup { padding-block: 72px; border-top: 1px solid var(--sl-color-gray-5); }
     h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 500; margin: 0 0 12px; }
     .landing h2 { border: 0; padding: 0; }
+    .demonstration > p { max-width: 72ch; margin-block: 20px 0; color: var(--sl-color-gray-2); }
+    .setup-note { margin-top: 24px; max-width: 80ch; }
     .section-heading { display: flex; justify-content: space-between; gap: 24px; align-items: center; }
     .section-heading p { color: var(--sl-color-gray-2); margin: 0; }
     .section-heading .eyebrow { color: var(--sl-color-text-accent); font-size: 0.75rem; margin-bottom: 12px; }
@@ -74,13 +72,17 @@ const repository = [
     .pill:hover { background: var(--sl-color-gray-6); }
     .primary { background: var(--sl-color-white); color: var(--sl-color-black); }
     .primary:hover { background: var(--sl-color-gray-1); }
-    .setup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 16px; }
-    .setup-grid > div { min-width: 0; }
+    .setup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+    .setup-grid > div { min-width: 0; display: grid; grid-template-rows: 1fr auto; gap: 16px; }
     .setup-grid p, .setup-note { font-size: 0.875rem; color: var(--sl-color-gray-2); }
-    .setup-grid :global(.expressive-code) { margin-bottom: 12px; }
-    .closing { border-top: 1px solid var(--sl-color-gray-5); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 56px; }
+    .setup-grid :global(.expressive-code) { margin: 0; min-width: 0; height: 100%; }
+    .setup-grid :global(.frame) { height: 100%; display: flex; flex-direction: column; }
+    .setup-grid :global(pre) { flex: 1; overflow-x: auto; }
+    .setup-grid p { margin: 0; }
+    .closing { border-top: 1px solid var(--sl-color-gray-5); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 72px; }
     .closing nav { display: flex; flex-wrap: wrap; gap: 12px; }
     .home-footer { display: flex; flex-wrap: wrap; gap: 24px; padding-block: 24px; border-top: 1px solid var(--sl-color-gray-5); font-size: 0.75rem; color: var(--sl-color-gray-3); }
     .home-footer span { margin-right: auto; }
-    @media (max-width: 49.99rem) { .tool-strip { flex-direction: column; align-items: start; gap: 16px; }.tool-strip ul { justify-content: start; gap: 16px 24px; }.section-heading, .closing { flex-direction: column; align-items: start; }.setup-grid { grid-template-columns: 1fr; }.demonstration, .setup, .bash-example { padding-block: 32px; } }
+    @media (max-width: 49.99rem) { .tool-strip ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }.section-heading, .closing { flex-direction: column; align-items: start; }.setup-grid { grid-template-columns: 1fr; }.demonstration, .setup { padding-block: 48px; } }
+    @media (max-width: 39.99rem) { .tool-strip ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

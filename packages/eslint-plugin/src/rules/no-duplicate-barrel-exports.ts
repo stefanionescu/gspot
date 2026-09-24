@@ -134,6 +134,7 @@ export const noDuplicateBarrelExports = createRule<[], 'duplicate'>({
     meta: {
         type: 'problem',
         docs: {
+            title: 'No duplicate barrel exports',
             example:
                 'If `a.ts` and `b.ts` both export `two`, an `index.ts` containing `export * from "./a";` and `export * from "./b";` reports `duplicate`. Keep the first export and replace the second with `export { three } from "./b";` when `three` is the distinct public value needed from that module.',
             level: 'recommended',

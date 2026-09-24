@@ -28,7 +28,7 @@ const PROJECT = `// !$*UTF8*$!
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n',
         'App.xcodeproj/project.pbxproj': PROJECT,
         'First Group/Shared.swift': 'let first = 1\n',
         'Second/Shared.swift': 'let second = 2\n',
@@ -91,7 +91,7 @@ test.each([
 ])('an unreadable project returns execution status 2', async (source) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n',
         'App.xcodeproj/project.pbxproj': source,
         'Root.swift': 'let root = 1\n',
     });
@@ -106,7 +106,7 @@ test('membership combines projects in a scope and checks nested scopes independe
             .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
             .replace('path = Root.swift;', `path = ${source};`);
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["xcode"]\n[[scope]]\npath = "nested"\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\n',
         'One.xcodeproj/project.pbxproj': smallProject('One.swift'),
         'Two.xcodeproj/project.pbxproj': smallProject('Two.swift'),
         'One.swift': 'let one = 1\n',

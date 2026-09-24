@@ -4,10 +4,10 @@ import { basename, dirname, join } from 'node:path';
 import { globbySync } from 'globby';
 import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 
 // The source of an import statement that is no type import, read from a line that starts with import and holds its from.
 const IMPORT_SOURCE = /from ['"](?<source>[^'"]+)['"]/u;

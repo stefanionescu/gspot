@@ -1,7 +1,8 @@
 # gspot documentation
 
-The manual uses Astro Starlight. Authored guides teach workflows; references come from the
-CLI, policy schema, preset manifests, and standalone plugin definitions.
+The manual uses Astro Starlight with four navigation sections: Get started, Guides, Reference,
+and Development. Authored guides teach workflows; references come from the
+CLI, policy schema, configuration manifests, and standalone plugin definitions.
 
 ## Preview and verify
 
@@ -37,8 +38,8 @@ its steps. Keep initialization, installation, policy changes, and checking disti
 
 A guide starts with prerequisites and the reader's action. Show the default procedure first,
 its expected result, and any condition that changes the reader's choice. Put substantial
-integration-specific procedures in their own task guide. Use the sidebar to distinguish
-getting started, daily work, integrations, maintenance, and reference lookup.
+integration-specific procedures in their own task guide. Use the sidebar sections Get started,
+Guides, Reference, and Development.
 
 References describe accepted inputs, defaults, scope, effects, exits, and limitations. Change
 the owning CLI help, schema, manifest, or rule definition rather than maintaining a copied
@@ -59,10 +60,10 @@ in `../architecture/22-remaining.md`.
 Use complete policy examples when a reader needs a starting file. Label fragments and name
 their destination. State required tools and working directories. Pair diagnostic examples with
 a correction and the command that verifies it. Never invent successful output or imply a
-manual correction is automatic. The landing page and quickstart share the captured Bash
-example in `src/components/bash-syntax.json`.
+manual correction is automatic. The landing page uses the captured JavaScript defect and correction in
+`src/components/home/client-environment.json`. The first-check guide points to the complete JavaScript walkthrough.
 
-Use short, direct headings and consistent terms: preset, check, tool rule, finding, stage,
+Use short, direct headings and consistent terms: configuration, check, tool rule, finding, stage,
 level, scope, and profile. Remove repeated claims, vague assurances, self-referential openings,
 and implementation terminology that does not help the reader act. Retain exact option names,
 exit codes, paths, and failure conditions when they define the behavior.
@@ -93,11 +94,11 @@ to Astro components. The [MIT notice](public/licenses/turborepo.txt) ships with 
 Starlight owns navigation, search, theme persistence, and code-copy behavior.
 
 The Sweet spot mark and dimensional hero were created with the built-in image generator.
-Their source PNGs are `public/brand/mark-generated.png` and `public/brand/hero.png`.
+Their source PNGs are `public/brand/identity/mark-generated.png` and `public/brand/home/hero.png`.
 The SVG variants and diagrams remain editable. Keep purpose, release status, and commands
 as selectable text beside artwork. `public/brand/` also holds README banners and local badges.
 
-Tool logos come from [Simple Icons](https://github.com/simple-icons/simple-icons) under
+Most tool and framework logos come from [Simple Icons](https://github.com/simple-icons/simple-icons) under
 [CC0](public/licenses/simple-icons.txt). The tool names identify integrations; they do not
 claim sponsorship. Retain the notices when distributing these assets.
 
@@ -110,3 +111,5 @@ The flat mark used this prompt with the built-in image generator:
 The dimensional hero uses that generated mark as its visual reference, with cobalt enamel
 surfaces, a tangerine center, a slight perspective tilt, and a transparent background.
 The editable SVG mark is a vector interpretation of the generated silhouette.
+
+ShellCheck artwork comes from the [VS Code integration](https://github.com/vscode-shellcheck/vscode-shellcheck/blob/master/shellcheck.png) under its [MIT license](public/licenses/shellcheck.txt). The Semgrep symbol is extracted from the [upstream logo](https://github.com/semgrep/semgrep/blob/develop/semgrep.svg), with its [LGPL-2.1 license](public/licenses/semgrep.txt). Names and marks identify supported integrations and do not imply endorsement.

@@ -1,8 +1,8 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // The parsed Python modules of one run, and the functions they define.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/types.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import type { PythonFunction, PythonModule } from '#cli/structure/python/types.ts';
 
 function isDocstring(statement: Node | undefined): boolean {

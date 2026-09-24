@@ -1,5 +1,5 @@
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { PathSegment } from '#cli/policy/types.ts';
+import type { PathSegment } from '#cli/types/policy.ts';
 
 type Block = ReturnType<typeof parseDocument>['cst'][number];
 type KeyValue = Extract<Block, { type: 'KeyValue' }>;

@@ -40,8 +40,8 @@ async function installSwiftFormat(): Promise<void> {
         await Bun.write(
             config,
             emitTarget(
-                'presets/language/swift/swiftformat.tmpl',
-                '.gspot/swiftformat',
+                'packages/cli/configurations/language/swift/swiftformat.tmpl',
+                '.gspot/config/swiftformat',
                 templateInputs(session, session.scopes[0]!),
             ),
         );

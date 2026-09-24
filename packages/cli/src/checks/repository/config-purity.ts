@@ -1,18 +1,13 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // A configuration module holds literals: no function, no control flow, no call, no value import from outside the config roots.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import { grammarFor, parserFor } from '#cli/naming/parsers.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { grammarFor, parserFor } from '#cli/parsers/tree-sitter.ts';
 
-import {
-    CONFIG_CALL_ALLOWED,
-    CONFIG_IMPORT_PREFIXES,
-    CONFIG_LOGIC_NODES,
-    CONFIG_STATEMENTS,
-} from '#cli/checks/integrity-definitions.ts';
+
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
     '.ts': 'typescript',
@@ -117,3 +112,33 @@ export async function configurationPurity(input: EngineInput): Promise<Finding[]
     }
     return findings;
 }
+
+const CONFIG_STATEMENTS = [
+    'import_statement',
+    'export_statement',
+    'lexical_declaration',
+    'type_alias_declaration',
+    'comment',
+    'empty_statement',
+];
+
+const CONFIG_LOGIC_NODES = [
+    'function_declaration',
+    'generator_function_declaration',
+    'function_expression',
+    'arrow_function',
+    'class_declaration',
+    'if_statement',
+    'for_statement',
+    'for_in_statement',
+    'while_statement',
+    'do_statement',
+    'switch_statement',
+    'try_statement',
+    'await_expression',
+    'ternary_expression',
+];
+
+const CONFIG_CALL_ALLOWED = ['Set', 'Map', 'RegExp'];
+
+const CONFIG_IMPORT_PREFIXES = ['#config/'];

@@ -1,6 +1,6 @@
-import { quoteArgument } from '#cli/run/reproduce.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
 // The checks on a normalized policy that the schema cannot state: reasons present, selectors precise, scopes real.
-import { mutationPath, openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type {
@@ -11,7 +11,7 @@ import type {
     PolicyProblem,
     Reasoned,
     ToolTable,
-} from '#cli/policy/types.ts';
+} from '#cli/types/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);

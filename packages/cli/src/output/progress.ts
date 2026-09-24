@@ -1,4 +1,4 @@
-import type { CheckResult } from '#cli/output/finding.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
 
 /** Print completed check states without mixing progress into machine-readable output. */
 export function progress(

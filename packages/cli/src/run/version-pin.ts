@@ -1,8 +1,8 @@
 // .gspot/version against the running binary; the exit-2 refusal with its two remedies.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import * as messages from '#cli/policy/messages.ts';
-import { VERSION_FILE_LINE } from '#cli/emit/markers-definitions.ts';
+import { VERSION_FILE_LINE } from '#cli/emit/markers.ts';
 import packageManifest from '#package' with { type: 'json' };
 
 /** The version of this build: the one source is packages/cli/package.json (D-84). */

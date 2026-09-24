@@ -11,13 +11,13 @@ const modules = join(import.meta.dir, '../../../../node_modules');
 test.each(['recommended', 'all'])('generated %s lint enforces size limits in test files', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["javascript"]\n[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
     const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/eslint.config.mjs',
+        (file) => file.path === '.gspot/config/eslint.config.mjs',
     )!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
@@ -42,13 +42,13 @@ test.each([
 ] as const)('generated %s lint validates the native expect arguments of %s', async (level, runtime, maximum) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["jest"]\n[tools.jest]\nglobal_package = "${runtime}"\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[tools.jest]\nglobal_package = "${runtime}"\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
     const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/eslint.config.mjs',
+        (file) => file.path === '.gspot/config/eslint.config.mjs',
     )!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
@@ -73,7 +73,7 @@ test.each([
 ] as const)('generated %s ESLint retains client defects and makes aliases opt-in for %s', async (level, filePath) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\npresets = []\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = []\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'client.js': '',
         'other.js': '',
@@ -81,8 +81,8 @@ test.each([
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
     const output = emitAll(await openSession(sandbox.path));
-    const config = output.files.find((file) => file.path === '.gspot/eslint.config.mjs')!;
-    mkdirSync(join(sandbox.path, '.gspot'));
+    const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
     const finding = await eslint.lintText("'use client';\nexport const value = process.env.SECRET;\n", {
@@ -121,7 +121,7 @@ test.each(['recommended', 'all'])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["typescript"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,
@@ -129,9 +129,9 @@ test.each(['recommended', 'all'])(
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/eslint.config.mjs',
+            (file) => file.path === '.gspot/config/eslint.config.mjs',
         )!;
-        mkdirSync(join(sandbox.path, '.gspot'));
+        mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
         const javascript = await eslint.lintFiles(['client.js']);
@@ -161,12 +161,12 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["jest"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'sample.test.js': '',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        mkdirSync(join(sandbox.path, '.gspot'));
+        mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
         const cases = [
             [
                 'no-focused-tests',
@@ -214,10 +214,10 @@ test.each(['recommended', 'all'])(
         for (const globalPackage of ['@jest/globals', 'bun:test']) {
             writeFileSync(
                 join(sandbox.path, 'gspot.toml'),
-                `version = 1\nlevel = "${level}"\npresets = ["jest"]\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
+                `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
             );
             const config = emitAll(await openSession(sandbox.path)).files.find(
-                (file) => file.path === '.gspot/eslint.config.mjs',
+                (file) => file.path === '.gspot/config/eslint.config.mjs',
             )!;
             const path = join(
                 sandbox.path,
@@ -251,7 +251,7 @@ test.each(['js', 'jsx'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\npresets = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\npresets = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+                'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
             'package.json': '{"private":true,"type":"module"}\n',
             'root.test.js': '',
             'app/sample.test.js': '',
@@ -264,9 +264,9 @@ test.each(['js', 'jsx'])(
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/eslint.config.mjs',
+            (file) => file.path === '.gspot/config/eslint.config.mjs',
         )!;
-        mkdirSync(join(sandbox.path, '.gspot'));
+        mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
         const focused =
@@ -317,14 +317,14 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["javascript"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\npresets = []\n[scope.tools.knip]\nentry = ["main.js"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.knip]\nentry = ["main.js"]\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'main.js': '',
             'app/main.js': '',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
         const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/eslint.config.mjs',
+            (file) => file.path === '.gspot/config/eslint.config.mjs',
         )!;
         await Bun.write(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });

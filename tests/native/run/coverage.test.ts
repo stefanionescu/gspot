@@ -5,7 +5,7 @@ import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { planRun } from '#cli/run/plan.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
-import { coverageReport } from '#cli/doctor/coverage.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -16,13 +16,13 @@ import { settingRows } from '#cli/policy/settings-list.ts';
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[[scope]]\npath = "app"\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
         'source.sh': 'echo root\n',
         'app/source.sh': 'echo nested\n',
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.preset.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         scope.selected = [{ ...manifest, checks: scope.scope.path === '' ? [{ ...syntax, runs: 'per-scope' }] : [] }];
     }
@@ -40,7 +40,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     await using sandbox = await testdir();
     const policy = {
         version: 1,
-        presets: [],
+        configurations: [],
         coverage: { strict: true },
         check: [
             {
@@ -68,7 +68,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     expect(runText(failed.report, { quiet: true, verbose: false })).toContain('1 finding,');
     expect(runText(failed.report, { quiet: true, verbose: false })).toEndWith('(failed)\n');
     expect(JSON.parse(sarifText(failed.report))).toHaveProperty('runs.0.results.0.ruleId', 'coverage.strict');
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.codequality.json'), 'utf8'))).toMatchObject([
+    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8'))).toMatchObject([
         { check_name: 'coverage.strict', location: { path: 'source.sh' } },
     ]);
     writeFileSync(
@@ -101,7 +101,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             coverage: { strict: true },
             check: [
                 {
@@ -126,7 +126,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
 test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -149,13 +149,13 @@ test('engine coverage rejects an unobserved path and accepts confirmed repositor
 test('a per-scope check runs only where that scope owns a claimed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[[scope]]\npath = "app"\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
         'app/source.sh': 'echo example\n',
         'notes.md': 'No shell source belongs to the root.\n',
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.preset.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
             throw new Error('The fixture requires the shell syntax command.');
@@ -182,13 +182,13 @@ test('a per-scope check runs only where that scope owns a claimed source', async
 test('a project-wide check covers its claimed sources without claiming unrelated project inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
         'source.sh': 'echo example\n',
         'notes.md': 'An unrelated source document.\n',
     });
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
-    const manifest = scope.selected.find((entry) => entry.preset.name === 'bash')!;
+    const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
     const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
     if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
         throw new Error('The fixture requires the shell syntax command.');
@@ -219,7 +219,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             ...(scenario === 'ignore' ? { ignore: [{ check }] } : {}),
             check: [
                 {

@@ -1,10 +1,10 @@
-import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
+import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import { currentBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
-import { HOOK_HEADER } from '#cli/emit/markers-definitions.ts';
+import { HOOK_HEADER } from '#cli/emit/markers.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/emit/types.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/types/generation.ts';
 
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',

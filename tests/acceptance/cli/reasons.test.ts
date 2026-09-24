@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 test('ignore and loosened settings accept omitted reasons by default and enforce the repository preference', async () => {
     for (const required of [false, true]) {
         await using directory = await testdir();
-        const policy = `version = 1\nrequire_reasons = ${String(required)}\npresets = ["bash"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
@@ -38,7 +38,7 @@ test(
     async () => {
         for (const required of [false, true]) {
             await using directory = await testdir();
-            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\npresets = ["bash", "naming"]\n[rules]\ninstall = false\n`;
+            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash", "naming"]\n[rules]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
             const entry = '{"name":"shell_command"}';
             const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
@@ -77,7 +77,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\npresets = ["bash"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`,
             'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
         });
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
@@ -112,34 +112,34 @@ test.each([false, true])(
 );
 
 test.each([
-    { preset: 'sql', path: 'query.sql', form: 'sqlfluff', bare: '-- noqa: LT01', clean: 'SELECT 1;' },
+    { configuration: 'sql', path: 'query.sql', form: 'sqlfluff', bare: '-- noqa: LT01', clean: 'SELECT 1;' },
     {
-        preset: 'css',
+        configuration: 'css',
         path: 'style.css',
         form: 'stylelint',
         bare: '/* stylelint-disable */',
         clean: 'body { color: red; }',
     },
     {
-        preset: 'html',
+        configuration: 'html',
         path: 'page.html',
         form: 'html-validate',
         bare: '<!-- html-validate-disable -->',
         clean: '<p>Example</p>',
     },
     {
-        preset: 'markdown',
+        configuration: 'markdown',
         path: 'guide.md',
         form: 'markdownlint-cli2',
         bare: '<!-- markdownlint-disable -->',
         clean: '# Example',
     },
 ])(
-    '$preset suppression comments use their tool definition, fail without required reasons, and accept correction',
-    async ({ preset, path, form, bare, clean }) => {
+    '$configuration suppression comments use their tool definition, fail without required reasons, and accept correction',
+    async ({ configuration, path, form, bare, clean }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\npresets = ["structure", "${preset}"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure", "${configuration}"]\n[rules]\ninstall = false\n`,
             [path]: `${bare}\n${clean}\n`,
         });
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
@@ -167,7 +167,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nrequire_reasons = true\npresets = ["structure", "sql", "python"]\n[rules]\ninstall = false\n',
+            'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure", "sql", "python"]\n[rules]\ninstall = false\n',
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
@@ -189,7 +189,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nrequire_reasons = ${String(required)}\npresets = ["bash"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);

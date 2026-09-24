@@ -20,7 +20,7 @@ describe('profiles', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'scripts/a.sh': script,
-            'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\npresets = ["bash"]\n',
+            'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\nconfigurations = ["bash"]\n',
         });
         commitAll(sandbox.path);
         const before = treeContents(sandbox.path);
@@ -42,7 +42,7 @@ describe('profiles', () => {
                 [
                     'init',
                     '--yes',
-                    '--presets',
+                    '--configurations',
                     'bash',
                     '--without',
                     'naming',
@@ -97,7 +97,7 @@ describe('profiles', () => {
             expect(init.stdout).toContain('profile    house');
             expect(init.stdout).toContain('detected, not in the profile: typescript');
             const [one, two] = [await tables(first.path), await tables(second.path)];
-            expect(two['presets']).toEqual(one['presets']);
+            expect(two['configurations']).toEqual(one['configurations']);
             expect(two['format']).toEqual({ indent_width: 2 });
             expect(two['hooks']).toEqual(one['hooks']);
             expect(two['ignore']).toEqual([
@@ -123,13 +123,13 @@ describe('profiles', () => {
     );
 
     test(
-        'a profile with a wrong value, an unknown preset and a path stops init before anything is written',
+        'a profile with a wrong value, an unknown configuration and a path stops init before anything is written',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 'scripts/a.sh': script,
                 'bad.profile.toml':
-                    'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
+                    'version = 1\nprofile = "bad"\nselection = "sometimes"\nconfigurations = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
             });
             commitAll(sandbox.path);
             const init = await run(sandbox.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
@@ -162,7 +162,7 @@ describe('policy edits', () => {
                 [
                     'init',
                     '--yes',
-                    '--presets',
+                    '--configurations',
                     'bash',
                     '--without',
                     'naming',

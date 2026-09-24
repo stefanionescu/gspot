@@ -7,12 +7,12 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["javascript"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n',
         'package.json': '{"private":true,"type":"module"}\n',
         'a.js': 'export const first = 1;\n',
         'z.js': 'export const last = 2;\n',
@@ -28,10 +28,10 @@ test('required ESLint rules inspect later file overrides and accept their correc
         spec: spec,
         files: session.repository.files,
     });
-    const generated = emitAll(session).files.find((file) => file.path === '.gspot/eslint.config.mjs')!;
-    mkdirSync(join(sandbox.path, '.gspot'));
+    const generated = emitAll(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);
-    const base = join(sandbox.path, '.gspot/base.mjs');
+    const base = join(sandbox.path, '.gspot/config/base.mjs');
     writeFileSync(base, generated.content);
     writeFileSync(
         config,
@@ -40,10 +40,10 @@ test('required ESLint rules inspect later file overrides and accept their correc
     expect(await requiredRules(input)).toEqual([
         {
             check: 'integrity/required-rules',
-            file: '.gspot/eslint.config.mjs',
+            file: '.gspot/config/eslint.config.mjs',
             line: 1,
             rule: 'rule-off',
-            message: 'eqeqeq is off for z.js, and the presets require it for every .js file.',
+            message: 'eqeqeq is off for z.js, and the configurations require it for every .js file.',
             fixable: false,
         },
     ]);

@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { appendEntry, appendList, deleteKey, removeEntries, setKey, writePolicy } from '#cli/policy/write.ts';
 
 const text =
-    '#:schema x\n\n# Comment on version.\nversion = 1\npresets = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
+    '#:schema x\n\n# Comment on version.\nversion = 1\nconfigurations = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
 
 describe('writePolicy', () => {
     test('policy edits retain invalid UTF-8 bytes and refuse a mode change after observation', async () => {

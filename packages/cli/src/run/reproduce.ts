@@ -1,10 +1,5 @@
-import type { CheckOptions } from '#cli/run/types.ts';
-
-/** Quote one argument for a POSIX shell command shown to the reader. */
-export function quoteArgument(value: string): string {
-    if (/^[a-zA-Z0-9_./-]+$/u.test(value)) return value;
-    return `'${value.replaceAll("'", "'\"'\"'")}'`;
-}
+import { quoteArgument } from '#cli/platform/arguments.ts';
+import type { CheckOptions } from '#cli/types/execution.ts';
 
 // The reproduce line per failing check: the same in the hook, in CI and in the terminal.
 

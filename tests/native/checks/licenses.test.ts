@@ -9,7 +9,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
@@ -29,7 +29,7 @@ async function input(root: string): Promise<EngineInput> {
 test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["licenses"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
         'package.json': '{"name":"example","private":true}',
     });
     await rejects(licensesPackages(await input(sandbox.path)), {
@@ -41,7 +41,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\npresets = ["licenses"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
         'pyproject.toml':
             '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
     });
@@ -75,14 +75,14 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\npresets = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
+        'version = 1\nconfigurations = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
     );
     expect(await licensesPackages(await input(root))).toEqual([]);
     await writeLicense('MIT');
     expect(await licensesPackages(await input(root))).toEqual([
         expect.objectContaining({ rule: 'license', message: expect.stringContaining('exception no longer holds') }),
     ]);
-    await Bun.write(join(root, 'gspot.toml'), 'version = 1\npresets = ["licenses"]\n');
+    await Bun.write(join(root, 'gspot.toml'), 'version = 1\nconfigurations = ["licenses"]\n');
     expect(await licensesPackages(await input(root))).toEqual([]);
     await writeLicense('MIT-0');
     expect(await licensesPackages(await input(root))).toEqual([
@@ -90,7 +90,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\npresets = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
+        'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
     );
     expect(await licensesPackages(await input(root))).toEqual([]);
 });
@@ -100,7 +100,7 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["licenses"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',
@@ -141,14 +141,14 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["licenses"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',
         });
         chmodSync(join(sandbox.path, '.gspot/.venv/bin/pip-licenses'), 0o755);
         const selected = await input(sandbox.path);
-        const path = join(sandbox.path, '.gspot/licenses.json');
+        const path = join(sandbox.path, '.gspot/config/licenses.json');
         const original = readFileSync(path);
         if (failure === 'missing') unlinkSync(path);
         else if (failure === 'external link') {

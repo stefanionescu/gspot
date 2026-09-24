@@ -3,8 +3,9 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { mkdirSync, readdirSync, statSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { cacheHome } from '#cli/platform/environment.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/lifecycle/types.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/filesystem.ts';
+
 
 /** Prepare and lock one compiler directory without following existing output links. */
 export function openBuildCache(folder: string): ConfinedRoot {

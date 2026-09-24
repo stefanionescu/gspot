@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { expect, test } from 'bun:test';
@@ -8,7 +8,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\npresets = ["prose"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nconfigurations = ["prose"]\n[rules]\ninstall = false\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'guide.md': '# Schedule\n\nRelease on 03/04/2026.\n',

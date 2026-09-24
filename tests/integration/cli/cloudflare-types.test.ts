@@ -1,5 +1,5 @@
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
-import * as tools from '#cli/platform/tool-probe.ts';
+import * as tools from '#cli/tools/tool-probe.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -22,7 +22,7 @@ for (const scope of ['', 'workers/api']) {
             await using directory = await testdir();
             const path = (name: string) => join(scope, name);
             await createFileTree(directory.path, {
-                'gspot.toml': 'version = 1\npresets = ["cloudflare"]\n',
+                'gspot.toml': 'version = 1\nconfigurations = ["cloudflare"]\n',
                 [path('package.json')]: '{"private":true}\n',
                 [path('cloudflare-env.d.ts')]: '// Committed types\n',
                 [path('bindings.txt')]: isFailure ? 'failure' : '// Generated types\n',
@@ -78,7 +78,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\npresets = ["cloudflare"]\n[[scope]]\npath = "workers/api"\npresets = ["cloudflare"]\n',
+            'version = 1\nconfigurations = ["cloudflare"]\n[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n',
         _headers: '  Invalid header\n',
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });

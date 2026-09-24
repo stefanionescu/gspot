@@ -1,30 +1,32 @@
+import { bunConfiguration } from '#cli/emit/bun.ts';
 import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
 import { posix } from 'node:path';
 import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { toolPackages } from '#cli/emit/tool-packages.ts';
 import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
-import type { FileSnapshot } from '#cli/lifecycle/types.ts';
-import { mutationTarget } from '#cli/lifecycle/confined.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+
+import { mutationTarget } from '#cli/filesystem/confined.ts';
 import { styleFiles } from '#cli/prose/vale.ts';
-import type { MergedView, EditorconfigAdoption } from '#cli/policy/types.ts';
+import type { MergedView, EditorconfigAdoption } from '#cli/types/policy.ts';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
-import { assembleRules } from '#cli/rules/assemble.ts';
-import { everyManifest } from '#cli/presets/select.ts';
-import { GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
+import { assembleRules } from '#cli/agents/assemble.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
-import { claimedByClaims, pathMatcher } from '#cli/presets/claims.ts';
-import { agentFiles, managedBlock } from '#cli/rules/managed-block.ts';
-import type { ScopeSelection, Session } from '#cli/run/types.ts';
+import { claimedByClaims, pathMatcher } from '#cli/configurations/claims.ts';
+import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
+import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
-import type { ConfigurationTarget, Manifest } from '#cli/presets/types.ts';
+import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/emit/hooks.ts';
 import { miseTasks, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
 import { emitTarget, eta, templateInputs } from '#cli/emit/templates.ts';
-import type { EmitContext, GeneratedFile, GeneratedProposal, TemplateInputs } from '#cli/emit/types.ts';
+import type { EmitContext, GeneratedFile, GeneratedProposal, TemplateInputs } from '#cli/types/generation.ts';
 
 const JSON_INDENT = 4;
 
@@ -62,15 +64,15 @@ function directoryStubs(context: EmitContext, config: ConfigurationTarget, targe
         }
     }
     return [...directories].map((directory) =>
-        bodyStub(stub, `${directory}/${stub.path}`, target, session.version, manifest.preset.name),
+        bodyStub(stub, `${directory}/${stub.path}`, target, session.version, manifest.configuration.name),
     );
 }
 
-// The presets whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
+// The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
 function fragmentOwners(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
     if (owner.per_scope) return selection.selected;
     const every = [selection, ...session.scopes].flatMap((entry) => entry.selected);
-    return new Map(every.map((manifest) => [manifest.preset.name, manifest])).values().toArray();
+    return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
 }
 
 function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): string {
@@ -121,7 +123,7 @@ function stubFor(
             content: emitTarget(`${manifest.dir}/${stub.template}`, stubPath, inputs, config.header),
             readOnly: true,
             kind: 'stub',
-            preset: manifest.preset.name,
+            configuration: manifest.configuration.name,
         });
     else if (stub.copy === true)
         out.files.push({
@@ -129,16 +131,16 @@ function stubFor(
             content: copyStubContent(file.content, stubPath),
             readOnly: true,
             kind: 'stub',
-            preset: manifest.preset.name,
+            configuration: manifest.configuration.name,
         });
-    else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.preset.name));
+    else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.configuration.name));
 }
 
-// A target with a needs key is written only while the preset it names is selected somewhere in the repository.
+// A target with a needs key is written only while the configuration it names is selected somewhere in the repository.
 function isWanted(config: ConfigurationTarget, session: Session): boolean {
     if (config.needs === undefined) return true;
     const wanted = config.needs;
-    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === wanted));
+    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === wanted));
 }
 
 function configurationFiles(
@@ -158,17 +160,17 @@ function configurationFiles(
         if (seen.has(target)) continue;
         seen.add(target);
         const inputs = templateInputs(session, selection, fragmentsFor(session, selection, config));
-        if (config.per_scope) inputs.has = (preset) => selection.view.presets.includes(preset);
+        if (config.per_scope) inputs.has = (configuration) => selection.view.configurations.includes(configuration);
         const file: GeneratedFile = {
             path: target,
             content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
             readOnly: true,
             kind: 'config',
-            preset: manifest.preset.name,
+            configuration: manifest.configuration.name,
             ...(config.rules_path === undefined ? {} : { rulesPath: config.rules_path }),
         };
         out.files.push(file);
-        if (manifest.preset.name === 'formatting' && config.target === '.editorconfig') {
+        if (manifest.configuration.name === 'formatting' && config.target === '.editorconfig') {
             const adopted = selection.view.tool('editorconfig')['adopted'] as EditorconfigAdoption | undefined;
             for (const directory of adopted?.directories ?? []) {
                 const path = `${directory.basePath}/.editorconfig`;
@@ -231,7 +233,7 @@ function workflowOutput(session: Session, out: GeneratedProposal): void {
     const { policy } = session.policyFiles;
     if (policy.ci === undefined) return;
     const swiftScope = session.scopes.find((selection) =>
-        selection.selected.some((manifest) => manifest.preset.name === 'swift'),
+        selection.selected.some((manifest) => manifest.configuration.name === 'swift'),
     );
     out.files.push(
         (policy.ci.provider === 'github' ? workflowFile : gitlabFile)({
@@ -310,7 +312,7 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
     const seen = new Set<string>();
     for (const selection of session.scopes)
         for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);
-    if (out.files.some((file) => file.preset === 'formatting')) {
+    if (out.files.some((file) => file.configuration === 'formatting')) {
         const retained = retainedConfigurationPaths(session, ['prettier', 'ec'], takeover);
         if (retained.length > 0) {
             const adopted = session.policyFiles.policy.tools['editorconfig']?.['adopted'] as
@@ -326,7 +328,7 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
             );
             out.files = out.files.filter(
                 (file) =>
-                    file.preset !== 'formatting' ||
+                    file.configuration !== 'formatting' ||
                     file.path.startsWith('.gspot/') ||
                     editorconfigs.has(file.path) ||
                     retained.every((path) => posix.dirname(path) !== posix.dirname(file.path)),
@@ -339,7 +341,7 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
             );
         }
     }
-    if (out.files.some((file) => file.path === '.gspot/eslint.config.mjs')) {
+    if (out.files.some((file) => file.path === '.gspot/config/eslint.config.mjs')) {
         const retained = retainedConfigurationPaths(session, ['eslint'], takeover);
         if (retained.length > 0) {
             out.files = out.files.filter((file) => file.path !== 'eslint.config.mjs');
@@ -351,12 +353,13 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
             );
         }
     }
+    out.configurations.push(...bunConfiguration(session));
     hookOutputs(session, out, binary);
     out.files.push(...toolPackages(session), ...toolEnvironment(session));
     runnerOutputs(session, out);
     workflowOutput(session, out);
     out.files.push(...assembleRules(session));
-    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.preset.name === 'prose')))
+    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'prose')))
         out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
     blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));

@@ -5,7 +5,7 @@ import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 
-const POLICY = 'version = 1\npresets = ["javascript"]\n[rules]\ninstall = false\n';
+const POLICY = 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
 const SOURCE = 'alert(left == right);\n';
 const CONFIG = [
     { files: ['**/*.js'], rules: { eqeqeq: 'error' } },

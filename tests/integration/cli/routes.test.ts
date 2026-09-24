@@ -15,12 +15,12 @@ const OPTIONS = {
 };
 const POLICY = `version = 1
 level = "all"
-presets = ["express"]
+configurations = ["express"]
 [tools.express]
 route_glob = ["routes/*.ts"]
 [[scope]]
 path = "api"
-presets = ["express"]
+configurations = ["express"]
 `;
 const ROUTE = 'export const users = () => [];\n';
 
@@ -61,7 +61,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["express"]\n[tools.express]\nroute_glob = ["routes/*.ts"]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["express"]\n[tools.express]\nroute_glob = ["routes/*.ts"]\n',
         'package.json': '{"imports":{"#routes/*":"./routes/*.ts"}}',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@routes/*":["./routes/*"]}}}',
         'routes/users.ts': ROUTE,

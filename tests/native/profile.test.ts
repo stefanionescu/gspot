@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { exportCommand } from '#cli/profile/command.ts';
-import { applyCommand } from '#cli/emit/apply-command.ts';
-import { applyUninstall, planUninstall } from '#cli/lifecycle/uninstall-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
+import { applyUninstall, planUninstall } from '#cli/commands/uninstall/command.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, spyOn, test } from 'bun:test';
@@ -10,7 +10,7 @@ import * as fs from 'node:fs';
 import { stringify } from 'smol-toml';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { readProfile } from '#cli/profile/read.ts';
-import { initCommand } from '#cli/lifecycle/init/command.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 
 describe('profile file paths', () => {
@@ -18,7 +18,7 @@ describe('profile file paths', () => {
         const source = 'policies/café house.profile.toml';
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            [source]: 'version = 1\nprofile = "house"\nselection = "exact"\npresets = ["bash"]\n',
+            [source]: 'version = 1\nprofile = "house"\nselection = "exact"\nconfigurations = ["bash"]\n',
             'project/README.md': '# Project\n',
         });
         const relative = await readProfile(source, sandbox.path);
@@ -34,7 +34,7 @@ test('profile tool settings survive adoption of another setting for the same too
     const profile = exportedProfile(
         stringify({
             version: 1,
-            presets: ['spelling'],
+            configurations: ['spelling'],
             tools: { typos: { words: [{ word: 'teh', reason: 'A domain term used by the team.' }] } },
         }),
         'team.profile.toml',
@@ -60,7 +60,7 @@ test('profile tool settings survive adoption of another setting for the same too
     expect(readFileSync(join(directory.path, 'typos.toml'), 'utf8')).toBe(original);
     expect((await initCommand({ ...options, isDryRun: false })).exitCode).toBe(0);
     const check = () =>
-        runBlocking(['typos', '--isolated', '--config', '.gspot/typos.toml', 'sample.txt'], {
+        runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
             cwd: directory.path,
         });
     const accepted = check();
@@ -77,28 +77,28 @@ test('profile tool settings survive adoption of another setting for the same too
 
 test.each(['jest', 'vitest'])(
     'profiles retain %s coverage settings and omit repository support directories',
-    async (preset) => {
+    async (configuration) => {
         await using directory = await testdir();
-        const reusable = { coverage_lines: 90, ...(preset === 'jest' ? { global_package: 'bun:test' } : {}) };
+        const reusable = { coverage_lines: 90, ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}) };
         const exported = exportedProfile(
             stringify({
                 version: 1,
-                presets: [preset],
-                tools: { [preset]: { ...reusable, harness_directory: 'tests/fixtures' } },
+                configurations: [configuration],
+                tools: { [configuration]: { ...reusable, harness_directory: 'tests/fixtures' } },
             }),
             'shared.profile.toml',
         );
         await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
         const restored = await readProfile('shared.profile.toml', directory.path);
-        expect(restored.tables.tools?.[preset]).toEqual(reusable);
-        expect(exported.leftOut).toEqual([`tools.${preset}.harness_directory: names a repository path`]);
+        expect(restored.tables.tools?.[configuration]).toEqual(reusable);
+        expect(exported.leftOut).toEqual([`tools.${configuration}.harness_directory: names a repository path`]);
         await createFileTree(directory.path, {
             'invalid.profile.toml': stringify({
                 version: 1,
                 profile: 'local',
                 selection: 'exact',
-                presets: [preset],
-                tools: { [preset]: { harness_directory: 'tests/fixtures' } },
+                configurations: [configuration],
+                tools: { [configuration]: { harness_directory: 'tests/fixtures' } },
             }),
         });
         await expect(readProfile('invalid.profile.toml', directory.path)).rejects.toThrow('a profile carries no path');
@@ -113,7 +113,7 @@ test('profile export omits local ESLint registrations and selector bases while p
     };
     const source = stringify({
         version: 1,
-        presets: ['javascript'],
+        configurations: ['javascript'],
         tools: {
             eslint: {
                 adopted: [
@@ -134,7 +134,7 @@ test('profile export omits local ESLint registrations and selector bases while p
             version: 1,
             profile: 'local',
             selection: 'exact',
-            presets: ['javascript'],
+            configurations: ['javascript'],
             tools: { eslint: { adopted: [{ processor: { module: './processing.mjs', export: 'default' } }] } },
         }),
     });
@@ -153,7 +153,7 @@ test('profile export omits complete EditorConfig documents and preserves reusabl
     const exported = exportedProfile(
         stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: { quotes: 'single' },
             tools: { editorconfig: { adopted } },
         }),
@@ -168,7 +168,7 @@ test('profile export omits complete EditorConfig documents and preserves reusabl
 
 test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n' });
+    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n' });
     expect((await exportCommand(directory.path, 'shared.profile.toml')).exitCode).toBe(0);
     const path = join(directory.path, 'shared.profile.toml');
     const first = readFileSync(path);
@@ -193,7 +193,7 @@ test.each([
 ])('profile export refuses unsafe destination %s without changing external bytes', async (file) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\npresets = []\n',
+        'project/gspot.toml': 'version = 1\nconfigurations = []\n',
         'outside/profile.toml': 'original',
     });
     const root = join(directory.path, 'project');
@@ -207,7 +207,7 @@ test.each([
 test('profile export preserves an unowned destination and refuses the managed repository policy', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
         'occupied.toml': 'original bytes',
     });
     const occupied = join(directory.path, 'occupied.toml');
@@ -222,7 +222,7 @@ test('profile export preserves an unowned destination and refuses the managed re
 
 test('profile publication recovers an interrupted write through the lifecycle journal', async () => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\npresets = []\n' });
+    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
     const path = join(directory.path, 'shared.profile.toml');
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
@@ -240,12 +240,12 @@ test('profile publication recovers an interrupted write through the lifecycle jo
     }
     expect((await exportCommand(directory.path, 'shared.profile.toml')).exitCode).toBe(0);
     expect(readOwnership(directory.path).pending).toBeUndefined();
-    expect((await readProfile('shared.profile.toml', directory.path)).tables.presets).toEqual([]);
+    expect((await readProfile('shared.profile.toml', directory.path)).tables.configurations).toEqual([]);
 });
 
 test('profile publication preserves permissions when adopting identical existing bytes', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\npresets = []\n';
+    const policy = 'version = 1\nconfigurations = []\n';
     const profile = exportedProfile(policy, 'shared.profile.toml');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'shared.profile.toml': profile.text });
     const path = join(directory.path, 'shared.profile.toml');
@@ -263,7 +263,7 @@ test('profiles round-trip license allowances and exact-version exceptions', asyn
         packages_allowed: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
     };
     const exported = exportedProfile(
-        stringify({ version: 1, presets: ['licenses'], tools: { licenses } }),
+        stringify({ version: 1, configurations: ['licenses'], tools: { licenses } }),
         'licenses.profile.toml',
     );
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });

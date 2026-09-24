@@ -40,7 +40,7 @@ repositories retain their generated pinned executable.
 `mise.toml` owns development runtimes and repository settings. Authored tasks and the source-launcher PATH belong to
 `.mise/conf.d/repo.toml`; gspot owns the generated tool pins. Edit policy in `gspot.toml`
 and run `mise run apply` to regenerate managed configuration. Native tools discover
-`typos.toml` by filename; the spelling preset owns its content. The editor schema is generated
+`typos.toml` by filename; the spelling configuration owns its content. The editor schema is generated
 from the policy schema and copied into the published documentation during the site build.
 Do not edit managed outputs to resolve drift. Change their source and regenerate them.
 
@@ -70,7 +70,7 @@ dependencies use the configured npm registry. Output streams while the suite run
 The runner removes its registry after failure, timeout, or interruption. Select acceptance cases through that runner:
 
 ```shell
-mise run test:acceptance -- ./acceptance/presets/vite.test.ts
+mise run test:acceptance -- ./acceptance/configurations/vite.test.ts
 ```
 
 Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.
@@ -102,7 +102,7 @@ names, npm identities, and libc selection. macOS builds run `codesign` when buil
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
 The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-upstream records in `packages/cli/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
+upstream records in `packages/cli/scripts/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
 the Swift grammar provenance and Bun runtime notices. Missing grammars, mismatched grammar
 hashes, and unrecorded license notices fail the build.
 

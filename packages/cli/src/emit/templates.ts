@@ -1,26 +1,26 @@
 import { prettierConfig, editorconfigOverrides } from '#cli/emit/format.ts';
 import { markdownlintRules } from '#cli/emit/markdownlint.ts';
 import { scopeIgnorePatterns } from '#cli/emit/ignore-patterns.ts';
-import { pathExpressions } from '#cli/presets/claims.ts';
+import { pathExpressions } from '#cli/configurations/claims.ts';
 import { eslintRuleBlocks } from '#cli/emit/eslint.ts';
-// Render a preset template with the merged settings; prepend the generated-file header.
+// Render a configuration template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
 import { styleNames } from '#cli/prose/vale.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/typescript-definitions.ts';
+import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { ScopeSelection, Session } from '#cli/run/types.ts';
+import type { ScopeSelection, Session } from '#cli/types/execution.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { extensionOf, toPosix } from '#cli/platform/paths.ts';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/prose-definitions.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/syntax.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
-import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
-import type { JsonFormat, TemplateInputs, EslintRuleBlock } from '#cli/emit/types.ts';
+import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
+import type { JsonFormat, TemplateInputs, EslintRuleBlock } from '#cli/types/generation.ts';
 
 const JSON_INDENT = 4;
 
@@ -212,7 +212,7 @@ export function jsonHeaderAdded(rendered: string, version: string, format: JsonF
  * The inputs every template sees.
  * @param session the session
  * @param selection the scope being rendered
- * @param fragments the fragment text other presets contribute
+ * @param fragments the fragment text other configurations contribute
  * @returns the template inputs
  */
 export function templateInputs(session: Session, selection: ScopeSelection, fragments = ''): TemplateInputs {
@@ -241,18 +241,18 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
                 path: entry.scope.path,
-                presets: entry.selected.map((manifest) => manifest.preset.name),
+                configurations: entry.selected.map((manifest) => manifest.configuration.name),
             })),
-        presetScopes: (preset) =>
+        configurationScopes: (configuration) =>
             session.scopes
-                .filter((entry) => entry.view.presets.includes(preset))
+                .filter((entry) => entry.view.configurations.includes(configuration))
                 .toSorted(
                     (left, right) =>
                         left.scope.path.split('/').length - right.scope.path.split('/').length ||
                         left.scope.path.localeCompare(right.scope.path),
                 )
                 .map((entry) => ({ path: entry.scope.path, settings: entry.view.settings })),
-        presets: view.presets,
+        configurations: view.configurations,
         policy: session.policyFiles.policy,
         view,
         format: view.format,
@@ -271,11 +271,11 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         toml: stringifyToml,
         yaml: stringifyYaml,
         tomlDate: TomlDate,
-        // Repository-wide output includes nested presets. The configuration owner narrows per-scope output.
-        has: (preset) =>
-            view.presets.includes(preset) ||
+        // Repository-wide output includes nested configurations. The configuration owner narrows per-scope output.
+        has: (configuration) =>
+            view.configurations.includes(configuration) ||
             (selection.scope.path === '' &&
-                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === preset))),
+                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === configuration))),
         importAliases: (scope) => aliasesFor(session, scope),
         tools: toolNames(session),
         toolPackages: toolPackages(session),
@@ -286,7 +286,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
 }
 
 /**
- * Renders a preset template asset to the final text of a target, header included unless the target's reader refuses unknown keys.
+ * Renders a configuration template asset to the final text of a target, header included unless the target's reader refuses unknown keys.
  * @param templatePath the asset path of the template
  * @param targetPath the path the text is written to
  * @param inputs the template inputs

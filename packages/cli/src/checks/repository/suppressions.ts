@@ -1,13 +1,17 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import { GSPOT_SUPPRESSION } from '#cli/suppressions/suppressions-definitions.ts';
-import { claimedByClaims } from '#cli/presets/claims.ts';
+import type { EngineInput, Session } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { claimedByClaims } from '#cli/configurations/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/emit/markers-definitions.ts';
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/emit/markers.ts';
+
+const GSPOT_SUPPRESSION = {
+    marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
+    reason: ' -- (?<reason>\\S.*)',
+};
 
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 

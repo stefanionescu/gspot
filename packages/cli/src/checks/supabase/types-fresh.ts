@@ -2,8 +2,8 @@ import { readSource } from '#cli/repository/tracked.ts';
 // The generated database types, compared with what the CLI writes from the local database.
 import { join, posix } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 

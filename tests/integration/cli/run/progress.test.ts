@@ -5,7 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { stringify } from 'smol-toml';
 import { openSession } from '#cli/run/session.ts';
 import { executeRun } from '#cli/run/execute.ts';
-import type { CheckResult } from '#cli/output/finding.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
     await using sandbox = await testdir();
@@ -13,7 +13,7 @@ test('completion callbacks publish filtered results before the remaining check f
         'source.sh': 'echo example\n',
         'gspot.toml': stringify({
             version: 1,
-            presets: [],
+            configurations: [],
             ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
             check: [
                 {

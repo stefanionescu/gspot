@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = `version = 1
-presets = ["formatting"]
+configurations = ["formatting"]
 [limits]
 file_lines = 250
 [format]
@@ -14,19 +14,19 @@ indent_width = 4
 install = false
 [[scope]]
 path = "api"
-presets = ["bash"]
+configurations = ["bash"]
 [scope.limits]
 file_lines = 200
 [scope.format]
 indent_width = 2
 [[scope]]
 path = "api/worker"
-presets = ["sql"]
+configurations = ["sql"]
 [scope.limits]
 function_lines = 30
 `;
 
-test('nested scopes inherit parent presets and settings and check each file in its deepest scope', async () => {
+test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': POLICY,

@@ -13,7 +13,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\npresets = ["dependencies"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["dependencies"]\n',
             'package.json': '{"name":"example","private":true}\n',
             'bun.lock': 'original lock\n',
             'node_modules/protected.txt': 'installed dependency\n',
@@ -77,7 +77,7 @@ test.each([
     const modernYarn = manager === 'yarn' && Number(version.stdout.trim().split('.')[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["dependencies"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["dependencies"]\n`,
         'package.json': manifest,
         'library/package.json': '{"name":"library","version":"1.0.0"}\n',
         'other/package.json': '{"name":"other","version":"1.0.0"}\n',

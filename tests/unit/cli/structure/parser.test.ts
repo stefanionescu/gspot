@@ -1,4 +1,4 @@
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { scriptFunctions } from '#cli/structure/parser.ts';

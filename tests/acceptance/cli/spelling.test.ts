@@ -1,4 +1,4 @@
-import type { RunReport } from '#cli/output/report-types.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
@@ -12,7 +12,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["spelling"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n[rules]\ninstall = false\n',
             'sample.txt': 'teh wether\n',
         });
         const environment = { PATH: toolsPath(['typos']) };
@@ -46,7 +46,7 @@ test(
             ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt', 'tab\tname.txt']),
         ];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["spelling"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n[rules]\ninstall = false\n',
             'the.txt': 'protected\n',
             ...Object.fromEntries(paths.map((path) => [path, 'café teh\n'])),
         });
@@ -108,7 +108,7 @@ test(
             [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'spelling',
                 '--no-install',
                 '--no-hooks',
@@ -120,7 +120,7 @@ test(
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const policy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-        const configuration = readFileSync(join(sandbox.path, '.gspot/nested/typos.toml'), 'utf8');
+        const configuration = readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8');
         const invalid = await run(
             sandbox.path,
             ['set', 'tools.typos.locale', 'en_US', '--scope', 'nested'],
@@ -128,7 +128,7 @@ test(
         );
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
-        expect(readFileSync(join(sandbox.path, '.gspot/nested/typos.toml'), 'utf8')).toBe(configuration);
+        expect(readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8')).toBe(configuration);
         await createFileTree(sandbox.path, {
             'nested/rogue/typos.toml': '[default]\ncheck-file = false\n',
             'nested/rogue/sample.txt': 'recieve\n',
@@ -158,8 +158,8 @@ test(
         expect(readFileSync(join(sandbox.path, 'nested/sample.txt'), 'utf8')).toBe('colour teh\n');
         const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        chmodSync(join(sandbox.path, '.gspot/nested/typos.toml'), 0o644);
-        await Bun.write(join(sandbox.path, '.gspot/nested/typos.toml'), '[default]\nlocale = "unknown"\n');
+        chmodSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 0o644);
+        await Bun.write(join(sandbox.path, '.gspot/config/nested/typos.toml'), '[default]\nlocale = "unknown"\n');
         const broken = await run(sandbox.path, args, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(2);
         const brokenReport = JSON.parse(broken.stdout) as RunReport;
@@ -170,11 +170,11 @@ test(
         );
         const preserved = await run(sandbox.path, ['apply'], environment);
         expect(preserved.code, preserved.stdout + preserved.stderr).toBe(2);
-        expect(readFileSync(join(sandbox.path, '.gspot/nested/typos.toml'), 'utf8')).toContain('unknown');
-        unlinkSync(join(sandbox.path, '.gspot/nested/typos.toml'));
+        expect(readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8')).toContain('unknown');
+        unlinkSync(join(sandbox.path, '.gspot/config/nested/typos.toml'));
         const restored = await run(sandbox.path, ['apply'], environment);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        expect(readFileSync(join(sandbox.path, '.gspot/nested/typos.toml'), 'utf8')).toBe(configuration);
+        expect(readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8')).toBe(configuration);
         const removed = await run(sandbox.path, ['uninstall', '--yes'], environment);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, 'nested/typos.toml'), 'utf8')).toBe(original);

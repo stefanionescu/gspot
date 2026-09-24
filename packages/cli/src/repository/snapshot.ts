@@ -1,8 +1,8 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/presets/select.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/snapshot-dependencies.ts';
-import type { GitEntry, SnapshotSource } from '#cli/repository/types.ts';
+import type { GitEntry, SnapshotSource } from '#cli/types/repository.ts';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';

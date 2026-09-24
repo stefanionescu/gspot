@@ -1,9 +1,9 @@
-import { releaseTargets } from '#cli/emit/targets-definitions.ts';
+import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { stringify } from 'yaml';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 // GitHub workflows and GitLab includes share installation and exact-object selection.
 import { headerFor } from '#cli/emit/templates.ts';
-import type { GeneratedFile, WorkflowShape } from '#cli/emit/types.ts';
+import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
 const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';
@@ -179,9 +179,9 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
         '          include-hidden-files: true',
         '          if-no-files-found: warn',
         '          path: |',
-        '            .gspot/report.json',
-        '            .gspot/report.sarif',
-        '            .gspot/report.codequality.json',
+        '            .gspot/reports/report.json',
+        '            .gspot/reports/report.sarif',
+        '            .gspot/reports/report.codequality.json',
     ];
 }
 
@@ -275,8 +275,8 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
             artifacts: {
                 when: 'always',
                 expire_in: '14 days',
-                paths: ['.gspot/report.json', '.gspot/report.sarif', '.gspot/report.codequality.json'],
-                reports: { codequality: '.gspot/report.codequality.json' },
+                paths: ['.gspot/reports/report.json', '.gspot/reports/report.sarif', '.gspot/reports/report.codequality.json'],
+                reports: { codequality: '.gspot/reports/report.codequality.json' },
             },
         },
     });

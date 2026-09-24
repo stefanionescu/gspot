@@ -56,7 +56,7 @@ The first release needs these, in this order:
 
 ## Pins
 
-Every preset lists its tools with one version and the name under each installer. An installer
+Every configuration lists its tools with one version and the name under each installer. An installer
 that numbers differently carries its own version:
 
 ```toml
@@ -117,12 +117,12 @@ the package manager. It stays a project of its own inside a pnpm or Yarn workspa
 hint names Homebrew only for a tool with no pin, because Homebrew installs the
 current version alone.
 
-Every tool in the presets has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
+Every tool in the configurations has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
 `swiftlint`, `swiftformat`, and `periphery`. Their checks are platform skips elsewhere.
 
 ## One tool per job
 
-A tool enters a preset only when it does something no tool already in the set does. Applied to
+A tool enters a configuration only when it does something no tool already in the set does. Applied to
 the reference set, these were cut, and every rule they enforced is re-pointed in the ledger:
 
 | Cut                                     | Kept instead                                             | Why                                                               |
@@ -255,7 +255,7 @@ the project license from distribution output. Platform packages also include `NO
 inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
 The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
 lives beside the build entry point; pinned upstream supplements and provenance live in
-`packages/cli/notices.json`. Retain upstream text until installed dependencies supply the required
+`packages/cli/scripts/notices.json`. Retain upstream text until installed dependencies supply the required
 material. Include the Bun runtime and vendored Swift grammar provenance. A dependency-tree
 scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
 

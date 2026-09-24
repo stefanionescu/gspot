@@ -1,8 +1,8 @@
 import { z } from 'zod';
 // Readers for the manifests detection and takeover need: package.json, pyproject.toml, Package.swift and the rest.
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { parse as parseToml } from 'smol-toml';
-import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#cli/repository/types.ts';
+import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#cli/types/repository.ts';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[]/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;

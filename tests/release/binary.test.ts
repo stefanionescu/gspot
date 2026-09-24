@@ -1,10 +1,10 @@
-// Runs the compiled binary of this platform in a planted repository: the embedded presets, rules and grammars, not the source tree.
+// Runs the compiled binary of this platform in a planted repository: the embedded configurations, rules and grammars, not the source tree.
 
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
+import { releaseTargets } from '../../packages/cli/src/platform/release-targets.ts';
 // The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
@@ -50,7 +50,7 @@ describe('the compiled binary', () => {
             const init = binary(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'bash',
                 '--no-runner',
                 '--no-ci',
@@ -73,13 +73,10 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     for (const path of [
         'packages/cli',
         'packages/npm',
-        'presets',
-        'rules',
         'package.json',
         'bun.lock',
         'bunfig.toml',
         'tsconfig.json',
-        'gspot.schema.json',
         'LICENSE.md',
         'docs/package.json',
         'packages/eslint-plugin/package.json',
@@ -95,7 +92,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const options = { cwd: checkout, timeoutMs: 180_000 };
     const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const built = await runProcess([process.execPath, 'packages/cli/build.ts'], options);
+    const built = await runProcess([process.execPath, 'packages/cli/scripts/build.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
     copyFileSync(join(checkout, 'dist', host!.binary), executable);
@@ -108,7 +105,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
             executable,
             'init',
             '--yes',
-            '--presets',
+            '--configurations',
             'formatting',
             '--no-runner',
             '--no-ci',

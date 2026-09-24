@@ -8,8 +8,8 @@ import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
 import { valeRules } from '#cli/emit/vale-rules.ts';
 import { javascriptRules } from '#cli/emit/javascript-rules.ts';
 import { gixyRules } from '#cli/emit/gixy-rules.ts';
-import { GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
-import type { DriftEntry, GeneratedFile } from '#cli/emit/types.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/markers.ts';
+import type { DriftEntry, GeneratedFile } from '#cli/types/generation.ts';
 
 function document(path: string, text: string): unknown {
     if (baseName(path) === 'gixy.cfg') return gixyRules(text);

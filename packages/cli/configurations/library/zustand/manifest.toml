@@ -1,0 +1,24 @@
+[configuration]
+name = "zustand"
+kind = "library"
+title = "Zustand"
+requires = ["javascript"]
+description = "Zustand stores: a store is created in a store file, and a component reads it through a selector."
+
+[detect]
+dependencies = ["zustand"]
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+fragment = true
+
+[[settings]]
+name = "tools.zustand.store_files"
+kind = "list"
+direction = "neutral"
+default = ["**/store.ts", "**/stores/*.ts", "**/store/*.ts", "**/*.store.ts"]
+summary = "The files that may create a store."
+
+[rule_files]
+library = ["library/zustand/ZUSTAND.md"]

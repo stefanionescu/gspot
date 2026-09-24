@@ -1,14 +1,14 @@
 // Selects compiler project mode and confines build metadata to a disposable copy.
 import ts from 'typescript';
 import { join, relative } from 'node:path';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { rmSync } from 'node:fs';
-import type { CheckResult } from '#cli/output/finding.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { Session, PlannedCheck } from '#cli/run/types.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution.ts';
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {
     if (visited.has(path)) return;
@@ -49,7 +49,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
         [
             ...session.repository.files.map((file) => file.path),
             ...(planned.manifest?.configs ?? [])
-                .filter((entry) => entry.target === '.gspot/tsconfig.check.json')
+                .filter((entry) => entry.target === '.gspot/config/tsconfig.check.json')
                 .map((entry) => targetInScope(planned.scope.scope.path, entry)),
         ],
         session.repository.scopes.map((scope) => scope.path),

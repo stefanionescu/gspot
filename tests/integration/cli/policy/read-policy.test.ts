@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
 
-const minimal = 'version = 1\npresets = ["bash"]\n';
+const minimal = 'version = 1\nconfigurations = ["bash"]\n';
 
 function problems(text: string, root?: string): string[] {
     try {
@@ -61,7 +61,7 @@ describe('parsePolicyText', () => {
     test.each([
         {
             name: 'a multiline array value',
-            text: 'version = 1\npresets = [\n"bash",\n12\n]\n',
+            text: 'version = 1\nconfigurations = [\n"bash",\n12\n]\n',
             line: 4,
             correction: ['12', '"toml"'],
         },
@@ -85,9 +85,9 @@ describe('parsePolicyText', () => {
         },
         {
             name: 'an unknown nested key',
-            text: 'version = 1\n[[scope]]\npath = "api"\npresetz = []\n',
+            text: 'version = 1\n[[scope]]\npath = "api"\nconfigurationz = []\n',
             line: 4,
-            correction: ['presetz', 'presets'],
+            correction: ['configurationz', 'configurations'],
         },
         {
             name: 'a nested array of tables under a second scope',
@@ -105,13 +105,13 @@ describe('parsePolicyText', () => {
     test.each(['\n', '\r\n'])(
         'syntax errors name their location without copying neighboring source with %j lines',
         (newline) => {
-            const invalid = ['# private fixture marker', 'version = 1', 'presets = ?', ''].join(newline);
+            const invalid = ['# private fixture marker', 'version = 1', 'configurations = ?', ''].join(newline);
             const found = problems(invalid);
             expect(found).toHaveLength(1);
             expect(found[0]).toMatch(/^gspot\.toml:3:\d+ is not valid TOML:/u);
             expect(found[0]).not.toContain('private fixture marker');
             expect(found[0]).not.toContain('\n');
-            expect(problems(invalid.replace('presets = ?', 'presets = []'))).toEqual([]);
+            expect(problems(invalid.replace('configurations = ?', 'configurations = []'))).toEqual([]);
         },
     );
     test.each(['linked', 'linked/nested'])('scope %s cannot follow an external directory symlink', async (path) => {
@@ -232,7 +232,7 @@ describe('readPolicy', () => {
             'gspot.toml': minimal,
         });
         const files = readPolicy(sandbox.path);
-        expect(files.policy.presets).toEqual(['bash']);
+        expect(files.policy.configurations).toEqual(['bash']);
     });
 
     test('a missing gspot.toml points at init', async () => {
@@ -308,7 +308,7 @@ for (const scoped of [false, true]) {
             const prefix = scoped ? '[[scope]]\npath = "src"\n[scope.tools.eslint.rules]' : '[tools.eslint.rules]';
             expect(() =>
                 parsePolicyText(
-                    `version = 1\npresets = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
+                    `version = 1\nconfigurations = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
                     'gspot.toml',
                 ),
             ).toThrow('gspot ignore');
@@ -324,7 +324,7 @@ test.each([
     'paths = ["src"]\nrulez = {eqeqeq = "error"}',
 ])('invalid ESLint override refuses configuration: %s', (entry) => {
     expect(() =>
-        parsePolicyText(`version = 1\npresets = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
+        parsePolicyText(`version = 1\nconfigurations = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
     ).toThrow();
 });
 
@@ -337,7 +337,7 @@ test('ESLint selector bases and local registrations reject links while future se
     const root = join(directory.path, 'project');
     symlinkSync('../outside', join(root, 'linked'));
     const configured = (adopted: unknown[]) =>
-        stringify({ version: 1, presets: ['javascript'], tools: { eslint: { adopted } } });
+        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: { adopted } } });
     expect(() => parsePolicyText(configured([{ basePath: 'linked' }]), 'gspot.toml', root)).toThrow('Unsafe lifecycle');
     expect(() =>
         parsePolicyText(

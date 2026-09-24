@@ -1,5 +1,5 @@
 // A file stem equal to a sibling directory. Searched: ls-lint; it names files and folders apart.
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 import { directoryOf, directoryTree, stemOf } from '#cli/structure/directories.ts';
 
 /**

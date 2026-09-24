@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 const POLICY = `version = 1
-presets = ["xctest", "xcode"]
+configurations = ["xctest", "xcode"]
 [limits]
 tool_seconds = 1
 [tools.xcode]

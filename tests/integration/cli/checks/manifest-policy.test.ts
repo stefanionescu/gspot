@@ -2,12 +2,12 @@ import { engineInput } from '#cli/run/engines.ts';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { openSession } from '#cli/run/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 
-const POLICY = 'version = 1\npresets = ["dependencies"]\n';
+const POLICY = 'version = 1\nconfigurations = ["dependencies"]\n';
 const MANIFEST = '{"private":true,"packageManager":"bun@1.3.11"}\n';
 
 async function input(root: string): Promise<EngineInput> {

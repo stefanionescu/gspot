@@ -1,10 +1,10 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { tmpdir } from 'node:os';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { z } from 'zod';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 // Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
@@ -79,7 +79,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
         const files = openConfinedRoot(input.root);
         let content: Buffer;
         try {
-            const config = files.read('.gspot/jscpd.json');
+            const config = files.read('.gspot/config/jscpd.json');
             if (config === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
             content = config.bytes;
         } finally {

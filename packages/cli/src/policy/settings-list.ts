@@ -1,13 +1,13 @@
 // The settings listing: every setting, its value, and where it came from.
-import type { Session } from '#cli/run/types.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { listSettings } from '#cli/policy/settings.ts';
-import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#cli/policy/types.ts';
+import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#cli/types/policy.ts';
 
 function rowsFor(session: Session): SettingRow[] {
     return session.scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         return listSettings(selection.surface, session.policyFiles.policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('preset'))
+            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
             .map((entry) => ({
                 key: entry.key,
                 value: entry.value,

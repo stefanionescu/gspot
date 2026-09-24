@@ -1,0 +1,151 @@
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import { existsSync } from 'node:fs';
+import { join, relative } from 'node:path';
+// What changed in the repository after init: configurations detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { pinnedTwice } from '#cli/emit/runner-tasks.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { hasHeader } from '#cli/emit/templates.ts';
+import { isOwned } from '#cli/lifecycle/takeover.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import { head } from '#cli/repository/tracked.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { ChangeReport, ChangeRow } from '#cli/types/reports.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/types/repository.ts';
+
+const HEAD_BYTES = 600;
+
+function detectedNotSelected(
+    session: Session,
+    facts: ReturnType<typeof readManifests>,
+    selected: Set<string>,
+): ChangeReport['detectedNotSelected'] {
+    return detectConfigurations(session.repository.files, session.manifests, facts)
+        .filter((proposal) => !selected.has(proposal.configuration))
+        .filter((proposal) => {
+            const manifest = session.manifests.get(proposal.configuration);
+            return manifest?.configuration.default !== true && manifest?.configuration.kind !== 'policy';
+        })
+        .map((proposal) => ({
+            configuration: proposal.configuration,
+            evidence: proposal.evidence,
+            command: `gspot add ${proposal.configuration}`,
+        }));
+}
+
+function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
+    const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
+    for (const manifest of everyManifest(session))
+        for (const id of manifest.configuration.recommends)
+            if (!selected.has(id) && !rows.has(id))
+                rows.set(id, {
+                    configuration: id,
+                    evidence: `recommended by ${manifest.configuration.name}`,
+                    command: `gspot add ${id}`,
+                });
+    return rows.values().toArray();
+}
+
+function configurationRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
+    if (isOwned(config.tool, selected))
+        return {
+            path: config.path,
+            note: `beside gspot's ${config.tool} configuration`,
+            command: 'review gspot.toml and carry settings before removing the authored configuration',
+        };
+    const owner = session.manifests
+        .values()
+        .find((manifest) => manifest.tools.some((tool) => tool.name === config.tool));
+    return {
+        path: config.path,
+        note: owner ? `${config.tool} has a configuration` : `${config.tool} has no gspot configuration`,
+        command: owner ? `gspot add ${owner.configuration.name}` : 'none; add a [[check]] entry to run it',
+    };
+}
+
+function configurationNotOwned(session: Session, tooling: ExistingTooling, selected: Set<string>): ChangeRow[] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    const rendered = new Set(emitAll(session).files.map((file) => file.path));
+    return tooling.configs
+        .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
+        .filter((config) => !hasHeader(head(session.root, config.path, HEAD_BYTES)))
+        .map((config) => configurationRow(session, config, selected));
+}
+
+function unownedGeneratedFiles(session: Session): ChangeRow[] {
+    const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
+    if (session.repository.hasGit) {
+        const location = hookLocation(session.root);
+        for (const entry of readOwnership(location.root, location.stateDirectory).files)
+            recorded.add(relative(session.root, join(location.root, entry.path)).replaceAll('\\', '/'));
+    }
+    return session.repository.files
+        .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
+        .map((file) => ({
+            path: file.path,
+            note: 'not recorded as owned; lifecycle commands preserve this file',
+            command: 'review the file before moving or adopting it',
+        }));
+}
+
+function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
+    const tool = session.policyFiles.policy.hooks?.tool;
+    if (tool === undefined) return [];
+    return tooling.hooks.flatMap((hook) => {
+        if (tool !== 'husky' && hook.kind === 'husky')
+            return [{ path: `${hook.path}/`, note: 'hooks added by hand', command: 'gspot apply' }];
+        return [];
+    });
+}
+
+function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
+    const generated = new Set(
+        emitAll(session)
+            .files.filter((file) => file.kind === 'workflow')
+            .map((file) => file.path),
+    );
+    return ciLintJobs(
+        session.root,
+        tooling.ci.filter((path) => !generated.has(path)),
+    ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' }));
+}
+
+/**
+ * The change report for a session.
+ * @param session the session
+ * @returns what changed after init, by kind
+ */
+export function changeReport(session: Session): ChangeReport {
+    const facts = readManifests(session.root, session.repository.files);
+    const selected = new Set(everyManifest(session).map((manifest) => manifest.configuration.name));
+    const tooling = existingTooling(session.root, session.repository.files, facts);
+    return {
+        detectedNotSelected: detectedNotSelected(session, facts, selected),
+        recommendedNotSelected: recommendedNotSelected(session, selected),
+        configurationNotOwned: [
+            ...configurationNotOwned(session, tooling, selected),
+            ...unownedGeneratedFiles(session),
+            ...(existsSync(join(session.root, 'gspot.local.toml'))
+                ? [
+                      {
+                          path: 'gspot.local.toml',
+                          note: 'No command reads this file. Use --skip for one run.',
+                          command: 'gspot check --skip <checks>',
+                      },
+                  ]
+                : []),
+        ],
+        changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling)],
+        pinnedTwice: pinnedTwice(session.root, everyManifest(session)).map((pin) => ({
+            tool: pin.tool,
+            version: pin.version,
+            places: [pin.place, MISE_CONFIG_PATH],
+            command: `delete the ${pin.place} line`,
+        })),
+    };
+}

@@ -1,10 +1,21 @@
-import type { Stage } from '#cli/presets/types.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { progress } from '#cli/output/progress.ts';
-import type { StageFilter, CheckOptions } from '#cli/run/types.ts';
-// gspot check
-import { Command, Option, InvalidArgumentError } from 'commander';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { note, warn } from '#cli/output/messages.ts';
+import { progress } from '#cli/output/progress.ts';
+import { writeReport } from '#cli/output/report.ts';
+import { runText } from '#cli/output/reporter.ts';
+import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { executeRun } from '#cli/run/execute.ts';
+import { reproduceLine } from '#cli/run/reproduce.ts';
+import { openSession } from '#cli/run/session.ts';
+import type { Stage } from '#cli/types/configurations.ts';
+import type { CheckOptions, StageFilter } from '#cli/types/execution.ts';
+import type { PushReport } from '#cli/types/reports.ts';
+import { Command, InvalidArgumentError, Option } from 'commander';
+import { readFileSync } from 'node:fs';
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {
         operands: string[];
@@ -53,6 +64,7 @@ export function registerCheck(program: Command): void {
     program.addCommand(command);
     command
         .argument('[paths...]')
+        .summary('Run checks')
         .description('Run checks over the selected files and folders and print findings')
         .addHelpText(
             'after',
@@ -126,26 +138,14 @@ export function registerCheck(program: Command): void {
             }
         });
 }
-import { reproduceLine } from '#cli/run/reproduce.ts';
-import type { PushReport } from '#cli/output/report-types.ts';
-import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import { writeReport } from '#cli/output/report.ts';
-import { readFileSync } from 'node:fs';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
-import { runText } from '#cli/output/reporter.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { note, warn } from '#cli/output/messages.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 // check: open the session, honor the pin, run, render, decide the exit code.
-import type { ChangedSet, StagedSet } from '#cli/repository/types.ts';
-import { SelectionError } from '#cli/presets/select.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
+import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/staged.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import type { CheckCommandResult, CommandResult, FixReport, RunOptions, Session } from '#cli/types/execution.ts';
+import type { ChangedSet, StagedSet } from '#cli/types/repository.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
-import { changedFiles, stagedFiles, pushedRevisions } from '#cli/repository/staged.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-files-definitions.ts';
-import type { CheckCommandResult, CommandResult, FixReport, RunOptions, Session } from '#cli/run/types.ts';
 const CHANGED_SHOWN = 8;
 function stagedEnvironmentFiles(staged: string[]): string[] {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
@@ -251,7 +251,7 @@ function unknownSelection(session: Session, only: string[] | undefined): Command
     return unknown === undefined
         ? undefined
         : {
-              text: `No selected preset runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which preset ships it.\n`,
+              text: `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
               json: { error: 'unknown-check' },
               exitCode: 2,
           };

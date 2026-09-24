@@ -28,7 +28,7 @@ Code, everywhere:
 - `.gspot/rules/general/code/SECURITY.md`
 - `.gspot/rules/general/code/TESTING.md`
 
-Writing and documentation:
+Documentation:
 
 - `.gspot/rules/general/prose/DOCS-CONTENT.md`
 - `.gspot/rules/general/prose/DOCS-FORMAT.md`
@@ -38,60 +38,27 @@ Writing and documentation:
 - `.gspot/rules/general/prose/DOCS.md`
 - `.gspot/rules/general/prose/WRITING.md`
 
-JavaScript:
+Languages:
 
 - `.gspot/rules/language/JAVASCRIPT.md`
-
-JavaScript Naming:
-
 - `.gspot/rules/language/naming/JAVASCRIPT.md`
+- `.gspot/rules/language/BASH.md`
+- `.gspot/rules/language/bash/LANGUAGE.md`
+- `.gspot/rules/language/bash/SAFETY.md`
+- `.gspot/rules/language/bash/OPERATIONS.md`
+- `.gspot/rules/language/naming/BASH.md`
+- `.gspot/rules/language/TYPESCRIPT.md`
+- `.gspot/rules/language/naming/TYPESCRIPT.md`
+- `.gspot/rules/language/YAML.md`
 
-Node:
+Runtimes:
 
 - `.gspot/rules/runtime/node/NODE.md`
 
-Bash:
-
-- `.gspot/rules/language/BASH.md`
-
-Bash Language:
-
-- `.gspot/rules/language/bash/LANGUAGE.md`
-
-Bash Safety:
-
-- `.gspot/rules/language/bash/SAFETY.md`
-
-Bash Operations:
-
-- `.gspot/rules/language/bash/OPERATIONS.md`
-
-Bash Naming:
-
-- `.gspot/rules/language/naming/BASH.md`
-
-TypeScript:
-
-- `.gspot/rules/language/TYPESCRIPT.md`
-
-TypeScript Naming:
-
-- `.gspot/rules/language/naming/TYPESCRIPT.md`
-
-Commit Messages:
+Tools:
 
 - `.gspot/rules/tool/commitlint/COMMITLINT.md`
-
-YAML:
-
-- `.gspot/rules/language/YAML.md`
-
-Task Runner:
-
 - `.gspot/rules/tool/tasks/TASKS.md`
-
-GitHub Actions:
-
 - `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`
 
 

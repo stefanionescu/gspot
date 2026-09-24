@@ -1,13 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
-import { ignoredPathsResponse } from '#cli/lifecycle/format-evaluation.ts';
-import type { PlannedCheck, Session } from '#cli/run/types.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { ignoredPathsResponse } from '#cli/schemas/evaluation.ts';
+
+import type { PlannedCheck, Session } from '#cli/types/execution.ts';
 
 /** Resolve native ignore patterns before either the checker or its fixer receives file arguments. */
 export async function prettierInputs(session: Session, check: PlannedCheck): Promise<PlannedCheck> {
     if (
-        check.manifest?.preset.name !== 'formatting' ||
+        check.manifest?.configuration.name !== 'formatting' ||
         check.check !== 'formatting/prettier' ||
         check.skip !== undefined ||
         check.files.length === 0

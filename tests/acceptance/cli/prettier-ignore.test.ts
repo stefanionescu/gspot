@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { expect, test } from 'bun:test';
@@ -26,7 +26,7 @@ test(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'formatting',
             '--no-runner',
             '--no-ci',

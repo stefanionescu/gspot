@@ -25,6 +25,7 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
     meta: {
         type: 'problem',
         docs: {
+            title: 'Avoid folders with one file',
             example:
                 'A folder `lone/` containing only `only.ts` reports `lone`. Move `only.ts` beside related files in the parent folder, remove the empty folder, and update imports.',
             summary: 'Finds a folder that holds one code file and nothing else.',

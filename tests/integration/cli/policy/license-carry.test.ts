@@ -3,8 +3,8 @@ import { mkdirSync, symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
-import type { ExistingTooling } from '#cli/repository/types.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { proposeText } from '#cli/policy/propose.ts';
 import { openSession } from '#cli/run/session.ts';
 import { emitAll } from '#cli/emit/targets.ts';
@@ -20,7 +20,7 @@ const tooling: ExistingTooling = {
     runner: 'none',
 };
 const scanner = join(import.meta.dir, '../../../../node_modules/license-checker-rseidelsohn');
-const allowed = presetManifests()
+const allowed = configurationManifests()
     .get('licenses')!
     .settings.find((setting) => setting.name === 'tools.licenses.licenses_allowed')!.default as string[];
 
@@ -56,7 +56,7 @@ test.each(['root', 'nested'])(
         mkdirSync(join(sandbox.path, 'node_modules'));
         symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
-        expect(installed.version).toBe(presetManifests().get('licenses')!.tools[0]!.version!);
+        expect(installed.version).toBe(configurationManifests().get('licenses')!.tools[0]!.version!);
         const refused = await collectCarried(root, selected, new Set(['licenses']), []);
         expect(refused.unread.map((entry) => entry.path)).toEqual([path]);
         expect(refused.tools.size).toBe(0);
@@ -82,12 +82,12 @@ test.each(['root', 'nested'])(
         });
         if (scope === 'nested') {
             expect(carried.tools.size).toBe(0);
-            expect(carried.scopes.get('project')?.presets).toEqual(['licenses']);
+            expect(carried.scopes.get('project')?.configurations).toEqual(['licenses']);
             await Bun.write(
                 join(root, 'gspot.toml'),
                 proposeText({
-                    presets: [],
-                    scopes: [{ path: 'sibling', presets: ['licenses'] }],
+                    configurations: [],
+                    scopes: [{ path: 'sibling', configurations: ['licenses'] }],
                     carried,
                     hooks: 'none',
                     ci: 'none',
@@ -98,8 +98,8 @@ test.each(['root', 'nested'])(
             await Bun.write(join(root, 'sibling/package.json'), '{"private":true}');
             const session = await openSession(root);
             const emitted = emitAll(session).files;
-            const projectConfig = emitted.find((file) => file.path === '.gspot/project/licenses.json')!;
-            const siblingConfig = emitted.find((file) => file.path === '.gspot/sibling/licenses.json')!;
+            const projectConfig = emitted.find((file) => file.path === '.gspot/config/project/licenses.json')!;
+            const siblingConfig = emitted.find((file) => file.path === '.gspot/config/sibling/licenses.json')!;
             expect(JSON.parse(projectConfig.content).packages_allowed).toHaveLength(2);
             expect(JSON.parse(siblingConfig.content).packages_allowed).toEqual([]);
         }

@@ -11,7 +11,7 @@ import { openSession } from '#cli/run/session.ts';
 test('engine inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["jest", "docs"]\n[[scope]]\npath = "apps/web"\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["jest", "docs"]\n[[scope]]\npath = "apps/web"\n',
         'README.md': '# Repository\n',
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
         'apps/web/fixture.bin': new Uint8Array([0, 255, 0]),
@@ -64,7 +64,7 @@ test('shell observations distinguish filename lists containing newlines', async 
     await using sandbox = await testdir();
     const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
         ...Object.fromEntries(names.map((name, index) => [name, `function name${index}() { echo ${index}; }\n`])),
     });
     const session = await openSession(sandbox.path);

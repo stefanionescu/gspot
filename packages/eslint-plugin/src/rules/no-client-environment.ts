@@ -16,6 +16,7 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
     meta: {
         type: 'problem',
         docs: {
+            title: 'Keep private environment values on the server',
             example:
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',

@@ -1,6 +1,6 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
-import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
+import type { TakeoverPlan } from '#cli/types/ownership.ts';
 
 const COLUMN_GAP = 2;
 
@@ -10,16 +10,16 @@ function section(title: string, rows: { path: string; note: string }[]): string[
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
-const PRESET_WIDTH = 16;
+const CONFIGURATION_WIDTH = 16;
 const REASON_WIDTH = 12;
 
-function presetSection(rows: TakeoverPlan['presets']): string[] {
-    if (rows.length === 0) return ['presets', '  none: the rule files install alone', ''];
+function configurationSection(rows: TakeoverPlan['configurations']): string[] {
+    if (rows.length === 0) return ['configurations', '  none: the rule files install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
-        return `  ${row.preset.padEnd(PRESET_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
     });
-    return ['presets', ...lines, ''];
+    return ['configurations', ...lines, ''];
 }
 
 function profileSection(profile: TakeoverPlan['profile']): string[] {
@@ -49,7 +49,7 @@ export function initPlanText(plan: TakeoverPlan): string {
     const { dim } = colors;
     const lines = [
         ...profileSection(plan.profile),
-        ...presetSection(plan.presets),
+        ...configurationSection(plan.configurations),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('kept active', plan.retained),

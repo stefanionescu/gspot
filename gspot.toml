@@ -1,22 +1,22 @@
-#:schema ./gspot.schema.json
+#:schema ./packages/cli/schemas/gspot.schema.json
 
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 version = 1
 level = "all"
-presets = ["jest", "bash", "spelling", "typescript", "markdown", "prose", "commits", "configs", "naming", "formatting", "docs", "secrets", "dependencies", "licenses", "duplication", "security"]
+configurations = ["jest", "bash", "spelling", "typescript", "markdown", "prose", "commits", "configs", "naming", "formatting", "docs", "secrets", "dependencies", "licenses", "duplication", "security"]
 
 [[scope]]
 path = "packages/cli"
-presets = []
+configurations = []
 
 [[scope]]
 path = "packages/eslint-plugin"
-presets = []
+configurations = []
 
 [[scope]]
 path = "docs"
-presets = ["typescript"]
+configurations = ["typescript"]
 
 [hooks]
 tool = "gspot"
@@ -35,7 +35,7 @@ tool = "mise"
 
 [tools.docs]
 paths_allowed = [
-    {patterns = ["rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."},
+    {patterns = ["packages/cli/rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."},
     {patterns = ["architecture/**"], reason = "The architecture names files in other repositories and files that are not built yet."},
     {patterns = ["docs/**"], reason = "The manual names files in the reader's repository and check ids written with a slash."},
 ]
@@ -44,8 +44,8 @@ paths_allowed = [
 exclude_paths = [{paths = ["docs/src/content/docs/**"], reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."}]
 
 [tools.typos]
-words = [{word = "udid", reason = "Apple's device identifier API name."}, {word = "certifi", reason = "The Python certificate package name."}, {word = "axe", reason = "The axe-core accessibility package name."}, {word = "Virtua", reason = "The Virtua list virtualisation library."}, {word = "virtua", reason = "The Virtua list virtualisation library."}, {word = "synchronise", reason = "British spellings the naming policy bans on purpose."}, {word = "synchronised", reason = "British spellings the naming policy bans on purpose."}, {word = "materialise", reason = "British spellings the naming policy bans on purpose."}, {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."}, {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."}, {word = "capitalisation", reason = "The sqlfluff rule group is spelled capitalisation in its own configuration keys."}, {word = "speling", reason = "A preset name misspelled on purpose in the profile test."}]
-exclude = [{paths = ["presets/policy/prose/styles/gspot/us-english.yml"], reason = "A list of British spellings mapped to their US forms."}]
+words = [{word = "udid", reason = "Apple's device identifier API name."}, {word = "certifi", reason = "The Python certificate package name."}, {word = "axe", reason = "The axe-core accessibility package name."}, {word = "Virtua", reason = "The Virtua list virtualisation library."}, {word = "virtua", reason = "The Virtua list virtualisation library."}, {word = "synchronise", reason = "British spellings the naming policy bans on purpose."}, {word = "synchronised", reason = "British spellings the naming policy bans on purpose."}, {word = "materialise", reason = "British spellings the naming policy bans on purpose."}, {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."}, {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."}, {word = "capitalisation", reason = "The sqlfluff rule group is spelled capitalisation in its own configuration keys."}, {word = "speling", reason = "A configuration name misspelled on purpose in the profile test."}]
+exclude = [{paths = ["packages/cli/configurations/policy/prose/styles/gspot/us-english.yml"], reason = "A list of British spellings mapped to their US forms."}]
 
 [[naming.rules]]
 paths = ["packages/cli/src/checks/security/gitleaks-baseline.ts"]
@@ -60,7 +60,7 @@ exclude = true
 reason = "package.json names the key packageManager, and the code reads it under that name."
 
 [[naming.rules]]
-paths = ["packages/cli/src/readers/sql/types.ts"]
+paths = ["packages/cli/src/parsers/sql/types.ts"]
 names = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
 exclude = true
 reason = "Emscripten and libpg-query name these members, and the type spells them as the module exports them."
@@ -76,12 +76,12 @@ roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
-script_files = ["packages/npm/**", "packages/cli/build.ts", "packages/cli/compile.ts", "packages/cli/publish.ts", "packages/cli/schemas.ts", "packages/cli/src/rules/command.ts", "packages/eslint-plugin/build.ts", "docs/src/content/reference.ts"]
+script_files = ["packages/npm/**", "packages/cli/scripts/**", "packages/eslint-plugin/build.ts", "docs/src/content/reference.ts"]
 globals = {"packages/npm/**" = "commonjs"}
 node_version = ">=24.2.0"
 
 [tools.knip]
-entry = ["**/build.ts", "packages/cli/compile.ts", "**/publish.ts", "packages/cli/schemas.ts", "packages/cli/src/rules/command.ts", "packages/npm/gspot/gspot.js", "docs/src/content/reference.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
+entry = ["**/build.ts", "packages/cli/scripts/compile.ts", "packages/cli/scripts/build-swift-grammar.ts", "**/publish.ts", "packages/cli/scripts/generate-schema.ts", "packages/cli/scripts/check-rule-guides.ts", "packages/npm/gspot/gspot.js", "docs/src/content/reference.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
 ignore_dependencies = [{name = "html-validate", reason = "Native site-output compatibility tests invoke its installed executable."}, {name = "linkinator", reason = "Native site-output compatibility tests invoke its installed executable."}, {name = "purgecss", reason = "Native site-output compatibility tests invoke its installed executable."}, {name = "eslint-plugin-expo", reason = "The ESLint configuration of the planted react-native test repository imports it."}, {name = "@nestjs/common", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."}, {name = "@nestjs/core", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."}, {name = "reflect-metadata", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."}, {name = "rxjs", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."}, {name = "eslint-plugin-vue", reason = "The planted components test lints a test repository with it, which knip cannot see."}, {name = "vue-eslint-parser", reason = "The planted components test lints a test repository with it, which knip cannot see."}, {name = "eslint-plugin-svelte", reason = "The planted components test lints a test repository with it, which knip cannot see."}, {name = "svelte-eslint-parser", reason = "The planted components test lints a test repository with it, which knip cannot see."}, {name = "svelte", reason = "The planted components test lints a test repository with it, which knip cannot see."}, {name = "@types/node", reason = "Next.js refuses to write its types in the planted test repository when the package is absent."}, {name = "next", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."}, {name = "react", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."}, {name = "react-dom", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."}, {name = "@types/react", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."}, {name = "@next/eslint-plugin-next", reason = "The ESLint configuration of the planted nextjs test repository imports it."}, {name = "eslint-plugin-react-hooks", reason = "The ESLint configuration of the planted nextjs test repository imports it."}, {name = "eslint-plugin-react", reason = "The ESLint configuration of the planted nextjs test repository imports it."}, {name = "eslint-plugin-i18next", reason = "The ESLint configuration of the planted nextjs test repository imports it."}, {name = "eslint-plugin-zod", reason = "The ESLint configuration of the planted libraries test repository imports it."}, {name = "@tanstack/eslint-plugin-query", reason = "The ESLint configuration of the planted libraries test repository imports it."}, {name = "eslint-plugin-drizzle", reason = "The ESLint configuration of the planted libraries test repository imports it."}, {name = "stylelint", reason = "The planted css test runs it in a test repository, which knip cannot see."}, {name = "stylelint-config-standard", reason = "The stylelint configuration of a planted test repository extends it."}, {name = "vitest", reason = "The planted vitest test runs it in a test repository, which knip cannot see."}, {name = "@vitest/coverage-v8", reason = "The planted vitest test needs the coverage provider in a test repository."}, {name = "@vitest/eslint-plugin", reason = "The ESLint configuration of a planted test repository imports it."}, {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."}]
 
 [structure]
@@ -90,26 +90,26 @@ single_file_folder_allowed = [{paths = ["packages/npm/gspot"], reason = "The npm
 prefix_collision_allowed = [{paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/plugin/rules/**"], reason = "ESLint rule ids are the file names, and the ids share their first word by convention."}, {paths = ["docs/src"], reason = "Astro fixes the name of the content configuration file beside the content folder."}]
 
 [[vendored]]
-paths = ["packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/notices.json"]
-reason = "Pinned upstream grammar and license text are retained with source records; bun packages/cli/grammars/swift.build.ts owns the Swift outputs."
+paths = ["packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/scripts/notices.json"]
+reason = "Pinned upstream grammar and license text are retained with source records; bun packages/cli/scripts/build-swift-grammar.ts owns the Swift outputs."
 
 # The published JSON schemas are written from the zod schemas; this says whether they still match.
 [[check]]
 name = "schema/generated"
-command = ["bun", "packages/cli/schemas.ts", "--check"]
-paths = ["gspot.schema.json", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/report-schema.ts"]
+command = ["bun", "packages/cli/scripts/generate-schema.ts", "--check"]
+paths = ["packages/cli/schemas/gspot.schema.json", "packages/cli/src/schemas/policy.ts", "packages/cli/src/schemas/reports.ts"]
 stage = "commit"
 summary = "Checks that the published JSON schemas match the zod schemas the binary reads with."
 
 [[generated]]
-paths = ["gspot.schema.json"]
-produced_by = "bun packages/cli/schemas.ts"
+paths = ["packages/cli/schemas/gspot.schema.json"]
+produced_by = "bun packages/cli/scripts/generate-schema.ts"
 
 # The rule corpus is this repository's product; its lint is this repository's check and ships in no binary.
 [[check]]
 name = "rules/lint"
-command = ["bun", "packages/cli/src/rules/command.ts"]
-paths = ["rules/**", "packages/cli/src/rules/**"]
+command = ["bun", "packages/cli/scripts/check-rule-guides.ts"]
+paths = ["packages/cli/rules/**", "packages/cli/src/agents/**"]
 stage = "commit"
 summary = "Lints rule files for front matter, links, size, layer boundaries, and fences."
 
@@ -129,13 +129,13 @@ reason = "This repository runs Bun tests. tests/unit runs unit and integration t
 [[check]]
 name = "tests/unit"
 command = ["mise", "run", "test"]
-paths = ["packages/cli/**", "packages/eslint-plugin/**", "tests/**", ".mise/gspot/**", "presets/**", "rules/**", "package.json", "bun.lock", "tsconfig.json", "mise.toml", "docs/**", ".mise/conf.d/repo.toml"]
+paths = ["packages/cli/**", "packages/eslint-plugin/**", "tests/**", ".mise/gspot/**", "packages/cli/configurations/**", "packages/cli/rules/**", "package.json", "bun.lock", "tsconfig.json", "mise.toml", "docs/**", ".mise/conf.d/repo.toml"]
 stage = "push"
 summary = "Runs the routine unit and integration suites, including CLI, plugin, and documentation tests."
 
 [[check]]
 name = "tests/coverage"
 command = ["mise", "run", "test:coverage"]
-paths = ["packages/cli/**", "packages/eslint-plugin/**", "tests/**", ".mise/gspot/**", "presets/**", "rules/**", "package.json", "bun.lock", "tsconfig.json", "mise.toml", "docs/**", ".mise/conf.d/repo.toml"]
+paths = ["packages/cli/**", "packages/eslint-plugin/**", "tests/**", ".mise/gspot/**", "packages/cli/configurations/**", "packages/cli/rules/**", "package.json", "bun.lock", "tsconfig.json", "mise.toml", "docs/**", ".mise/conf.d/repo.toml"]
 stage = "manual"
 summary = "Measures unit and integration coverage with Bun without imposing a percentage quota."

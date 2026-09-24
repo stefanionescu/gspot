@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { parsePlpgsql } from '#cli/readers/sql/parser.ts';
+import { parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 // The checks every SQL file gets: it parses, it holds no block comment, and it stays under the line ceiling.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { positionAt, sqlFile } from '#cli/readers/sql/statements.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 
 const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
 const BLOCK_COMMENT = '/*';

@@ -1,15 +1,15 @@
-import type { IgnoreEntry } from '#cli/policy/types.ts';
+import type { IgnoreEntry } from '#cli/types/policy.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { coverageReport } from '#cli/doctor/coverage.ts';
-import type { CheckResult, Finding } from '#cli/output/finding.ts';
-import type { RunReport } from '#cli/output/report-types.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import type { CheckResult, Finding } from '#cli/types/reports.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { writeReport } from '#cli/output/report.ts';
 import { jobsWanted } from '#cli/platform/environment.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { cacheInputs, cacheKey, fileHash, pruneCache, readCached, textHash, writeCached } from '#cli/run/cache.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
@@ -20,7 +20,7 @@ import { prepareCommand } from '#cli/run/tool-runner.ts';
 import { cpus } from 'node:os';
 import pLimit from 'p-limit';
 
-import type { FixReport, IgnoreUse, PlannedCheck, RunOptions, RunOutcome, Session } from '#cli/run/types.ts';
+import type { FixReport, IgnoreUse, PlannedCheck, RunOptions, RunOutcome, Session } from '#cli/types/execution.ts';
 
 /** File observations shared by cached checks within one execution pass. */
 type RunHashes = {
@@ -225,7 +225,7 @@ function failedChecks(results: CheckResult[], fixes: FixReport | undefined): str
 }
 
 /**
- * Runs the checks and returns the report. Writes .gspot/report.json.
+ * Runs the checks and returns the report. Writes .gspot/reports/report.json.
  * @param opened the session
  * @param options stage, skips, fix and cache flags
  * @returns the report, the plan, and the fix report when --fix ran

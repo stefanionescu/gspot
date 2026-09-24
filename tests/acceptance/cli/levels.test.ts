@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { join } from 'node:path';
@@ -9,7 +9,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["bash", "naming"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["bash", "naming"]\n[rules]\ninstall = false\n',
             'entry.sh': 'shell_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--no-cache', '--json'];

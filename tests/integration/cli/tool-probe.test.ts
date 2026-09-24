@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { ToolPin } from '#cli/presets/types.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { openSession } from '#cli/run/session.ts';
-import { locateTool, probeTool } from '#cli/platform/tool-probe.ts';
-import { privateToolInstallation } from '#cli/platform/tool-installation.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { locateTool, probeTool } from '#cli/tools/tool-probe.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
@@ -229,7 +229,7 @@ test('a manifest can declare its help command status without accepting other fai
 test('tool observations distinguish pins and refresh private libraries in the next session', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
     const session = await openSession(sandbox.path);
@@ -247,7 +247,7 @@ test('tool observations distinguish pins and refresh private libraries in the ne
 test('a command shares version observations and the next session probes again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n',
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
         'probe.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });
@@ -329,9 +329,9 @@ test.each([
     ['python', 'ruff', undefined, 'python'],
     ['python', 'ruff', 'mise', 'python'],
     ['typescript', 'tsc', undefined, undefined],
-] as const)('installation placement for %s/%s under %s is %s', (preset, name, runner, kind) => {
-    const tool = presetManifests()
-        .get(preset)!
+] as const)('installation placement for %s/%s under %s is %s', (configuration, name, runner, kind) => {
+    const tool = configurationManifests()
+        .get(configuration)!
         .tools.find((entry) => entry.name === name)!;
     expect(tool).toBeDefined();
     const placement = privateToolInstallation(tool, runner);

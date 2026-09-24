@@ -1,10 +1,10 @@
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import type { IgnoreEntry } from '#cli/policy/types.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import type { IgnoreEntry } from '#cli/types/policy.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import type { IgnoreUse, InlineIgnore } from '#cli/run/types.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { IgnoreUse, InlineIgnore } from '#cli/types/execution.ts';
 
 import {
     COMMENT_OPENERS,
@@ -12,7 +12,7 @@ import {
     HTML_COMMENT_CLOSE,
     INLINE_IGNORE,
     REASON_INTRODUCER,
-} from '#cli/emit/markers-definitions.ts';
+} from '#cli/emit/markers.ts';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;

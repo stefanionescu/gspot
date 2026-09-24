@@ -1,6 +1,6 @@
 // Variable defaults live in the configuration owners. Searched: shellcheck; it accepts every expansion.
-import type { Analysis } from '#cli/structure/types.ts';
-import { DEFAULT_EXPANSION } from '#cli/structure/structure-definitions.ts';
+import type { Analysis } from '#cli/types/structure.ts';
+import { DEFAULT_EXPANSION } from '#cli/structure/patterns.ts';
 
 /**
  * One finding per `${name:-value}` default outside the configuration owners, unless an allowed fragment is on the line.

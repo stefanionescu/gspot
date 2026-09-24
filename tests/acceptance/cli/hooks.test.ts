@@ -1,6 +1,6 @@
 // The hook gspot installs runs the staged checks on commit.
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { pushReportSchema, reportSchema } from '#cli/run/report-schema.ts';
+import { pushReportSchema, reportSchema } from '#cli/schemas/reports.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
@@ -23,7 +23,7 @@ describe('the gspot hook', () => {
             await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'bash',
                 '--without',
                 'formatting',
@@ -84,7 +84,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
             'changed.sh': 'echo base\n',
             'legacy.sh': 'if then\n',
         });
@@ -175,11 +175,11 @@ test(
         });
         expect(multiple.code, multiple.stdout + multiple.stderr).toBe(1);
         const saved = pushReportSchema.parse(
-            JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')),
+            JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')),
         );
         expect(saved).toEqual(JSON.parse(multiple.stdout));
         expect(saved.revisions.map((revision) => revision.report.exitCode)).toEqual([1, 0]);
-        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8'));
+        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
         expect(sarif.runs).toHaveLength(2);
         expect(
             sarif.runs.map(
@@ -285,7 +285,7 @@ test(
         expect(readFileSync(join(sandbox.path, 'changed.sh'), 'utf8')).toBe('echo repaired only in the working tree\n');
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\npresets = ["bash"]\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'version = 1\nconfigurations = ["bash"]\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
         );
         const configured = await run(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
@@ -316,7 +316,7 @@ test('a hook selects configuration below the Git root and checks its exact index
     chmodSync(join(launcher.path, 'gspot'), 0o755);
     await createFileTree(sandbox.path, {
         'nested config/gspot.toml': `version = 1
-presets = []
+configurations = []
 [rules]
 install = false
 [hooks]

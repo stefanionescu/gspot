@@ -2,12 +2,12 @@
 import { resolve } from 'node:path';
 import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
-import type { Profile } from '#cli/profile/types.ts';
+import type { Profile } from '#cli/types/profiles.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
-import { profileSchema, isRepositoryPath } from '#cli/profile/schema.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { profileSchema, isRepositoryPath } from '#cli/schemas/profiles.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const GITHUB_PREFIX = 'github:';
 const RAW_HOST = 'https://raw.githubusercontent.com';
@@ -53,9 +53,9 @@ function issueLine(issue: { path: PropertyKey[]; message: string }, source: stri
     return `${where === '' ? source : where}: ${issue.message}`;
 }
 
-function presetProblems(presets: string[]): string[] {
-    const known = presetManifests().keys().toArray();
-    return presets.filter((id) => !known.includes(id)).map((id) => messages.unknownPreset(id, nearMatches(id, known)));
+function configurationProblems(configurations: string[]): string[] {
+    const known = configurationManifests().keys().toArray();
+    return configurations.filter((id) => !known.includes(id)).map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
 }
 
 /** Every problem a profile has, as one error with one line per problem. */
@@ -88,9 +88,9 @@ export function parseProfile(text: string, source: string): Profile {
     }
     const result = profileSchema.safeParse(raw);
     const shape = result.success ? [] : result.error.issues.map((issue) => issueLine(issue, source));
-    const named = (raw as { presets?: unknown }).presets;
-    const presets = presetProblems(Array.isArray(named) ? named.map(String) : []);
-    const problems = [...shape, ...presets, ...pathProblems(raw, '')];
+    const named = (raw as { configurations?: unknown }).configurations;
+    const configurations = configurationProblems(Array.isArray(named) ? named.map(String) : []);
+    const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new ProfileError(problems);
     return { source, digest: textHash(text), tables: result.data };
 }

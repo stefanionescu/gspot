@@ -1,17 +1,17 @@
-// Explain a check, tool rule, preset, setting, or file path.
+// Explain a check, tool rule, configuration, setting, or file path.
 import { explainPath } from '#cli/output/file.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
-import type { ResolvedSetting } from '#cli/policy/types.ts';
-import { allChecks, toRow } from '#cli/presets/listing.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { ListingRow, SettingSpec } from '#cli/presets/types.ts';
+import type { ResolvedSetting } from '#cli/types/policy.ts';
+import { allChecks, toRow } from '#cli/configurations/listing.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
 import { repositoryCheckSpec } from '#cli/run/plan.ts';
-import { quoteArgument } from '#cli/run/reproduce.ts';
-import type { Session } from '#cli/run/types.ts';
+import { quoteArgument } from '#cli/platform/arguments.ts';
+import type { Session } from '#cli/types/execution.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;
@@ -52,23 +52,23 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
     },
 };
 
-function isSelected(session: Session, presetName: string): boolean {
-    return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.preset.name === presetName));
+function isSelected(session: Session, configurationName: string): boolean {
+    return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.configuration.name === configurationName));
 }
 
 function checkExplanation(session: Session | undefined, checkName: string): Explanation | undefined {
     const own = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
     const found =
         allChecks().get(checkName) ??
-        (own === undefined ? undefined : { check: repositoryCheckSpec(own), preset: undefined });
+        (own === undefined ? undefined : { check: repositoryCheckSpec(own), configuration: undefined });
     if (!found) return undefined;
-    const { check, preset } = found;
+    const { check, configuration } = found;
     const toolPrefix = `tools.${check.tool ?? check.command?.[0] ?? '~'}.`;
-    const settings = (preset?.settings ?? [])
+    const settings = (configuration?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(preset?.rule_files ?? {}).flat();
-    const owner = preset === undefined ? 'repository command' : `${preset.preset.name} preset`;
+    const rules = Object.values(configuration?.rule_files ?? {}).flat();
+    const owner = configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`;
     const lines = [
         `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -90,11 +90,11 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
     if (rules.length > 0) lines.push(`Rule files that state it: ${rules.join(', ')}`);
     if (own !== undefined)
         lines.push(`Command: ${own.command.map(quoteArgument).join(' ')}`, `Paths: ${own.paths.join(', ')}`);
-    if (session && preset !== undefined)
+    if (session && configuration !== undefined)
         lines.push(
-            isSelected(session, preset.preset.name)
+            isSelected(session, configuration.configuration.name)
                 ? 'Selected in this repository: yes'
-                : `Selected in this repository: no (gspot add ${preset.preset.name})`,
+                : `Selected in this repository: no (gspot add ${configuration.configuration.name})`,
         );
     const { stage, summary, why, help, waits_for: waitsFor } = check;
     return {
@@ -103,7 +103,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         text: `${lines.join('\n')}\n`,
         data: {
             check: checkName,
-            ...(preset === undefined ? { command: own?.command, paths: own?.paths } : { preset: preset.preset.name }),
+            ...(configuration === undefined ? { command: own?.command, paths: own?.paths } : { configuration: configuration.configuration.name }),
             stage,
             level: check.level,
             summary,
@@ -125,7 +125,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
 function toolSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
     const source = TOOL_RULE_SOURCES[tool];
     if (!source) return undefined;
-    const pin = presetManifests()
+    const pin = configurationManifests()
         .values()
         .flatMap((manifest) => manifest.tools)
         .find((entry) => entry.name === tool);
@@ -171,16 +171,16 @@ function stageLines(row: ListingRow): string[] {
     );
 }
 
-function presetExplanation(presetName: string): Explanation | { error: string } {
-    const manifest = presetManifests().get(presetName);
+function configurationExplanation(configurationName: string): Explanation | { error: string } {
+    const manifest = configurationManifests().get(configurationName);
     if (!manifest)
         return {
-            error: messages.unknownPreset(presetName, nearMatches(presetName, presetManifests().keys().toArray())),
+            error: messages.unknownConfiguration(configurationName, nearMatches(configurationName, configurationManifests().keys().toArray())),
         };
     const row = toRow(manifest);
     const { detect, claims } = manifest;
     const lines = [
-        `${row.title} (${row.kind} preset)`,
+        `${row.title} (${row.kind} configuration)`,
         '',
         row.description,
         '',
@@ -190,14 +190,14 @@ function presetExplanation(presetName: string): Explanation | { error: string } 
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
         ...listLine('Claims', [...claims.extensions, ...claims.filenames, ...claims.paths]),
-        ...(claims.from_languages ? ['Claims: every file a language preset claims'] : []),
+        ...(claims.from_languages ? ['Claims: every file a language configuration claims'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...stageLines(row),
         ...listLine('Settings', row.settings),
         ...listLine('Rule files', row.rules),
     ];
-    return { kind: 'preset', subject: presetName, text: `${lines.join('\n')}\n`, data: row };
+    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
 }
 
 function changeLine(spec: SettingSpec, key: string, scope: string): string {
@@ -286,7 +286,7 @@ function explainDotted(session: Session | undefined, subject: string): Explanati
 /**
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository
- * @param subject a check name, a tool/rule pair, a preset name, a setting key, or a file path
+ * @param subject a check name, a tool/rule pair, a configuration name, a setting key, or a file path
  * @returns the explanation, or an error naming the closest matches
  */
 export function explain(session: Session | undefined, subject: string): Explanation | { error: string } {
@@ -295,13 +295,13 @@ export function explain(session: Session | undefined, subject: string): Explanat
     let named: Explanation | { error: string };
     if (subject.includes('/')) named = explainSlashed(session, subject);
     else if (subject.includes('.')) named = explainDotted(session, subject);
-    else named = presetExplanation(subject);
+    else named = configurationExplanation(subject);
     if (!('error' in named)) return named;
     return file ?? named;
 }
 
 export type Explanation = {
-    kind: 'check' | 'tool-rule' | 'preset' | 'setting' | 'path';
+    kind: 'check' | 'tool-rule' | 'configuration' | 'setting' | 'path';
     subject: string;
     text: string;
     data: Record<string, unknown>;

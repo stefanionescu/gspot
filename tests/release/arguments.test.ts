@@ -7,11 +7,11 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const ENTRIES = ['packages/cli/schemas.ts'];
+const ENTRIES = ['packages/cli/scripts/generate-schema.ts'];
 const LINKS = ['node_modules', 'docs/node_modules', 'packages/cli/node_modules', 'packages/cli/src'];
 const SOURCES = [...ENTRIES, 'packages/cli/package.json', 'docs/package.json'];
 
-const OUTPUTS = ['gspot.schema.json', 'docs/public/schema', 'docs/src/content/docs/reference'];
+const OUTPUTS = ['packages/cli/schemas/gspot.schema.json', 'docs/public/schema', 'docs/src/content/docs/reference'];
 
 const INVALID = [['--checks'], ['unexpected'], ['--check', 'unexpected'], ['--check=true']];
 
@@ -21,7 +21,7 @@ describe('read-only script arguments', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...sources,
-            'gspot.schema.json': '{"sentinel": true}\n',
+            'packages/cli/schemas/gspot.schema.json': '{"sentinel": true}\n',
             'docs/public/schema/gspot.schema.json': '{"sentinel": true}\n',
             'docs/src/content/docs/reference/sentinel.md': '# Authored reference\n',
         });
@@ -73,32 +73,32 @@ describe('build script arguments', () => {
     test('rejects malformed targets before writes and forwards multiple targets from one flag', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'packages/cli/build.ts': readFileSync(join(ROOT, 'packages/cli/build.ts'), 'utf8'),
+            'packages/cli/scripts/build.ts': readFileSync(join(ROOT, 'packages/cli/scripts/build.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
-            'packages/cli/src/naming/grammars-definitions.ts': readFileSync(
-                join(ROOT, 'packages/cli/src/naming/grammars-definitions.ts'),
+            'packages/cli/src/parsers/grammars.ts': readFileSync(
+                join(ROOT, 'packages/cli/src/parsers/grammars.ts'),
                 'utf8',
             ),
-            'packages/cli/src/emit/targets-definitions.ts': readFileSync(
-                join(ROOT, 'packages/cli/src/emit/targets-definitions.ts'),
+            'packages/cli/src/platform/release-targets.ts': readFileSync(
+                join(ROOT, 'packages/cli/src/platform/release-targets.ts'),
                 'utf8',
             ),
             'packages/npm/gspot/targets.json': readFileSync(join(ROOT, 'packages/npm/gspot/targets.json'), 'utf8'),
             ...Object.fromEntries(
                 [
                     'LICENSE.md',
-                    'packages/cli/notices.ts',
-                    'packages/cli/notices.json',
+                    'packages/cli/scripts/notices.ts',
+                    'packages/cli/scripts/notices.json',
                     'packages/cli/src/platform/assets.ts',
                     'packages/cli/src/platform/paths.ts',
                     'packages/cli/src/platform/environment.ts',
-                    'packages/cli/src/checks/integrity-definitions.ts',
+                    'packages/cli/src/repository/hooks.ts',
                     'packages/cli/grammars/swift.json',
                     'packages/cli/grammars/swift.LICENSE',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
             ),
             'packages/cli/build/entry.ts': '// existing entry\n',
-            'presets/fixture.txt': 'asset fixture\n',
+            'packages/cli/configurations/fixture.txt': 'asset fixture\n',
             'dist/gspot-linux-arm64': 'existing binary',
             'bin/bun':
                 `#!${process.execPath}\n` +
@@ -124,7 +124,7 @@ const argv = process.argv.slice(2);
                 : treeContents(join(sandbox.path, path)),
         );
         const execute = (args: string[]) =>
-            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/build.ts'), ...args], {
+            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/scripts/build.ts'), ...args], {
                 cwd: sandbox.path,
                 stdout: 'pipe',
                 stderr: 'pipe',
@@ -182,7 +182,7 @@ describe('publish script arguments', () => {
             const registry = 'http://127.0.0.1:4873';
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'packages/cli/publish.ts': readFileSync(join(ROOT, 'packages/cli/publish.ts'), 'utf8'),
+                'packages/cli/scripts/publish.ts': readFileSync(join(ROOT, 'packages/cli/scripts/publish.ts'), 'utf8'),
                 'packages/cli/package.json': manifest,
                 ...Object.fromEntries(
                     [
@@ -190,7 +190,7 @@ describe('publish script arguments', () => {
                         'packages/npm/gspot/package.json',
                         'packages/npm/gspot/gspot.js',
                         'packages/npm/gspot/targets.json',
-                        'packages/cli/src/emit/targets-definitions.ts',
+                        'packages/cli/src/platform/release-targets.ts',
                     ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
                 ),
                 ...Object.fromEntries(
@@ -221,7 +221,7 @@ const argv = process.argv.slice(2);
             chmodSync(join(sandbox.path, 'bin/npm'), 0o755);
             const before = treeContents(join(sandbox.path, 'dist'));
             const execute = (args: string[]) =>
-                Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/publish.ts'), ...args], {
+                Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/scripts/publish.ts'), ...args], {
                     cwd: sandbox.path,
                     stdout: 'pipe',
                     stderr: 'pipe',

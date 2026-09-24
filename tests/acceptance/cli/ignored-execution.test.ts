@@ -1,6 +1,6 @@
 import { exportedProfile } from '#cli/profile/export.ts';
 import { parseProfile } from '#cli/profile/read.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
@@ -11,7 +11,7 @@ test('a global ignore stops a repository check and its correction command until 
     await using directory = await testdir();
     const command = ['bash', '-c', 'printf executed > observed.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
-    const policy = `version = 1\npresets = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
+    const policy = `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--no-cache', '--json'];
     const before = await run(directory.path, args);
@@ -40,7 +40,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
     await using directory = await testdir();
     const modules = join(import.meta.dir, '../../../node_modules');
     const policy =
-        'version = 1\npresets = ["javascript"]\n[rules]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
+        'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'package.json': '{"private":true,"type":"module"}\n',
@@ -55,7 +55,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         const applied = await run(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const lint = Bun.spawnSync(
-            [join(modules, '.bin/eslint'), '--config', '.gspot/eslint.config.mjs', '--format', 'json', 'source.js'],
+            [join(modules, '.bin/eslint'), '--config', '.gspot/config/eslint.config.mjs', '--format', 'json', 'source.js'],
             { cwd: directory.path },
         );
         expect(lint.exitCode, lint.stderr.toString()).not.toBe(2);
@@ -75,7 +75,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
     await using directory = await testdir();
     const modules = join(import.meta.dir, '../../../node_modules');
     const policy = `version = 1
-presets = ["javascript"]
+configurations = ["javascript"]
 [rules]
 install = false
 [tools.eslint.rules]
@@ -127,7 +127,7 @@ rules = {eqeqeq = ["error", "always"]}
             [
                 join(modules, '.bin/eslint'),
                 '--config',
-                '.gspot/eslint.config.mjs',
+                '.gspot/config/eslint.config.mjs',
                 '--format',
                 'json',
                 'source.js',
@@ -187,7 +187,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         '--',
         '{files}',
     ];
-    const policy = `version = 1\npresets = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`;
+    const policy = `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`;
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'inputs/regular.txt': 'defect\n',

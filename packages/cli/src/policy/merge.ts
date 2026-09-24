@@ -1,6 +1,6 @@
 // The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
-import type { Manifest } from '#cli/presets/types.ts';
-import { shippedFormat } from '#cli/presets/listing.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { shippedFormat } from '#cli/configurations/listing.ts';
 import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';
 
 import type {
@@ -10,7 +10,7 @@ import type {
     Policy,
     PolicyScopeLayer,
     ExposedSettings,
-} from '#cli/policy/types.ts';
+} from '#cli/types/policy.ts';
 
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);
@@ -107,7 +107,7 @@ export function mergeForScope(
     const ignoresFor = (check: string): IgnoreEntry[] => policy.ignores.filter((entry) => entry.check === check);
     return {
         scope,
-        presets: selected.map((manifest) => manifest.preset.name),
+        configurations: selected.map((manifest) => manifest.configuration.name),
         settings,
         reasons,
         format: Object.assign(

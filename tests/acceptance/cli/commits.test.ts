@@ -1,7 +1,7 @@
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { pushReportSchema } from '#cli/run/report-schema.ts';
+import { pushReportSchema } from '#cli/schemas/reports.ts';
 import { pathToFileURL } from 'node:url';
-// The commits preset: the commit-msg hook refuses a message outside the convention and passes one inside it.
+// The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
@@ -11,9 +11,9 @@ import { chmodSync, readFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 
-const INIT = ['init', '--yes', '--presets', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
+const INIT = ['init', '--yes', '--configurations', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
-describe('the commits preset', () => {
+describe('the commits configuration', () => {
     test(
         'the commit-msg hook refuses a free-form message and takes a conventional one',
         async () => {
@@ -50,11 +50,11 @@ process.exit(child.exitCode);
             expect(bad.stdout + bad.stderr).toContain('Bypass this hook once: git commit --no-verify');
             const good = git(sandbox.path, ['commit', '-qm', 'docs: add the notes page'], environment);
             expect(good.code, good.stdout + good.stderr).toBe(0);
-            const reportPath = join(sandbox.path, '.gspot/report.json');
+            const reportPath = join(sandbox.path, '.gspot/reports/report.json');
             const report = readFileSync(reportPath, 'utf8');
             const previous = JSON.parse(report) as { stage: string };
             expect(previous.stage).toBe('commit');
-            const sarifPath = join(sandbox.path, '.gspot/report.sarif');
+            const sarifPath = join(sandbox.path, '.gspot/reports/report.sarif');
             const sarif = readFileSync(sarifPath, 'utf8');
             const draft = join(sandbox.path, 'draft.txt');
             await Bun.write(draft, 'Fixed stuff.\n');
@@ -85,7 +85,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["commits"]\nlevel = "all"\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["commits"]\nlevel = "all"\n[rules]\ninstall = false\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const applied = await run(sandbox.path, ['apply']);
@@ -129,7 +129,7 @@ test(
         await using sandbox = await testdir();
         const source = join(sandbox.path, 'source');
         await createFileTree(source, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash", "commits"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash", "commits"]\n[rules]\ninstall = false\n',
             'source.sh': 'echo base\n',
         });
         expect(git(source, ['init', '-q']).code).toBe(0);

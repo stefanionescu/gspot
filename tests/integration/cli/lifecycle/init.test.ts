@@ -1,3 +1,4 @@
+import { run } from '#tests/support/cli/command.ts';
 import { rejects } from 'node:assert/strict';
 import { join } from 'node:path';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
@@ -5,10 +6,10 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as fs from 'node:fs';
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { initCommand } from '#cli/lifecycle/init/command.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 
 test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
     await using directory = await testdir();
@@ -19,7 +20,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
         yes: true,
         isDryRun: true,
         json: true,
-        presets: ['spelling'],
+        configurations: ['spelling'],
         isListExact: true,
         hooks: 'none',
         runner: 'none',
@@ -28,7 +29,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
         install: false,
         allowDirty: false,
     } as const;
-    const preview = await initCommand({ ...options, presets: [...options.presets] });
+    const preview = await initCommand({ ...options, configurations: [...options.configurations] });
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
@@ -39,7 +40,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
     });
     expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
-    const installed = await initCommand({ ...options, presets: [...options.presets], isDryRun: false });
+    const installed = await initCommand({ ...options, configurations: [...options.configurations], isDryRun: false });
     expect(installed.exitCode).toBe(0);
     expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toContain('en-gb');
@@ -69,7 +70,7 @@ test('init reports each submodule once without reading its contents', async () =
         yes: true,
         isDryRun: true,
         json: true,
-        presets: ['none'],
+        configurations: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -100,7 +101,7 @@ test('failed initialization retains the previous pin until generated publication
                 yes: true,
                 isDryRun: false,
                 json: true,
-                presets: ['none'],
+                configurations: ['none'],
                 hooks: 'none',
                 runner: 'none',
                 ci: 'none',
@@ -125,7 +126,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
         yes: true,
         isDryRun: false,
         json: true,
-        presets: ['none'],
+        configurations: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -140,7 +141,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
             : execute(command, settings),
     );
     try {
-        await rejects(initCommand({ ...options, presets: [...options.presets] }), {
+        await rejects(initCommand({ ...options, configurations: [...options.configurations] }), {
             message: /Cannot read the Git index/u,
         });
         expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
@@ -148,7 +149,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
     } finally {
         failed.mockRestore();
     }
-    const corrected = await initCommand({ ...options, presets: [...options.presets] });
+    const corrected = await initCommand({ ...options, configurations: [...options.configurations] });
     expect(corrected.exitCode).toBe(0);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(true);
 });
@@ -168,7 +169,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             yes: true,
             isDryRun: false,
             json: true,
-            presets: ['none'],
+            configurations: ['none'],
             scopes: [`${scope}=`],
             hooks: 'none',
             runner: 'none',
@@ -177,7 +178,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             install: false,
             allowDirty: false,
         } as const;
-        await rejects(initCommand({ ...options, presets: [...options.presets], scopes: [...options.scopes] }), {
+        await rejects(initCommand({ ...options, configurations: [...options.configurations], scopes: [...options.scopes] }), {
             message: /Unsafe lifecycle|Scope directory does not exist/u,
         });
         expect(existsSync(join(root, 'gspot.toml'))).toBe(false);
@@ -185,8 +186,16 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
         expect(readFileSync(join(directory.path, 'outside/nested/keep.txt'), 'utf8')).toBe('original\n');
         unlinkSync(join(root, 'linked'));
         await createFileTree(root, { 'src/keep.txt': 'inside\n' });
-        const corrected = await initCommand({ ...options, presets: [...options.presets], scopes: ['src='] });
+        const corrected = await initCommand({ ...options, configurations: [...options.configurations], scopes: ['src='] });
         expect(corrected.exitCode).toBe(0);
         expect(readFileSync(join(root, 'gspot.toml'), 'utf8')).toContain('path = "src"');
     },
 );
+
+test('initialization refuses the removed selection flag without writing files', async () => {
+    await using directory = await testdir();
+    const rejected = await run(directory.path, ['init', '--presets', 'typescript', '--dry-run', '--json']);
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
+    expect(rejected.stdout + rejected.stderr).toContain("unknown option '--presets'");
+    expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
+});

@@ -1,8 +1,8 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/presets/select.ts';
-import { isValePackageFile } from '#cli/repository/natures.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
 import { createHash } from 'node:crypto';
 import { constants, existsSync, readFileSync } from 'node:fs';
@@ -55,15 +55,15 @@ const PYTHON_PATH_SPANS = z.array(
 );
 
 export function copyProsePackages(root: string, snapshot: string, paths: string[]): void {
-    for (const config of paths.filter((path) => path === '.gspot/vale.ini' || path.endsWith('/.gspot/vale.ini'))) {
+    for (const config of paths.filter((path) => path === '.gspot/config/vale.ini' || path.endsWith('/.gspot/config/vale.ini'))) {
         const folder = dirname(dirname(config));
         const installed = openConfinedRoot(join(root, folder));
         const destination = openConfinedRoot(join(snapshot, folder));
         try {
             const packages = readOwnership(join(root, folder)).files.filter((entry) => isValePackageFile(entry.path));
             if (packages.length === 0) continue;
-            const current = installed.read('.gspot/vale.ini');
-            const selected = destination.read('.gspot/vale.ini');
+            const current = installed.read('.gspot/config/vale.ini');
+            const selected = destination.read('.gspot/config/vale.ini');
             if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
                 throw new SelectionError([
                     'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',

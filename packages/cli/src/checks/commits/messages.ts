@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { pushBase } from '#cli/repository/staged.ts';
 import { runToolCheck, runToolCommand } from '#cli/run/tool-runner.ts';
-import type { CheckResult } from '#cli/output/finding.ts';
-import type { Session, PlannedCheck } from '#cli/run/types.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution.ts';
 
 /** Check every selected commit message, including empty commits with identical source trees. */
 export async function checkCommitMessages(session: Session, planned: PlannedCheck): Promise<CheckResult> {

@@ -1,14 +1,14 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { MergedView } from '#cli/policy/types.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { MissingToolError } from '#cli/tools/missing-tool.ts';
+import type { MergedView } from '#cli/types/policy.ts';
 import { commandConfigurations, perFileCommands, substitute, substituteValue } from '#cli/run/command-expansion.ts';
-import { TOOL_DEADLINE } from '#cli/run/execution-definitions.ts';
+import { TOOL_DEADLINE } from '#cli/run/settings.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import type { CheckResult, Finding } from '#cli/output/finding.ts';
+import type { CheckResult, Finding } from '#cli/types/reports.ts';
 import { run } from '#cli/platform/spawn.ts';
-import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/platform/types.ts';
-import type { CheckSpec, ToolPin } from '#cli/presets/types.ts';
+import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
+import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
 import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/run/broken-tool.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
@@ -20,7 +20,7 @@ import type {
     Session,
     Substitutions,
     ToolInvocation,
-} from '#cli/run/types.ts';
+} from '#cli/types/execution.ts';
 import { isAbsolute, join } from 'node:path';
 /** What one tool run accumulates across its spawns. */
 type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

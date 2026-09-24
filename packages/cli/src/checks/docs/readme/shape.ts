@@ -3,11 +3,11 @@ import { join } from 'node:path';
 // The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/checks/docs/docs-definitions.ts';
+
 
 type ShapeProblem = [number, string, string];
 
@@ -94,3 +94,9 @@ export function readmeShape(input: EngineInput): Finding[] {
         );
     return findings;
 }
+
+const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements'];
+
+const CONTENTS_THRESHOLD = 6;
+
+const CONTENTS_HEADING = 'contents';

@@ -1,67 +1,43 @@
 ---
-title: Run your first check
-description: Reproduce a Bash syntax finding in a disposable folder, correct it, and run the check again.
+title: Run your first JavaScript check
+description: Find a private environment read in a client module, correct it, and rerun ESLint.
 ---
 
-Start from a [source checkout with dependencies installed](/guides/install/). This example
-uses Bun 1.3.11 and Bash on `PATH`; it was captured with
-gspot 0.1.0 on macOS arm64. It selects only Bash syntax, so no broad tool installation is needed.
+Start with [the JavaScript walkthrough](/guides/client-environment/). It runs the gspot ESLint
+plugin against a small client module, reports the exact line that reads private configuration,
+and checks the corrected module.
 
-## Prepare a disposable folder
+## What you will check
 
-Use the `gspot` shell function from the installation procedure. In that shell, create the example:
+This client module reads a variable intended for the server:
 
-```bash
-example_directory="$(mktemp -d)"
-cd "$example_directory"
-printf 'if then\n' > greet.sh
+```javascript
+"use client";
+export const endpoint = process.env.PRIVATE_API_URL;
 ```
 
-The folder is outside your project. It contains a deliberately broken Bash statement.
+The `gspot/no-client-environment` rule reports the read at line 2, column 25. Change the
+client to use an API route:
 
-## Review the setup
-
-```bash
-gspot init --presets bash --no-hooks --no-ci --no-runner --no-rules --no-install
+```javascript
+"use client";
+export const endpoint = "/api/search";
 ```
 
-Read the plan, then accept it. Initialization writes `gspot.toml`, generated configuration,
-matching tool locks, and a version pin. These flags omit hooks, CI, a task runner, agent rules,
-and tool installation for this narrow demonstration. Initialization runs no checks.
+The corrected module produces no finding from this rule. An application still needs to
+implement that route on the server, where it can read private configuration.
 
-If you decline the plan, no configuration is applied. In your own repository, use
-[the adoption guide](/guides/existing-repository/) before accepting changes.
+## Run the example
 
-## Read the failure
+The [walkthrough](/guides/client-environment/) includes the complete setup, ESLint
+configuration, commands, and expected output. It uses a disposable directory and the plugin
+built from your [source checkout](/guides/install/). No published gspot package is required.
 
-```bash
-gspot check --only bash/syntax --no-cache
-```
+## Check your repository
 
-The command exits 1. The captured finding begins:
+After trying the example, follow [adopt an existing repository](/guides/existing-repository/)
+to select configurations and review generated configuration. The JavaScript configuration runs ESLint and
+other checks; the walkthrough selects one rule so its result is easy to inspect.
 
-```text
-greet.sh:1  bash/syntax  syntax error near unexpected token `then'
-    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.
-```
-
-Bash also echoes the invalid statement in a second diagnostic. Its wording can vary with the
-Bash version. The [landing page](/#finding) shows the complete captured output.
-Only Bash syntax was checked.
-
-## Correct and rerun
-
-Replace the contents of `greet.sh`:
-
-```bash
-printf 'printf "%%s\\n" "Hello"\n' > greet.sh
-gspot check --only bash/syntax --no-cache
-```
-
-The command exits 0 and reports `1 check passed, 0 checks failed`. The edit fixes the syntax
-error manually; `bash/syntax` has no automatic fixer.
-
-The inputs and captured output live in
-[docs/src/components/bash-syntax.json](https://github.com/stefanionescu/gspot/blob/main/docs/src/components/bash-syntax.json).
-To reproduce in your own project, keep the project files and run `gspot init` without the
-example-specific exclusions. Run `gspot install` before checks that need the locked tools.
+See [edit and retain repository files](/guides/generated-files/) for what to commit,
+regenerate, and keep for restoration.

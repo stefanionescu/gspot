@@ -1,8 +1,8 @@
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 // A folder named after a container word or a language. Searched: ls-lint; it checks case, not meaning.
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { directoryOf } from '#cli/structure/directories.ts';
-import { BANNED_FOLDER_NAMES, IGNORED_FOLDERS } from '#cli/structure/structure-definitions.ts';
+import { BANNED_FOLDER_NAMES, IGNORED_FOLDERS } from '#cli/structure/patterns.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.

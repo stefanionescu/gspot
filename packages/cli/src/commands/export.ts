@@ -1,8 +1,7 @@
-// gspot export
-import type { Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { exportCommand } from '#cli/profile/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { exportCommand } from '#cli/profile/command.ts';
+import type { Command } from 'commander';
 
 /**
  * Registers export.
@@ -11,6 +10,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 export function registerExport(program: Command): void {
     program
         .command('export <file>')
+        .summary('Export a profile')
         .description('Write a profile from the policy of this repository, without anything that names a path')
         .addHelpText(
             'after',

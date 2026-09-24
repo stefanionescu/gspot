@@ -1,9 +1,9 @@
 // A tracked file above the size limit is under LFS or declared, or it is a finding.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import { isUnderLfs } from '#cli/repository/natures.ts';
-import { FILE_SIZE_KB_DEFAULT } from '#cli/checks/integrity-definitions.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { isUnderLfs } from '#cli/repository/file-classification.ts';
+
 
 const KILOBYTE = 1024;
 
@@ -31,3 +31,5 @@ export function largeFiles(input: EngineInput): Finding[] {
         }));
     return findings;
 }
+
+const FILE_SIZE_KB_DEFAULT = 1024;

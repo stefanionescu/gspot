@@ -1,0 +1,121 @@
+[configuration]
+name = "markdown"
+kind = "language"
+title = "Markdown"
+requires = ["formatting"]
+recommends = ["docs", "spelling"]
+description = "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
+
+[detect]
+extensions = [".md", ".mdx"]
+
+[claims]
+extensions = [".md", ".mdx"]
+natures = ["source"]
+
+[[tools]]
+name = "markdownlint-cli2"
+suppression = {marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S.*)"}
+version = "0.23.2"
+npm = "markdownlint-cli2"
+mise = "npm:markdownlint-cli2"
+version_command = ["--help"]
+version_exit_code = 2
+version_regex = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
+
+[[tools.takeover]]
+file = ".markdownlint-cli2.jsonc"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint-cli2.yaml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint-cli2.cjs"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint-cli2.mjs"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint.json"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint.jsonc"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint.yaml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".markdownlint.yml"
+carries = "rules-table"
+
+[[configs]]
+template = "markdownlint.jsonc.tmpl"
+target = ".gspot/config/markdownlint.jsonc"
+per_scope = true
+rules_path = [""]
+stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"{target}\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
+
+[[configs]]
+template = "markdownlint-cli2.mjs.tmpl"
+target = ".gspot/config/markdownlint-cli2.mjs"
+per_scope = true
+
+[[checks]]
+name = "markdown/markdownlint"
+title = "Markdownlint"
+example = "A Markdown document with two top-level headings can report MD025. Keep one document title and change the later section heading to level two."
+isolated_files = true
+file_prefix = ":"
+level = "all"
+stage = "commit"
+runs = "per-file-list"
+command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
+fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
+fix_order = "format"
+fix_findings_exit_codes = [1]
+coverage = ["style"]
+output = {format = "markdownlint-json"}
+summary = "Checks every Markdown file against markdownlint with the shipped rule set."
+why = "Markdown that lints the same everywhere renders the same everywhere."
+help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
+
+[[checks]]
+name = "markdown/prettier"
+title = "Prettier"
+example = "A Markdown list with spacing that differs from the configured Prettier output reports a formatting finding. Run the formatter, inspect the rendered list, and rerun the check."
+level = "all"
+stage = "commit"
+reported_by = "formatting/prettier"
+coverage = ["format"]
+summary = "Checks that every Markdown file is formatted the way Prettier formats it."
+why = "One formatter keeps a diff about the words, not the table padding."
+help = "Run gspot check --fix, or prettier --write on the file."
+
+[[checks]]
+name = "markdown/fences"
+title = "Check code block syntax"
+example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
+level = "recommended"
+stage = "commit"
+engine = "integrity"
+analysis = "fences"
+coverage = ["syntax"]
+summary = "Checks that every fenced code block with a language tag parses in that language."
+why = "A code block that does not parse is documentation that lies about the code."
+help = "Fix the code in the block, or tag the block text when it is not code."
+
+[[settings]]
+name = "tools.markdownlint.rules"
+kind = "table"
+direction = "per-rule"
+summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
+
+[rule_files]
+language = ["general/prose/DOCS-FORMAT.md"]

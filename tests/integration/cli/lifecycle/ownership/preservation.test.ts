@@ -1,3 +1,4 @@
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
 
 import { fileURLToPath } from 'node:url';
@@ -20,9 +21,9 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
 
-import { openLifecycleOwner, ownershipSchema, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
-import { publishInstalledFiles } from '#cli/lifecycle/installed-files.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 
 import { parse as parseToml } from 'smol-toml';
 
@@ -32,7 +33,7 @@ const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/lifecycle/confined.ts', import.meta.url));
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
 
 test.each([false, true])(
     'TOML task ownership restores originals while retaining unrelated edits (%s)',
@@ -303,7 +304,7 @@ test('adopting identical authored configuration retains original recovery bytes 
             ),
         ]);
         const state = ownershipSchema.parse(
-            JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+            JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
         );
         const original = state.files[0]!.original;
         expect(original).toBeDefined();
@@ -429,8 +430,8 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             expect(owner.read('config.txt')).toEqual({ bytes: original, mode: 0o640 });
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
             expect(owner.paths()).toEqual([]);
-            expect(statSync(join(directory.path, '.gspot/ownership.json')).mode & 0o777).toBe(0o600);
-            expect(statSync(join(directory.path, '.gspot/recovery')).mode & 0o777).toBe(0o700);
+            expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(0o600);
+            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(0o700);
         } finally {
             owner.close();
         }

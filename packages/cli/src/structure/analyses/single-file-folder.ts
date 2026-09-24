@@ -1,8 +1,8 @@
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 // A leaf folder holding one code file. Searched: eslint-plugin-unicorn, ls-lint, knip; none sees a folder.
-import { pathMatcher } from '#cli/presets/claims.ts';
-import { IGNORED_FOLDERS } from '#cli/structure/structure-definitions.ts';
-import { sourcePresets } from '#cli/presets/select.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import { IGNORED_FOLDERS } from '#cli/structure/patterns.ts';
+import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { directoryOf, directoryTree } from '#cli/structure/directories.ts';
 
 function isSkipped(directory: string, isAllowed: (path: string) => boolean): boolean {
@@ -18,7 +18,7 @@ function isSkipped(directory: string, isAllowed: (path: string) => boolean): boo
 export const singleFileFolder: Analysis = (context) => {
     const { input } = context;
     const selection = input.selection;
-    const extensions = sourcePresets(selection.selected).flatMap((manifest) => manifest.claims.extensions);
+    const extensions = sourceConfigurations(selection.selected).flatMap((manifest) => manifest.claims.extensions);
     const isAllowed = pathMatcher(
         input.policyFiles.policy.structure.single_file_folder_allowed.flatMap((entry) => entry.paths),
     );

@@ -1,10 +1,10 @@
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#cli/policy/types.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { MergedView } from '#cli/types/policy.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
-import { docsHeadings } from '#cli/checks/docs/docs-headings.ts';
+import { docsHeadings } from '#cli/checks/docs/headings.ts';
 
 function input(root: string, paths: string[], docs: Record<string, unknown> = {}): EngineInput {
     const files = paths.map((path) => ({

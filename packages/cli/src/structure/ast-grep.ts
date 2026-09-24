@@ -1,14 +1,15 @@
-// The ast-grep runner: a preset rule over files, its matches as JSON, counted per enclosing function.
+import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
+// The ast-grep runner: a configuration rule over files, its matches as JSON, counted per enclosing function.
 import { isAbsolute, join, relative } from 'node:path';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { z } from 'zod';
 
-const RULE_CACHE = '.gspot/cache/ast-grep';
+const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;
 const positionSchema = z.object({ line: z.number().int().nonnegative() });
 const matchSchema = z.object({
     file: z.string().min(1),
@@ -31,7 +32,7 @@ export type AstGrepMatch = z.infer<typeof matchSchema>;
 /**
  * Runs one rule asset over selected files through shared execution boundaries.
  * @param input the engine input
- * @param asset the rule's asset path, such as `presets/language/bash/rules/bash-branches.yml`
+ * @param asset the rule's asset path, such as `packages/cli/configurations/language/bash/rules/bash-branches.yml`
  * @param files the files, relative to the root
  * @returns the matches with zero-based lines, by file
  */

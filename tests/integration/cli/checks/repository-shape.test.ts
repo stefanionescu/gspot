@@ -3,13 +3,13 @@ import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#cli/presets/types.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
-import { readAttributes } from '#cli/repository/natures.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { EngineInput, Session } from '#cli/types/execution.ts';
+import { readAttributes } from '#cli/repository/file-classification.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
-import type { MergedView, NamingSettings, Policy } from '#cli/policy/types.ts';
+import type { MergedView, NamingSettings, Policy } from '#cli/types/policy.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 
@@ -57,7 +57,7 @@ describe('the repository-shape analyses', () => {
     test('suppression validation ignores source text and valid reasons but reports missing required reasons', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nrequire_reasons = true\npresets = ["typescript", "bash", "security"]\n',
+            'gspot.toml': 'version = 1\nrequire_reasons = true\nconfigurations = ["typescript", "bash", "security"]\n',
             'a.ts': 'const marker = /eslint-disable/u; // eslint-disable-next-line no-x -- Required generated protocol binding.\nlet y; // eslint-disable-line\n',
             'b.sh': '# shellcheck disable=SC2086 # reason: the split is wanted\necho x # nosemgrep\n',
         });

@@ -1,5 +1,5 @@
 import { engineInput } from '#cli/run/engines.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { swiftSources } from '#cli/structure/swift/sources.ts';
 import { pythonModules } from '#cli/structure/python/modules.ts';
 import { expect, spyOn, test } from 'bun:test';
@@ -11,7 +11,7 @@ for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\npresets = ["sql"]\n[limits]\ntrivial_statements = ${threshold}\n`,
+            'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${threshold}\n`,
             'functions.sql': [
                 'CREATE FUNCTION one() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;',
                 'CREATE FUNCTION two() RETURNS void LANGUAGE plpgsql AS $$ BEGIN PERFORM 1; PERFORM 2; END $$;',
@@ -32,7 +32,7 @@ for (const threshold of [1, 2, 3]) {
         expect(findings.filter((finding) => finding.rule === 'function-parameters')).toHaveLength(1);
         await Bun.write(
             `${sandbox.path}/gspot.toml`,
-            `version = 1\npresets = ["sql"]\n[limits.sql]\nfunction_parameters = 8\n`,
+            `version = 1\nconfigurations = ["sql"]\n[limits.sql]\nfunction_parameters = 8\n`,
         );
         const overridden = await executeRun(await openSession(sandbox.path), {
             stage: 'all',
@@ -52,7 +52,7 @@ for (const threshold of [1, 2, 3]) {
 test('SQL atomic bodies count each statement and reject files containing only trivial functions', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["sql"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["sql"]\n',
         'owner.sql':
             'CREATE FUNCTION substantial() RETURNS int LANGUAGE SQL BEGIN ATOMIC SELECT 1; SELECT 2; SELECT 3; END;',
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
@@ -80,7 +80,7 @@ test.each([
 ] as const)('%s releases earlier trees when a later parse returns no tree', async (language, extension, read) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = ["${language}"]\n`,
+        'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n`,
         [`first.${extension}`]: language === 'swift' ? 'let first = 1' : 'first = 1',
         [`second.${extension}`]: language === 'swift' ? 'let second = 2' : 'second = 2',
     });

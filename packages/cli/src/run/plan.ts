@@ -1,19 +1,19 @@
-import { SelectionError } from '#cli/presets/select.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
 import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
 import { checkCommitMessages } from '#cli/checks/commits/messages.ts';
 import { prettierInputs } from '#cli/run/prettier-inputs.ts';
 import { checkState, waitingSetting } from '#cli/policy/check-state.ts';
-import { toolPin } from '#cli/platform/tool-probe.ts';
+import { toolPin } from '#cli/tools/tool-probe.ts';
 import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
 import { checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { configurationName } from '#cli/run/scope-paths.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
-import type { RepositoryCheck } from '#cli/policy/types.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/presets/types.ts';
-import { claimedByClaims, isInScope, pathMatcher } from '#cli/presets/claims.ts';
+import type { RepositoryCheck } from '#cli/types/policy.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
+import { claimedByClaims, isInScope, pathMatcher } from '#cli/configurations/claims.ts';
 
 import type {
     CheckRunner,
@@ -24,7 +24,7 @@ import type {
     ScopeSelection,
     Session,
     StageFilter,
-} from '#cli/run/types.ts';
+} from '#cli/types/execution.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 
@@ -78,7 +78,7 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
 
 // A policy check that reads a scoped configuration must run against that scope's file partition.
 function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.preset.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope') return false;
+    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope') return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>
@@ -108,7 +108,7 @@ function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set
             for (const manifest of selected.selected)
                 for (const spec of manifest.checks)
                     if (
-                        manifest.preset.check_references?.includes(spec.name) &&
+                        manifest.configuration.check_references?.includes(spec.name) &&
                         !entries.some((entry) => entry.spec.name === spec.name)
                     )
                         entries.push({ spec, manifest });

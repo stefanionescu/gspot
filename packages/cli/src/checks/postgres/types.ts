@@ -1,5 +1,5 @@
 // Types of the postgres checks.
-import type { SqlStatementView } from '#cli/readers/sql/types.ts';
+import type { SqlStatementView } from '#cli/parsers/sql/types.ts';
 
 /** One migration file, read and parsed. */
 export type Migration = {

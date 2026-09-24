@@ -2,10 +2,10 @@ import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync, unlink
 import { delimiter, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { openSession } from '#cli/run/session.ts';
 import { run } from '#cli/platform/spawn.ts';
 
@@ -17,7 +17,7 @@ test.each(['default', 'native', 'nested'])(
         const root = kind === 'nested' ? join(top, "apps/worker's tools") : top;
         const authored = 'cat > authored-input\nprintf "%s\\n" "$@" > authored-args\nexit 0\n';
         await createFileTree(root, {
-            'gspot.toml': 'version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "husky"\n',
+            'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "husky"\n',
             'package.json': '{"private":true,"devDependencies":{"husky":"9.1.7"}}\n',
             '.husky/pre-commit': 'printf retained > authored-commit\nexit 0\n',
             '.husky/pre-push': authored,

@@ -1,8 +1,8 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 // Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
 
 type BaselineReason = { fingerprint: string; reason: string };

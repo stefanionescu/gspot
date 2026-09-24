@@ -1,7 +1,95 @@
-// gspot ignore
-import type { Command } from 'commander';
+import { quoteArgument } from '#cli/platform/arguments.ts';
+// gspot ignore: one [[ignore]] entry with its reason, or the removal of the entries that match.
+import { allChecks } from '#cli/configurations/listing.ts';
+import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { nearMatches } from '#cli/policy/near.ts';
+import { PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
+import { appendEntry, removeEntries } from '#cli/policy/write.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
+type IgnoreOptions = {
+    cwd: string;
+    check: string;
+    paths?: string[];
+    rule?: string;
+    reason?: string;
+    remove: boolean;
+};
+
+function knownCheck(checkName: string, repositoryChecks: string[]): void {
+    if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
+        return;
+    }
+
+    const known = [...allChecks().keys(), ...repositoryChecks];
+    throw new PolicyError([messages.unknownCheck(checkName, nearMatches(checkName, known))]);
+}
+
+function ignoreCommandLine(o: IgnoreOptions): string {
+    const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
+    const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map(quoteArgument).join(' ')}`;
+    return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
+}
+
+function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
+    const entry: TomlTable = { check: o.check };
+    const lines = ['[[ignore]]', `check  = "${o.check}"`];
+    if (o.rule !== undefined) {
+        entry['rule'] = o.rule;
+        lines.push(`rule   = "${o.rule}"`);
+    }
+    if (o.paths !== undefined && o.paths.length > 0) {
+        entry['paths'] = o.paths;
+        lines.push(`paths  = ${JSON.stringify(o.paths)}`);
+    }
+    if (o.reason !== undefined) {
+        entry['reason'] = o.reason;
+        lines.push(`reason = ${JSON.stringify(o.reason)}`);
+    }
+    return { entry, lines };
+}
+
+async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
+    const counter = { removed: 0 };
+    const paths = JSON.stringify(o.paths ?? []);
+    const isMatch = (entry: TomlTable): boolean =>
+        entry['check'] === o.check &&
+        (entry['rule'] ?? undefined) === o.rule &&
+        JSON.stringify(entry['paths'] ?? []) === paths;
+    const result = await commitPolicy(root, removeEntries('ignore', isMatch, counter), false, '');
+    const noun = counter.removed === 1 ? 'entry' : 'entries';
+    const text =
+        counter.removed === 0
+            ? 'no matching ignore entry'
+            : `removed ${String(counter.removed)} ignore ${noun} for ${o.check}`;
+    return { ...result, text: `${text}\n` };
+}
+
+/**
+ * gspot ignore: writes one [[ignore]] entry with its reason, or removes the entries that match.
+ * @param o the parsed flags
+ * @returns the command result
+ */
+export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
+    const root = findRoot(o.cwd);
+    assertPinMatches(root);
+    const { policy } = readPolicy(root);
+    knownCheck(
+        o.check,
+        policy.checks.map((check) => check.name),
+    );
+    if (o.remove) return removeIgnore(root, o);
+    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
+    const { entry, lines } = ignoreEntry(o);
+    return commitPolicy(root, appendEntry('ignore', entry), false, lines.join('\n'));
+}
+
 import { printCommand } from '#cli/commands/print-result.ts';
-import { ignoreCommand } from '#cli/policy/ignore-command.ts';
+import type { Command } from 'commander';
+
 import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -11,6 +99,7 @@ import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
 export function registerIgnore(program: Command): void {
     program
         .command('ignore <check>')
+        .summary('Ignore a check or rule')
         .description('Turn a check, or one rule in it, off for some paths or everywhere')
         .addHelpText(
             'after',

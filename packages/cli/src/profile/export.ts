@@ -1,9 +1,9 @@
 // gspot export: the policy of this repository without anything that names a path.
 import { basename } from 'node:path';
-import type { TomlTable } from '#cli/policy/types.ts';
-import type { ExportedProfile } from '#cli/profile/types.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
+import type { ExportedProfile } from '#cli/types/profiles.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
-import { REPOSITORY_TABLES, isRepositoryPath } from '#cli/profile/schema.ts';
+import { REPOSITORY_TABLES, isRepositoryPath } from '#cli/schemas/profiles.ts';
 
 const PROFILE_EXTENSION = /\.profile\.toml$|\.toml$/u;
 
@@ -62,8 +62,8 @@ export function exportedProfile(policyText: string, file: string): ExportedProfi
             for (const index of entries.keys()) leftOut.push(`${table}[${String(index)}]: belongs to this repository`);
         Reflect.deleteProperty(raw, table);
     }
-    const { version, presets, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
+    const { version, configurations, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
     const name = basename(file).replace(PROFILE_EXTENSION, '');
-    const document = { version, profile: name, selection: 'exact', presets: presets ?? [], ...rest };
+    const document = { version, profile: name, selection: 'exact', configurations: configurations ?? [], ...rest };
     return { text: stringify(document).trimEnd().concat('\n'), leftOut };
 }

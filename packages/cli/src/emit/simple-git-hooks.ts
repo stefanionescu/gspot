@@ -1,11 +1,12 @@
-import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
+import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import { hookBody, hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
-import type { GeneratedProposal, HookName } from '#cli/emit/types.ts';
+import type { GeneratedProposal, HookName } from '#cli/types/generation.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { ConfinedRoot } from '#cli/lifecycle/types.ts';
-import type { Session } from '#cli/run/types.ts';
+import type { ConfinedRoot } from '#cli/types/filesystem.ts';
+
+import type { Session } from '#cli/types/execution.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { z } from 'zod';
 

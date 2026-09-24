@@ -7,7 +7,7 @@ Run commands from the configured repository root with the [CLI available](/guide
 
 ## Jest coverage
 
-Select the `jest` preset for a project that runs Jest. Keep Jest and its test dependencies in
+Select the `jest` configuration for a project that runs Jest. Keep Jest and its test dependencies in
 the project. `gspot install` installs the ESLint plugin in the private tool directory.
 JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both levels.
 
@@ -48,7 +48,7 @@ documentation comments. It preserves ordinary block comments and comment markers
 
 Static test checks recognize imports of `XCTest` or `Testing`, and `@Test` or `@Suite`
 attributes, including files outside test folders. Imports and attributes inside strings or
-comments do not select tests. A package test target also proposes the `xctest` preset.
+comments do not select tests. A package test target also proposes the `xctest` configuration.
 Put a skip reason in the `XCTSkip` or `.disabled` argument. Missing, empty, and whitespace-only
 literal reasons are findings. Sleep allowances apply within their declared policy scope.
 

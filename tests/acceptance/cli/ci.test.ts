@@ -18,7 +18,7 @@ test.each(['gitlab', 'github'] as const)(
                 ? 'stages: [test]\napplication:\n  script: echo authored-job\n'
                 : 'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo authored-job\n';
         const policy = `version = 1
-presets = []
+configurations = []
 [rules]
 install = false
 [ci]
@@ -120,23 +120,23 @@ process.exit(child.exitCode);
                 });
             const invalid = await execute(base);
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-            const reportPath = join(repository.path, '.gspot/report.json');
+            const reportPath = join(repository.path, '.gspot/reports/report.json');
             const failed = JSON.parse(readFileSync(reportPath, 'utf8'));
             expect(failed.revisions[0].object).toBe(target);
             expect(failed.revisions[0].report.checks[0].status).toBe('fail');
             expect(invalid.stdout).toContain('changed.sh');
             expect(JSON.stringify(failed.revisions[0].report.checks[0].findings)).not.toContain('legacy.sh');
-            for (const path of ['.gspot/report.json', '.gspot/report.sarif', '.gspot/report.codequality.json'])
+            for (const path of ['.gspot/reports/report.json', '.gspot/reports/report.sarif', '.gspot/reports/report.codequality.json'])
                 expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
             if (provider === 'gitlab') {
                 expect(generated.gspot.artifacts.when).toBe('always');
-                expect(generated.gspot.artifacts.reports.codequality).toBe('.gspot/report.codequality.json');
+                expect(generated.gspot.artifacts.reports.codequality).toBe('.gspot/reports/report.codequality.json');
             } else {
                 const artifact = generated.jobs['check-ubuntu']!.steps.find((step) =>
                     step.uses?.startsWith('actions/upload-artifact@'),
                 )!;
                 expect(artifact.if).toContain('always()');
-                expect(artifact.with?.['path']).toContain('.gspot/report.codequality.json');
+                expect(artifact.with?.['path']).toContain('.gspot/reports/report.codequality.json');
                 expect(
                     generated.jobs['manual-ubuntu']!.steps.some((step) => step.run?.includes('--stage manual')),
                 ).toBe(true);
@@ -222,7 +222,7 @@ test.each([
             '--dry-run',
             '--json',
             '--yes',
-            '--presets',
+            '--configurations',
             'none',
             '--no-runner',
             '--no-hooks',

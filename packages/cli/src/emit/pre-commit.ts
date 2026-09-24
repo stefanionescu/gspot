@@ -1,7 +1,7 @@
 import { hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
-import type { ConfigurationOutput } from '#cli/emit/types.ts';
+import type { ConfigurationOutput } from '#cli/types/generation.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseYaml } from 'yaml';

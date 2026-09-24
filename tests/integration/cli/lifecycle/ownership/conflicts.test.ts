@@ -1,3 +1,4 @@
+import { ownershipSchema } from '#cli/schemas/ownership.ts';
 import { join } from 'node:path';
 
 import { fileURLToPath } from 'node:url';
@@ -17,9 +18,9 @@ import { describe, expect, test } from 'bun:test';
 
 import { createFileTree, testdir } from 'testdirs';
 
-import { openLifecycleOwner, ownershipSchema } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
-import { publishInstalledFiles } from '#cli/lifecycle/installed-files.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 
 import { parse as parseToml } from 'smol-toml';
 
@@ -27,7 +28,7 @@ const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/lifecycle/confined.ts', import.meta.url));
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/filesystem/confined.ts', import.meta.url));
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();
@@ -324,7 +325,7 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             expect(owner.restore('config.txt')).toBe('preserved');
             expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored later\n');
             const state = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );
             expect(readFileSync(join(directory.path, state.files[0]!.original!.backup), 'utf8')).toBe(
                 'authored original\n',

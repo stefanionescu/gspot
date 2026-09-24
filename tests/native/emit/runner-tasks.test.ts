@@ -1,16 +1,16 @@
 import { delimiter, join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { initCommand } from '#cli/lifecycle/init/command.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { parseProfile } from '#cli/profile/read.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { MISE_MIN_VERSION, miseTasks, pinnedTwice } from '#cli/emit/runner-tasks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/emit/apply-command.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
 import { parse as parseToml } from 'smol-toml';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { run } from '#cli/platform/spawn.ts';
@@ -20,7 +20,7 @@ const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.me
 
 test('task mappings validate before mutation, round-trip profiles, and explain the effective names', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\npresets = []\n[runner]\ntool = "npm"\n';
+    const policy = 'version = 1\nconfigurations = []\n[runner]\ntool = "npm"\n';
     await createFileTree(directory.path, { 'gspot.toml': policy, 'package.json': '{"private":true}\n' });
     for (const tasks of [{ check: 'prepare' }, { check: 'gspot:fix' }, { check: 'lint', fix: 'lint' }]) {
         const rejected = await run([process.execPath, CLI, 'set', 'runner.tasks', JSON.stringify(tasks), '--json'], {
@@ -76,7 +76,7 @@ test.each([undefined, 'yarn'])(
             yes: true,
             isDryRun: false,
             json: true,
-            presets: ['none'],
+            configurations: ['none'],
             hooks: 'none',
             ci: 'none',
             rules: 'no',
@@ -129,7 +129,7 @@ test.each(['mise', 'npm'] as const)(
             yes: true,
             isDryRun: false,
             json: true,
-            presets: ['none'],
+            configurations: ['none'],
             hooks: 'none',
             runner,
             ci: 'none',
@@ -187,7 +187,7 @@ test.each(['mise', 'npm'] as const)(
 
 test('duplicate pins include only parsed tool keys', async () => {
     await using directory = await testdir();
-    const manifests = [...presetManifests().values()];
+    const manifests = [...configurationManifests().values()];
     await createFileTree(directory.path, {
         'mise.toml': `[tools]\n'shellcheck' = { version = "0.11.0" }\n"ty\\u0070os" = "1.43.5"\n[env]\nruff = "not a pin"\n[tasks]\nactionlint = "echo not a pin"\n[tasks.check]\nrun = "echo vale = something"\n`,
     });

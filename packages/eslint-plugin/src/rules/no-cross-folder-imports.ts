@@ -36,6 +36,7 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         type: 'problem',
         fixable: 'code',
         docs: {
+            title: 'Keep imports within folder boundaries',
             example:
                 'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `cross`. Correct the import to `import { a } from "@/turn/a.js";`.',
             summary: 'Finds relative imports that leave their top-level folder under a source root.',

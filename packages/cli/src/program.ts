@@ -1,22 +1,22 @@
 import { registerInstall } from '#cli/commands/install.ts';
 // The commander program: every command from commands/, the global flags, and the run over argv.
-import { registerAdd } from '#cli/commands/add.ts';
+import { registerAdd } from '#cli/commands/configurations.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
 import { PromptError } from '#cli/output/prompts.ts';
-import { registerInit } from '#cli/commands/init.ts';
+import { registerInit } from '#cli/commands/init/command.ts';
 import type { OutputOptions } from '#cli/output/messages.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerCheck } from '#cli/commands/check.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { registerDoctor } from '#cli/commands/doctor.ts';
+import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
-import { registerRemove } from '#cli/commands/remove.ts';
+import { registerRemove } from '#cli/commands/configurations.ts';
 import { registerExplain } from '#cli/commands/explain.ts';
 import { installCompletion } from '#cli/output/completion.ts';
-import { registerUninstall } from '#cli/commands/uninstall.ts';
+import { registerUninstall } from '#cli/commands/uninstall/command.ts';
 import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 
 const HELP_CODES = new Set(['commander.helpDisplayed', 'commander.version', 'commander.help']);

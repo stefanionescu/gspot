@@ -34,7 +34,7 @@ test.each(['', '   ', { file: '' }])(
     'planted cases reject an empty diagnostic expectation before writing: %j',
     async (expected) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n', 'source.txt': 'original' });
+        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n', 'source.txt': 'original' });
         await expect(
             runPlanted(
                 sandbox.path,

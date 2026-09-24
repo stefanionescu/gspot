@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/presets/select.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 // Staged files for the commit stage, and the honest note about unstaged changes.
-import type { ChangedSet, StagedSet, PushSelection } from '#cli/repository/types.ts';
+import type { ChangedSet, StagedSet, PushSelection } from '#cli/types/repository.ts';
 
 async function observed(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
     const result = await run(['git', ...argv], {

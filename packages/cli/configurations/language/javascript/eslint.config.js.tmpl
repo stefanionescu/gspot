@@ -1,0 +1,518 @@
+import { createRequire, isBuiltin } from 'node:module';
+import { pathToFileURL } from 'node:url';
+import { relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import eslint from '@eslint/js';
+import gspot from '@gspot/eslint-plugin';
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
+import boundaries from 'eslint-plugin-boundaries';
+import importX from 'eslint-plugin-import-x';
+import jsdoc from 'eslint-plugin-jsdoc';
+import nodePlugin from 'eslint-plugin-n';
+import packageJson from 'eslint-plugin-package-json';
+import regexp from 'eslint-plugin-regexp';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
+import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
+<% if (has('typescript')) { %>import tseslint from 'typescript-eslint';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+<% } %><% if (has('jest')) { %>import jest from 'eslint-plugin-jest';
+<% } %><% if (has('vitest')) { %>import vitest from '@vitest/eslint-plugin';
+<% } %><% if (has('nextjs')) { %>import nextPlugin from '@next/eslint-plugin-next';
+<% } %><% if (has('react')) { %>import reactHooks from 'eslint-plugin-react-hooks';
+import react from 'eslint-plugin-react';
+<% } %><% if (has('react-native')) { %>import expoPlugin from 'eslint-plugin-expo';
+<% } %><% if (has('vue')) { %>import vuePlugin from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
+<% } %><% if (has('svelte')) { %>import sveltePlugin from 'eslint-plugin-svelte';
+import svelteParser from 'svelte-eslint-parser';
+<% } %><% if (has('i18n')) { %>import i18next from 'eslint-plugin-i18next';
+<% } %><% if (has('zod')) { %>import zodPlugin from 'eslint-plugin-zod';
+<% } %><% if (has('tanstack-query')) { %>import tanstackQuery from '@tanstack/eslint-plugin-query';
+<% } %><% if (has('drizzle')) { %>import drizzlePlugin from 'eslint-plugin-drizzle';
+<% } %>
+<%
+const eslintTool = tool('eslint');
+const architecture = policy.architecture;
+const structure = policy.structure;
+const scopePaths = scopes.map((entry) => entry.path);
+const limitOf = (key, language) => limit(key, language) ?? limit(key);
+const aliases = importAliases('');
+const importStyle = eslintTool.import_style && Object.keys(eslintTool.import_style).length > 0 ? eslintTool.import_style : { '**/*': has('nextjs') || has('static-site') ? 'extensionless' : 'js' };
+const testFiles = settings['tools.eslint.test_files'] ?? [];
+const scriptFiles = settings['tools.eslint.script_files'] ?? [];
+const nodeVersion = settings['tools.eslint.node_version'] ?? '>=22.0.0';
+const globalsByClass = eslintTool.globals ?? {};
+const roles = architecture.roles ?? {};
+const roleList = (value, fallback) => (value === undefined ? fallback : Array.isArray(value) ? value : [value]);
+const elementNames = new Set(architecture.elements.map((element) => element.name));
+const roleGlobs = (name, fallback) => roleList(roles[name], fallback).flatMap((entry) => (elementNames.has(entry) ? architecture.elements.find((element) => element.name === entry).paths : [entry]));
+const envOwners = roleGlobs('env', ['src/env/**', 'config/**']);
+const testScopes = [...configurationScopes('vitest'), ...configurationScopes('jest')];
+const harnessDirectory = (values) => values['tools.jest.harness_directory'] ?? values['tools.vitest.harness_directory'] ?? 'tests/support';
+const directionRoles = {
+    types: roleGlobs('types', [`${architecture.types_directory ?? 'types'}/**`, `**/${architecture.types_directory ?? 'types'}/**`]),
+    tests: roleGlobs('tests', ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**']),
+    harness: roleGlobs('harness', [`${harnessDirectory(settings)}/**`]),
+    config: roleGlobs('config', ['config/**']),
+    env: envOwners,
+    runtime: roleGlobs('runtime', ['src/**']),
+};
+const scopeRules = (isAll ? scopes : []).map((scope) => {
+    const scoped = importAliases(scope.path);
+    const selected = testScopes.findLast((entry) => entry.path === scope.path);
+    const scopedRoles = { ...directionRoles, harness: roleGlobs('harness', [`${harnessDirectory(selected?.settings ?? settings)}/**`]) };
+    const imports = {
+        ...(Object.keys(scoped).length === 0 ? {} : { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }] }),
+        'gspot/import-direction': ['error', { roles: scopedRoles, aliases: scoped, scope: scope.path }],
+    };
+    return { files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: imports };
+});
+const restricted = settings['tools.eslint.restricted_imports'] ?? [];
+const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
+const testOverrides = has('vitest');
+%>
+const root = fileURLToPath(new URL('../..', import.meta.url));
+const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
+const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
+const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
+const TESTS = <%= json(testFiles) %>;
+const SCRIPTS = <%= json(scriptFiles) %>;
+const ALIASES = <%= json(aliases) %>;
+
+const limits = {
+    fileLines: <%= limitOf('file_lines', 'typescript') %>,
+    functionLines: <%= limitOf('function_lines', 'typescript') %>,
+    parameters: <%= limitOf('function_parameters', 'typescript') %>,
+    cyclomatic: <%= limitOf('cyclomatic_complexity', 'typescript') %>,
+    cognitive: <%= limitOf('cognitive_complexity', 'typescript') %>,
+    depth: <%= limitOf('nested_blocks', 'typescript') %>,
+    statements: <%= limitOf('statements', 'typescript') %>,
+    nestedCallbacks: <%= limitOf('nested_callbacks', 'typescript') %>,
+    identicalFunctions: <%= limitOf('identical_functions', 'typescript') %>,
+    barrelReexports: <%= limitOf('barrel_reexports', 'typescript') %>,
+};
+
+const sizeRules = {
+    'max-lines': ['error', { max: limits.fileLines, skipBlankLines: true, skipComments: true }],
+    'max-lines-per-function': ['error', { max: limits.functionLines, skipBlankLines: true, skipComments: true, IIFEs: true }],
+    'max-params': ['error', { max: limits.parameters, countVoidThis: false }],
+    'max-depth': ['error', limits.depth],
+    'max-statements': ['error', limits.statements],
+    'max-nested-callbacks': ['error', limits.nestedCallbacks],
+    complexity: ['error', limits.cyclomatic],
+};
+
+// One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
+// selectors join the base ones here, and each block below lists all that apply to its files.
+const BASE_SELECTORS = [
+        { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
+        { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSAsExpression > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSTypeAssertion > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSAsExpression > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'TSTypeAssertion > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]', message: 'An empty-object fallback hides a missing value. Handle the missing case.' },
+        { selector: 'NewExpression[callee.name=/Error$/] > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name=/Error$/] > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
+        { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
+];
+const LIBRARY_SELECTORS = [
+<% if (has('zustand')) { %>    { selector: "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]", message: 'Pass a selector to the store hook, so the component renders when its slice changes and at no other time.' },
+<% } %><% if (has('react-hook-form')) { %>    { selector: "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))", message: 'Give useForm a resolver, so the schema that types the form also validates it.' },
+    { selector: "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])", message: 'A registered field is uncontrolled. Drop the value attribute, or use a Controller.' },
+<% } %><% if (has('react-native')) { %>    { selector: "JSXAttribute[name.name=/^(style|contentContainerStyle)$/] > JSXExpressionContainer > ObjectExpression", message: 'An inline style is a new object on every render. Name it in StyleSheet.create below the component.' },
+    { selector: "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message: 'Use Pressable. The Touchable components are kept for old code and get no new behavior.' },
+    { selector: "JSXOpeningElement[name.name=/^(FlatList|SectionList)$/]:not(:has(JSXAttribute[name.name='keyExtractor']))", message: 'Give the list a keyExtractor, so a row keeps its state when the list changes.' },
+    { selector: "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']", message: 'A ScrollView renders every row at once. Render a list that grows through FlatList.' },
+    { selector: "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]", message: 'AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform.' },
+<% } %><% if (has('nestjs')) { %>    { selector: "CallExpression[callee.name='forwardRef']", message: 'forwardRef papers over two modules that import each other. Move what both need into a third module.' },
+    { selector: "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message: 'Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }.' },
+<% } %>];
+const RAW_SQL_SELECTORS = [
+<% if (has('drizzle')) { %>    { selector: "TaggedTemplateExpression[tag.name='sql']", message: 'Raw SQL skips the types of the schema. Use the query builder, or allow the path under tools.drizzle.raw_sql_allowed with a reason.' },
+<% } %>];
+const PROCEDURE_SELECTORS = [
+<% if (has('trpc')) { %>    { selector: "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))", message: 'Give the procedure an input schema before its resolver, even when the input is nothing.' },
+<% } %>];
+// A controller turns a request into a call, and a service owns the data.
+const CONTROLLER_SELECTORS = [
+<% if (has('nestjs')) { %>    { selector: "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
+    { selector: "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
+<% } %>];
+const CONTROLLER_FILES = ['**/*.controller.ts'];
+const RAW_SQL_ALLOWED = <%~ json((settings['tools.drizzle.raw_sql_allowed'] ?? []).flatMap((entry) => entry.paths ?? []), 0) %>;
+const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
+const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length + CONTROLLER_SELECTORS.length === 0 ? [] : [
+    { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
+    ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
+    ...(CONTROLLER_SELECTORS.length === 0 ? [] : [{ files: CONTROLLER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...CONTROLLER_SELECTORS] } }]),
+    ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
+];
+
+const coreRules = {
+    'no-useless-constructor': 'error',
+    'no-useless-return': 'error',
+    'no-useless-call': 'error',
+    'no-useless-rename': 'error',
+    'no-duplicate-imports': 'off',
+    eqeqeq: ['error', 'always'],
+    'no-param-reassign': 'error',
+    'prefer-const': 'error',
+    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
+    'lines-between-class-members': ['error', 'always'],
+    'no-empty': ['error', { allowEmptyCatch: false }],
+    'no-restricted-syntax': ['error', ...BASE_SELECTORS],
+};
+
+const gspotRules = {
+    ...gspot.configs.recommended.rules,
+    'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
+    'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
+<% if (isAll) { %>
+    'gspot/no-export-only-files': 'error',
+    'gspot/no-exported-alias-constants': 'error',
+    'gspot/no-index-imports': 'error',
+    'gspot/header-comments-before-imports': 'error',
+    'gspot/import-layout': 'error',
+    'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
+    'gspot/no-cross-project-imports': ['error', { scopes: <%= json(scopePaths) %> }],
+    'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json(settings[has('jest') ? 'tools.jest.harness_directory' : 'tools.vitest.harness_directory'] ?? 'tests/support') %> }],
+    'gspot/registry-instance-only': 'error',
+    'gspot/private-before-public': 'error',
+<% if (architecture.types_directory !== undefined) { %>    'gspot/types-placement': ['error', { typesDirectory: <%= json(architecture.types_directory) %> }],
+<% } %>
+    'gspot/import-direction': ['error', { roles: <%= json(directionRoles) %>, aliases: ALIASES }],
+    'gspot/env-access-owner': ['error', { owners: <%= json(envOwners) %> }],
+<% if (structure.reexports === 'none') { %>    'gspot/no-reexports': 'error',
+<% } else { %>    'gspot/no-reexports': ['error', { allowIndex: true }],
+    'gspot/max-barrel-reexports': ['error', { max: limits.barrelReexports }],
+<% } %>
+<% } %>};
+
+// sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
+// helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
+const sonarRules = {
+    'sonarjs/no-empty-test-file': 'off',
+    'sonarjs/cognitive-complexity': ['error', limits.cognitive],
+    'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
+    'sonarjs/no-all-duplicated-branches': 'error',
+    'sonarjs/no-duplicated-branches': 'error',
+    'sonarjs/no-identical-conditions': 'error',
+    'sonarjs/no-identical-expressions': 'error',
+    'sonarjs/no-element-overwrite': 'error',
+    'sonarjs/no-empty-collection': 'error',
+    'sonarjs/no-extra-arguments': 'error',
+    'sonarjs/no-use-of-empty-return-value': 'error',
+    'sonarjs/non-existent-operator': 'error',
+    'sonarjs/no-gratuitous-expressions': 'error',
+    'sonarjs/no-invariant-returns': 'error',
+    'sonarjs/for-loop-increment-sign': 'error',
+    'sonarjs/no-useless-increment': 'error',
+    'sonarjs/no-unthrown-error': 'error',
+    'sonarjs/no-collapsible-if': 'error',
+    'sonarjs/no-nested-switch': 'error',
+    'sonarjs/no-nested-template-literals': 'error',
+    'sonarjs/no-redundant-boolean': 'error',
+    'sonarjs/no-redundant-jump': 'error',
+    'sonarjs/no-same-line-conditional': 'error',
+    'sonarjs/no-small-switch': 'error',
+    'sonarjs/no-unused-collection': 'error',
+    'sonarjs/no-useless-catch': 'error',
+    'sonarjs/prefer-single-boolean-return': 'error',
+    'sonarjs/prefer-while': 'error',
+    'sonarjs/prefer-object-literal': 'error',
+    'sonarjs/no-nested-conditional': 'error',
+    'sonarjs/no-inverted-boolean-check': 'error',
+    'sonarjs/no-nested-functions': 'error',
+    'sonarjs/no-parameter-reassignment': 'error',
+    'sonarjs/no-commented-code': 'error',
+    'sonarjs/no-dead-store': 'error',
+    'sonarjs/prefer-immediate-return': 'error',
+    'sonarjs/updated-loop-counter': 'error',
+    'sonarjs/no-equals-in-for-termination': 'error',
+    'sonarjs/no-redundant-assignments': 'error',
+};
+
+// Naming checks own abbreviations and filename case. Platform APIs can return null.
+// Explicit undefined returns satisfy noImplicitReturns. Import shape is not a naming defect.
+// Conditional expressions remain on one line.
+const unicornRules = {
+    'unicorn/prevent-abbreviations': 'off',
+    'unicorn/filename-case': 'off',
+    'unicorn/no-null': 'off',
+    'unicorn/no-useless-undefined': 'off',
+    'unicorn/import-style': 'off',
+    'unicorn/prefer-ternary': ['error', 'only-single-line'],
+    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
+    'unicorn/no-array-reduce': 'off',
+    'unicorn/no-array-for-each': 'error',
+    'unicorn/prefer-node-protocol': 'error',
+    'unicorn/no-useless-spread': 'error',
+    'unicorn/no-useless-promise-resolve-reject': 'error',
+    'unicorn/prefer-array-find': 'error',
+    'unicorn/prefer-array-flat': 'error',
+    'unicorn/prefer-array-flat-map': 'error',
+    'unicorn/prefer-at': 'error',
+    'unicorn/prefer-includes': 'error',
+    'unicorn/prefer-number-properties': 'error',
+    'unicorn/prefer-string-replace-all': 'error',
+    'unicorn/prefer-string-slice': 'error',
+    'unicorn/prefer-string-starts-ends-with': 'error',
+    'unicorn/no-typeof-undefined': 'error',
+    'unicorn/no-lonely-if': 'error',
+};
+
+const securityRules = {
+    'security/detect-buffer-noassert': 'error',
+    'security/detect-child-process': 'error',
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-eval-with-expression': 'error',
+    'security/detect-new-buffer': 'error',
+    'security/detect-no-csrf-before-method-override': 'error',
+    // detect-non-literal-regexp is off: it flags the constructor, not the input (D-67).
+    'security/detect-non-literal-regexp': 'off',
+    'security/detect-non-literal-require': 'error',
+    'security/detect-possible-timing-attacks': 'error',
+    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-unsafe-regex': 'error',
+    'security/detect-object-injection': 'off',
+    'security/detect-non-literal-fs-filename': 'off',
+};
+
+const nodeRules = {
+    'n/no-deprecated-api': 'error',
+    'n/no-process-exit': 'error',
+    'n/no-unsupported-features/node-builtins': ['error', { version: <%= json(nodeVersion) %>, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', { version: <%= json(nodeVersion) %> }],
+    'n/no-unsupported-features/es-syntax': 'off',
+    'n/prefer-global/buffer': ['error', 'always'],
+    'n/prefer-global/console': ['error', 'always'],
+    'n/prefer-global/process': ['error', 'always'],
+    'n/prefer-global/url': ['error', 'always'],
+    'n/prefer-global/url-search-params': ['error', 'always'],
+    'n/prefer-promises/dns': 'error',
+    'n/prefer-promises/fs': 'error',
+    'n/no-sync': 'off',
+    'n/no-callback-literal': 'error',
+    'n/no-new-require': 'error',
+    'n/no-path-concat': 'error',
+    'n/no-missing-import': 'off',
+    'n/no-missing-require': 'off',
+    'n/no-unpublished-import': 'off',
+    'n/no-unpublished-require': 'off',
+    'n/no-extraneous-import': 'off',
+    'n/no-extraneous-require': 'off',
+};
+
+const jsdocRules = {
+    'jsdoc/require-jsdoc': ['error', { publicOnly: true, require: { FunctionDeclaration: true, ArrowFunctionExpression: true, FunctionExpression: true, MethodDefinition: true } }],
+    'jsdoc/require-description': 'error',
+    'jsdoc/require-param': 'error',
+    'jsdoc/require-param-description': 'error',
+    'jsdoc/require-param-name': 'error',
+    'jsdoc/require-param-type': 'off',
+    'jsdoc/require-returns': 'error',
+    'jsdoc/require-returns-description': 'error',
+    'jsdoc/require-returns-type': 'off',
+    'jsdoc/check-param-names': 'error',
+    'jsdoc/check-tag-names': 'error',
+    'jsdoc/check-types': 'off',
+    'jsdoc/no-undefined-types': 'off',
+    'jsdoc/valid-types': 'off',
+    'jsdoc/no-types': 'off',
+};
+
+const regexpRules = {
+    'regexp/no-super-linear-backtracking': 'error',
+    'regexp/no-empty-alternative': 'error',
+    'regexp/no-empty-capturing-group': 'error',
+    'regexp/no-empty-character-class': 'error',
+    'regexp/no-empty-group': 'error',
+    'regexp/no-empty-lookarounds-assertion': 'error',
+    'regexp/no-useless-assertions': 'error',
+    'regexp/no-useless-backreference': 'error',
+    'regexp/no-useless-character-class': 'error',
+    'regexp/no-useless-dollar-replacements': 'error',
+    'regexp/no-useless-lazy': 'error',
+    'regexp/no-useless-quantifier': 'error',
+    'regexp/no-useless-range': 'error',
+    'regexp/no-lazy-ends': 'error',
+    'regexp/no-optional-assertion': 'error',
+    'regexp/no-invalid-regexp': 'error',
+    'regexp/no-misleading-capturing-group': 'error',
+    'regexp/no-contradiction-with-assertion': 'error',
+    'regexp/strict': 'error',
+};
+
+const importRules = {
+    'import-x/export': 'error',
+<% if (isAll) { %>    'import-x/first': 'error',
+    'import-x/newline-after-import': ['error', { count: 1 }],
+    'import-x/exports-last': 'error',
+<% } %>
+    'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
+    'import-x/no-self-import': 'error',
+    'import-x/no-useless-path-segments': ['error', { noUselessIndex: false }],
+    'import-x/no-empty-named-blocks': 'error',
+    'import-x/no-duplicates': 'error',
+};
+
+const commentRules = {
+    '@eslint-community/eslint-comments/require-description': 'error',
+    '@eslint-community/eslint-comments/no-unused-disable': 'error',
+};
+
+// A pair of patterns in one list means both hold, so a pattern as wide as **/* still reaches code files only.
+const importStyleOverrides = <%= json(Object.entries(importStyle).map(([glob, style]) => ({ files: [[glob, '**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}']], rules: { 'gspot/import-path-style': ['error', { style, internalPrefixes: ['./', '../', ...Object.keys(aliases)] }] } }))) %>;
+
+const runtimeOverrides = [
+<% for (const [glob, runtime] of Object.entries(globalsByClass)) { %>    { files: [<%= json(glob) %>], languageOptions: <%= runtime === 'commonjs' ? "{ sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } }" : `{ globals: globals[${json(runtime === 'worker' ? 'serviceworker' : runtime, 0)}] }` %><%= runtime === 'commonjs' ? ", rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' }" : '' %> },
+<% } %>];
+
+const boundaryConfigs = [
+<% for (const scope of [{ path: '', configurations }, ...scopes]) { const scoped = scope.path === '' ? policy.architecture : (policy.scopeTables[scope.path]?.architecture ?? policy.architecture); if (!scoped.elements || scoped.elements.length === 0) continue; const prefix = scope.path === '' ? '' : `${scope.path}/`; %>    {
+        files: [<%= json(`${prefix}**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`) %>],
+        settings: {
+            'boundaries/elements': <%= json(scoped.elements.map((element) => ({ type: element.name, pattern: element.paths.map((path) => `${prefix}${path}`), mode: 'full' }))) %>,
+            'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'],
+        },
+        rules: {
+            'boundaries/element-types': ['error', { default: 'disallow', rules: <%= json(scoped.edges_allowed.map((entry) => ({ from: entry.from, allow: entry.to }))) %> }],
+        },
+    },
+<% } %>];
+
+const scopeRules = <%= json(scopeRules) %>;
+
+const policyRules = <%= json(eslintPolicy) %>.map(({ scope, includes, excludes, rules }) => {
+    const included = includes.map((source) => new RegExp(source, 's'));
+    const excluded = excludes.map((source) => new RegExp(source, 's'));
+    const matches = (file) => {
+        const path = relative(root, file).split(sep).join('/');
+        return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
+    };
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { scope, includes, excludes, flags: 's' } });
+    return { files: CODE.map((pattern) => [pattern, matches]), rules };
+});
+
+const requireProject = createRequire(`${root}/package.json`);
+const adopted = <%= json(eslintTool.adopted ?? []) %>;
+async function loadRegistration(reference) {
+    const resolved = requireProject.resolve(reference.module);
+    const imported = await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href);
+    const exported = reference.export === '*' ? imported : imported[reference.export];
+    return (reference.members ?? []).reduce((value, key) => value[key], exported);
+}
+const legacy = adopted.some((entry) => entry.legacyCriteria || entry.legacyIgnores || entry.legacyScope)
+    ? (await import(pathToFileURL(createRequire(createRequire(import.meta.url).resolve('eslint')).resolve('@eslint/eslintrc')).href)).Legacy
+    : undefined;
+function restoreCriteria(specification) {
+    return specification.patterns.map(({includes, excludes}) =>
+        legacy.OverrideTester.create(includes, excludes, resolve(root, specification.basePath)))
+        .reduce((left, right) => legacy.OverrideTester.and(left, right), null);
+}
+for (const entry of adopted) {
+    const legacyScope = entry.legacyScope;
+    const scope = entry.legacyScope ? restoreCriteria(entry.legacyScope) : undefined;
+    delete entry.legacyScope;
+    if (scope && !entry.legacyIgnores) {
+        const matches = (path) => scope.test(path);
+        Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { legacyScope } });
+        entry.files = entry.files ? entry.files.map((pattern) => [...(Array.isArray(pattern) ? pattern : [pattern]), matches]) : [matches];
+    }
+    if (entry.legacyCriteria) {
+        const criteria = restoreCriteria(entry.legacyCriteria);
+        const matches = (path) => criteria.test(path);
+        Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { legacyCriteria: entry.legacyCriteria } });
+        entry.files = entry.files ? entry.files.map((pattern) => [...(Array.isArray(pattern) ? pattern : [pattern]), matches]) : [matches];
+        delete entry.legacyCriteria;
+    }
+    if (entry.legacyIgnores) {
+        const configuration = new legacy.ConfigArray(...entry.legacyIgnores.map((specification) => {
+            const ignorePattern = new legacy.IgnorePattern(specification.patterns, resolve(root, specification.basePath));
+            ignorePattern.loose = specification.loose;
+            return { type: 'config', criteria: specification.criteria ? restoreCriteria(specification.criteria) : null, ignorePattern };
+        }));
+        const ignored = (path) => (!scope || scope.test(path)) && Boolean(configuration.extractConfig(path).ignores?.(path));
+        Object.defineProperty(ignored, Symbol.for('gspot.eslint.scope'), { value: { legacyScope, legacyIgnores: entry.legacyIgnores } });
+        entry.ignores = [ignored];
+        delete entry.legacyIgnores;
+    }
+    if (entry.basePath !== undefined) entry.basePath = resolve(root, entry.basePath);
+    for (const [name, reference] of Object.entries(entry.plugins ?? {}))
+        entry.plugins[name] = await loadRegistration(reference);
+    if (entry.processor && typeof entry.processor !== 'string')
+        entry.processor = await loadRegistration(entry.processor);
+    if (entry.languageOptions?.parser)
+        entry.languageOptions.parser = await loadRegistration(entry.languageOptions.parser);
+}
+
+export default [
+    { ignores: <%= json(ignoredPaths) %> },
+    { files: CODE, ...eslint.configs.recommended },
+    { files: CODE, ...sonarjs.configs.recommended },
+    { files: CODE, ...unicorn.configs.recommended },
+    {
+        files: CODE,
+        plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments },
+        linterOptions: { reportUnusedDisableDirectives: 'error' },
+        languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.es2024 } },
+        settings: { node: { version: <%= json(nodeVersion) %> }, gspot: { root } },
+        rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
+    },
+    { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
+<% if (isAll) { %>    ...importStyleOverrides,
+<% } %>
+    ...scopeRules,
+    ...runtimeOverrides,
+<% if (isAll) { %>    ...boundaryConfigs,
+<% } %>
+<%~ fragments %>
+    ...librarySelectorBlocks,
+    { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
+    {
+        files: SCRIPTS,
+        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
+    },
+    {
+        files: TESTS,
+        rules: {
+            'jsdoc/require-jsdoc': 'off',
+            'jsdoc/require-param': 'off',
+            'jsdoc/require-returns': 'off',
+            'jsdoc/require-description': 'off',
+            'jsdoc/require-param-description': 'off',
+            'jsdoc/require-returns-description': 'off',
+            'gspot/no-trivial-files': 'off',
+            'max-nested-callbacks': ['error', limits.nestedCallbacks + 2],
+<% if (isAll) { %>            'gspot/no-harness-barrel-imports': ['error', { barrels: <%= json(Object.keys(aliases).filter((prefix) => /tests?\//.test(aliases[prefix]) || prefix.includes('tests')).map((prefix) => prefix.replace(/\/$/, ''))) %> }],
+<% } %>
+<% if (testOverrides) { %>            ...vitest.configs.recommended.rules,
+            'vitest/no-focused-tests': ['error', { fixable: false }],
+            'vitest/no-disabled-tests': 'error',
+            'vitest/no-identical-title': 'error',
+            'vitest/no-standalone-expect': 'error',
+            'vitest/no-commented-out-tests': 'error',
+            'vitest/expect-expect': 'error',
+            'vitest/valid-describe-callback': 'error',
+            'vitest/no-conditional-expect': 'error',
+            'vitest/valid-expect': 'error',
+            'vitest/prefer-strict-equal': 'error',
+<% } %>        },
+<% if (testOverrides) { %>        plugins: { vitest },
+<% } %>    },
+<% if (restricted.length > 0) { %>    { files: CODE, rules: { 'no-restricted-imports': ['error', { paths: <%= json(restricted) %> }] } },
+<% } %>    { files: ['**/package.json'], ...packageJson.configs.recommended },
+    { files: CODE, ...prettierConfig },
+<% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
+    <%= json(entries) %>,
+<% } } %>    { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
+    ...adopted,
+    ...policyRules,
+];

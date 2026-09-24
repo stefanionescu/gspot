@@ -16,6 +16,7 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
     meta: {
         type: 'problem',
         docs: {
+            title: 'No index imports',
             example:
                 'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',
             summary: 'Finds an import that names an index file instead of the module that declares the value.',

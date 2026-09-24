@@ -1,0 +1,115 @@
+[configuration]
+name = "commits"
+kind = "policy"
+title = "Commits"
+default = true
+description = "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
+
+[claims]
+paths = ["**"]
+natures = ["source"]
+
+[[tools]]
+name = "commitlint"
+version = "21.2.2"
+npm = "@commitlint/cli"
+mise = "npm:@commitlint/cli"
+
+[[tools.takeover]]
+file = ".commitlintrc"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".commitlintrc.json"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".commitlintrc.yml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".commitlintrc.yaml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".commitlintrc.js"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".commitlintrc.cjs"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "commitlint.config.js"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "commitlint.config.cjs"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "commitlint.config.mjs"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "commitlint.config.ts"
+carries = "rules-table"
+
+[[configs]]
+template = "commitlint.config.cjs.tmpl"
+target = ".gspot/config/commitlint.config.cjs"
+rules_path = ["rules"]
+stub = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/commitlint.config.cjs\"]\n}\n"}
+
+[[checks]]
+name = "commits/commitlint"
+title = "Commitlint"
+example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
+level = "all"
+stage = "message"
+runs = "per-file-list"
+command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
+output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
+coverage = []
+summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."
+why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
+help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
+
+[[checks]]
+name = "commits/range"
+title = "Check pushed commit messages"
+example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
+level = "all"
+stage = "push"
+runs = "per-scope"
+tool = "commitlint"
+analysis = "commit-messages"
+output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
+coverage = []
+summary = "Checks messages in the supplied pushed commit sets, or the local range from the upstream merge base to HEAD."
+why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
+help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
+
+[[settings]]
+name = "tools.commitlint.types"
+kind = "list"
+direction = "neutral"
+default = ["feat", "fix", "refactor", "perf", "docs", "test", "build", "ci", "chore"]
+summary = "The commit types the type-enum rule allows."
+
+[[settings]]
+name = "tools.commitlint.scopes"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum."
+
+[[settings]]
+name = "tools.commitlint.rules"
+kind = "table"
+direction = "per-rule"
+summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
+
+[rule_files]
+general = ["general/agent/GIT.md"]
+tool = ["tool/commitlint/COMMITLINT.md"]

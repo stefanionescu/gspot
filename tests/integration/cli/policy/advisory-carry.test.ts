@@ -23,12 +23,12 @@ test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
             join(sandbox.path, 'gspot.toml'),
             stringify({
                 version: 1,
-                presets: ['dependencies'],
+                configurations: ['dependencies'],
                 tools: Object.fromEntries([...carried.tools].map(([tool, entry]) => [tool, entry.settings])),
             }),
         );
         const output = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/osv-scanner.toml',
+            (file) => file.path === '.gspot/config/osv-scanner.toml',
         )!;
         const parsed = parse(output.content) as { IgnoredVulns: { ignoreUntil: TomlDate }[] };
         expect(parsed.IgnoredVulns[0]!.ignoreUntil.toISOString()).toBe(new TomlDate(expiration).toISOString());

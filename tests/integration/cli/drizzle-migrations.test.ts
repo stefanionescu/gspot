@@ -2,7 +2,7 @@ import { drizzleMigrations } from '#cli/checks/libraries.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/run/engines.ts';
 import { planRun } from '#cli/run/plan.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { openSession } from '#cli/run/session.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -32,8 +32,8 @@ for (const scope of ['', 'packages/db']) {
             const path = (file: string) => join(scope, file);
             await createFileTree(directory.path, {
                 'gspot.toml':
-                    'version = 1\npresets = ["drizzle"]\n' +
-                    (scope === '' ? '' : `[[scope]]\npath = "${scope}"\npresets = []\n`),
+                    'version = 1\nconfigurations = ["drizzle"]\n' +
+                    (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nconfigurations = []\n`),
                 [path('package.json')]: '{"private":true}\n',
                 [path('drizzle.config.ts')]: 'export default {};\n',
                 [path('schema.txt')]: isFailure ? 'failure' : 'changed',
@@ -156,7 +156,7 @@ test.each(['cancellation', 'deadline'])(
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\npresets = ["drizzle"]\n[limits]\ntool_seconds = 1\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["drizzle"]\n[limits]\ntool_seconds = 1\n',
             'drizzle.config.ts': 'export default {};\n',
             generate: 'setInterval(() => {}, 1000);\n',
         });

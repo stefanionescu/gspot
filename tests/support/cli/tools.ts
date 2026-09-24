@@ -1,10 +1,10 @@
-import { installPackageProject } from '#cli/lifecycle/package-project.ts';
-import { installPythonProject } from '#cli/lifecycle/python-project.ts';
+import { installPackageProject } from '#cli/tools/package-project.ts';
+import { installPythonProject } from '#cli/tools/python-project.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { privateToolInstallation } from '#cli/platform/tool-installation.ts';
-import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { delimiter, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,11 +16,11 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
  * @returns the PATH value
  */
 export function toolsPath(names: string[]): string {
-    const manifests = [...presetManifests().values()];
+    const manifests = [...configurationManifests().values()];
     const context = { root, probes: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (tool === undefined) throw new Error(`Required tool ${name} has no preset-owned definition.`);
+        if (tool === undefined) throw new Error(`Required tool ${name} has no configuration-owned definition.`);
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
         const found = probeTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
@@ -51,7 +51,7 @@ export async function install(cwd: string, argv: string[], environment: Record<s
 export async function installPrivateTools(cwd: string): Promise<void> {
     await installPackageProject(
         cwd,
-        [...presetManifests().values()].flatMap((manifest) => manifest.tools),
+        [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
     await installPythonProject(cwd);
 }

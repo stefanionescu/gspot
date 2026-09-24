@@ -17,7 +17,7 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     const root = sandbox.path;
     const prefix = scope === '' ? '' : `${scope}/`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nlevel = "all"\npresets = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\npresets = ["xctest"]\n`}`,
+        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["xctest"]\n`}`,
         [`${prefix}Sources/Value.swift`]: DEFECT,
         [`${prefix}AppTests/Value.swift`]: DEFECT,
         [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
@@ -72,7 +72,7 @@ test.each(
 )('a Swift test scope $scope has one complete native configuration at $level', async ({ scope, level }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\npresets = []\n[[scope]]\npath = "${scope}"\npresets = ["xctest"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[[scope]]\npath = "${scope}"\nconfigurations = ["xctest"]\n`,
         [`${scope}/Value.swift`]: DEFECT,
     });
     const outputs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) => path.endsWith('swiftlint.yml'));

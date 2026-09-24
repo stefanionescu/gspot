@@ -12,23 +12,23 @@ arranged by layer:
 | agent      | `general/agent/`          | `WORKING.md`, `PLANNING.md`, `TALKING.md`, `GIT.md`, `SUPPRESSIONS.md`                                                                                                                                                                                                                 | always                                 |
 | code       | `general/code/`           | `NAMING.md`, `NAMING-FILES.md`, `COMMENTS.md`, `ERRORS.md`, `LOGGING.md`, `TESTING.md`, `SECRETS.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEPENDENCIES.md`, `GENERATED.md`, `ACCESSIBILITY.md`, `CLI.md`                                                                               | always                                 |
 | prose      | `general/prose/`          | `WRITING.md`, `DOCS.md`, `DOCS-FORMAT.md`, `DOCS-CONTENT.md`, `DOCS-MEDIA.md`, `DOCS-SURFACES.md`, `DOCS-REVIEW.md`                                                                                                                                                                    | always                                 |
-| language   | `language/`               | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language preset                    |
+| language   | `language/`               | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language configuration                    |
 | runtime    | `runtime/<name>/`         | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md`                                                                                                                                                                                                                             | detected runtime                       |
-| framework  | `framework/<name>/`       | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                      | the framework preset                   |
-| library    | `library/<name>/`         | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                 | the library preset                     |
-| tool       | `tool/<name>/`            | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `XCTEST.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                        | the tool preset                        |
-| platform   | `platform/supabase/`      | `SUPABASE.md`                                                                                                                                                                                                                                                                          | the platform preset                    |
-| database   | `database/postgres/`      | `POSTGRES.md`                                                                                                                                                                                                                                                                          | the database preset                    |
-| shared     | `shared/`                 | `http/HTTP.md`, `i18n/I18N.md`                                                                                                                                                                                                                                                         | any preset that lists the shared block |
-| repository | `repository/static-site/` | `STATIC-SITE.md`                                                                                                                                                                                                                                                                       | the repository preset                  |
+| framework  | `framework/<name>/`       | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                      | the framework configuration                   |
+| library    | `library/<name>/`         | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                 | the library configuration                     |
+| tool       | `tool/<name>/`            | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `XCTEST.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                        | the tool configuration                        |
+| platform   | `platform/supabase/`      | `SUPABASE.md`                                                                                                                                                                                                                                                                          | the platform configuration                    |
+| database   | `database/postgres/`      | `POSTGRES.md`                                                                                                                                                                                                                                                                          | the database configuration                    |
+| shared     | `shared/`                 | `http/HTTP.md`, `i18n/I18N.md`                                                                                                                                                                                                                                                         | any configuration that lists the shared block |
+| repository | `repository/static-site/` | `STATIC-SITE.md`                                                                                                                                                                                                                                                                       | the repository configuration                  |
 | templates  | `templates/docs/`         | document templates                                                                                                                                                                                                                                                                     | offered once at init, never upgraded   |
 | project    | the repository's own      | whatever the team writes                                                                                                                                                                                                                                                               | never written by gspot                 |
 
-Each preset manifest names its files under `[rule_files]`. A source file has one owner; multiple presets can select shared guidance without copying it.
+Each configuration manifest names its files under `[rule_files]`. A source file has one owner; multiple configurations can select shared guidance without copying it.
 
 The agent layer tells the agent how to work in a repository; the code and prose layers say
 what the code and text must look like. The general agent, code, and prose layers are installed when rules are enabled.
-Other layers follow preset selection; installation does not make every guide required reading
+Other layers follow configuration selection; installation does not make every guide required reading
 for every task.
 
 ## What belongs to one product
@@ -77,7 +77,7 @@ Every rule file opens with front matter the lint verifies against the path:
 ```yaml
 ---
 layer: language          # agent | code | prose | language | runtime | framework | library | tool | platform | database | shared | repository | template
-preset: python           # the preset page that installs it; none for templates
+configuration: python           # the configuration page that installs it; none for templates
 title: Python            # equals the H1
 ---
 ```
@@ -96,7 +96,7 @@ inline code. What the gate enforces is the ledger's business ([06-enforcement-le
 ## Size
 
 No file exceeds 800 lines. A file that grows past the ceiling is split into siblings under the
-same preset (`language/python/TYPING.md` beside `language/PYTHON.md`) only when distinct reader
+same configuration (`language/python/TYPING.md` beside `language/PYTHON.md`) only when distinct reader
 tasks justify the split. Remove repetition before splitting. Each guide states its own scope. Templates are project files and are
 not measured.
 
@@ -104,9 +104,9 @@ not measured.
 
 `gspot apply`, when `[rules] install = true`:
 
-1. Selects the files for the selected presets, root, and every scope.
+1. Selects the files for the selected configurations, root, and every scope.
 2. Writes them under `[rules] directory` (default `.gspot/rules/`), keeping the layer folders.
-3. Removes files under that directory that no selected preset installs.
+3. Removes files under that directory that no selected configuration installs.
 4. Writes the shared managed block into `AGENTS.md`, supported detected agent files, and
    additional files configured in `[rules] agents`:
 
@@ -133,7 +133,7 @@ Run `gspot check --staged` before committing. Change policy with `gspot set` or
 ```
 
 The closing paragraph depends on what is installed. With at least one check selected it
-reads as above. With rule files alone (`presets = []`) it keeps only the sentence about
+reads as above. With rule files alone (`configurations = []`) it keeps only the sentence about
 subagents, and adds: "These files are installed copies. Change `[rules]` in `gspot.toml` and run
 `gspot apply`, and never edit files under the rules directory."
 
@@ -149,20 +149,20 @@ The block is a compact task index with one guide per entry, grouped where that h
 
 The rules lint belongs to this repository, not to the commands of the binary. It runs as
 the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the commit stage,
-over `rules/**`. Its code sits in `packages/cli/src/rules/`. Prose is no part of it: `prose/vale`
+over `rules/**`. Its code sits in `packages/cli/src/agents/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
-- Front matter holds `layer`, `preset`, and `title`. The layer agrees with the path and the title
+- Front matter holds `layer`, `configuration`, and `title`. The layer agrees with the path and the title
   agrees with the H1; do not require a metadata migration merely to remove a validated field.
-- Preset-specific files have a manifest owner. General agent, code, and prose files belong to
+- Configuration-specific files have a manifest owner. General agent, code, and prose files belong to
   the general corpus. Shared selection does not require duplicated source files.
 - No file links to another rule file, and no file exceeds 800 lines.
 - A list item is a whole sentence. An item that stops at a comma or at `and` fails.
 - A section that describes checks of the level `all` carries the mark `<!-- level: all -->`, and
   the assembler leaves it out at `recommended`.
-- A fenced example under a line that starts with `Good` passes the linter of its preset. The lint
+- A fenced example under a line that starts with `Good` passes the linter of its configuration. The lint
   runs those examples at the push stage.
-- No file names a tool or a library of another preset. The word list is built from the
+- No file names a tool or a library of another configuration. The word list is built from the
   manifests. The words `quality/` and the names of the reference repositories are refused.
 - Instruction policy agrees with the selected checks and levels. Check identifiers and
   implementation status belong in references and remaining work, not installed rule prose.
@@ -227,7 +227,7 @@ and idempotent regeneration. Do not assert a fixed guide inventory or snapshot b
 
 ### Acceptance K-67
 
-Rule front matter holds `layer`, `preset`, and `title`. Validate these against the actual owner,
+Rule front matter holds `layer`, `configuration`, and `title`. Validate these against the actual owner,
 path, and heading. The managed block derives its labels from validated metadata. Verify incorrect
 metadata and corrected input; no field-removal migration or compatibility parser is required.
 
@@ -254,17 +254,17 @@ A unit test of the lint with one cut item.
 
 ### Acceptance K-241
 
-A rule file never asks for what a check of the same preset refuses.
+A rule file never asks for what a check of the same configuration refuses.
 
 Each of the nine is settled on the side of the decision or the check, and the rule
 file changes. `explicit_acl` moves to the level `all` (row 11), and the rule file says so.
 
-`src/rules/lint.ts` reads every rule name a rule file names, and fails where the template
-of its preset turns that rule the other way.
+`src/agents/lint.ts` reads every rule name a rule file names, and fails where the template
+of its configuration turns that rule the other way.
 
 ### Acceptance K-261
 
-An example marked good passes the linter of its preset.
+An example marked good passes the linter of its configuration.
 
 `examples.ts` takes each fenced block under a line that starts with `Good`, writes it
 to the cache, and runs the tool the manifest names for that language. The two zod rules move to

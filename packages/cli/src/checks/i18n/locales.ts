@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 // Message files: every one parses as ICU MessageFormat, none is empty, and every locale holds every key of the base.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 
 type Translations = { directory?: string; base?: string };

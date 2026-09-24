@@ -13,7 +13,7 @@ test.each(['../outside', '/outside', 'C:outside', '..\\outside'])(
     async (language) => {
         await using directory = await testdir();
         const policy = (value: string) =>
-            `version = 1\nlevel = "all"\npresets = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
+            `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
         const session = await openSession(directory.path);
         const spec = session.manifests.get('security')!.checks.find((entry) => entry.analysis === 'codeql')!;
@@ -72,7 +72,7 @@ test('CodeQL uses native language names and pinned packs once and maps isolated 
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\npresets = ["security"]\n[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
+            'version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
         'source file.ts': 'export const source = true;\n',
     });
     const session = await openSession(directory.path);

@@ -1,4 +1,4 @@
-import type { RunReport } from '#cli/output/report-types.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { renameSync } from 'node:fs';
@@ -10,7 +10,7 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
     const invalid = 'migrations/20260101120000_CreateUsers.sql';
     const valid = 'migrations/20260101120000_create_users.sql';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["sql", "naming"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["sql", "naming"]\n',
         [invalid]: 'CREATE TABLE users (id integer);\n',
         'queries/select_users.sql': 'SELECT id FROM users;\n',
     });

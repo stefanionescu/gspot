@@ -1,8 +1,8 @@
 // Installs built packages from an isolated registry and checks a fresh consumer.
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { run } from '#cli/platform/spawn.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { describe, expect, test } from 'bun:test';
 import {
@@ -21,7 +21,7 @@ import { createRequire } from 'node:module';
 import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
-import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
+import { releaseTargets } from '../../packages/cli/src/platform/release-targets.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -67,8 +67,8 @@ describe('the installed consumer', () => {
                     'dist',
                     'packages/npm',
                     'packages/cli/package.json',
-                    'packages/cli/publish.ts',
-                    'packages/cli/src/emit/targets-definitions.ts',
+                    'packages/cli/scripts/publish.ts',
+                    'packages/cli/src/platform/release-targets.ts',
                     'tsconfig.json',
                 ]) {
                     const target = join(checkout, path);
@@ -188,7 +188,7 @@ describe('the installed consumer', () => {
                     ];
                     writeFileSync(
                         join(cancellation, 'gspot.toml'),
-                        `version = 1\npresets = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
+                        `version = 1\nconfigurations = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
                     );
                     const child = Bun.spawn([...command, 'check', '--json', '--no-cache'], {
                         cwd: cancellation,
@@ -233,7 +233,7 @@ describe('the installed consumer', () => {
                         'init',
                         '--json',
                         '--yes',
-                        '--presets',
+                        '--configurations',
                         'bash',
                         'naming',
                         'prose',
@@ -264,7 +264,7 @@ describe('the installed consumer', () => {
                 expect(initialized.stdout).not.toContain('formatter stdout');
                 const filepath = join(consumer, 'source.js');
                 const carried = await prettier.resolveConfig(filepath, {
-                    config: join(consumer, '.gspot/prettier.json'),
+                    config: join(consumer, '.gspot/config/prettier.json'),
                     editorconfig: true,
                     useCache: false,
                 });
@@ -272,12 +272,12 @@ describe('the installed consumer', () => {
                     'const greeting = "hello"\n',
                 );
                 const futureJson = await prettier.resolveConfig(join(consumer, 'nested/future.json'), {
-                    config: join(consumer, '.gspot/prettier.json'),
+                    config: join(consumer, '.gspot/config/prettier.json'),
                     editorconfig: true,
                     useCache: false,
                 });
                 expect(futureJson?.tabWidth).toBe(4);
-                expect(existsSync(join(consumer, '.gspot', 'report.json'))).toBe(false);
+                expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
                 const checked = await run(
                     [...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'],
                     options,
@@ -285,10 +285,10 @@ describe('the installed consumer', () => {
                 expect(checked.code, checked.stdout + checked.stderr).toBe(1);
                 const report = reportSchema.parse(JSON.parse(checked.stdout));
                 expect(report.exitCode).toBe(1);
-                expect(JSON.parse(readFileSync(join(consumer, '.gspot/report.json'), 'utf8'))).toEqual(report);
-                const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/report.sarif'), 'utf8'));
+                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toEqual(report);
+                const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8'));
                 expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
-                const quality = JSON.parse(readFileSync(join(consumer, '.gspot/report.codequality.json'), 'utf8'));
+                const quality = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'));
                 expect(quality).toHaveLength(report.checks[0]?.findings.length ?? 0);
                 expect(quality[0]).toMatchObject({
                     check_name: 'bash/syntax',
@@ -322,7 +322,7 @@ describe('the installed consumer', () => {
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 const clean = reportSchema.parse(JSON.parse(corrected.stdout));
                 expect(clean.exitCode).toBe(0);
-                expect(JSON.parse(readFileSync(join(consumer, '.gspot/report.codequality.json'), 'utf8'))).toEqual([]);
+                expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'))).toEqual([]);
                 expect(clean.skips).toEqual([]);
                 expect(clean.checks).toHaveLength(1);
                 expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });
@@ -349,7 +349,7 @@ describe('the installed consumer', () => {
                     options,
                 );
                 expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
-                const valePin = presetManifests()
+                const valePin = configurationManifests()
                     .get('prose')!
                     .tools.find((tool) => tool.name === 'vale')!;
                 const valeVersion = await run(['vale', '--version'], options);
@@ -396,7 +396,7 @@ describe('the installed consumer', () => {
                 });
                 writeFileSync(
                     join(consumer, 'vocabulary.ini'),
-                    'StylesPath = .gspot/vale/styles\nVocab = gspot\nMinAlertLevel = suggestion\n\n[*]\nBasedOnStyles = Vale\nVale.Spelling = NO\nVale.Terms = YES\n',
+                    'StylesPath = .gspot/config/vale/styles\nVocab = gspot\nMinAlertLevel = suggestion\n\n[*]\nBasedOnStyles = Vale\nVale.Spelling = NO\nVale.Terms = YES\n',
                 );
                 writeFileSync(join(consumer, 'vocabulary.md'), 'typescript supports nebulakit.\n');
                 const termsCommand = [
@@ -422,7 +422,7 @@ describe('the installed consumer', () => {
                 const correctedTerms = await run(termsCommand, options);
                 expect(correctedTerms.code, correctedTerms.stdout + correctedTerms.stderr).toBe(0);
                 expect(JSON.parse(correctedTerms.stdout)).toEqual({});
-                const ruffPin = presetManifests()
+                const ruffPin = configurationManifests()
                     .get('python')!
                     .tools.find((tool) => tool.name === 'ruff')!;
                 const ruffVersion = await run(['ruff', '--version'], options);
@@ -470,7 +470,7 @@ describe('the installed consumer', () => {
                     files: 1,
                     findings: [],
                 });
-                const shellcheck = presetManifests()
+                const shellcheck = configurationManifests()
                     .get('bash')!
                     .tools.find((tool) => tool.name === 'shellcheck')!;
                 const toolVersion = await run(['shellcheck', '--version'], options);
@@ -566,7 +566,7 @@ describe('the installed consumer', () => {
                 const detected = await run([...command, 'list', '--json'], options);
                 expect(detected.code, detected.stdout + detected.stderr).toBe(0);
                 const available = JSON.parse(detected.stdout) as { detected: { name: string; command: string }[] };
-                expect(available.detected.find((preset) => preset.name === 'sql')?.command).toBe('gspot add sql');
+                expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
                 const added = await run([...command, 'add', 'sql'], setupOptions);
                 expect(added.code, added.stdout + added.stderr).toBe(0);
                 const sql = await run(
@@ -632,7 +632,7 @@ describe('the installed consumer', () => {
                         'init',
                         '--json',
                         '--yes',
-                        '--presets',
+                        '--configurations',
                         'formatting',
                         '--runner',
                         'mise',
@@ -644,7 +644,7 @@ describe('the installed consumer', () => {
                     toolOptions,
                 );
                 expect(toolInit.code, toolInit.stdout + toolInit.stderr).toBe(0);
-                expect(existsSync(join(toolConsumer, '.gspot/report.json'))).toBe(false);
+                expect(existsSync(join(toolConsumer, '.gspot/reports/report.json'))).toBe(false);
                 const selectedFormatter = await run(
                     [...command, 'set', 'extra_checks', 'formatting/prettier'],
                     toolOptions,
@@ -704,7 +704,7 @@ describe('the installed consumer', () => {
                         ...command,
                         'init',
                         '--yes',
-                        '--presets',
+                        '--configurations',
                         'configs',
                         '--no-runner',
                         '--no-ci',

@@ -1,9 +1,10 @@
-import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
-import { eslintPreviewResponse } from '#cli/lifecycle/eslint-preview.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { eslintPreviewResponse } from '#cli/schemas/evaluation.ts';
+
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { compareRules } from '#cli/emit/rule-diff.ts';
-import type { Session } from '#cli/run/types.ts';
-import type { GeneratedProposal, DriftEntry } from '#cli/emit/types.ts';
+import type { Session } from '#cli/types/execution.ts';
+import type { GeneratedProposal, DriftEntry } from '#cli/types/generation.ts';
 
 /** Enrich an explicit apply preview with imported and computed ESLint rule data. */
 export async function eslintRuleDiff(

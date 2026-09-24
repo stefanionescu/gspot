@@ -12,7 +12,7 @@ import type {
     NamingLanguageTable,
     Policy,
     Reasoned,
-} from '#cli/policy/types.ts';
+} from '#cli/types/policy.ts';
 
 const NAMING_LIST_KEYS = new Set([
     'banned_terms',
@@ -189,8 +189,8 @@ export function normalize(raw: RawPolicy): Policy {
         requireReasons: raw.require_reasons,
         extraChecks: raw.extra_checks,
         exclude: raw.exclude,
-        presets: raw.presets ?? [],
-        scopes: scopes.map((scope) => ({ path: trimTrailingSlashes(scope.path), presets: scope.presets ?? [] })),
+        configurations: raw.configurations ?? [],
+        scopes: scopes.map((scope) => ({ path: trimTrailingSlashes(scope.path), configurations: scope.configurations ?? [] })),
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
         architecture: normalizeArchitecture(raw.architecture),

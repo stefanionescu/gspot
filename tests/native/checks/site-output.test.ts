@@ -21,7 +21,7 @@ test.each([
     const page = (body: string) =>
         `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`;
     await createFileTree(sandbox.path, {
-        '.gspot/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
+        '.gspot/config/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
     });
     writeFileSync(
         join(build.output, 'index.html'),

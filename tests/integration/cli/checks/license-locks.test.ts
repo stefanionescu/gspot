@@ -26,13 +26,13 @@ const LOCKS: [string, string][] = [
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
     await using repository = await testdir();
     const policy = (version: string): string =>
-        `version = 1\npresets = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
+        `version = 1\nconfigurations = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
     await createFileTree(repository.path, { 'gspot.toml': policy('2.0.0'), [filename]: lock });
     const check = async () => {
         const session = await openSession(repository.path);
         const scope = session.scopes[0]!;
         const spec = scope.selected
-            .flatMap((preset) => preset.checks)
+            .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
         return await allowlistsMatch(
             engineInput(session, {
@@ -59,7 +59,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     const lock = 'version = 1\n[[package]]\nname = "Example_Package"\nversion = "1.2.3"\n';
     await createFileTree(root, {
         'gspot.toml':
-            'version = 1\npresets = ["structure", "licenses"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
+            'version = 1\nconfigurations = ["structure", "licenses"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
         'app/source.py': 'selected = True\n',
         'sibling/uv.lock': lock,
         '.gspot/uv.lock': lock,
@@ -68,7 +68,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const session = await openSession(root);
         const scope = session.scopes[0]!;
         const spec = scope.selected
-            .flatMap((preset) => preset.checks)
+            .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
         return await allowlistsMatch(
             engineInput(session, {
@@ -130,8 +130,8 @@ test.each(['root', 'nested', 'combined'])(
             '\n[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
         const selected =
             selection === 'nested'
-                ? 'presets = []\n[[scope]]\npath = "app"\npresets = ["licenses"]\n'
-                : `presets = ["licenses"${selection === 'combined' ? ', "structure"' : ''}]\n`;
+                ? 'configurations = []\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n'
+                : `configurations = ["licenses"${selection === 'combined' ? ', "structure"' : ''}]\n`;
         await createFileTree(root, {
             'gspot.toml':
                 'version = 1\n' +
@@ -147,7 +147,7 @@ test.each(['root', 'nested', 'combined'])(
             expect(
                 session.scopes
                     .flatMap((scope) => scope.selected)
-                    .some((manifest) => manifest.preset.name === 'structure'),
+                    .some((manifest) => manifest.configuration.name === 'structure'),
             ).toBe(false);
         const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);

@@ -7,7 +7,7 @@ import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
 import { afterEach, expect, spyOn, test } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { openSession } from '#cli/run/session.ts';
 import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 
@@ -31,7 +31,7 @@ async function inputFor(root: string, check: string): Promise<EngineInput> {
 
 test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
@@ -45,7 +45,7 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
 
 test('a later Swift session observes a failed build after an earlier successful build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const first = await inputFor(sandbox.path, 'swift/build');
     const second = await inputFor(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run')
@@ -78,7 +78,7 @@ test('a later Swift session observes a failed build after an earlier successful 
 
 test('Swift compiler diagnostics retain their source location on a failed build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({
         code: 1,
@@ -98,7 +98,7 @@ test('Swift compiler diagnostics retain their source location on a failed build'
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -112,7 +112,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
 
 test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -127,7 +127,7 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
 
 test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async (step) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run');
     if (step === 'analyzer')
@@ -143,7 +143,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
 test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["swift"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
         'Package.swift':
             '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
         'Sources/Example/Value.swift': 'public let value: Int = 1\n',
@@ -171,7 +171,7 @@ test('incremental Swift builds preserve compiler state and still detect a change
 
 test('manual analysis clears its own compiler state without consuming the incremental build result', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/swiftlint-analyze');
     const compile = swiftBuildPlan(input);
     const analyzer = swiftBuildPlan(input, 'analyze');
@@ -199,7 +199,7 @@ test('manual analysis clears its own compiler state without consuming the increm
 
 test('canceled Swift compilation refuses to launch the compiler', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/build');
     input.cancelSignal = AbortSignal.abort();
     await rejects(swiftBuild(input), { message: 'The command was canceled.' });
@@ -214,7 +214,7 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
 test('Swift response files stay inside the compiler cache before log publication', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["swift"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
         'external-response': 'external bytes must not enter a compiler log',
     });
     const input = await inputFor(sandbox.path, 'swift/build');
@@ -246,7 +246,7 @@ test('Swift response files stay inside the compiler cache before log publication
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["swift"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
         'Sources/Value.swift': 'let value = 1\n',
     });
     const original = join(sandbox.path, 'Sources/Value.swift');
@@ -284,7 +284,7 @@ test('Swift build side effects stay in the source copy and do not become later i
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["swift"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
         'Main.swift': 'let unused = 1\n',
     });
     const input = await inputFor(sandbox.path, 'swift/periphery');
@@ -313,7 +313,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
 
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const compile = await inputFor(sandbox.path, 'swift/build');
     const periphery = await inputFor(sandbox.path, 'swift/periphery');
     const started = Promise.withResolvers<void>();
@@ -340,12 +340,12 @@ test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj
     async (project) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\npresets = ["swift", "xcode"]\n[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
+            'gspot.toml': `version = 1\nconfigurations = ["swift", "xcode"]\n[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
         });
         const input = await inputFor(sandbox.path, 'swift/build');
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\npresets = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
+            'version = 1\nconfigurations = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
         );
         const corrected = await inputFor(sandbox.path, 'swift/build');
         const run = spyOn(spawn, 'run').mockResolvedValue({

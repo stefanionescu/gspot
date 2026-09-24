@@ -9,7 +9,7 @@ import { createFileTree, testdir } from 'testdirs';
 const INIT = [
     'init',
     '--yes',
-    '--presets',
+    '--configurations',
     'markdown',
     'docs',
     '--no-runner',

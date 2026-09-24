@@ -3,14 +3,14 @@ import { chmodSync, readFileSync, unlinkSync, writeFileSync, renameSync } from '
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { openSession } from '#cli/run/session.ts';
 import { run } from '#cli/platform/spawn.ts';
-import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
+import { uninstallCommand } from '#cli/commands/uninstall/command.ts';
 
-const POLICY = 'version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
+const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 
 test.each([
     '',

@@ -58,7 +58,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'javascript',
             '--no-runner',
             '--no-ci',
@@ -72,7 +72,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         );
         const eslint = new ESLint({
             cwd: repository.path,
-            overrideConfigFile: join(repository.path, '.gspot/eslint.config.mjs'),
+            overrideConfigFile: join(repository.path, '.gspot/config/eslint.config.mjs'),
         });
         const checked = await eslint.lintFiles(FILES);
         expect(
@@ -100,7 +100,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         if (path === 'package.json') expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
         else if (existsSync(join(repository.path, path)))
             expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
-        expect(existsSync(join(repository.path, '.gspot/report.json'))).toBe(false);
+        expect(existsSync(join(repository.path, '.gspot/reports/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
         expect(JSON.parse(repeated.stdout).drift).toEqual([]);
@@ -122,7 +122,7 @@ test(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'javascript',
             '--no-runner',
             '--no-ci',
@@ -155,7 +155,7 @@ test(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'javascript',
             'formatting',
             '--no-runner',
@@ -184,7 +184,7 @@ test(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'javascript',
             '--no-runner',
             '--no-ci',
@@ -222,7 +222,7 @@ test(
             'init',
             '--yes',
             '--json',
-            '--presets',
+            '--configurations',
             'javascript',
             '--no-runner',
             '--no-ci',

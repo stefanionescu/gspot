@@ -16,7 +16,7 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
         'gspot.toml': stringify({
             version: 1,
             level: 'all',
-            presets: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
+            configurations: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
             format: { indent_width: width },
         }),
         'sample.yaml': 'parent:\n child: value\n',
@@ -31,16 +31,16 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     expect(editor?.tabWidth).toBe(width);
-    const native = JSON.parse(generated.get('.gspot/prettier.json')!);
+    const native = JSON.parse(generated.get('.gspot/config/prettier.json')!);
     expect(native.tabWidth).toBe(width);
-    expect(parseJsonc(generated.get('.gspot/markdownlint.jsonc')!).MD007.indent).toBe(width);
-    expect(parseYaml(generated.get('.gspot/yamllint.yml')!).rules.indentation.spaces).toBe(width);
-    expect(parseToml(generated.get('.gspot/ruff.toml')!)['indent-width']).toBe(width);
-    expect(parseToml(generated.get('.gspot/taplo.toml')!)).toMatchObject({
+    expect(parseJsonc(generated.get('.gspot/config/markdownlint.jsonc')!).MD007.indent).toBe(width);
+    expect(parseYaml(generated.get('.gspot/config/yamllint.yml')!).rules.indentation.spaces).toBe(width);
+    expect(parseToml(generated.get('.gspot/config/ruff.toml')!)['indent-width']).toBe(width);
+    expect(parseToml(generated.get('.gspot/config/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
-    expect(generated.get('.gspot/sqlfluff.cfg')).toContain(`tab_space_size = ${width}`);
-    expect(generated.get('.gspot/swiftformat')).toContain(`--indent ${width}\n`);
+    expect(generated.get('.gspot/config/sqlfluff.cfg')).toContain(`tab_space_size = ${width}`);
+    expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${width}\n`);
     const source = await Bun.file(path).text();
     const expected = `parent:\n${' '.repeat(width)}child: value\n`;
     expect(await prettier.check(source, { ...editor, filepath: path })).toBe(false);
@@ -54,7 +54,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     await createFileTree(directory.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['formatting'],
+            configurations: ['formatting'],
             format: { indent_width: 6, overrides: [{ paths: ['**/*.yaml'], indent_width: 2 }] },
         }),
         'sample.yaml': 'parent:\n child: value\n',
@@ -63,11 +63,11 @@ test('an explicit YAML width override remains consistent between EditorConfig an
         emitAll(await openSession(directory.path)).files.map((file) => [file.path, file.content]),
     );
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
-    await Bun.write(join(directory.path, '.gspot/prettier.json'), generated.get('.gspot/prettier.json')!);
+    await Bun.write(join(directory.path, '.gspot/config/prettier.json'), generated.get('.gspot/config/prettier.json')!);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const native = await prettier.resolveConfig(path, {
-        config: join(directory.path, '.gspot/prettier.json'),
+        config: join(directory.path, '.gspot/config/prettier.json'),
         useCache: false,
     });
     expect(editor?.tabWidth).toBe(2);

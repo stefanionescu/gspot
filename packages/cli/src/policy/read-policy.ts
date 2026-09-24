@@ -2,14 +2,14 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
 import { parse as parseToml, TomlError } from 'smol-toml';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
-import { policySchema } from '#cli/policy/schema.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems, pathProblems } from '#cli/policy/problems.ts';
 import { policyLocation, sourceLocations } from '#cli/policy/source-locations.ts';
-import type { PolicyFiles, PathSegment, Policy } from '#cli/policy/types.ts';
+import type { PolicyFiles, PathSegment, Policy } from '#cli/types/policy.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');

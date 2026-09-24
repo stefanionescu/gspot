@@ -1,10 +1,10 @@
 import { parseShell } from '@yarnpkg/parsers';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/execution-definitions.ts';
+import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/settings.ts';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
-import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
-import type { Manifest, SettingSpec } from '#cli/presets/types.ts';
+import { rootSettingSchemas, integrationSettingSchemas } from '#cli/schemas/policy.ts';
+import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 
 import type {
     WrittenValue,
@@ -17,7 +17,7 @@ import type {
     Reasoned,
     ResolvedSetting,
     ExposedSettings,
-} from '#cli/policy/types.ts';
+} from '#cli/types/policy.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
@@ -90,19 +90,19 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
     const previous = surface.defaults.get(spec.name);
     const isConflict =
         previous !== undefined &&
-        previous.preset !== manifest.preset.name &&
+        previous.configuration !== manifest.configuration.name &&
         JSON.stringify(previous.value) !== JSON.stringify(spec.default);
     const isList = surface.specs.get(spec.name)?.kind === 'list';
-    if (!isList && isConflict && !OVERRIDING_KINDS.has(manifest.preset.kind)) {
+    if (!isList && isConflict && !OVERRIDING_KINDS.has(manifest.configuration.kind)) {
         surface.problems.push({
             key: spec.name,
-            message: messages.conflictingScalars(spec.name, previous.preset, manifest.preset.name),
+            message: messages.conflictingScalars(spec.name, previous.configuration, manifest.configuration.name),
         });
         return;
     }
     surface.defaults.set(spec.name, {
         value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
-        preset: manifest.preset.name,
+        configuration: manifest.configuration.name,
     });
 }
 
@@ -241,7 +241,7 @@ export function writtenKeys(policy: Partial<Policy>): string[] {
 }
 
 /**
- * Builds the surface in selection order; framework, platform, library, and database presets override scalar defaults.
+ * Builds the surface in selection order; framework, platform, library, and database configurations override scalar defaults.
  * @param selected the manifests of the selection, in order
  * @returns the specs, their defaults and the conflicts found on the way
  */
@@ -249,7 +249,7 @@ export function exposedSettings(selected: Manifest[]): ExposedSettings {
     const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
     for (const spec of [TOOL_DEADLINE, COVERAGE_STRICT]) {
         surface.specs.set(spec.name, spec);
-        surface.defaults.set(spec.name, { value: spec.default, preset: 'gspot' });
+        surface.defaults.set(spec.name, { value: spec.default, configuration: 'gspot' });
     }
     for (const [name, schema] of Object.entries({
         ...rootSettingSchemas,
@@ -264,7 +264,7 @@ export function exposedSettings(selected: Manifest[]): ExposedSettings {
             summary: schema.description ?? '',
         };
         surface.specs.set(name, spec);
-        surface.defaults.set(name, { value: spec.default, preset: 'gspot' });
+        surface.defaults.set(name, { value: spec.default, configuration: 'gspot' });
     }
     for (const manifest of selected) {
         for (const spec of manifest.settings) {
@@ -310,7 +310,7 @@ export function policyValue(policy: Partial<Policy>, key: string): WrittenValue 
 }
 
 /**
- * Resolves one key: preset default, root table, scope table. Lists append and deduplicate; scalars replace.
+ * Resolves one key: configuration default, root table, scope table. Lists append and deduplicate; scalars replace.
  * @param surface the surface of the selection
  * @param policy the loaded policy
  * @param key the dotted key
@@ -329,7 +329,7 @@ export function settingValue(
     const shipped = surface.defaults.get(spec.name) ?? surface.defaults.get(key);
     const start: SettingState = {
         value: shipped?.value,
-        source: shipped ? `preset ${shipped.preset}` : 'unset',
+        source: shipped ? `configuration ${shipped.configuration}` : 'unset',
         reason: undefined,
     };
     const candidates = match.language === undefined ? [key] : [spec.name, key];

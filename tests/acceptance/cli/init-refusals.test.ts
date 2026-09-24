@@ -16,7 +16,7 @@ const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 describe('init refusals', () => {
     test(
-        'a nonterminal preview names its accepted preset list and keeps JSON output parseable',
+        'a nonterminal preview names its accepted configuration list and keeps JSON output parseable',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -24,7 +24,7 @@ describe('init refusals', () => {
             const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...QUIET];
             const result = await run(sandbox.path, flags);
             expect(result.code, result.stdout + result.stderr).toBe(0);
-            expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --presets <ids>\./u);
+            expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --configurations <ids>\./u);
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
             const json = await run(sandbox.path, [...flags, '--json']);
             expect(json.code, json.stdout + json.stderr).toBe(0);
@@ -51,18 +51,18 @@ describe('init refusals', () => {
     );
 
     test(
-        'an unknown preset names the near match, and a required preset cannot be left out',
+        'an unknown configuration names the near match, and a required configuration cannot be left out',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
-            const unknown = await run(sandbox.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
+            const unknown = await run(sandbox.path, ['init', '--yes', '--configurations', 'bassh', ...QUIET]);
             expect(unknown.code).toBe(2);
             expect(unknown.stderr).toContain('Did you mean `bash`');
             const required = await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--presets',
+                '--configurations',
                 'bash',
                 '--without',
                 'structure',
@@ -82,11 +82,11 @@ describe('init refusals', () => {
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-            const refused = await run(sandbox.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
+            const refused = await run(sandbox.path, ['init', '--yes', '--configurations', 'bash', ...QUIET]);
             expect(refused.code).toBe(2);
             expect(refused.stderr).toContain('--allow-dirty');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-            const allowed = await run(sandbox.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
+            const allowed = await run(sandbox.path, ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...QUIET], {
                 PATH: `${join(import.meta.dir, '../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
             });
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
@@ -123,7 +123,7 @@ describe('init refusals', () => {
     });
 
     test(
-        'a recommended preset is installed unless --without names it',
+        'a recommended configuration is installed unless --without names it',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -131,7 +131,7 @@ describe('init refusals', () => {
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
                 sandbox.path,
-                ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET],
+                ['init', '--yes', '--configurations', 'bash', '--without', 'naming', ...QUIET],
                 environment,
             );
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
@@ -139,13 +139,13 @@ describe('init refusals', () => {
             expect(policy).not.toContain('"naming"');
             const check = await run(sandbox.path, ['check', '--only', 'naming/identifiers'], environment);
             expect(check.code).toBe(2);
-            expect(check.stdout).toContain('No selected preset runs a check called `naming/identifiers`');
+            expect(check.stdout).toContain('No selected configuration runs a check called `naming/identifiers`');
         },
         PLANTED_TIMEOUT_MS,
     );
 
     test(
-        'one --scope flag writes both scopes with their presets',
+        'one --scope flag writes both scopes with their configurations',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'tools/a.sh': script, 'jobs/b.sh': script });
@@ -155,8 +155,8 @@ describe('init refusals', () => {
             expect(init.code, init.stdout + init.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             const parsed = parsePolicyText(policy, 'gspot.toml');
-            expect(parsed.scopes.find((scope) => scope.path === 'tools')?.presets).toContain('bash');
-            expect(parsed.scopes.find((scope) => scope.path === 'jobs')?.presets).toContain('bash');
+            expect(parsed.scopes.find((scope) => scope.path === 'tools')?.configurations).toContain('bash');
+            expect(parsed.scopes.find((scope) => scope.path === 'jobs')?.configurations).toContain('bash');
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -171,7 +171,7 @@ test('initialization flags control integrations and formatter carryover in the p
     const command = [
         'init',
         '--yes',
-        '--presets',
+        '--configurations',
         'javascript',
         '--no-hooks',
         '--no-ci',

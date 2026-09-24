@@ -1,14 +1,14 @@
 // The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
-import type { PolicyFiles, PathSegment, PolicyProblem } from '#cli/policy/types.ts';
-import { selectForScope } from '#cli/presets/select.ts';
+import type { PolicyFiles, PathSegment, PolicyProblem } from '#cli/types/policy.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
-import { excludeProblems } from '#cli/rules/assemble.ts';
+import { excludeProblems } from '#cli/agents/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { sourceLocations, policyLocation } from '#cli/policy/source-locations.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import { unknownPreset } from '#cli/policy/messages.ts';
+import { unknownConfiguration } from '#cli/policy/messages.ts';
 
 /**
  * Every problem the selection and the surface find in a parsed policy. Throws PolicyError when there are any.
@@ -16,11 +16,11 @@ import { unknownPreset } from '#cli/policy/messages.ts';
  */
 export function assertPolicyComplete(source: PolicyFiles): void {
     const { policy } = source;
-    const manifests = presetManifests();
+    const manifests = configurationManifests();
     const declarations: { name: string; path: PathSegment[] }[] = [
-        ...policy.presets.map((name, index) => ({ name, path: ['presets', index] })),
+        ...policy.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...policy.scopes.flatMap((scope, scopeIndex) =>
-            scope.presets.map((name, index) => ({ name, path: ['scope', scopeIndex, 'presets', index] })),
+            scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
     const unknown = declarations.filter(({ name }) => !manifests.has(name));
@@ -29,13 +29,13 @@ export function assertPolicyComplete(source: PolicyFiles): void {
         throw new PolicyError(
             unknown.map(
                 ({ name, path }) =>
-                    `${source.path}:${policyLocation(locations, path)}: ${unknownPreset(name, nearMatches(name, [...manifests.keys()]))}`,
+                    `${source.path}:${policyLocation(locations, path)}: ${unknownConfiguration(name, nearMatches(name, [...manifests.keys()]))}`,
             ),
         );
     }
     const problems: PolicyProblem[] = [];
     const rootSelected = selectForScope(policy, '', manifests);
-    // A scope table is read against the settings of the presets that scope selects, the root presets included.
+    // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
     const scopeSurfaces = new Map(
         policy.scopes.map((scope) => [scope.path, exposedSettings(selectForScope(policy, scope.path, manifests))]),
     );

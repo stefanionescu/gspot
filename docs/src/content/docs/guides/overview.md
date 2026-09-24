@@ -3,14 +3,14 @@ title: Overview
 description: Choose a setup, run checks, and resolve findings with gspot.
 ---
 
-gspot is a CLI to lint and enforce rules for LLM generated codebases. It runs selected tools
+gspot configures linters, runs checks, and generates instructions for coding agents from one repository configuration. It runs selected tools
 and repository checks, then reports findings with paths, check names, and correction guidance.
 It does not determine who wrote the code.
 
 ## Set up a repository
 
 Start with the [source installation prerequisites](/guides/install/). From your project root,
-`gspot init` proposes presets and configuration. A preset selects checks and the tools they need.
+`gspot init` proposes configurations and configuration. A configuration selects checks and the tools they need.
 Review the proposed writes before accepting them. Initialization does not run checks.
 
 - For a disposable example, [run your first check](/guides/quick-start/).
@@ -42,8 +42,8 @@ checks at the intended stages. If setup or removal conflicts with edited files, 
 
 ## From policy to findings
 
-![Policy, apply, and check workflow](/brand/workflow.svg)
+![Policy, apply, and check workflow](/brand/diagrams/workflow.svg)
 
-Choose presets and settings in policy. Run `gspot apply` to generate configuration for those
+Choose configurations and settings in policy. Run `gspot apply` to generate configuration for those
 tools. Run `gspot check` to execute the selected checks and report findings. Correct the code
 or change policy with a reason, then apply policy changes before checking again.

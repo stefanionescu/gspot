@@ -55,7 +55,7 @@ describe('typescript in a scope', () => {
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const lint = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('Parsing error');
-            const written = await Bun.file(join(sandbox.path, '.gspot/eslint.config.mjs')).text();
+            const written = await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).text();
             expect(written).toContain('tseslint.configs.strictTypeChecked');
             expect(lint.stdout).toContain('typescript/eslint');
         },

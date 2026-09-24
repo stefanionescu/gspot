@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
         'entry.sh': 'echo example\n',
         'output types/broken.sh': 'if then\n',
         'upstream/broken.sh': 'if then\n',
@@ -43,7 +43,7 @@ test('generated and vendored settings classify directories and removal returns f
 test('declarations retain producer metadata and reasons while removing individual paths', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\nrequire_reasons = true\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\nrequire_reasons = true\n[rules]\ninstall = false\n',
         'a.sh': 'if then\n',
         'b.sh': 'if then\n',
     });

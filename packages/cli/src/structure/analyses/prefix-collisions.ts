@@ -1,7 +1,7 @@
 // Sibling entries sharing a name prefix at or above the limit. Searched: ls-lint, eslint-plugin-unicorn; neither compares siblings.
-import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Analysis } from '#cli/structure/types.ts';
-import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/structure/structure-definitions.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+import type { Analysis } from '#cli/types/structure.ts';
+import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/structure/patterns.ts';
 import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/structure/directories.ts';
 
 const DEFAULT_THRESHOLD = 2;
@@ -57,7 +57,7 @@ export const prefixCollisions: Analysis = (context) => {
     const isAllowed = pathMatcher(
         input.policyFiles.policy.structure.prefix_collision_allowed.flatMap((entry) => entry.paths),
     );
-    const isNest = input.selection.selected.some((manifest) => manifest.preset.name === 'nestjs');
+    const isNest = input.selection.selected.some((manifest) => manifest.configuration.name === 'nestjs');
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
     return context.files.flatMap((file) => {

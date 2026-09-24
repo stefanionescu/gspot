@@ -1,34 +1,39 @@
 # gspot
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/banner-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/banner-light.svg">
-  <img src="docs/public/brand/banner.png" alt="gspot" width="1200" height="360">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner-light.svg">
+  <img src="docs/public/brand/readme/banner.png" alt="gspot" width="1200" height="360">
 </picture>
 
-[![npm: unreleased](docs/public/brand/badge-npm.svg)](docs/src/content/docs/guides/install.md)
-[![Documentation source](docs/public/brand/badge-docs.svg)](docs/README.md)
-[![License: Apache-2.0](docs/public/brand/badge-license.svg)](LICENSE.md)
-[![Coverage instructions](docs/public/brand/badge-coverage.svg)](docs/src/content/docs/guides/testing.md)
+[![npm: unreleased](docs/public/brand/badges/badge-npm.svg)](docs/src/content/docs/guides/install.md)
+[![Documentation source](docs/public/brand/badges/badge-docs.svg)](docs/README.md)
+[![License: Apache-2.0](docs/public/brand/badges/badge-license.svg)](LICENSE.md)
+[![Coverage instructions](docs/public/brand/badges/badge-coverage.svg)](docs/src/content/docs/guides/testing.md)
 
-CLI to lint and enforce rules for LLM generated codebases.
+**Lint AI generated code.**
 
-Choose presets for your tools, keep policy in `gspot.toml`, and generate their configuration.
-Coding agents receive the selected rule guides through `AGENTS.md`.
+gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.
+
+Edit `gspot.toml` to choose checks. See [edit and retain repository files](docs/src/content/docs/guides/generated-files.md) for what to commit and keep for recovery.
 
 **Unreleased:** use a source checkout. Local builds and package tests do not establish a
 published release or native verification on every target platform.
 
+**Tools**
+
 <p>
-  <img src="docs/public/brand/tool-eslint.svg" alt="ESLint" width="144" height="40">
-  <img src="docs/public/brand/tool-prettier.svg" alt="Prettier" width="144" height="40">
-  <img src="docs/public/brand/tool-ruff.svg" alt="Ruff" width="144" height="40">
-  <img src="docs/public/brand/tool-typescript.svg" alt="TypeScript" width="144" height="40">
-  <img src="docs/public/brand/tool-gnubash.svg" alt="Bash" width="144" height="40">
-  <img src="docs/public/brand/tool-git.svg" alt="Git" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-eslint.svg" alt="ESLint" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-prettier.svg" alt="Prettier" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-ruff.svg" alt="Ruff" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-stylelint.svg" alt="Stylelint" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-shellcheck.svg" alt="ShellCheck" width="144" height="40">
+  <img src="docs/public/brand/readme/tool-semgrep.svg" alt="Semgrep" width="144" height="40">
 </p>
 
-## Find a boundary violation
+See the [configuration catalog](https://gspot.dev/reference/configurations/) for supported technologies.
+
+## Check a JavaScript module
 
 A client module reads private configuration:
 
@@ -47,8 +52,7 @@ export const endpoint = "/api/search";
 
 The corrected module produces no finding from this rule. The application still needs a server
 implementation for the route. Follow the [executable JavaScript example](docs/src/content/docs/guides/client-environment.md)
-for setup, the captured diagnostic, and verification. The [Bash walkthrough](docs/src/content/docs/guides/quick-start.md)
-provides a first CLI check without npm dependencies.
+for setup, the captured diagnostic, and verification.
 
 ## Run from source
 
@@ -74,11 +78,11 @@ A complete policy can select one language:
 
 ```toml
 version = 1
-presets = ["bash"]
+configurations = ["javascript"]
 level = "recommended"
 ```
 
-<img src="docs/public/brand/workflow.svg" alt="Choose policy, apply generated configuration, then run checks." width="720">
+<img src="docs/public/brand/diagrams/workflow.svg" alt="Choose policy, apply generated configuration, then run checks." width="720">
 
 `recommended` is the default. `all` adds further naming, ordering, and style checks. Mandatory
 trivial-file and trivial-function rules remain enabled at both levels. Change policy with
@@ -110,4 +114,11 @@ If setup or a check cannot run, use the
 
 Read the [build and testing guide](docs/src/content/docs/guides/build.md) and the
 [documentation conventions](docs/README.md). The [standalone ESLint plugin](packages/eslint-plugin/README.md)
-can also run without the CLI. The project uses [Apache-2.0](LICENSE.md).
+can also run without the CLI.
+
+See [artwork sources and licenses](docs/README.md#identity-and-layout-assets) for the generated mark,
+upstream logos, and adapted layout.
+
+## License
+
+[Apache-2.0](LICENSE.md).

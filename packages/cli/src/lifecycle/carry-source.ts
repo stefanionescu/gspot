@@ -1,6 +1,7 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { CarrySource, FileSnapshot } from '#cli/lifecycle/types.ts';
-import type { TomlTable } from '#cli/policy/types.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import type { CarrySource } from '#cli/types/ownership.ts';
+import type { TomlTable } from '#cli/types/policy.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';

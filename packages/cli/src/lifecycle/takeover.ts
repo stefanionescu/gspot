@@ -1,4 +1,4 @@
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { dirname } from 'node:path';
 // Observe configuration carryover before retiring supported inputs through the lifecycle owner.
 import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
@@ -6,21 +6,22 @@ import { carryFrom } from '#cli/lifecycle/carry.ts';
 import { collectFormatting } from '#cli/lifecycle/carry-formatting.ts';
 import { collectEslint } from '#cli/lifecycle/carry-eslint.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { CarriedConfiguration, FileSnapshot, TakeoverPlan, TakeoverRemovalResult } from '#cli/lifecycle/types.ts';
-import type { ExistingTooling } from '#cli/repository/types.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+import type { CarriedConfiguration, TakeoverPlan, TakeoverRemovalResult } from '#cli/types/ownership.ts';
+import type { ExistingTooling } from '#cli/types/repository.ts';
 
 function sortedUnique(items: string[]): string[] {
     return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
 }
 
 /**
- * True when a selected preset declares adoption for the tool.
+ * True when a selected configuration declares adoption for the tool.
  * @param tool the tool a configuration file belongs to
- * @param selected the ids of the selected presets
+ * @param selected the ids of the selected configurations
  * @returns whether takeover replaces the tool's configuration
  */
 export function isOwned(tool: string, selected: Set<string>): boolean {
-    const manifests = presetManifests();
+    const manifests = configurationManifests();
     return [...selected].some((id) =>
         manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined),
     );
@@ -30,7 +31,7 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * Reads carried settings from each declared configuration of the selected tools. Deletes nothing.
  * @param root the repository root
  * @param tooling the configuration files, hooks and lint folders found
- * @param selected the ids of the selected presets
+ * @param selected the ids of the selected configurations
  * @returns the lists to write into gspot.toml and the files takeover replaces
  */
 export async function collectCarried(
@@ -168,7 +169,7 @@ export function retireReplaced(
 /**
  * Owned tools among the ones found, given the selection.
  * @param tooling the configuration files found
- * @param selected the ids of the selected presets
+ * @param selected the ids of the selected configurations
  * @returns the tool names, sorted
  */
 export function ownedTools(tooling: ExistingTooling, selected: Set<string>): string[] {
@@ -178,9 +179,9 @@ export function ownedTools(tooling: ExistingTooling, selected: Set<string>): str
 }
 
 /**
- * Tools found for which no selected preset exists.
+ * Tools found for which no selected configuration exists.
  * @param tooling the configuration files found
- * @param selected the ids of the selected presets
+ * @param selected the ids of the selected configurations
  * @returns the tool names, sorted
  */
 export function unownedTools(tooling: ExistingTooling, selected: Set<string>): string[] {

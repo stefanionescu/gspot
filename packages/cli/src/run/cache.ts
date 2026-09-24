@@ -1,14 +1,15 @@
+import { CACHE_DIRECTORY } from '#cli/platform/layout.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
-import { join, relative } from 'node:path';
-import { globbySync } from 'globby';
-import type { CacheKeyInput } from '#cli/run/types.ts';
-import type { CheckResult } from '#cli/output/finding.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
-import { reportStorageFailure } from '#cli/output/messages.ts';
-import { readdirSync, statSync, type Dirent } from 'node:fs';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { reportStorageFailure } from '#cli/output/messages.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
+import type { CacheKeyInput } from '#cli/types/execution.ts';
+import type { CheckResult } from '#cli/types/reports.ts';
+import { globbySync } from 'globby';
+import { readdirSync, statSync, type Dirent } from 'node:fs';
+import { join, relative } from 'node:path';
 
 const CACHE_FORMAT = 5;
 // Thirty days in milliseconds.
@@ -80,9 +81,9 @@ export function cacheInputs(root: string, patterns: string[]): string[] {
  * @returns the result when the cache holds one
  */
 export function readCached(root: string, key: string): CheckResult | undefined {
-    const path = join(join(root, '.gspot', 'cache'), `${key}.json`);
+    const path = join(join(root, CACHE_DIRECTORY), `${key}.json`);
     try {
-        const relative = `.gspot/cache/${key}.json`;
+        const relative = `${CACHE_DIRECTORY}/${key}.json`;
         const recorded = readOwnership(root).files.find((entry) => entry.path === relative && entry.kind === 'runtime');
         if (recorded?.installed === undefined) return undefined;
         const confined = openConfinedRoot(root);
@@ -112,13 +113,13 @@ export function readCached(root: string, key: string): CheckResult | undefined {
  * @param result the result to record
  */
 export function writeCached(root: string, key: string, result: CheckResult): void {
-    const path = join(join(root, '.gspot', 'cache'), `${key}.json`);
+    const path = join(join(root, CACHE_DIRECTORY), `${key}.json`);
     const status = result.status === 'cache' ? 'ok' : result.status;
     const text = JSON.stringify({ ...result, status });
     try {
         withLifecycleOwner(root, (owner) => {
             const status = owner.replace(
-                `.gspot/cache/${key}.json`,
+                `${CACHE_DIRECTORY}/${key}.json`,
                 { bytes: Buffer.from(text), mode: 0o600 },
                 'runtime',
             );
@@ -149,6 +150,6 @@ export function pruneCache(root: string): void {
             owner.applyProposals(proposals);
         });
     } catch (error) {
-        reportStorageFailure(join(root, '.gspot', 'cache'), error);
+        reportStorageFailure(join(root, CACHE_DIRECTORY), error);
     }
 }

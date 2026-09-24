@@ -21,7 +21,7 @@ the declaration is redundant or that its abstraction is wrong.
 
 ## Schema
 
-The shipped policy is `presets/policy/naming/policy.json`. The repository extends it through
+The shipped policy is `packages/cli/configurations/policy/naming/policy.json`. The repository extends it through
 `[naming]` in `gspot.toml`. Both use one schema.
 
 ```json
@@ -118,12 +118,12 @@ Node globals and APIs (`spawnSync`, `setTimeout`, `clearTimeout`, `URLSearchPara
 and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass`, environment
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
 
-The shared policy names no framework. A framework preset carries the names its framework fixes
-as `[[naming.rules]]` in its manifest. The nextjs preset holds the exports of Next.js
-and its route file names. The react preset holds the hooks of React, and PascalCase for a
+The shared policy names no framework. A framework configuration carries the names its framework fixes
+as `[[naming.rules]]` in its manifest. The nextjs configuration holds the exports of Next.js
+and its route file names. The react configuration holds the hooks of React, and PascalCase for a
 component and its file. Vue, Svelte, and React Native do the same.
 
-Each language preset contributes its external names. A repository adds more under `[naming]
+Each language configuration contributes its external names. A repository adds more under `[naming]
 external`.
 
 ### Contract properties
@@ -183,12 +183,12 @@ prefix. SQL boolean columns remain bare predicates such as `enabled` and `retrya
 These house-style checks run at `all`. The action and parameter contract in
 [public vocabulary](README.md#glossary) also applies to the naming rules and lint configuration of gspot itself.
 
-`handle` as a leading verb is a `verbs` finding in the shared policy. A preset whose framework
+`handle` as a leading verb is a `verbs` finding in the shared policy. A configuration whose framework
 uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and
 nestjs for a request handler, and swift for an `@objc` selector. `Handler` as a type or role
 suffix is always a `roles` finding.
 
-The nextjs preset strips the brackets and parentheses of a route segment before matching:
+The nextjs configuration strips the brackets and parentheses of a route segment before matching:
 `[slug]` is a path parameter in camel case, `(group)` is a folder in kebab case, and `@slot`
 likewise. `_private` folders drop the underscore.
 
@@ -257,7 +257,7 @@ exemptions that whole-part matching does not need.
 The engine extracts identifiers with tree-sitter per language and classifies them. One unit test for each language runs the shipped policy over a short file written the way
 that language and its frameworks are written, and expects no finding (T-19).
 
-Extraction skips: generated files (by nature), lockfiles, the paths a preset excludes
+Extraction skips: generated files (by nature), lockfiles, the paths a configuration excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
 Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table).
 
@@ -308,7 +308,7 @@ and `defensive` groups refuse removal by command and by hand alike.
 
 The Vale `gspot` style bans the words of the `marketing` and `defensive` groups in prose, so a
 comment cannot say what an identifier cannot say. The style holds its own lists under
-`presets/policy/prose/styles/gspot/`, and a unit test holds each list equal to its group of
-`presets/policy/naming/policy.json`.
+`packages/cli/configurations/policy/prose/styles/gspot/`, and a unit test holds each list equal to its group of
+`packages/cli/configurations/policy/naming/policy.json`.
 
 Names follow their behavioral owners. Do not require top-level `config` or `types` buckets, forwarding modules, or source/test directory symmetry. Rename consumers directly without aliases.

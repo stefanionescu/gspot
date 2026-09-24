@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 /** Copy selected files and declared configurations without native discovery inputs. */
 export function createFileWorkspace(

@@ -4,10 +4,10 @@ import { parse } from 'yaml';
 import { z } from 'zod';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import { COMPOSE_FILES } from '#cli/checks/integrity-definitions.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
+
 
 const SHOWN_LINES = 20;
 const composeSchema = z.object({
@@ -33,7 +33,7 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
         );
         for (const image of images) {
             const result = await runCheckCommand(input, [
-                'trivy', 'image', '--quiet', '--config', join(input.root, '.gspot/trivy.yaml'), '--exit-code', '1', image,
+                'trivy', 'image', '--quiet', '--config', join(input.root, '.gspot/config/trivy.yaml'), '--exit-code', '1', image,
             ], { cwd: input.root });
             if (result.code === 0) continue;
             const lines = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => line.trim() !== '');
@@ -49,3 +49,10 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
+
+const COMPOSE_FILES = [
+    '**/docker-compose*.yml',
+    '**/docker-compose*.yaml',
+    '**/compose*.yml',
+    '**/compose*.yaml',
+];

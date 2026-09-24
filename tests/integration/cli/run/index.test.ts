@@ -28,7 +28,7 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
     async (check) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["secrets", "structure"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["secrets", "structure"]\n',
             '.env': 'TOKEN=example\n',
             'node_modules/example/source.js': 'export {};\n',
             'source.ts': 'export {};\n',

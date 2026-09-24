@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // The migrations of a repository: where they live, their versions, and their parsed statements.
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { sqlFile } from '#cli/readers/sql/statements.ts';
-import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/checks/postgres/postgres-definitions.ts';
+import { sqlFile } from '#cli/parsers/sql/statements.ts';
+
 
 const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 
@@ -65,3 +65,7 @@ export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
     }
     return migrations;
 }
+
+const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
+
+const MIGRATION_VERSION = /^(?<version>\d+)/u;

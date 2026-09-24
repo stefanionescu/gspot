@@ -22,7 +22,7 @@ table, then rerun the command. For a missing required value, the location identi
 nearest authored table. Syntax diagnostics do not print neighboring configuration lines.
 Missing scopes, invalid adopted tool paths, missing reasons, and disabled-rule errors also
 identify their policy declarations.
-Unknown presets and unsupported settings name their source entries. A refused loosening
+Unknown configurations and unsupported settings name their source entries. A refused loosening
 points to the configured value and includes the command for recording its reason.
 
 ## A tool is missing
@@ -36,7 +36,7 @@ its check passes.
 
 Read the download error before changing configuration. A response that says `API rate limit
 exceeded` means GitHub refused the release lookup or asset download. The npm wrapper downloads
-the native version pinned by the formatting preset, even when npm package installation succeeds.
+the native version pinned by the formatting configuration, even when npm package installation succeeds.
 
 Wait for the GitHub API limit to reset, then rerun `gspot install` from the same repository.
 An existing `GITHUB_TOKEN` environment variable is passed to the wrapper for authenticated

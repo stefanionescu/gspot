@@ -1,6 +1,6 @@
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { chmodSync, cpSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -15,7 +15,7 @@ test(
         await using repository = await testdir();
         const projectTool = '#!/bin/sh\necho "project formatter must remain separate" >&2\nexit 2\n';
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["formatting"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n',
             'source.js': 'export const greeting="hello";',
             'node_modules/prettier/package.json': '{"name":"prettier","version":"3.8.1"}\n',
             'node_modules/prettier/cli': projectTool,
@@ -61,7 +61,7 @@ test(
         chmodSync(join(repository.path, '.gspot/node_modules/.bin/tsc'), 0o755);
         mkdirSync(join(repository.path, 'node_modules/.bin'), { recursive: true });
         symlinkSync(join(MODULES, '.bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
-        const tool = presetManifests()
+        const tool = configurationManifests()
             .get('typescript')!
             .tools.find((entry) => entry.name === 'tsc')!;
         const probe = probeTool({ root: repository.path, probes: new Map() }, tool);

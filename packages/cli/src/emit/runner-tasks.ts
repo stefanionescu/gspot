@@ -1,17 +1,18 @@
 import { z } from 'zod';
-import { privateToolInstallation } from '#cli/platform/tool-installation.ts';
+import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
 // Mise tool pins and task definitions; npm tools belong to the isolated package project.
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { parse as parseToml } from 'smol-toml';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/emit/types.ts';
-import type { RunnerTaskNames } from '#cli/emit/runner-definitions.ts';
-import { PACKAGE_LIFECYCLE } from '#cli/emit/runner-definitions.ts';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
+import type { RunnerTaskNames } from '#cli/schemas/runners.ts';
+import { PACKAGE_LIFECYCLE } from '#cli/schemas/runners.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { MISE_BACKENDS, UV_INSTALLER } from '#cli/platform/installers-definitions.ts';
-import type { Manifest, ToolPin, InstallerPin } from '#cli/presets/types.ts';
-import type { FileSnapshot } from '#cli/lifecycle/types.ts';
+import { MISE_BACKENDS, UV_INSTALLER } from '#cli/tools/installers.ts';
+import type { Manifest, ToolPin, InstallerPin } from '#cli/types/configurations.ts';
+import type { FileSnapshot } from '#cli/types/filesystem.ts';
+
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;

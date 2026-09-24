@@ -2,30 +2,30 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { isValePackageFile } from '#cli/repository/natures.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { z } from 'zod';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
-import type { SpawnResult } from '#cli/platform/types.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import type { MergedView, Policy } from '#cli/policy/types.ts';
-import type { ProseRoute, ValeAlert } from '#cli/prose/types.ts';
+import { locateTool } from '#cli/tools/tool-probe.ts';
+import type { MergedView, Policy } from '#cli/types/policy.ts';
+import type { ProseRoute, ValeAlert } from '#cli/types/prose.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_STDIN } from '#cli/prose/prose-definitions.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_STDIN } from '#cli/prose/syntax.ts';
 
-const STYLE_ASSETS = 'presets/policy/prose/styles/gspot/';
+const STYLE_ASSETS = 'packages/cli/configurations/policy/prose/styles/gspot/';
 
-const VALE_CONFIG = '.gspot/vale.ini';
+const VALE_CONFIG = '.gspot/config/vale.ini';
 
 const MAX_LINE = /^max: \d+$/mu;
 const LONGER_THAN = /longer than \d+/u;
@@ -94,7 +94,7 @@ export function styleNames(): string[] {
 }
 
 /**
- * The style and vocabulary files apply writes under .gspot/vale/styles.
+ * The style and vocabulary files apply writes under .gspot/config/vale/styles.
  * @param policy the repository policy
  * @param view the root scope's merged view, for the docs limits
  * @returns the generated files
@@ -108,10 +108,10 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
             content: renderedRule(stem, readAsset(asset), view),
             readOnly: true,
             kind: 'config',
-            preset: 'prose',
+            configuration: 'prose',
         };
     });
-    const shipped = readAsset('presets/policy/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    const shipped = readAsset('packages/cli/configurations/policy/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [
@@ -121,7 +121,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
             content: `${vocabulary.join('\n')}\n`,
             readOnly: true,
             kind: 'config',
-            preset: 'prose',
+            configuration: 'prose',
         },
     ];
 }

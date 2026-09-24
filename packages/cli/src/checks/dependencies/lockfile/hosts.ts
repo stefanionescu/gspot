@@ -1,8 +1,8 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { LOCKFILES, LOCKFILE_URL } from '#cli/checks/integrity-definitions.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -47,3 +47,5 @@ export function lockfileHosts(input: EngineInput): Finding[] {
         });
     return paths.flatMap((path) => fileFindings(input, path, hosts));
 }
+
+const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;

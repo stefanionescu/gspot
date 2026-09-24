@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/run/report-schema.ts';
+import { reportSchema } from '#cli/schemas/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { expect, test } from 'bun:test';
@@ -10,7 +10,7 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     await using directory = await testdir();
     const local = 'skip = ["bash/shellcheck"]\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
         'gspot.local.toml': local,
         'entry.sh': '#!/usr/bin/env bash\necho $1\n',
     });

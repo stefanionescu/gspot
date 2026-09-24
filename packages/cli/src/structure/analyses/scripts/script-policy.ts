@@ -1,5 +1,5 @@
 // Scripts that only forward, wrappers, compatibility aliases and inline Node. Searched: shellcheck; it reads syntax, not roles.
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 import { stemOf } from '#cli/structure/directories.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
 
@@ -10,7 +10,7 @@ import {
     FORWARDING_MAX_LINES,
     INLINE_NODE,
     FORWARDER_STEM,
-} from '#cli/structure/structure-definitions.ts';
+} from '#cli/structure/patterns.ts';
 
 /**
  * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.

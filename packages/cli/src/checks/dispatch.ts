@@ -1,12 +1,12 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { Engine } from '#cli/run/types.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { Engine } from '#cli/types/execution.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { localeFiles } from '#cli/checks/i18n/locales.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
-import { jestCoverage } from '#cli/checks/jest.ts';
+import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
 import { htmlCopy, htmlScripts } from '#cli/checks/html.ts';
 import { adminKey } from '#cli/checks/supabase/admin-key.ts';
@@ -19,7 +19,7 @@ import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 import { dockerignore } from '#cli/checks/docker/ignore-file.ts';
-import { docsHeadings } from '#cli/checks/docs/docs-headings.ts';
+import { docsHeadings } from '#cli/checks/docs/headings.ts';
 import { envExample } from '#cli/checks/security/env/example.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { SWIFT_STRUCTURE } from '#cli/structure/swift/analyses.ts';
@@ -44,14 +44,14 @@ import { gitleaksBaseline } from '#cli/checks/security/gitleaks-baseline.ts';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
-import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
+import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
 import { buildReproducible, siteBuilds } from '#cli/checks/static-site/build.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/repository/tracked-dependencies.ts';
 import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/project.ts';
-import { dependencyAlignment, frameworkFile, routeSegments } from '#cli/checks/nextjs.ts';
+import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
 import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-checks.ts';
 import { drizzleMigrations, drizzleRelations, trpcBoundaries } from '#cli/checks/libraries.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
@@ -98,9 +98,9 @@ const checks: Record<string, Engine> = {
     'drizzle-relations': drizzleRelations,
     'drizzle-migrations': drizzleMigrations,
     'next-route-segments': routeSegments,
-    'next-config': frameworkFile,
-    'next-types': frameworkTypes,
-    'next-build': frameworkBuild,
+    'next-config': nextjsConfiguration,
+    'next-types': nextjsTypes,
+    'next-build': nextjsBuild,
     'required-rules': requiredRules,
     'dependency-alignment': dependencyAlignment,
     'locale-files': localeFiles,

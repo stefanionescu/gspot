@@ -1,6 +1,6 @@
 // The header init prints: what it found in the repository, one row per kind.
-import type { Proposal } from '#cli/presets/types.ts';
-import type { DetectionSummary } from '#cli/lifecycle/types.ts';
+import type { Proposal } from '#cli/types/configurations.ts';
+import type { DetectionSummary } from '#cli/types/ownership.ts';
 
 const LABEL_WIDTH = 13;
 const GAP_WIDTH = 3;
@@ -19,13 +19,13 @@ function row(label: string, items: string[]): string | undefined {
 
 function proposalsOfKind(summary: DetectionSummary, kind: string): Proposal[] {
     return summary.proposals.filter(
-        (proposal) => proposal.kind === kind && summary.manifests.get(proposal.preset)?.preset.default !== true,
+        (proposal) => proposal.kind === kind && summary.manifests.get(proposal.configuration)?.configuration.default !== true,
     );
 }
 
 function languageRow(summary: DetectionSummary): string | undefined {
     const items = proposalsOfKind(summary, 'language').map(
-        (proposal) => `${proposal.preset} ${proposal.evidence.split(' ', 1)[0] ?? ''}`,
+        (proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`,
     );
     return row('languages', items);
 }
@@ -34,7 +34,7 @@ function kindRows(summary: DetectionSummary): (string | undefined)[] {
     return KIND_ROWS.map(({ label, kind }) =>
         row(
             label,
-            proposalsOfKind(summary, kind).map((proposal) => `${proposal.preset}  ${proposal.evidence}`),
+            proposalsOfKind(summary, kind).map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
         ),
     );
 }
@@ -63,20 +63,20 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
 
 function unknownRows(summary: DetectionSummary): string[] {
     return summary.unknown.map(
-        (entry) => `${'no preset'.padEnd(LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
+        (entry) => `${'no configuration'.padEnd(LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
     );
 }
 
 function ownershipRows(summary: DetectionSummary): string[] {
     const lines: string[] = [];
     if (summary.owned.length > 0) lines.push(`already configured   ${summary.owned.join('  ')}`);
-    if (summary.unowned.length > 0) lines.push(`no gspot preset      ${summary.unowned.join('  ')}`);
+    if (summary.unowned.length > 0) lines.push(`no gspot configuration      ${summary.unowned.join('  ')}`);
     if (lines.length > 0) lines.push('');
     return lines;
 }
 
 /**
- * The detection header: tracked files, what each preset kind was found from, scopes, tooling, and what has no preset.
+ * The detection header: tracked files, what each configuration kind was found from, scopes, tooling, and what has no configuration.
  * @param summary what init detected
  * @returns the text, ending with a blank line when tooling was found
  */

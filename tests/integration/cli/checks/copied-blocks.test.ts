@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/platform/tool-probe.ts';
+import * as probes from '#cli/tools/tool-probe.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { planRun } from '#cli/run/plan.ts';
@@ -14,9 +14,9 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash", "duplication"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash", "duplication"]\n',
             'sample.sh': 'echo example\n',
-            '.gspot/jscpd.json': '{}\n',
+            '.gspot/config/jscpd.json': '{}\n',
         });
         const session = await openSession(directory.path);
         const [planned] = await planRun(session, { stage: 'push', skips: [], only: ['duplication/jscpd'] });

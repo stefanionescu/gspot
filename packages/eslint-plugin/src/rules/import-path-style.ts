@@ -18,6 +18,7 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
     meta: {
         type: 'problem',
         docs: {
+            title: 'Import path style',
             example:
                 'With `style: "js"`, `import { a } from "./a";` reports a missing JavaScript suffix. Correct it to `import { a } from "./a.js";`. Package imports such as `import { a } from "package";` do not need a suffix.',
             summary:

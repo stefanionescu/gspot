@@ -1,10 +1,10 @@
 // The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
-import { SCHEMA_LINE } from '#cli/emit/markers-definitions.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import type { CarriedConfiguration } from '#cli/lifecycle/types.ts';
-import type { TomlTable, Proposal } from '#cli/policy/types.ts';
+import { SCHEMA_LINE } from '#cli/emit/markers.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
+import type { CarriedConfiguration } from '#cli/types/ownership.ts';
+import type { TomlTable, Proposal } from '#cli/types/policy.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -47,21 +47,21 @@ function headTables(proposal: Proposal): TomlTable {
     const document: TomlTable = {
         version: 1,
         level: policySchema.shape.level.parse(undefined),
-        presets: proposal.presets,
+        configurations: proposal.configurations,
     };
-    const scopes = new Map<string, { path: string; presets: string[]; tools: TomlTable }>(
+    const scopes = new Map<string, { path: string; configurations: string[]; tools: TomlTable }>(
         proposal.scopes.map((scope) => [
             scope.path,
             {
                 path: scope.path,
-                presets: scope.presets,
+                configurations: scope.configurations,
                 tools: proposal.xcode?.scope === scope.path ? { xcode: xcodeTable(proposal.xcode) } : {},
             },
         ]),
     );
     for (const [path, adopted] of proposal.carried.scopes) {
-        const scope = scopes.get(path) ?? { path, presets: [], tools: {} };
-        scope.presets = [...new Set([...scope.presets, ...adopted.presets])];
+        const scope = scopes.get(path) ?? { path, configurations: [], tools: {} };
+        scope.configurations = [...new Set([...scope.configurations, ...adopted.configurations])];
         scope.tools = { ...scope.tools, ...adopted.tools };
         scopes.set(path, scope);
     }
@@ -86,7 +86,7 @@ function ignoreTables(carried: CarriedConfiguration): TomlTable[] {
         }));
 }
 
-const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'presets']);
+const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'configurations']);
 
 function asTable(value: unknown): TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};

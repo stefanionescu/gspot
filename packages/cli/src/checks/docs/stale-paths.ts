@@ -4,19 +4,12 @@ import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 
-import {
-    FILE_EXTENSION,
-    FREE_TEXT_FENCES,
-    PATH_CHARS,
-    PATH_TOKEN_SKIPS,
-    RUN_TOKEN,
-    TOKEN_SEPARATORS,
-} from '#cli/checks/docs/docs-definitions.ts';
+
 
 type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
 
@@ -152,3 +145,15 @@ export function stalePaths(input: EngineInput): Finding[] {
         );
     return findings;
 }
+
+const PATH_CHARS = /^[\w./-]+$/u;
+
+const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
+
+const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
+
+const FREE_TEXT_FENCES = ['text', 'plaintext', 'console', 'diff'];
+
+const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
+
+const PATH_TOKEN_SKIPS = [/^https?:/u, /^[a-z]+:\/\//u, /^\.\.?\/?$/u, /^\/dev\//u, /^\d+\/\d+$/u, /^\//u];

@@ -101,24 +101,24 @@ folders (`SA eslint/local/`, `LA shared/eslint/plugin/rules/`, `SS shared/eslint
 | tests-directory-contents                                                                                                                                                                                                                                          | SA                                                                      | `gspot/tests-directory-contents`                                                                                                                                        |
 | no-harness-barrel-imports                                                                                                                                                                                                                                         | SA                                                                      | `no-restricted-imports` over `tools.vitest.harness_directory` (K-188)                                                                                                   |
 | registry-instance-only                                                                                                                                                                                                                                            | SA                                                                      | `gspot/registry-instance-only`                                                                                                                                          |
-| require-server-only                                                                                                                                                                                                                                               | SS `boundary-plugin.mjs`                                                | `gspot/require-server-only` (nextjs preset)                                                                                                                             |
-| no-client-environment                                                                                                                                                                                                                                             | SS `boundary-plugin.mjs`                                                | `gspot/no-client-environment` (nextjs preset)                                                                                                                           |
+| require-server-only                                                                                                                                                                                                                                               | SS `boundary-plugin.mjs`                                                | `gspot/require-server-only` (nextjs configuration)                                                                                                                             |
+| no-client-environment                                                                                                                                                                                                                                             | SS `boundary-plugin.mjs`                                                | `gspot/no-client-environment` (nextjs configuration)                                                                                                                           |
 | `NO_REEXPORT_SYNTAX`: no `export ... from`, no re-export of local symbols, no `export *` in application source                                                                                                                                                    | SA `eslint/api/index.js`                                                | `gspot/no-reexports` with `[structure] reexports = "none"` (default for application scopes; `index-only` for libraries)                                                 |
 | boundaries as an allow matrix: `boundaries/element-types` with `default: disallow` and one allow list per element                                                                                                                                                 | SA `eslint/api/index.js`, `eslint/supabase/index.js`                    | `boundaries/element-types` rendered from `[architecture] elements` and `allow`                                                                                          |
 | type roots: type-only imports, no default export, no runtime value, function or class export, `export *` of types only                                                                                                                                            | SA both projects                                                        | `gspot/types-placement`, `[architecture] types_directory` (explicit opt-in)                                                                                             |
 | type placement: owner-local types by default; an explicit types directory can enforce placement                                                                                                                                                                   | SA `config/eslint.js` `TYPE_PLACEMENT_RESTRICTED_SYNTAX`                | `gspot/types-placement`                                                                                                                                                 |
 | source never imports tests or test-only types; integration, e2e, stress tests and support code never import runtime internals; config, env and types never import app, module, platform or OpenAPI owners (`no-restricted-imports` pattern groups per file class) | SA `api/policy.js`, `supabase/policy.js`, `api/overrides/boundaries.js` | `gspot/import-direction`, the four shipped rules from `[architecture] roles`, rendered as `no-restricted-imports` groups in the generated config so editors report them |
-| `no-console` in source files                                                                                                                                                                                                                                      | SA `presets/overrides/restrictions.js`                                  | core `no-console` over the source file class                                                                                                                            |
+| `no-console` in source files                                                                                                                                                                                                                                      | SA `configurations/overrides/restrictions.js`                                  | core `no-console` over the source file class                                                                                                                            |
 | import path styles `js`, `ts`, `extensionless` per file class                                                                                                                                                                                                     | SA `api/overrides/naming.js`, `supabase/overrides/naming.js`            | `gspot/import-path-style` with `[tools.eslint] import_style`                                                                                                            |
 | call-through allowlist keyed `file:function`                                                                                                                                                                                                                      | SA `eslint/api/index.js`                                                | `[structure] call_through_allowed` entries carry `file`, `name`, `reason`                                                                                               |
-| Deno file class: `n/*` and `n/prefer-promises/*` off, Deno globals                                                                                                                                                                                                | SA `eslint/supabase/index.js`                                           | supabase preset override for `functions/**`                                                                                                                             |
-| plugin floor versions (`UNICORN_ESLINT_MIN` 9.38.0)                                                                                                                                                                                                               | SA, LA `version-policy.js`                                              | `doctor` floors in the preset manifests                                                                                                                                 |
+| Deno file class: `n/*` and `n/prefer-promises/*` off, Deno globals                                                                                                                                                                                                | SA `eslint/supabase/index.js`                                           | supabase configuration override for `functions/**`                                                                                                                             |
+| plugin floor versions (`UNICORN_ESLINT_MIN` 9.38.0)                                                                                                                                                                                                               | SA, LA `version-policy.js`                                              | `doctor` floors in the configuration manifests                                                                                                                                 |
 | exports last, private declarations first                                                                                                                                                                                                                          | new                                                                     | `import-x/exports-last`, `gspot/private-before-public`                                                                                                                  |
 | `process.env` only in the configuration owner                                                                                                                                                                                                                     | SS `no-client-environment` generalized                                  | `gspot/env-access-owner` with `[architecture] roles.env`                                                                                                                |
 
 ## 3. ESLint rule sets
 
-Rendered into `.gspot/eslint.config.mjs` by the typescript and javascript presets. Source:
+Rendered into `.gspot/config/eslint.config.mjs` by the typescript and javascript configurations. Source:
 `SA eslint/rulesets/*.js`, `LA site/eslint/index.js`, `SS shared/eslint/*.mjs`,
 `SS config/lint/ecosystem.mjs`.
 
@@ -151,7 +151,7 @@ Test-file overrides: `no-non-null-assertion` off in tests; jsdoc off in tests an
 
 | Option                                                                                                                                | Sources                       | gspot                                                                  |
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| `strict`                                                                                                                              | all                           | `.gspot/tsconfig.check.json`; `typescript/tsconfig-options` asserts it |
+| `strict`                                                                                                                              | all                           | `.gspot/config/tsconfig.check.json`; `typescript/tsconfig-options` asserts it |
 | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `forceConsistentCasingInFileNames`                    | SS `integrity/typescript.mjs` | same                                                                   |
 | `noImplicitReturns`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noPropertyAccessFromIndexSignature` | SA                            | same                                                                   |
 | every file in a type-check project                                                                                                    | TI `integrity/typecheck.py`   | `typescript/typecheck-membership`                                      |
@@ -198,7 +198,7 @@ Source: `TI pyproject.toml`, `TI quality/python/`, `TI quality/repository/`.
 | every folder allowlist entry resolves                                                                                                                                                                                                                                                                                                           | `integrity/folder.py`                                          | `integrity/allowlists-match`                                                                                                                                                                               |
 | gitleaks baseline entries carry reviewed reasons                                                                                                                                                                                                                                                                                                | `integrity/gitleaks.py`                                        | `secrets/gitleaks-baseline`                                                                                                                                                                                |
 | naming: python categories and cases, visitor method exemptions                                                                                                                                                                                                                                                                                  | `repository/naming/`                                           | naming engine                                                                                                                                                                                              |
-| Semgrep: no `torch.jit.script`, no `torch.load`, no `LSTMCell`, no direct diskcache, no HF token literal, no obsolete markers                                                                                                                                                                                                                   | `config/security/semgrep/*.yml`                                | `security/semgrep` with `presets/language/python/semgrep/python.yml`; the rules that name one project go to that project (K-248, K-218)                                                                             |
+| Semgrep: no `torch.jit.script`, no `torch.load`, no `LSTMCell`, no direct diskcache, no HF token literal, no obsolete markers                                                                                                                                                                                                                   | `config/security/semgrep/*.yml`                                | `security/semgrep` with `packages/cli/configurations/language/python/semgrep/python.yml`; the rules that name one project go to that project (K-248, K-218)                                                                             |
 | ambiguous folder names banned (`common`, `core`, `helper(s)`, `util(s)`, `support`, language names)                                                                                                                                                                                                                                             | `config/repository/folders.py`                                 | `structure/folder-names`                                                                                                                                                                                   |
 
 ## 6. Shell
@@ -248,13 +248,13 @@ Source: `SA ios/.swiftlint.yml`, `.swiftformat`, `.periphery.yml`, `quality/nami
 | SwiftFormat config: the enabled and disabled rule lists and options                                                                                                                                                                                                                                                                                                                                                                                   | `swift/swiftformat`                                                                                    |
 | Periphery with the retain options                                                                                                                                                                                                                                                                                                                                                                                                                     | `swift/periphery` (push)                                                                               |
 | `swiftlint lint --strict` at commit, analyze after `xcodebuild` at push                                                                                                                                                                                                                                                                                                                                                                               | stages                                                                                                 |
-| Semgrep iOS: 14 rules (keychain accessibility, secrets in plist and UserDefaults, insecure HTTP, ATS exceptions, weak hashes, UIWebView, unsafe pointer casts, sensitive logging, script eval and unquoted vars, JavaScript in WKWebView, hardcoded keys and credential URLs)                                                                                                                                                                         | `security/semgrep` with `presets/language/swift/semgrep/ios.yml` (K-248)                                        |
+| Semgrep iOS: 14 rules (keychain accessibility, secrets in plist and UserDefaults, insecure HTTP, ATS exceptions, weak hashes, UIWebView, unsafe pointer casts, sensitive logging, script eval and unquoted vars, JavaScript in WKWebView, hardcoded keys and credential URLs)                                                                                                                                                                         | `security/semgrep` with `packages/cli/configurations/language/swift/semgrep/ios.yml` (K-248)                                        |
 | naming: swift categories, `pascal-plus` file case, 40 characters, 5 words                                                                                                                                                                                                                                                                                                                                                                             | naming engine                                                                                          |
 | trivial functions                                                                                                                                                                                                                                                                                                                                                                                                                                     | `structure/trivial-function`                                                                           |
 | `///` doc comments over `/** */`                                                                                                                                                                                                                                                                                                                                                                                                                      | SwiftLint custom rule                                                                                  |
 | snapshot test config lint                                                                                                                                                                                                                                                                                                                                                                                                                             | `swift/swiftlint` second config through `[tools.swiftlint.extra_configs]`                              |
 | Swift tests, checked by nothing in the reference tree beyond five SwiftLint rules: disabled tests with reasons, sleeps, a snapshot recording mode left on, snapshot references without a test, coverage                                                                                                                                                                                                                                               | `xctest/disabled`, `xctest/no-sleep`, `xctest/recording`, `xctest/reference-images`, `xctest/coverage` |
-| Xcode project files, checked by nothing in the reference tree: plist and entitlements (`plutil -lint`), xcconfig secrets, xcstrings completeness, asset catalogues, test plans, orphan sources, tracked symlinks, entitlement policy, ATS exceptions                                                                                                                                                                                                  | the xcode preset, one check each                                                                       |
+| Xcode project files, checked by nothing in the reference tree: plist and entitlements (`plutil -lint`), xcconfig secrets, xcstrings completeness, asset catalogues, test plans, orphan sources, tracked symlinks, entitlement policy, ATS exceptions                                                                                                                                                                                                  | the xcode configuration, one check each                                                                       |
 
 ## 8. SQL and Supabase
 
@@ -262,7 +262,7 @@ Source: `SA quality/sql/`, `SA .squawk.toml`, `SA supabase/`, `SA security/semgr
 
 | Rule                                                                                                                                                                                                                      | gspot                                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| sqlfluff over every SQL file with `sql_file_exts` covering `.pgsql` and `.psql`, dialect from the database preset                                                                                                         | `sql/sqlfluff`                                                     |
+| sqlfluff over every SQL file with `sql_file_exts` covering `.pgsql` and `.psql`, dialect from the database configuration                                                                                                         | `sql/sqlfluff`                                                     |
 | squawk over migrations, `assume_in_transaction`, excluded rules, scoped to migrations after a baseline version                                                                                                            | `postgres/squawk`                                                  |
 | migration filename `YYYYMMDDHHMMSS_snake_case.sql`                                                                                                                                                                        | naming engine `snake-migration`                                    |
 | migration header: boxed separators, `-- Migration: <file>`, `-- Purpose:`; section headings boxed; entities under their section; entity labels with purpose and separators; trigger comments; generated statements marked | `postgres/migration-docs`                                          |
@@ -316,8 +316,8 @@ Source: `SS quality/`.
 | manifests sorted, four-space indentation                                                                                                                                                        | `package-json/order-properties` through eslint-plugin-package-json with `[tools.package-json] indent`; sort-package-json is cut |
 | docs: every Markdown link and anchor resolves                                                                                                                                                   | lychee `--offline --include-fragments`                                                                                          |
 | task policy: required runner tasks exist, no runtime-named folders, no stale paths                                                                                                              | `integrity/task-policy`                                                                                                         |
-| zod rules (13), react-hook-form, tanstack-query, zustand, drizzle, trpc rule files                                                                                                              | library presets                                                                                                                 |
-| framework entry files retain mandatory structural rules                                                                                                                                              | nextjs preset overrides                                                                                                         |
+| zod rules (13), react-hook-form, tanstack-query, zustand, drizzle, trpc rule files                                                                                                              | library configurations                                                                                                                 |
+| framework entry files retain mandatory structural rules                                                                                                                                              | nextjs configuration overrides                                                                                                         |
 
 ## 11. Repository-wide
 
@@ -334,7 +334,7 @@ Source: `SS quality/`.
 | osv-scanner over lockfiles with ignored vulnerabilities carrying reasons                                                                                                                                                                                                | all                                                  | `dependencies/osv` (push)                                                                                                      |
 | trivy config and image                                                                                                                                                                                                                                                  | SA                                                   | `docker/trivy-config` (push, docker)                                                                                           |
 | bearer with skip paths and ignore file                                                                                                                                                                                                                                  | SA, LA, TI                                           | Semgrep carries the same pattern classes; bearer is cut and its ignore entries map to Semgrep rule ignores                     |
-| semgrep with the preset rule packs and vendored OWASP, python, bash, secrets sets                                                                                                                                                                                       | all (never wired in SA; wired here)                  | `security/semgrep` (push); the vendored bandit set is cut because Ruff `S` is the port                                         |
+| semgrep with the configuration rule packs and vendored OWASP, python, bash, secrets sets                                                                                                                                                                                       | all (never wired in SA; wired here)                  | `security/semgrep` (push); the vendored bandit set is cut because Ruff `S` is the port                                         |
 | CodeQL per language with scan configs, false-positive filter, path integrity                                                                                                                                                                                            | all                                                  | `security/codeql` (manual)                                                                                                     |
 | hadolint                                                                                                                                                                                                                                                                | SA, TI                                               | `docker/hadolint`                                                                                                              |
 | `docker compose config`                                                                                                                                                                                                                                                 | none ran it; the audit named it                      | `docker/compose-config`                                                                                                        |
@@ -366,7 +366,7 @@ Source: `SA LINTING.md`, section "Prose linting with Vale." Nothing in it ran; a
 | Rule                                                                                                                                                                                                                                                                                                                                                                                                      | gspot                                                   |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | `gspot.dashes`, `present-state`, `modals`, `hedging`, `marketing`, `idioms`, `since`, `self-reference`, `file-paths`, `locations`, `defaults`, `future`, `version-range`, `interface-verbs`, `us-english`, `possessives`, `headings`, `title`, `heading-names`, `sentence-length`, `step-length`, `paragraph-length`, `acronyms`, `link-text`, `alt-text`, `placeholders`, `dates`, `currency`, `symbols` | the `gspot` Vale style, every rule an error             |
-| Google, Microsoft, write-good, proselint, alex, RedHat packages with the disabled-rule list                                                                                                                                                                                                                                                                                                               | `.gspot/vale.ini`                                       |
+| Google, Microsoft, write-good, proselint, alex, RedHat packages with the disabled-rule list                                                                                                                                                                                                                                                                                                               | `.gspot/config/vale.ini`                                       |
 | Harper grammar with spelling rules off                                                                                                                                                                                                                                                                                                                                                                    | last, own step                                          |
 | vocabulary accept list                                                                                                                                                                                                                                                                                                                                                                                    | `[prose] vocabulary`                                    |
 | shell and SQL comments through stdin grammars; no `/* */` in SQL; no in-text Vale directives in Markdown                                                                                                                                                                                                                                                                                                  | prose engine                                            |
@@ -382,7 +382,7 @@ indexes them by area, in the table style slopshop uses.
 
 ## Reference tool versions
 
-The versions the four repositories pin today, taken as the initial preset pins:
+The versions the four repositories pin today, taken as the initial configuration pins:
 
 | Tool                       | Version                                                                                                             | Tool                                                                                            | Version                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -411,16 +411,16 @@ The versions the four repositories pin today, taken as the initial preset pins:
 | vale                       | 3.21.0                                                                                                              | swiftlint                                                                                       | 0.63.2                                                                          |
 | swiftformat                | 0.61.1                                                                                                              | periphery                                                                                       | 3.6.0                                                                           |
 | sqlfluff                   | 4.0.0                                                                                                               | ansible-core                                                                                    | 2.19.4                                                                          |
-| ast-grep                   | the latest stable release on the day the preset is written, recorded in the manifest, moved only by a gspot release | ruff, basedpyright, deptry, vulture, pydoclint, import-linter, pip-licenses, validate-pyproject | the same rule, starting from the versions the reference `uv.lock` files resolve |
+| ast-grep                   | the latest stable release on the day the configuration is written, recorded in the manifest, moved only by a gspot release | ruff, basedpyright, deptry, vulture, pydoclint, import-linter, pip-licenses, validate-pyproject | the same rule, starting from the versions the reference `uv.lock` files resolve |
 
-Where two repositories pin different versions, the preset takes the newer one and the ledger records the older as the floor `doctor` accepts. Some tools the reference repositories pinned are not used. [11-toolchain.md](11-toolchain.md) lists them (lizard, madge, sort-package-json, bearer, bandit, pip-audit, interrogate, pyright) with the tool that does their job.
+Where two repositories pin different versions, the configuration takes the newer one and the ledger records the older as the floor `doctor` accepts. Some tools the reference repositories pinned are not used. [11-toolchain.md](11-toolchain.md) lists them (lizard, madge, sort-package-json, bearer, bandit, pip-audit, interrogate, pyright) with the tool that does their job.
 
-## Preset enforcement contracts
+## Configuration enforcement contracts
 
 These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
-The preset entries retain agreed enforcement, settings, and detection, including unimplemented
+The configuration entries retain agreed enforcement, settings, and detection, including unimplemented
 capabilities. They are target contracts, not a generated inventory of the current manifests.
-The level owner in [presets](04-presets.md) governs every rule below: house-style, naming, layout,
+The level owner in [configurations](04-configurations.md) governs every rule below: house-style, naming, layout,
 and optional abstraction preferences remain available at `all`. Trivial-function and trivial-file
 enforcement is mandatory at both levels, as defined in [slop in structure](07-slop-drift.md#slop-in-structure).
 Stage selection follows [hooks and execution](10-hooks-ci-runners.md#stages): build, analyzer,
@@ -509,11 +509,11 @@ Each rule test gains a case with no option, which expects no report.
 
 ### Acceptance K-211
 
-Implement the agreed React, Next.js, React Native, NestJS, Vue, and Svelte integrations recorded in the enforcement ledger. Preserve the planned Jest preset and testing-library integrations even where no manifest exists. Test focused-test failures under Jest and Vitest. This is a bounded integration commitment, not an instruction to add every available linter.
+Implement the agreed React, Next.js, React Native, NestJS, Vue, and Svelte integrations recorded in the enforcement ledger. Preserve the planned Jest configuration and testing-library integrations even where no manifest exists. Test focused-test failures under Jest and Vitest. This is a bounded integration commitment, not an instruction to add every available linter.
 
 ### Acceptance K-50
 
-A framework preset carries its naming rules as `[[naming.rules]]` in its manifest
+A framework configuration carries its naming rules as `[[naming.rules]]` in its manifest
 . The engine knows no framework.
 
 `policy.ts` merges the rules of the selected manifests after the shared policy. The
@@ -543,8 +543,8 @@ A unit test with both forms.
 
 ### Acceptance K-233
 
-The css preset claims `.css` alone. Detection names Sass as a language gspot has no
-preset for.
+The css configuration claims `.css` alone. Detection names Sass as a language gspot has no
+configuration for.
 
 Two endings leave the claim.
 
@@ -553,7 +553,7 @@ The css planted repository holds a `.scss` file with a mixin and no finding.
 ### Acceptance K-236
 
 One check, `licenses/packages`, runs `osv-scanner` with its license flag over every
-lockfile of the scope. The supabase preset gains `supabase/db-lint` at the `manual` stage.
+lockfile of the scope. The supabase configuration gains `supabase/db-lint` at the `manual` stage.
 
 The allowed list stays `tools.licenses.allowed`, and the scanner takes it as
 `--licenses=<list>`. `supabase/db-lint` declares `requires = "database"`, as
@@ -576,7 +576,7 @@ That test.
 
 ### Acceptance K-256
 
-The xctest preset writes a nested SwiftLint file over the folders it claims, with the
+The xctest configuration writes a nested SwiftLint file over the folders it claims, with the
 three rules off.
 
 SwiftLint reads a `.swiftlint.yml` in a subfolder as a nested config. The manifest
@@ -609,7 +609,7 @@ Three checks with three claims. `zsh` and `bats` are host tools, so an absent on
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
 manifest already says.
 
-`tests/acceptance/presets/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
+`tests/acceptance/configurations/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
 
 ### Acceptance K-258
 
@@ -715,7 +715,7 @@ key `env`, which `tool-runner.ts` passes to the spawn.
 
 The contract test runs `<tool> --help` for each pinned tool and holds each flag.
 
-### Preset swift
+### Configuration swift
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling.
 
@@ -735,19 +735,19 @@ Generated configuration:
 
 | Target                 | Stub                                  | Holds                                                                                                                                                                                                                                                                                                                 |
 | ---------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/swiftlint.yml` | `.swiftlint.yml` with `parent_config` | the selected opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, custom rules for `///` and banned-term regexes as a second line of defense |
-| `.gspot/swiftformat`   | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                          |
-| `.gspot/periphery.yml` | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                      |
+| `.gspot/config/swiftlint.yml` | `.swiftlint.yml` with `parent_config` | the selected opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, custom rules for `///` and banned-term regexes as a second line of defense |
+| `.gspot/config/swiftformat`   | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                          |
+| `.gspot/config/periphery.yml` | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                      |
 
 Checks:
 
 | Id                                                                              | Stage       | Command                                                                                                                 |
 | ------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `swift/swiftlint`                                                               | commit      | `swiftlint lint --strict --quiet --config .gspot/swiftlint.yml --reporter json {files}`                                 |
-| `swift/swiftformat`                                                             | commit      | `swiftformat --lint --config .gspot/swiftformat {files}`; fix order format                                              |
+| `swift/swiftlint`                                                               | commit      | `swiftlint lint --strict --quiet --config .gspot/config/swiftlint.yml --reporter json {files}`                                 |
+| `swift/swiftformat`                                                             | commit      | `swiftformat --lint --config .gspot/config/swiftformat {files}`; fix order format                                              |
 | `swift/build`                                                                   | push, build | `xcodebuild build-for-testing` or `swift build`, incremental compiler state retained; analysis has separate clean state |
 | `swift/swiftlint-analyze`                                                       | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                                                  |
-| `swift/periphery`                                                               | push, build | `periphery scan --config .gspot/periphery.yml --strict`                                                                 |
+| `swift/periphery`                                                               | push, build | `periphery scan --config .gspot/config/periphery.yml --strict`                                                                 |
 | `swift/trivial-function`, `swift/duplicate-functions` | commit      | analyses on the Swift grammar                                                                                           |
 | `swift/private-before-public`                                                   | commit      | `private` and `fileprivate` top-level declarations above `internal`, `public` and `open` ones                           |
 | `swift/env-access-owner`                                                        | commit      | `ProcessInfo.processInfo.environment` read only in the configuration owner                                              |
@@ -760,7 +760,7 @@ and are part of the level `all`.
 
 Shipped rule sets:
 
-The preset renders these lists. They are the measured set of the reference repository, so the
+The configuration renders these lists. They are the measured set of the reference repository, so the
 acceptance run compares like with like. A person turns one rule off with
 `gspot ignore swift/swiftlint --rule <rule>` and a reason.
 
@@ -918,9 +918,9 @@ Rule files:
 Not covered here:
 
 Package dependency scanning: osv-scanner has no `Package.resolved` extractor. The dependencies
-preset reports the gap.
+configuration reports the gap.
 
-### Preset markdown
+### Configuration markdown
 
 Kind: language. Requires: formatting. Recommends: docs, spelling.
 
@@ -940,14 +940,14 @@ Generated configuration:
 
 | Target                      | Stub                                                                     | Holds                                                                                                                                                                                      |
 | --------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/markdownlint.jsonc` | `.markdownlint-cli2.jsonc` with `config.extends` and `globs` from claims | `default: true`; MD007 indent from `[format] indent_width`; MD013 off; MD024 siblings only; MD033 off; MD041 on; MD046 fenced; MD048 backtick; MD049 underscore; MD050 asterisk; MD060 off |
-| `.gspot/lychee.toml`        | none                                                                     | through docs: `offline`, `include_fragments`; an online profile for the manual run                                                                                                         |
+| `.gspot/config/markdownlint.jsonc` | `.markdownlint-cli2.jsonc` with `config.extends` and `globs` from claims | `default: true`; MD007 indent from `[format] indent_width`; MD013 off; MD024 siblings only; MD033 off; MD041 on; MD046 fenced; MD048 backtick; MD049 underscore; MD050 asterisk; MD060 off |
+| `.gspot/config/lychee.toml`        | none                                                                     | through docs: `offline`, `include_fragments`; an online profile for the manual run                                                                                                         |
 
 Checks:
 
 | Id                      | Stage  | Command                                                                                                                                                              |
 | ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/markdownlint.jsonc {files}` (the stub's globs are for editors; the check lints the file list alone); fix, order format |
+| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/config/markdownlint.jsonc {files}` (the stub's globs are for editors; the check lints the file list alone); fix, order format |
 | `markdown/prettier`     | commit | through formatting                                                                                                                                                   |
 | `docs/links`            | commit | lychee offline with fragments, through docs                                                                                                                          |
 | `docs/headings`         | commit | banned headings absent                                                                                                                                               |
@@ -962,7 +962,7 @@ Rule files:
 
 `general/prose/DOCS.md` and its siblings (installed by docs), `general/prose/WRITING.md`.
 
-### Preset i18n
+### Configuration i18n
 
 Kind: library. Requires: javascript.
 
@@ -991,7 +991,7 @@ Rule files:
 
 `shared/i18n/I18N.md`; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
-### Preset react-native
+### Configuration react-native
 
 Kind: framework. Requires: react. Recommends: typescript, jest.
 
@@ -1011,12 +1011,12 @@ As a command: expo-doctor 1.20.4, where `expo` is a dependency.
 
 eslint-plugin-react-native-a11y is left out: its range ends at ESLint 8. eslint-config-expo
 is left out, because it brings its own copies of the React and TypeScript rules, which the react
-and typescript presets own.
+and typescript configurations own.
 
 Generated configuration:
 
-Every shared rule of the javascript and typescript presets reads the files of this framework
-too, with the same limits. A rule this preset turns off stands in its manifest with a
+Every shared rule of the javascript and typescript configurations reads the files of this framework
+too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
 The ESLint config gains, over every code file:
@@ -1042,7 +1042,7 @@ The fragment exports four selectors, which the template joins into `no-restricte
 
 Names:
 
-`[[naming.rules]]` of this preset: the file stem ends before a platform suffix (`.ios`,
+`[[naming.rules]]` of this configuration: the file stem ends before a platform suffix (`.ios`,
 `.android`, `.native`, `.web`), so `Button.ios.tsx` and `Button.android.tsx` are one name.
 
 Turned off:
@@ -1068,7 +1068,7 @@ Rule files:
 
 `framework/react-native/REACT-NATIVE.md`.
 
-### Preset postgres
+### Configuration postgres
 
 Kind: database. Requires: sql.
 
@@ -1088,14 +1088,14 @@ Generated configuration:
 
 | Target                | Holds                                                                                                                                                                                       |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/squawk.toml`  | `assume_in_transaction` from `[tools.squawk]`, `excluded_rules` rendered from the `[[ignore]]` entries for `postgres/squawk`, `--exclude-path` for migrations at or before `frozen_through` |
-| `.gspot/sqlfluff.cfg` | `dialect = postgres`                                                                                                                                                                        |
+| `.gspot/config/squawk.toml`  | `assume_in_transaction` from `[tools.squawk]`, `excluded_rules` rendered from the `[[ignore]]` entries for `postgres/squawk`, `--exclude-path` for migrations at or before `frozen_through` |
+| `.gspot/config/sqlfluff.cfg` | `dialect = postgres`                                                                                                                                                                        |
 
 Checks:
 
 | Id                                      | Stage  | Command                                                                                                                                                                                                                                                          |
 | --------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `postgres/squawk`                       | commit | `squawk --config .gspot/squawk.toml {migrations after frozen_through}`                                                                                                                                                                                           |
+| `postgres/squawk`                       | commit | `squawk --config .gspot/config/squawk.toml {migrations after frozen_through}`                                                                                                                                                                                           |
 | `postgres/migrations-frozen`            | commit | a migration at or before `frozen_through` differs from its committed bytes at that version: fail                                                                                                                                                                 |
 | `postgres/migration-order`              | commit | timestamps ascend; no two migrations share a timestamp                                                                                                                                                                                                           |
 | `postgres/migration-docs`               | commit | boxed header with `-- Migration: <file>` and `-- Purpose:`; section headings boxed; `CREATE SCHEMA`, `TABLE`, `INDEX`, `FUNCTION`, `TRIGGER`, `EXTENSION` under their section; entity labels with purpose and separators; `-- Row Level Security` capitalization |
@@ -1116,7 +1116,7 @@ Rule files:
 
 `database/postgres/POSTGRES.md`.
 
-### Preset python
+### Configuration python
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling, dependencies.
 
@@ -1138,8 +1138,8 @@ Generated configuration:
 
 | Target                           | Stub                              | Holds                                                                                                                                                                                                                                           |
 | -------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/ruff.toml`               | none; the check passes `--config` | the selected families including `S` and `ANN401`, `PLR2004`, `PLR1702`, `PLR0917`, `FAST`; the ignores; the limits (`C901` at `cyclomatic_complexity`, `PLR0915` at `statements`, `PLR1702` at `nested_blocks`); format options from `[format]` |
-| `.gspot/basedpyrightconfig.json` | `pyrightconfig.json`              | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from claims                                                                                                                                                               |
+| `.gspot/config/ruff.toml`               | none; the check passes `--config` | the selected families including `S` and `ANN401`, `PLR2004`, `PLR1702`, `PLR0917`, `FAST`; the ignores; the limits (`C901` at `cyclomatic_complexity`, `PLR0915` at `statements`, `PLR1702` at `nested_blocks`); format options from `[format]` |
+| `.gspot/config/basedpyrightconfig.json` | `pyrightconfig.json`              | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from claims                                                                                                                                                               |
 
 import-linter, deptry, and vulture each read a generated file under `.gspot/`, which the check passes
 by flag. A table of `pyproject.toml` is read and carried at `init`, and left in place.
@@ -1148,7 +1148,7 @@ Checks:
 
 | Id                                                                                                                                                             | Stage  | Command                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `python/ruff`                                                                                                                                                  | commit | `ruff check --config .gspot/ruff.toml {files}`; fix order codemod                                                                     |
+| `python/ruff`                                                                                                                                                  | commit | `ruff check --config .gspot/config/ruff.toml {files}`; fix order codemod                                                                     |
 | `python/ruff-format`                                                                                                                                           | commit | `ruff format --check`; fix order format                                                                                               |
 | `python/basedpyright`                                                                                                                                          | commit | `basedpyright --outputjson`, run in the scope, which holds the `pyrightconfig.json` stub                                              |
 | `python/import-linter`                                                                                                                                         | commit | `lint-imports`                                                                                                                        |
@@ -1169,7 +1169,7 @@ configuration sits under `.gspot/`, so the scope holds a root pointer, `pyrightc
 one key: `extends`. It is generated and read-only, unlike the
 `tsconfig.json` stub, because a repository has nothing of its own to keep in it. Takeover replaces
 an old `pyrightconfig.json` and carries its `exclude` paths into `tools.basedpyright.exclude`, without
-dot folders and the folders the preset leaves out by itself.
+dot folders and the folders the configuration leaves out by itself.
 
 Settings:
 
@@ -1194,14 +1194,14 @@ Not covered here:
 Notebook linting. Ruff runs over `.ipynb` when the repository has them, through a `[tools.ruff]`
 slot; no other check reads notebooks.
 
-### Preset structure
+### Configuration structure
 
-Kind: policy. Requires: nothing. Required by every language preset, because it owns the `limits.*`
+Kind: policy. Requires: nothing. Required by every language configuration, because it owns the `limits.*`
 settings their configurations read. It runs the structural rules no standard linter ships.
 
 Claims:
 
-Every file a language preset claims. The engine dispatches by grammar.
+Every file a language configuration claims. The engine dispatches by grammar.
 
 Checks:
 
@@ -1228,7 +1228,7 @@ Facts about folders hold for every language, and the structure engine alone repo
 `structure/single-file-folder` (level `all`), `structure/prefix-collisions`,
 `structure/file-directory-collision`, and `structure/folder-names`.
 
-The preset also ships the checks over the config and the files gspot writes:
+The configuration also ships the checks over the config and the files gspot writes:
 `integrity/policy`, `integrity/generated-drift`, `integrity/config-purity`, `integrity/suppressions`, `integrity/allowlists-match`,
 `integrity/task-policy`, and `integrity/large-files`.
 
@@ -1247,7 +1247,7 @@ Rule files:
 - `general/code/CONFIGURATION.md` states the environment owner rule.
 - Each language file states its private-first, private-prefix, types, and re-export rules.
 
-### Preset svelte
+### Configuration svelte
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -1267,11 +1267,11 @@ As a command: svelte-check 4.7.6.
 
 Generated configuration:
 
-Every shared rule of the javascript and typescript presets reads the files of this framework
-too, with the same limits. A rule this preset turns off stands in its manifest with a
+Every shared rule of the javascript and typescript configurations reads the files of this framework
+too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The preset claims `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
+The configuration claims `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
 ESLint config holds them. The config gains the `recommended` blocks of the Svelte plugin, with
 every rule that is on set to error. One more block sets the parser, and hands it the TypeScript
 parser for the script where typescript is selected. It adds: `svelte/no-at-html-tags`,
@@ -1286,7 +1286,7 @@ through `postcss-html`. The naming engine reads the script block. The plugin nee
 
 Names:
 
-`[[naming.rules]]` of this preset: a component file is in PascalCase, and the route files of
+`[[naming.rules]]` of this configuration: a component file is in PascalCase, and the route files of
 SvelteKit keep their names (`+page.svelte`, `+layout.ts`, `+server.ts`, `+error.svelte`).
 
 Turned off:
@@ -1312,7 +1312,7 @@ Rule files:
 
 `framework/svelte/SVELTE.md`.
 
-### Preset zustand
+### Configuration zustand
 
 Kind: library. Requires: javascript.
 
@@ -1338,7 +1338,7 @@ Rule files:
 
 `library/zustand/ZUSTAND.md`.
 
-### Preset css
+### Configuration css
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
@@ -1359,15 +1359,15 @@ Generated configuration:
 
 | Target                  | Stub                               | Holds                                                                                                                                                                                                                                                                                                                    |
 | ----------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/stylelint.json` | `.stylelintrc.json` with `extends` | `stylelint-config-standard`, `no-descending-specificity`, `at-rule-no-unknown`, `function-no-unknown`, `import-notation: string`, `at-rule-prelude-no-invalid`, `property-no-vendor-prefix` with the two ignored properties; the reference repositories' disabled rules stay disabled with their reasons in the template |
+| `.gspot/config/stylelint.json` | `.stylelintrc.json` with `extends` | `stylelint-config-standard`, `no-descending-specificity`, `at-rule-no-unknown`, `function-no-unknown`, `import-notation: string`, `at-rule-prelude-no-invalid`, `property-no-vendor-prefix` with the two ignored properties; the reference repositories' disabled rules stay disabled with their reasons in the template |
 
 Checks:
 
-`formatting/prettier` formats CSS files, so this preset has no format check of its own.
+`formatting/prettier` formats CSS files, so this configuration has no format check of its own.
 
 | Id                   | Stage  | Command                                                                        |
 | -------------------- | ------ | ------------------------------------------------------------------------------ |
-| `css/stylelint`      | commit | `stylelint --config .gspot/stylelint.json {files}`; fix, order codemod         |
+| `css/stylelint`      | commit | `stylelint --config .gspot/config/stylelint.json {files}`; fix, order codemod         |
 | `css/usage`          | push   | CSS modules: every class defined is used, every class used is defined (nextjs) |
 | `css/dead-selectors` | push   | PurgeCSS over the built output with a safelist (static-site)                   |
 
@@ -1379,7 +1379,7 @@ Rule files:
 
 `language/CSS.md`, `language/naming/CSS.md`; `tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
 
-### Preset prose
+### Configuration prose
 
 Kind: policy. Requires: markdown. Runs Vale over every comment and every documentation file.
 
@@ -1397,9 +1397,9 @@ Generated configuration:
 
 | Target                                                    | Holds                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/vale.ini`                                         | `StylesPath`, `MinAlertLevel = suggestion`, the packages, `BasedOnStyles`, `SkippedScopes` with tables added, `BlockIgnores` for front matter, `TokenIgnores` for URLs, tool directives (`eslint-disable`, `@ts-expect-error`, `swiftlint:`, `shellcheck`, `nosemgrep`, `MARK: -`, JSDoc tags), spelling rules off (typos owns spelling), the disabled-rule list with its reasons in comments                                   |
-| `.gspot/vale/styles/gspot/*.yml`                          | the 30 rules: `dashes`, `present-state`, `modals`, `hedging`, `marketing`, `idioms`, `since`, `self-reference`, `file-paths`, `locations`, `defaults`, `future`, `version-range`, `interface-verbs`, `us-english`, `possessives`, `headings`, `title`, `heading-names`, `sentence-length`, `step-length`, `paragraph-length`, `acronyms`, `link-text`, `alt-text`, `placeholders`, `dates`, `currency`, `symbols`, `corruption` |
-| `.gspot/vale/styles/config/vocabularies/gspot/accept.txt` | the tool and product names from `[prose] vocabulary`                                                                                                                                                                                                                                                                                                                                                                            |
+| `.gspot/config/vale.ini`                                         | `StylesPath`, `MinAlertLevel = suggestion`, the packages, `BasedOnStyles`, `SkippedScopes` with tables added, `BlockIgnores` for front matter, `TokenIgnores` for URLs, tool directives (`eslint-disable`, `@ts-expect-error`, `swiftlint:`, `shellcheck`, `nosemgrep`, `MARK: -`, JSDoc tags), spelling rules off (typos owns spelling), the disabled-rule list with its reasons in comments                                   |
+| `.gspot/config/vale/styles/gspot/*.yml`                          | the 30 rules: `dashes`, `present-state`, `modals`, `hedging`, `marketing`, `idioms`, `since`, `self-reference`, `file-paths`, `locations`, `defaults`, `future`, `version-range`, `interface-verbs`, `us-english`, `possessives`, `headings`, `title`, `heading-names`, `sentence-length`, `step-length`, `paragraph-length`, `acronyms`, `link-text`, `alt-text`, `placeholders`, `dates`, `currency`, `symbols`, `corruption` |
+| `.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt` | the tool and product names from `[prose] vocabulary`                                                                                                                                                                                                                                                                                                                                                                            |
 
 Style packages are fetched by `vale apply` at setup into an ignored directory. Only the gspot
 style and vocabulary are tracked.
@@ -1408,7 +1408,7 @@ Checks:
 
 | Id                  | Stage  | Command                                                                                                                                                                                                                                                   |
 | ------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prose/vale`        | commit | `vale --config .gspot/vale.ini --output=line --no-exit {files}` per grammar; any alert fails                                                                                                                                                              |
+| `prose/vale`        | commit | `vale --config .gspot/config/vale.ini --output=line --no-exit {files}` per grammar; any alert fails                                                                                                                                                              |
 | `prose/source-bans` | commit | no `<!-- vale` directive in Markdown; no `/* */` in SQL                                                                                                                                                                                                   |
 | `prose/messages`    | commit | the three ESLint selectors: error messages start uppercase, client messages (a `message` or `error` field in an object passed to `.json()` or `.send()`) carry no interpolated identifiers, log calls use a stable message; Ruff `EM101`, `EM102`, `G004` |
 | `prose/doc-tags`    | commit | `jsdoc/no-types` in TypeScript; SwiftLint custom rule `///` over `/** */`                                                                                                                                                                                 |
@@ -1427,7 +1427,7 @@ The prose checks read the files a change touches, so a repository with a backlog
 not blocked by it.
 disabled upstream rules and the reason for each is in the template.
 
-### Preset xctest
+### Configuration xctest
 
 Kind: tool. Requires: swift. macOS only. Every check here passes as a platform skip elsewhere.
 Covers XCTest, Swift Testing and snapshot tests.
@@ -1445,10 +1445,10 @@ swiftlint (from swift), xcodebuild (host). No tool of its own.
 
 Generated configuration:
 
-`.gspot/swiftlint.yml` gains, over the claimed files, the five test rules of the swift preset
+`.gspot/config/swiftlint.yml` gains, over the claimed files, the five test rules of the swift configuration
 (`balanced_xctest_lifecycle`, `empty_xctest_method`, `final_test_case`, `test_case_accessibility`,
 `xct_specific_matcher`) and turns `force_unwrapping`, `missing_docs` and `no_magic_numbers` off
-there. The preset writes a nested SwiftLint file into each test folder it claims, with `parent_config`
+there. The configuration writes a nested SwiftLint file into each test folder it claims, with `parent_config`
 set to the file under `.gspot/` (K-256).
 
 Checks:
@@ -1460,7 +1460,7 @@ Checks:
 | `xctest/recording`        | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                    |
 | `xctest/reference-images` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                        |
 | `xctest/coverage`         | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                              |
-| `xcode/test-plan`         | commit      | from the xcode preset                                                                                                                                                                                         |
+| `xcode/test-plan`         | commit      | from the xcode configuration                                                                                                                                                                                         |
 
 Settings:
 
@@ -1472,7 +1472,7 @@ Rule files:
 
 `tool/xctest/XCTEST.md`, `general/code/TESTING.md`.
 
-### Preset secrets
+### Configuration secrets
 
 Kind: policy. Requires: nothing. Selected by default in every repository.
 
@@ -1488,17 +1488,17 @@ Generated configuration:
 
 | Target                                                         | Holds                                                                                                          |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `.gspot/gitleaks.toml`                                         | `[extend] useDefault = true`; allowlists from `[tools.gitleaks] allow` (paths, regexes, reason); baseline path |
+| `.gspot/config/gitleaks.toml`                                         | `[extend] useDefault = true`; allowlists from `[tools.gitleaks] allow` (paths, regexes, reason); baseline path |
 | `.gitleaks-baseline.json`, at the root, owned by the developer | reviewed historical findings, each with a reason in `[tools.gitleaks] baseline_reasons`                        |
 
 Checks:
 
 | Id                          | Stage  | Command                                                                                                                                                      |
 | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `secrets/gitleaks-staged`   | commit | `gitleaks git --staged --config .gspot/gitleaks.toml --redact`                                                                                               |
-| `secrets/gitleaks`          | push   | `gitleaks git --config .gspot/gitleaks.toml --baseline-path .gitleaks-baseline.json --redact` over the pushed range                                          |
+| `secrets/gitleaks-staged`   | commit | `gitleaks git --staged --config .gspot/config/gitleaks.toml --redact`                                                                                               |
+| `secrets/gitleaks`          | push   | `gitleaks git --config .gspot/config/gitleaks.toml --baseline-path .gitleaks-baseline.json --redact` over the pushed range                                          |
 | `secrets/trufflehog`        | push   | `trufflehog git file://. --since-commit <base> --results=verified --fail`                                                                                    |
-| `secrets/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a preset adds a pattern as data, never as code |
+| `secrets/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a configuration adds a pattern as data, never as code |
 | `secrets/gitleaks-baseline` | commit | every baseline fingerprint has a reason and names a path that existed                                                                                        |
 | `configs/dotenv`            | commit | tracked `.env*` files hold keys only                                                                                                                         |
 
@@ -1511,7 +1511,7 @@ Rule files:
 
 `general/code/SECRETS.md`, `general/code/SECURITY.md`.
 
-### Preset pytest
+### Configuration pytest
 
 Kind: tool. Requires: python.
 
@@ -1528,7 +1528,7 @@ pytest, pytest-cov.
 
 Generated configuration:
 
-`.gspot/ruff.toml` keeps the `PT` family on and adds test-file overrides: `S101` (assert) off in
+`.gspot/config/ruff.toml` keeps the `PT` family on and adds test-file overrides: `S101` (assert) off in
 gspot writes nothing into `pyproject.toml`. The coverage check passes its options by flag.
 with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config"`.
 
@@ -1549,7 +1549,7 @@ Rule files:
 
 `general/code/TESTING.md`; the Tests section of `language/PYTHON.md`.
 
-### Preset static-site
+### Configuration static-site
 
 Kind: policy. Requires: html, css, javascript. For a site built to a directory and served
 as files: the checks that only make sense over built output.
@@ -1564,7 +1564,7 @@ Detects and claims:
 Tools:
 
 html-validate, purgecss, linkinator, svgo. linkinator serves the output folder itself. Cycle
-and complexity checks come from the javascript preset (import-x, sonarjs); madge and Lizard are
+and complexity checks come from the javascript configuration (import-x, sonarjs); madge and Lizard are
 not used.
 
 Checks:
@@ -1594,7 +1594,7 @@ Rule files:
 
 `repository/static-site/STATIC-SITE.md`, `runtime/browser/BROWSER.md`.
 
-### Preset nginx
+### Configuration nginx
 
 Kind: tool. Requires: nothing.
 
@@ -1629,7 +1629,7 @@ Rule files:
 
 `tool/nginx/NGINX.md`.
 
-### Preset vue
+### Configuration vue
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -1649,11 +1649,11 @@ As a command: vue-tsc 3.3.11.
 
 Generated configuration:
 
-Every shared rule of the javascript and typescript presets reads the files of this framework
-too, with the same limits. A rule this preset turns off stands in its manifest with a
+Every shared rule of the javascript and typescript configurations reads the files of this framework
+too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The preset claims `.vue`, so the list of code files of the ESLint config holds it. The config
+The configuration claims `.vue`, so the list of code files of the ESLint config holds it. The config
 gains the `flat/recommended` blocks of the Vue plugin and of the accessibility plugin, with every
 rule that is on set to error. One more block over `.vue` files sets the parser, and hands it the
 TypeScript parser for the script where typescript is selected. It adds: `vue/no-v-html`,
@@ -1668,7 +1668,7 @@ engine reads the script block.
 
 Names:
 
-`[[naming.rules]]` of this preset: a component file is in PascalCase, and a composable starts
+`[[naming.rules]]` of this configuration: a component file is in PascalCase, and a composable starts
 with `use`.
 
 Turned off:
@@ -1693,7 +1693,7 @@ Rule files:
 
 `framework/vue/VUE.md`.
 
-### Preset nextjs
+### Configuration nextjs
 
 Kind: framework. Requires: typescript, react. Recommends: css, configs.
 
@@ -1717,7 +1717,7 @@ The typescript flat config gains, in order:
 - the `core-web-vitals` set of `@next/eslint-plugin-next`, on ESLint 9;
 - the `[architecture]` boundaries (route, feature, shared);
 - `gspot/require-server-only` over server files and `gspot/no-client-environment` over every file;
-- the React rules come from the `react` preset, which this one requires; `@next/next/no-async-client-component`;
+- the React rules come from the `react` configuration, which this one requires; `@next/next/no-async-client-component`;
 - the rules under "Turned off" below, rendered from the manifest.
 
 Server files: `**/server/**`, `**/*.server.*`, `features/*/server/**`, `lib/**/server.*`, and any
@@ -1761,7 +1761,7 @@ Rule files:
 `runtime/browser/BROWSER.md`; `runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
 present; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
-### Preset configs
+### Configuration configs
 
 Kind: policy. Requires: formatting. Recommends: spelling. Claims every data and configuration file no
 language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked only.
@@ -1778,15 +1778,15 @@ Tools:
 
 taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, plutil (host, macOS),
 xmllint (host).
-Prettier comes from the formatting preset.
+Prettier comes from the formatting configuration.
 
 Generated configuration:
 
 | Target                | Holds                                                                                                                                                                                                                                           |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/taplo.toml`   | schema loading off (v8r owns schemas, at push); indent and column width from `[format]`; arrays never expanded or collapsed, no padding inside brackets or inline tables, the style the `gspot.toml` writer emits; `[tools.taplo] rules` on top |
-| `.gspot/yamllint.yml` | `extends: default`, line length and document start off, `truthy` not on keys (the `on:` of a workflow), one space allowed inside braces and brackets (the Prettier style), indent from `[format]`                                               |
-| `.gspot/v8r.yml`      | errors for files with no known schema ignored; a custom catalog with the mise schema and every `[tools.v8r] schemas` entry on top of SchemaStore                                                                                                |
+| `.gspot/config/taplo.toml`   | schema loading off (v8r owns schemas, at push); indent and column width from `[format]`; arrays never expanded or collapsed, no padding inside brackets or inline tables, the style the `gspot.toml` writer emits; `[tools.taplo] rules` on top |
+| `.gspot/config/yamllint.yml` | `extends: default`, line length and document start off, `truthy` not on keys (the `on:` of a workflow), one space allowed inside braces and brackets (the Prettier style), indent from `[format]`                                               |
+| `.gspot/config/v8r.yml`      | errors for files with no known schema ignored; a custom catalog with the mise schema and every `[tools.v8r] schemas` entry on top of SchemaStore                                                                                                |
 
 Each has a stub at the conventional path (`.taplo.toml`, `.yamllint.yml`, `.v8rrc.yml`) so editors
 and bare tool runs find it.
@@ -1798,7 +1798,7 @@ Checks:
 | `configs/json`             | commit        | Prettier parses and formats JSON, JSONC and JSON5; the findings come from `formatting/prettier`                                                  |
 | `configs/toml`             | commit        | `taplo check --no-schema {files}`: syntax alone, offline                                                                                         |
 | `configs/toml-format`      | commit        | `taplo fmt --check {files}`; fix, order format                                                                                                   |
-| `configs/yaml`             | commit        | `yamllint -c .gspot/yamllint.yml -f parsable -s {files}`                                                                                         |
+| `configs/yaml`             | commit        | `yamllint -c .gspot/config/yamllint.yml -f parsable -s {files}`                                                                                         |
 | `configs/schema`           | push, network | `v8r --ignore-errors {files}` over JSON, YAML and TOML: `package.json`, `tsconfig.json`, workflows, mise and the rest of the SchemaStore catalog |
 | `configs/actions`          | commit        | `actionlint {files}` over `.github/workflows/*`                                                                                                  |
 | `configs/actions-security` | commit        | `zizmor --offline --format github {files}` over `.github/workflows/*`                                                                            |
@@ -1809,7 +1809,7 @@ Checks:
 
 `configs/env-example` searches the whole scope for reads and compares them with the
 templates in the scope; a scope with no template has nothing to compare and no finding.
-`.xcstrings` files are claimed here and checked by the xcode preset.
+`.xcstrings` files are claimed here and checked by the xcode configuration.
 
 Settings:
 
@@ -1823,10 +1823,10 @@ Rule files:
 `general/code/CONFIGURATION.md`, `language/YAML.md`, `tool/tasks/TASKS.md`;
 `tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
 
-Ansible playbooks have their own preset, `ansible`, so a repository with no playbook installs no
+Ansible playbooks have their own configuration, `ansible`, so a repository with no playbook installs no
 ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder that holds one.
 
-### Preset dependencies
+### Configuration dependencies
 
 Kind: policy. Requires: nothing. Dependency health: advisories, unused, duplicated,
 skewed, foreign lockfiles, ownership, install policy.
@@ -1846,16 +1846,16 @@ Generated configuration:
 
 | Target                                 | Holds                                                                                                                                                                                                                           |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/osv-scanner.toml`              | `[[IgnoredVulns]]` from `[tools.osv] ignore` with id, reason, and a date to re-review                                                                                                                                           |
-| `.gspot/syncpack.json`                 | one exact version per dependency across the workspace; a version group per aligned pair from `[tools.dependencies] aligned` (defaults: `next` with `eslint-config-next`, `react` with `react-dom`, `@types/react` with `react`) |
+| `.gspot/config/osv-scanner.toml`              | `[[IgnoredVulns]]` from `[tools.osv] ignore` with id, reason, and a date to re-review                                                                                                                                           |
+| `.gspot/config/syncpack.json`                 | one exact version per dependency across the workspace; a version group per aligned pair from `[tools.dependencies] aligned` (defaults: `next` with `eslint-config-next`, `react` with `react-dom`, `@types/react` with `react`) |
 | the package manager's install settings | `bunfig.toml` `[install] minimumReleaseAge`, `[install.security] scanner`; `.npmrc` `min-release-age`; `pnpm-workspace.yaml` `minimumReleaseAge`; gspot reads them and never writes them, and the check is at the level `all`   |
 
 Checks:
 
 | Id                                 | Stage                                                              | Command                                                                                                                                                                                                                                                                                                                                    |
 | ---------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `dependencies/osv`                 | push, network                                                      | `osv-scanner --config .gspot/osv-scanner.toml --lockfile <each>`; Python advisories come from `uv.lock` here                                                                                                                                                                                                                               |
-| `dependencies/syncpack`            | push                                                               | `syncpack lint --config .gspot/syncpack.json`                                                                                                                                                                                                                                                                                              |
+| `dependencies/osv`                 | push, network                                                      | `osv-scanner --config .gspot/config/osv-scanner.toml --lockfile <each>`; Python advisories come from `uv.lock` here                                                                                                                                                                                                                               |
+| `dependencies/syncpack`            | push                                                               | `syncpack lint --config .gspot/config/syncpack.json`                                                                                                                                                                                                                                                                                              |
 | `dependencies/lockfile-hosts`      | commit                                                             | every URL in a text lockfile is HTTPS and on `tools.dependencies.registry_hosts`; built in, because lockfile-lint reads no `bun.lock`                                                                                                                                                                                                      |
 | `dependencies/lockfile-fresh`      | commit when a manifest or lockfile is staged; push                 | `bun install --frozen-lockfile --dry-run` (or npm, pnpm, yarn equivalents), `uv lock --check`                                                                                                                                                                                                                                              |
 | `dependencies/manifest-policy`     | commit                                                             | exact versions (no `^`, `~`, ranges); keys ordered by `package-json/order-properties`; one `packageManager`, equal across workspace packages; root packages private; no foreign lockfiles; `engines` agree with `.nvmrc`, `.node-version` and the mise pin; scripts policy from `[tools.package-json] scripts` (`any`, `wrappers`, `none`) |
@@ -1877,7 +1877,7 @@ Rule files:
 
 `general/code/DEPENDENCIES.md`.
 
-### Preset trpc
+### Configuration trpc
 
 Kind: library. Requires: javascript.
 
@@ -1905,7 +1905,7 @@ Rule files:
 
 `library/trpc/TRPC.md`, `shared/http/HTTP.md`.
 
-### Preset express
+### Configuration express
 
 Kind: framework. Requires: javascript. Recommends: security, vitest.
 
@@ -1925,14 +1925,14 @@ Generated configuration:
 
 The scope's ESLint config gains `n/no-process-exit`, `security/*`, and three `no-restricted-syntax` selectors from the prose plan. The selectors say that error messages start uppercase, client messages carry no interpolated identifiers, and log calls take a stable message and a fields object. Boundaries from `[architecture]` when the scope declares elements.
 
-`.gspot/spectral.yaml` extends `spectral:oas` when an OpenAPI file is declared.
+`.gspot/config/spectral.yaml` extends `spectral:oas` when an OpenAPI file is declared.
 
 Checks:
 
 | Id                              | Stage  | Command                                                                                                                                       |
 | ------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `security/semgrep` express pack | push   | raw query interpolation, `res.send` of raw input, unvalidated redirect, and auth routes with no rate limit; the Node rules ship in `security` |
-| `express/openapi-lint`          | commit | `spectral lint --ruleset .gspot/spectral.yaml <document>` when `[tools.openapi] document` is set                                              |
+| `express/openapi-lint`          | commit | `spectral lint --ruleset .gspot/config/spectral.yaml <document>` when `[tools.openapi] document` is set                                              |
 | `express/openapi-fresh`         | push   | the generator in `[tools.openapi] command` leaves the document unchanged                                                                      |
 | `express/routes-tested`         | push   | every route file has a test file that names it (through `[tools.express] route_files` and `test_files`)                                       |
 
@@ -1946,7 +1946,7 @@ Rule files:
 `framework/express/EXPRESS.md`, `framework/express/API.md`, `framework/express/OPENAPI.md`,
 `shared/http/HTTP.md`, `runtime/node/NODE.md`.
 
-### Preset sql
+### Configuration sql
 
 Kind: language. Requires: formatting. Recommends: naming, structure, spelling.
 
@@ -1966,7 +1966,7 @@ Generated configuration:
 
 | Target                | Stub                                                                        | Holds                                                                                                                                                                                                          |
 | --------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/sqlfluff.cfg` | no root file: sqlfluff has no include form, and the check passes `--config` | `sql_file_exts` covering all three extensions, dialect from the database preset (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
+| `.gspot/config/sqlfluff.cfg` | no root file: sqlfluff has no include form, and the check passes `--config` | `sql_file_exts` covering all three extensions, dialect from the database configuration (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
 
 sqlfluff never reads a `.sqlfluffignore`; gspot passes the file list.
 
@@ -1992,7 +1992,7 @@ Checks:
 
 | Id                   | Stage  | Command                                                                                               |
 | -------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| `sql/sqlfluff`       | commit | `sqlfluff lint --config .gspot/sqlfluff.cfg --nofail=false {files}`; fix `sqlfluff fix`, order format |
+| `sql/sqlfluff`       | commit | `sqlfluff lint --config .gspot/config/sqlfluff.cfg --nofail=false {files}`; fix `sqlfluff fix`, order format |
 | `sql/syntax`         | commit | `libpg-query` parse when the dialect is `postgres`; a parse error is a finding                        |
 | `sql/file-length`    | commit | code lines against `limits.sql.file_lines` (default 400)                                              |
 | `naming/identifiers` | commit | schemas, tables, columns, functions, parameters, indexes, triggers, policies                          |
@@ -2000,7 +2000,7 @@ Checks:
 
 Settings:
 
-`tools.sqlfluff.dialect` (set by the database preset), `tools.sqlfluff.rules` (per-rule options; a rule turned off
+`tools.sqlfluff.dialect` (set by the database configuration), `tools.sqlfluff.rules` (per-rule options; a rule turned off
 is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 Rule files:
@@ -2012,7 +2012,7 @@ Not covered here:
 Migration safety, documentation layout, and immutability belong to postgres. Row-level security
 and grants belong to supabase.
 
-### Preset licenses
+### Configuration licenses
 
 Kind: policy. Requires: nothing. Offered when a manifest exists; selected only on acceptance.
 
@@ -2026,7 +2026,7 @@ license-checker-rseidelsohn (npm), pip-licenses (Python).
 
 Generated configuration:
 
-`.gspot/licenses.json`: the allowlist and exact-version exceptions.
+`.gspot/config/licenses.json`: the allowlist and exact-version exceptions.
 
 Shipped allowlist: `MIT`, `ISC`, `BSD-2-Clause`, `BSD-3-Clause`, `Apache-2.0`, `0BSD`, `CC0-1.0`, `CC-BY-3.0`, `CC-BY-4.0`, `Unlicense`, `BlueOak-1.0.0`, `Python-2.0`.
 
@@ -2061,7 +2061,7 @@ Rule files:
 
 None.
 
-### Preset javascript
+### Configuration javascript
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
@@ -2082,8 +2082,8 @@ Generated configuration:
 
 | Target                     | Stub                                                                           | Holds                                                                                                                                                                                                                                                    |
 | -------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/eslint.config.mjs` | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
-| `.gspot/jsconfig.json`     | `jsconfig.json`                                                                | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
+| `.gspot/config/eslint.config.mjs` | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
+| `.gspot/config/jsconfig.json`     | `jsconfig.json`                                                                | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
 
 At `all`, the optional types directory rule applies to JavaScript as JSDoc: `@typedef` and `@callback` only in
 files under `[architecture] types_directory`.
@@ -2093,16 +2093,16 @@ Checks:
 | Id                   | Stage  | Command                                                                                                                                                                                                      |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `javascript/eslint`  | commit | as typescript; cognitive complexity through `sonarjs/cognitive-complexity` and cyclomatic through core `complexity`, `max-statements` from `[limits]`; cycles through `import-x/no-cycle`, CommonJS included |
-| `javascript/checkjs` | commit | `tsc -p .gspot/jsconfig.json`                                                                                                                                                                                |
+| `javascript/checkjs` | commit | `tsc -p .gspot/config/jsconfig.json`                                                                                                                                                                                |
 | `javascript/knip`    | push   | knip                                                                                                                                                                                                         |
 
 Settings:
 
-`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform configuration claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
-The rendered knip ignore list carries `.gspot/commitlint.config.cjs` when the commits preset is selected, because commitlint loads that file by path and knip cannot see it. Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
+The rendered knip ignore list carries `.gspot/config/commitlint.config.cjs` when the commits configuration is selected, because commitlint loads that file by path and knip cannot see it. Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
 `gspot set tools.eslint.globals "<glob>" browser` overrides one file class, and `gspot explain
 <file>` prints the runtime a file got and why.
 
@@ -2117,7 +2117,7 @@ Type checking of untyped JavaScript is `checkJs` with JSDoc; no reference reposi
 it is part of the level `all`. Lizard and madge are not used: sonarjs and import-x do their jobs in
 the editor.
 
-### Preset zod
+### Configuration zod
 
 Kind: library. Requires: javascript.
 
@@ -2145,7 +2145,7 @@ Rule files:
 
 `library/zod/ZOD.md`.
 
-### Preset xcode
+### Configuration xcode
 
 Kind: tool. Requires: configs. Recommends: swift. macOS only; every check here passes as a platform skip
 elsewhere.
@@ -2185,9 +2185,9 @@ Rule files:
 
 `tool/xcode/XCODE.md`.
 
-### Preset commits
+### Configuration commits
 
-Kind: policy. Requires: nothing. Offered at `init` and not selected. The security and licenses presets work the same way.
+Kind: policy. Requires: nothing. Offered at `init` and not selected. The security and licenses configurations work the same way.
 
 Tools:
 
@@ -2197,7 +2197,7 @@ commitlint binary runs.
 
 Generated configuration:
 
-`.gspot/commitlint.config.cjs` with a `.commitlintrc.json` stub that extends it. The rules:
+`.gspot/config/commitlint.config.cjs` with a `.commitlintrc.json` stub that extends it. The rules:
 
 - `type-enum` from `[tools.commitlint] types` (default: `feat`, `fix`, `refactor`, `perf`,
   `docs`, `test`, `build`, `ci`, `chore`, the corpus list); `type-case` lower; `type-empty`
@@ -2216,8 +2216,8 @@ Checks:
 
 | Id                   | Stage   | Command                                                                          |
 | -------------------- | ------- | -------------------------------------------------------------------------------- |
-| `commits/commitlint` | message | `commitlint --config .gspot/commitlint.config.cjs --edit <message file>`         |
-| `commits/range`      | push    | `commitlint --config .gspot/commitlint.config.cjs --from <merge base> --to HEAD` |
+| `commits/commitlint` | message | `commitlint --config .gspot/config/commitlint.config.cjs --edit <message file>`         |
+| `commits/range`      | push    | `commitlint --config .gspot/config/commitlint.config.cjs --from <merge base> --to HEAD` |
 
 The merge base is the one with the upstream branch, or the root commit when the branch has no
 upstream. Neither check is cached: the message and the range change without any file changing.
@@ -2231,7 +2231,7 @@ Rule files:
 
 `general/agent/GIT.md`, `tool/commitlint/COMMITLINT.md`.
 
-### Preset react-hook-form
+### Configuration react-hook-form
 
 Kind: library. Requires: javascript.
 
@@ -2257,7 +2257,7 @@ Rule files:
 
 `library/react-hook-form/REACTHOOKFORM.md`.
 
-### Preset supabase
+### Configuration supabase
 
 Kind: platform. Requires: postgres. Recommends: typescript, configs, security.
 
@@ -2278,8 +2278,8 @@ Generated configuration:
 | Target                             | Holds                                                                    |
 | ---------------------------------- | ------------------------------------------------------------------------ |
 | ESLint override for `functions/**` | Deno globals; `n/*` and `n/prefer-promises/*` off; `import_style = "ts"` |
-| `.gspot/sqlfluff.cfg`              | dialect `postgres` (through postgres)                                    |
-| `.gspot/v8r.yml`                   | the `config.toml` schema                                                 |
+| `.gspot/config/sqlfluff.cfg`              | dialect `postgres` (through postgres)                                    |
+| `.gspot/config/v8r.yml`                   | the `config.toml` schema                                                 |
 
 Checks:
 
@@ -2309,7 +2309,7 @@ Rule files:
 `platform/supabase/SUPABASE.md`, `database/postgres/POSTGRES.md`, `runtime/deno/DENO.md`.
 Project-specific deployment conventions belong to the repository.
 
-### Preset drizzle
+### Configuration drizzle
 
 Kind: library. Requires: javascript.
 
@@ -2339,11 +2339,11 @@ Rule files:
 
 `library/drizzle/DRIZZLE.md`.
 
-### Preset jest
+### Configuration jest
 
 Kind: tool. Requires: typescript or javascript.
 
-NestJS and React Native test with Jest by default, so this preset ships beside `vitest`.
+NestJS and React Native test with Jest by default, so this configuration ships beside `vitest`.
 A repository selects the one its tests run with.
 
 Detects and claims:
@@ -2356,11 +2356,11 @@ Detects and claims:
 Tools:
 
 eslint-plugin-jest 29.16.6, as a library. The repository owns Jest and its version, as it owns
-Vitest under the vitest preset.
+Vitest under the vitest configuration.
 
 Generated configuration:
 
-The ESLint config gains, over test files, the same test rules the vitest preset holds, under the
+The ESLint config gains, over test files, the same test rules the vitest configuration holds, under the
 `jest` prefix: `no-focused-tests`, `no-disabled-tests`, `no-identical-title`,
 `no-standalone-expect`, `no-commented-out-tests`, `expect-expect`, `valid-describe-callback`,
 `no-conditional-expect`, `valid-expect`, and `prefer-strict-equal`. The relaxations for test files
@@ -2385,7 +2385,7 @@ Rule files:
 
 `general/code/TESTING.md`.
 
-### Preset react
+### Configuration react
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -2404,8 +2404,8 @@ As libraries, each with ESLint 9 in its range:
 
 Generated configuration:
 
-Every shared rule of the javascript and typescript presets reads the files of this framework
-too, with the same limits. A rule this preset turns off stands in its manifest with a
+Every shared rule of the javascript and typescript configurations reads the files of this framework
+too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
 The ESLint config gains one block over `js`, `jsx`, `ts`, and `tsx` files:
@@ -2425,7 +2425,7 @@ Over test files, the `react` set of the testing-library plugin. At the `all` lev
 
 Names:
 
-`[[naming.rules]]` of this preset:
+`[[naming.rules]]` of this configuration:
 
 - a function that returns JSX is in PascalCase, and a hook starts with `use`;
 - a callback may start with `handle`;
@@ -2449,7 +2449,7 @@ Rule files:
 
 `framework/react/REACT.md`.
 
-### Preset ansible
+### Configuration ansible
 
 Kind: tool. Requires: configs.
 
@@ -2472,15 +2472,15 @@ Checks:
 
 A rule turned off is `gspot ignore ansible/lint --rule <rule> --reason`, passed as `--skip-list`.
 
-Why a preset:
+Why a configuration:
 
-The check lived in configs in an earlier draft. A preset installs its tools, so every
+The check lived in configs in an earlier draft. A configuration installs its tools, so every
 repository with a YAML file installed ansible-lint. Detection by `ansible.cfg` installs it only
 where a playbook exists.
 
-### Preset spelling
+### Configuration spelling
 
-Kind: policy. Requires: nothing. Recommended by every language preset.
+Kind: policy. Requires: nothing. Recommended by every language configuration.
 
 Claims:
 
@@ -2492,7 +2492,7 @@ typos.
 
 Generated configuration:
 
-`.gspot/typos.toml` with a `typos.toml` stub: `[files] extend-exclude` from natures and
+`.gspot/config/typos.toml` with a `typos.toml` stub: `[files] extend-exclude` from natures and
 `[tools.typos] exclude`; `[default.extend-words]` from `[tools.typos] words`, each with its
 reason as a comment.
 
@@ -2500,7 +2500,7 @@ Checks:
 
 | Id               | Stage  | Command                                                                         |
 | ---------------- | ------ | ------------------------------------------------------------------------------- |
-| `spelling/typos` | commit | `typos --config .gspot/typos.toml {files}`; fix `--write-changes`, order format |
+| `spelling/typos` | commit | `typos --config .gspot/config/typos.toml {files}`; fix `--write-changes`, order format |
 
 Settings:
 
@@ -2512,7 +2512,7 @@ Rule files:
 
 None.
 
-### Preset tanstack-query
+### Configuration tanstack-query
 
 Kind: library. Requires: javascript.
 
@@ -2537,7 +2537,7 @@ Rule files:
 
 `library/tanstack-query/TANSTACKQUERY.md`.
 
-### Preset cloudflare
+### Configuration cloudflare
 
 Kind: platform. Requires: javascript. Recommends: security, configs.
 
@@ -2555,7 +2555,7 @@ wrangler, zizmor is not relevant; the Semgrep landing pack for workers.
 
 Generated configuration:
 
-The files this preset claims get the `worker` runtime (the rule in [javascript.md](#preset-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
+The files this configuration claims get the `worker` runtime (the rule in [javascript.md](#configuration-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
 `functions/**` and `_worker.*`.
 
 Checks:
@@ -2576,9 +2576,9 @@ rule file states them.
 
 Rule files:
 
-`runtime/workers/WORKERS.md`. The configs preset installs the GitHub Actions rule file.
+`runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
 
-### Preset docs
+### Configuration docs
 
 Kind: policy. Requires: nothing. Documentation integrity: links, anchors, headings,
 stale paths, and the agent files.
@@ -2593,14 +2593,14 @@ lychee; the integrity engine.
 
 Generated configuration:
 
-`.gspot/lychee.toml`: `offline = true`, `include_fragments = true`, `no_progress = true`,
+`.gspot/config/lychee.toml`: `offline = true`, `include_fragments = true`, `no_progress = true`,
 excludes from `[tools.lychee] exclude` with reasons; a second profile for the online run.
 
 Checks:
 
 | Id                    | Stage           | Command                                                                                                                                                                                                                                                                                                                                                                 |
 | --------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/links`          | commit          | `lychee --config .gspot/lychee.toml --offline --include-fragments {files}`: every relative link resolves to a tracked file and every `#anchor` to a heading or an HTML id                                                                                                                                                                                               |
+| `docs/links`          | commit          | `lychee --config .gspot/config/lychee.toml --offline --include-fragments {files}`: every relative link resolves to a tracked file and every `#anchor` to a heading or an HTML id                                                                                                                                                                                               |
 | `docs/links-external` | manual, network | `lychee --no-offline` with the online profile                                                                                                                                                                                                                                                                                                                           |
 | `docs/headings`       | commit          | no heading from the banned list (`Table of contents`, `Project structure`, `Repository layout`, `Directory structure`, `File map`, `Codebase map`)                                                                                                                                                                                                                      |
 | `docs/stale-paths`    | commit          | every path-shaped token in Markdown and comments (a token counts when its first segment is a tracked top-level entry or it ends in a file extension) names a tracked file, and every `mise run <task>`, `bun run <script>` or `npm run <script>` names a task or script that exists, unless it is in a code fence tagged `text` or matches `[tools.docs] paths_allowed` |
@@ -2622,7 +2622,7 @@ Rule files:
 `general/prose/DOCS-MEDIA.md`, `general/prose/DOCS-SURFACES.md`, `general/prose/DOCS-REVIEW.md`,
 `general/prose/WRITING.md`, `general/code/COMMENTS.md`; the templates under `templates/docs/`.
 
-### Preset docker
+### Configuration docker
 
 Kind: tool. Requires: configs. Recommends: spelling.
 
@@ -2642,17 +2642,17 @@ Generated configuration:
 
 | Target                 | Stub             | Holds                                                                                                                   |
 | ---------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/hadolint.yaml` | `.hadolint.yaml` | `failure-threshold: style`, `ignored:` rendered from the `[[ignore]]` entries for `docker/hadolint`, trusted registries |
-| `.gspot/trivy.yaml`    | none             | severities, ignore file path, timeout                                                                                   |
+| `.gspot/config/hadolint.yaml` | `.hadolint.yaml` | `failure-threshold: style`, `ignored:` rendered from the `[[ignore]]` entries for `docker/hadolint`, trusted registries |
+| `.gspot/config/trivy.yaml`    | none             | severities, ignore file path, timeout                                                                                   |
 
 Checks:
 
 | Id                      | Stage                   | Command                                                                                             |
 | ----------------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| `docker/hadolint`       | commit                  | `hadolint --config .gspot/hadolint.yaml {files}` (ShellCheck runs over `RUN` lines inside hadolint) |
+| `docker/hadolint`       | commit                  | `hadolint --config .gspot/config/hadolint.yaml {files}` (ShellCheck runs over `RUN` lines inside hadolint) |
 | `docker/compose-config` | push, docker            | `docker compose -f <file> config --quiet` per compose file (parses without a daemon)                |
 | `docker/dockerignore`   | commit                  | `.dockerignore` exists beside every Dockerfile and excludes `.git`, `node_modules`, `.env`          |
-| `docker/trivy-config`   | push                    | `trivy config --config .gspot/trivy.yaml <dir>`                                                     |
+| `docker/trivy-config`   | push                    | `trivy config --config .gspot/config/trivy.yaml <dir>`                                                     |
 | `docker/trivy-image`    | manual, docker, network | `trivy image` over images the compose file names, with `[tools.trivy] ignore` (id, reason)          |
 | `structure/bash-embeds` | commit                  | no inline Python or Node heredocs in `RUN` lines                                                    |
 
@@ -2669,7 +2669,7 @@ Not covered here:
 
 The compose file itself is a configs YAML with the Compose schema.
 
-### Preset nestjs
+### Configuration nestjs
 
 Kind: framework. Requires: typescript. Recommends: jest, security, dependencies.
 
@@ -2680,11 +2680,11 @@ Detects and claims:
 | Detect | `@nestjs/core` in dependencies, `nest-cli.json` |
 | Claims | `nest-cli.json`                                 |
 
-What the framework needs from the other presets:
+What the framework needs from the other configurations:
 
 NestJS injects by the types of constructor parameters. That takes decorators with emitted
-metadata and parameter properties, and the strict base of the typescript preset refuses both.
-A scope that selects nestjs gets a `tsconfig` file of this preset, which extends the shared base
+metadata and parameter properties, and the strict base of the typescript configuration refuses both.
+A scope that selects nestjs gets a `tsconfig` file of this configuration, which extends the shared base
 and sets `experimentalDecorators` and `emitDecoratorMetadata`. The shared base names no
 framework.
 `typescript/tsconfig-options` requires the first pair and drops the second pair in that scope.
@@ -2692,7 +2692,7 @@ framework.
 both decorator options are on.
 
 The Nest generator names a file for its feature and its kind: `cats.controller.ts` beside
-`cats.service.ts`. `[[naming.rules]]` of this preset say so for the sixteen kinds the generator
+`cats.service.ts`. `[[naming.rules]]` of this configuration say so for the sixteen kinds the generator
 writes and for `.spec` files, and `structure/prefix-collisions` reads those rules.
 
 The acceptance bar is a planted module, controller, and service written the Nest way. They pass
@@ -2704,8 +2704,8 @@ As a library: @darraghor/eslint-plugin-nestjs-typed 7.5.5, which runs on the pin
 
 Generated configuration:
 
-Every shared rule of the javascript and typescript presets reads the files of this framework
-too, with the same limits. A rule this preset turns off stands in its manifest with a
+Every shared rule of the javascript and typescript configurations reads the files of this framework
+too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
 - the `flatRecommended` set of the nestjs-typed plugin. It finds a provider that no module
@@ -2738,9 +2738,9 @@ Rule files:
 
 `framework/nestjs/NESTJS.md`.
 
-### Preset formatting
+### Configuration formatting
 
-Kind: policy. Requires: nothing. Recommended by every language preset. One `[format]` block that every formatter
+Kind: policy. Requires: nothing. Recommended by every language configuration. One `[format]` block that every formatter
 reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
 Settings:
@@ -2766,19 +2766,19 @@ Generated configuration:
 | Target                               | Stub                                                                                                   | Derived                                                                                                                                                                                              |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.editorconfig`                      | none; gspot owns the whole file at its conventional path, with the header                              | `end_of_line`, `insert_final_newline`, `charset`, `trim_trailing_whitespace`, indent per extension, `switch_case_indent` for shell; `[tools.editorconfig.extra]` for a section gspot does not render |
-| `.gspot/prettier.json`               | `.prettierrc.json` (the whole document is the path)                                                    | `tabWidth`, `printWidth`, `singleQuote`, `trailingComma`, `semi`, `arrowParens: always`, `embeddedLanguageFormatting: off`                                                                           |
+| `.gspot/config/prettier.json`               | `.prettierrc.json` (the whole document is the path)                                                    | `tabWidth`, `printWidth`, `singleQuote`, `trailingComma`, `semi`, `arrowParens: always`, `embeddedLanguageFormatting: off`                                                                           |
 | `.prettierignore`                    | none; gspot owns the whole file at the root, with the header, for editors (the gate passes file lists) | by nature: generated, vendored, binary, lockfiles                                                                                                                                                    |
 | shfmt flags                          | in the bash check command                                                                              | `-i <width> -ci -s`                                                                                                                                                                                  |
-| ruff format section                  | in `.gspot/ruff.toml`                                                                                  | `indent-width`, `quote-style`, `line-ending`                                                                                                                                                         |
-| markdownlint MD007                   | in `.gspot/markdownlint.jsonc`                                                                         | `indent`                                                                                                                                                                                             |
-| SwiftFormat `--indent`, `--maxwidth` | in `.gspot/swiftformat`                                                                                |                                                                                                                                                                                                      |
+| ruff format section                  | in `.gspot/config/ruff.toml`                                                                                  | `indent-width`, `quote-style`, `line-ending`                                                                                                                                                         |
+| markdownlint MD007                   | in `.gspot/config/markdownlint.jsonc`                                                                         | `indent`                                                                                                                                                                                             |
+| SwiftFormat `--indent`, `--maxwidth` | in `.gspot/config/swiftformat`                                                                                |                                                                                                                                                                                                      |
 | taplo, yamllint indent               | in their configs                                                                                       |                                                                                                                                                                                                      |
 
 Checks:
 
 | Id                                | Stage  | Command                                                                               |
 | --------------------------------- | ------ | ------------------------------------------------------------------------------------- |
-| `formatting/prettier`             | commit | `prettier --check --config .gspot/prettier.json {files}`; fix `--write`, order format |
+| `formatting/prettier`             | commit | `prettier --check --config .gspot/config/prettier.json {files}`; fix `--write`, order format |
 | `formatting/editorconfig-checker` | commit | `editorconfig-checker {files}`                                                        |
 
 Tools:
@@ -2789,7 +2789,7 @@ Rule files:
 
 None. Formatting decisions are the tools' and are not restated in prose.
 
-### Preset fastapi
+### Configuration fastapi
 
 Kind: framework. Requires: python. Recommends: security, pytest.
 
@@ -2807,7 +2807,7 @@ spectral, the Semgrep Python and API packs; Ruff `ASYNC` and `FAST` families.
 
 Generated configuration:
 
-`.gspot/ruff.toml` gains `FAST` (FastAPI rules) and keeps `ASYNC`. The import-linter contracts
+`.gspot/config/ruff.toml` gains `FAST` (FastAPI rules) and keeps `ASYNC`. The import-linter contracts
 gain `[architecture.contracts]` entries the repository declares.
 
 Checks:
@@ -2828,9 +2828,9 @@ Rule files:
 
 `framework/fastapi/FASTAPI.md`, `framework/fastapi/RUNTIME.md`, `shared/http/HTTP.md`.
 
-### Preset naming
+### Configuration naming
 
-Kind: policy. Requires: nothing. Recommended by every language preset. Runs the naming engine over every language
+Kind: policy. Requires: nothing. Recommended by every language configuration. Runs the naming engine over every language
 with the shipped policy in [../08-naming-policy.md](08-naming-policy.md).
 
 Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
@@ -2838,7 +2838,7 @@ Banned terms and reserved-word restrictions are level `all`. The shipped policy 
 
 Claims:
 
-Every file a language preset claims, plus every directory name, and file name in the tree
+Every file a language configuration claims, plus every directory name, and file name in the tree
 outside build output and vendored paths.
 
 Checks:
@@ -2870,7 +2870,7 @@ Rule files:
 
 `general/code/NAMING.md`, `general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
 
-### Preset typescript
+### Configuration typescript
 
 Kind: language. Requires: javascript, structure. Recommends: naming, formatting, spelling.
 
@@ -2890,17 +2890,17 @@ Generated configuration:
 
 | Target                       | Stub                                                                           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/eslint.config.mjs`   | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | the flat config: ignores by nature; typescript-eslint `strictTypeChecked` over typed files; sonarjs and unicorn `recommended` bases with the listed exceptions; the rule sets from the ledger section 3 and the additions (`strict-boolean-expressions`, `explicit-module-boundary-types`, `no-unnecessary-condition`, `only-throw-error`, `prefer-optional-chain`, `no-magic-numbers`, `eqeqeq`, `no-param-reassign`, `prefer-const`, `max-depth` 3, `complexity`, `max-statements` from `[limits]`, `no-console` in source); `@gspot/eslint-plugin` with limits from `[limits]`, `types-placement` from `[architecture] types_directory`, `import-direction` from `[architecture] roles`, `no-reexports` from `[structure] reexports`, `env-access-owner` from `roles.env`, `private-before-public`, `import-path-style` per file class from `[tools.eslint] import_style`; `import-x/exports-last`; `boundaries/element-types` from `[architecture] elements` and `allow`; test overrides; prettier last |
-| `.gspot/tsconfig.check.json` | none; it extends the `tsconfig.json` of the repository                         | `strict` at `recommended`, and four more flags at `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `.gspot/knip.json`           | none                                                                           | entry points from the framework preset or `[tools.knip] entry`; project globs from claims                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `.gspot/config/eslint.config.mjs`   | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | the flat config: ignores by nature; typescript-eslint `strictTypeChecked` over typed files; sonarjs and unicorn `recommended` bases with the listed exceptions; the rule sets from the ledger section 3 and the additions (`strict-boolean-expressions`, `explicit-module-boundary-types`, `no-unnecessary-condition`, `only-throw-error`, `prefer-optional-chain`, `no-magic-numbers`, `eqeqeq`, `no-param-reassign`, `prefer-const`, `max-depth` 3, `complexity`, `max-statements` from `[limits]`, `no-console` in source); `@gspot/eslint-plugin` with limits from `[limits]`, `types-placement` from `[architecture] types_directory`, `import-direction` from `[architecture] roles`, `no-reexports` from `[structure] reexports`, `env-access-owner` from `roles.env`, `private-before-public`, `import-path-style` per file class from `[tools.eslint] import_style`; `import-x/exports-last`; `boundaries/element-types` from `[architecture] elements` and `allow`; test overrides; prettier last |
+| `.gspot/config/tsconfig.check.json` | none; it extends the `tsconfig.json` of the repository                         | `strict` at `recommended`, and four more flags at `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `.gspot/config/knip.json`           | none                                                                           | entry points from the framework configuration or `[tools.knip] entry`; project globs from claims                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 Checks:
 
 | Id                            | Stage  | Command                                                                                                                                                                   |
 | ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `typescript/tsc`              | push   | `tsc --noEmit -p .gspot/tsconfig.check.json` for each scope, or `tsc -b --noEmit` where the config holds references (K-226)                                               |
-| `typescript/eslint`           | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.mjs {files}`; fix: `--fix`, order codemod                                                        |
-| `javascript/knip`             | push   | `knip --config .gspot/knip.json`, once over the whole tree; javascript owns the check and typescript requires javascript                                                  |
+| `typescript/tsc`              | push   | `tsc --noEmit -p .gspot/config/tsconfig.check.json` for each scope, or `tsc -b --noEmit` where the config holds references (K-226)                                               |
+| `typescript/eslint`           | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/config/eslint.config.mjs {files}`; fix: `--fix`, order codemod                                                        |
+| `javascript/knip`             | push   | `knip --config .gspot/config/knip.json`, once over the whole tree; javascript owns the check and typescript requires javascript                                                  |
 | `typescript/tsconfig-options` | commit | engine                                                                                                                                                                    |
 | `javascript/required-rules`   | push   | ESLint-resolved configuration for every governed file, grouped by equal results, compared with the `[required_rules]` of every selected manifest; shipped by `javascript` |
 
@@ -2931,7 +2931,7 @@ Settings:
 | `tools.eslint.import_style`                           | neutral                                                                | `js` for TypeScript compiled to ESM, `ts` for Deno, `extensionless` for bundled code; per file class. Aliases come from tsconfig `paths` and `package.json` `imports` |
 | `tools.eslint.test_files`                             | neutral                                                                | `**/*.{test,spec}.{ts,tsx}`, `**/tests/**`                                                                                                                            |
 | `tools.typescript.paths`                              | neutral                                                                | from the existing tsconfig at init                                                                                                                                    |
-| `tools.knip.entry`                                    | neutral                                                                | from the framework preset                                                                                                                                             |
+| `tools.knip.entry`                                    | neutral                                                                | from the framework configuration                                                                                                                                             |
 | `architecture.types_directory`                        | neutral                                                                | `types`                                                                                                                                                               |
 | `architecture.elements`, `architecture.edges_allowed` | tightening                                                             | one element; the default roles                                                                                                                                        |
 | `structure.reexports`                                 | tightening                                                             | `none`                                                                                                                                                                |
@@ -2944,9 +2944,9 @@ Rule files:
 Not covered here:
 
 Runtime-specific rules (Node, browser, workers) come from the runtime detected in
-`package.json` and the framework preset. React rules come from the react preset.
+`package.json` and the framework configuration. React rules come from the react configuration.
 
-### Preset bash
+### Configuration bash
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
@@ -2967,7 +2967,7 @@ Generated configuration:
 
 | Target                        | Stub                                    | Holds                                                                                                                                                       |
 | ----------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/shellcheckrc`         | `.shellcheckrc`                         | `shell=bash`, `source-path=SCRIPTDIR`, `external-sources=true`, `enable=all`, `disable=` lines rendered from the `[[ignore]]` entries for `bash/shellcheck` |
+| `.gspot/config/shellcheckrc`         | `.shellcheckrc`                         | `shell=bash`, `source-path=SCRIPTDIR`, `external-sources=true`, `enable=all`, `disable=` lines rendered from the `[[ignore]]` entries for `bash/shellcheck` |
 | `.editorconfig` shell section | through formatting, which owns the file | indent width and `switch_case_indent` from `[format]`                                                                                                       |
 
 Checks:
@@ -2977,7 +2977,7 @@ Checks:
 | `bash/syntax`                                                                   | commit | `bash -n <file>` per file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `bash/zsh-syntax`                                                               | commit | `zsh -n <file>` for Zsh files and launchers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `bash/bats-syntax`                                                              | commit | `bats --count <file>` for Bats test files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `bash/shellcheck`                                                               | commit | `shellcheck --rcfile .gspot/shellcheckrc --severity=style --check-sourced {files}`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `bash/shellcheck`                                                               | commit | `shellcheck --rcfile .gspot/config/shellcheckrc --severity=style --check-sourced {files}`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `bash/shfmt`                                                                    | commit | `shfmt -d -i <indent> -ci -s {files}`; fix `-w`, order format                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `structure/bash-interpreter`                                                    | commit | shebang is `#!/usr/bin/env bash` or `#!/bin/bash`; line 2 is `#`; line 3 is a concrete description; line 4 is `# Runtime: Bash N.N+, macOS and Linux.` (or `Linux`); `set -euo pipefail` and `shopt -s inherit_errexit` before the first command in an executable; Bash 4 features named in the header; computed directory constants use `CDPATH=`, `cd --`, `pwd -P` and a failure path; `main "$@"` last in an executable; top-level assignments `readonly`; a library (sourced) file is declarative at top level and not executable; an executable file has the bit set through git; every `mktemp` has a `trap` that removes it |
 | `structure/doc-comment`                                                         | commit | function header `# name: summary`, no vague summary words (`handle`, `perform`, `execute`, `do`), doc sections when present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -3012,18 +3012,18 @@ Rule files:
 
 Not covered here:
 
-Zsh-specific lint and formatting remain outside this preset. Zsh syntax uses
+Zsh-specific lint and formatting remain outside this configuration. Zsh syntax uses
 `zsh -n`; Bash syntax uses `bash -n`; Bats syntax uses `bats --count`. ShellCheck
 and shfmt claim Bash and Bats files. Broader dialect-aware structure analysis
 remains open.
 
-### Preset security
+### Configuration security
 
 Kind: policy. Requires: nothing. Static analysis for security patterns, per language. One SAST tool.
 
 Claims:
 
-Every file a language preset claims.
+Every file a language configuration claims.
 
 Tools:
 
@@ -3037,7 +3037,7 @@ Generated configuration:
 
 | Target                         | Holds                                                                                                                                                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/semgrep/`              | one pack per selected preset: `node.yml` (9 rules) and `secrets.yml` (1) from this preset; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
+| `.gspot/config/semgrep/`              | one pack per selected configuration: `node.yml` (9 rules) and `secrets.yml` (1) from this configuration; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
 | `.semgrepignore`               | build output, dependencies, lockfiles, and the paths in `tools.semgrep.ignore`                                                                                                                      |
 | `.gspot/codeql/<language>.yml` | query suites per language; false positives with reasons and paths that exist                                                                                                                        |
 
@@ -3045,7 +3045,7 @@ Checks:
 
 | Id                          | Stage  | Command                                                                                         |
 | --------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
-| `security/semgrep`          | push   | `semgrep scan --config .gspot/semgrep --error --metrics off --vim {files}`                      |
+| `security/semgrep`          | push   | `semgrep scan --config .gspot/config/semgrep --error --metrics off --vim {files}`                      |
 | `security/semgrep-registry` | manual | the registry packs of `tools.semgrep.registry`; needs the network                               |
 | `security/codeql`           | manual | database create per language, analyze with the suite, SARIF filtered by the false-positive list |
 | `integrity/suppressions`    | commit | `nosemgrep` carries a reason; the census does not grow                                          |
@@ -3062,7 +3062,7 @@ Rule files:
 
 `general/code/SECURITY.md`, `general/code/SECRETS.md`; the security sections of each framework file.
 
-### Preset html
+### Configuration html
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
@@ -3082,14 +3082,14 @@ Generated configuration:
 
 | Target                                | Stub                 | Holds                                                                                                                                                                                    |
 | ------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/html-validate-templates.json` | `.htmlvalidate.json` | `html-validate:recommended`, `doctype-style: lowercase`, `element-required-attributes`, `no-inline-style`, `no-raw-characters`, `void-style: selfclosing`, `wcag/h37`; `no-autoplay` off |
-| `.gspot/html-validate-built.json`     | none                 | recommended with the template-only rules off; `wcag/h37` on; used by static-site over built output                                                                                       |
+| `.gspot/config/html-validate-templates.json` | `.htmlvalidate.json` | `html-validate:recommended`, `doctype-style: lowercase`, `element-required-attributes`, `no-inline-style`, `no-raw-characters`, `void-style: selfclosing`, `wcag/h37`; `no-autoplay` off |
+| `.gspot/config/html-validate-built.json`     | none                 | recommended with the template-only rules off; `wcag/h37` on; used by static-site over built output                                                                                       |
 
 Checks:
 
 | Id                   | Stage  | Command                                                                                                                                                                                                                                    |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `html/html-validate` | commit | `html-validate --config .gspot/html-validate-templates.json {files}`                                                                                                                                                                       |
+| `html/html-validate` | commit | `html-validate --config .gspot/config/html-validate-templates.json {files}`                                                                                                                                                                       |
 | `html/copy`          | commit | no hard-coded user-facing text in template files: text nodes, `alt`, `aria-label`, `aria-description`, `placeholder`, `title`, and button, input and option values are placeholders only; `[tools.html] copy_allowed` names the exceptions |
 | `html/scripts`       | commit | no executable inline script except `application/ld+json`, no `on*` handlers, no `javascript:` URLs, no `document.write`                                                                                                                    |
 
@@ -3105,7 +3105,7 @@ Rule files:
 
 `language/HTML.md`, `language/naming/HTML.md`, `repository/static-site/STATIC-SITE.md`.
 
-### Preset duplication
+### Configuration duplication
 
 Kind: policy. Requires: nothing. Copy-paste detection across every language.
 
@@ -3115,14 +3115,14 @@ jscpd.
 
 Generated configuration:
 
-`.gspot/jscpd.json`: `mode: strict`, `minLines` 8, `minTokens` 40, `threshold` 4 percent,
+`.gspot/config/jscpd.json`: `mode: strict`, `minLines` 8, `minTokens` 40, `threshold` 4 percent,
 formats from the selected languages, ignore by nature, reporters `console` and `json`.
 
 Checks:
 
 | Id                  | Stage | Command                                                        |
 | ------------------- | ----- | -------------------------------------------------------------- |
-| `duplication/jscpd` | push  | `jscpd --config .gspot/jscpd.json {files}` per language format |
+| `duplication/jscpd` | push  | `jscpd --config .gspot/config/jscpd.json {files}` per language format |
 
 Function-level duplicates are caught earlier by `sonarjs/no-identical-functions` and
 `structure/duplicate-functions`; jscpd catches the rest.
@@ -3135,7 +3135,7 @@ Rule files:
 
 `general/agent/WORKING.md` (the duplication section).
 
-### Preset vitest
+### Configuration vitest
 
 Kind: tool. Requires: javascript.
 
@@ -3149,13 +3149,13 @@ Detects and claims:
 Tools:
 
 @vitest/eslint-plugin. The repository owns its coverage provider, istanbul or v8, as it owns
-Vitest: the preset lists neither as a tool, so `doctor` never calls one missing.
+Vitest: the configuration lists neither as a tool, so `doctor` never calls one missing.
 
 Versions:
 
-The repository owns the version of its test framework. The preset pins neither `vitest` nor
+The repository owns the version of its test framework. The configuration pins neither `vitest` nor
 `@vitest/coverage-v8`, and its floor is Vitest 2. The same holds for the Supabase CLI
-in the supabase preset. A pin never lowers an exact version a `package.json` already holds.
+in the supabase configuration. A pin never lowers an exact version a `package.json` already holds.
 
 `tools.vitest.coverage_file` names the Vitest configuration the coverage run reads, relative to the
 scope, for a repository that keeps it where Vitest does not look. It is empty by default.

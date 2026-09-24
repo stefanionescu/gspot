@@ -4,11 +4,11 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { toolOutputDetail } from '#cli/run/broken-tool.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 
 const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
 
@@ -32,12 +32,12 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const files = openConfinedRoot(input.root, 'native');
     try {
         files.source(document);
-        if (files.read('.gspot/spectral.yaml') === undefined)
+        if (files.read('.gspot/config/spectral.yaml') === undefined)
             throw new Error('The Spectral configuration is missing. Run: gspot apply');
     } finally {
         files.close();
     }
-    const ruleset = join(input.root, '.gspot/spectral.yaml');
+    const ruleset = join(input.root, '.gspot/config/spectral.yaml');
     const result = await runCheckCommand(
         input,
         ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', document],

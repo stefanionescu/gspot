@@ -1,6 +1,6 @@
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/checks/integrity-definitions.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
 // No tracked file sits inside a folder a package manager fills.
 import { indexedPaths } from '#cli/repository/tracked.ts';
 

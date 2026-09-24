@@ -1,15 +1,16 @@
-import { Argument, type Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { openSession } from '#cli/run/session.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { coverageLines } from '#cli/output/coverage.ts';
 import { checkState } from '#cli/policy/check-state.ts';
-import { detectPresets } from '#cli/presets/detect.ts';
-import { everyManifest } from '#cli/presets/select.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
-import { coverageLines, coverageReport } from '#cli/doctor/coverage.ts';
-import type { Session, CommandResult } from '#cli/run/types.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { coverageReport } from '#cli/run/coverage.ts';
+import { openSession } from '#cli/run/session.ts';
+import type { CommandResult, Session } from '#cli/types/execution.ts';
+import { Argument, type Command } from 'commander';
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;
@@ -35,11 +36,11 @@ function settingsText(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras }, exitCode: 0 };
 }
 
-function presetsResult(session: Session): CommandResult {
+function configurationsResult(session: Session): CommandResult {
     const selected = everyManifest(session);
-    const names = new Set(selected.map((manifest) => manifest.preset.name));
+    const names = new Set(selected.map((manifest) => manifest.configuration.name));
     const installed = selected.map((manifest) => ({
-        name: manifest.preset.name,
+        name: manifest.configuration.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
                 ? manifest.checks.map((spec) => ({
@@ -51,48 +52,53 @@ function presetsResult(session: Session): CommandResult {
         ),
     }));
     const facts = readManifests(session.root, session.repository.files);
-    const detected = detectPresets(session.repository.files, session.manifests, facts)
-        .filter((proposal) => !names.has(proposal.preset))
+    const detected = detectConfigurations(session.repository.files, session.manifests, facts)
+        .filter((proposal) => !names.has(proposal.configuration))
         .map((proposal) => ({
-            name: proposal.preset,
+            name: proposal.configuration,
             evidence: proposal.evidence,
-            command: `gspot add ${proposal.preset}`,
+            command: `gspot add ${proposal.configuration}`,
         }));
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
         .values()
-        .filter((manifest) => !names.has(manifest.preset.name) && !detectedNames.has(manifest.preset.name))
-        .map((manifest) => ({ name: manifest.preset.name, description: manifest.preset.description }))
+        .filter(
+            (manifest) => !names.has(manifest.configuration.name) && !detectedNames.has(manifest.configuration.name),
+        )
+        .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
         .toArray();
     const lines = ['installed'];
-    for (const preset of installed) {
-        lines.push(`  ${preset.name}`);
-        for (const check of preset.checks) lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
+    for (const configuration of installed) {
+        lines.push(`  ${configuration.name}`);
+        for (const check of configuration.checks)
+            lines.push(`    ${check.name}  ${check.state}${scopeTag(check.scope)}`);
     }
     lines.push('', 'detected, not selected');
-    for (const preset of detected) lines.push(`  ${preset.name}  ${preset.evidence}\n    ${preset.command}`);
+    for (const configuration of detected)
+        lines.push(`  ${configuration.name}  ${configuration.evidence}\n    ${configuration.command}`);
     lines.push('', 'available');
-    for (const preset of available) lines.push(`  ${preset.name}  ${preset.description}`);
+    for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
     const coverage = coverageReport(session);
     lines.push('', ...coverageLines(coverage));
     return { text: `${lines.join('\n')}\n`, json: { installed, detected, available, coverage }, exitCode: 0 };
 }
 
-/** List presets and effective settings without executing checks or mutating the project. */
+/** List configurations and effective settings without executing checks or mutating the project. */
 export function registerList(program: Command): void {
     program
         .command('list')
-        .description('List presets and check states, or effective settings and their sources')
+        .summary('List configurations and settings')
+        .description('List configurations and check states, or effective settings and their sources')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the policy and repository to list selected, detected, and available presets. With settings, prints effective values and their sources. It does not execute checks or mutate project files.\n\nExit codes:\n0: the requested information was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot list settings',
+            '\nEffects:\nReads the policy and repository to list selected, detected, and available configurations. With settings, prints effective values and their sources. It does not execute checks or mutate project files.\n\nExit codes:\n0: the requested information was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot list settings',
         )
         .addArgument(new Argument('[kind]', 'The information to list').choices(['settings']))
         .action(async (kind: string | undefined, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(async () => {
                 const session = await openSession(findRoot(directoryOf(global)));
-                return kind === 'settings' ? settingsText(session) : presetsResult(session);
+                return kind === 'settings' ? settingsText(session) : configurationsResult(session);
             }, global);
         });
 }

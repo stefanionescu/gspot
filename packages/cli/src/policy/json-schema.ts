@@ -1,7 +1,7 @@
 // gspot.schema.json from the zod schema, published with each release and submitted to SchemaStore.
 import { z } from 'zod';
-import type { SchemaNode } from '#cli/policy/types.ts';
-import { policySchema } from '#cli/policy/schema.ts';
+import type { SchemaNode } from '#cli/types/policy.ts';
+import { policySchema } from '#cli/schemas/policy.ts';
 
 const JSON_INDENT = 4;
 
@@ -26,7 +26,7 @@ export function policyJsonSchema(): Record<string, unknown> {
         $id: 'https://gspot.dev/schema/gspot.schema.json',
         title: 'gspot.toml',
         description:
-            'The policy of one repository under gspot: presets, scopes, limits, naming, tools, ignores, declarations and hooks.',
+            'The policy of one repository under gspot: configurations, scopes, limits, naming, tools, ignores, declarations and hooks.',
         ...schema,
     };
 }

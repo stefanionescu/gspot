@@ -18,7 +18,7 @@ const sources = [
 test('Compose images follow service mappings and reject unreadable input', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\npresets = ["docker"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["docker"]\n',
         'compose.yaml': sources[0]!,
     });
     const session = await openSession(directory.path);

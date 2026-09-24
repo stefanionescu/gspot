@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 
-const POLICY = 'version = 1\npresets = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
+const POLICY = 'version = 1\nconfigurations = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
 const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
 const PATH = 'migrations/20240201_teams.sql';
 
@@ -75,7 +75,7 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["postgres"]\n[[scope]]\npath = "apps/one"\npresets = ["postgres"]\n[[scope]]\npath = "apps/two"\npresets = ["postgres"]\n[scope.tools.postgres]\nmigrations_dir = "schema"\n',
+            'version = 1\nconfigurations = ["postgres"]\n[[scope]]\npath = "apps/one"\nconfigurations = ["postgres"]\n[[scope]]\npath = "apps/two"\nconfigurations = ["postgres"]\n[scope.tools.postgres]\nmigrations_dir = "schema"\n',
         [PATH]: ORIGINAL,
         'apps/one/migrations/20240101_one.sql': 'SELECT 1;\n',
         'apps/two/schema/20240101_two.sql': 'SELECT 2;\n',

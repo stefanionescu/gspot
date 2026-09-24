@@ -35,6 +35,7 @@ export type RuleSpec<Options extends readonly unknown[], MessageIds extends stri
 }>;
 
 export type RuleDocs = {
+    title: string;
     level?: 'recommended' | 'all';
     summary: string;
     why: string;

@@ -6,12 +6,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import example from '../../../docs/src/components/bash-syntax.json';
+import example from '../../../docs/src/components/home/bash-syntax.json';
 
 test('the published syntax example produces the captured finding and accepts its correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'greet.sh': example.broken,
     });
@@ -31,7 +31,7 @@ test('the published syntax example produces the captured finding and accepts its
 });
 
 test('the Bash retry example preserves the final failure status', async () => {
-    const source = readFileSync(new URL('../../../rules/language/bash/OPERATIONS.md', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../../packages/cli/rules/language/bash/OPERATIONS.md', import.meta.url), 'utf8');
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
         .map((match) => match[1]!)
         .find((block) => block.includes('retry_retryable()'));
@@ -46,7 +46,7 @@ test('the Bash retry example preserves the final failure status', async () => {
 });
 
 test('the Bash sentinel example preserves trailing newlines and rejects producer failure', async () => {
-    const source = readFileSync(new URL('../../../rules/language/bash/LANGUAGE.md', import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../../packages/cli/rules/language/bash/LANGUAGE.md', import.meta.url), 'utf8');
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
         .map((match) => match[1]!)
         .find((block) => block.includes('content_with_sentinel='));

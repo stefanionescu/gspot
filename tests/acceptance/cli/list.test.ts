@@ -1,4 +1,4 @@
-import type { CoverageReport } from '#cli/doctor/types.ts';
+import type { CoverageReport } from '#cli/types/reports.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nlevel = "all"\npresets = ["bash"]\n';
+    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n';
     await createFileTree(directory.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["excluded.sh"]\nreason = "The fixture exercises differing coverage within one ending."\n`,
         'entry.sh': 'echo example\n',
@@ -34,10 +34,10 @@ test('doctor and list name unsupported endings and retain different coverage wit
     ).toEqual([{ ending: '.sh', scope: '', files: 2, kinds: expect.arrayContaining(['syntax']) }]);
 });
 
-test('list shows selected policy states, detected presets, and setting values without writing', async () => {
+test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
     await using directory = await testdir();
     const policy =
-        'version = 1\npresets = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';
+        'version = 1\nconfigurations = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'entry.sh': 'echo example\n',
@@ -50,13 +50,13 @@ test('list shows selected policy states, detected presets, and setting values wi
         detected: { name: string; command: string }[];
         available: { name: string }[];
     };
-    const checks = result.installed.flatMap((preset) => preset.checks);
+    const checks = result.installed.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'bash/syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'off (level)' });
     expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'waits for tools.next.build_in_gate' });
-    expect(result.detected.find((preset) => preset.name === 'sql')?.command).toBe('gspot add sql');
-    expect(result.available.some((preset) => preset.name === 'python')).toBe(true);
+    expect(result.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
+    expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
     const settings = await run(directory.path, ['list', 'settings', '--json']);
     expect(settings.code, settings.stdout + settings.stderr).toBe(0);
     const rows = (JSON.parse(settings.stdout) as { settings: { key: string; value: unknown }[] }).settings;

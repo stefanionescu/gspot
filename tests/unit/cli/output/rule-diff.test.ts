@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
 import { ruleDiff } from '#cli/emit/rule-diff.ts';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 
 test('Gixy previews retain final root selectors and keep plugin options outside the rule lists', () => {
     const file: GeneratedFile = {
-        path: '.gspot/gixy.cfg',
+        path: '.gspot/config/gixy.cfg',
         content: 'checks = ssrf, aliastraversal\nskips = ssrf\n',
         rulesPath: ['checks', 'skips'],
         kind: 'config',
@@ -32,7 +32,7 @@ test('Gixy previews retain final root selectors and keep plugin options outside 
 
 test('record rule lists compare by ID and diagnose ambiguous duplicate IDs', () => {
     const file: GeneratedFile = {
-        path: '.gspot/semgrep/example.yml',
+        path: '.gspot/config/semgrep/example.yml',
         content: 'rules:\n  - id: first\n    pattern: eval(...)\n  - id: second\n    pattern: exec(...)\n',
         rulesPath: ['rules'],
         kind: 'config',
@@ -56,7 +56,7 @@ test('record rule lists compare by ID and diagnose ambiguous duplicate IDs', () 
 
 test('JavaScript comparison reads static exports and rejects executable rule values without running them', () => {
     const file: GeneratedFile = {
-        path: '.gspot/commitlint.config.cjs',
+        path: '.gspot/config/commitlint.config.cjs',
         content: "module.exports = {rules: {'type-case': [2, 'always', 'lower-case']}};",
         rulesPath: ['rules'],
         kind: 'config',
@@ -76,7 +76,7 @@ test('JavaScript comparison reads static exports and rejects executable rule val
 
 test('Vale comparison combines style selections and keeps rule overrides in their file sections', () => {
     const file: GeneratedFile = {
-        path: '.gspot/vale.ini',
+        path: '.gspot/config/vale.ini',
         content: '[*]\nBasedOnStyles = Vale, Example\nExample.Rule = YES\n',
         rulesPath: ['*.rules', '*.BasedOnStyles'],
         kind: 'config',
@@ -99,7 +99,7 @@ test('Vale comparison combines style selections and keeps rule overrides in thei
 
 test('SQLFluff comparison names excluded rules and changed rule options while ignoring list order', () => {
     const file: GeneratedFile = {
-        path: '.gspot/sqlfluff.cfg',
+        path: '.gspot/config/sqlfluff.cfg',
         content:
             '[sqlfluff]\nexclude_rules = CP01, LT01\n[sqlfluff:rules:capitalisation.keywords]\ncapitalisation_policy = upper\n',
         rulesPath: ['sqlfluff.rules', 'sqlfluff.exclude_rules', 'sqlfluff:rules'],
@@ -133,7 +133,7 @@ test('SQLFluff comparison names excluded rules and changed rule options while ig
 
 test('SQLFluff comparison preserves case-sensitive options and resolves inherited defaults as data', () => {
     const file: GeneratedFile = {
-        path: '.gspot/sqlfluff.cfg',
+        path: '.gspot/config/sqlfluff.cfg',
         content: '[sqlfluff:rules:example]\nflag = true\nlimit = 1\nName = VALUE\n',
         rulesPath: ['sqlfluff:rules'],
         kind: 'config',
@@ -183,7 +183,7 @@ test('rule comparison ignores list order and reports malformed JSON without clai
 
 test('ShellCheck comparisons combine repeated directives and normalize code prefixes and list order', () => {
     const file: GeneratedFile = {
-        path: '.gspot/shellcheckrc',
+        path: '.gspot/config/shellcheckrc',
         content: 'shell=bash\nenable=all\ndisable=SC2086,SC2002\n',
         rulesPath: ['enable', 'disable'],
         kind: 'config',
@@ -211,7 +211,7 @@ test('ShellCheck comparisons combine repeated directives and normalize code pref
 
 test('SwiftFormat comparisons combine repeated and continued rule lists without treating options as rules', () => {
     const file: GeneratedFile = {
-        path: '.gspot/swiftformat',
+        path: '.gspot/config/swiftformat',
         content: '--enable consecutiveSpaces, trailingSpace\n--disable redundantSelf\n--indent 4\n',
         rulesPath: ['enable', 'disable', 'rules', 'lint-only'],
         kind: 'config',

@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // An ignore file beside every Dockerfile, with the entries that keep history, dependencies and secrets out of the build.
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
-import { DOCKERIGNORE_ENTRIES } from '#cli/checks/integrity-definitions.ts';
+
 
 function isDockerfile(path: string): boolean {
     const name = path.slice(path.lastIndexOf('/') + 1);
@@ -43,3 +43,5 @@ export function dockerignore(input: EngineInput): Finding[] {
     });
     return findings.toArray();
 }
+
+const DOCKERIGNORE_ENTRIES = ['.git', 'node_modules', '.env'];

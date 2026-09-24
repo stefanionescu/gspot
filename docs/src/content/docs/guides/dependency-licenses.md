@@ -9,7 +9,7 @@ Select `licenses` to check installed npm and Python packages with `licenses/pack
 Install the project dependencies first. Python projects use their scope's `.venv`; the license
 scanner is installed separately by `gspot install`.
 
-`gspot apply` writes the effective allowances and exceptions to `.gspot/licenses.json`.
+`gspot apply` writes the effective allowances and exceptions to `.gspot/config/licenses.json`.
 Scoped policies have their own files under `.gspot/<scope>/licenses.json`. Change these values
 with `gspot set`, which applies the setting. After a manual edit of `gspot.toml`, run `gspot apply`.
 The scanner reads this generated configuration and refuses missing or stale values before
@@ -36,7 +36,7 @@ do not distinguish Python distribution names. Versions and reported licenses rem
 
 Selecting `licenses` also selects `integrity/allowlists-match` at commit. This shared check
 verifies that each package exception names a version in the project or workspace lockfile.
-It runs once even when another selected preset includes it. It does not select the other
+It runs once even when another selected configuration includes it. It does not select the other
 checks or tools from `structure`.
 
 Adoption keeps nested license configuration in its directory scope. It retains original

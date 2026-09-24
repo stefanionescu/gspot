@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { dirname, relative, sep } from 'node:path';
-import { openConfinedRoot, mutationPath } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot, mutationPath } from '#cli/filesystem/confined.ts';
 import { readFileSync } from 'node:fs';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });

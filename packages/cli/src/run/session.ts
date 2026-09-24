@@ -1,15 +1,15 @@
-import type { PolicyFiles } from '#cli/policy/types.ts';
+import type { PolicyFiles } from '#cli/types/policy.ts';
 import { toolPackageManager } from '#cli/emit/tool-packages.ts';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 // One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
 import { readPolicy } from '#cli/policy/read-policy.ts';
-import { selectForScope } from '#cli/presets/select.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
-import type { ScopeSelection, Session } from '#cli/run/types.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import type { ScopeSelection, Session } from '#cli/types/execution.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 
 /**
@@ -19,7 +19,7 @@ import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
  */
 export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {
     assertPolicyComplete(policyFiles);
-    const manifests = presetManifests();
+    const manifests = configurationManifests();
     const repo = await readRepository(
         root,
         policyFiles.policy.declarations,

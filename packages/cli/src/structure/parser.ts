@@ -1,7 +1,7 @@
 import { executableStatements } from '#cli/structure/statements.ts';
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
-import { parserFor } from '#cli/naming/parsers.ts';
-import type { ScriptFunction } from '#cli/structure/types.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import type { ScriptFunction } from '#cli/types/structure.ts';
 
 /**
  * The functions a shell script declares, in order.

@@ -1,4 +1,4 @@
-import { applyCommand } from '#cli/emit/apply-command.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { run } from '#cli/platform/spawn.ts';
@@ -16,7 +16,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         await using repository = await testdir();
         const root = repository.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\npresets = []\n[rules]\ninstall = false\n[hooks]\ntool = "${manager}"\n`,
+            'gspot.toml': `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "${manager}"\n`,
             'package.json': JSON.stringify({
                 private: true,
                 devDependencies: manager === 'pre-commit' ? {} : { [manager]: VERSIONS[manager] },

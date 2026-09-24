@@ -1,8 +1,15 @@
-// gspot apply
-import type { Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { applyCommand } from '#cli/emit/apply-command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { computeDrift } from '#cli/emit/drift.ts';
+import { eslintRuleDiff } from '#cli/emit/eslint-rule-diff.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { openSession } from '#cli/run/session.ts';
+import { GSPOT_VERSION, pinnedVersion } from '#cli/run/version-pin.ts';
+import type { CommandResult, Session } from '#cli/types/execution.ts';
+import type { ApplyReport, DriftEntry } from '#cli/types/generation.ts';
+import type { Command } from 'commander';
 
 /**
  * Registers apply.
@@ -11,6 +18,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 export function registerApply(program: Command): void {
     program
         .command('apply')
+        .summary('Generate tool files')
         .description('Generate configuration from gspot.toml')
         .addHelpText(
             'after',
@@ -28,4 +36,75 @@ export function registerApply(program: Command): void {
                 global,
             );
         });
+}
+
+export type ApplyOptions = {
+    cwd: string;
+    isDryRun: boolean;
+};
+
+function driftText(drift: DriftEntry[]): string {
+    const noun = drift.length === 1 ? 'file' : 'files';
+    const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
+    for (const entry of drift) {
+        lines.push(`  ${entry.path}  ${entry.kind}`);
+        for (const rules of entry.rules ?? []) {
+            const at = rules.path === '' ? 'root' : rules.path;
+            if (rules.added.length > 0) lines.push(`    ${at}: added ${rules.added.join(', ')}`);
+            if (rules.removed.length > 0) lines.push(`    ${at}: removed ${rules.removed.join(', ')}`);
+            if (rules.changed.length > 0) lines.push(`    ${at}: changed ${rules.changed.join(', ')}`);
+        }
+        if (entry.ruleError !== undefined) lines.push(`    ${entry.ruleError}`);
+        if (entry.diff !== undefined && entry.diff !== '')
+            lines.push(
+                entry.diff
+                    .split('\n')
+                    .map((line) => `    ${line}`)
+                    .join('\n'),
+            );
+    }
+    lines.push(
+        '',
+        'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside before regenerating.',
+    );
+    return `${lines.join('\n')}\n`;
+}
+
+async function previewApply(session: Session): Promise<CommandResult> {
+    const proposal = emitAll(session);
+    const drift = computeDrift(session, proposal);
+    await eslintRuleDiff(session, proposal, drift);
+    const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
+    const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
+    const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
+    return {
+        text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`,
+        json: { isDryRun: true, pin, drift, notes: proposal.notes },
+        exitCode: 0,
+    };
+}
+
+function reportText(report: ApplyReport): string {
+    const lines = [
+        ...report.written.map((path) => `wrote    ${path}`),
+        ...report.blocks.map((path) => `block    ${path}`),
+        ...report.packages.map((path) => `scripts  ${path}`),
+        ...report.removed.map((path) => `removed  ${path}`),
+        ...report.notes.map((note) => `note     ${note}`),
+    ];
+    if (lines.length === 0) lines.push(`everything up to date (${String(report.unchanged.length)} files)`);
+    return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Generates configuration or previews proposed changes without writing.
+ * @param options the parsed flags
+ * @returns the command result
+ */
+export async function applyCommand(options: ApplyOptions): Promise<CommandResult> {
+    const root = findRoot(options.cwd);
+    const session = await openSession(root);
+    if (options.isDryRun) return previewApply(session);
+    const report = await applyAll(session);
+    return { text: reportText(report), json: report, exitCode: 0 };
 }

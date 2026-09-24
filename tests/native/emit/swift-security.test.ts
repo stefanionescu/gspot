@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { emitAll } from '#cli/emit/targets.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { installPythonProject, resolvePythonProject } from '#cli/lifecycle/python-project.ts';
+import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 import { openSession } from '#cli/run/session.ts';
 
 const SWIFT =
@@ -49,13 +49,13 @@ test.each(['recommended', 'all'])(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\npresets = ["swift", "javascript", "security"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["swift", "javascript", "security"]\n[rules]\ninstall = false\n`,
             'Value.swift': SWIFT,
             'scripts/build.js': SCRIPTS,
             'Info.plist': PLIST,
         });
         const files = emitAll(await openSession(root)).files.filter(
-            ({ path }) => path.startsWith('.gspot/semgrep/') || path === '.gspot/pyproject.toml',
+            ({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml',
         );
         await withLifecycleOwner(root, async (owner) => await resolvePythonProject(root, files, owner));
         for (const file of files) await Bun.write(join(root, file.path), file.content);
@@ -66,7 +66,7 @@ test.each(['recommended', 'all'])(
                     join(root, '.gspot/.venv/bin/semgrep'),
                     'scan',
                     '--config',
-                    '.gspot/semgrep/ios.yml',
+                    '.gspot/config/semgrep/ios.yml',
                     '--metrics',
                     'off',
                     '--disable-version-check',

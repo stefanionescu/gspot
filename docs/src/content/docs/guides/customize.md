@@ -1,11 +1,11 @@
 ---
 title: Choose checks and exceptions
-description: Select presets, adjust settings, and keep exceptions scoped and explained.
+description: Select configurations, adjust settings, and keep exceptions scoped and explained.
 ---
 
 Run commands from the configured repository root with the [CLI available](/guides/install/).
 
-Start with an initialized repository. A **preset** groups checks and tool configuration.
+Start with an initialized repository. A **configuration** groups checks and tool configuration.
 A **check** runs an analysis or a tool; a **tool rule** identifies a diagnostic within that
 check. A **finding** is the reported problem. The **level** selects policy strength, the
 **stage** selects when checks run, and a **scope** selects a project within the repository.
@@ -21,13 +21,13 @@ gspot list settings
 Use `gspot explain <check>` before changing its policy. The generated
 [settings reference](/reference/settings/) gives accepted values and defaults.
 
-## Select presets and a level
+## Select configurations and a level
 
-A complete policy starts with a schema version and selected presets:
+A complete policy starts with a schema version and selected configurations:
 
 ```toml
 version = 1
-presets = ["bash"]
+configurations = ["bash"]
 level = "recommended"
 require_reasons = true
 ```
@@ -82,3 +82,6 @@ changing one. Review `gspot.toml` and generated changes before sharing them.
 - [Dependency licenses](/guides/dependency-licenses/): installed packages and exact exceptions.
 - [Security checks](/guides/security/): Swift rules and CodeQL analysis.
 - [Scopes](/guides/scopes/): policy inheritance and project-local resources.
+
+See [edit and retain repository files](/guides/generated-files/) for what to commit,
+regenerate, and keep for restoration.

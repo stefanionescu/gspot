@@ -6,10 +6,10 @@ import { z } from 'zod';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { existsSync } from 'node:fs';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 
 const MANIFEST = 'pyproject.toml';
 const importConfiguration = z.object({

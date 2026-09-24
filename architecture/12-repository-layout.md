@@ -8,7 +8,7 @@ This document decides the gspot repository: packages, folders, tests, and how gs
 itself.
 
 Two published artifacts: the binary (GitHub Releases, one asset per platform) and
-`@gspot/eslint-plugin` (npm). Presets, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
+`@gspot/eslint-plugin` (npm). Configurations, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
 install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors all work.
 
 Central test suites classify tests by their actual dependencies. Shared CLI support separates
@@ -22,8 +22,8 @@ and reading. Both use the existing confinement boundary; neither changes the sel
 ## Ownership
 
 gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
-compatibility aliases, version migrations, Changesets, or release-PR promises. Presets live at
-`presets/<kind>/<name>`; the data/configuration preset and its public check prefix are `configs`.
+compatibility aliases, Changesets, or release-PR promises. Local ownership conversion preserves recovery records when storage moves. Configurations live at
+`packages/cli/configurations/<kind>/<name>`; the data/configuration configuration and its public check prefix are `configs`.
 
 The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
 arguments and present results; output renders the statuses and findings computed by the runner.
@@ -31,7 +31,7 @@ Generators return proposals. Lifecycle owns collisions, recorded ownership, reco
 A generated header or directory name does not authorize deletion.
 
 The independent ESLint plugin owns editor enforcement and its public exports. The npm launcher
-selects an installed platform artifact. Presets own shipped policy, pins, templates, styles, and
+selects an installed platform artifact. Configurations own shipped policy, pins, templates, styles, and
 vocabulary; rule guides own instructions for agents. Documentation renders released definitions
 and authored guides. Tests exercise these behaviors and installed consumer journeys.
 
@@ -45,7 +45,7 @@ or a shared contract. Keep local types, schemas, constants, and functions beside
 Do not require a file per type, constant, forwarding function, or check. Test locations follow
 the behavior they exercise; source/test directory symmetry is not required.
 
-Use the preset kind `policy` for cross-language checks. It groups preset
+Use the configuration kind `policy` for cross-language checks. It groups configuration
 selection and planning; it does not prescribe the taxonomy of commands, tests, docs,
 or unrelated source directories. Configurable shipped naming and placement policies remain
 available at their specified levels. They are not blanket instructions to reorganize gspot.
@@ -65,6 +65,61 @@ Use `testdirs` directly for temporary test directories. Register disposal before
 so setup failures are cleaned up. Keep test-only types with tests and exercise harness behavior
 through real product journeys.
 
+## CLI ownership boundaries
+
+The executable entry delegates to Commander composition. Command adapters parse flags and
+present command results. Execution planning, scheduling, cancellation, and diagnostic parsing
+remain separate from check implementations. Policy owns validation and mutation proposals;
+configurations own shipped check definitions and selection. Output owns terminal and report formats.
+Naming and structure analyses retain their language-specific semantics beside their consumers.
+
+Next.js source checks and execution live in `checks/nextjs/source.ts` and `checks/nextjs/build.ts`.
+Jest execution and its shared validation schema live in `checks/jest/run.ts` and
+`checks/jest/schema.ts`. Hook names and hook metadata belong to `repository/hooks.ts`;
+dependency directory names belong to repository file classification. Dependency checks share
+lockfile formats. Other check constants stay with their consumers.
+
+Agent metadata and generated instructions belong to `agents/metadata.ts` and
+`agents/instructions.ts`. The authored catalog and its runtime owner are both named
+`configurations/`. Homepage components live under `docs/src/components/home/`; Starlight
+overrides stay at `docs/src/components/`. Artwork is grouped by home, identity, README, badges,
+and diagrams under `docs/public/brand/`.
+
+Generation proposes configuration content. Lifecycle applies those proposals through recorded
+ownership, preserves local edits, and restores recovery copies. Apply registration, previews, and command orchestration belong to commands. Shared publication stays in lifecycle. Tool acquisition owns installation, version probes, installer hints,
+package-manager connection settings, locked npm and Python projects, and installed-file
+publication. It uses filesystem confinement and lifecycle ownership for repository writes. Hook adoption
+and restoration remain lifecycle operations. Vale package assembly stays with prose because it
+combines the shipped styles with the selected external style packages.
+
+Shared SQL parsing and Tree-sitter loading belong to parsers. Grammar names belong to the loader;
+language-specific identifier extraction and analysis remain in naming and checks. Agent-guide
+assembly and validation are distinct from executable checks. Their internal owner name does not
+change the public rules configuration or the embedded rules asset paths. Repository discovery
+owns file classification. The suppression check owns its directive constant.
+
+Platform provides process execution, environment access, paths, embedded assets, and release
+targets. The launcher target manifest remains the single source for release platforms. Shared tool observations belong to `types/tools.ts`; doctor consumes those observations in its report.
+
+CLI development entry points live in `packages/cli/scripts/`. Build and compile preserve the
+ignored package build directory and the embedded configuration-evaluator asset key. Grammar
+assets retain their provenance. Notice generation reads the actual bundled module inputs and
+embedded assets, rather than collecting unrelated workspace dependencies. Package metadata stays
+at the package root. Script callers, task definitions, release fixtures, and generated policy
+use the development entry points directly.
+
+These boundaries use the entry/command separation and development-script ownership inspected
+in Nx revision `59b35fba73` and Turborepo revision `1dead3cc9d`. They retain Bun, mise, and the
+existing packages without introducing a task framework or compatibility modules.
+
+Shared TypeScript contracts belong to `src/types/`, grouped by domain. Runtime validators belong
+to `src/schemas/` and do not import commands or execution implementations. Tool-configuration
+evaluation belongs to `evaluation/`; its request validators do not import the evaluators.
+Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initialization planning,
+questions, and selection belong to `commands/init/`. Shared coverage analysis belongs to execution,
+and its text rendering belongs to output. Direct imports include type and dynamic dependencies;
+reusable modules do not import command modules.
+
 ## Native configuration and packaging
 
 The CLI and independently usable ESLint plugin remain separate workspace packages.
@@ -79,7 +134,7 @@ The authored configuration adds `.mise/gspot/` to PATH so hooks and tasks run re
 source. Root `mise.toml` owns development runtimes and checkout settings. Keep each identical tool pin in one owner. Duplicate-pin
 detection parses only `[tools]` with smol-toml, so task and environment keys cannot become pins.
 
-Repository choices remain in TOML. The generated root schema provides
+Repository choices remain in TOML. The generated CLI-package schema provides
 [Taplo editor assistance](https://taplo.tamasfe.dev/configuration/using-schemas.html).
 The website build copies that schema into output; a second tracked copy serves no purpose.
 
@@ -87,13 +142,13 @@ Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in
 Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain explicit.
 The test TypeScript configuration inherits the strict workspace settings.
 All tests belong under the root `tests/`: unit CLI and plugin suites, integration CLI, docs,
-and repository suites, native checks, source acceptance CLI and preset journeys, and release
+and repository suites, native checks, source acceptance CLI and configuration journeys, and release
 consumers. Support owns process, registry, and fixture lifetime; types stay with those owners.
 `mise run test` targets deterministic unit and integration execution using documented development
 prerequisites and installed workspace dependencies. Native tools, downloads, source acceptance,
 and installed release consumers require separate explicit tasks. The release task runs directly
 after its artifact prerequisites are built; no environment opt-in hides its tests. Do not add Vitest, Jest, or a custom coordinator for this
-repository. Framework presets can still use their own test tools.
+repository. Framework configurations can still use their own test tools.
 
 Root configuration has explicit owners. `gspot.toml`, `mise.toml`, `package.json`,
 `bunfig.toml`, `tsconfig.json`, and the authored portions of `.gitignore` and `.gitattributes`
@@ -103,11 +158,24 @@ files `.commitlintrc.json`, `.gitleaks.toml`, `.markdownlint-cli2.jsonc`, `.semg
 Retained EditorConfig, Prettier, and ESLint entry points continue serving editors; ownership
 records, rather than generated-looking headers, govern replacement. Agent instructions and
 Git attributes retain their authored content outside managed blocks. The policy schema owns
-`gspot.schema.json`; the site build publishes its copy. Native filenames remain stable.
+`packages/cli/schemas/gspot.schema.json`; the site build publishes its copy. Native filenames remain stable.
+
+Generated tool configuration and bundled tool rules live under `.gspot/config/`, with scope paths
+mirrored below it. Agent guides remain under `.gspot/rules/`. Ownership journals, writer locks,
+and recovery backups live under `.gspot/state/`. Reports use `.gspot/reports/`; disposable caches
+use `.gspot/cache/`. Private dependency manifests, lockfiles, installed packages, and the Python
+environment remain at `.gspot/`'s root for native dependency resolution. Ignore rules use the same
+path definitions as storage. Only installed dependencies, downloaded styles, local state, reports,
+and caches are ignored.
+
+Hooks inside the configured repository share its ownership journal. Git-internal hooks use state
+under the resolved Git directory. External destinations keep their state and writer lock inside
+the hook destination. Conversion reads recorded ownership, copies and verifies recovery bytes,
+preserves modes and pending operations, and removes the old journal after publication succeeds.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
 including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,
-embedded grammars, and Bun; `packages/cli/notices.json` owns pinned supplemental text and provenance.
+embedded grammars, and Bun; `packages/cli/scripts/notices.json` owns pinned supplemental text and provenance.
 The plugin leaves dependencies external and does not copy unrelated CLI notices. Native
 packaging does not assemble licenses for a compiled binary, so the small build-owned notice
 assembler remains. Do not replace it with a scanner of the entire dependency tree.
@@ -136,7 +204,7 @@ questions when interactive input is available.
 | Job                                                   | Library                                                                | Note                                                                                                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temporary test directories                            | `testdirs`                                                             | Call `testdir()` with no files, register async disposal, then call `createFileTree`. This order preserves cleanup after setup failure.                     |
-| Render a preset template                              | `eta`                                                                  | every `*.tmpl` under `presets/`; the generated-file header is prepended by gspot                                                                           |
+| Render a configuration template                       | `eta`                                                                  | every `*.tmpl` under `packages/cli/configurations/`; the generated-file header is prepended by gspot                                                       |
 | Command parsing, `--help`, unknown-command suggestion | commander                                                              | the public command definition feeds the reference content loader                                                                                           |
 | The questions in `init`                               | `@clack/prompts`                                                       | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                                              |
 | Color                                                 | picocolors                                                             | off under `NO_COLOR`, `CI`, `--no-color` or no terminal                                                                                                    |
@@ -144,9 +212,9 @@ questions when interactive input is available.
 | Read TOML                                             | smol-toml                                                              |                                                                                                                                                            |
 | Write `gspot.toml` keeping comments and order         | `@decimalturn/toml-patch`                                              | TOML 1.1; `patch()` and `TomlDocument`; a comment travels with the entry it belongs to when the entry moves or goes                                        |
 | Detect the package manager                            | `nypm`                                                                 | `detectPackageManager` reads repository metadata; installation remains owned by the runner.                                                                |
-| `.gitignore` semantics without Git                    | `ignore`, pinned in the CLI package                                   | Native directory traversal applies nested exclusions, negations, pruning, and symlink boundaries while preserving newline-containing paths.              |
-| Name a language gspot has no preset for               | `linguist-languages`                                                   | GitHub Linguist's extension data, offline                                                                                                                  |
-| SARIF for CI                                          | `node-sarif-builder`                                                   | the `.gspot/report.sarif` rendering                                                                                                                        |
+| `.gitignore` semantics without Git                    | `ignore`, pinned in the CLI package                                    | Native directory traversal applies nested exclusions, negations, pruning, and symlink boundaries while preserving newline-containing paths.                |
+| Name a language gspot has no configuration for        | `linguist-languages`                                                   | GitHub Linguist's extension data, offline                                                                                                                  |
+| SARIF for CI                                          | `node-sarif-builder`                                                   | the `.gspot/reports/report.sarif` rendering                                                                                                                |
 | Shell completions                                     | `@bomb.sh/tab` with its commander adapter                              | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro, and Vitest use                                                                         |
 | JSON schema for `gspot.toml`                          | zod v4 `z.toJSONSchema`                                                | `gspot.schema.json`, published to SchemaStore each release                                                                                                 |
 | Split identifiers into parts                          | `scule` (`splitByCase`, the case functions)                            | the naming engine's splitter; the whole-part matcher stays gspot's                                                                                         |
@@ -170,7 +238,7 @@ Not used: any terminal UI framework, table renderer, spinner library outside cla
 framework, or dependency-injection container. Columns are computed from the longest id.
 [15-prior-art.md](15-prior-art.md) records the candidates that were considered and not taken.
 
-Custom code owns the rules and decisions specific to gspot: preset selection and precedence,
+Custom code owns the rules and decisions specific to gspot: configuration selection and precedence,
 coverage policy, finding semantics, managed ownership, and recovery decisions. Use the libraries
 above for parsing, matching, serialization, and execution where their contracts fit. Do not claim
 that no library exists without evaluating candidates. Do not require one library to implement
@@ -179,7 +247,7 @@ an entire gspot workflow before reusing the part it already solves.
 ## Build
 
 - `bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files,
-  presets, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
+  configurations, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
   `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`, plus Linux x64 and ARM64 musl targets from the same platform definition.
 - The release tag must match the package version source; generated file headers use that version.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
@@ -331,7 +399,7 @@ Share proven parsing, line counting, and extraction operations without forcing l
 ### Acceptance G-13
 
 Colocate constants with the behavior that uses them. Share a literal contract only
-when multiple consumers need it. Presets own shipped tool pins and policy. The package layout
+when multiple consumers need it. Configurations own shipped tool pins and policy. The package layout
 need not match between CLI and plugin.
 
 Remove unrelated central tables and forwarding accessors. Keep algorithm constants
@@ -363,7 +431,7 @@ Verify emitted integration, a real staged check, and hook invocation in the owni
 
 Private tool installation uses each supported package manager and executes installed checks.
 Share a representative dependency installation where it proves the same boundary; do not repeat
-an expensive install for every preset solely to satisfy a matrix count. Native configuration
+an expensive install for every configuration solely to satisfy a matrix count. Native configuration
 behavior still needs defect and correction evidence at both levels.
 
 ### Acceptance T-3
@@ -417,7 +485,7 @@ Resolve generated ESLint configuration for source, tests, scripts, configuration
 
 ### Acceptance T-36
 
-Test generated behavior with the actual pinned consumer. Preserve exact-byte assertions where serialization, escaping, authored content, or recovery requires them. A snapshot directory for every preset is not required.
+Test generated behavior with the actual pinned consumer. Preserve exact-byte assertions where serialization, escaping, authored content, or recovery requires them. A snapshot directory for every configuration is not required.
 
 ### Acceptance T-12
 
@@ -458,10 +526,10 @@ Do not recreate a standalone registry-harness suite.
 
 ### Acceptance S-1
 
-One repository check writes every template of every preset into the cache, at both
+One repository check writes every template of every configuration into the cache, at both
 levels, and runs the parser and the formatter of each kind over the result.
 
-Render each preset with its planted policy, then validate the output with its pinned consumer,
+Render each configuration with its planted policy, then validate the output with its pinned consumer,
 including Prettier, Taplo, yamllint, and ESLint where applicable. Retain exact serialization
 assertions only for contractual bytes. T-36 requires generated behavior, not a snapshot inventory.
 
@@ -480,7 +548,7 @@ from `tests/`, load `tests/bunfig.toml`, and pass `--timeout 60000` to Bun. Focu
 `test:unit` and `test:integration`. Candidate acceptance also runs `test:native`,
 `test:acceptance`, and `test:release`; build release prerequisites first and run source acceptance
 before installed consumers. Native tools and downloads do not belong in routine documentation
-tests. The Jest preset configures ESLint for `bun:test` through `globalPackage`; the repository
+tests. The Jest configuration configures ESLint for `bun:test` through `globalPackage`; the repository
 replaces native Jest coverage execution with its Bun tasks. Preserve `level = "all"` and
 `[coverage] strict = true`, which govern product checks rather than a test coverage percentage.
 

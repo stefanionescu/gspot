@@ -6,11 +6,11 @@ import { parse as parseYaml } from 'yaml';
 import JSON5 from 'json5';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { z } from 'zod';
-import { mutationPath, openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { mutationPath, openConfinedRoot } from '#cli/filesystem/confined.ts';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/lifecycle/patterns-definitions.ts';
-import type { ManifestFacts, ScopeEntry } from '#cli/repository/types.ts';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
+import type { ManifestFacts, ScopeEntry } from '#cli/types/repository.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
 
 function lastSegment(path: string): string {
@@ -19,7 +19,7 @@ function lastSegment(path: string): string {
 
 function workspaceEntry(path: string): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
-    return { name: lastSegment(trimmed), path: trimmed, presets: [], source: 'workspace' };
+    return { name: lastSegment(trimmed), path: trimmed, configurations: [], source: 'workspace' };
 }
 
 // Validate filesystem access before the workspace resolver reads package manifests.
@@ -169,14 +169,14 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
  * @param entries the [[scope]] entries
  * @returns the scope entries
  */
-export function policyScopes(entries: { path: string; presets: string[] }[]): ScopeEntry[] {
+export function policyScopes(entries: { path: string; configurations: string[] }[]): ScopeEntry[] {
     return [
-        { name: 'root', path: '', presets: [], source: 'root' },
+        { name: 'root', path: '', configurations: [], source: 'root' },
         ...entries.map(
             (entry): ScopeEntry => ({
                 name: lastSegment(entry.path),
                 path: entry.path,
-                presets: entry.presets,
+                configurations: entry.configurations,
                 source: 'gspot.toml',
             }),
         ),
@@ -193,7 +193,7 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
     const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? {
         name: 'root',
         path: '',
-        presets: [],
+        configurations: [],
         source: 'root',
     };
     return scopes
@@ -203,9 +203,9 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
 
 /** Declared ancestors of a scope, ordered from the outermost to the exact scope. */
 export function scopeAncestors(
-    entries: Pick<ScopeEntry, 'path' | 'presets'>[],
+    entries: Pick<ScopeEntry, 'path' | 'configurations'>[],
     path: string,
-): Pick<ScopeEntry, 'path' | 'presets'>[] {
+): Pick<ScopeEntry, 'path' | 'configurations'>[] {
     return entries
         .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
         .toSorted((left, right) => left.path.length - right.path.length);

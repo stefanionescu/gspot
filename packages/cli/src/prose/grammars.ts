@@ -1,8 +1,8 @@
-import type { ProseRoute } from '#cli/prose/types.ts';
+import type { ProseRoute } from '#cli/types/prose.ts';
 // Which grammar Vale reads each file with: by path where Vale has one, through stdin under a look-alike where it does not.
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import { PROSE_GRAMMARS, SCRIPT_TAG } from '#cli/prose/prose-definitions.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { PROSE_GRAMMARS, SCRIPT_TAG } from '#cli/prose/syntax.ts';
 
 /**
  * The route for a tracked file, or undefined when Vale has nothing to read in it.

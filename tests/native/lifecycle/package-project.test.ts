@@ -1,6 +1,6 @@
 import * as spawn from '#cli/platform/spawn.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname } from 'node:path';
@@ -9,10 +9,10 @@ import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/emit/apply-command.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
+import { applyAll } from '#cli/lifecycle/apply.ts';
+import { probeTool } from '#cli/tools/tool-probe.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
-import { installPackageProject } from '#cli/lifecycle/package-project.ts';
+import { installPackageProject } from '#cli/tools/package-project.ts';
 
 const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -28,7 +28,7 @@ test.each([
 ] as const)(
     '%s from %s with %s integration installs the pinned formatter from an authenticated registry without changing the repository dependencies or locked inputs',
     async (manager, projectPath, runner) => {
-        const tools = [...presetManifests().values()].flatMap((manifest) => manifest.tools);
+        const tools = [...configurationManifests().values()].flatMap((manifest) => manifest.tools);
         await using repository = await testdir();
         await using artifacts = await testdir();
         const version = await run([manager, '--version'], { cwd: artifacts.path, timeoutMs: 15000 });
@@ -119,7 +119,7 @@ test.each([
                 'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
                 ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
                 '.npmrc': `registry=http://127.0.0.1:${server.port}/\nalways-auth=true\n//127.0.0.1:${server.port}/:_authToken=${token}\n`,
-                'gspot.toml': `version = 1\nlevel = "recommended"\npresets = ["formatting"]\n${runner === 'none' ? '' : '[runner]\ntool = "mise"\n'}[rules]\ninstall = false\n`,
+                'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["formatting"]\n${runner === 'none' ? '' : '[runner]\ntool = "mise"\n'}[rules]\ninstall = false\n`,
                 'source.js': 'export const greeting="hello";',
                 'node_modules/authored.txt': 'keep project dependencies',
             });
@@ -137,7 +137,7 @@ test.each([
             const lockPath = join(repository.path, '.gspot', LOCKS[manager]);
             const lock = readFileSync(lockPath);
             const mode = statSync(lockPath).mode;
-            const ownershipPath = join(repository.path, '.gspot/ownership.json');
+            const ownershipPath = join(repository.path, '.gspot/state/ownership.json');
             const ownership = readFileSync(ownershipPath);
             const preview = await run([process.execPath, CLI, 'install', '--dry-run', '--json'], {
                 cwd: repository.path,
@@ -186,7 +186,7 @@ ${lock.toString('utf8')}
             const repaired = await applyAll(await openSession(repository.path));
             expect(repaired.written).toContain(`.gspot/${LOCKS[manager]}`);
             expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toEqual([]);
-            const recovery = join(repository.path, '.gspot/recovery');
+            const recovery = join(repository.path, '.gspot/state/recovery');
             expect(
                 readdirSync(recovery, { recursive: true })
                     .filter((path) => String(path).endsWith('.original'))
@@ -245,7 +245,7 @@ ${lock.toString('utf8')}
                         entry.path.endsWith('/editorconfig-checker'),
                 );
                 expect(binary?.installed).toBeDefined();
-                const checker = presetManifests()
+                const checker = configurationManifests()
                     .get('formatting')!
                     .tools.find((tool) => tool.name === 'ec')!;
                 expect(probeTool({ root: repository.path, probes: new Map() }, checker).state).toBe('ok');
@@ -324,7 +324,7 @@ ${lock.toString('utf8')}
                     expect(result.code, result.stdout + result.stderr).toBe(0);
                 }
                 expect(existsSync(join(clone, '.gspot/node_modules'))).toBe(false);
-                expect(existsSync(join(clone, '.gspot/ownership.json'))).toBe(false);
+                expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
                 for (let attempt = 0; attempt < 2; attempt++) {
                     const installed = await installPackageProject(clone, tools);
                     expect(installed).toContain('.gspot/node_modules');

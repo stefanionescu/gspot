@@ -3,9 +3,9 @@ import { dirname, join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { FROZEN_INSTALLS } from '#cli/checks/integrity-definitions.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+
 
 const SHOWN_LINES = 3;
 const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
@@ -56,3 +56,11 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
+
+const FROZEN_INSTALLS: Record<string, string[]> = {
+    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
+    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
+    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
+    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
+    'uv.lock': ['uv', 'lock', '--check'],
+};

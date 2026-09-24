@@ -4,7 +4,7 @@ This document decides the six things inside gspot that produce findings, what ea
 where each draws its line against writing original analysis.
 
 ```text
-                     gspot.toml + presets
+                     gspot.toml + configurations
                               |
         +----------+----------+-----------+----------+-----------+
         |          |          |           |          |           |
@@ -176,7 +176,7 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **Parsing.** `web-tree-sitter` with WASM grammars embedded in the binary: bash, python, swift,
   css, html, and the JavaScript family for the naming extractors. SQL parses through
   `libpg-query` compiled to WASM. No native modules.
-- **Declarative rules.** ast-grep YAML files under each preset, executed through the ast-grep
+- **Declarative rules.** ast-grep YAML files under each configuration, executed through the ast-grep
   CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's.
 - **Counted rules.** Rules that need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and gspot counts the matches per file or per enclosing function.
 - **One parse for a scope.** A source file is parsed once for a scope and a run. The naming
@@ -243,7 +243,7 @@ extractors per language, no emission into other tools.
 
 Vale, driven by gspot, over comments, and documentation.
 
-- gspot renders `.gspot/vale.ini` with the `gspot` style, the pinned upstream packages (Google,
+- gspot renders `.gspot/config/vale.ini` with the `gspot` style, the pinned upstream packages (Google,
   Microsoft, write-good, proselint, alex, RedHat, Harper), and the vocabulary from `[prose]`.
 - Files with a Vale grammar (Markdown, TypeScript, JavaScript, Swift) go to Vale by path.
   Shell and SQL comments go through stdin under a grammar with the same comment marker (`.rb`
@@ -268,7 +268,7 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 | `integrity/allowlists-match`      | Does every path in an allowlist or `[[ignore]]` match at least one tracked file?                                                                                                                                                                                                                                                                                                         |
 | `integrity/config-purity`         | Does every file in a declared config directory hold only literals (no functions, control flow, I/O)?                                                                                                                                                                                                                                                                                     |
 | `integrity/suppressions`          | Does every inline suppression carry a reason, and did the census grow?                                                                                                                                                                                                                                                                                                                   |
-| `javascript/required-rules`       | Does the resolved configuration of every owned tool still enable every rule the preset requires?                                                                                                                                                                                                                                                                                         |
+| `javascript/required-rules`       | Does the resolved configuration of every owned tool still enable every rule the configuration requires?                                                                                                                                                                                                                                                                                         |
 | `dependencies/manifest-policy`    | Exact versions, sorted keys, no range prefixes, no foreign lockfiles, engines match the runtime pin, root packages private, `packageManager` pinned and equal across workspace packages; scripts policy: `any`, `wrappers` (root scripts limited to an approved set, every `bun run X` names an existing script, no `---` section markers, no package script wraps the runner) or `none` |
 | `dependencies/install-policy`     | Is the package manager's minimum release age at or above the limit (bun `minimumReleaseAge`, npm `min-release-age`, pnpm `minimumReleaseAge`)? Is a security scanner declared where the manager supports one? Does the installed tree match the lockfile, version for version, with every peer satisfied?                                                                                |
 | `dependencies/lockfile-fresh`     | Does the lockfile match the manifest (`bun install --frozen-lockfile --dry-run`, `uv lock --check`)?                                                                                                                                                                                                                                                                                     |
@@ -319,11 +319,11 @@ The list of code files holds the endings a framework claims, and one ESLint chec
 reads it. A framework turns a shared rule off in its manifest, with a reason.
 Type check, format, style, and names reach a component file.
 
-`CODE` in the template is built from the `claims.extensions` of the selected presets.
+`CODE` in the template is built from the `claims.extensions` of the selected configurations.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
 
-`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue preset
-runs `vue-tsc` and the svelte preset `svelte-check` through `takes_over` of `typescript/tsc`. The
+`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue configuration
+runs `vue-tsc` and the svelte configuration `svelte-check` through `takes_over` of `typescript/tsc`. The
 formatting manifest gains `prettier-plugin-svelte` where svelte is selected. Stylelint gains
 `postcss-html` for component files. The naming extractor reads the script block of a component
 through the offsets its parser gives.
@@ -372,7 +372,7 @@ No-Git folders still work. A failed Git listing inside a repository does not sil
 
 ### Acceptance K-308
 
-Definitions use `name`; references retain `check`, `preset`, or `rule`. Keep external wire names and existing internal `Policy` terminology. Distinguish actions from predicates, executable `fix_command` from `help`, and failed fixes from unchanged output. Retire synonym replacement campaigns and cosmetic source renames.
+Definitions use `name`; references retain `check`, `configuration`, or `rule`. Keep external wire names and existing internal `Policy` terminology. Distinguish actions from predicates, executable `fix_command` from `help`, and failed fixes from unchanged output. Retire synonym replacement campaigns and cosmetic source renames.
 
 ### Acceptance K-43
 
@@ -424,9 +424,9 @@ test holds a finding in a CSS comment.
 ### Acceptance K-196
 
 A check is at `commit` when it takes the staged files, or when it ends within five
-seconds on the planted repository of its preset. Every other check is at `push` or `manual`.
+seconds on the planted repository of its configuration. Every other check is at `push` or `manual`.
 
-The test runs each commit-stage check on the planted repository of its preset, warm,
+The test runs each commit-stage check on the planted repository of its configuration, warm,
 and fails one that takes over five seconds with no file list. The type checkers move to `push`.
 The commit hook still runs a whole-project check of a project that holds a staged file, where the
 manifest marks it `runs = "per-scope"` and it passes the test.
@@ -478,7 +478,7 @@ A planted Swift file with `// gspot-ignore swift/... -- reason` holds no finding
 
 ### Acceptance K-246
 
-`integrity/generated-drift` ships in the structure preset at the commit stage. The
+`integrity/generated-drift` ships in the structure configuration at the commit stage. The
 name `generated-fresh` leaves every document.
 
 The workflow runs `gspot check`, and the drift check fails a generated file that

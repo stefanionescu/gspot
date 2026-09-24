@@ -1,5 +1,5 @@
 import { win32 } from 'node:path';
-import { SelectionError } from '#cli/presets/select.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 
 const DIRECTORY_FLAG = 0x80000000;
 const OFFSET_MASK = 0x7fffffff;

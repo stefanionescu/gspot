@@ -30,7 +30,7 @@ Every check declares one stage.
 
 | Stage     | Holds                                                                                                                        |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `commit`  | a check that takes the staged files, or that ends within five seconds on the planted repository of its preset                |
+| `commit`  | a check that takes the staged files, or that ends within five seconds on the planted repository of its configuration                |
 | `push`    | a check that reads a whole scope: type checkers, dead code, dependency audits, link checks                                   |
 | `manual`  | a check that builds, tests, or scans a whole project: the Swift build and analyzer, Periphery, coverage, CodeQL, image scans |
 | `message` | commitlint                                                                                                                   |
@@ -206,7 +206,7 @@ package lifecycle script, including `prepare`, and never injects a setup task.
 The mise file has one place in every repository. gspot changes an existing task in `mise.toml` only when that exact replacement was accepted in the init plan. `init`
 runs `mise trust` on its file before the install. The file pins gspot itself through the `github`
 backend of mise, which is what `mise exec` and the hook find. A pin the repository already holds
-for a tool is kept, and `doctor` reports a version below the floor of the preset.
+for a tool is kept, and `doctor` reports a version below the floor of the configuration.
 
 The npm lint tools are no part of the runner. They install under `.gspot/`, from
 `.gspot/package.json`, with the package manager the repository uses, under every runner.
@@ -258,14 +258,14 @@ files is the check `integrity/generated-drift` inside `gspot check`, so the job 
 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that
 includes it. gspot never edits `.gitlab-ci.yml`. The job sets `GIT_DEPTH: 0`, runs for merge
-requests and the default branch, and declares `.gspot/report.codequality.json`. GitLab reads the
-CodeClimate format there, and every run writes `.gspot/report.codequality.json` beside the JSON and the SARIF.
+requests and the default branch, and declares `.gspot/reports/report.codequality.json`. GitLab reads the
+CodeClimate format there, and every run writes `.gspot/reports/report.codequality.json` beside the JSON and the SARIF.
 
 The CI system is found by its files, `.github/workflows/` or `.gitlab-ci.yml`, and never by a
 host name, so a self-hosted host works. For every other system, such as Bitbucket, Jenkins,
 CircleCI, or Azure, gspot writes no file. The plan prints the lines to paste: install gspot at
 the pinned version, `gspot install`, and `gspot check`. The reports are the files under
-`.gspot/report.*`.
+`.gspot/reports/report.*`.
 
 ```yaml
 include:
@@ -292,7 +292,7 @@ terminal.
 
 ## The report
 
-Every run but the message run writes `.gspot/report.json`, and `gspot check --json` prints the
+Every run but the message run writes `.gspot/reports/report.json`, and `gspot check --json` prints the
 same data. Its shape is part of `gspot.schema.json`. The report holds:
 
 - the version, the stage, the start time, and the duration;
@@ -445,10 +445,10 @@ history scans. Without git, every check that needs no history runs over the file
 finds.
 
 `--staged` and `--changed` exit 2 with one sentence: this folder is no git
-repository, so run `gspot check`. The secrets preset gains `secrets/gitleaks-files`, which runs
+repository, so run `gspot check`. The secrets configuration gains `secrets/gitleaks-files`, which runs
 `gitleaks dir`, with `needs_git = false`, and the two history checks take `needs_git = true`.
 `doctor` prints one line when a `.git` folder appeared after `init`, with the commands that add
-the hooks and the presets that need git. A Mercurial, Perforce, or jj folder without `.git` is
+the hooks and the configurations that need git. A Mercurial, Perforce, or jj folder without `.git` is
 this same mode, and the walk honors `.gitignore` and `.hgignore`.
 
 A planted folder with no `.git` and a planted secret holds the finding, and
@@ -520,7 +520,7 @@ A job that shows findings in a merge request.
 
 Every run but the message run writes three files under `.gspot/`: `report.json`,
 `report.sarif`, and `report.codequality.json` in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
-pipelines and the default branch, and it declares `.gspot/report.codequality.json` as the code quality artifact with `when: always`. Select the merge-request diff base or push-before SHA; missing or zero bases run the full target tree. The CI
+pipelines and the default branch, and it declares `.gspot/reports/report.codequality.json` as the code quality artifact with `when: always`. Select the merge-request diff base or push-before SHA; missing or zero bases run the full target tree. The CI
 system is found by `.gitlab-ci.yml` or `.github/workflows/`, never by the host name.
 
 The snapshot of the file, and `glab ci lint` in the `manual` job.
@@ -532,7 +532,7 @@ lines.
 
 With `--no-ci`, or where the CI files of another system are found, the plan ends with
 the lines to paste: install gspot at the pinned version, `gspot install`, and
-`gspot check`, with `.gspot/report.*` kept as artifacts. The guide shows them in the syntax of the four systems, and
+`gspot check`, with `.gspot/reports/report.*` kept as artifacts. The guide shows them in the syntax of the four systems, and
 `docs/samples` parses each command.
 
 A planted `bitbucket-pipelines.yml` holds the three lines in the plan.

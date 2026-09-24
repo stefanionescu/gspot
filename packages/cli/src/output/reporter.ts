@@ -3,8 +3,8 @@ import type { Colors } from 'picocolors/types';
 import { invokingHook } from '#cli/platform/environment.ts';
 // Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
 import { colors } from '#cli/output/messages.ts';
-import type { RunReport } from '#cli/output/report-types.ts';
-import type { CheckResult, Finding } from '#cli/output/finding.ts';
+import type { RunReport } from '#cli/types/reports.ts';
+import type { CheckResult, Finding } from '#cli/types/reports.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;

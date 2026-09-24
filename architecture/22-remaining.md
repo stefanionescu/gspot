@@ -6,7 +6,7 @@ expansion and repository lint cleanup follow it. Recorded local passes do not es
 the implementation, documentation, or tests are free of unnecessary complexity.
 
 The September 23 source, test, support, and content reading is complete. Test consolidation,
-preset grouping, the Astro/Starlight redesign, and the local visual matrix are implemented.
+configuration grouping, the Astro/Starlight redesign, and the local visual matrix are implemented.
 Current verification and remaining failures are consolidated under
 [Behavioral acceptance quality](#behavioral-acceptance-quality),
 [Reference content loaders](#reference-content-loaders),
@@ -18,6 +18,215 @@ unavailable native-platform evidence remain open. The Sweet spot continuation be
 the SQLFluff lifecycle repair and the current rendered verification.
 Updating architecture does not close those product requirements. The cleanup continuation below
 records the latest local results and supersedes earlier aggregate totals for this work.
+
+## September 24 generated files, code ownership, and website
+
+This continuation supersedes the preceding layout and homepage descriptions and their verification totals.
+The authored catalog and rule corpus live in `packages/cli/configurations/` and `packages/cli/rules/`.
+The generated editor schema lives in `packages/cli/schemas/gspot.schema.json`; its public URL is unchanged.
+The binary no longer embeds the unused schema. Asset readers, compilation, tasks, tests, and documentation
+use these locations.
+
+Generated tool configuration and scoped configurations use `.gspot/config/`. Agent instructions remain
+in `.gspot/rules/`; recovery records and writer locks use `.gspot/state/`. Reports and caches have
+separate directories. Private dependency manifests, lockfiles, installations, and the Python environment
+remain at `.gspot/`'s root for native resolution. Shared path definitions generate private ignore entries.
+Generated headers identify their source and regeneration command. Spelling exceptions retain their
+reasons in policy rather than repeating those reasons in generated TOML.
+
+Journal conversion retains original bytes, modes, and interrupted operations. It publishes converted
+records before retiring the old journal. In-repository hooks share repository ownership; Git-internal
+hooks use the resolved Git directory; external destinations have destination-local state and locking.
+The old nested `.gspot/.gspot` directory is gone from this checkout. Native entry points were explicitly
+adopted with recovery copies, then regenerated through `apply`. Prettier's root JSON pointer resolves to
+the same settings as CLI configuration. Bun's field-preserving writer retains unrelated fields and
+stricter release ages. Initialization carries root and scoped Bun safeguards into editable policy.
+
+Command registration and orchestration share command owners. Initialization and doctor have private
+subdirectories; reusable adoption, installation, and publication remain outside commands. Shared types
+and runtime schemas have domain owners; initialization-only types stay beside initialization. Evaluation
+requests are independent of their implementations. Filesystem confinement and argument quoting have
+lower-level owners. The import graph includes static imports, type imports, exports, and literal dynamic
+imports; no cycles or reusable imports of commands were found.
+
+The homepage has the requested headline and single subtitle, one six-tool row, and no framework or
+language inventories. Artwork is hidden below 800px. The header retains native Starlight search and theme
+controls. The final feature card centers when cards wrap into two columns. Recovery stays in Guides;
+attribution stays in Development and distributed notices. The generated-files guide explains editing,
+committing, regeneration, and retained recovery state and is linked from setup and customization.
+
+Local verification:
+
+- The routine suite passed 1,303 tests with 5,910 assertions across 144 files. Later focused lifecycle
+  verification passed 144 tests with 844 assertions; the final ownership, tool-probe, cache, and Bun batch
+  passed 103 tests with 494 assertions. Migration coverage includes default, nested, custom in-repository,
+  nested configured-root, Git-internal, and external destinations, shared locks, interrupted recovery,
+  original modes, and refusal to overwrite later edits. The native hook and ownership batch passed 76 tests.
+- Workspace, tests, and documentation type checks pass. Schema freshness passes. All seven CLI targets
+  and the plugin build pass. Apply preview has no drift or notes after product-driven regeneration.
+- Documentation and Bash examples pass 21 tests with 1,700 assertions. The site builds 319 pages;
+  links and fragment targets validate.
+- Chrome inspection covered the homepage and guide header at 360, 768, 1440, and 1920 CSS pixels in
+  both themes. Mobile artwork is hidden; the tablet final card is centered. Mobile search and theme
+  targets measure 44 by 44 pixels with no horizontal overflow. Search returns results, opens with
+  the keyboard shortcut, and closes with Escape. Focus, 200% browser zoom, reduced-motion emulation,
+  and essential content without JavaScript were exercised. The temporary tab and preview server were closed.
+
+Source acceptance ran before release verification. Its complete run reported 236 passes, 74 failures,
+one setup error, and 2,312 assertions across 81 files. Seven stale fixture assertions used the old scoped
+configuration, report, or recovery-ignore paths and were corrected. Remaining failures include native
+tools newer than their required pins and EditorConfig Checker downloads rejected by GitHub's API rate
+limit. The profile file also failed during setup on its Shfmt pin. These are failures, not accepted skips.
+The fresh correction batch passed 28 tests with 477 assertions and retained 11 failures: ten
+EditorConfig Checker download failures and one Typos pin mismatch. All six corrected license,
+report-storage, and uninstall assertions passed in that batch. A separate lifecycle run passed
+14 tests with 115 assertions, including the seventh corrected assertion, fresh-clone adoption,
+and both interrupted-uninstall cases. The full-run failures remain recorded above; these focused
+passes do not establish complete source acceptance.
+
+Release verification reported seven passes and two failures with 388 assertions across four files.
+The installed consumer completed initialization, defect detection, correction, dependency changes,
+and uninstall. The compiled host executable ran after its isolated checkout and dependencies were
+removed. The installed plugin exposed usable modules and declarations and enforced both levels.
+One failure used the previous catalog location in a build fixture; after correction, all five
+argument tests passed with 232 assertions. The compiled-script case remains blocked by the newer
+Shfmt installation. All eight prepared npm packages passed packing and publication dry runs;
+nothing was uploaded to the public registry.
+
+Checkout cleanup retired 16 legacy tool outputs after matching them to declared generated
+replacements. It also retired 740 old Vale files after byte comparison with their new locations.
+The lifecycle owner retained their original bytes and modes in recovery records. Three recorded
+reports were relocated without losing their originals. Four pre-existing, unowned
+`tsconfig.base.json` files have no current generated counterpart or source references and remain
+untouched; their names and headers alone do not grant deletion authority. This does not retain
+an alternate layout in product code. Repeated apply still reports no drift or notes.
+
+No repository lint, CI activation, commit, push, public publication, deployment, or reference-repository
+write was performed. Package verification uses dry runs and isolated local test registries.
+
+## September 24 configuration naming and presentation
+
+This continuation supersedes the earlier terminology and aggregate results below. Selection uses
+`configurations`, `--configurations`, and manifest `[configuration]` throughout root policy,
+scopes, profiles, JSON, instruction metadata, discovery, and embedded assets. The authored and
+runtime owners are `configurations/`. Old selection keys, the old initialization flag, and the
+old manifest table are rejected without aliases. Configuration IDs, executable check IDs, tool
+settings, selection behavior, and the version scheme are retained.
+
+Agent metadata and instruction assembly live under `agents/`. Next.js source and build checks
+share `checks/nextjs/`; Jest execution and schema share `checks/jest/`. Integrity constants live
+with their checks or shared repository and dependency owners. The remaining `-definitions`
+modules were renamed or distributed to their consumers. Homepage components live under
+`components/home/`, with Starlight overrides at the integration boundary. Imports, test paths,
+tasks, architecture links, and generated asset references use the resulting owners.
+
+The manual has Get started, Guides, Reference, and Development sections. Configuration references
+use `/reference/configurations/`, the catalog groups configurations by kind, and engine details
+use `/development/engines/`. Check and plugin titles live in their definitions; command titles
+use Commander summaries beside the owning help text. Exact IDs and command syntax remain in
+content and the search index. Generated agent instructions group their existing subject layers
+without separate headings for individual guides.
+
+The homepage title is `Lint AI generated code | gspot`. The hero and README use the generated
+mark without orbit decoration, extra flat marks, labels, or dotted backgrounds. Artwork is
+grouped by purpose. Separate tool and framework rows use upstream logos with retained licenses.
+Languages and formats appear as text with the detection and selection conditions. Root, plugin,
+and launcher READMEs end with License sections and retain unreleased wording. Managed files
+were regenerated through `gspot apply`.
+
+Local verification passed type checks, schema freshness, all seven CLI builds, the plugin build,
+and the routine suite (1,298 passes, zero failures, 5,180 assertions across 143 files). The final
+documentation tests pass 18 cases with 1,681 assertions. Focused configuration-contract tests pass
+107 cases with 300 assertions, including the additional old-manifest rejection. Profile tests
+pass 17 cases with 59 assertions; the renamed Next.js build tests pass seven with 79 assertions.
+The documented Bash example passes three cases with 19 assertions. The final site build produces
+318 pages and passes link and fragment validation.
+
+Chrome review covered the homepage, representative reference pages, and both README artwork
+variants at 360, 768, 1440, and 1920 CSS pixels. The hero stacks below the text on narrow screens;
+logos align and wrap without page overflow. Measured homepage document widths equal the viewport
+at all four sizes. Search finds readable titles and exact IDs in content. Mobile navigation,
+visible keyboard focus, copy feedback, theme persistence, 200% browser zoom, reduced motion,
+and content with JavaScript disabled were exercised. Reduced-motion emulation reports no active
+animations. README artwork was reviewed in a local HTML presentation of the authored images;
+this does not establish GitHub rendering or assistive-technology acceptance. The local review
+server and browser tab were stopped after inspection.
+
+Source acceptance completed before release verification. The full run reported 227 passes and
+55 failures, including four import errors, with 2,550 assertions across 81 files. The 51 executed
+failures were EditorConfig Checker v3.4.0 downloads returning HTTP 403 from the GitHub API rate
+limit. Four files in the long-lived process failed to resolve the moved marker module. A fresh
+source acceptance process ran those four files successfully: 35 passes, zero failures, and
+236 assertions. Across the completed cases, 262 pass and 51 remain download-blocked. The earlier
+SQL naming, HTML diagnostic, TypeScript spelling, and one-byte SVG failures remain open; this
+run stopped those journeys at acquisition and cannot establish that those failures are resolved.
+
+Release verification passed all nine tests with 419 assertions. Installed CLI initialization,
+defect detection, correction, uninstall restoration, and installed plugin behavior pass. The host
+binary reads embedded assets after its isolated build checkout is removed. These results do not
+erase the acquisition failures in the earlier source acceptance run.
+
+The npm packaging and publication dry run passed without uploading packages. Prepared npm
+artifacts contain eight matching launcher READMEs and licenses, seven matching
+platform notices, and the unchanged package version. README links are absolute and the final
+section links the license. All nine release checksums match their files. No repository lint,
+CI activation, external publication, deployment, commit, push, or reference-repository write
+was performed.
+
+## September 24 CLI ownership and website continuation
+
+The ownership review covered the 350 CLI source files present at the start of this pass;
+the proposed count of 388 did not match this checkout. The resulting runtime has 348 files:
+one development entry moved to scripts, and a single-consumer suppression module was inlined.
+The review considered imports, consumers, side effects, and responsibility across every owner.
+[Repository layout](12-repository-layout.md#cli-ownership-boundaries) records the boundaries.
+Development entry points now live under `packages/cli/scripts/`; callers use their new paths
+directly. Apply belongs to lifecycle, acquisition to tools, shared parsing to parsers,
+agent instructions to agents, and target definitions to platform. Public commands,
+configuration, check IDs, package exports, and shipped asset paths remain unchanged.
+
+The homepage uses direct product copy, a plain generated-logo hero, equal tool cells, aligned
+40:27 illustrations, and stretched setup panels. Its example and setup select JavaScript.
+The first-check guide now introduces that JavaScript example and links to its complete executed
+walkthrough. The plugin README explains source availability, both exported configurations,
+server-file selection, the private-environment correction, and the TypeScript parser prerequisite.
+Root and launcher summaries use the same product description; package documentation links are
+absolute and retain unreleased wording.
+
+Local verification passed workspace/documentation/test type checks, schema freshness, all seven
+CLI target builds, the plugin build, and the routine suite (1,295 tests, zero failures;
+5,173 assertions across 143 files). The final site build generated 318 pages and passed link and
+fragment validation. Source acceptance completed before release verification: 277 passes and
+36 failures, with 2,935 assertions across 81 files. Of those failures, 32 were blocked by the
+EditorConfig Checker v3.4.0 download returning HTTP 403 from the GitHub API rate limit.
+The release run passed seven tests and failed two, with 280 assertions. One failure was the
+same EditorConfig Checker acquisition limit in the installed consumer. The other selected an
+outdated README code-block index after the new defect/correction examples were inserted.
+The test now selects the server configuration block; its focused rerun passed with 10 assertions.
+Script arguments, host-binary independence after removing its build checkout, embedded assets,
+and the installed plugin's modules, declarations, and README configurations pass. The installed
+CLI consumer journey remains blocked by acquisition; this does not establish release readiness.
+The focused documented-example test also passed. Source acceptance exposed an existing SQL
+naming failure on psql meta-commands and an HTML expectation that still uses older diagnostic
+text. The SQL parser, statement reader, naming extractor, and HTML check are byte-identical to
+the starting revision after normalizing the moved imports. These failures remain open.
+Two further unchanged fixtures failed: TypeScript expects the old `error:` prefix in a spelling
+message, and the static-site fixture marked clean is shortened by SVGO by one byte. The spelling
+parser and both fixtures are unchanged in this pass. These are separate from acquisition failures.
+The eight prepared CLI package READMEs match the reviewed launcher source and use absolute
+documentation links. All nine generated release checksums match their prepared artifacts.
+The installed plugin README was also read directly and matches its reviewed package source.
+
+Native Chrome capture is restored. The homepage was inspected from hero through footer at
+360, 768, 1440, and 1920 pixels in light and dark themes with no viewport overflow. Inspection
+also covered installation, the JavaScript walkthrough, every reference category, and 404.
+Actual 200% browser zoom preserved usable code panels and aligned captions. Production search,
+visible keyboard focus, mobile navigation, copy success feedback, and theme persistence worked.
+Reduced-motion emulation reported zero transition duration; sandboxed pages without scripts
+retained readable content, code, and navigation links. Root README artwork and wrapping tool
+cards were inspected in light and dark local renders. This is local browser evidence, not a
+screen-reader audit or proof of every native platform. Earlier K-149 evidence and K-222's
+outstanding verification remain unchanged.
 
 ## Development readiness and next work
 
@@ -34,7 +243,7 @@ they do not close acceptance IDs or create a second backlog.
 | --- | --- |
 | Retain process-supervision regressions | [Process execution](#process-execution-and-failure-reporting): the Darwin reaping repair passes SQLFluff and the native suite. Keep permission errors visible and verify native behavior on the remaining platforms. |
 | Complete acquisition-blocked consumer journeys | [Tool installation](#tool-installation) and [packaging](#packaging-and-installed-product-acceptance): resolve or document the EditorConfig Checker HTTP 403, then rerun the affected native, source acceptance, and release cases sequentially. Preserve the earlier failures until replacement evidence exists. |
-| Finish documentation acceptance | [Reference examples](#reference-content-loaders) and [site acceptance](#guides-and-site-acceptance): execute the remaining defect/correction examples, inspect the final README cards, and verify screen-reader operation. Actual browser zoom and reduced motion have local evidence. |
+| Finish documentation acceptance | [Reference examples](#reference-content-loaders) and [site acceptance](#guides-and-site-acceptance): execute the remaining reference defect/correction examples and verify screen-reader operation. Final README cards, actual browser zoom, and reduced motion have local evidence. |
 | Resume product implementation in dependency order | Use the [implementation order](#implementation-order-after-cleanup) and the owning group's unresolved requirements. Keep native-platform evidence, publication, external adoption, and paused CI separate from local implementation. |
 
 The follow-up review checked task ownership, moved-path references, central test placement,
@@ -352,9 +561,9 @@ Architecture changes remove empty retired clauses, obsolete level-module prescri
 native-handle claims, and repeated rule-corpus history. The structural rules remain default policy
 at both levels. No runtime behavior, tests, generated agent files, or public docs are changed by
 this architecture-only batch. Historical results below retain their original scope.
-Rule metadata retains its validated layer, preset, and title; remove the contradictory demand
-for a field-removal migration. Preset kind owns source grouping at `presets/<kind>/<name>/`; public preset and check IDs
-remain unchanged. Other source and test directories do not mirror preset kinds.
+Rule metadata retains its validated layer, configuration, and title; remove the contradictory demand
+for a field-removal migration. Configuration kind owns source grouping at `configurations/<kind>/<name>/`; public configuration and check IDs
+remain unchanged. Other source and test directories do not mirror configuration kinds.
 
 Earlier architecture-only verification parsed all 16 Markdown files, resolved 380 local links
 and anchors, and passed the diff whitespace check. Removed acceptance anchors and renamed sections
@@ -366,7 +575,7 @@ product checks were not run for this documentation-only change. Runtime cleanup 
 1. Complete confinement and recovery, including Windows implementation, then lossless configuration
    carryover, proposal application, and immutable clone installation.
 1. Complete execution, immutable Git inputs, session observations, cache keys, and truthful failures.
-1. Complete levels and all agreed language, framework, plugin, preset, and rule-guide behavior.
+1. Complete levels and all agreed language, framework, plugin, configuration, and rule-guide behavior.
 1. Complete hooks, reports, CI generation, pinned-tool compatibility, and installed artifacts.
 1. Complete content loaders and release-matched documentation, including site usability acceptance.
 1. Freeze one candidate only after implementation settles. Reuse its artifacts for the gate below.
@@ -385,7 +594,7 @@ Locally implemented IDs: K-298. Frozen-candidate and native-platform acceptance 
 
 Former unnamed cleanup entries: 10.
 
-Source and retained evidence: [packages/cli/src/lifecycle/confined.ts](../packages/cli/src/lifecycle/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
+Source and retained evidence: [packages/cli/src/filesystem/confined.ts](../packages/cli/src/filesystem/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
 
 Repository inventory filters excluded and private lifecycle paths before observing links.
 Installed dependency links are inventoried without reading external targets; external authored
@@ -489,7 +698,7 @@ original byte and mode. A corrected batch installs and restores both destination
 lifecycle run passes 166 cases; its only failure is an external EditorConfig Checker release
 API rate limit during native installation. That unavailable download is not a lifecycle pass.
 
-Doctor passes with the declared mise CodeQL version and the refreshed private plugin. Preset
+Doctor passes with the declared mise CodeQL version and the refreshed private plugin. Configuration
 and dependency detection exclude generated, vendored, and private tool files; a real authored
 Python project remains detectable. The detection, repository, and doctor run passes 105 cases
 with 365 assertions. This corrects the false Python recommendation from `.gspot/pyproject.toml`.
@@ -543,7 +752,7 @@ Source and retained evidence: [packages/cli/src/lifecycle/takeover.ts](../packag
 
 Acceptance: [K-36](03-configuration.md#acceptance-k-36), [K-193](03-configuration.md#acceptance-k-193), [K-120](03-configuration.md#acceptance-k-120), [K-59](10-hooks-ci-runners.md#acceptance-k-59), [K-217](03-configuration.md#acceptance-k-217), [K-269](03-configuration.md#acceptance-k-269).
 
-SQLFluff takeover files and shared sections are declared by the SQL preset. Adoption
+SQLFluff takeover files and shared sections are declared by the SQL configuration. Adoption
 preserves `setup.cfg` and `tox.ini`, including when SQLFluff is their only section,
 and identifies the adopted section for manual removal. Nested disabled rules retain
 their directory scope. Unsupported and duplicate sections remain unadopted. Discovery
@@ -551,7 +760,7 @@ and carryover tests pass 18 cases with 82 assertions; two CLI cases pass with 18
 assertions, preserving original bytes and modes through init and uninstall. Type checks
 pass. Unsupported importer behavior and final candidate acceptance remain open.
 
-SQLFluff and Semgrep ignore files use preset-owned takeover declarations and the
+SQLFluff and Semgrep ignore files use configuration-owned takeover declarations and the
 `ignore-paths` reader. Nested selectors retain their base, and unsupported negation
 preserves the original without partial imports. Carried tool settings and rule exceptions
 share one tool-keyed map consumed by policy emission and the takeover plan. The reader
@@ -585,9 +794,9 @@ pass. Full inherited configuration support and frozen-candidate adoption remain 
 
 Shared takeover selectors support TOML tables and JSON/YAML keys. The schema requires
 `shared = true` for section selection and rejects combining `key` with `table`. Ruff
-declares its standalone files and `tool.ruff` table in the Python preset; ESLint declares
-the `eslintConfig` package key in the JavaScript preset. SQLFluff, Semgrep, typos,
-ShellCheck, SwiftLint, Squawk, and Hadolint use their owning presets for the moved
+declares its standalone files and `tool.ruff` table in the Python configuration; ESLint declares
+the `eslintConfig` package key in the JavaScript configuration. SQLFluff, Semgrep, typos,
+ShellCheck, SwiftLint, Squawk, and Hadolint use their owning configurations for the moved
 declarations. The affected policy, discovery, init, and declaration run passes 105 cases
 with 310 assertions. The full takeover CLI suite passes 20 cases with 155 assertions,
 including idempotent apply and original-file restoration. Complete importer coverage
@@ -598,20 +807,20 @@ configuration worker. It records actual package versions and reported licenses i
 inventing `UNKNOWN`, and refuses unresolved exclusions before adding any carried entry.
 Allowances outside SPDX syntax preserve the original for explicit conversion. Native scanner
 5.0.1 verification passes two cases with 15 assertions, including unresolved and corrected
-dependencies. The affected policy, adoption, and preset run passes 122 cases with 376
+dependencies. The affected policy, adoption, and configuration run passes 122 cases with 376
 assertions before the additional SPDX refusal case. Type checking passes.
 
 Advisory expiration imports preserve full TOML date and timestamp values, including
 offsets, through generated scanner configuration. Three round-trip cases pass with
 12 assertions; native advisory expiry and directory-local exception behavior remain open.
-Formatter, EditorConfig, and ESLint filenames and package keys are preset declarations.
+Formatter, EditorConfig, and ESLint filenames and package keys are configuration declarations.
 Retained-configuration detection reads those declarations instead of maintaining a second
 filename list. After updating the combined formatter fixture to use its declared tool
 identity, adoption passes 29 cases and the full takeover CLI suite passes 20 cases with
 155 assertions. These runs do not close the remaining importer and candidate gates.
 
-Markdownlint, basedpyright, Gitleaks, and Stylelint takeover files use preset declarations.
-The affected policy, adoption, and preset run passes 127 cases with 400 assertions.
+Markdownlint, basedpyright, Gitleaks, and Stylelint takeover files use configuration declarations.
+The affected policy, adoption, and configuration run passes 127 cases with 400 assertions.
 Markdown emission preserves an explicitly carried native `default: false` instead of
 re-enabling shipped rules such as MD041. A native comparison reports the retained MD033
 defect with identical diagnostics before and after adoption, accepts corrected content without
@@ -633,7 +842,7 @@ Disjoint directory-local Markdown configurations create scoped policy tables and
 editor pointers. Native tests verify different sibling rules, descendant inheritance, and
 corrected content. Overlapping configurations remain intact before any partial adoption.
 Markdownlint receives literal file arguments through its declared prefix, including brackets,
-leading hashes, and leading hyphens. The execution, adoption, preset, and emission suites pass
+leading hashes, and leading hyphens. The execution, adoption, configuration, and emission suites pass
 298 tests with 1,632 assertions. Root and scoped CLI journeys pass 50 assertions through private
 installation, native editor checks, staged content distinct from the working copy, partial
 correction, and uninstall restoration. Types, schema freshness, manifest formatting, and
@@ -710,9 +919,9 @@ also verifies that apply preserves an edited output and regenerates it after the
 fixture is removed. Schema and takeover tests pass 64 cases with 288 assertions, and the
 extended CLI spelling case passes with 23 assertions. Types and schema freshness pass.
 
-Every existing takeover filename and shared selector is declared by its owning preset.
+Every existing takeover filename and shared selector is declared by its owning configuration.
 Discovery, retirement eligibility, and retained-output selection no longer maintain separate
-filename or preset-owner tables. Discovered configurations require a declared reader.
+filename or configuration-owner tables. Discovered configurations require a declared reader.
 `CarriedLists` is the tool-entry map; the enclosing configuration also records observations
 and retirement decisions. The declaration run passes 151 tests with 507 assertions, and
 the subsequent reader-contract run passes 115 tests with 396 assertions. Type checking
@@ -750,8 +959,8 @@ policy violations remain findings. The dependency acceptance and package-project
 passes 15 tests with 292 assertions across npm, Bun, pnpm, and Yarn.
 
 Root Stylelint rule tables preserve enabled rules and native options, including zero-valued
-limits. Disabled primary options become ignores using the preset-declared check. Adoption
-validates rule names and options with the installed preset version before permitting retirement.
+limits. Disabled primary options become ignores using the configuration-declared check. Adoption
+validates rule names and options with the installed configuration version before permitting retirement.
 Missing or mismatched installations, unknown rules, invalid options, and lossy TOML conversion
 preserve the originals without partial settings. Nested, package-provided, and executable Stylelint
 configuration remains unsupported and active. The policy schema, manifest, generated configuration,
@@ -826,9 +1035,9 @@ Open. Verify immutable installation under each supported package manager, worksp
 
 Open acceptance IDs: K-180, K-240, K-237, K-264, K-265, K-266, K-283, K-267, K-268, K-297.
 
-Source and retained evidence: [packages/cli/src/lifecycle/install-command.ts](../packages/cli/src/lifecycle/install-command.ts), [tests/integration/cli/install.test.ts](../tests/integration/cli/install.test.ts).
+Source and retained evidence: [packages/cli/src/tools/install-command.ts](../packages/cli/src/tools/install-command.ts), [tests/integration/cli/install.test.ts](../tests/integration/cli/install.test.ts).
 
-Acceptance: [K-264](11-toolchain.md#acceptance-k-264), [K-267](03-configuration.md#acceptance-k-267), [K-297](11-toolchain.md#acceptance-k-297), [K-180](04-presets.md#acceptance-k-180), [K-237](03-configuration.md#acceptance-k-237), [K-268](03-configuration.md#acceptance-k-268).
+Acceptance: [K-264](11-toolchain.md#acceptance-k-264), [K-267](03-configuration.md#acceptance-k-267), [K-297](11-toolchain.md#acceptance-k-297), [K-180](04-configurations.md#acceptance-k-180), [K-237](03-configuration.md#acceptance-k-237), [K-268](03-configuration.md#acceptance-k-268).
 
 Python installation excludes runtime `__pycache__` directories from publication and pruning,
 while retaining packaged bytecode outside those cache directories. This preserves both unowned
@@ -877,35 +1086,35 @@ and native-platform installation gates remain open.
 
 ### Initialization and detection
 
-Open. Complete project and dependency detection, grouped preset selection, detected defaults, and one read-only proposal. Initialize new and existing repositories without running checks; a missing tool differs from invalid configuration or failed lock resolution.
+Open. Complete project and dependency detection, grouped configuration selection, detected defaults, and one read-only proposal. Initialize new and existing repositories without running checks; a missing tool differs from invalid configuration or failed lock resolution.
 
 Open acceptance IDs: K-182, K-214, K-247, K-126, K-128, K-53, K-93, K-40, K-64.
 
 Locally implemented IDs: K-127.
 
-Source and retained evidence: [packages/cli/src/lifecycle/init/command.ts](../packages/cli/src/lifecycle/init/command.ts).
+Source and retained evidence: [packages/cli/src/commands/init/command.ts](../packages/cli/src/commands/init/command.ts).
 
-Acceptance: [K-182](04-presets.md#acceptance-k-182), [K-126](03-configuration.md#acceptance-k-126), [K-128](03-configuration.md#acceptance-k-128), [K-53](05-engines.md#acceptance-k-53), [K-93](04-presets.md#acceptance-k-93), [K-40](04-presets.md#acceptance-k-40), [K-64](02-cli.md#acceptance-k-64).
+Acceptance: [K-182](04-configurations.md#acceptance-k-182), [K-126](03-configuration.md#acceptance-k-126), [K-128](03-configuration.md#acceptance-k-128), [K-53](05-engines.md#acceptance-k-53), [K-93](04-configurations.md#acceptance-k-93), [K-40](04-configurations.md#acceptance-k-40), [K-64](02-cli.md#acceptance-k-64).
 
 ### Configuration and scopes
 
 Open. Complete readable comment-preserving writes, deepest-scope selection, consistent formatting settings, canonical setting names, and destination-safe serialization. Separate syntax failure from recoverable policy findings.
 
-Preset scalar conflicts retain their setting keys for validation. Explicit root or inherited
+Configuration scalar conflicts retain their setting keys for validation. Explicit root or inherited
 scope values settle the conflicts they cover. Unresolved scope conflicts identify the scope's
-preset declaration, including scopes without settings tables. List defaults append and
-deduplicate across presets before root and scope values apply. The focused settings, schema,
+configuration declaration, including scopes without settings tables. List defaults append and
+deduplicate across configurations before root and scope values apply. The focused settings, schema,
 policy loading, and scope discovery checks pass 107 tests with 230 assertions. These cases
 cover unresolved and corrected conflicts, descendant inheritance, sibling isolation, and
 list merging across all layers. Remaining configuration acceptance stays open.
 
-SQLFluff dialect precedence now uses preset-owned defaults and the shared settings resolver.
-The PostgreSQL database preset declares `postgres`; plain SQL declares `ansi`. Root and scope
+SQLFluff dialect precedence now uses configuration-owned defaults and the shared settings resolver.
+The PostgreSQL database configuration declares `postgres`; plain SQL declares `ansi`. Root and scope
 values override those defaults, and SQLFluff configuration emits for each scope. The native
 SQLite statement reports a PostgreSQL parse defect (exit 1) and passes with its explicit
 generated SQLite configuration (exit 0). Nested DuckDB settings propagate to a descendant.
 The settings and emission suites pass 42 tests with 142 assertions. Generated settings
-references preserve distinct preset defaults while rejecting incompatible definitions; six
+references preserve distinct configuration defaults while rejecting incompatible definitions; six
 reference cases pass with 905 assertions. The 312-page documentation build and internal link
 checks pass. This closes the observed dialect/default mismatch, not the broader configuration
 or candidate acceptance gates.
@@ -928,7 +1137,7 @@ and published schemas require booleans, including reasoned values, in root and s
 Full adoption and candidate acceptance remain open.
 
 Ruff configuration now emits per scope. The emission owner restricts `has` to that scope's
-presets for per-scope targets, including the root; repository-wide targets still see nested
+configurations for per-scope targets, including the root; repository-wide targets still see nested
 selections. This fixes pytest allowances leaking into unrelated Python projects. The pytest
 selection also enables Ruff's PT family at recommended level. Native diagnostics retain S101
 outside the pytest scope, permit test assertions inside it, report PT001 for the fixture
@@ -952,7 +1161,7 @@ Open acceptance IDs: K-147, K-238, K-51, K-88, K-215, K-224, K-228, K-48.
 
 Locally implemented IDs: K-222.
 
-Source and retained evidence: [packages/cli/src/policy/schema.ts](../packages/cli/src/policy/schema.ts), [tests/native/policy/takeover.test.ts](../tests/native/policy/takeover.test.ts).
+Source and retained evidence: [packages/cli/src/schemas/policy.ts](../packages/cli/src/schemas/policy.ts), [tests/native/policy/takeover.test.ts](../tests/native/policy/takeover.test.ts).
 
 Acceptance: [K-51](03-configuration.md#acceptance-k-51), [K-88](03-configuration.md#acceptance-k-88), [K-48](03-configuration.md#acceptance-k-48), [K-215](03-configuration.md#acceptance-k-215), [K-222](03-configuration.md#acceptance-k-222), [K-238](03-configuration.md#acceptance-k-238), [K-147](03-configuration.md#acceptance-k-147), [K-116](03-configuration.md#acceptance-k-116).
 
@@ -1444,7 +1653,7 @@ tab, and newline filenames supported by the host, and reports filename-only defe
 UTF-8 byte offsets become character columns through confined
 source reads. The native CLI case checks staged bytes against a different working copy and
 preserves the working copy. Malformed records, unavailable source, out-of-range positions,
-and native fatal exits are execution errors for both preset and declared typos checks.
+and native fatal exits are execution errors for both configuration and declared typos checks.
 
 The shared path matcher and generated ESLint policy selectors now match newline filenames.
 Native ESLint verifies a scoped allowance, an unaffected defect, and its correction. The
@@ -1470,7 +1679,7 @@ a Python traceback. The declared pattern preserves status 2 and unchanged source
 write permission permits the partial fix with status 1, and correcting the remaining source
 returns 0. Fatal diagnostics override even exit 0; launch, cancellation, and timeout failures
 remain errors. The focused batch passes 135 tests with 404 assertions. The affected execution,
-policy, and preset suites pass 266 tests with 1,140 assertions. Three CLI spelling journeys
+policy, and configuration suites pass 266 tests with 1,140 assertions. Three CLI spelling journeys
 pass with 51 assertions, including repeated partial correction. Types, owned schema generation,
 and formatting pass. Native Windows permission behavior and frozen-candidate execution remain
 unverified.
@@ -1611,7 +1820,7 @@ Former unnamed cleanup entries: 29.
 
 Source and retained evidence: [tests/acceptance/cli/levels.test.ts](../tests/acceptance/cli/levels.test.ts).
 
-Acceptance: [K-198](04-presets.md#acceptance-k-198), [K-101](04-presets.md#acceptance-k-101), [K-135](04-presets.md#acceptance-k-135), [K-152](04-presets.md#acceptance-k-152), [K-174](04-presets.md#acceptance-k-174), [K-175](04-presets.md#acceptance-k-175), [K-201](04-presets.md#acceptance-k-201), [K-74](04-presets.md#acceptance-k-74), [K-75](04-presets.md#acceptance-k-75), [K-301](04-presets.md#acceptance-k-301), [T-19](12-repository-layout.md#acceptance-t-19).
+Acceptance: [K-198](04-configurations.md#acceptance-k-198), [K-101](04-configurations.md#acceptance-k-101), [K-135](04-configurations.md#acceptance-k-135), [K-152](04-configurations.md#acceptance-k-152), [K-174](04-configurations.md#acceptance-k-174), [K-175](04-configurations.md#acceptance-k-175), [K-201](04-configurations.md#acceptance-k-201), [K-74](04-configurations.md#acceptance-k-74), [K-75](04-configurations.md#acceptance-k-75), [K-301](04-configurations.md#acceptance-k-301), [T-19](12-repository-layout.md#acceptance-t-19).
 
 ### Shared language and plugin enforcement
 
@@ -1647,11 +1856,11 @@ Source and retained evidence: [packages/cli/src/structure/engine.ts](../packages
 
 Acceptance: [K-102](05-engines.md#acceptance-k-102), [K-208](05-engines.md#acceptance-k-208), [K-50](06-enforcement-ledger.md#acceptance-k-50), [K-87](06-enforcement-ledger.md#acceptance-k-87), [K-186](06-enforcement-ledger.md#acceptance-k-186), [K-189](06-enforcement-ledger.md#acceptance-k-189), [K-137](06-enforcement-ledger.md#acceptance-k-137), [K-49](06-enforcement-ledger.md#acceptance-k-49).
 
-### Planned integrations and preset coverage
+### Planned integrations and configuration coverage
 
-Open. Implement every explicitly agreed ledger capability, including the planned Jest preset and remaining nginx acceptance. Complete framework accessibility and test integrations, scoped security packs, non-npm licenses, database lint, and Swift test overrides. Do not expand this into adding every available linter.
+Open. Implement every explicitly agreed ledger capability, including the planned Jest configuration and remaining nginx acceptance. Complete framework accessibility and test integrations, scoped security packs, non-npm licenses, database lint, and Swift test overrides. Do not expand this into adding every available linter.
 
-The license preset now detects Python manifests and declares pip-licenses 5.5.5 through the
+The license configuration now detects Python manifests and declares pip-licenses 5.5.5 through the
 tool-installation owner. `licenses/packages` replaces the npm-only check and dispatch name,
 without an alias. Each scope scans its npm and Python environments when present. Python scans
 run from an empty temporary directory against the explicit project interpreter, so authored
@@ -1671,7 +1880,7 @@ installation. Missing environments, empty scans, and missing project interpreter
 disallowed licenses return 1 with the scoped manifest; corrected licenses return 0. An
 unselected sibling without an installed environment does not affect the selected scope.
 The initial journey exposed the planner silently omitting a policy selected only in a nested
-scope. The shared planner now honors explicit `per-scope` execution for policy presets.
+scope. The shared planner now honors explicit `per-scope` execution for policy configurations.
 The affected planning, scope, and license-parser run passes 31 cases with 140 assertions.
 Malformed JSON, missing package versions/licenses, empty reports, and scanner failures are
 refused; corrected reports pass and temporary scanner directories are removed in both cases.
@@ -1717,7 +1926,7 @@ package tables, retaining the resolved package name rather than the installation
 Both native locks resolve `is-number@7.0.0` and `@types/is-number@7.0.5`. The expanded suite
 passes 16 cases with 28 assertions; types and diff whitespace pass. Check selection remains
 unfinished: the integrity check has one declaration under structure, while licenses requires
-no other preset. Do not add duplicate declarations or silently pull in structure. The generated
+no other configuration. Do not add duplicate declarations or silently pull in structure. The generated
 license configuration also needs an execution reader; generation and idempotent apply alone
 do not satisfy the configuration-reader contract.
 
@@ -1734,7 +1943,7 @@ check selection for licenses alone and remaining lock-format/candidate evidence 
 
 License-only selection now includes the existing `integrity/allowlists-match` definition through
 the manifest's `check_references` field. References are resolved after collection validation;
-the loader requires a different preset's standalone built-in check that runs once. References
+the loader requires a different configuration's standalone built-in check that runs once. References
 do not duplicate global ownership, rename the check, or select the owner's other checks/tools.
 The root planner collects references from nested selections, and once-only planning prevents
 duplicates when structure is selected too. Root-only, nested-only, and combined CLI fixtures
@@ -1826,8 +2035,8 @@ K-248 remains open. Native fixtures remain under `/tmp` via the system temporary
 `gspot-swift-inline-vlsshjbh` and `gspot-swift-inline-cases-ra18jzdr`. The behavior follows the
 [SwiftLint custom-rule matcher](https://github.com/realm/SwiftLint/blob/0.63.2/Source/SwiftLintCore/Extensions/SwiftLintFile%2BRegex.swift).
 
-The missing Swift Semgrep pack is implemented at `presets/language/swift/semgrep/ios.yml`, through its
-preset configuration owner. It preserves all 14 rule IDs from the read-only reference iOS
+The missing Swift Semgrep pack is implemented at `configurations/language/swift/semgrep/ios.yml`, through its
+configuration configuration owner. It preserves all 14 rule IDs from the read-only reference iOS
 pack. The plist lookup uses the real `object(forInfoDictionaryKey:)` API, Keychain guidance
 correctly describes locked-device access, and the HTTP exception does not exempt a remote
 host that starts with `localhost`. Test-folder exclusions were not carried as blanket
@@ -1851,7 +2060,7 @@ Broad K-248 remains open.
 K-144 test identification and static checks have local implementation evidence. The
 repository reader identifies XCTest and Swift Testing imports and test attributes with the
 Swift parser, including tests outside test folders. Strings and comments do not select tests.
-Package test-target declarations propose the preset. Skip checks read the actual reason
+Package test-target declarations propose the configuration. Skip checks read the actual reason
 argument, rejecting missing, empty, whitespace-only, and nil reasons. Sleep and recording
 checks inspect syntax, including generic calls and multiline recording arguments. Scoped
 sleep allowances and exact per-file inputs remain isolated. The initial detection, scope,
@@ -1872,9 +2081,9 @@ Types, changed-file formatting, schema freshness, and whitespace checks pass. `x
 `all`. The Xcode group-path work and final local K-144 evidence are recorded under
 domain-specific scope behavior below. Candidate acceptance remains open.
 
-Source and retained evidence: [presets](../presets).
+Source and retained evidence: [configurations](../configurations).
 
-Acceptance: [K-211](06-enforcement-ledger.md#acceptance-k-211), [K-233](06-enforcement-ledger.md#acceptance-k-233), [K-236](06-enforcement-ledger.md#acceptance-k-236), [K-248](06-enforcement-ledger.md#acceptance-k-248), [K-256](06-enforcement-ledger.md#acceptance-k-256), [K-218](04-presets.md#acceptance-k-218).
+Acceptance: [K-211](06-enforcement-ledger.md#acceptance-k-211), [K-233](06-enforcement-ledger.md#acceptance-k-233), [K-236](06-enforcement-ledger.md#acceptance-k-236), [K-248](06-enforcement-ledger.md#acceptance-k-248), [K-256](06-enforcement-ledger.md#acceptance-k-256), [K-218](04-configurations.md#acceptance-k-218).
 
 The unfinished Jest implementation passes its initial 60-case settings, profile, execution,
 generated-ESLint, and standalone structural-rule run with 253 assertions. Native Jest passes
@@ -1888,11 +2097,11 @@ The private installation journey installs the published local plugin through the
 registry, without developer node_modules. It exposed that recommended mode generated Jest
 rules but omitted both JavaScript and TypeScript ESLint execution. Their owning manifests now
 select recommended; generated rule strength remains level-dependent. Native focused-test and
-corrected cases pass at both levels with eight assertions. The affected policy, preset, scope,
+corrected cases pass at both levels with eight assertions. The affected policy, configuration, scope,
 and generated-plugin run passes 92 tests with 275 assertions. Parser/planning and Jest execution
 pass 30 tests with 120 assertions, including both languages at both levels.
 
-The Jest preset, coverage check, and settings appear in the generated documentation. The
+The Jest configuration, coverage check, and settings appear in the generated documentation. The
 customization guide explains private lint installation, host-owned Jest, scoped floors, status
 codes, and the lint-only meaning of the Bun import setting. Documentation loading exposed
 unlowered resource-management syntax in Vite's Bun module runner. The docs build configuration
@@ -1957,7 +2166,7 @@ Locally implemented IDs: K-206, K-250, K-213.
 
 Former unnamed cleanup entries: 7.
 
-Source and retained evidence: [packages/cli/src/platform/tool-probe.ts](../packages/cli/src/platform/tool-probe.ts).
+Source and retained evidence: [packages/cli/src/tools/tool-probe.ts](../packages/cli/src/tools/tool-probe.ts).
 
 Acceptance: [K-207](05-engines.md#acceptance-k-207), [K-206](11-toolchain.md#acceptance-k-206), [K-249](06-enforcement-ledger.md#acceptance-k-249), [K-251](06-enforcement-ledger.md#acceptance-k-251), [K-250](06-enforcement-ledger.md#acceptance-k-250).
 
@@ -2044,7 +2253,7 @@ also exposed ANSI bytes affecting status padding; padding now uses visible width
 resource cleanup, and diagnostic locations remain covered. Verification is recorded below.
 
 Local cleanup evidence: required scope lookup and its error now belong to `scopeHolder`.
-`presetHolder`, `holderFor`, `isExtensionClaimed`, `projectFindings`, and the separate concurrency
+`configurationHolder`, `holderFor`, `isExtensionClaimed`, `projectFindings`, and the separate concurrency
 module are deleted. Fixer ordering uses planned checks directly. Guaranteed edit-distance and
 directory positions no longer have defaults. Naming, required-rule, and folder analyses trust
 the supplied selection. Validated diagnostic captures and pre-push fields no longer have redundant
@@ -2052,7 +2261,7 @@ defaults. The affected check, policy, runner, fixer, plugin, and generation run 
 with 869 assertions. This count is scoped evidence, not a complete audit.
 
 Expanded audit cleanup: move the required scope lookup contract into existing `scopeHolder` and
-delete duplicate `presetHolder` and `holderFor` wrappers. Delete `isExtensionClaimed`, collapse
+delete duplicate `configurationHolder` and `holderFor` wrappers. Delete `isExtensionClaimed`, collapse
 `projectFindings` into registered `orphanSources`, and move concurrency sizing and fixer ordering
 into their callers. Remove intermediate fixer objects. Delete impossible missing-selection
 branches in naming, required rules, and folder analysis; guaranteed-position defaults in edit
@@ -2067,9 +2276,9 @@ Locally implemented IDs: K-119, K-255.
 
 Former unnamed cleanup entries: 20, 25, 26, 27.
 
-Source and retained evidence: [packages/cli/src/presets/manifest-schema.ts](../packages/cli/src/presets/manifest-schema.ts), [tests/unit/cli/presets/select.test.ts](../tests/unit/cli/presets/select.test.ts).
+Source and retained evidence: [packages/cli/src/schemas/manifests.ts](../packages/cli/src/schemas/manifests.ts), [tests/unit/cli/configurations/select.test.ts](../tests/unit/cli/configurations/select.test.ts).
 
-Acceptance: [K-79](04-presets.md#acceptance-k-79), [K-39](04-presets.md#acceptance-k-39), [K-38](04-presets.md#acceptance-k-38), [K-197](04-presets.md#acceptance-k-197), [K-105](04-presets.md#acceptance-k-105), [K-55](12-repository-layout.md#acceptance-k-55), [K-99](04-presets.md#acceptance-k-99), [K-104](04-presets.md#acceptance-k-104), [K-119](04-presets.md#acceptance-k-119), [K-255](04-presets.md#acceptance-k-255).
+Acceptance: [K-79](04-configurations.md#acceptance-k-79), [K-39](04-configurations.md#acceptance-k-39), [K-38](04-configurations.md#acceptance-k-38), [K-197](04-configurations.md#acceptance-k-197), [K-105](04-configurations.md#acceptance-k-105), [K-55](12-repository-layout.md#acceptance-k-55), [K-99](04-configurations.md#acceptance-k-99), [K-104](04-configurations.md#acceptance-k-104), [K-119](04-configurations.md#acceptance-k-119), [K-255](04-configurations.md#acceptance-k-255).
 
 ### Rule guides and agent instructions
 
@@ -2097,7 +2306,7 @@ Open acceptance IDs: K-229, K-241, K-261, K-230, K-179, K-232, K-231, K-260, K-2
 
 Locally implemented IDs: K-279.
 
-Source and retained evidence: [packages/cli/src/rules/assemble.ts](../packages/cli/src/rules/assemble.ts), [tests/acceptance/cli/agents.test.ts](../tests/acceptance/cli/agents.test.ts).
+Source and retained evidence: [packages/cli/src/agents/assemble.ts](../packages/cli/src/agents/assemble.ts), [tests/acceptance/cli/agents.test.ts](../tests/acceptance/cli/agents.test.ts).
 
 Acceptance: [K-179](09-rules.md#acceptance-k-179), [K-231](09-rules.md#acceptance-k-231), [K-230](09-rules.md#acceptance-k-230), [K-229](09-rules.md#acceptance-k-229), [K-241](09-rules.md#acceptance-k-241), [K-261](09-rules.md#acceptance-k-261), [K-65](09-rules.md#acceptance-k-65), [K-67](09-rules.md#acceptance-k-67), [K-279](09-rules.md#acceptance-k-279), [S-10](09-rules.md#acceptance-s-10).
 
@@ -2111,7 +2320,7 @@ Locally implemented IDs: K-111, K-115, K-234, K-110.
 
 Former unnamed cleanup entries: 28.
 
-Source and retained evidence: [packages/cli/src/policy/ignore-command.ts](../packages/cli/src/policy/ignore-command.ts), [tests/unit/cli/policy/settings.test.ts](../tests/unit/cli/policy/settings.test.ts).
+Source and retained evidence: [packages/cli/src/commands/ignore.ts](../packages/cli/src/commands/ignore.ts), [tests/unit/cli/policy/settings.test.ts](../tests/unit/cli/policy/settings.test.ts).
 
 Acceptance: [K-111](02-cli.md#acceptance-k-111), [K-114](05-engines.md#acceptance-k-114), [K-234](06-enforcement-ledger.md#acceptance-k-234), [K-89](03-configuration.md#acceptance-k-89), [K-66](02-cli.md#acceptance-k-66), [K-308](05-engines.md#acceptance-k-308).
 
@@ -2126,7 +2335,7 @@ the Vale download directories; shared emission retains only clone-local runtime 
 Validation rejects paths outside `.gspot`, traversal, line injection, and noncanonical
 separators. Native Git checks confirm that downloaded styles are ignored while authored source,
 generated gspot rules, and vocabulary remain visible. Duplicate declarations produce one entry,
-and authored ignore lines survive idempotent updates. Generated preset references list these
+and authored ignore lines survive idempotent updates. Generated configuration references list these
 paths. Init and apply leave `.gitignore` unchanged outside Git, then add the managed block after
 Git initialization. The lifecycle run passes 37 tests with 151 assertions; the final init,
 ignore, reference, and documentation run passes 27 tests with 999 assertions. The npm clone
@@ -2169,7 +2378,7 @@ focused native/report run passes 11 tests with 39 assertions, and workspace type
 Per-kind coverage and final candidate reporting remain open.
 
 Doctor derives configured source coverage from the shared planner instead of crediting every
-check in a selected preset. Levels, disabled checks, path exceptions, and nested scopes affect
+check in a selected configuration. Levels, disabled checks, path exceptions, and nested scopes affect
 the reported missing kinds. Enabled repository commands cover their declared paths across
 child scopes. Binary, generated, and vendored files do not enter this source coverage count.
 The doctor and run integration suites pass 136 tests with 781 assertions. Runtime coverage
@@ -2214,7 +2423,7 @@ individually. Workspace types, formatting, and diff checks pass. Frozen-candidat
 still needs these behaviors exercised from the frozen artifacts.
 
 File explanations now use configured checks and their source claims rather than every check
-in a selected preset. They include repository commands across nested scopes, retain applicable
+in a selected configuration. They include repository commands across nested scopes, retain applicable
 global exceptions, and no longer call a file unchecked merely because its check is a repository
 command. Nature notes describe eligible analyses without claiming that an unselected secrets
 scan ran. Setting explanations enumerate every scope that exposes the key, including settings
@@ -2251,15 +2460,15 @@ identify their source values. Reason requirements and disabled-rule errors carry
 root and scoped tool tables. The read/write suite passes 60 tests with 138 assertions. Three
 additional reason/rule defect-correction cases pass with nine assertions, and a missing adopted
 module case passes with four assertions after the local module is created. Workspace types,
-formatting, and diff checks pass. Preset selection and effective-setting validation still produce
+formatting, and diff checks pass. Configuration selection and effective-setting validation still produce
 unlocated diagnostics and remain part of open K-122.
 
-Preset declarations and effective-setting validation now retain authored source locations.
-Unknown preset entries in root and nested lists carry correction suggestions. Unsupported
+Configuration declarations and effective-setting validation now retain authored source locations.
+Unknown configuration entries in root and nested lists carry correction suggestions. Unsupported
 settings, reasoned loosenings, list-item problems, options duplicated under `extra`, protected
 naming groups, unknown extra checks, and rule-file exclusions carry structured policy paths.
 Session loading, policy edits, and initialization pass the actual policy text to validation.
-Native root/nested preset and setting defect-correction cases pass with 14 assertions. Settings
+Native root/nested configuration and setting defect-correction cases pass with 14 assertions. Settings
 and policy-writing suites pass 24 tests with 57 assertions. Workspace types, formatting, and
 diff checks pass. K-122 remains open for its other message and apply-preview requirements;
 frozen-candidate verification remains separate.
@@ -2345,7 +2554,7 @@ apply/comparison suites pass 26 tests with 93 assertions. These tests verify pre
 native enforcement and frozen-candidate evidence remain separate. K-122 still requires ESLint
 comparison and authored SwiftFormat section/filter handling.
 
-K-122's preset-list prompt now reports the selected IDs and the `--presets <ids>` override.
+K-122's configuration-list prompt now reports the selected IDs and the `--configurations <ids>` override.
 The message reflects either accepted defaults without a terminal or the actual interactive
 answer, including an empty selection. It uses the output owner, so JSON mode suppresses the
 human note. Prompt tests pass 10 tests with 20 assertions. A native nonterminal init preview
@@ -2426,7 +2635,7 @@ is complete for the September 23 cleanup. Reading and check-ID presence do not e
 every documented defect and correction has been executed successfully.
 
 All tests live under `tests/`: CLI and plugin units, CLI/docs/repository integration, native
-compatibility, CLI/preset source acceptance, and installed release consumers. Support is grouped
+compatibility, CLI/configuration source acceptance, and installed release consumers. Support is grouped
 by process, registry, fixture, and cleanup responsibility. Types stay with their owners. The
 package-local test directories, forwarding test alias, and top-level acceptance runner are
 removed. Tasks, dependencies, fixture paths, policy triggers, and paused CI references use the
@@ -2466,7 +2675,7 @@ Latest local verification on September 23, 2026:
 | Native | 324 pass, one failure, 3,021 assertions | EditorConfig Checker download receives GitHub HTTP 403 |
 | Source acceptance | 268 pass, 45 failures, 2,725 assertions | 44 download failures and one Markdown takeover fixture failure |
 | Release | Seven pass, one failure, 278 assertions | Installed CLI stops at the same EditorConfig Checker download |
-| Preset/docs/repository focused batch | 69 pass, 1,083 assertions | Includes missing-example rejection and nonempty diagnostic expectations |
+| Configuration/docs/repository focused batch | 69 pass, 1,083 assertions | Includes missing-example rejection and nonempty diagnostic expectations |
 | Types and schemas | Workspace, docs, tests, and schema freshness pass | No repository lint run |
 | Build | All seven binaries and the site build pass | Building a target is not native execution evidence |
 
@@ -2551,7 +2760,7 @@ accepted values, defaults, root/scope precedence, and a validated nested policy.
 name repository, scope, file-list, or delegated execution. Verification selects the declared
 stage and identifies prerequisites, platform restrictions, and settings that can leave a check
 skipped. Delegated checks target the actual reporting owner and explain the scope of exceptions.
-A skip is not described as successful verification. Source links resolve to the current preset
+A skip is not described as successful verification. Source links resolve to the current configuration
 kind/name directories or the defining command and plugin module.
 
 The authored-guide, README, CLI-help, generated-category, and rule-guide reading corrected
@@ -2562,7 +2771,7 @@ compared with their behavior owners and retained tests; native downloads and ext
 still prevent complete execution evidence. The latest focused and broad results are recorded
 under [Behavioral acceptance quality](#behavioral-acceptance-quality).
 
-Preserve public URLs, the overview guide, the catalog grouped by preset kind, duplicate
+Preserve public URLs, the overview guide, the catalog grouped by configuration kind, duplicate
 validation, source attribution, and existing Starlight content loading. Do not add another
 reference generator, example inventory framework, or assertions that merely find check IDs.
 
@@ -2580,8 +2789,8 @@ Acceptance: [K-205](21-documentation.md#acceptance-k-205), [K-303](21-documentat
 
 Open for assistive-technology review, complete example execution, and release-matched public
 acceptance. The local visual matrix, keyboard interactions, reduced motion, and native browser
-zoom checks have local evidence. ScreenCaptureKit failed again during the final README card
-inspection; the Sweet spot continuation records that remaining visual check.
+zoom checks have local evidence. Native capture was restored during the September 24
+continuation above, which completes the previously blocked README card inspection.
 
 The Sweet spot identity uses two asymmetric cobalt forms around a tangerine dot. The image
 generator supplied the flat mark and dimensional hero; editable SVG interpretations, outlined
@@ -2656,7 +2865,7 @@ Open acceptance IDs: K-164, K-145, K-121, K-244, K-245, K-280.
 
 Former unnamed cleanup entries: 40.
 
-Source and retained evidence: [packages/cli/publish.ts](../packages/cli/publish.ts), [tests/release/install.test.ts](../tests/release/install.test.ts).
+Source and retained evidence: [packages/cli/scripts/publish.ts](../packages/cli/scripts/publish.ts), [tests/release/install.test.ts](../tests/release/install.test.ts).
 
 Acceptance: [K-164](11-toolchain.md#acceptance-k-164), [K-280](11-toolchain.md#acceptance-k-280).
 
@@ -2669,14 +2878,14 @@ the platform. Historical successful Windows tests do not establish current behav
 
 Open acceptance IDs: K-263.
 
-Source and retained evidence: [packages/cli/src/lifecycle/confined.ts](../packages/cli/src/lifecycle/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
+Source and retained evidence: [packages/cli/src/filesystem/confined.ts](../packages/cli/src/filesystem/confined.ts), [tests/integration/cli/lifecycle/confined.test.ts](../tests/integration/cli/lifecycle/confined.test.ts).
 
 Acceptance: [K-263](11-toolchain.md#acceptance-k-263).
 
 ### Architecture contract agreement
 
 The September 23 architecture reconciliation updates the central test tasks and prerequisites,
-preset kind/name ownership, Configuration Files terminology, no-Git traversal library, site
+configuration kind/name ownership, Configuration Files terminology, no-Git traversal library, site
 navigation, and content-loader acceptance. Obsolete test filenames, snapshot inventories,
 release opt-in wording, and implicit commit authority are removed. Current test, reference,
 visual, and packaging dispositions replace superseded run narratives. Historical evidence
@@ -2822,8 +3031,8 @@ under platform availability and the active CI bypass; implementation can continu
 Historical bounded repairs remain scoped to their recorded revisions: K-204 at `faf350f`,
 K-219 at `b553f9d`, and K-305 at `7464e27`. K-92 records removal of delegation preferences from
 managed agent blocks; K-97 records removal of unimplemented project-template flags. K-168,
-K-170, and K-173 were retired with Go, Rust, and Ruby presets at `fbfb142`; this consolidation
-does not restore them or retire any other planned preset.
+K-170, and K-173 were retired with Go, Rust, and Ruby configurations at `fbfb142`; this consolidation
+does not restore them or retire any other planned configuration.
 
 Older omitted IDs retain their obligations through the grouped owners:
 
@@ -2979,8 +3188,8 @@ statements describe that earlier pass; grouped dispositions own the current stat
 
 The CLI uses standard filesystem APIs and retains ownership, original-file recovery, symlink
 checks, and edited-file protection. Staged snapshots copy every dependency tree before link
-validation. Presets live at `presets/<kind>/<name>/`. Configuration Files is the title of the
-public `configs` preset at `presets/policy/configs/`; `policy` is the cross-language kind. Types and constants moved to behavioral owners. CLI upgrade,
+validation. Configurations live at `configurations/<kind>/<name>/`. Configuration Files is the title of the
+public `configs` configuration at `configurations/policy/configs/`; `policy` is the cross-language kind. Types and constants moved to behavioral owners. CLI upgrade,
 version migrations, newer-version lookup, Changesets, and generated Markdown writers are retired.
 
 The Astro loader builds reference entries from definitions with inherited command options,
@@ -3031,7 +3240,7 @@ release verification live in `docs/scripts/`. Rule metadata and shared option sc
 plugin rules under `packages/eslint-plugin/src/rules/`; their types stay with those definitions.
 
 The root project license remains the single authored copy. Plugin builds include it only under
-`dist/`. `packages/cli/notices.json` consolidates the eight supplemental package notice records
+`dist/`. `packages/cli/scripts/notices.json` consolidates the eight supplemental package notice records
 with their original text and provenance. The root license archive is removed. Binary packaging
 still assembles notices for bundled dependencies, the grammar, and the runtime.
 
@@ -3101,7 +3310,7 @@ revision snapshots.
 Execution now carries each per-file input with its expanded command, so trailing arguments do
 not become diagnostic filenames. Fixers retain partial changes and distinguish cancellation,
 deadlines, and signaled process failures from source findings. `limits.tool_seconds` belongs to
-the execution owner and is available without a structural preset. The affected settings and
+the execution owner and is available without a structural configuration. The affected settings and
 reference tests pass 19 cases with 940 assertions.
 
 A real descendant-process probe reproduced writes after the parent deadline. Asynchronous text
@@ -3175,7 +3384,7 @@ from the consumer root. Policy validation rejects escaped or linked bases and lo
 Profile export omits repository-specific selectors and registrations; profile import rejects
 those registrations. Native processor tests plant a finding in a future matching file, exclude
 other paths, and pass corrected content. Legacy configuration and the remaining formatter
-carryover contracts remain open. The shared schema, preset setting description, and reader
+carryover contracts remain open. The shared schema, configuration setting description, and reader
 guide describe the new processor and base-path fields.
 
 Windows file identities compare the read-only state that the filesystem API represents.
@@ -3200,12 +3409,12 @@ The schema and public adoption guide describe the retained settings and explicit
 `repository/snapshot.ts` copies only recorded, unchanged Vale package assets when snapshot and
 working configuration agree. Root and nested tests reject edited assets and changed configuration.
 `run/broken-tool.ts` preserves module-loading diagnostics instead of masking them as malformed
-structured output. `lifecycle/python-project.ts` creates relocatable environments before immutable
+structured output. `tools/python-project.ts` creates relocatable environments before immutable
 sync. Its test moves a console script environment to a path containing spaces and executes it.
 `platform/spawn.ts` gives an absolute executable's siblings precedence in child PATH resolution,
 while retaining explicit environment removal. Async and synchronous regressions cover this.
 
-`packages/cli/compile.ts` owns Bun compiler integration for EditorConfig's WASM loader. The
+`packages/cli/scripts/compile.ts` owns Bun compiler integration for EditorConfig's WASM loader. The
 parser asset is embedded and included in dependency metadata used for distribution notices.
 All seven target builds pass; native execution evidence is limited to macOS ARM64.
 
@@ -3222,7 +3431,7 @@ The following owners have additional implementation and regression evidence:
 | ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | Confined managed observations   | `emit/`, `policy/read-policy.ts`, `run/version-pin.ts`             | Preview rejects external symlinks in generated and shared configuration, policy, and pins. Malformed shared JSON and YAML fail without replacing originals.                          | Complete the lifecycle routing and recovery audit under K-298 and K-299.                              |
 | Markdown configuration adoption | `lifecycle/carry.ts`, `policy/propose.ts`, `run/file-workspace.ts` | Rule choices survive root and disjoint nested adoption. Native checks use isolated selected files; scoped editor pointers preserve inheritance.                                      | Complete unsupported inheritance, custom rules, overlapping configurations, and candidate acceptance. |
-| Scoped plugin configuration     | `presets/language/javascript/eslint.config.js.tmpl`                         | Root and nested JavaScript files execute actual ESLint configuration at both levels without the obsolete structural-rule option.                                                     | Complete framework parity and the enforcement ledger.                                                 |
+| Scoped plugin configuration     | `configurations/language/javascript/eslint.config.js.tmpl`                         | Root and nested JavaScript files execute actual ESLint configuration at both levels without the obsolete structural-rule option.                                                     | Complete framework parity and the enforcement ledger.                                                 |
 | ESLint process results          | JavaScript and TypeScript manifests, `run/parse-output.ts`         | Crash text inside linted source stays a finding result. Malformed output fails explicitly. Empty results and paths with Windows separators or sibling root prefixes parse correctly. | Complete other parsers, process execution, revision selection, and caching.                           |
 
 The current workspace suite passes 858 tests with 3,715 assertions across 132 files. Reported
@@ -3340,12 +3549,12 @@ The unit/plugin suite passes 397 tests. Workspace type checking passes.
 
 CodeQL validates database and SARIF destination names before spawning. Four planted portable
 escapes are refused before any tool invocation; corrected Python execution passes, using a
-controlled process fixture. The security preset and generated mise pin now agree with the
+controlled process fixture. The security configuration and generated mise pin now agree with the
 ledger on CodeQL 2.24.3. Owner-driven apply also refreshes the generated ESLint policy rules.
 CodeQL 2.24.3 is installed locally, and its version and language metadata are verified.
 
 Unversioned query resolution failed against the registry with an unexpected `digest` field.
-The preset now declares exact `query_packs` versions from the matching
+The configuration now declares exact `query_packs` versions from the matching
 [CodeQL release source](https://github.com/github/codeql/tree/codeql-cli/v2.24.3).
 Pinned Python queries resolve and execute successfully. The adapter uses native extractor
 metadata for documented language names and scans each resolved language once.
@@ -3398,7 +3607,7 @@ run passes 636 tests with 3,372 assertions. These results precede final candidat
 
 The corrected private-installation acceptance batch passes 61 cases, with two failures. The
 subsequent focused run passes all four cases with 58 assertions, covering both failures:
-shallow-clone commit checks install their private tools, and Express pins Ajv in its own preset
+shallow-clone commit checks install their private tools, and Express pins Ajv in its own configuration
 so Spectral and its validator plugins load the same code generator. OpenAPI checks use shared
 execution boundaries. Native npm wrappers initialize in the isolated installation before
 publication. Failed initialization publishes no dependencies; corrected installation records

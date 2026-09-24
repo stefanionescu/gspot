@@ -1,0 +1,91 @@
+[configuration]
+name = "jest"
+kind = "tool"
+title = "Jest"
+requires = ["javascript"]
+description = "Jest test rules and coverage floors for repository-owned test suites."
+
+[detect]
+dependencies = ["jest"]
+filenames = ["jest.config.*"]
+
+[claims]
+paths = ["**/*.{test,spec}.{ts,tsx,js,jsx}", "**/tests/**", "**/__tests__/**", "**/jest.config.*"]
+natures = ["source"]
+
+[[tools]]
+name = "jest"
+provider = "host"
+
+[[tools]]
+name = "eslint-plugin-jest"
+kind = "library"
+version = "29.16.6"
+npm = "eslint-plugin-jest"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+name = "jest/coverage"
+title = "Check Jest coverage"
+example = "A branch that no test exercises can leave coverage below the floor configured under `tools.jest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+engine = "integrity"
+analysis = "jest-coverage"
+claims = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
+tool = "jest"
+coverage = ["coverage"]
+summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
+why = "Coverage floors expose untested source without changing working-tree build or report files."
+help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
+
+[[settings]]
+name = "tools.jest.coverage_lines"
+kind = "number"
+direction = "floor"
+default = 80
+summary = "The minimum percentage of source lines covered by tests."
+
+[[settings]]
+name = "tools.jest.coverage_branches"
+kind = "number"
+direction = "floor"
+default = 80
+summary = "The minimum percentage of source branches covered by tests."
+
+[[settings]]
+name = "tools.jest.coverage_functions"
+kind = "number"
+direction = "floor"
+default = 80
+summary = "The minimum percentage of source functions covered by tests."
+
+[[settings]]
+name = "tools.jest.coverage_statements"
+kind = "number"
+direction = "floor"
+default = 80
+summary = "The minimum percentage of source statements covered by tests."
+
+[[settings]]
+name = "tools.jest.harness_directory"
+kind = "string"
+direction = "neutral"
+default = "tests/support"
+summary = "The directory containing test support code that application source cannot import."
+
+[[settings]]
+name = "tools.jest.global_package"
+kind = "string"
+direction = "neutral"
+default = "@jest/globals"
+summary = "The module supplying test functions for ESLint, including bun:test for Bun tests."
+
+[rule_files]
+general = ["general/code/TESTING.md"]

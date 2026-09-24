@@ -1,12 +1,12 @@
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/checks/integrity-definitions.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/lifecycle/patterns-definitions.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/repository/patterns.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore, { type Ignore } from 'ignore';
 import { dirname, join, resolve } from 'node:path';
-import type { SpawnResult } from '#cli/platform/types.ts';
-import type { RawEntry } from '#cli/repository/types.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
+import type { RawEntry } from '#cli/types/repository.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 

@@ -1,25 +1,25 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { planRun } from '#cli/run/plan.ts';
-import type { Session } from '#cli/run/types.ts';
+import type { Session } from '#cli/types/execution.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
-presets = []
+configurations = []
 [[scope]]
 path = "api"
-presets = []
+configurations = []
 [[scope]]
 path = "web"
-presets = []
+configurations = []
 `;
 
 test('repository checks retain nested inputs and report their defects once at the root', async () => {
@@ -155,11 +155,11 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
     async (engine) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
             'source.ts': 'export const count = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.selected.find(({ preset }) => preset.name === 'typescript')!;
+        const selected = session.scopes[0]!.selected.find(({ configuration }) => configuration.name === 'typescript')!;
         const definition = {
             name: 'sandbox/command',
             level: 'recommended',
@@ -187,6 +187,6 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
             executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
         ).rejects.toThrow(`No ${engine} analysis is called unknown-analysis.`);
         expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
-        expect(existsSync(join(sandbox.path, '.gspot/report.json'))).toBe(false);
+        expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
     },
 );

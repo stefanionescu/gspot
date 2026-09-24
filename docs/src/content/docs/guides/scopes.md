@@ -1,30 +1,30 @@
 ---
 title: Monorepos and scopes
-description: Give nested projects their own presets and settings in one policy file.
+description: Give nested projects their own configurations and settings in one policy file.
 ---
 
 Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
 from the repository root unless a step names another directory.
 
 Start from a repository with nested projects. Initialization reads supported package-manager
-workspace declarations and proposes scopes. Review their paths and presets before accepting.
+workspace declarations and proposes scopes. Review their paths and configurations before accepting.
 
 A complete example policy:
 
 ```toml
 version = 1
-presets = []
+configurations = []
 
 [[scope]]
 path = "api"
-presets = ["typescript", "express", "vitest"]
+configurations = ["typescript", "express", "vitest"]
 
 [scope.limits]
 function_lines = 80
 
 [[scope]]
 path = "ios"
-presets = ["swift", "xcode"]
+configurations = ["swift", "xcode"]
 ```
 
 Use the singular `[[scope]]` array table. The `[scope.limits]` table belongs to the preceding
@@ -43,7 +43,7 @@ A project-wide check triggered by a path can inspect other files in that project
 configuration lives under `.gspot/<path>/` when the owning tool needs a separate scope file.
 
 `gspot explain <file>` reports the scope and claims. Use `./` for a filename that also names a
-preset or check: `gspot explain bash` explains the preset, while `gspot explain ./bash`
+configuration or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`
 explains the file.
 
 ## Change a scoped setting
@@ -55,7 +55,7 @@ gspot set limits.function_lines 80 --scope api --reason "The parser is one state
 The command writes the scoped setting and applies policy. Root settings supply defaults;
 more specific scope settings override them. Keep scope paths relative to the policy root.
 PostgreSQL migration directories are also relative to their scope.
-The PostgreSQL preset supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
+The PostgreSQL configuration supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
 at the root or in a scope to select another dialect. Each scope receives its effective dialect
 in its generated SQLFluff configuration, including inherited scope values.
 Use the tool's lowercase dialect label, such as `postgres`, `sqlite`, or `duckdb`.
@@ -75,9 +75,9 @@ Paths in `tools.typos.exclude` remain relative to the policy root, including ins
 Editor configuration translates those patterns to its directory. CLI checks and fixes use only
 the generated configuration, so an unowned nested typos file cannot add word allowances.
 
-List settings append values from presets, the root table, and containing scopes, and remove
-repeated values. Scalar settings replace the preceding value. If selected presets provide
-conflicting scalar defaults, the error names both presets. Set that key in the root table to
+List settings append values from configurations, the root table, and containing scopes, and remove
+repeated values. Scalar settings replace the preceding value. If selected configurations provide
+conflicting scalar defaults, the error names both configurations. Set that key in the root table to
 settle the conflict for all scopes, or in a containing scope table for that scope and its
 descendants.
 

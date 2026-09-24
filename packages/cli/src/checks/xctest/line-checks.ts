@@ -1,9 +1,9 @@
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 // Swift test syntax: skip reasons, sleep calls, and snapshot recording modes.
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { textOf, xcodeFinding } from '#cli/checks/xcode/files.ts';
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import type { Node } from 'web-tree-sitter';
 
 const COMMENT = /^\s*\/\/\s*\S{3,}/u;

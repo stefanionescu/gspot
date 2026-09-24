@@ -1,7 +1,7 @@
 {
     "name": "gspot",
     "version": "0.1.0",
-    "description": "CLI to lint and enforce rules for LLM generated codebases",
+    "description": "gspot configures linters, runs checks, and generates instructions for coding agents from one repository configuration",
     "license": "Apache-2.0",
     "repository": "github:stefanionescu/gspot",
     "bin": {

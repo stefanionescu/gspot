@@ -1,6 +1,6 @@
-import { parserFor } from '#cli/naming/parsers.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { trivialFile } from '#cli/structure/statements.ts';
-import type { Analysis } from '#cli/structure/types.ts';
+import type { Analysis } from '#cli/types/structure.ts';
 
 export const trivialFunction: Analysis = async (context, scripts) => {
     const threshold = context.limit('trivial_statements', 'bash') ?? 2;

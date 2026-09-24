@@ -1,12 +1,12 @@
-import type { Engine, EngineInput } from '#cli/run/types.ts';
+import type { Engine, EngineInput } from '#cli/types/execution.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { countFindings } from '#cli/structure/counts.ts';
-import { DOCUMENT_EXTENSIONS } from '#cli/structure/structure-definitions.ts';
+import { DOCUMENT_EXTENSIONS } from '#cli/structure/patterns.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
 import { docComment } from '#cli/structure/analyses/doc-comment.ts';
 import { fileLength } from '#cli/structure/analyses/file/length.ts';
-import type { Analysis, StructureContext } from '#cli/structure/types.ts';
+import type { Analysis, StructureContext } from '#cli/types/structure.ts';
 import { folderNames } from '#cli/structure/analyses/folder-names.ts';
 import { scriptEmbeds } from '#cli/structure/analyses/scripts/embeds.ts';
 import { scriptSafety } from '#cli/structure/analyses/scripts/safety.ts';

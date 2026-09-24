@@ -1,5 +1,5 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
-import type { JsonFormat } from '#cli/emit/types.ts';
+import type { JsonFormat } from '#cli/types/generation.ts';
 
 function primitive(value: unknown): string | undefined {
     if (value === null || typeof value === 'number' || typeof value === 'boolean') return String(value);

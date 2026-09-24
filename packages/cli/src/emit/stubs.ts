@@ -1,9 +1,9 @@
 // One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
-import type { StubSpec } from '#cli/presets/types.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import type { StubSpec } from '#cli/types/configurations.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { GeneratedFile } from '#cli/emit/types.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { relative, dirname } from 'node:path';
 import { applyEdits, modify, parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
@@ -43,7 +43,7 @@ function relativeTarget(stubPath: string, targetPath: string): string {
  * @param stubPath the stub's path
  * @param targetPath the generated file's path
  * @param version the gspot version
- * @param preset the preset that owns the stub
+ * @param configuration the configuration that owns the stub
  * @returns the generated file
  */
 export function bodyStub(
@@ -51,11 +51,11 @@ export function bodyStub(
     stubPath: string,
     targetPath: string,
     version: string,
-    preset: string,
+    configuration: string,
 ): GeneratedFile {
     const body = String(fillTarget(stub.body ?? '', stubPath, targetPath));
     const ended = body.endsWith('\n') ? body : `${body}\n`;
-    return { path: stubPath, content: `${headerFor(stubPath, version)}${ended}`, readOnly: true, kind: 'stub', preset };
+    return { path: stubPath, content: `${headerFor(stubPath, version)}${ended}`, readOnly: true, kind: 'stub', configuration };
 }
 
 /**

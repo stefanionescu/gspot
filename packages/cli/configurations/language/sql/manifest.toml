@@ -1,0 +1,153 @@
+[configuration]
+name = "sql"
+kind = "language"
+title = "SQL"
+requires = ["formatting", "structure"]
+recommends = ["naming", "spelling"]
+description = "SQL files: sqlfluff for layout and style, a parse by the Postgres parser, names checked by category, and line comments only."
+
+[detect]
+extensions = [".sql", ".pgsql", ".psql"]
+
+[claims]
+extensions = [".sql", ".pgsql", ".psql"]
+natures = ["source"]
+
+[[tools]]
+name = "sqlfluff"
+suppression = {marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)"}
+version = "4.0.0"
+floor = "3.0.0"
+pypi = "sqlfluff"
+mise = "pipx:sqlfluff"
+brew = "sqlfluff"
+
+[[tools.takeover]]
+file = ".sqlfluff"
+carries = "rules-table"
+check = "sql/sqlfluff"
+
+[[tools.takeover]]
+file = ".sqlfluffignore"
+carries = "ignore-paths"
+
+[[tools.takeover]]
+file = "setup.cfg"
+table = "sqlfluff"
+shared = true
+carries = "rules-table"
+check = "sql/sqlfluff"
+
+[[tools.takeover]]
+file = "tox.ini"
+table = "sqlfluff"
+shared = true
+carries = "rules-table"
+check = "sql/sqlfluff"
+
+[[configs]]
+template = "sqlfluff.cfg.tmpl"
+target = ".gspot/config/sqlfluff.cfg"
+per_scope = true
+rules_path = ["sqlfluff.rules", "sqlfluff.exclude_rules", "sqlfluff:rules"]
+
+[[checks]]
+name = "sql/sqlfluff"
+title = "SQLFluff"
+example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
+level = "all"
+stage = "commit"
+command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
+fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+fix_order = "format"
+fix_findings_exit_codes = [1]
+tool_errors = '^Traceback \(most recent call last\):$'
+coverage = ["format", "style"]
+exclude_setting = "tools.sqlfluff.exclude"
+output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
+summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
+why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
+help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
+
+[[checks]]
+name = "sql/syntax"
+title = "Check SQL syntax"
+example = "The statement `SELECT FROM;` lacks a valid select expression and reports a parser error. Replace it with the intended valid query, such as `SELECT 1;`."
+level = "recommended"
+stage = "commit"
+engine = "integrity"
+analysis = "sql-syntax"
+exclude_setting = "tools.sqlfluff.exclude"
+coverage = ["syntax"]
+summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
+why = "A migration that does not parse fails at deploy, halfway through a release."
+help = "Correct the statement at the line and column the message names."
+
+[[checks]]
+name = "sql/block-comments"
+title = "Block comments"
+example = "The SQL comment `/* Explains the table. */` reports a block-comment finding. Replace it with `-- Explains the table.` on its own line."
+level = "all"
+stage = "commit"
+engine = "integrity"
+analysis = "sql-block-comments"
+coverage = ["structure"]
+summary = "Refuses block comments in SQL, so every comment is a line comment."
+why = "The prose and spelling checks read line comments, and a block comment hides text and dead code from them."
+help = "Rewrite the block as line comments that start with two dashes."
+
+[[checks]]
+name = "sql/file-length"
+title = "File length"
+example = "A SQL file with 401 code lines exceeds a 400-line ceiling. Split independent database changes into appropriately ordered files and rerun with each file below the configured limit."
+level = "all"
+stage = "commit"
+engine = "integrity"
+analysis = "sql-file-length"
+limit = "limits.sql.file_lines"
+coverage = ["structure"]
+summary = "Checks that no SQL file has more code lines than the ceiling."
+why = "A long SQL file holds more than one change, and one change is what a reviewer can hold."
+help = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
+
+[[settings]]
+name = "tools.sqlfluff.dialect"
+kind = "string"
+direction = "neutral"
+default = "ansi"
+summary = "The sqlfluff dialect; a database configuration sets it."
+
+[[settings]]
+name = "tools.sqlfluff.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason."
+
+[[settings]]
+name = "limits.sql.file_lines"
+kind = "number"
+direction = "ceiling"
+default = 400
+summary = "The most code lines a SQL file may have."
+
+[coverage]
+".sql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+".pgsql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+".psql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+
+[rule_files]
+language = ["language/SQL.md", "language/naming/SQL.md"]
+
+[[checks]]
+name = "sql/functions"
+title = "Check SQL function size and parameters"
+example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, use a narrow suppression with a reason."
+level = "recommended"
+stage = "commit"
+engine = "integrity"
+analysis = "sql-functions"
+coverage = ["structure"]
+summary = "Reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
+why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
+help = "Inline unnecessary functions or use a narrow suppression for a required API. Reduce parameters or configure limits.sql.function_parameters."

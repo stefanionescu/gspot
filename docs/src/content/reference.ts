@@ -4,11 +4,11 @@ import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import type { Command } from 'commander';
 import { buildProgram } from '@gspot/cli/src/program.ts';
-import { allChecks } from '@gspot/cli/src/presets/listing.ts';
-import { presetManifests } from '@gspot/cli/src/presets/read-manifests.ts';
+import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
+import { configurationManifests } from '@gspot/cli/src/configurations/read-manifests.ts';
 import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
 import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
-import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/presets/types.ts';
+import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/src/types/configurations.ts';
 import type { JSONSchema } from 'zod/v4/core';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
 import plugin from '../../../packages/eslint-plugin/src/plugin.ts';
@@ -25,7 +25,7 @@ import { sourceRevision } from './revision';
 export function referenceHeader(
     title: string,
     description: string,
-    owner = 'packages/cli/src/policy/schema.ts',
+    owner = 'packages/cli/src/schemas/policy.ts',
 ): string {
     const source = `https://github.com/stefanionescu/gspot/blob/${sourceRevision}/${owner}`;
     return `---\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\neditUrl: ${JSON.stringify(source)}\n---\n\ngspot ${packageManifest.version} · [Source definition](${source})\n\n`;
@@ -81,7 +81,7 @@ export function configurationReference(): string {
         ([name, node]) =>
             `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
     );
-    return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected presets, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for preset-owned values.\n\n${sections.join('\n')}`;
+    return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected configurations, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for configuration-owned values.\n\n${sections.join('\n')}`;
 }
 
 /**
@@ -102,10 +102,10 @@ export function pluginReferencePages(): Map<string, string> {
                 configurations.length === 0
                     ? 'Select this rule explicitly for the files it governs.'
                     : `Enabled by ${configurations.join(' and ')}.`;
-            const body = `${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, 2)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, 2)}\n\`\`\`\n`;
+            const body = `Rule: \`gspot/${name}\`.\n\n${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, 2)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, 2)}\n\`\`\`\n`;
             return [
                 `plugin/${name}.md`,
-                referenceHeader(`gspot/${name}`, docs.summary, `packages/eslint-plugin/src/rules/${name}.ts`) + body,
+                referenceHeader(docs.title, docs.summary, `packages/eslint-plugin/src/rules/${name}.ts`) + body,
             ];
         }),
     );
@@ -129,7 +129,10 @@ function cell(text: string): string {
 
 function commandPage(command: Command, name: string): string {
     const rootCommand = name.split(' ')[0]!;
-    const owner = rootCommand === 'completion' ? 'output/completion.ts' : `commands/${rootCommand}.ts`;
+    const owner = rootCommand === 'completion' ? 'output/completion.ts'
+        : ['init', 'doctor', 'uninstall'].includes(rootCommand) ? `commands/${rootCommand}/command.ts`
+        : ['add', 'remove'].includes(rootCommand) ? 'commands/configurations.ts'
+        : `commands/${rootCommand}.ts`;
     const helper = command.createHelp();
     helper.showGlobalOptions = true;
     const usage = helper.commandUsage(command);
@@ -170,7 +173,7 @@ function commandPage(command: Command, name: string): string {
         )
         .trim()}\n\`\`\`\n`;
     const sections = [
-        referenceHeader(`gspot ${name}`, command.description(), `packages/cli/src/${owner}`),
+        referenceHeader(command.summary(), command.description(), `packages/cli/src/${owner}`),
         `${command.description()}.\n\n\`\`\`text\n${usage}\n\`\`\`\n`,
         behavior,
         section('Arguments', argumentRows.length === 0 ? '' : table(['Argument', 'Meaning'], argumentRows)),
@@ -179,30 +182,30 @@ function commandPage(command: Command, name: string): string {
     return sections.join('');
 }
 
-function presetPage(manifest: Manifest): string {
-    const { preset } = manifest;
+function configurationPage(manifest: Manifest): string {
+    const { configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
     const targets = manifest.configs.map((config) =>
         config.needs === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.needs} preset](/reference/presets/${config.needs}/) is selected`,
+            : `\`${config.target}\` when the [${config.needs} configuration](/reference/configurations/${config.needs}/) is selected`,
     );
     const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => `\`${file}\``));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
-    const requires = preset.requires.map((id) => `\`${id}\``).join(', ');
+    const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
-        `${preset.description}\n\nKind: ${preset.kind}.`,
+        `${configuration.description}\n\nKind: ${configuration.kind}.`,
         requires === '' ? '' : ` Requires: ${requires}.`,
-        preset.default ? ' Selected by default.' : '',
+        configuration.default ? ' Selected by default.' : '',
         '\n',
     ].join('');
     return [
-        referenceHeader(preset.title, preset.description, `${manifest.dir}/manifest.toml`),
+        referenceHeader(configuration.title, configuration.description, `${manifest.dir}/manifest.toml`),
         opening,
         section('Tools', bullets(tools)),
-        section('Generated configuration', bullets(targets)),
+        section('Generated tool files', bullets(targets)),
         section('Untracked tool files', bullets(manifest.untracked.map((path) => `\`${path}\``))),
         section(
             'Checks',
@@ -220,15 +223,15 @@ function presetPage(manifest: Manifest): string {
     ].join('');
 }
 
-function rulePage(check: CheckSpec, preset: Manifest): string {
+function rulePage(check: CheckSpec, configuration: Manifest): string {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
     const tool = check.tool ?? check.command?.[0];
     const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name} --no-cache`;
     const lines = [
-        referenceHeader(check.name, check.summary, `${preset.dir}/manifest.toml`),
+        referenceHeader(check.title ?? check.name, check.summary, `${configuration.dir}/manifest.toml`),
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `- Preset: [the ${preset.preset.name} preset](/reference/presets/${preset.preset.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.configuration.name} configuration](/reference/configurations/${configuration.configuration.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
         check.reported_by === undefined
             ? `- Scope: ${
                   {
@@ -248,7 +251,7 @@ function rulePage(check: CheckSpec, preset: Manifest): string {
         section('Defect and correction', check.example),
         check.stage === 'message'
             ? '\n## Verify a correction\n\nThe installed commit-msg hook checks the proposed commit message. A reported defect prevents the commit. Correct the message and retry the commit. A missing tool or unreadable report does not establish a clean result.\n'
-            : `\n## Verify a correction\n\nIn a configured repository that selects this preset, run:\n\n\`\`\`shell\n${command}\n\`\`\`\n\nA reported defect exits 1. Apply the correction described above and rerun the same command. Successful execution exits 0. Missing required tools and execution or report failures exit 2. Check the report for skips: a skipped check has not verified its inputs.\n`,
+            : `\n## Verify a correction\n\nIn a configured repository that selects this configuration, run:\n\n\`\`\`shell\n${command}\n\`\`\`\n\nA reported defect exits 1. Apply the correction described above and rerun the same command. Successful execution exits 0. Missing required tools and execution or report failures exit 2. Check the report for skips: a skipped check has not verified its inputs.\n`,
         `\nRecord a path exception with a reason: \`gspot ignore ${check.reported_by ?? check.name} --paths <glob> --reason "<why>"\`.\n`,
         check.reported_by === undefined
             ? ''
@@ -264,7 +267,7 @@ function settingsPage(manifests: Manifest[]): string {
         ...manifests.flatMap((manifest) =>
             manifest.settings.map((setting) => ({
                 setting,
-                owner: `[the ${manifest.preset.name} preset](/reference/presets/${manifest.preset.name}/)`,
+                owner: `[the ${manifest.configuration.name} configuration](/reference/configurations/${manifest.configuration.name}/)`,
             })),
         ),
     ];
@@ -300,7 +303,7 @@ function settingsPage(manifests: Manifest[]): string {
 
 ## Scope and precedence
 
-Preset defaults apply first. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected preset determines which tool settings are available in each scope.
+Configuration defaults apply first. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected configuration determines which tool settings are available in each scope.
 
 Use \`gspot set <key> <value> --scope <path>\` to write an existing scope. Without \`--scope\`, the command writes the root. \`--default\` removes a written override; an inherited value can still apply. Integration settings such as hooks, CI, rules, and runner configuration belong to the repository root. See [configuration fields](/reference/configuration/) for the fields accepted inside a scope.
 
@@ -312,7 +315,7 @@ This complete policy sets a repository limit and tightens it for the app scope:
 
 \`\`\`toml
 version = 1
-presets = ["javascript"]
+configurations = ["javascript"]
 [limits]
 file_lines = 200
 [[scope]]
@@ -321,12 +324,12 @@ path = "app"
 file_lines = 100
 \`\`\`
 
-Files outside app use 200 lines. Files in app inherit the JavaScript preset and use 100 lines.
+Files outside app use 200 lines. Files in app inherit the JavaScript configuration and use 100 lines.
 
-${table(['Key', 'Kind', 'Direction', 'Default', 'Meaning', 'Preset'], rows)}\n`;
+${table(['Key', 'Kind', 'Direction', 'Default', 'Meaning', 'Configuration'], rows)}\n`;
 }
 
-function enginesPage(checks: Map<string, { check: CheckSpec; preset: Manifest }>): string {
+function enginesPage(checks: Map<string, { check: CheckSpec; configuration: Manifest }>): string {
     const byEngine = new Map<string, CheckSpec[]>();
     for (const { check } of checks.values()) {
         if (check.engine === undefined) continue;
@@ -364,41 +367,41 @@ export function referencePages(): Map<string, string> {
         }
     };
     commands(program, []);
-    const manifests = presetManifests()
+    const manifests = configurationManifests()
         .values()
         .toArray()
-        .toSorted((a, b) => a.preset.name.localeCompare(b.preset.name));
-    const kinds = ['language', 'framework', 'platform', 'tool', 'library', 'database', 'policy'];
+        .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
+    const kinds = [['language', 'Languages'], ['framework', 'Frameworks'], ['tool', 'Tools'], ['library', 'Libraries'], ['platform', 'Platforms'], ['database', 'Databases'], ['policy', 'Repository checks']];
     add(
-        'presets/index.md',
+        'configurations/index.md',
         referenceHeader(
-            'Preset catalog',
-            'Choose presets by the files and tools they govern.',
-            'architecture/04-presets.md',
+            'Configuration catalog',
+            'Choose configurations by the files and tools they govern.',
+            'architecture/04-configurations.md',
         ) +
             kinds
-                .map((kind) =>
+                .map(([kind, title]) =>
                     section(
-                        kind.charAt(0).toUpperCase() + kind.slice(1),
+                        title!,
                         bullets(
                             manifests
-                                .filter((manifest) => manifest.preset.kind === kind)
+                                .filter((manifest) => manifest.configuration.kind === kind)
                                 .map(
                                     (manifest) =>
-                                        `[${manifest.preset.title}](/reference/presets/${manifest.preset.name}/): ${manifest.preset.description}`,
+                                        `[${manifest.configuration.title}](/reference/configurations/${manifest.configuration.name}/): ${manifest.configuration.description}`,
                                 ),
                         ),
                     ),
                 )
                 .join(''),
     );
-    for (const manifest of manifests) add(`presets/${manifest.preset.name}.md`, presetPage(manifest));
+    for (const manifest of manifests) add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest));
     const checks = allChecks();
-    for (const { check, preset } of checks.values()) add(`rules/${check.name}.md`, rulePage(check, preset));
+    for (const { check, configuration } of checks.values()) add(`rules/${check.name}.md`, rulePage(check, configuration));
     add('settings.md', settingsPage(manifests));
     add(
         'configuration.md',
-        referenceHeader('Configuration fields', 'All policy fields from the validated schema.') +
+        referenceHeader('Configuration file', 'All policy fields from the validated schema.') +
             configurationReference(),
     );
     add('engines.md', enginesPage(checks));
@@ -416,7 +419,7 @@ export function referenceLoader(): Loader {
             await docsLoader().load(context);
             const entries = [];
             for (const [path, markdown] of referencePages()) {
-                const id = `reference/${path.slice(0, -3)}`;
+                const id = path === 'engines.md' ? 'development/engines' : `reference/${path.slice(0, -3)}`;
                 if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
                 const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/u.exec(markdown)!;
                 const body = match[2]!;

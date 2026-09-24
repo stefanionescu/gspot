@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { z } from 'zod';
 import satisfies from 'spdx-satisfies';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import parseExpression from 'spdx-expression-parse';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { openConfinedRoot } from '#cli/filesystem/confined.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
@@ -55,7 +55,7 @@ function verdict(name: string, license: string, exception: LicenseException | un
  */
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
-    if (target === undefined) throw new Error('The license preset has no configuration target.');
+    if (target === undefined) throw new Error('The license configuration has no configuration target.');
     const files = openConfinedRoot(input.root);
     let configuration: z.infer<typeof configurationSchema>;
     try {

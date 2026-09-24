@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { excludeProblems, FIRST_READ } from '#cli/rules/assemble.ts';
+import { excludeProblems, FIRST_READ } from '#cli/agents/assemble.ts';
 
 describe('[rules] exclude', () => {
     test('a file path and a layer folder are accepted', () => {

@@ -1,26 +1,26 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
-import type { Engine, EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
+import type { Engine, EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
 import { isKnownCase } from '#cli/naming/cases.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import { languagePresets } from '#cli/presets/select.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { languageConfigurations } from '#cli/configurations/select.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
-import { isClaimed, pathMatcher } from '#cli/presets/claims.ts';
+import { isClaimed, pathMatcher } from '#cli/configurations/claims.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/naming/paths.ts';
-import type { EffectivePolicy, Identifier, NamingContext } from '#cli/naming/types.ts';
+import type { EffectivePolicy, Identifier, NamingContext } from '#cli/types/naming.ts';
 
 const REACT_FILE = /\.[jt]sx$/u;
 const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
-    const languages = languagePresets(input.selection.selected);
+    const languages = languageConfigurations(input.selection.selected);
     return input.files
         .filter((file) => file.nature === 'source')
-        .map((file) => ({ file, language: languages.find((manifest) => isClaimed(manifest.claims, file))?.preset.name }))
+        .map((file) => ({ file, language: languages.find((manifest) => isClaimed(manifest.claims, file))?.configuration.name }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
 

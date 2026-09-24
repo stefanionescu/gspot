@@ -1,0 +1,488 @@
+[configuration]
+name = "bash"
+kind = "language"
+title = "Bash"
+requires = ["structure"]
+recommends = ["naming", "formatting", "spelling"]
+description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
+
+[detect]
+extensions = [".sh", ".bash", ".zsh", ".bats"]
+shebangs = ["shell"]
+
+[claims]
+extensions = [".sh", ".bash", ".zsh", ".bats"]
+tags = ["shebang:shell"]
+
+[[tools]]
+name = "shellcheck"
+suppression = {marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)"}
+version = "0.11.0"
+mise = "shellcheck"
+brew = "shellcheck"
+apt = "shellcheck"
+winget = "koalaman.shellcheck"
+scoop = "shellcheck"
+github = {name = "koalaman/shellcheck", version = "v0.11.0"}
+
+[[tools.takeover]]
+file = ".shellcheckrc"
+carries = "rules-table"
+check = "bash/shellcheck"
+
+[[tools]]
+name = "shfmt"
+version = "3.12.0"
+mise = "shfmt"
+brew = "shfmt"
+winget = "mvdan.shfmt"
+scoop = "shfmt"
+github = {name = "mvdan/sh", version = "v3.12.0"}
+
+[[tools]]
+name = "bash"
+provider = "host"
+
+[[tools]]
+name = "zsh"
+provider = "host"
+
+[[tools]]
+name = "bats"
+provider = "host"
+
+[[configs]]
+template = "shellcheckrc.tmpl"
+target = ".gspot/config/shellcheckrc"
+rules_path = ["enable", "disable"]
+stub = {path = ".shellcheckrc", copy = true}
+
+[[checks]]
+name = "bash/syntax"
+title = "Check Bash syntax"
+example = "In `greet.sh`, `if then` produces a syntax error. Replace the file contents with `printf \"%s\\n\" \"Hello\"`, then rerun the syntax check. This is a manual edit, not an automatic correction."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["bash", "-n", "{file}"]
+claims = {tags = ["bash"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$"}
+summary = "Checks that Bash scripts parse before running them."
+why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
+help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
+
+[[checks]]
+name = "bash/zsh-syntax"
+title = "Check Zsh syntax"
+example = "In a Zsh script, `if then` is missing a condition and produces a syntax error. Replace it with `print -r -- \"Hello\"` and rerun with Zsh installed."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["zsh", "-n", "{file}"]
+claims = {tags = ["zsh"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$"}
+summary = "Checks Zsh syntax with the Zsh interpreter."
+why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
+help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
+
+[[checks]]
+name = "bash/bats-syntax"
+title = "Check Bats syntax"
+example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["bats", "--count", "{file}"]
+claims = {tags = ["bats"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
+summary = "Parses Bats test files while counting their test cases."
+why = "Bats test declarations need the Bats parser before Bash can read them."
+help = "Fix the syntax reported by Bats. Install bats-core when the command is missing."
+
+[[checks]]
+name = "bash/shellcheck"
+title = "ShellCheck"
+example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+claims = {tags = ["bash", "bats"]}
+command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
+coverage = ["style", "security"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
+summary = "Runs ShellCheck over shell scripts and sourced files, adding opt-in rules at level all."
+why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
+help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
+
+[[checks]]
+name = "bash/shfmt"
+title = "Format shell scripts"
+example = "In a script, `if true;then echo hello;fi` differs from shfmt output. Run the configured formatter to add the required spacing and block layout, then rerun the check."
+level = "all"
+stage = "commit"
+runs = "per-file-list"
+claims = {tags = ["bash", "bats"]}
+command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
+fix_command = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
+fix_order = "format"
+coverage = ["format"]
+output = {format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it."}
+summary = "Checks that every shell script is formatted the way shfmt formats it."
+why = "One formatter means diffs show what changed, not how someone's editor indents."
+help = "Run gspot check --fix to format every script, or shfmt -w on one file."
+
+[[checks]]
+name = "structure/bash-interpreter"
+title = "Bash interpreter"
+example = "An executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-interpreter"
+coverage = ["structure"]
+searched = ["shellcheck", "shfmt", "bashate"]
+summary = "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
+why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
+help = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
+
+[[checks]]
+name = "structure/doc-comment"
+title = "Document shell functions"
+example = "A function `_quiet() { printf \"%s\\n\" \"Hello\"; }` without a preceding description reports a missing comment. Add `# _quiet: prints a greeting.` immediately above the function. Other structural checks still apply."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "doc-comment"
+coverage = ["structure", "prose"]
+searched = ["shellcheck", "bashdoc", "shdoc"]
+summary = "Checks that every shell function announces itself in a comment above it that says more than its name."
+why = "A function with no summary makes the reader run it in their head; a vague summary is a summary nobody will trust."
+help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
+
+[[checks]]
+name = "structure/duplicate-functions"
+title = "Duplicate functions"
+example = "Two shell functions with the same executable body report duplication even when their names differ. Keep the function that owns the behavior, replace calls to the duplicate, and delete the duplicate definition."
+level = "recommended"
+stage = "commit"
+engine = "structure"
+analysis = "duplicate-functions"
+limit = "limits.bash.duplicate_min_lines"
+coverage = ["structure"]
+searched = ["jscpd", "shellcheck"]
+summary = "Finds shell functions with the same body in the same scope."
+why = "Two copies drift apart; the fix lands in one and the bug stays in the other."
+help = "Keep one function and call it from both places."
+
+[[checks]]
+name = "structure/unused-functions"
+title = "Unused functions"
+example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, document that contract in a narrow suppression."
+level = "recommended"
+stage = "commit"
+engine = "structure"
+analysis = "unused-functions"
+coverage = ["structure"]
+searched = ["shellcheck SC2329", "knip"]
+summary = "Finds shell functions no script in the scope calls."
+why = "Dead code is read and maintained for nobody."
+help = "Delete the function, or put `gspot-ignore structure/unused-functions -- reason` on the preceding comment line for a required hook entry point."
+
+[[checks]]
+name = "structure/dead-parameters"
+title = "Remove unused shell arguments"
+example = "A call `_deaf one two` whose function never reads positional arguments reports dead parameters. If both arguments are unnecessary, remove them from the call. Otherwise read and use the arguments in the function."
+level = "recommended"
+stage = "commit"
+engine = "structure"
+analysis = "dead-parameters"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Finds shell functions called with arguments they never read."
+why = "An argument the callee ignores is a promise the call site believes in."
+help = "Read the argument in the function, or drop it from every call."
+
+[[checks]]
+name = "structure/private-prefix"
+title = "Private prefix"
+example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "private-prefix"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside."
+why = "The underscore tells a reader what the file publishes without reading every caller."
+help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
+
+[[checks]]
+name = "structure/private-before-public"
+title = "Private before public"
+example = "A private function `_late` declared after a public shell function reports an ordering finding. Move `_late` above the public function, leaving `main` at the end."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "private-before-public"
+coverage = ["structure"]
+searched = ["shfmt", "shellcheck"]
+summary = "Checks that underscore functions come before the public ones and main comes last."
+why = "A file read top to bottom then explains its helpers before it uses them and ends where it starts."
+help = "Move the private functions above the public ones and main to the end."
+
+[[checks]]
+name = "structure/trivial-function"
+title = "Trivial function"
+example = "A shell function `_tiny() { printf \"%s\\n\" \"Hello\"; }` has one executable statement and reports a trivial-function finding. Inline the command at its call sites and delete the wrapper."
+level = "recommended"
+stage = "commit"
+engine = "structure"
+analysis = "trivial-function"
+limit = "limits.trivial_statements"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
+why = "Unnecessary functions add names and indirection without substantial behavior."
+help = "Inline unnecessary functions. Required external APIs need a narrow suppression with a reason."
+
+
+[[checks]]
+name = "structure/file-length"
+title = "File length"
+example = "A script whose code-line count exceeds `limits.bash.file_lines` reports the measured count and ceiling. Split independent responsibilities into their existing owners, update callers, and rerun with every resulting file below the ceiling."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "file-length"
+limit = "limits.bash.file_lines"
+coverage = ["structure"]
+searched = ["shellcheck", "shfmt"]
+summary = "Checks that no shell script has more code lines than the ceiling."
+why = "A long script holds more than one job; split it by the job."
+help = "Split the script, or raise limits.bash.file_lines with a reason."
+
+[[checks]]
+name = "structure/function-length"
+title = "Function length"
+example = "A shell function exceeding `limits.bash.function_lines` reports a length finding. Move an independent operation into its owning function and update the caller, then rerun to verify both function lengths."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "function-length"
+limit = "limits.bash.function_lines"
+coverage = ["structure"]
+searched = ["shellcheck", "shfmt"]
+summary = "Checks that no shell function has more code lines than the ceiling."
+why = "A long function does more than its name says."
+help = "Split the function, or raise limits.bash.function_lines with a reason."
+
+[[checks]]
+name = "structure/bash-script-policy"
+title = "Bash script policy"
+example = "Invoking a repository script as `bash scripts/build.sh` reports an interpreter-wrapper finding. Give the script its required shebang and executable permission, then invoke `scripts/build.sh` directly."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-script-policy"
+coverage = ["structure"]
+searched = ["shellcheck", "semgrep"]
+summary = "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
+why = "A wrapper is a second entry point that drifts from the first; inline Node is a second language nobody lints."
+help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
+
+[[checks]]
+name = "structure/bash-embeds"
+title = "Avoid embedded scripts"
+example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-embeds"
+coverage = ["structure"]
+searched = ["shellcheck", "semgrep"]
+summary = "Finds inline Python, Node and generated-script heredocs in shell scripts."
+why = "Code inside a heredoc is checked by nothing."
+help = "Move the embedded code into its own file and run that."
+
+[[checks]]
+name = "structure/bash-ssh-blocks"
+title = "Name and document SSH blocks"
+example = "An anonymous SSH heredoc reports a remote-block finding. Move the remote operation into a named function with a comment that explains its purpose, then invoke that function through the supported remote call."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-ssh-blocks"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
+why = "A remote command block with no name is the hardest thing in a script to test or reuse."
+help = "Move the block into a named function and write \"# name - what it does\" above it."
+
+[[checks]]
+name = "structure/bash-config-defaults"
+title = "Keep defaults in configuration owners"
+example = "A default such as `${PORT:-8080}` outside a declared configuration owner reports a misplaced default. Set the default in a path listed in `tools.bash.config_owners` and consume the configured value elsewhere."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-config-defaults"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Finds variable defaults of the form name:-value outside the configuration owners."
+why = "A default set in three places is three settings with one name."
+help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
+
+[[checks]]
+name = "structure/bash-config-guards"
+title = "Guard shell configuration imports"
+example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${_CFG_APP_READY:-} ]] && return 0`, followed by `readonly _CFG_APP_READY=1`, before declaring its configuration."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-config-guards"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Checks that every configuration owner opens with one include guard nobody else uses."
+why = "A configuration file sourced twice runs its side effects twice."
+help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
+
+[[checks]]
+name = "structure/bash-boundaries"
+title = "Bash boundaries"
+example = "A `source` statement without its ShellCheck source annotation reports a boundary finding. Name the actual sourced file in `# shellcheck source=...` above the statement and declare the script boundary in its header. Replace the ellipsis with the real repository path."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-boundaries"
+coverage = ["structure"]
+searched = ["shellcheck source="]
+summary = "Checks that scripts under the architecture roots declare their boundary and source what they call."
+why = "A script that works only because another file was sourced first breaks when the order changes."
+help = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
+
+[[checks]]
+name = "structure/env-access-owner"
+title = "Environment access owner"
+example = "Reading an environment value outside the paths selected by `architecture.roles.env` reports an ownership finding. Read it in the declared configuration owner and pass the resulting value into the consumer."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "env-access-owner"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Checks that environment variables the owner declares are read elsewhere only through it."
+why = "When any script reads the environment, nobody can list what the program needs to run; one owner can."
+help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
+
+[[checks]]
+name = "structure/bash-branches"
+title = "Bash branches"
+example = "A shell function with more decision branches than `limits.bash.function_branches` reports its count and ceiling. Separate independent decisions into their owning operations and rerun to verify the reduced branch count."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-branches"
+limit = "limits.bash.function_branches"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Counts the branches in each shell function against the ceiling."
+why = "A function with many branches is several functions with one name."
+help = "Split the function by branch, or raise limits.bash.function_branches with a reason."
+
+[[checks]]
+name = "structure/bash-nesting"
+title = "Bash nesting"
+example = "A shell function nested beyond `limits.bash.function_nesting` reports a nesting finding. Replace a surrounding conditional with an early return where behavior permits, then rerun to verify the depth."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-nesting"
+limit = "limits.bash.function_nesting"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Measures how deep control flow nests in each shell function against the ceiling."
+why = "Deep nesting is the shape of code nobody can hold in their head."
+help = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
+
+[[checks]]
+name = "structure/bash-mutable-assignments"
+title = "Bash mutable assignments"
+example = "Repeated writes to local variables beyond `limits.bash.mutable_assignments` report a mutation finding. Separate independent operations and retain only the state each operation needs, then rerun the check."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "bash-mutable-assignments"
+limit = "limits.bash.mutable_assignments"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Counts the variable assignments in each shell function against the ceiling."
+why = "A function that reassigns many variables is tracking state a reader cannot follow."
+help = "Split the function, or raise limits.bash.mutable_assignments with a reason."
+
+[[checks]]
+name = "structure/bash-safety"
+title = "Bash safety"
+example = "An unchecked `cd \"$directory\"` reports a safety finding. Handle failure with `cd \"$directory\" || return 1` inside a function, so later commands cannot run in the wrong directory."
+level = "recommended"
+stage = "commit"
+engine = "structure"
+analysis = "bash-safety"
+coverage = ["structure", "security"]
+searched = ["shellcheck", "semgrep"]
+summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
+why = "Each of these is a way a script destroys something it did not mean to and says nothing."
+help = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety.owners."
+
+[[settings]]
+name = "tools.bash.doc_style"
+kind = "string"
+direction = "neutral"
+default = "colon"
+summary = "How a shell function announces itself: colon means a header line like `# name: what it does`."
+
+[[settings]]
+name = "tools.bash.config_owners"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "The scripts allowed to read environment variables with defaults; every other script reads them through these."
+
+[[settings]]
+name = "tools.bash.architecture_roots"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The directories whose scripts carry a Boundary header and source annotations."
+
+[[settings]]
+name = "tools.bash.safety.owners"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "The scripts allowed to delete recursively or kill processes; everything else is refused."
+
+[[settings]]
+name = "tools.bash.default_fragments_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Variable defaults of the form name:-value that appear outside the configuration owners."
+
+[[settings]]
+name = "tools.bash.runtime_header"
+kind = "string"
+direction = "neutral"
+default = "macOS and Linux"
+summary = "The platforms the fourth header line of every script names."
+
+[coverage]
+".zsh" = ["syntax"]
+".bats" = ["syntax", "style", "format"]
+".sh" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+".bash" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+
+[rule_files]
+language = ["language/BASH.md", "language/bash/LANGUAGE.md", "language/bash/SAFETY.md", "language/bash/OPERATIONS.md", "language/naming/BASH.md"]

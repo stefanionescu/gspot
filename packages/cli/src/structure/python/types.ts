@@ -1,5 +1,5 @@
 // Types of the Python structure analyses.
-import type { EngineInput } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
 import type { Node, Tree } from 'web-tree-sitter';
 
 /** One parsed Python module. */

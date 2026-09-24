@@ -8,6 +8,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
     meta: {
         type: 'problem',
         docs: {
+            title: 'Keep files substantive',
             example:
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Entry filenames do not exempt forwarding code.',
             level: 'recommended',

@@ -9,7 +9,7 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 
 test('cache pruning removes only expired unchanged owned results', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
     const paths = ['1', '2', '3', '4'].map((digit) => `.gspot/cache/${digit.repeat(64)}.json`);
     const [expired, recent, edited, authored] = paths as [string, string, string, string];
     for (const path of [expired, recent, edited]) {
@@ -58,7 +58,7 @@ test('cache keys cannot confuse a newline in a filename with another input recor
 
 test('full cache-enabled runs retire old results while narrowed runs retain them', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
     const key = 'a'.repeat(64);
     const path = join(sandbox.path, '.gspot/cache', `${key}.json`);
     writeCached(sandbox.path, key, {
@@ -100,11 +100,11 @@ test('cache inputs refuse traversal hidden in a glob alternative', async () => {
 test('a check hashes its named configuration even when ignored and retains unrelated cached results', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
         '.gitignore': '.gspot/\n',
         'source.sh': '#!/bin/sh\necho example\n',
-        '.gspot/ruff.toml': 'line-length = 88\n',
-        '.gspot/shellcheckrc': 'valid',
+        '.gspot/config/ruff.toml': 'line-length = 88\n',
+        '.gspot/config/shellcheckrc': 'valid',
         '.gspot/node_modules/.bin/shellcheck': `#!${process.execPath}
 if (process.argv.includes('--version')) console.log('0.11.0');
 else if ((await Bun.file(process.argv[process.argv.indexOf('--rcfile') + 1]).text()) === 'invalid') {
@@ -118,12 +118,12 @@ else if ((await Bun.file(process.argv[process.argv.indexOf('--rcfile') + 1]).tex
     const options = { stage: 'commit' as const, skips: [], only: ['bash/shellcheck'], fix: false, isDryRun: false };
     expect((await executeRun(session, options)).report.checks[0]!.status).toBe('ok');
     expect((await executeRun(session, options)).report.checks[0]!.status).toBe('cache');
-    writeFileSync(join(sandbox.path, '.gspot/ruff.toml'), 'line-length = 100\n');
+    writeFileSync(join(sandbox.path, '.gspot/config/ruff.toml'), 'line-length = 100\n');
     expect((await executeRun(session, options)).report.checks[0]!.status).toBe('cache');
-    writeFileSync(join(sandbox.path, '.gspot/shellcheckrc'), 'invalid');
+    writeFileSync(join(sandbox.path, '.gspot/config/shellcheckrc'), 'invalid');
     const changed = await executeRun(session, options);
     expect(changed.report.exitCode).toBe(1);
     expect(changed.report.checks[0]!.findings[0]!.message).toContain('planted configuration finding');
-    writeFileSync(join(sandbox.path, '.gspot/shellcheckrc'), 'valid');
+    writeFileSync(join(sandbox.path, '.gspot/config/shellcheckrc'), 'valid');
     expect((await executeRun(session, options)).report.exitCode).toBe(0);
 });

@@ -12,7 +12,7 @@ const SOURCE =
 test.each(['recommended', 'all'])('Swift documentation comment style has native diagnostics at %s', async (level) => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const policy = `version = 1\nlevel = "${level}"\npresets = ["swift"]\n[rules]\ninstall = false\n`;
+    const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n`;
     await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SOURCE });
     const generate = async (): Promise<void> => {
         for (const file of emitAll(await openSession(root)).files.filter(({ path }) => path.endsWith('swiftlint.yml')))

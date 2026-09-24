@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { isToolBroken } from '#cli/run/broken-tool.ts';
 
 const base = {

@@ -2,7 +2,7 @@
 
 This document decides the enforcement gspot adds beyond the reference repositories: what
 machine-written slop looks like, what repository drift looks like, and the mechanism that catches
-each. Every row names a check of a preset, a rule of a pinned tool, or a rule of the gspot plugin. Python, Swift, and SQL
+each. Every row names a check of a configuration, a rule of a pinned tool, or a rule of the gspot plugin. Python, Swift, and SQL
 list a shared idea under an id of their own, such as `python/trivial-function`.
 
 ## Slop
@@ -135,7 +135,7 @@ so every kind gets a check.
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
 | Generated configuration | `.gspot/*` equals its render from `gspot.toml`                                                                                               | `integrity/generated-drift` (in `gspot check`)            | commit                                                    |
 | Root pointers           | each root pointer still points at `.gspot/`                                                                                                  | `integrity/generated-drift`                               | commit                                                    |
-| Tool rule set           | the resolved config of every owned tool still enables every rule the preset requires (`eslint --print-config`, `ruff check --show-settings`) | `javascript/required-rules`                               | push                                                      |
+| Tool rule set           | the resolved config of every owned tool still enables every rule the configuration requires (`eslint --print-config`, `ruff check --show-settings`) | `javascript/required-rules`                               | push                                                      |
 | Tool versions           | installed versions match the pins                                                                                                            | `doctor`; `check` fails on a missing or outdated tool     | commit                                                    |
 | Runtime pins            | `engines.node`, `.nvmrc`, `.node-version`, `mise` node pin, `requires-python`, `.python-version` agree                                       | `dependencies/manifest-policy`                            | commit                                                    |
 | Lockfile                | manifest and lockfile agree (`--frozen-lockfile --dry-run`, `uv lock --check`)                                                               | `dependencies/lockfile-fresh`                             | commit when a manifest or lockfile is staged; push always |
@@ -151,7 +151,7 @@ so every kind gets a check.
 | Locale catalogs         | every locale has every key the base locale has; every key is used                                                                            | `i18n/locales`                                            | push                                                      |
 | CSS modules             | every class defined is used and every class used is defined                                                                                  | `css/usage`                                               | push                                                      |
 | Type-check membership   | every governed file belongs to a type-check project                                                                                          | `typescript/typecheck-membership`                         | commit                                                    |
-| Coverage of the tree    | files no preset claims are listed; strict mode fails on them                                                                                 | `doctor`; `[coverage] strict`                             | push                                                      |
+| Coverage of the tree    | files no configuration claims are listed; strict mode fails on them                                                                                 | `doctor`; `[coverage] strict`                             | push                                                      |
 | Suppression census      | a suppression comment names its rule, and carries a reason where `require_reasons` is on                                                     | `integrity/suppressions`                                  | commit                                                    |
 | Install policy          | the package manager's release-age and scanner settings still hold; the installed tree equals the lockfile                                    | `dependencies/install-policy`                             | commit when a manifest or lockfile is staged; push        |
 | Shell headers           | every executable script's header still names its runtime and description                                                                     | `structure/bash-script-header`                            | commit                                                    |
@@ -160,8 +160,8 @@ so every kind gets a check.
 ## How a new pattern enters
 
 A pattern joins this document when a reviewer finds an instance in a real repository that no
-existing check caught. The entry names the instance class, the mechanism, and the preset. If a
-maintained tool ships the rule, the mechanism is configuration. If not, the preset manifest
+existing check caught. The entry names the instance class, the mechanism, and the configuration. If a
+maintained tool ships the rule, the mechanism is configuration. If not, the configuration manifest
 records the tools searched before original code was written.
 
 ## Behavioral test assertions

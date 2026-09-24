@@ -1,12 +1,11 @@
-// gspot explain
-import type { Command } from 'commander';
-import { explain } from '#cli/output/explain.ts';
-import { openSession } from '#cli/run/session.ts';
-import type { CommandResult } from '#cli/run/types.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { hasPolicy } from '#cli/policy/read-policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { explain } from '#cli/output/explain.ts';
+import { hasPolicy } from '#cli/policy/read-policy.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { openSession } from '#cli/run/session.ts';
+import type { CommandResult } from '#cli/types/execution.ts';
+import type { Command } from 'commander';
 
 async function explainResult(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);
@@ -23,7 +22,8 @@ async function explainResult(directory: string, subject: string): Promise<Comman
 export function registerExplain(program: Command): void {
     program
         .command('explain <subject>')
-        .description('Say what a check, a tool rule, a preset, a setting, or a file path is, in plain words')
+        .summary('Explain a check or setting')
+        .description('Say what a check, a tool rule, a configuration, a setting, or a file path is, in plain words')
         .addHelpText(
             'after',
             '\nEffects:\nReads definitions or file ownership and prints the requested explanation. It does not change policy or run the repository gate. An unknown subject is an inability to complete the request.\n\nExit codes:\n0: the explanation was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot explain bash/syntax',

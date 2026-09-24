@@ -1,10 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // The key that bypasses row level security, named only where the policy allows it.
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
+import type { EngineInput } from '#cli/types/execution.ts';
+import type { Finding } from '#cli/types/reports.ts';
+import { pathMatcher } from '#cli/configurations/claims.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
-import { CODE_EXTENSIONS, ADMIN_KEY_NAMES } from '#cli/checks/supabase/supabase-definitions.ts';
+
 
 const DEFAULT_PATHS = [
     'supabase/functions/**',
@@ -42,3 +42,7 @@ export function adminKey(input: EngineInput): Finding[] {
     );
     return findings;
 }
+
+const ADMIN_KEY_NAMES = ['SERVICE_ROLE_KEY', 'service_role_key', 'serviceRoleKey'];
+
+const CODE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.swift', '.py', '.kt', '.dart'];

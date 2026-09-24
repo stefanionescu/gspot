@@ -1,5 +1,5 @@
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
-import type { RunReport } from '#cli/output/report-types.ts';
+import type { RunReport } from '#cli/types/reports.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
@@ -24,10 +24,10 @@ pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
 `;
 
 test.each([
-    { scope: 'root', policy: 'version = 1\npresets = ["bas"]\n', line: 2 },
-    { scope: 'nested', policy: 'version = 1\npresets = []\n[[scope]]\npath = "api"\npresets = ["bas"]\n', line: 5 },
+    { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },
+    { scope: 'nested', policy: 'version = 1\nconfigurations = []\n[[scope]]\npath = "api"\nconfigurations = ["bas"]\n', line: 5 },
 ])(
-    'unknown presets in the $scope scope identify their declaration and accept the suggested preset',
+    'unknown configurations in the $scope scope identify their declaration and accept the suggested configuration',
     async ({ policy, line }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
@@ -45,14 +45,14 @@ test.each([
 test.each([
     {
         name: 'a root loosening',
-        policy: 'version = 1\npresets = ["bash"]\nrequire_reasons = true\n[limits]\nfile_lines = 1000\n',
+        policy: 'version = 1\nconfigurations = ["bash"]\nrequire_reasons = true\n[limits]\nfile_lines = 1000\n',
         line: 5,
         before: '1000',
         after: '200',
     },
     {
         name: 'a nested unknown setting',
-        policy: 'version = 1\npresets = ["bash"]\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+        policy: 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
         line: 6,
         before: 'file_linse',
         after: 'file_lines',
@@ -72,7 +72,7 @@ test.each(['\n', '\r\n'])(
     'configuration errors retain source locations in text and JSON with %j lines',
     async (newline) => {
         await using sandbox = await testdir();
-        const policy = ['version = 1', 'presets = []', 'require_reasons = "wrong"', ''].join(newline);
+        const policy = ['version = 1', 'configurations = []', 'require_reasons = "wrong"', ''].join(newline);
         await createFileTree(sandbox.path, { 'gspot.toml': policy });
         const text = await run(sandbox.path, ['check']);
         expect(text.code).toBe(2);
@@ -100,7 +100,7 @@ describe('a [[check]] entry', () => {
         await createFileTree(sandbox.path, {
             '.gitignore': '.gspot/\n',
             'gspot.toml': `version = 1
-presets = []
+configurations = []
 
 [[check]]
 name = "notes/state"
@@ -138,7 +138,7 @@ stage = "commit"
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
                 sandbox.path,
-                ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
+                ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
                 environment,
             );
             const policy = join(sandbox.path, 'gspot.toml');
@@ -167,7 +167,7 @@ test('a declared check maps nested JSON output into findings', async () => {
     await createFileTree(sandbox.path, {
         'source.txt': 'defect',
         'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "sandbox/json"
 command = ${JSON.stringify(command)}
@@ -223,7 +223,7 @@ format = "lines"
         .join('');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = []\n${entries}`,
+        'gspot.toml': `version = 1\nconfigurations = []\n${entries}`,
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
@@ -279,7 +279,7 @@ stage = "${name}"
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\npresets = []\n${definitions.join('\n')}`,
+        'gspot.toml': `version = 1\nconfigurations = []\n${definitions.join('\n')}`,
         'source.txt': 'input',
     });
     const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);
@@ -293,13 +293,13 @@ test('a scope path selects its checks and its reproduction command repeats the s
     await createFileTree(sandbox.path, {
         'gspot.toml': `version = 1
 level = "all"
-presets = []
+configurations = []
 [[scope]]
 path = "api"
-presets = ["javascript", "naming"]
+configurations = ["javascript", "naming"]
 [[scope]]
 path = "web"
-presets = ["javascript", "naming"]
+configurations = ["javascript", "naming"]
 `,
         'api/port.js': 'export const shellCommand = 1;\n',
         'web/port.js': 'export const shellCommand = 2;\n',
@@ -332,7 +332,7 @@ test('declared cache inputs include ignored files and invalidate for changed, ad
     await createFileTree(sandbox.path, {
         '.gitignore': '.gspot/\nstate/\n',
         'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "project/state"
 command = ${JSON.stringify(command)}
@@ -375,7 +375,7 @@ test.each([{ inputs: [] }, { inputs: ['../outside'] }, { inputs: ['/outside'] },
         await createFileTree(sandbox.path, {
             'selected.txt': 'authored',
             'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "project/state"
 command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("selected.txt", "changed")'])}
@@ -397,7 +397,7 @@ test('a declared symlink input invalidates the cached verdict when its target ch
         'target.txt': 'valid',
         'selected.txt': 'authored',
         'gspot.toml': `version = 1
-presets = []
+configurations = []
 [[check]]
 name = "project/linked-input"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exit((await Bun.file("state/input.txt").text()) === "valid" ? 0 : 1)'])}

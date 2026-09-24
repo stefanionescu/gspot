@@ -76,3 +76,6 @@ Install consumes matching tool locks and sets up selected hooks. If policy and l
 the policy owner must run `gspot apply` and share the resulting changes. Installation does not
 regenerate policy or add a `prepare` lifecycle script. Working-tree and staged checks warn when
 hooks are missing or edited; that warning does not change the check result.
+
+See [edit and retain repository files](/guides/generated-files/) for what to commit,
+regenerate, and keep for restoration.

@@ -33,7 +33,7 @@ open requirements, historical completion claims, and deferred verification.
 | [01-product.md](01-product.md)                       | Who gspot is for, what it promises, what it refuses to do                                                                                   |
 | [02-cli.md](02-cli.md)                               | Every command, flag, output line, and exit code                                                                                             |
 | [03-configuration.md](03-configuration.md)           | The one file a person edits, and the files gspot owns                                                                                       |
-| [04-presets.md](04-presets.md)                       | The unit of selection: manifest format, detection, catalog                                                                                  |
+| [04-configurations.md](04-configurations.md)                       | The unit of selection: manifest format, detection, catalog                                                                                  |
 | [05-engines.md](05-engines.md)                       | The six things that produce findings                                                                                                        |
 | [06-enforcement-ledger.md](06-enforcement-ledger.md) | Every rule and check carried from the reference repositories, and where it lands                                                            |
 | [07-slop-drift.md](07-slop-drift.md)                 | New enforcement: what LLM slop and repository drift look like and how gspot catches them                                                    |
@@ -54,7 +54,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 
 | Term           | Meaning                                                                                                                   |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| preset         | A named bundle of tools, config, checks, settings, and agent rule files.                                                  |
+| configuration         | A named bundle of tools, config, checks, settings, and agent rule files.                                                  |
 | check          | One external command or built-in analysis that produces findings.                                                         |
 | rule           | A named diagnostic within a check, such as an ESLint rule. Not an agent instruction file.                                 |
 | finding        | A message from a check, optionally with a file location and tool rule name.                                               |
@@ -63,7 +63,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 | engine         | The implementation that executes a class of checks.                                                                       |
 | config         | The repository's choices in `gspot.toml`. Internal `Policy` names are implementation names, not public synonyms.          |
 | ignore         | A tracked exception for a check or one of its rules, optionally restricted by paths. Reasons follow `require_reasons`.    |
-| scope          | A config-relative subtree with its own preset selection and settings.                                                     |
+| scope          | A config-relative subtree with its own configuration selection and settings.                                                     |
 | stage          | When a check runs: commit, push, manual, or the hook-only message stage.                                                  |
 | level          | Which checks are enabled by default: recommended or all. Not a stage.                                                     |
 | rule file      | Markdown instructions an agent reads. Use the full phrase to distinguish it from a diagnostic rule.                       |
@@ -83,9 +83,9 @@ One word, one meaning, everywhere in this folder, and in the code.
 | setting        | One named configuration choice with a type, scope, and default.                                                           |
 | allowed list   | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
 | profile        | Portable config without repository-specific paths.                                                                        |
-| policy         | The manifest preset kind for checks that span languages; public prose says what the preset checks.                        |
+| policy         | The manifest configuration kind for checks that span languages; public prose says what the configuration checks.                        |
 
-[Preset definitions](04-presets.md#names-across-the-public-contract) and
+[Configuration definitions](04-configurations.md#names-across-the-public-contract) and
 [execution results](05-engines.md#actions-and-their-results) own exact public fields. File ownership and
 recovery are defined in [03-configuration.md](03-configuration.md), not inferred from a name.
 
@@ -124,7 +124,7 @@ Acceptance clauses describe the target; only remaining work records completion e
 | Implementation verification and app branch handoff                   | [22-remaining.md](22-remaining.md)               |
 
 The [grouped dispositions](22-remaining.md#grouped-dispositions) own all status. The ledger
-preserves agreed preset capabilities, including those without a manifest. Directory inventories,
+preserves agreed configuration capabilities, including those without a manifest. Directory inventories,
 cosmetic rename campaigns, and fixed rule totals do not establish completion. Updating this
 folder does not authorize implementation changes, publication, deployment, or changes to
 external repositories.
