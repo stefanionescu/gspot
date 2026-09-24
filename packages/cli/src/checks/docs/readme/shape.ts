@@ -4,7 +4,7 @@ import { statSync } from 'node:fs';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 

@@ -2,11 +2,11 @@ import { z } from 'zod';
 // Line coverage of the targets the policy names, from one xcodebuild test run.
 import { join } from 'node:path';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
-import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
+import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 
 const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),

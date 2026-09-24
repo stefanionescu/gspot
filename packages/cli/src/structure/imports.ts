@@ -1,6 +1,6 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { isInScope } from '#cli/configurations/claims.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';

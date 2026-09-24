@@ -19,11 +19,18 @@ test('terminal progress includes cached and skipped checks while log output keep
         interactive({ ...result, status });
         redirected({ ...result, status });
     }
-    expect(terminal.join('')).toContain('app  example/check  unchanged\n');
-    expect(terminal.join('')).toContain('skipped');
-    expect(log).toHaveLength(3);
-    expect(log.join('')).not.toContain('unchanged');
-    expect(log.join('')).not.toContain('skipped');
+    expect(terminal).toStrictEqual([
+        'app  example/check  unchanged\n',
+        'app  example/check  skipped\n',
+        'app  example/check  fail\n',
+        'app  example/check  missing\n',
+        'app  example/check  error\n',
+    ]);
+    expect(log).toStrictEqual([
+        'app  example/check  fail\n',
+        'app  example/check  missing\n',
+        'app  example/check  error\n',
+    ]);
 });
 
 test('quiet terminal progress hides successful checks but retains execution errors', () => {

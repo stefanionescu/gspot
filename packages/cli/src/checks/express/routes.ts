@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // Each governed route has an importing test in its own scope.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { scopeImports } from '#cli/structure/imports.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 

@@ -1,34 +1,86 @@
 import { parse } from 'postcss';
+import ts from 'typescript';
+import { posix } from 'node:path';
 import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
 import type { Finding } from '#cli/output/schema.ts';
 // CSS modules against the code that imports them: every class defined is read, and every class read is defined.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 
 const MODULE_SUFFIX = /\.module\.(?:css|scss|pcss)$/u;
 const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;
 
-function moduleImport(name: string): RegExp {
-    const escaped = name.replaceAll('.', String.raw`\.`);
-    return new RegExp(String.raw`import\s+(?<binding>\w+)\s+from\s+['"][^'"]*${escaped}['"]`, 'u');
+type Importer = { path: string; read: string[] };
+
+// Bind identifiers without reading dependencies or sources outside the selected inventory.
+function moduleImporters(code: { path: string; text: string }[], sheets: Set<string>): Map<string, Importer[]> {
+    const sources = new Map(
+        code.map(({ path, text }) => [path, ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true)]),
+    );
+    const options: ts.CompilerOptions = { noLib: true, noResolve: true, allowJs: true };
+    const host: ts.CompilerHost = {
+        getSourceFile: (path) => sources.get(path),
+        getDefaultLibFileName: () => '',
+        writeFile: () => {},
+        getCurrentDirectory: () => '',
+        getDirectories: () => [],
+        fileExists: (path) => sources.has(path),
+        readFile: (path) => sources.get(path)?.text,
+        getCanonicalFileName: (path) => path,
+        useCaseSensitiveFileNames: () => true,
+        getNewLine: () => '\n',
+    };
+    const program = ts.createProgram([...sources.keys()], options, host);
+    const checker = program.getTypeChecker();
+    const importers = new Map<string, Importer[]>();
+    for (const [path, source] of sources) {
+        for (const statement of source.statements) {
+            if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+            const specifier = statement.moduleSpecifier.text;
+            if (!specifier.startsWith('.')) continue;
+            const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
+            if (!sheets.has(sheet)) continue;
+            const clause = statement.importClause;
+            if (clause === undefined || clause.isTypeOnly) continue;
+            const binding =
+                clause.name ??
+                (clause.namedBindings !== undefined && ts.isNamespaceImport(clause.namedBindings)
+                    ? clause.namedBindings.name
+                    : undefined);
+            if (binding === undefined) continue;
+            const symbol = checker.getSymbolAtLocation(binding);
+            if (symbol === undefined) continue;
+            const reads = new Set<string>();
+            const entries = importers.get(sheet) ?? [];
+            const importer: Importer = { path, read: [] };
+            entries.push(importer);
+            importers.set(sheet, entries);
+            // Each imported binding owns its uses, including lexical shadowing.
+            const visit = (node: ts.Node): void => {
+                if (
+                    (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+                    ts.isIdentifier(node.expression) &&
+                    checker.getSymbolAtLocation(node.expression) === symbol
+                ) {
+                    if (ts.isPropertyAccessExpression(node)) reads.add(node.name.text);
+                    else if (ts.isStringLiteral(node.argumentExpression)) reads.add(node.argumentExpression.text);
+                }
+                ts.forEachChild(node, visit);
+            };
+            visit(source);
+            importer.read = [...reads];
+        }
+    }
+    return importers;
 }
 
 function camel(name: string): string {
     return name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase());
 }
 
-function sheetFindings(
-    input: EngineInput,
-    sheet: string,
-    defined: string[],
-    code: { path: string; text: string }[],
-): Finding[] {
+function sheetFindings(input: EngineInput, sheet: string, defined: string[], importers: Importer[]): Finding[] {
     const name = sheet.slice(sheet.lastIndexOf('/') + 1);
-    const importers = code.flatMap((file) => {
-        const binding = moduleImport(name).exec(file.text)?.groups?.['binding'];
-        return binding === undefined ? [] : [{ ...file, read: readClasses(file.text, binding) }];
-    });
     if (importers.length === 0) return [];
     const known = new Set(defined.flatMap((entry) => [entry, camel(entry)]));
     const read = new Set(importers.flatMap((file) => file.read));
@@ -68,19 +120,6 @@ function definedClasses(text: string, path: string): string[] {
 }
 
 /**
- * The classes code reads from a module it binds to a name: binding.name and binding['name'].
- * @param text the code
- * @param binding the name the module is imported under
- * @returns the class names, once each
- */
-export function readClasses(text: string, binding: string): string[] {
-    const dotted = new RegExp(String.raw`\b${binding}\.(?<name>[A-Za-z_]\w*)`, 'gu');
-    const indexed = new RegExp(String.raw`\b${binding}\[['"](?<name>[^'"]+)['"]\]`, 'gu');
-    const found = [...text.matchAll(dotted), ...text.matchAll(indexed)].map((match) => match.groups?.['name'] ?? '');
-    return [...new Set(found)];
-}
-
-/**
  * The findings of every CSS module of the scope.
  * @param input the engine input
  * @returns the findings
@@ -92,9 +131,10 @@ export function cssModuleUsage(input: EngineInput): Finding[] {
         .map((path) => ({ path, text: readSource(input.root, path, input.observations).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
+    const importers = moduleImporters(code, new Set(sheets));
     for (const sheet of sheets) {
         const defined = definedClasses(readSource(input.root, sheet, input.observations).toString('utf8'), sheet);
-        findings.push(...sheetFindings(input, sheet, defined, code));
+        findings.push(...sheetFindings(input, sheet, defined, importers.get(sheet) ?? []));
     }
     return findings;
 }

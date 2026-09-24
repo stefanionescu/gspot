@@ -172,6 +172,8 @@ const coreRules = {
 
 const gspotRules = {
     ...gspot.configs.recommended.rules,
+<% if (architecture.types_directory !== undefined) { %>    'gspot/types-placement': ['error', { typesDirectory: <%= json(architecture.types_directory) %> }],
+<% } %>
     'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
     'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
 <% if (isAll) { %>
@@ -185,8 +187,6 @@ const gspotRules = {
     'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json(settings[has('jest') ? 'tools.jest.harness_directory' : 'tools.vitest.harness_directory'] ?? 'tests/support') %> }],
     'gspot/registry-instance-only': 'error',
     'gspot/private-before-public': 'error',
-<% if (architecture.types_directory !== undefined) { %>    'gspot/types-placement': ['error', { typesDirectory: <%= json(architecture.types_directory) %> }],
-<% } %>
     'gspot/import-direction': ['error', { roles: <%= json(directionRoles) %>, aliases: ALIASES }],
     'gspot/env-access-owner': ['error', { owners: <%= json(envOwners) %> }],
 <% if (structure.reexports === 'none') { %>    'gspot/no-reexports': 'error',

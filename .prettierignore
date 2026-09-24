@@ -13,6 +13,4 @@ bun.lockb
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
-packages/cli/vendor/swift.wasm
-packages/cli/vendor/swift.LICENSE
-packages/cli/vendor/notices.json
+packages/cli/release/notices.json

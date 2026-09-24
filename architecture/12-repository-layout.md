@@ -104,8 +104,9 @@ targets. The launcher target manifest remains the single source for release plat
 CLI release operations live in `packages/cli/release/`. The binary builder uses Bun's build API
 and passes dependency metadata directly to notice generation. It preserves the ignored build
 directory, embedded evaluator asset key, EditorConfig WASM integration, and platform signing.
-Swift grammar rebuilding requires Docker. Its pinned WASM, license, provenance, and supplemental
-dependency notices live in `packages/cli/vendor/`. Other parser assets resolve from locked packages.
+Swift parser preparation downloads a checksum-pinned upstream release into ignored build output.
+The release notice data retains its license and supplemental dependency notices. Other parser
+assets resolve from locked packages. Installed binaries embed the parser and perform no download.
 The asset boundary declares every supported parser and rejects undeclared filenames.
 
 These boundaries use the entry/command separation and development-script ownership inspected
@@ -118,6 +119,16 @@ features. Evaluation request and response schemas form a shared protocol indepen
 evaluators. Command and check-output validation remain shared boundaries used by both policy
 and configuration manifests. Emitter shapes belong to the corresponding emitters. Tool command
 execution serves checking, installation, and detection without importing the check runner.
+
+Check input contracts belong to the check feature, independently of the runtime dispatcher.
+Parsers accept source observations and disposable resources without importing check inputs.
+Repository discovery receives journal-owned runtime paths from command composition. The source
+reader owns the byte observations used by parsers, suppression readers, and result caching.
+
+Foreign configuration readers belong to adoption. Lifecycle retires explicitly selected files
+against their observed bytes and permissions. Initialization owns its policy proposal and Xcode
+scheme discovery. Writing commands prepare a policy mutation once, then publish that proposal
+under the lifecycle lock before applying generated configuration.
 
 Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initialization planning,
 questions, and selection belong to `commands/init/`. Shared coverage analysis belongs to execution,
@@ -143,10 +154,10 @@ the runtime policy schema. The repository editor directive uses the public schem
 
 Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in `tests/bunfig.toml`.
 Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain explicit.
-The test TypeScript configuration inherits the strict workspace settings.
+The root TypeScript project includes every test under its strict workspace settings.
 All tests belong under the root `tests/`: unit CLI and plugin suites, integration CLI, docs,
-and repository suites, native checks, source acceptance CLI and configuration journeys, and release
-consumers. Support owns process, registry, and fixture lifetime; types stay with those owners.
+and repository suites, tool integration under `integration/tools`, source journeys under
+`acceptance/source`, and release consumers under `acceptance/release`. Support owns process, registry, and fixture lifetime; types stay with those owners.
 `mise run test` targets deterministic unit and integration execution using documented development
 prerequisites and installed workspace dependencies. Native tools, downloads, source acceptance,
 and installed release consumers require separate explicit tasks. The release task runs directly
@@ -178,7 +189,7 @@ recovery layouts remain unowned data and are not converted or deleted.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
 including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,
-embedded grammars, and Bun; `packages/cli/vendor/notices.json` owns pinned supplemental text and provenance.
+embedded grammars, and Bun; `packages/cli/release/notices.json` owns pinned supplemental text and provenance.
 The plugin leaves dependencies external and does not copy unrelated CLI notices. Native
 packaging does not assemble licenses for a compiled binary, so the small build-owned notice
 assembler remains. Do not replace it with a scanner of the entire dependency tree.
@@ -540,15 +551,15 @@ A template with a broken TOML line fails the check.
 
 ### Acceptance S-3
 
-The deterministic unit, plugin, and integration tests run at the push stage. Coverage measures
-missing behavioral evidence without an arbitrary percentage quota. Native and release suites
+The deterministic unit, plugin, and integration tests run at the push stage. Coverage measures in-process source execution without an arbitrary percentage quota.
+Subprocess and native execution provide separate behavioral evidence. Native and release suites
 retain explicit prerequisites. The
 work of a change follows the [active CI bypass](22-remaining.md#active-ci-bypass).
 While it is active, local verification permits continued implementation without a GitHub run.
 
 The check runs `mise run test`. Use `mise run test:coverage` for measurement. Both tasks run
 from `tests/`, load `tests/bunfig.toml`, and pass `--timeout 60000` to Bun. Focused tasks are
-`test:unit` and `test:integration`. Candidate acceptance also runs `test:native`,
+`test:unit` and `test:integration`. Candidate acceptance also runs `test:tools`,
 `test:acceptance`, and `test:release`; build release prerequisites first and run source acceptance
 before installed consumers. Native tools and downloads do not belong in routine documentation
 tests. The Jest configuration configures ESLint for `bun:test` through `globalPackage`; the repository

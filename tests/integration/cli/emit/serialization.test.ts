@@ -81,7 +81,7 @@ test('profile spelling values use the same TOML emission path', async () => {
 });
 
 test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
-    const text = "café \"quoted\" \\value # comment";
+    const text = 'café "quoted" \\value # comment';
     const path = 'docs/"draft"/**';
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
     const option = 'custom."option"';

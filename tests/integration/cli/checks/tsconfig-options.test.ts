@@ -4,10 +4,19 @@ import { expect, spyOn, test } from 'bun:test';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
+const VALID = JSON.stringify({
+    compilerOptions: {
+        strict: true,
+        noFallthroughCasesInSwitch: true,
+        noUncheckedIndexedAccess: true,
+        noImplicitOverride: true,
+        exactOptionalPropertyTypes: true,
+    },
+});
 
 async function inputFor(root: string): Promise<EngineInput> {
     const session = await openSession(root);
@@ -31,6 +40,8 @@ test.each(['{', 'null', '[]', '{"extends":7}', '{"compilerOptions":[]}'])(
         expect(() => tsconfigOptions(input)).toThrow(
             `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
         );
+        fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+        expect(tsconfigOptions(await inputFor(sandbox.path))).toStrictEqual([]);
     },
 );
 
@@ -46,6 +57,8 @@ test('a denied TypeScript configuration read retains its error', async () => {
     } finally {
         denied.mockRestore();
     }
+    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+    expect(tsconfigOptions(await inputFor(sandbox.path))).toStrictEqual([]);
 });
 
 test('a missing inherited configuration cannot be replaced by empty compiler options', async () => {
@@ -56,6 +69,8 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
     });
     const input = await inputFor(sandbox.path);
     expect(() => tsconfigOptions(input)).toThrow(`Cannot read file '${join(sandbox.path, 'missing.json')}'`);
+    fs.writeFileSync(join(sandbox.path, 'missing.json'), VALID);
+    expect(tsconfigOptions(await inputFor(sandbox.path))).toStrictEqual([]);
 });
 
 test('circular configuration inheritance reports the cycle', async () => {
@@ -67,6 +82,8 @@ test('circular configuration inheritance reports the cycle', async () => {
     });
     const input = await inputFor(sandbox.path);
     expect(() => tsconfigOptions(input)).toThrow('Circularity detected while resolving configuration');
+    fs.writeFileSync(join(sandbox.path, 'base.json'), VALID);
+    expect(tsconfigOptions(await inputFor(sandbox.path))).toStrictEqual([]);
 });
 
 test.each([
@@ -89,7 +106,15 @@ test('a scope without tsconfig.json reports the missing configuration', async ()
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POLICY });
     const findings = await tsconfigOptions(await inputFor(sandbox.path));
-    expect(findings).toMatchObject([{ file: 'tsconfig.json', message: expect.stringContaining('no tsconfig.json') }]);
+    expect(findings).toMatchObject([
+        {
+            check: 'integrity/tsconfig-options',
+            file: 'tsconfig.json',
+            message: expect.stringContaining('no tsconfig.json'),
+        },
+    ]);
+    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+    expect(tsconfigOptions(await inputFor(sandbox.path))).toStrictEqual([]);
 });
 
 test.each(['tsconfig.json', 'strict.json'])(

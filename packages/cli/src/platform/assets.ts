@@ -96,7 +96,12 @@ export function grammarPath(name: string): string {
         return embedded;
     }
     const root = developmentRoot();
-    if (name === 'swift.wasm') return join(root, 'packages', 'cli', 'vendor', name);
+    if (name === 'swift.wasm') {
+        const path = join(root, 'packages', 'cli', 'build', name);
+        if (statSync(path, { throwIfNoEntry: false }) === undefined)
+            throw new Error('The Swift grammar is not prepared; run mise run prepare:grammar.');
+        return path;
+    }
     const source = GRAMMAR_SOURCES[name]!;
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
     const found = candidates.find((candidate) => statSync(candidate, { throwIfNoEntry: false }) !== undefined);

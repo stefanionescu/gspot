@@ -28,8 +28,6 @@
         "../../../../packages/cli/**/coverage/**",
         "../../../../packages/cli/**/.build/**",
         "../../../../packages/cli/**/DerivedData/**",
-        "../../../../packages/cli/packages/cli/vendor/swift.wasm",
-        "../../../../packages/cli/packages/cli/vendor/swift.LICENSE",
-        "../../../../packages/cli/packages/cli/vendor/notices.json"
+        "../../../../packages/cli/packages/cli/release/notices.json"
     ]
 }

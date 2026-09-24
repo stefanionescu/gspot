@@ -1,5 +1,17 @@
 import { dirname, join } from 'node:path';
-import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+    chmodSync,
+    mkdirSync,
+    readFileSync,
+    rmdirSync,
+    rmSync,
+    statSync,
+    lstatSync,
+    readlinkSync,
+    symlinkSync,
+    unlinkSync,
+    writeFileSync,
+} from 'node:fs';
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {
     check: string;
@@ -10,10 +22,13 @@ export type PlantedInput = {
     executable?: string[];
 };
 
-function originalFile(path: string): { bytes: Uint8Array; mode: number } | undefined {
+type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
+
+function originalFile(path: string): OriginalFile | undefined {
     try {
-        const mode = statSync(path).mode;
-        return { bytes: readFileSync(path), mode };
+        const attributes = lstatSync(path);
+        if (attributes.isSymbolicLink()) return { kind: 'symlink', target: readlinkSync(path) };
+        return { kind: 'file', bytes: readFileSync(path), mode: attributes.mode };
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
@@ -22,7 +37,7 @@ function originalFile(path: string): { bytes: Uint8Array; mode: number } | undef
 
 function isAbsent(path: string): boolean {
     try {
-        statSync(path);
+        lstatSync(path);
         return false;
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return true;
@@ -42,11 +57,12 @@ function absentParents(cwd: string, paths: string[]): string[] {
     return [...parents].toSorted((a, b) => b.length - a.length);
 }
 
-function restoreFiles(cwd: string, originals: Map<string, { bytes: Uint8Array; mode: number } | undefined>): void {
+function restoreFiles(cwd: string, originals: Map<string, OriginalFile | undefined>): void {
     for (const [path, original] of originals) {
         const full = join(cwd, path);
-        if (original === undefined) rmSync(full, { force: true });
-        else {
+        rmSync(full, { force: true });
+        if (original?.kind === 'symlink') symlinkSync(original.target, full);
+        else if (original?.kind === 'file') {
             writeFileSync(full, original.bytes);
             chmodSync(full, original.mode);
         }
@@ -69,6 +85,7 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     for (const [path, text] of Object.entries(planted.files)) {
         const full = join(cwd, path);
         mkdirSync(dirname(full), { recursive: true });
+        if (lstatSync(full, { throwIfNoEntry: false })?.isSymbolicLink()) unlinkSync(full);
         writeFileSync(full, text);
     }
     for (const path of executable) chmodSync(join(cwd, path), statSync(join(cwd, path)).mode | 0o111);

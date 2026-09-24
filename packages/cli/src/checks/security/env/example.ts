@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // Every environment variable the code reads appears in the environment template.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 

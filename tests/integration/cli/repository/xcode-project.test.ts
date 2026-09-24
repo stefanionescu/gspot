@@ -137,10 +137,10 @@ test('membership combines projects in a scope and checks nested scopes independe
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-
 test('Xcode symlinks use the deepest scope and the immutable staged target', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    const policy =
+        'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'App.xcodeproj/project.pbxproj': PROJECT,
@@ -158,8 +158,20 @@ test('Xcode symlinks use the deepest scope and the immutable staged target', asy
     const command = ['check', '--staged', '--only', 'xcode/symlinks', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = JSON.parse(broken.stdout).checks.flatMap((check: { scope: string; findings: unknown[] }) => check.findings.map(finding => ({ scope: check.scope, finding })));
-    expect(findings).toStrictEqual([{ scope: 'app/child', finding: expect.objectContaining({ file: 'app/child/Linked.swift', line: 1, rule: 'symlink', message: expect.stringContaining('A symlink to Source.swift') }) }]);
+    const findings = JSON.parse(broken.stdout).checks.flatMap((check: { scope: string; findings: unknown[] }) =>
+        check.findings.map((finding) => ({ scope: check.scope, finding })),
+    );
+    expect(findings).toStrictEqual([
+        {
+            scope: 'app/child',
+            finding: expect.objectContaining({
+                file: 'app/child/Linked.swift',
+                line: 1,
+                rule: 'symlink',
+                message: expect.stringContaining('A symlink to Source.swift'),
+            }),
+        },
+    ]);
     expect(await readlink(link)).toBe('Unstaged.swift');
     expect(git(sandbox.path, ['rm', '--cached', '-f', 'app/child/Linked.swift']).code).toBe(0);
     const corrected = await run(sandbox.path, command);

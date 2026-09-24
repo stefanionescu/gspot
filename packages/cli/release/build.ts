@@ -1,5 +1,6 @@
 // Builds one executable per target with grammars, configurations, prose and rules embedded.
 import { execaSync } from 'execa';
+import { prepareGrammar } from './grammar.ts';
 import { globbySync } from 'globby';
 import { familySync } from 'detect-libc';
 import { fileURLToPath } from 'node:url';
@@ -9,7 +10,7 @@ import { binaryNotices, dependencyNotices } from './notices.ts';
 import { releaseTargets } from '#cli/platform/release-targets.ts';
 import { grammarPath, GRAMMAR_NAMES } from '#cli/platform/assets.ts';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { existsSync, mkdirSync, rmSync, writeFileSync, copyFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, copyFileSync, readFileSync } from 'node:fs';
 
 const here = join(dirname(fileURLToPath(new URL(import.meta.url))), '..');
 const root = join(here, '..', '..');
@@ -18,7 +19,12 @@ const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target
 
 const ASSET_FOLDERS = ['packages/cli/configurations', 'packages/cli/rules'];
 
-const grammarAssets = new Map(GRAMMAR_NAMES.map((name) => [grammarPath(name), `grammars/${name}`]));
+const grammarAssets = new Map(
+    GRAMMAR_NAMES.map((name) => [
+        name === 'swift.wasm' ? join(here, 'build', name) : grammarPath(name),
+        `grammars/${name}`,
+    ]),
+);
 
 function assetKey(file: string): string {
     const key = grammarAssets.get(file) ?? relative(root, file);
@@ -61,9 +67,9 @@ function writeEntry(): string {
 }
 
 async function build(targets: string[], out: string): Promise<void> {
-    const grammarSources = [...grammarAssets.keys()].filter((path) => path !== join(here, 'vendor/swift.wasm'));
-    if (!existsSync(join(here, 'vendor/swift.wasm'))) throw new Error('Missing required grammar: swift.wasm.');
-    binaryNotices('', join(here, 'vendor'));
+    await prepareGrammar(join(here, 'build/swift.wasm'));
+    const grammarSources = [...grammarAssets.keys()].filter((path) => path !== grammarPath('swift.wasm'));
+    binaryNotices('');
     mkdirSync(join(here, 'build'), { recursive: true });
     const evaluator = await Bun.build({
         entrypoints: [join(here, 'src/evaluation/process.ts')],
@@ -120,7 +126,7 @@ async function build(targets: string[], out: string): Promise<void> {
         console.log(`built ${relative(root, outfile)}`);
     }
     const dependencies = dependencyNotices(metadata, grammarSources);
-    const notice = binaryNotices(dependencies, join(here, 'vendor'));
+    const notice = binaryNotices(dependencies);
     writeFileSync(join(out, 'NOTICE.md'), notice);
     copyFileSync(join(root, 'LICENSE.md'), join(out, 'LICENSE.md'));
 }

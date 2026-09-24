@@ -12,34 +12,63 @@ import { scriptIndex } from '#cli/structure/cross-file-index.ts';
 import { engineInput, runEngineCheck } from '#cli/run/engines.ts';
 
 test.each([
-    { language: 'python', path: 'source.py', structural: 'python/trivial-function',
-      defect: 'def BadName():\n    return 1\n',
-      corrected: 'def read_entries(source):\n    text = source.read()\n    entries = text.splitlines()\n    return entries\n' },
-    { language: 'swift', path: 'Source.swift', structural: 'swift/trivial-function',
-      defect: 'func Bad_Name() -> Int { 1 }\n',
-      corrected: 'func readLines(_ source: String) -> [String] {\n    let trimmed = source.trimmingCharacters(in: .whitespaces)\n    let lines = trimmed.components(separatedBy: "\\n")\n    return lines\n}\n' },
-    { language: 'bash', path: 'source.sh', structural: 'structure/trivial-function',
-      defect: 'BadName() { echo ready; }\n',
-      corrected: 'read_lines() {\n    local source="$1"\n    printf "%s\\n" "$source"\n    printf "%s\\n" "Complete"\n}\n' },
-])('$language naming and structure share parses without invalidating readers or later runs', async ({ language, path, structural, defect, corrected }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}", "naming"]\n`,
-        [path]: defect,
-    });
-    const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, only: ['naming/identifiers', structural], skips: [], fix: false, isDryRun: true, noCache: true };
-    const failed = await executeRun(session, options);
-    expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
-    expect(failed.report.checks.map(check => check.status)).toStrictEqual(['fail', 'fail']);
-    for (const check of failed.report.checks)
-        expect(check.findings).toContainEqual(expect.objectContaining({ file: path, line: 1 }));
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
-    await Bun.write(join(sandbox.path, path), corrected);
-    const accepted = await executeRun(session, options);
-    expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe(corrected);
-});
+    {
+        language: 'python',
+        path: 'source.py',
+        structural: 'python/trivial-function',
+        defect: 'def BadName():\n    return 1\n',
+        corrected:
+            'def read_entries(source):\n    text = source.read()\n    entries = text.splitlines()\n    return entries\n',
+    },
+    {
+        language: 'swift',
+        path: 'Source.swift',
+        structural: 'swift/trivial-function',
+        defect: 'func Bad_Name() -> Int { 1 }\n',
+        corrected:
+            'func readLines(_ source: String) -> [String] {\n    let trimmed = source.trimmingCharacters(in: .whitespaces)\n    let lines = trimmed.components(separatedBy: "\\n")\n    return lines\n}\n',
+    },
+    {
+        language: 'bash',
+        path: 'source.sh',
+        structural: 'structure/trivial-function',
+        defect: 'BadName() { echo ready; }\n',
+        corrected:
+            'read_lines() {\n    local source="$1"\n    printf "%s\\n" "$source"\n    printf "%s\\n" "Complete"\n}\n',
+    },
+])(
+    '$language naming and structure share parses without invalidating readers or later runs',
+    async ({ language, path, structural, defect, corrected }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}", "naming"]\n`,
+            [path]: defect,
+        });
+        const session = await openSession(sandbox.path);
+        const options = {
+            stage: 'all' as const,
+            only: ['naming/identifiers', structural],
+            skips: [],
+            fix: false,
+            isDryRun: true,
+            noCache: true,
+        };
+        const failed = await executeRun(session, options);
+        expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
+        expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
+        for (const check of failed.report.checks)
+            expect(check.findings).toContainEqual(expect.objectContaining({ file: path, line: 1 }));
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
+        await Bun.write(join(sandbox.path, path), corrected);
+        const accepted = await executeRun(session, options);
+        expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
+        expect(accepted.report.checks).toMatchObject([
+            { status: 'ok', findings: [] },
+            { status: 'ok', findings: [] },
+        ]);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(corrected);
+    },
+);
 
 test('engine inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
@@ -121,22 +150,24 @@ test.each([
     ['python', 'python/basedpyright', 'source.py', 'value: int = 1\n'],
     ['nextjs', 'nextjs/typecheck', 'source.tsx', 'export const value = 1;\n'],
     ['supabase', 'supabase/deno-check', 'supabase/functions/home/index.ts', 'export const value = 1;\n'],
-])('%s project type checking belongs to push and preserves explicit selection', async (configuration, check, path, source) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
-        [path]: source,
-    });
-    const session = await openSession(sandbox.path);
-    const commit = await planRun(session, { stage: 'commit', skips: [], only: [check] });
-    expect(commit.map(entry => entry.check)).not.toContain(check);
-    for (const stage of ['push', 'all'] as const) {
-        const planned = await planRun(session, { stage, skips: [], only: [check] });
-        expect(planned.map(entry => entry.check)).toContain(check);
-        expect(planned.find(entry => entry.check === check)?.spec.stage).toBe('push');
-    }
-});
-
+])(
+    '%s project type checking belongs to push and preserves explicit selection',
+    async (configuration, check, path, source) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+            [path]: source,
+        });
+        const session = await openSession(sandbox.path);
+        const commit = await planRun(session, { stage: 'commit', skips: [], only: [check] });
+        expect(commit.map((entry) => entry.check)).not.toContain(check);
+        for (const stage of ['push', 'all'] as const) {
+            const planned = await planRun(session, { stage, skips: [], only: [check] });
+            expect(planned.map((entry) => entry.check)).toContain(check);
+            expect(planned.find((entry) => entry.check === check)?.spec.stage).toBe('push');
+        }
+    },
+);
 
 test('engines share source bytes within a run and refresh reused sessions after corrections', async () => {
     await using sandbox = await testdir();
@@ -146,18 +177,32 @@ test('engines share source bytes within a run and refresh reused sessions after 
         [path]: 'select 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, skips: [], only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'], fix: false, isDryRun: true, noCache: true };
+    const options = {
+        stage: 'all' as const,
+        skips: [],
+        only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'],
+        fix: false,
+        isDryRun: true,
+        noCache: true,
+    };
     const read = spyOn(fs, 'readFileSync');
     try {
         const clean = await executeRun(session, options);
         expect(clean.report.exitCode).toBe(0);
-        expect(clean.report.checks.filter(check => check.scope === 'app').map(check => check.check).sort()).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
+        expect(
+            clean.report.checks
+                .filter((check) => check.scope === 'app')
+                .map((check) => check.check)
+                .sort(),
+        ).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
         expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         read.mockClear();
         await Bun.write(join(sandbox.path, path), 'select from;\n');
         const defect = await executeRun(session, options);
         expect(defect.report.exitCode).toBe(1);
-        expect(defect.report.checks.flatMap(check => check.findings)).toContainEqual(expect.objectContaining({ file: path, line: 1 }));
+        expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
+            expect.objectContaining({ file: path, line: 1 }),
+        );
         expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         read.mockClear();
         await Bun.write(join(sandbox.path, path), 'select 2;\n');
@@ -204,16 +249,29 @@ format = "none"
         'gspot.toml': policy,
         'query.sql': 'select from;\n',
         'notes.txt': 'Authored notes.\n',
-        'correct.cjs': 'const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\\n");',
+        'correct.cjs':
+            'const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\\n");',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, skips: [], only: ['sql/syntax', 'project/correct-sql'], fix: false, isDryRun: false, noCache: true };
+    const options = {
+        stage: 'all' as const,
+        skips: [],
+        only: ['sql/syntax', 'project/correct-sql'],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+    };
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
-    expect(defect.report.checks.flatMap(check => check.findings)).toContainEqual(expect.objectContaining({ file: 'query.sql', line: 1 }));
+    expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
+        expect.objectContaining({ file: 'query.sql', line: 1 }),
+    );
     const corrected = await executeRun(session, { ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks.every(check => check.status === 'ok')).toBe(true);
+    expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
+        { check: 'sql/syntax', status: 'ok', findings: [] },
+        { check: 'project/correct-sql', status: 'ok', findings: [] },
+    ]);
     expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('select 1;\n');
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     expect(await Bun.file(join(sandbox.path, 'notes.txt')).text()).toBe('Authored notes.\n');

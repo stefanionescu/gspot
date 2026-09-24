@@ -1,7 +1,7 @@
 import { isAbsolute, join } from 'node:path';
 import type { Session } from '#cli/run/session.ts';
 import type { PlannedCheck } from '#cli/run/plan.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { ToolOutputError } from '#cli/run/parse-output.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';

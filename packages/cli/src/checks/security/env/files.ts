@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 // git tracks no environment file except the templates.
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';

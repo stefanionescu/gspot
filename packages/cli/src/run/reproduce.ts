@@ -1,4 +1,4 @@
-import type { CheckOptions } from '#cli/commands/check.ts';
+import type { StageFilter } from '#cli/run/plan.ts';
 // The reproduce line per failing check: the same in the hook, in CI and in the terminal.
 
 import { quoteArgument } from '#cli/platform/arguments.ts';
@@ -13,7 +13,7 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
 export function reproduceLine(
     checkName: string,
     scope: string,
-    options: Pick<CheckOptions, 'stage' | 'push' | 'messageFile'> = {},
+    options: { stage?: StageFilter; push?: { input: string; remote?: string }; messageFile?: string } = {},
 ): string {
     const { stage, push, messageFile } = options;
     if (push !== undefined) {

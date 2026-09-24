@@ -1,6 +1,5 @@
 // Read a profile from a path, an https URL or github:owner/repo, validate it, and name every problem in one pass.
 import { resolve } from 'node:path';
-import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
 import { readFileSync, statSync } from 'node:fs';
 import { nearMatches } from '#cli/policy/near.ts';
@@ -95,7 +94,7 @@ export function parseProfile(text: string, source: string): Profile {
     const configurations = configurationProblems(Array.isArray(named) ? named.map(String) : []);
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new ProfileError(problems);
-    return { source, digest: textHash(text), tables: result.data };
+    return { source, digest: new Bun.CryptoHasher('sha256').update(text).digest('hex'), tables: result.data };
 }
 
 /**

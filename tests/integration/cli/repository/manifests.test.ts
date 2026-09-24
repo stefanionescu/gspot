@@ -32,6 +32,9 @@ test.each(['package.json', 'pyproject.toml', 'Package.swift', 'Pipfile', 'requir
         expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
         mkdirSync(join(sandbox.path, path));
         expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
+        rmSync(join(sandbox.path, path), { recursive: true });
+        writeFileSync(join(sandbox.path, path), path.endsWith('.json') ? '{}' : '');
+        expect(readManifests(sandbox.path, repository.files)).toHaveLength(1);
     },
 );
 
@@ -68,9 +71,18 @@ test.each(['package.json', 'pyproject.toml', 'Package.swift', 'Pipfile', 'requir
 
 test.each([
     ['pyproject.toml', '[project]\ndependencies = ["FastAPI>=1", "Friendly_Bard>=2"]\n'],
-    ['pyproject.toml', '[tool.poetry.dependencies]\nFaStApI = "^1"\n\"Friendly.Bard\" = {version = "^2"}\npython = "^3.12"\n'],
-    ['pyproject.toml', '[tool.poetry.group.web.dependencies]\nFASTAPI = {version = "^1", extras = ["standard"]}\n"Friendly...__Bard" = "^2"\n'],
-    ['requirements.txt', '# Not a dependency: django\nFastApi[standard]>=1 # web\nFriendly_Bard>=2\n--index-url https://example.com/simple\n-r other.txt\n'],
+    [
+        'pyproject.toml',
+        '[tool.poetry.dependencies]\nFaStApI = "^1"\n\"Friendly.Bard\" = {version = "^2"}\npython = "^3.12"\n',
+    ],
+    [
+        'pyproject.toml',
+        '[tool.poetry.group.web.dependencies]\nFASTAPI = {version = "^1", extras = ["standard"]}\n"Friendly...__Bard" = "^2"\n',
+    ],
+    [
+        'requirements.txt',
+        '# Not a dependency: django\nFastApi[standard]>=1 # web\nFriendly_Bard>=2\n--index-url https://example.com/simple\n-r other.txt\n',
+    ],
     ['requirements-dev.txt', 'FaStApI @ https://example.com/fastapi.whl\nFriendly.Bard==2\n'],
     ['Pipfile', '[packages]\nfastAPI = {version = "*", extras = ["standard"]}\n"Friendly--Bard" = "==2"\n'],
 ] as const)('Python dependency detection reads %s without changing source', async (path, source) => {
@@ -83,11 +95,19 @@ test.each([
     const proposed = detectConfigurations(repository.files, manifests, facts, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
-    expect(detectConfigurations(repository.files, manifests, facts, 'other').some((entry) => entry.configuration === 'fastapi')).toBe(false);
+    expect(
+        detectConfigurations(repository.files, manifests, facts, 'other').some(
+            (entry) => entry.configuration === 'fastapi',
+        ),
+    ).toBe(false);
     expect(readFileSync(join(sandbox.path, 'api', path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = readManifests(sandbox.path, repository.files);
-    expect(detectConfigurations(repository.files, manifests, corrected, 'api').some((entry) => entry.configuration === 'fastapi')).toBe(false);
+    expect(
+        detectConfigurations(repository.files, manifests, corrected, 'api').some(
+            (entry) => entry.configuration === 'fastapi',
+        ),
+    ).toBe(false);
 });
 
 test.each([

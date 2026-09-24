@@ -3,7 +3,7 @@ import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';

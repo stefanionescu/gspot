@@ -1,6 +1,6 @@
 import { nodesOf } from '#cli/parsers/sql/tree.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/checks/postgres/types.ts';
 // The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.

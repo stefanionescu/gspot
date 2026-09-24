@@ -8,7 +8,7 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { installTools } from '#cli/tools/install-tools.ts';
-import { commitPolicy } from '#cli/policy/commit-policy.ts';
+import { commitPolicy } from '#cli/commands/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { requireChain } from '#cli/configurations/select.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';

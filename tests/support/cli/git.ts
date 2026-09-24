@@ -27,6 +27,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
             env: { ...environmentVariables(), ...environment },
             stdout: 'pipe',
             stderr: 'pipe',
+            timeout: 30_000,
         },
     );
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };

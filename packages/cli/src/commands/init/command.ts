@@ -1,3 +1,4 @@
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { z } from 'zod';
 import { Option } from 'commander';
 import type { Command } from 'commander';
@@ -10,7 +11,7 @@ import { compact } from '#cli/policy/normalize.ts';
 import { readProfile } from '#cli/profile/read.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Profile } from '#cli/profile/read.ts';
-import { proposeText } from '#cli/policy/propose.ts';
+import { proposeText } from '#cli/commands/init/propose.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
@@ -27,7 +28,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { colors, note, print } from '#cli/output/messages.ts';
-import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
+import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { InstallationError } from '#cli/tools/install-error.ts';
 import { proposedRunnerTasks } from '#cli/emit/runner-tasks.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
@@ -43,7 +44,8 @@ import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
-import { collectCarried, ownedTools, retireReplaced, unownedTools } from '#cli/lifecycle/takeover.ts';
+import { collectCarried, ownedTools, unownedTools } from '#cli/adoption/collect.ts';
+import { retireReplaced } from '#cli/lifecycle/retire.ts';
 import type { InitInputs, InitOptions, InitPrepared, InitResult, InitSelection } from '#cli/commands/init/types.ts';
 
 const ALREADY_INSTALLED =
@@ -97,7 +99,17 @@ async function chosenSelection(
 
 async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = configurationManifests();
-    const repo = await readRepository(root, [], [], []);
+    const repo = await readRepository(
+        root,
+        [],
+        [],
+        [],
+        new Set(
+            readOwnership(root)
+                .files.filter((entry) => entry.kind === 'runtime')
+                .map((entry) => entry.path),
+        ),
+    );
     if (repo.hasGit) assertCleanTree(root, options);
     const facts = readManifests(root, repo.files);
     const workspace = workspaceScopes(root, facts);

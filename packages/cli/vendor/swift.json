@@ -1,8 +1,0 @@
-{
-    "source": "https://github.com/alex-pinkus/tree-sitter-swift.git",
-    "revision": "b8b22bffbb3441780e6471665bacfb263741c86a",
-    "version": "0.7.3",
-    "treeSitter": "0.25.10",
-    "emscripten": "emscripten/emsdk@sha256:90b757eb11fa9a0e3ce4d2d9f76d932a56018e4accc37b5a28b2783751e60eb7",
-    "sha256": "92a6aa39712255e7332d1b06db52bc6d49e9f563215846978c0ca63b6cc38359"
-}

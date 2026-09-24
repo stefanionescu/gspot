@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 type BaselineReason = { fingerprint: string; reason: string };

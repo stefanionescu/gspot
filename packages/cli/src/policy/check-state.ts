@@ -1,5 +1,5 @@
 import type { Policy } from '#cli/policy/normalize.ts';
-import type { ScopeSelection } from '#cli/run/session.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 
 /**

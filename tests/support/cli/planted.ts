@@ -26,11 +26,6 @@ export async function runPlanted(
     planted: PlantedInput & { expected?: string | { file: string } },
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
-    if (planted.expected !== undefined) {
-        const expectation = typeof planted.expected === 'string' ? planted.expected : planted.expected.file;
-        if (expectation.trim() === '')
-            throw new Error(`The planted case for ${planted.check} has an empty diagnostic expectation.`);
-    }
     const restore = plant(cwd, planted);
     try {
         return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment);

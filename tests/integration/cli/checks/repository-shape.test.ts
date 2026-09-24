@@ -1,58 +1,24 @@
+import { checkInput } from '#tests/support/cli/input.ts';
 import { describe, expect, test } from 'bun:test';
 // The repository-shape integrity analyses: suppressions, policy patterns, large files and configuration purity.
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { Session } from '#cli/run/session.ts';
+
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/run/engines.ts';
-import type { MergedView } from '#cli/policy/merge.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
+
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
-import type { NamingSettings, Policy } from '#cli/policy/normalize.ts';
-import { readAttributes } from '#cli/repository/file-classification.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 
-function tracked(path: string, size = 1): TrackedFile {
-    return { path, prefix: Buffer.alloc(0), nature: 'source', tags: ['text'], executable: false, size };
-}
-
-function input(root: string, files: TrackedFile[], policy: Partial<Policy>): EngineInput {
-    const policyFiles: Partial<Session['policyFiles']> = { policy: policy as Policy };
-    const view: Partial<MergedView> = { limit: () => undefined, tool: () => ({}) };
-    const spec: Partial<CheckSpec> = { name: 'integrity/test' };
-    const partial: Partial<EngineInput> = {
-        root,
-        scope: '',
-        spec: spec as CheckSpec,
-        files,
-        repositoryFiles: files,
-        attributes: readAttributes(root),
-        policyFiles: policyFiles as Session['policyFiles'],
-        scopeEntries: [],
-        view: view as MergedView,
-    };
-    return partial as EngineInput;
-}
-
-const naming: Partial<NamingSettings> = { rules: [] };
-
-const policy: Partial<Policy> = {
-    scopeTables: {},
-    ignores: [{ check: 'x/y', paths: ['gone/**'], reason: 'A test reason.' }],
-    declarations: [{ paths: ['data/**'], nature: 'generated' }],
-    structure: {
-        reexports: 'none',
-        single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }],
-        prefix_collision_allowed: [],
-        folder_name_allowed: [],
-        python: {},
-    },
-    naming: naming as NamingSettings,
+const policy = {
+    configurations: ['typescript', 'docs'],
+    ignore: [{ check: 'x/y', paths: ['gone/**'], reason: 'A test reason.' }],
+    generated: [{ paths: ['data/**'], reason: 'The fixture owns generated output.' }],
+    structure: { single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }] },
     tools: { docs: { paths_allowed: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
-    architecture: { elements: [], edges_allowed: [], roles: { config: 'config' }, contracts: [] },
+    architecture: { roles: { config: 'config' } },
 };
 
 describe('the repository-shape analyses', () => {
@@ -79,8 +45,10 @@ describe('the repository-shape analyses', () => {
     test('a policy pattern that names nothing tracked is reported, a folder or glob that does is not', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'src/a.ts': '', 'data/x.bin': '', 'docs/a.md': '' });
-        const files = [tracked('src/a.ts'), tracked('data/x.bin'), tracked('docs/a.md')];
-        const found = await allowlistsMatch(input(sandbox.path, files, policy));
+        const paths = ['src/a.ts', 'data/x.bin', 'docs/a.md'];
+        const found = await allowlistsMatch(
+            await checkInput(sandbox.path, 'integrity/allowlists-match', paths, policy),
+        );
         expect(found.map((finding) => finding.message)).toStrictEqual([
             'gone/** under [[ignore]] matches no tracked file or folder.',
         ]);
@@ -88,9 +56,13 @@ describe('the repository-shape analyses', () => {
 
     test('a file over the limit that is neither declared nor under LFS is reported', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'big.bin': '', 'data/big.bin': '' });
-        const files = [tracked('big.bin', 2_000_000), tracked('data/big.bin', 2_000_000), tracked('small.txt', 10)];
-        const found = await largeFiles(input(sandbox.path, files, policy));
+        await createFileTree(sandbox.path, {
+            'big.bin': Buffer.alloc(2_000_000),
+            'data/big.bin': Buffer.alloc(2_000_000),
+            'small.txt': 'small',
+        });
+        const paths = ['big.bin', 'data/big.bin', 'small.txt'];
+        const found = await largeFiles(await checkInput(sandbox.path, 'integrity/large-files', paths, policy));
         expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
     });
 
@@ -102,8 +74,10 @@ describe('the repository-shape analyses', () => {
             'config/logic.ts':
                 "import { readFileSync } from 'node:fs';\n\nexport const text = readFileSync('x', 'utf8');\nexport const pick = (value: string): string => value;\n",
         });
-        const files = [tracked('config/pure.ts'), tracked('config/logic.ts')];
-        const found = await configurationPurity(input(sandbox.path, files, policy));
+        const paths = ['config/pure.ts', 'config/logic.ts'];
+        const found = await configurationPurity(
+            await checkInput(sandbox.path, 'integrity/config-purity', paths, policy),
+        );
         expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
             'config/logic.ts:1',
             'config/logic.ts:3',

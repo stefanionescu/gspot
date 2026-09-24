@@ -1,6 +1,6 @@
 // The Python structure checks, each one analysis of the integrity engine.
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { trivialFile } from '#cli/structure/statements.ts';
 import type { StructureReader } from '#cli/structure/python/types.ts';
 import { importCycles, singletons } from '#cli/structure/python/imports.ts';

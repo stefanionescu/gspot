@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { acceptanceArguments } from '#tests/support/acceptance/run.ts';
 
 const root = join(import.meta.dir, '../../..');
-const acceptance = join(root, 'tests/acceptance');
+const acceptance = join(root, 'tests/acceptance/source');
 
 test('acceptance selection keeps its default suite when filtering names', () => {
     expect(acceptanceArguments(['-t', 'findings'])).toStrictEqual([
@@ -23,7 +23,7 @@ test('acceptance selection keeps its default suite when filtering names', () => 
 test.each([
     { args: ['--test-name-pattern'] },
     { args: ['--preload', 'script.ts'] },
-    { args: [join(root, 'tests/release')] },
+    { args: [join(root, 'tests/acceptance/release')] },
     { args: [join(root, 'packages/cli/src/main.ts')] },
 ])('acceptance refuses invalid or out-of-suite selection before setup: %j', ({ args }) => {
     expect(() => acceptanceArguments(args)).toThrow();

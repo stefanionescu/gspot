@@ -1,11 +1,12 @@
 // The settings listing: every setting, its value, and where it came from.
-import type { Session } from '#cli/run/session.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 
-function rowsFor(session: Session): SettingRow[] {
-    return session.scopes.flatMap((selection) => {
+function rowsFor(policy: Policy, scopes: ScopeSelection[]): SettingRow[] {
+    return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        return listSettings(selection.surface, session.policyFiles.policy, scope)
+        return listSettings(selection.surface, policy, scope)
             .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
             .map((entry) => ({
                 key: entry.key,
@@ -33,15 +34,15 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
 
 /**
  * Every setting per scope, plus every extra table under "not a slot."
- * @param session the session
+ * @param policy the resolved policy
+ * @param scopes the resolved settings for each scope
  * @returns the rows and the extra tables
  */
-export function settingRows(session: Session): SettingsListing {
-    const { policy } = session.policyFiles;
+export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
     const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
         table.tools === undefined ? [] : extrasFor(scope, table.tools),
     );
-    return { rows: rowsFor(session), extras: [...extrasFor('', policy.tools), ...fromScopes] };
+    return { rows: rowsFor(policy, scopes), extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }
 
 export type SettingRow = {

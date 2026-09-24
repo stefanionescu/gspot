@@ -1,13 +1,13 @@
-import type { Proposal } from '#cli/policy/propose.ts';
-import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
+import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
+import type { Proposal } from '#cli/commands/init/propose.ts';
+import { noLongerRuns } from '#cli/adoption/collect.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { RunnerTaskNames } from '#cli/policy/runner.ts';
-import type { TakeoverPlan } from '#cli/lifecycle/takeover.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import type { CarriedConfiguration } from '#cli/lifecycle/carry.ts';
+import { xcodeProposal } from '#cli/commands/init/xcode.ts';
+import type { CarriedConfiguration } from '#cli/adoption/native.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { pythonPins, npmPins } from '#cli/tools/tool-installation.ts';
 // The proposal init writes and the plan it prints: what is written, removed, carried, changed, and stops running.
@@ -240,3 +240,16 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         ignores: [...carried.tools.values()].flatMap((tool) => tool.ignores),
     };
 }
+
+export type TakeoverPlan = {
+    profile?: { name: string; digest: string; selection: string; detected: string[] };
+    configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
+    write: { path: string; note: string }[];
+    remove: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
+    carried: { from: string; count: number; into: string }[];
+    change: { path: string; note: string }[];
+    noLongerRuns: { path: string; note: string }[];
+    ignores: { check: string; rule?: string; reason: string }[];
+};

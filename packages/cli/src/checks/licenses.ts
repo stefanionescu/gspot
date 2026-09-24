@@ -6,7 +6,7 @@ import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { statSync, mkdtempSync, rmSync } from 'node:fs';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';

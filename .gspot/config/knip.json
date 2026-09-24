@@ -2,7 +2,7 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
-        "packages/cli/release/build-swift-grammar.ts",
+        "packages/cli/release/grammar.ts",
         "**/publish.ts",
         "packages/cli/src/agents/lint.ts",
         "packages/npm/gspot/gspot.js",
@@ -20,13 +20,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [
-        ".gspot/**",
-        "eslint.config.{js,mjs,cjs}",
-        "packages/cli/vendor/swift.wasm",
-        "packages/cli/vendor/swift.LICENSE",
-        "packages/cli/vendor/notices.json"
-    ],
+    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}", "packages/cli/release/notices.json"],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
         "eslint-config-prettier",
@@ -168,7 +162,7 @@
         ".": {
             "entry": [
                 "**/build.ts",
-                "packages/cli/release/build-swift-grammar.ts",
+                "packages/cli/release/grammar.ts",
                 "**/publish.ts",
                 "packages/cli/src/agents/lint.ts",
                 "packages/npm/gspot/gspot.js",
@@ -189,7 +183,7 @@
         "packages/cli": {
             "entry": [
                 "**/build.ts",
-                "release/build-swift-grammar.ts",
+                "release/grammar.ts",
                 "**/publish.ts",
                 "src/agents/lint.ts",
                 "src/main.{ts,js}",

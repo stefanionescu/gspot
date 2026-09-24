@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
-import type { SourceObservations } from '#cli/repository/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 
 describe('parseSql', () => {
@@ -64,7 +64,7 @@ test('concurrent SQL parsing returns independent results in a fresh process', ()
         const parsed = await Promise.all(['SELECT 1', 'SELEC 2', 'SELECT 3'].map((sql) => parseSql(sql)));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
-    const result = Bun.spawnSync([process.execPath, '-e', script]);
+    const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     expect(JSON.parse(result.stdout.toString())).toStrictEqual([
         null,

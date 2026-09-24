@@ -6,7 +6,7 @@ import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 

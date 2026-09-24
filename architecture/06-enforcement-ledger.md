@@ -569,7 +569,7 @@ Preserve every agreed enforcement requirement in the ledger, including Python st
 
 A pin is never below the version a reference repository runs.
 
-The registry test of K-206 reads the floors from a table in `tests/release/` and fails
+The registry test of K-206 reads the floors from a table in `tests/acceptance/release/` and fails
 a pin below one.
 
 That test.
@@ -609,7 +609,7 @@ Three checks with three claims. `zsh` and `bats` are host tools, so an absent on
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
 manifest already says.
 
-`tests/acceptance/configurations/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
+`tests/acceptance/source/configurations/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
 
 ### Acceptance K-258
 

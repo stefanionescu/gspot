@@ -35,5 +35,4 @@
             'no-unused-vars': 'off',
         },
     },
-    ...tseslint.configs.disableTypeChecked.files ? [{ ...tseslint.configs.disableTypeChecked, files: JAVASCRIPT }] : [],
     { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },

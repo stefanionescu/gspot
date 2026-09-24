@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parse as parseToml } from 'smol-toml';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
@@ -17,12 +16,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-
-const implementation = fileURLToPath(
-    new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
-);
-
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();

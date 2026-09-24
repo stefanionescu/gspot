@@ -1,5 +1,5 @@
 // The shell scripts of one scope, read once per run: functions, references and top-level assignments, and who owns each function.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/structure/patterns.ts';
 import { functionAt, scriptFunctions } from '#cli/structure/parser.ts';

@@ -1,5 +1,5 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { Engine } from '#cli/run/engines.ts';
+import type { Engine } from '#cli/checks/input.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';

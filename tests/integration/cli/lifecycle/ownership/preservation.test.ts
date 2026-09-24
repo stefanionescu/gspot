@@ -26,8 +26,6 @@ const implementation = fileURLToPath(
     new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
 );
 
-const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
-
 test.each([false, true])(
     'TOML task ownership restores originals while retaining unrelated edits (%s)',
     async (edited) => {

@@ -3,7 +3,7 @@ import { parseAllDocuments } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';

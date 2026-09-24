@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { MISE_CONFIG_PATH, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
 

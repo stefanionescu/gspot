@@ -1,0 +1,229 @@
+import { symlinkSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework.
+import { reportSchema, type RunReport } from '#cli/output/schema.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import vueManifest from 'vue/package.json' with { type: 'json' };
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+
+/** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
+type ComponentShape = {
+    check: string;
+    configurations: string[];
+    files: Record<string, string>;
+    planted: string;
+    cases: [string, string][];
+};
+
+const MODULES = join(import.meta.dir, '../../../../node_modules');
+const init = (configurations: string[]): string[] => [
+    'init',
+    '--yes',
+    '--configurations',
+    ...configurations,
+    '--without',
+    'naming',
+    'spelling',
+    'css',
+    'vitest',
+    '--no-runner',
+    '--no-ci',
+    '--no-hooks',
+    '--no-rules',
+    '--no-install',
+];
+const manifest = (name: string, version: string): string =>
+    `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "${name}": "${version}"\n    }\n}\n`;
+const TSCONFIG =
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n';
+const SOURCE = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
+
+const VUE_CLEAN =
+    '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
+const VUE_CASES: [string, string][] = [
+    [
+        'vue/no-v-html',
+        '<script setup lang="ts">\ndefineProps<{ html: string }>();\n</script>\n\n<template>\n    <div v-html="html"></div>\n</template>\n',
+    ],
+    [
+        'vue/require-v-for-key',
+        '<script setup lang="ts">\ndefineProps<{ names: string[] }>();\n</script>\n\n<template>\n    <ul>\n        <li v-for="name in names">{{ name }}</li>\n    </ul>\n</template>\n',
+    ],
+];
+
+const SVELTE_CLEAN =
+    '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p>{name}</p>\n';
+const SVELTE_CASES: [string, string][] = [
+    [
+        'svelte/no-at-html-tags',
+        '<script lang="ts">\n    const { html }: { html: string } = $props();\n</script>\n\n<div>{@html html}</div>\n',
+    ],
+    [
+        'svelte/require-each-key',
+        '<script lang="ts">\n    const { names }: { names: string[] } = $props();\n</script>\n\n<ul>\n    {#each names as name}\n        <li>{name}</li>\n    {/each}\n</ul>\n',
+    ],
+];
+
+const SHAPES: ComponentShape[] = [
+    {
+        check: 'vue/eslint',
+        configurations: ['typescript', 'vue'],
+        files: {
+            'package.json': manifest('vue', vueManifest.version),
+            'src/UserGreeting.vue': VUE_CLEAN,
+            'src/env.d.ts': "import 'vue';\n",
+        },
+        planted: 'src/PlantedExample.vue',
+        cases: VUE_CASES,
+    },
+    {
+        check: 'svelte/eslint',
+        configurations: ['typescript', 'svelte'],
+        files: { 'package.json': manifest('svelte', '5.57.0'), 'src/Greeting.svelte': SVELTE_CLEAN },
+        planted: 'src/Planted.svelte',
+        cases: SVELTE_CASES,
+    },
+];
+
+describe('the vue and svelte configurations', () => {
+    for (const shape of SHAPES)
+        test.each(shape.cases)(
+            `${shape.check} reports %s and accepts a corrected component`,
+            async (rule, text) => {
+                await using sandbox = await testdir();
+                await createFileTree(sandbox.path, {
+                    '.gitignore': 'node_modules\n',
+                    'tsconfig.json': TSCONFIG,
+                    'src/answer.ts': SOURCE,
+                    ...shape.files,
+                });
+                symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+                commitAll(sandbox.path);
+                const environment = {
+                    PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+                };
+                await install(sandbox.path, init(shape.configurations), environment);
+                const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+                expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+                const clean = await run(
+                    sandbox.path,
+                    ['check', '--only', shape.check, '--no-cache', '--json'],
+                    environment,
+                );
+                expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([
+                    { check: shape.check, status: 'ok', files: 1, findings: [] },
+                ]);
+                const outcome = await runPlanted(
+                    sandbox.path,
+                    { check: shape.check, files: { [shape.planted]: text } },
+                    environment,
+                );
+                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+                const report = reportSchema.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
+                );
+                expect(report.checks).toMatchObject([{ check: shape.check, status: 'fail' }]);
+                expect(report.checks[0]!.findings).toContainEqual(
+                    expect.objectContaining({
+                        rule,
+                        file: shape.planted,
+                        line: {
+                            'vue/no-v-html': 6,
+                            'vue/require-v-for-key': 7,
+                            'svelte/no-at-html-tags': 5,
+                            'svelte/require-each-key': 6,
+                        }[rule]!,
+                    }),
+                );
+                await Bun.write(
+                    join(sandbox.path, shape.planted),
+                    shape.check === 'vue/eslint' ? VUE_CLEAN : SVELTE_CLEAN,
+                );
+                const corrected = await run(
+                    sandbox.path,
+                    ['check', '--only', shape.check, '--no-cache', '--json'],
+                    environment,
+                );
+                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                    { check: shape.check, status: 'ok', findings: [] },
+                ]);
+                const code = await run(
+                    sandbox.path,
+                    ['check', '--only', 'typescript/eslint', '--no-cache'],
+                    environment,
+                );
+                expect(code.code, code.stdout + code.stderr).toBe(0);
+                const required = await run(
+                    sandbox.path,
+                    ['check', '--only', 'integrity/required-rules', '--no-cache'],
+                    environment,
+                );
+                expect(required.code, required.stdout + required.stderr).toBe(0);
+            },
+            PLANTED_TIMEOUT_MS * 6,
+        );
+});
+
+test.each([
+    ['vue', 'javascript'],
+    ['svelte', 'javascript'],
+    ['vue', 'typescript'],
+    ['svelte', 'typescript'],
+])(
+    '%s applies shared %s rules inside component scripts',
+    async (framework, language) => {
+        const filename = `src/SharedPolicy.${framework}`;
+        const before =
+            language === 'typescript'
+                ? '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n'
+                : '<script>\nfunction forward(value) { return build(value); }\n</script>\n';
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${framework}", "${language}"]\n`,
+            'package.json': '{"name":"component-policy","private":true,"type":"module"}',
+            'tsconfig.json': '{ "compilerOptions": { "strict": true }, "include": ["src"] }\n',
+            'src/build.ts': 'export const build = (value: number): number => value + 1;',
+            [filename]: before,
+        });
+        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await installPrivateTools(sandbox.path);
+        const args = ['check', '--only', `${framework}/eslint`, '--no-cache', '--json'];
+        const broken = await run(sandbox.path, args);
+        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+        const report = JSON.parse(broken.stdout) as RunReport;
+        expect(
+            report.checks
+                .flatMap((check) => check.findings)
+                .filter((finding) => finding.rule === 'gspot/no-trivial-functions')
+                .map(({ check, rule, file, line, column }) => ({ check, rule, file, line, column })),
+            broken.stdout + broken.stderr,
+        ).toStrictEqual([
+            { check: `${framework}/eslint`, rule: 'gspot/no-trivial-functions', file: filename, line: 2, column: 1 },
+        ]);
+        if (language === 'typescript')
+            expect(
+                report.checks
+                    .flatMap((check) => check.findings)
+                    .find((finding) => finding.rule === '@typescript-eslint/no-explicit-any'),
+            ).toMatchObject({ file: filename, line: 2 });
+        await Bun.write(
+            join(sandbox.path, filename),
+            `<script${framework === 'vue' ? ' setup' : ''}${language === 'typescript' ? ' lang="ts"' : ''}>\nconst answer = 42;\n</script>\n` +
+                (framework === 'vue' ? '<template><p>{{ answer }}</p></template>\n' : '<p>{answer}</p>\n'),
+        );
+        const corrected = await run(sandbox.path, args);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            { check: `${framework}/eslint`, status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS,
+);

@@ -341,7 +341,9 @@ test.skipIf(process.platform === 'win32')(
         };
         const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);
-        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toStrictEqual(paths);
+        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toStrictEqual(
+            paths,
+        );
         for (const path of paths) writeFileSync(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);

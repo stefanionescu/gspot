@@ -1,3 +1,4 @@
+import type { CoverageReport } from '#cli/run/coverage.ts';
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import type { Session } from '#cli/run/session.ts';
@@ -186,13 +187,6 @@ export function doctorText(report: DoctorReport): string {
     ];
     return `${lines.join('\n')}\n`;
 }
-
-export type CoverageReport = {
-    endings: { ending: string; scope: string; files: number; kinds: string[] }[];
-    unchecked: { path: string; reason: string; remedy?: string }[];
-    partial: { path: string; missing: string[] }[];
-    checked: number;
-};
 
 export type ChangeReport = {
     detectedNotSelected: { configuration: string; evidence: string; command: string }[];

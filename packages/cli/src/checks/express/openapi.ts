@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { commandArguments } from '#cli/policy/settings.ts';

@@ -3,7 +3,7 @@ import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import type { Finding } from '#cli/output/schema.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 
 const SHOWN_LINES = 3;

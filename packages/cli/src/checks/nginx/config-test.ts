@@ -8,7 +8,7 @@ import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import type { EngineInput, EngineOutcome } from '#cli/run/engines.ts';
+import type { EngineInput, EngineOutcome } from '#cli/checks/input.ts';
 
 const MAIN_FILE = 'nginx.conf';
 const DEFAULT_IMAGE = 'nginx:stable-alpine';

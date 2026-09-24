@@ -4,7 +4,7 @@ import { parse } from 'yaml';
 import { join } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { toolOutputDetail } from '#cli/run/broken-tool.ts';

@@ -1,4 +1,4 @@
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 // The identifiers of one file: parse it with the grammar its language names and run that language's extractor.
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/naming/extractors/bash.ts';

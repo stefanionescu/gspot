@@ -64,6 +64,9 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     );
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+        { check: 'xctest/no-sleep', status: 'ok', findings: [] },
+    ]);
 });
 
 test.each([
@@ -99,6 +102,8 @@ test.each([
         isDryRun: false,
     });
     const findings = result.report.checks.flatMap((check) => check.findings);
+    expect(result.report.exitCode).toBe(missing ? 1 : 0);
+    expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'fail' : 'ok' }]);
     expect(findings).toHaveLength(missing ? 1 : 0);
     if (missing) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 });
 });
@@ -150,10 +155,14 @@ test.each([
             isDryRun: false,
         });
     const result = await inspect();
+    expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
+    expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
     if (count > 0) {
         await Bun.write(`${sandbox.path}/Examples/Checks.swift`, source('#expect(true)'));
         const corrected = await inspect();
+        expect(corrected.report.exitCode).toBe(0);
+        expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
         expect(corrected.report.checks.flatMap((entry) => entry.findings)).toStrictEqual([]);
     }
 });
@@ -207,4 +216,11 @@ test.each([
     const result = await run(sandbox.path, ['check', '--only', 'xctest/reference-images']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('reference_layout');
+    await Bun.write(`${sandbox.path}/gspot.toml`, 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n');
+    await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
+    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--no-cache', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+        { check: 'xctest/reference-images', status: 'ok', findings: [] },
+    ]);
 });

@@ -16,7 +16,7 @@ import type { IgnoreEntry } from '#cli/policy/normalize.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import type { PlanOptions, PlannedCheck } from '#cli/run/plan.ts';
-import type { SourceObservations } from '#cli/repository/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
 import { commandConfigurations } from '#cli/run/command-expansion.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';

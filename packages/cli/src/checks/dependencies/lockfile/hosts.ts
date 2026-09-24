@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
 

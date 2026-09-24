@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { outputSchema } from '#cli/schemas/check-output.ts';
+import { outputSchema } from '#cli/run/output-format.ts';
 // The zod schema of gspot.toml. Pure: no transforms, so the JSON schema is generated from it.
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/schemas/commands.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
 
 const INDENT_MAX = 8;
 

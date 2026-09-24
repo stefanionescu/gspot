@@ -4,7 +4,7 @@ import { statSync } from 'node:fs';
 // The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 
 const projectSchema = z.object({

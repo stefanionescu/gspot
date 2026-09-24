@@ -23,8 +23,6 @@
         "../../../docs/**/coverage/**",
         "../../../docs/**/.build/**",
         "../../../docs/**/DerivedData/**",
-        "../../../docs/packages/cli/vendor/swift.wasm",
-        "../../../docs/packages/cli/vendor/swift.LICENSE",
-        "../../../docs/packages/cli/vendor/notices.json"
+        "../../../docs/packages/cli/release/notices.json"
     ]
 }

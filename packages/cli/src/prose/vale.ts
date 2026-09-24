@@ -6,7 +6,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/output/schema.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 import { locateTool } from '#cli/tools/tool-probe.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';

@@ -2,7 +2,7 @@ import { statSync } from 'node:fs';
 // The generated database types, compared with what the CLI writes from the local database.
 import { join, posix } from 'node:path';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';

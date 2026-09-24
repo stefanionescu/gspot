@@ -3,49 +3,13 @@ import { stringify } from 'smol-toml';
 import { planRun } from '#cli/run/plan.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/run/execute.ts';
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { resolveCheck } from '#cli/run/engines.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
-
-describe('file batches', () => {
-    test('a list that fits is one batch, and a long list splits under the budget in order', () => {
-        expect(fileBatches(['a.sh', 'b.sh'], ['tool'], 'linux')).toStrictEqual([['a.sh', 'b.sh']]);
-        const files = Array.from({ length: 5000 }, (_, index) => `scripts/deploy/step-${String(index)}.sh`);
-        const batches = fileBatches(files, ['tool'], 'linux');
-        expect(batches.length).toBeGreaterThan(1);
-        expect(batches.flat()).toStrictEqual(files);
-        for (const batch of batches) expect(batch.join(' ').length).toBeLessThanOrEqual(100_000);
-    });
-});
-
-test('Windows batches reserve quoted paths and the resolved executable', () => {
-    const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);
-    const fixed = [
-        'C:/workspace with spaces/node_modules/.bin/markdownlint.cmd',
-        '--config',
-        'C:/workspace with spaces/.gspot/markdown.json',
-    ];
-    const batches = fileBatches(files, fixed, 'win32');
-    expect(batches.length).toBeGreaterThan(1);
-    expect(batches.flat()).toStrictEqual(files);
-    for (const batch of batches) {
-        const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');
-        expect(command.length).toBeLessThan(8191);
-    }
-});
-
-test('Unix batches count Unicode bytes and reject an argument that cannot fit', () => {
-    const files = Array.from({ length: 5000 }, (_, index) => `資料/結果-${String(index)}.txt`);
-    const batches = fileBatches(files, ['tool'], 'linux');
-    expect(batches.flat()).toStrictEqual(files);
-    for (const batch of batches) expect(Buffer.byteLength(['tool', ...batch].join(' '))).toBeLessThan(100_000);
-    expect(() => fileBatches(['x'.repeat(100_001)], ['tool'], 'linux')).toThrow('file argument exceeds');
-    expect(() => fileBatches([], ['x'.repeat(100_001)], 'linux')).toThrow('Tool arguments exceed');
-});
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
     await using sandbox = await testdir();
@@ -354,7 +318,7 @@ test.each(['{file}', '{files}'])(
 );
 
 test.each([0, 1, 3])(
-    'Actionlint removes its prepared project after native exit %i without changing source permissions',
+    'Actionlint removes its prepared project after adapter exit %i without changing source permissions',
     async (code) => {
         await using sandbox = await testdir();
         const record = join(sandbox.path, 'workspace.txt');

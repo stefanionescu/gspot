@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/platform/assets.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 // The ast-grep runner: a configuration rule over files, its matches as JSON, counted per enclosing function.
 import { isAbsolute, join, relative } from 'node:path';

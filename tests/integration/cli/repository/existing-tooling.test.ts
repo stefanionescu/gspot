@@ -17,8 +17,13 @@ test('hook discovery preserves path whitespace and refuses malformed Git configu
     expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
         { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
     ]);
+    const original = readFileSync(join(sandbox.path, '.git/config'));
     writeFileSync(join(sandbox.path, '.git/config'), '[core\n');
     expect(() => existingTooling(sandbox.path, [], [])).toThrow('Git configuration core.hooksPath failed');
+    writeFileSync(join(sandbox.path, '.git/config'), original);
+    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+        { kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] },
+    ]);
 });
 
 test('tool discovery rejects linked hook directories and accepts the corrected directory', async () => {
@@ -33,7 +38,9 @@ test('tool discovery rejects linked hook directories and accepts the corrected d
     expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
     unlinkSync(join(root, '.husky'));
     await createFileTree(root, { '.husky/pre-commit': '#!/bin/sh\nexit 0\n' });
-    expect(existingTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
+    expect(existingTooling(root, [], []).hooks).toStrictEqual([
+        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
+    ]);
 });
 
 test('tool discovery reads an external hook directory only through the Git-resolved boundary', async () => {

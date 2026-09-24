@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { readRepository } from '#cli/repository/tree.ts';
 
 describe('natures', () => {
@@ -64,4 +64,23 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
     await rejects(readRepository(sandbox.path, [], [], []), {
         message: /Lifecycle destination is not a private regular file/u,
     });
+    rmSync(join(sandbox.path, '.gitattributes'), { recursive: true });
+    writeFileSync(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
+    expect(
+        (await readRepository(sandbox.path, [], [], [])).files.find((file) => file.path === 'source.ts'),
+    ).toMatchObject({ nature: 'generated', natureSource: '.gitattributes' });
+});
+
+test('runtime identities classify only the supplied repository files as generated', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'runtime.yml': 'key: value\n', 'source.yml': 'key: value\n' });
+    const repository = await readRepository(sandbox.path, [], [], [], new Set(['runtime.yml']));
+    expect(repository.files.find((file) => file.path === 'runtime.yml')).toMatchObject({
+        nature: 'generated',
+        natureSource: 'gspot',
+        producedBy: 'gspot check',
+    });
+    expect(repository.files.find((file) => file.path === 'source.yml')?.nature).toBe('source');
+    const unowned = await readRepository(sandbox.path, [], [], []);
+    expect(unowned.files.find((file) => file.path === 'runtime.yml')?.nature).toBe('source');
 });

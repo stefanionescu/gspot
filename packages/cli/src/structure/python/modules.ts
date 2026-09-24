@@ -1,6 +1,6 @@
 // The parsed Python modules of one run, and the functions they define.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { PythonFunction, PythonModule } from '#cli/structure/python/types.ts';

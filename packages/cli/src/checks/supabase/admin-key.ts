@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // The key that bypasses row level security, named only where the policy allows it.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';

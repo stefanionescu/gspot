@@ -1,6 +1,6 @@
 // The parsed Swift files of one run, and the functions they declare.
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';

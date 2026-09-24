@@ -21,7 +21,7 @@ describe('ignores', () => {
             { check: 'bash/shellcheck', rule: 'SC2312', paths: ['scripts/**'], reason: 'why' },
             { check: 'bash/shellcheck', rule: 'SC2086', reason: 'why' },
         ]);
-        expect(result.kept).toHaveLength(1);
+        expect(result.kept).toStrictEqual([finding('src/b.sh', 'SC2312', 'bash/shellcheck')]);
         expect(result.uses.map((use) => use.matched)).toStrictEqual([1, 1]);
     });
 });

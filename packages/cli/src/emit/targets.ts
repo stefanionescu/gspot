@@ -17,7 +17,8 @@ import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
 import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
-import type { ScopeSelection, Session } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { miseTasks, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';

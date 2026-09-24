@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Blocking calls inside an async function: they stop the event loop for every other task.
 import { parseSource } from '#cli/parsers/tree-sitter.ts';

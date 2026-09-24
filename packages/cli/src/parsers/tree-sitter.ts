@@ -1,9 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { Language, Parser, type Tree } from 'web-tree-sitter';
-import type { SourceObservations } from '#cli/repository/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 
 export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 
@@ -49,11 +48,7 @@ export function parserFor(name: GrammarName): Promise<Parser> {
  * @param context execution observations and their existing resource owner, when running checks
  * @returns a caller-owned tree copy, or null when parsing cannot produce a tree
  */
-export async function parseSource(
-    name: GrammarName,
-    text: string,
-    context?: Pick<EngineInput, 'observations' | 'resources'>,
-): Promise<Tree | null> {
+export async function parseSource(name: GrammarName, text: string, context?: ParseContext): Promise<Tree | null> {
     const parser = await parserFor(name);
     if (context?.resources === undefined) return parser.parse(text);
     let trees = observations.get(context.observations);
@@ -89,3 +84,5 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
     if (language !== 'typescript') return undefined;
     return path.endsWith('.tsx') ? 'tsx' : 'typescript';
 }
+
+export type ParseContext = { observations: SourceObservations; resources?: DisposableStack };

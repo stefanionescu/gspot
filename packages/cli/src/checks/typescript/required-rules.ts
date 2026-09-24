@@ -1,6 +1,6 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
 // integrity/required-rules: the configuration ESLint resolves for a file still turns on every rule a configuration requires.
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';

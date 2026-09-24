@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 

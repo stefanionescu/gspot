@@ -1,31 +1,25 @@
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Engine, EngineInput } from '#cli/checks/input.ts';
 import { join } from 'node:path';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { valeFindings } from '#cli/prose/vale.ts';
 import type { PlannedCheck } from '#cli/run/plan.ts';
 import { checkActions } from '#cli/checks/actions.ts';
 import { resolveNaming } from '#cli/naming/engine.ts';
-import type { MergedView } from '#cli/policy/merge.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { sourceBans } from '#cli/prose/source-bans.ts';
 import { resolveIntegrity } from '#cli/checks/dispatch.ts';
-import type { ScopeEntry } from '#cli/repository/scopes.ts';
-import type { ToolContext } from '#cli/tools/tool-probe.ts';
 import { resolveStructure } from '#cli/structure/engine.ts';
-import type { PolicyFiles } from '#cli/policy/read-policy.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { checkSwiftlint } from '#cli/structure/swift/lint.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
-import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { Finding, CheckResult } from '#cli/output/schema.ts';
-import type { Session, ScopeSelection } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
 import { checkCommitMessages } from '#cli/checks/commit-messages.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { Repository, SourceObservations } from '#cli/repository/tree.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
@@ -162,32 +156,3 @@ export function resolveCheck(
         });
     return (session, planned) => runToolCheck(session, planned);
 }
-
-export type EngineInput = {
-    policyFiles: PolicyFiles;
-    selection: ScopeSelection;
-    manifests: Map<string, Manifest>;
-    probes: ToolContext['probes'];
-    scopeEntries: ScopeEntry[];
-    attributes: Repository['attributes'];
-    hasGit: boolean;
-    observations: SourceObservations;
-    resources?: DisposableStack;
-    cancelSignal?: AbortSignal;
-    scopeRoot: string;
-    repositoryFiles?: TrackedFile[];
-    generatedDrift?: () => import('#cli/emit/drift.ts').DriftEntry[];
-    suppressions?: SuppressionComment[];
-    root: string;
-    scope: string;
-    view: MergedView;
-    spec: CheckSpec;
-    files: TrackedFile[];
-    staged?: Set<string>;
-};
-
-export type EngineOutcome = { findings: Finding[]; checkedFiles: string[] };
-
-export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
-
-export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };

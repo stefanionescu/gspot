@@ -29,7 +29,9 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
     const corrected = await eslint.lintText('export function count() { return 1; }\n', {
         filePath: 'sample.test.js',
     });
-    expect(corrected.flatMap((file) => file.messages).filter((message) => rules.has(message.ruleId ?? ''))).toStrictEqual([]);
+    expect(
+        corrected.flatMap((file) => file.messages).filter((message) => rules.has(message.ruleId ?? '')),
+    ).toStrictEqual([]);
 });
 
 test.each([
@@ -154,92 +156,76 @@ test.each(['recommended', 'all'])(
     },
 );
 
-test.each(['recommended', 'all'])(
-    'generated %s Jest rules report each required defect for Jest and Bun imports',
-    async (level) => {
+const JEST_CASES = [
+    [
+        'no-focused-tests',
+        'test.only("counts", () => { expect(1).toBe(1); });',
+        'test("counts", () => { expect(1).toBe(1); });',
+    ],
+    [
+        'no-disabled-tests',
+        'test.skip("counts", () => { expect(1).toBe(1); });',
+        'test("counts", () => { expect(1).toBe(1); });',
+    ],
+    [
+        'no-identical-title',
+        'test("counts", () => { expect(1).toBe(1); }); test("counts", () => { expect(2).toBe(2); });',
+        'test("counts one", () => { expect(1).toBe(1); }); test("counts two", () => { expect(2).toBe(2); });',
+    ],
+    ['no-standalone-expect', 'expect(1).toBe(1);', 'test("counts", () => { expect(1).toBe(1); });'],
+    [
+        'no-commented-out-tests',
+        '// test("counts", () => { expect(1).toBe(1); });',
+        'test("counts", () => { expect(1).toBe(1); });',
+    ],
+    ['expect-expect', 'test("counts", () => { const count = 1; });', 'test("counts", () => { expect(1).toBe(1); });'],
+    [
+        'valid-describe-callback',
+        'describe("counting", async () => { test("counts", () => { expect(1).toBe(1); }); });',
+        'describe("counting", () => { test("counts", () => { expect(1).toBe(1); }); });',
+    ],
+    [
+        'no-conditional-expect',
+        'test("counts", () => { if (Date.now() > 0) expect(1).toBe(1); });',
+        'test("counts", () => { expect(1).toBe(1); });',
+    ],
+    ['valid-expect', 'test("counts", () => { expect(1); });', 'test("counts", () => { expect(1).toBe(1); });'],
+    [
+        'prefer-strict-equal',
+        'test("counts", () => { expect({ count: 1 }).toEqual({ count: 1 }); });',
+        'test("counts", () => { expect({ count: 1 }).toStrictEqual({ count: 1 }); });',
+    ],
+] as const;
+test.each(
+    ['recommended', 'all'].flatMap((level) =>
+        ['@jest/globals', 'bun:test'].flatMap((globalPackage) =>
+            JEST_CASES.map(([rule, planted, corrected]) => ({ level, globalPackage, rule, planted, corrected })),
+        ),
+    ),
+)(
+    'generated $level ESLint reports jest/$rule for $globalPackage and accepts its correction',
+    async ({ level, globalPackage, rule, planted, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'sample.test.js': '',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
-        const cases = [
-            [
-                'no-focused-tests',
-                'test.only("counts", () => { expect(1).toBe(1); });',
-                'test("counts", () => { expect(1).toBe(1); });',
-            ],
-            [
-                'no-disabled-tests',
-                'test.skip("counts", () => { expect(1).toBe(1); });',
-                'test("counts", () => { expect(1).toBe(1); });',
-            ],
-            [
-                'no-identical-title',
-                'test("counts", () => { expect(1).toBe(1); }); test("counts", () => { expect(2).toBe(2); });',
-                'test("counts one", () => { expect(1).toBe(1); }); test("counts two", () => { expect(2).toBe(2); });',
-            ],
-            ['no-standalone-expect', 'expect(1).toBe(1);', 'test("counts", () => { expect(1).toBe(1); });'],
-            [
-                'no-commented-out-tests',
-                '// test("counts", () => { expect(1).toBe(1); });',
-                'test("counts", () => { expect(1).toBe(1); });',
-            ],
-            [
-                'expect-expect',
-                'test("counts", () => { const count = 1; });',
-                'test("counts", () => { expect(1).toBe(1); });',
-            ],
-            [
-                'valid-describe-callback',
-                'describe("counting", async () => { test("counts", () => { expect(1).toBe(1); }); });',
-                'describe("counting", () => { test("counts", () => { expect(1).toBe(1); }); });',
-            ],
-            [
-                'no-conditional-expect',
-                'test("counts", () => { if (Date.now() > 0) expect(1).toBe(1); });',
-                'test("counts", () => { expect(1).toBe(1); });',
-            ],
-            ['valid-expect', 'test("counts", () => { expect(1); });', 'test("counts", () => { expect(1).toBe(1); });'],
-            [
-                'prefer-strict-equal',
-                'test("counts", () => { expect({ count: 1 }).toEqual({ count: 1 }); });',
-                'test("counts", () => { expect({ count: 1 }).toStrictEqual({ count: 1 }); });',
-            ],
-        ] as const;
-        for (const globalPackage of ['@jest/globals', 'bun:test']) {
-            writeFileSync(
-                join(sandbox.path, 'gspot.toml'),
-                `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
-            );
-            const config = emitAll(await openSession(sandbox.path)).files.find(
-                (file) => file.path === '.gspot/config/eslint.config.mjs',
-            )!;
-            const path = join(
-                sandbox.path,
-                '.gspot',
-                globalPackage === 'bun:test' ? 'bun-eslint.config.mjs' : 'jest-eslint.config.mjs',
-            );
-            writeFileSync(path, config.content);
-            const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: path });
-            for (const [rule, planted, corrected] of cases) {
-                const prefix = `import { describe, test, expect } from '${globalPackage}';\n`;
-                const failed = await eslint.lintText(prefix + planted, { filePath: 'sample.test.js' });
-                expect(
-                    failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === `jest/${rule}`),
-                    `${globalPackage}: ${rule}`,
-                ).not.toStrictEqual([]);
-                const fixed = await eslint.lintText(prefix + corrected, { filePath: 'sample.test.js' });
-                expect(
-                    fixed
-                        .flatMap((file) => file.messages)
-                        .filter(({ ruleId, fatal }) => ruleId === `jest/${rule}` || fatal),
-                    `${globalPackage}: ${rule}`,
-                ).toStrictEqual([]);
-            }
-        }
+        const config = emitAll(await openSession(sandbox.path)).files.find(
+            (file) => file.path === '.gspot/config/eslint.config.mjs',
+        )!;
+        await Bun.write(join(sandbox.path, config.path), config.content);
+        const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
+        const prefix = `import { describe, test, expect } from '${globalPackage}';\n`;
+        const failed = await eslint.lintText(prefix + planted, { filePath: 'sample.test.js' });
+        expect(failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === `jest/${rule}`)).toMatchObject(
+            [{ line: 2, severity: 2 }],
+        );
+        const fixed = await eslint.lintText(prefix + corrected, { filePath: 'sample.test.js' });
+        expect(
+            fixed.flatMap((file) => file.messages).filter(({ ruleId, fatal }) => ruleId === `jest/${rule}` || fatal),
+        ).toStrictEqual([]);
     },
 );
 
@@ -270,7 +256,9 @@ test.each(['js', 'jsx'])(
         const focused =
             "import { test, expect } from 'bun:test';\ntest.only('counts', () => { expect(1).toBe(1); });\n";
         const root = await eslint.lintText(focused, { filePath: `root.test.${extension}` });
-        expect(root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/'))).toStrictEqual([]);
+        expect(root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/'))).toStrictEqual(
+            [],
+        );
         const nested = await eslint.lintText(focused, { filePath: `app/sample.test.${extension}` });
         expect(
             nested.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jest/no-focused-tests'),
@@ -345,3 +333,29 @@ test.each(['recommended', 'all'])(
         }
     },
 );
+
+test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit types directory', async (level) => {
+    await using sandbox = await testdir();
+    const source = 'export type Value = string;\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[architecture]\ntypes_directory = "contracts"\n[rules]\ninstall = false\n`,
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+        'value.ts': source,
+        'contracts/value.ts': source,
+    });
+    symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
+    const config = emitAll(await openSession(sandbox.path)).files.find(
+        (file) => file.path === '.gspot/config/eslint.config.mjs',
+    )!;
+    await Bun.write(join(sandbox.path, config.path), config.content);
+    const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
+    const defect = await eslint.lintFiles(['value.ts']);
+    expect(
+        defect.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/types-placement'),
+    ).toMatchObject([{ severity: 2, line: 1, column: 8, messageId: 'aliasOutside' }]);
+    const corrected = await eslint.lintFiles(['contracts/value.ts']);
+    expect(
+        corrected.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/types-placement'),
+    ).toStrictEqual([]);
+});

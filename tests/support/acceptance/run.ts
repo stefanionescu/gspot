@@ -6,7 +6,7 @@ import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
-const ACCEPTANCE = join(TESTS, 'acceptance');
+const ACCEPTANCE = join(TESTS, 'acceptance/source');
 const SETUP_MS = 60_000;
 const TEST_MS = 30 * 60_000;
 
@@ -26,7 +26,7 @@ export function acceptanceArguments(args: readonly string[]): string[] {
         const selected = realpathSync(resolve(process.cwd(), argument));
         const within = relative(ACCEPTANCE, selected);
         if (within === '..' || within.startsWith('../') || within.startsWith('..\\') || isAbsolute(within))
-            throw new Error('Select a source test under tests/acceptance.');
+            throw new Error('Select a source test under tests/acceptance/source.');
         paths.push(selected);
     }
     return ['--timeout', '60000', ...flags, ...(paths.length === 0 ? [ACCEPTANCE] : paths)];

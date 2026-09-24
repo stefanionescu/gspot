@@ -5,7 +5,8 @@ import type { Finding } from '#cli/output/schema.ts';
 import type { PlannedCheck } from '#cli/run/plan.ts';
 import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
-import type { CheckSpec, OutputFormat } from '#cli/configurations/schema.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { OutputFormat } from '#cli/run/output-format.ts';
 
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
 const FILELESS_FORMATS = new Set(['lines', 'none']);

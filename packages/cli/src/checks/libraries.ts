@@ -4,7 +4,7 @@ import { scratchCopy } from '#cli/run/fixers.ts';
 // Checks of two libraries that read files: what client code imports from the server, and Drizzle tables with their relations and migrations.
 import { basename, dirname, join } from 'node:path';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { scopeImports } from '#cli/structure/imports.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';

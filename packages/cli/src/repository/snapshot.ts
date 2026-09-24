@@ -4,7 +4,7 @@ import { run, runBinary } from '#cli/platform/spawn.ts';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { SourceObservations } from '#cli/repository/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/snapshot-dependencies.ts';
 
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();

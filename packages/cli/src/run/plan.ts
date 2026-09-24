@@ -5,7 +5,8 @@ import { prettierInputs } from '#cli/run/prettier-inputs.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import type { RepositoryCheck } from '#cli/policy/normalize.ts';
-import type { ScopeSelection, Session } from '#cli/run/session.ts';
+import type { Session } from '#cli/run/session.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
 import { checkState, waitingSetting } from '#cli/policy/check-state.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';

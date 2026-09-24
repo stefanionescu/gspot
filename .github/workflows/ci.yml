@@ -84,7 +84,7 @@ jobs:
             - run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
             - run: mise run --skip-tools test:coverage
-            - run: mise run --skip-tools test:integration
+            - run: mise run --skip-tools test:tools
             - run: mise run --skip-tools test:acceptance
             - id: normal
               run: mise run --skip-tools gspot:check

@@ -1,5 +1,5 @@
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { executableStatements } from '#cli/structure/statements.ts';
 

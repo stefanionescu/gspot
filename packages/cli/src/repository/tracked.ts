@@ -4,7 +4,6 @@ import { dirname, join, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
-import type { SourceObservations } from '#cli/repository/tree.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
 import { openConfinedRoot, LIFECYCLE_PRIVATE_PATH } from '#cli/platform/filesystem.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
@@ -272,3 +271,9 @@ export function readSource(root: string, path: string, observations?: SourceObse
 }
 
 export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
+
+/** Source bytes observed during one run, confined to its original repository root. */
+export type SourceObservations = {
+    root: string;
+    sources: Map<string, Buffer>;
+};

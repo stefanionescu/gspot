@@ -1,7 +1,7 @@
 // Every lockfile matches its manifest: the package manager installs from it without wanting to change it.
 import { dirname, join } from 'node:path';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { createFileWorkspace } from '#cli/run/file-workspace.ts';

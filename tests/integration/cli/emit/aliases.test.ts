@@ -21,6 +21,14 @@ test.each(['package.json', 'tsconfig.json'])(
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
                 : 'Cannot read package manifest package.json',
         );
+        rmSync(join(sandbox.path, path), { recursive: true });
+        writeFileSync(
+            join(sandbox.path, path),
+            path === 'package.json'
+                ? '{"imports":{"#app/*":"./src/*"}}'
+                : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
+        );
+        expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({ '#app/': 'src/' });
     },
 );
 
@@ -40,6 +48,14 @@ test.each(['package.json', 'tsconfig.json'])(
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
                 : 'Cannot read package manifest package.json',
         );
+        rmSync(join(sandbox.path, path), { recursive: true });
+        writeFileSync(
+            join(sandbox.path, path),
+            path === 'package.json'
+                ? '{"imports":{"#app/*":"./src/*"}}'
+                : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
+        );
+        expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({ '#app/': 'src/' });
     },
 );
 
@@ -149,4 +165,6 @@ test('generation preserves authored aliases and reports missing authored bases',
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);
     writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
     expect(() => inputs.importAliases('')).toThrow('missing-base.json');
+    writeFileSync(join(sandbox.path, 'missing-base.json'), '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');
+    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });

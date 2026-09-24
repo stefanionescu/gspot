@@ -122,6 +122,7 @@ const coreRules = {
 
 const gspotRules = {
     ...gspot.configs.recommended.rules,
+
     'gspot/no-trivial-functions': ['error', { maxStatements: 2 }],
     'gspot/no-trivial-files': ['error', { maxStatements: 2 }],
 
@@ -139,7 +140,6 @@ const gspotRules = {
     'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }],
     'gspot/registry-instance-only': 'error',
     'gspot/private-before-public': 'error',
-
     'gspot/import-direction': ['error', { roles: {
     "types": [
         "types/**",
@@ -776,9 +776,7 @@ export default [
     "**/build/**",
     "**/coverage/**",
     ".gspot/**",
-    "packages/cli/vendor/swift.wasm",
-    "packages/cli/vendor/swift.LICENSE",
-    "packages/cli/vendor/notices.json"
+    "packages/cli/release/notices.json"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },
@@ -985,7 +983,6 @@ export default [
             'no-unused-vars': 'off',
         },
     },
-    ...tseslint.configs.disableTypeChecked.files ? [{ ...tseslint.configs.disableTypeChecked, files: JAVASCRIPT }] : [],
     { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
 
     ...librarySelectorBlocks,

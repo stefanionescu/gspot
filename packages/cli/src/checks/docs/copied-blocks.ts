@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';

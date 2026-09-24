@@ -4,7 +4,7 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { head } from '#cli/repository/tracked.ts';
 import type { Session } from '#cli/run/session.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
-import { isOwned } from '#cli/lifecycle/takeover.ts';
+import { isOwned } from '#cli/adoption/collect.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { readManifests } from '#cli/repository/manifests.ts';

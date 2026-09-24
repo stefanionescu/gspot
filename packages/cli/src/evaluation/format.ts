@@ -7,7 +7,7 @@ import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { CarriedFormatter } from '#cli/lifecycle/carry.ts';
+import type { CarriedFormatter } from '#cli/adoption/native.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/emit/format.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';

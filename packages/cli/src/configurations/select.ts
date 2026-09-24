@@ -1,5 +1,4 @@
 import { nearMatches } from '#cli/policy/near.ts';
-import type { Session } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
 // Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
 import type { Policy } from '#cli/policy/normalize.ts';
@@ -135,7 +134,7 @@ export function sourceConfigurations(selected: Manifest[]): Manifest[] {
  * @param session the session
  * @returns the manifests
  */
-export function everyManifest(session: Session): Manifest[] {
+export function everyManifest(session: { scopes: { selected: Manifest[] }[] }): Manifest[] {
     const seen = new Map<string, Manifest>();
     for (const scope of session.scopes)
         for (const manifest of scope.selected)

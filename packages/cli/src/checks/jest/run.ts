@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import type { Finding } from '#cli/output/schema.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';

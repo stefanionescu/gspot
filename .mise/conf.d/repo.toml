@@ -23,8 +23,8 @@ description = "Diagnose the repository using gspot source."
 run = "gspot doctor"
 
 [tasks."repo:setup"]
-description = "Install frozen workspace dependencies and synchronize Astro types."
-run = "bun install --frozen-lockfile"
+description = "Install frozen dependencies, prepare the Swift parser, and synchronize Astro types."
+run = ["bun install --frozen-lockfile", "bun packages/cli/release/grammar.ts"]
 depends_post = ["docs:sync"]
 
 [tasks."repo:install-checks"]
@@ -40,44 +40,51 @@ description = "Build the standalone ESLint plugin and stage its license."
 run = "bun packages/eslint-plugin/build.ts"
 
 [tasks.test]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Run deterministic unit and integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./unit ./integration"
+run = "bun test --timeout 60000 --path-ignore-patterns '**/integration/tools/**' ./unit ./integration"
 
 [tasks."test:unit"]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Run CLI unit and standalone plugin tests."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./unit"
 
 [tasks."test:coverage"]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Run unit and integration tests with coverage."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 --coverage ./unit ./integration"
+run = "bun test --timeout 60000 --coverage --path-ignore-patterns '**/integration/tools/**' ./unit ./integration"
 
 [tasks."test:integration"]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Run integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration"
+run = "bun test --timeout 60000 --path-ignore-patterns '**/integration/tools/**' ./integration"
 
-[tasks."test:native"]
+[tasks."test:tools"]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Run native compatibility tests with the selected tools installed."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./native"
+run = "bun test --timeout 60000 ./integration/tools"
 
 [tasks."test:acceptance"]
+depends = ["prepare:grammar"]
 description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
 dir = "{{config_root}}/tests"
 run = "bun support/acceptance/run.ts"
 
 [tasks."test:release"]
+depends = ["prepare:grammar", "build:plugin"]
 description = "Exercise built release artifacts and installed consumers through an isolated registry."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./release"
+run = "bun test --timeout 60000 ./acceptance/release"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."
 depends = ["docs:sync"]
-run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json", "bunx tsc --noEmit -p tests/tsconfig.json"]
+run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
 
 [tasks."docs:sync"]
 description = "Generate Astro content and TypeScript metadata."
@@ -108,10 +115,9 @@ run = "bun docs/scripts/verify-release.ts"
 description = "Validate and publish packages to the selected registry."
 run = "bun packages/cli/release/publish.ts"
 
-[tasks."build:grammar"]
-description = "Build the pinned Swift grammar using Docker, or compare it with --check."
-tools = {tree-sitter = "0.25.10"}
-run = "bun packages/cli/release/build-swift-grammar.ts"
+[tasks."prepare:grammar"]
+description = "Download and verify the pinned upstream Swift parser for source development."
+run = "bun packages/cli/release/grammar.ts"
 
 [tasks."ci:affected"]
 description = "Check committed changes against GSPOT_CI_BASE, or all inputs for a first push."
@@ -162,6 +168,7 @@ bun -e 'await Bun.write("docs/dist/source.json", JSON.stringify({revision:proces
 '''
 
 [tasks."test:docs"]
+depends = ["prepare:grammar"]
 description = "Run documentation example, reference, link, and release-source tests."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/docs"
@@ -169,7 +176,7 @@ run = "bun test --timeout 60000 ./integration/docs"
 [tasks."test:bash-example"]
 description = "Exercise the published Bash example and captured transcript with native tools."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./native/docs/bash-example.test.ts"
+run = "bun test --timeout 60000 ./integration/tools/docs/bash-example.test.ts"
 
 [tasks."docs:check-links"]
 description = "Validate local links and fragment targets in the built documentation site."

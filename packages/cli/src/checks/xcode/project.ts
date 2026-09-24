@@ -2,7 +2,7 @@
 import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import type { TestPlan } from '#cli/checks/xcode/types.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';

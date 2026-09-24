@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 
 const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;

@@ -2,7 +2,7 @@ import { readGitSetting } from '#cli/platform/spawn.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { CarriedFormatter } from '#cli/lifecycle/carry.ts';
+import type { CarriedFormatter } from '#cli/adoption/native.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';

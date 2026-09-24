@@ -1,5 +1,3 @@
-# gspot
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner-light.svg">

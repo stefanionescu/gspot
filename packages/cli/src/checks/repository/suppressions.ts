@@ -6,7 +6,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { EngineInput, SuppressionComment } from '#cli/run/engines.ts';
+import type { EngineInput, SuppressionComment } from '#cli/checks/input.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/run/ignores.ts';
 
 const GSPOT_SUPPRESSION = {

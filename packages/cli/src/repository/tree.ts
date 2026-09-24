@@ -2,13 +2,13 @@
 import { tagEntry } from '#cli/repository/tags.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { swiftTestTags } from '#cli/repository/swift-tests.ts';
 import type { FileDeclaration } from '#cli/policy/normalize.ts';
-import { FILE_PREFIX_BYTES } from '#cli/repository/file-tags.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
 import type { Attribute, TrackedFile } from '#cli/repository/file-classification.ts';
 import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
+
+const FILE_PREFIX_BYTES = 4096;
 
 /**
  * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.
@@ -16,6 +16,7 @@ import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/re
  * @param declarations the generated and vendored declarations
  * @param scopeEntries the [[scope]] entries
  * @param exclude paths and directory patterns excluded before reading content
+ * @param runtimeFiles journal-owned runtime outputs supplied by command composition
  * @returns the repository record
  */
 export async function readRepository(
@@ -23,15 +24,11 @@ export async function readRepository(
     declarations: FileDeclaration[],
     scopeEntries: { path: string; configurations: string[] }[],
     exclude: string[],
+    runtimeFiles: ReadonlySet<string> = new Set(),
 ): Promise<Repository> {
     const entries = await trackedEntries(root, exclude);
     const files: TrackedFile[] = [];
     const attributes = readAttributes(root);
-    const runtimeFiles = new Set(
-        readOwnership(root)
-            .files.filter((entry) => entry.kind === 'runtime')
-            .map((entry) => entry.path),
-    );
     for (const entry of entries) {
         const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES);
         const tagged = tagEntry(entry, prefix);
@@ -58,12 +55,6 @@ export async function readRepository(
     }
     return { root, attributes, hasGit: isGitRepository(root), files, scopes: policyScopes(scopeEntries) };
 }
-
-/** Source bytes observed during one run, confined to its original repository root. */
-export type SourceObservations = {
-    root: string;
-    sources: Map<string, Buffer>;
-};
 
 export type Repository = {
     root: string;

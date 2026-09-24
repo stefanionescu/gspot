@@ -3,7 +3,7 @@ import { countFindings } from '#cli/structure/counts.ts';
 import type { ScriptIndex } from '#cli/structure/parser.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
 import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { Engine, EngineInput } from '#cli/run/engines.ts';
+import type { Engine, EngineInput } from '#cli/checks/input.ts';
 import { DOCUMENT_EXTENSIONS } from '#cli/structure/patterns.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
 import { docComment } from '#cli/structure/analyses/doc-comment.ts';

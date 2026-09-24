@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // Every package.json: exact versions, one packageManager across the workspace, a private root, one kind of lockfile.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { pathMatcher } from '#cli/configurations/claims.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/repository/manifests.ts';

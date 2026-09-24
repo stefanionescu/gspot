@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 

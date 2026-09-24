@@ -12,7 +12,7 @@ import type { CommandResult } from '#cli/commands/print-result.ts';
 import { PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
-import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
+import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
 
 type IgnoreOptions = {
     cwd: string;

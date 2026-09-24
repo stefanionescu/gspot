@@ -8,7 +8,7 @@ import { nameProblems } from '#cli/naming/validate-name.ts';
 import type { EffectivePolicy } from '#cli/naming/policy.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
-import type { Engine, EngineInput } from '#cli/run/engines.ts';
+import type { Engine, EngineInput } from '#cli/checks/input.ts';
 import type { NamingContext } from '#cli/naming/validate-name.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';

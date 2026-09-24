@@ -163,6 +163,7 @@ export function publishTo(registry: Registry, version: string, checkout: string)
             env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },
             stdout: 'pipe',
             stderr: 'pipe',
+            timeout: 180_000,
         },
     );
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };

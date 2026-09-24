@@ -61,7 +61,9 @@ test.each([
     { version: '2.1.0', runs: [{ results: null }] },
 ])('an incomplete CodeQL report cannot become a clean result: %j', (value) => {
     expect(() => sarifFindings(value, 'security/codeql', [], sourceRoot)).toThrow();
-    expect(sarifFindings({ version: '2.1.0', runs: [{ results: [] }] }, 'security/codeql', [], sourceRoot)).toStrictEqual([]);
+    expect(
+        sarifFindings({ version: '2.1.0', runs: [{ results: [] }] }, 'security/codeql', [], sourceRoot),
+    ).toStrictEqual([]);
 });
 
 test.each([

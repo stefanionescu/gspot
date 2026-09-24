@@ -1,6 +1,6 @@
 ---
 title: Build gspot
-description: Build local binaries, regenerate the Swift grammar, and prepare packages.
+description: Build local binaries, prepare the upstream Swift parser, and package releases.
 sidebar:
     order: 2
 ---
@@ -55,13 +55,23 @@ mise run docs:build
 ```
 
 `test` runs the unit and integration suites using the development prerequisites and installed
-workspace dependencies. Use `test:unit` or `test:integration` to select one suite.
+workspace dependencies. Routine tasks explicitly exclude `tests/integration/tools`. Use `test:unit` or
+`test:integration` to select one suite. Tasks that load plugin exports build the plugin first.
+
+Unit tests cover focused production logic and ESLint RuleTester cases. Integration tests
+combine production components with local fixtures and controlled external boundaries.
+Tool integration executes installed tools. Source acceptance runs user journeys through the
+source CLI. Release acceptance uses built binaries, installed packages, and standalone plugin
+consumers. Shared test setup, preservation, and cleanup live under `tests/support`.
 
 Native compatibility and source acceptance require their pinned external tools. Install those
-tools with `mise install`, then run the explicit suites. These suites can download dependencies:
+tools with `mise install`, then run the explicit suites. Supabase type compatibility requires
+Supabase CLI 2.72.7 and a running Docker daemon. Its isolated project removes its own containers
+and volumes after execution. XCTest coverage requires macOS with full Xcode and command-line
+tools selected by `xcode-select`. These suites can download dependencies:
 
 ```shell
-mise run test:native
+mise run test:tools
 mise run test:acceptance
 ```
 
@@ -70,10 +80,13 @@ dependencies use the configured npm registry. Output streams while the suite run
 The runner removes its registry after failure, timeout, or interruption. Select acceptance cases through that runner:
 
 ```shell
-mise run test:acceptance -- ./acceptance/configurations/vite.test.ts
+mise run test:acceptance -- ./acceptance/source/configurations/vite.test.ts
 ```
 
 Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.
+Coverage measures in-process source execution. It excludes tests and support code,
+generated configuration, built distributions, fixtures, and vendored assets. Reports are
+written to `coverage/lcov.info`; subprocess and native execution provide separate evidence.
 There is no fixed coverage-percentage gate. Jest supplies lint rules for `bun:test`; its native
 coverage command does not run Bun tests. Direct `bun test` discovers the broader test tree,
 including suites that require the acceptance runner or built release artifacts.
@@ -102,29 +115,24 @@ names, npm identities, and libc selection. macOS builds run `codesign` when buil
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
 The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-upstream records in `packages/cli/vendor/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
-the Swift grammar provenance and Bun runtime notices. Missing grammars, mismatched grammar
-hashes, and unrecorded license notices fail the build.
+upstream records in `packages/cli/release/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
+the Swift grammar provenance and Bun runtime notices. Failed parser downloads, mismatched checksums, and unrecorded license notices fail the build.
 
-## Regenerate the Swift grammar
+## Prepare the Swift parser
 
-The checked-in grammar is built from a pinned upstream commit. Its source, compiler versions,
-and SHA-256 are recorded in `packages/cli/vendor/swift.json`. Its upstream license is
-`packages/cli/vendor/swift.LICENSE`.
-
-Start Docker, then use mise 2026.8.8 or newer to run the pinned tree-sitter CLI:
+Source checkout setup and release builds download the upstream Swift 0.7.3 WebAssembly parser.
+`packages/cli/release/notices.json` records its release URL, SHA-256, and license. Preparation verifies cached
+bytes and rejects a failed download or checksum mismatch. The cache lives in ignored
+`packages/cli/build/swift.wasm`; no compiler or Docker is required for this preparation.
 
 ```shell
-mise run build:grammar
-mise run build:grammar -- --check
+mise run prepare:grammar
 ```
 
-The script fetches the exact source commit into a temporary checkout. tree-sitter invokes
-Emscripten in a container pinned by digest, with compilation network access disabled. The
-second command rebuilds and compares the grammar, provenance, and license without changing
-the checked-in outputs.
-
-Use `--out <directory>` to preview the generated files elsewhere.
+Test tasks prepare the grammar automatically. Before invoking Bun tests directly, run repository
+setup or the preparation task. Source checks report a missing cache without downloading it.
+Release binaries embed the verified parser and require no parser download at runtime.
+The Swift license and attribution are included in the release notice data.
 
 ## Validate packages locally
 

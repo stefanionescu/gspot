@@ -5,6 +5,7 @@ import { planRun } from '#cli/run/plan.ts';
 import { openSession } from '#cli/run/session.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
+import { reportSchema } from '#cli/output/schema.ts';
 import { createFileTree, testdir } from 'testdirs';
 
 const LOCKS: [string, string][] = [
@@ -43,7 +44,13 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         );
     };
     expect(await check()).toStrictEqual([
-        expect.objectContaining({ rule: 'unlocked-package', message: expect.stringContaining('example@2.0.0') }),
+        expect.objectContaining({
+            check: 'integrity/allowlists-match',
+            file: 'gspot.toml',
+            line: 1,
+            rule: 'unlocked-package',
+            message: expect.stringContaining('example@2.0.0'),
+        }),
     ]);
     await Bun.write(`${repository.path}/gspot.toml`, policy('1.2.3'));
     expect(await check()).toStrictEqual([]);
@@ -151,8 +158,19 @@ test.each(['root', 'nested', 'combined'])(
             ).toBe(false);
         const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(JSON.parse(result.stdout).checks).toMatchObject([
-            { check: 'integrity/allowlists-match', findings: [{ rule: 'unlocked-package' }] },
+        expect(reportSchema.parse(JSON.parse(result.stdout)).checks).toMatchObject([
+            {
+                check: 'integrity/allowlists-match',
+                status: 'fail',
+                findings: [{ file: 'gspot.toml', line: 1, rule: 'unlocked-package' }],
+            },
+        ]);
+        const path = `${root}/gspot.toml`;
+        await Bun.write(path, (await Bun.file(path).text()).replace('example@2.0.0', 'example@1.2.3'));
+        const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            { check: 'integrity/allowlists-match', status: 'ok', findings: [] },
         ]);
     },
 );

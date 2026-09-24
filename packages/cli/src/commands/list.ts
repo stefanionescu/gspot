@@ -21,7 +21,7 @@ function scopeTag(scope: string | undefined): string {
 }
 
 function settingsText(session: Session): CommandResult {
-    const { rows, extras } = settingRows(session);
+    const { rows, extras } = settingRows(session.policyFiles.policy, session.scopes);
     const width = Math.max(...rows.map((row) => row.key.length)) + KEY_GAP;
     const lines = rows.map((row) => {
         const value = (row.value === undefined ? 'unset' : JSON.stringify(row.value)).padEnd(VALUE_WIDTH);

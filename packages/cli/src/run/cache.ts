@@ -8,7 +8,7 @@ import { readdirSync, statSync, type Dirent } from 'node:fs';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-import type { SourceObservations } from '#cli/repository/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 const CACHE_FORMAT = 5;

@@ -1,12 +1,8 @@
-import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
-import { fileMissing } from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { stringify as stringifyToml } from 'smol-toml';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-// The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+// Policy mutations preserve comments and order and validate the resulting document.
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
@@ -69,34 +65,6 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete({ policy, text: next, path: 'gspot.toml' });
     return { text: next, policy, changed: next !== text };
-}
-
-/**
- * Apply a validated policy proposal through lifecycle ownership.
- * @param root
- * @param mutate
- * @param isDryRun
- */
-export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
-    const original = openConfinedRoot(root).read('gspot.toml');
-    if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
-    const text = original.bytes.toString('utf8');
-    if (!Buffer.from(text).equals(original.bytes)) throw new Error('gspot.toml must contain valid UTF-8 text.');
-    const proposal = proposePolicy(root, text, mutate);
-    if (proposal.changed && !isDryRun)
-        withLifecycleOwner(root, (owner) => {
-            const previous = owner.read('gspot.toml');
-            if (!isDeepStrictEqual(previous, original))
-                throw new Error('gspot.toml changed while the edit was prepared. Retry the command.');
-            const status = owner.replace(
-                'gspot.toml',
-                { bytes: Buffer.from(proposal.text), mode: original.mode },
-                'policy',
-                true,
-            );
-            if (status === 'preserved') throw new Error('The policy edit could not preserve the current input.');
-        });
-    return proposal;
 }
 
 /**

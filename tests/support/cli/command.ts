@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { run as runProcess } from '#cli/platform/spawn.ts';
+import { spawn } from 'node:child_process';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -25,17 +25,74 @@ export async function run(
     argv: string[],
     environment: Record<string, string> = {},
 ): Promise<SpawnOutcome> {
-    const result = await runProcess([process.execPath, gspot, ...argv], {
+    return await runProcess([process.execPath, gspot, ...argv], {
         cwd,
-        env: { NO_COLOR: '1', CI: '1', ...environment },
+        env: { ...process.env, NO_COLOR: '1', CI: '1', ...environment },
         timeoutMs: PLANTED_TIMEOUT_MS * 2,
     });
-    if (result.isTimedOut === true)
-        throw new Error(
-            `Command gspot ${argv.join(' ')} timed out in ${cwd}.\n` +
-                `Duration: ${result.duration.toFixed(0)} ms; exit: ${String(result.code)}.\n` +
-                `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+}
+
+/** Observes an acceptance command independently of the production process supervisor. */
+export async function runProcess(
+    argv: string[],
+    options: { cwd: string; env?: Record<string, string | undefined>; timeoutMs?: number; stdin?: string },
+): Promise<SpawnOutcome> {
+    const [executable, ...arguments_] = argv;
+    return await new Promise<SpawnOutcome>((resolve, reject) => {
+        const child = spawn(executable!, arguments_, {
+            cwd: options.cwd,
+            env: { ...process.env, ...options.env },
+            detached: process.platform !== 'win32',
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        let stdout = '';
+        let stderr = '';
+        let bytes = 0;
+        let failure: Error | undefined;
+        const terminate = (reason: string): void => {
+            failure = new Error(reason);
+            try {
+                if (process.platform !== 'win32' && child.pid !== undefined) process.kill(-child.pid, 'SIGKILL');
+                else child.kill('SIGKILL');
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code !== 'ESRCH') failure = error as Error;
+            }
+        };
+        const deadline = setTimeout(
+            () => terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`),
+            options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2,
         );
-    if (result.missing) throw new Error(`Could not launch gspot: ${result.stderr}`);
-    return { code: result.code, stdout: result.stdout, stderr: result.stderr };
+        for (const [name, stream] of [
+            ['stdout', child.stdout],
+            ['stderr', child.stderr],
+        ] as const) {
+            stream.setEncoding('utf8');
+            stream.on('data', (chunk: string) => {
+                bytes += Buffer.byteLength(chunk);
+                if (bytes > 32 * 1024 * 1024) {
+                    terminate('Command output exceeded 32 MiB');
+                    return;
+                }
+                if (name === 'stdout') stdout += chunk;
+                else stderr += chunk;
+            });
+        }
+        child.once('error', (error) => {
+            failure = error;
+        });
+        child.once('close', (code, signal) => {
+            clearTimeout(deadline);
+            if (failure !== undefined || code === null) {
+                reject(
+                    new Error(
+                        `Could not complete ${argv.join(' ')} in ${options.cwd}: ${failure?.message ?? signal}\n${stdout}\n${stderr}`,
+                        { cause: failure },
+                    ),
+                );
+                return;
+            }
+            resolve({ code, stdout, stderr });
+        });
+        child.stdin.end(options.stdin);
+    });
 }

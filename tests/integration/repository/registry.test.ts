@@ -22,7 +22,9 @@ test('registry setup releases storage after bind failure, timeout, and interrupt
         const starting = startRegistry(0, 30_000, controller.signal);
         controller.abort(new Error('Interrupted setup'));
         await expect(starting).rejects.toThrow('Interrupted setup');
-        expect(new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')))).toStrictEqual(before);
+        expect(new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')))).toStrictEqual(
+            before,
+        );
     } finally {
         await unrelated.stop(true);
     }

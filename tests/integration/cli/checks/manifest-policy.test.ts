@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { engineInput } from '#cli/run/engines.ts';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 
@@ -32,6 +32,8 @@ describe('manifest policy observations', () => {
             const inspected = await input(sandbox.path);
             fs.writeFileSync(join(sandbox.path, 'package.json'), content);
             expect(() => manifestPolicy(inspected)).toThrow('Cannot read package manifest package.json');
+            fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
+            expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
         },
     );
 
@@ -47,6 +49,7 @@ describe('manifest policy observations', () => {
         } finally {
             denied.mockRestore();
         }
+        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
     });
 
     test('accepts an absent optional manifest and a valid manifest', async () => {

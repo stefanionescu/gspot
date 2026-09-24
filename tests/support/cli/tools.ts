@@ -4,8 +4,6 @@ import { delimiter, dirname, join } from 'node:path';
 import { readPolicy } from '#cli/policy/read-policy.ts';
 import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { installPythonProject } from '#cli/tools/python-project.ts';
-import { installPackageProject } from '#cli/tools/package-project.ts';
 import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
@@ -48,11 +46,11 @@ export async function install(cwd: string, argv: string[], environment: Record<s
     throw new Error(`The init command wrote no policy in the planted repository: ${outcome.stderr}${outcome.stdout}`);
 }
 
-/** Install generated, locked tool projects through their lifecycle owners. */
+/** Install generated, locked tool projects through the public command. */
 export async function installPrivateTools(cwd: string): Promise<void> {
-    await installPackageProject(
-        cwd,
-        [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
-    );
-    await installPythonProject(cwd);
+    const outcome = await run(cwd, ['install']);
+    if (outcome.code !== 0)
+        throw new Error(
+            `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
+        );
 }

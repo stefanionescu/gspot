@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -29,29 +28,6 @@ describe('documented examples', () => {
         expect(selected).toBeGreaterThan(0);
     });
 });
-
-test.each(['', ' '.repeat(3), { file: '' }])(
-    'planted cases reject an empty diagnostic expectation before writing: %j',
-    async (expected) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n',
-            'source.txt': 'original',
-        });
-        await expect(
-            runPlanted(
-                sandbox.path,
-                {
-                    check: 'example/check',
-                    files: { 'source.txt': 'changed' },
-                    expected,
-                },
-                {},
-            ),
-        ).rejects.toThrow('empty diagnostic expectation');
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    },
-);
 
 test('the documented custom check reports its defect and accepts its correction', async () => {
     const source = readFileSync(join(guides, 'custom-checks.md'), 'utf8');

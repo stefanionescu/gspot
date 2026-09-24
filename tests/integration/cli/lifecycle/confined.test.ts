@@ -6,7 +6,7 @@ import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
+import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { fileMode, mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 import {
@@ -293,4 +293,36 @@ test('empty-directory removal confines parents and preserves nonempty directorie
     } finally {
         files.close();
     }
+});
+
+test.each([
+    'schemes: ["Authored # scheme"]\n',
+    'schemes:\n  # Preserve the selected scheme.\n  - "Authored # scheme"\n',
+    'schemes: &schemes\n  - "Authored # scheme"\nretain_public: true\n',
+])('Xcode discovery reads YAML scheme syntax: %s', async (configuration) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'app.xcodeproj/xcshareddata/xcschemes/Fallback.xcscheme': '',
+        '.periphery.yml': configuration,
+    });
+    expect(xcodeProposal(directory.path, [''])).toStrictEqual({
+        scope: '',
+        project: 'app.xcodeproj',
+        scheme: 'Authored # scheme',
+    });
+});
+
+test('Xcode discovery rejects invalid scheme settings and accepts their correction', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'app.xcodeproj/xcshareddata/xcschemes/Fallback.xcscheme': '',
+        '.periphery.yml': 'schemes: [42]\n',
+    });
+    expect(() => xcodeProposal(directory.path, [''])).toThrow();
+    writeFileSync(join(directory.path, '.periphery.yml'), 'schemes: []\n');
+    expect(xcodeProposal(directory.path, [''])).toStrictEqual({
+        scope: '',
+        project: 'app.xcodeproj',
+        scheme: 'Fallback',
+    });
 });

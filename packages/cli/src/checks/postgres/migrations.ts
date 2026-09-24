@@ -1,6 +1,6 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 // The migrations of a repository: where they live, their versions, and their parsed statements.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';

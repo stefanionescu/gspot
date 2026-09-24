@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { toolPin } from '#cli/tools/tool-probe.ts';
 import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';

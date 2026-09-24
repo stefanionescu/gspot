@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/output/schema.ts';
 // The checks every SQL file gets: it parses, it holds no block comment, and it stays under the line ceiling.
-import type { EngineInput } from '#cli/run/engines.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';

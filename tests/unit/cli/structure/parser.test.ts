@@ -69,7 +69,7 @@ test('Bash and naming analysis reject missing trees and accept corrected parsing
         parse.mockRestore();
     }
     expect(await scriptFunctions('run() { echo ready; }', context)).toHaveLength(1);
-    expect((await identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context)).map((entry) => entry.name)).toContain(
-        'run',
-    );
+    expect(
+        (await identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context)).map((entry) => entry.name),
+    ).toContain('run');
 });

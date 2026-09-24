@@ -47,7 +47,10 @@ describe('docProblems', () => {
             '-- Indexes',
         );
         const problems = docProblems(await migration(moved), SECTIONS);
-        expect(problems.map((problem) => problem.rule)).toStrictEqual(['placement', 'label']);
+        expect(problems.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([
+            { rule: 'placement', line: 13 },
+            { rule: 'label', line: 13 },
+        ]);
         expect(problems[0]?.text).toContain('belongs under "Tables", and it is under "Indexes"');
     });
 });

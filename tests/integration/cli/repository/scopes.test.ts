@@ -4,7 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { mkdirSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
 
 test.each([
     { 'package.json': '{"workspaces":["packages/*"]}' },
@@ -55,6 +55,15 @@ test.each(['pnpm-workspace.yaml', 'lerna.json', 'rush.json'])(
         await Bun.file(join(sandbox.path, path)).delete();
         mkdirSync(join(sandbox.path, path));
         expect(() => workspaceScopes(sandbox.path, [])).toThrow();
+        rmSync(join(sandbox.path, path), { recursive: true });
+        await createFileTree(sandbox.path, {
+            [path]:
+                path === 'rush.json'
+                    ? '{"projects":[{"packageName":"app","projectFolder":"packages/app"}]}'
+                    : '{"packages":["packages/*"]}',
+            'packages/app/package.json': '{"name":"app"}',
+        });
+        expect(workspaceScopes(sandbox.path, []).scopes.map((scope) => scope.path)).toStrictEqual(['packages/app']);
     },
 );
 

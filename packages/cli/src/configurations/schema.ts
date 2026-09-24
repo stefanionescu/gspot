@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { Defined } from '#cli/policy/schema.ts';
 // The zod schema of manifest.toml, and the refusals the loader applies.
-import { outputSchema } from '#cli/schemas/check-output.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/schemas/commands.ts';
+import { outputSchema } from '#cli/run/output-format.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -290,9 +290,6 @@ export type Stage = RawCheck['stage'];
 export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
 
 export type Claims = RawManifest['claims'];
-
-/** The output fields accepted by both configuration and repository checks. */
-export type OutputFormat = z.infer<typeof outputSchema>;
 
 export type ConfigurationTarget = RawManifest['configs'][number];
 
