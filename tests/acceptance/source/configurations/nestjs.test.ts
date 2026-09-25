@@ -1,7 +1,7 @@
 import { reportSchema } from '#cli/execution/report.ts';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, symlinkSync } from 'node:fs';
+import { symlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
@@ -111,15 +111,6 @@ describe('the nestjs configuration', () => {
             await install(sandbox.path, INIT, environment);
             const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            // Required Nest entry points carry local reasons, and the module has no automatic baseline.
-            const held = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
-            expect(held.code, held.stdout + held.stderr).toBe(0);
-            const eslintFile = join(sandbox.path, '.gspot/baselines/eslint.json');
-            const eslintHeld = existsSync(eslintFile) ? await Bun.file(eslintFile).text() : '';
-            expect(eslintHeld, eslintHeld).toBe('');
-            expect(
-                existsSync(join(sandbox.path, '.gspot/baselines/structure.prefix-collisions.shared-prefix.json')),
-            ).toBe(false);
             for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);

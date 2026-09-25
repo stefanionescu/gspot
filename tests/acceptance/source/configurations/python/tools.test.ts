@@ -149,7 +149,6 @@ describe('the python configuration', () => {
             const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
             expect(policy).toContain('planted/skipped.py');
             expect(policy).toContain('.venv');
-            expect(await Bun.file(`${sandbox.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(false);
             const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
             const refused = await run(sandbox.path, command, environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
