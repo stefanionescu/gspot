@@ -106,7 +106,10 @@ function collect(
     if (tool === undefined) throw new Error('Cannot collect tool output without a selected tool.');
     if (parsed.length === 0 && result.code !== 0 && invocation.file !== undefined)
         parsed.push(unexplainedFailure(spec, tool, result, invocation.file));
-    if (invocation.file !== undefined && spec.output?.format === 'regex' && (spec.output.file_is ?? 'path') === 'path')
+    if (
+        invocation.file !== undefined &&
+        (spec.output?.format !== 'regex' || (spec.output.file_is ?? 'path') === 'path')
+    )
         for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
     if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
     state.findings.push(...parsed);
