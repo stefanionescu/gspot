@@ -54,6 +54,7 @@ const CIRCULAR = MODULE.replace(
     "import { Module } from '@nestjs/common';",
     () => "import { forwardRef, Module } from '@nestjs/common';",
 ).replace('@Module({ controllers', () => '@Module({ imports: [forwardRef(() => GreetingModule)], controllers');
+const MISMATCHED = CONTROLLER.replace("@Get(':name')", () => "@Get(':id')");
 
 const CASES: FindingCase[] = [
     {
@@ -72,6 +73,20 @@ const CASES: FindingCase[] = [
             'tsconfig.json': TSCONFIG.replace('"strict": true', '"strict": false'),
         },
         expected: { file: 'tsconfig.json', rule: 'strict' },
+    },
+    {
+        check: 'typescript/eslint',
+        files: { 'src/greeting.controller.ts': MISMATCHED },
+        expected: {
+            file: 'src/greeting.controller.ts',
+            rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',
+            line: 23,
+        },
+    },
+    {
+        check: 'integrity/tsconfig-options',
+        files: { 'tsconfig.json': TSCONFIG.replace(',\n        "emitDecoratorMetadata": true', '') },
+        expected: { file: 'tsconfig.json', rule: 'emitDecoratorMetadata' },
     },
 ];
 
@@ -127,3 +142,41 @@ describe('the nestjs configuration', () => {
         PLANTED_TIMEOUT_MS * 8,
     );
 });
+
+test(
+    'tools.nestjs.swagger turns the Swagger rules of the NestJS plugin on and off',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            '.gitignore': 'node_modules\n',
+            'package.json': PACKAGE,
+            'tsconfig.json': TSCONFIG,
+            'src/greeting.service.ts': GREETER,
+            'src/greeting.controller.ts': CONTROLLER,
+            'src/greeting.module.ts': MODULE,
+        });
+        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+        commitAll(sandbox.path);
+        const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+        await install(sandbox.path, INIT, environment);
+        const documented = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'true'], environment);
+        expect(documented.code, documented.stdout + documented.stderr).toBe(0);
+        const swagger = await run(
+            sandbox.path,
+            ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
+            environment,
+        );
+        expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
+        expect(reportSchema.parse(JSON.parse(swagger.stdout)).checks[0]!.findings).toContainEqual(
+            expect.objectContaining({
+                rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
+                file: 'src/greeting.controller.ts',
+            }),
+        );
+        const plain = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'false'], environment);
+        expect(plain.code, plain.stdout + plain.stderr).toBe(0);
+        const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS * 6,
+);
