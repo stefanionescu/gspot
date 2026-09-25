@@ -75,3 +75,12 @@ query_packs = {python = "${pin}"}
         expect(() => parseManifest(source('1.7.8'), 'packages/cli/configurations/policy/security')).not.toThrow();
     },
 );
+
+test('a setting names the architecture role of its folder, and only a known role', () => {
+    const definition = (role: string) =>
+        `entry_files = ["src/main.js"]\n[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
+    const manifest = parseManifest(definition('harness'), 'configurations/example');
+    expect(manifest.settings[0]).toMatchObject({ name: 'tools.example.support_directory', role: 'harness' });
+    expect(manifest.entry_files).toStrictEqual(['src/main.js']);
+    expect(() => parseManifest(definition('helpers'), 'configurations/example')).toThrow('role');
+});

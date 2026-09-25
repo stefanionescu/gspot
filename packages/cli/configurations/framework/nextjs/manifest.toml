@@ -103,6 +103,20 @@ why = "A lint package a version behind flags what the framework allows and allow
 help = "Move both packages to the same version."
 
 [[settings]]
+name = "tools.eslint.import_style"
+kind = "table"
+direction = "neutral"
+default = {"**/*" = "extensionless"}
+summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
+
+[[settings]]
+name = "tools.stylelint.ignore_at_rules"
+kind = "list"
+direction = "loosening"
+default = ["tailwind", "apply", "layer", "theme", "utility", "variant", "custom-variant", "source", "plugin", "config", "reference"]
+summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
+
+[[settings]]
 name = "tools.next.build_in_gate"
 kind = "boolean"
 direction = "tightening"

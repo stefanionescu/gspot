@@ -160,6 +160,24 @@ Owner: `configurations/ and policy/`. Dependencies: contract audit. Completion e
 
 Acceptance: K-100, K-79, K-39, K-14, K-107, K-13, K-38, K-17, K-85, K-113, K-177, K-203, K-197, K-223, K-199, K-220, K-105, K-183, K-106, K-55, K-77, K-124, K-131, K-165, K-94, K-169, K-119, K-255, K-99, K-104.
 
+Done 2026-09-26, K-197. No template names another configuration. The template helpers have no
+`has()`. What moved:
+
+- Library selectors and component file globs live in their manifests as `[[configs.selectors]]`
+  and `code_files`; the base ESLint template joins them.
+- The TypeScript imports are the typescript configuration's own imports template.
+- The import style default is a setting default: `js` from javascript, `extensionless` from nextjs.
+  The static-site configuration sets none, because a site served as files imports with a suffix.
+- Component script languages are `tools.eslint.script_languages`, declared by vue, svelte, and
+  typescript.
+- The at-rules Stylelint accepts are `tools.stylelint.ignore_at_rules`. The css and nextjs
+  configurations declare it.
+- The extra Ruff families and test ignores are `tools.ruff.select`, `tools.ruff.test_files`, and
+  `tools.ruff.test_ignores`, declared by python, pytest, and fastapi.
+- Knip entries come from `entry_files` in the javascript manifest plus `tools.knip.entry`.
+- The harness folder reaches the base template through `role = "harness"` on the jest and vitest
+  settings; the `tests-directory-contents` rule is emitted by the runner fragments alone.
+
 ### Configuration and scopes
 
 Step 2.3. Verification and confirmed repairs.

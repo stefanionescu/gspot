@@ -1,3 +1,4 @@
+<% const scriptLanguages = settings['tools.eslint.script_languages']; const typed = scriptLanguages.includes('ts'); -%>
     // The plugin ships its recommended set as blocks with warnings in them.
     ...vuePlugin.configs['flat/recommended'].map((block) => ({
         ...block,
@@ -7,10 +8,10 @@
     ...vueAccessibility.configs['flat/recommended'].map((block) => ({ ...block, files: ['**/*.vue'] })),
     {
         files: ['**/*.vue'],
-        languageOptions: { parser: vueParser, parserOptions: { <% if (has('typescript')) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.vue'], sourceType: 'module' } },
+        languageOptions: { parser: vueParser, parserOptions: { <% if (typed) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.vue'], sourceType: 'module' } },
         rules: {
             'vue/no-v-html': 'error',
-            'vue/block-lang': ['error', { script: { lang: <% if (has('typescript')) { %>'ts'<% } else { %>['js']<% } %> } }],
+            'vue/block-lang': ['error', { script: { lang: <%= json(typed ? scriptLanguages : ['js'], 0) %> } }],
             'vue/define-props-declaration': 'error',
             'vue/define-emits-declaration': 'error',
             'vue/no-unused-refs': 'error',

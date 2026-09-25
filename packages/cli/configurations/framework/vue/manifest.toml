@@ -90,6 +90,13 @@ summary = "Type-checks every Vue component and TypeScript file of the scope with
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
 help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
 
+[[settings]]
+name = "tools.eslint.script_languages"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The languages a component script block declares; empty means plain JavaScript."
+
 [coverage]
 ".vue" = ["format", "syntax", "style", "structure", "spelling"]
 

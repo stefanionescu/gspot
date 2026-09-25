@@ -220,11 +220,22 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   Prettier loads from the private installation, and the overrides its files need. The
   formatting generator emits both; no template names a plugin.
 - A fragment config takes `code_files`, the file globs its framework adds to the code and
-  type-checked file sets, and `[[configs.selectors]]` rows, each a `selector` with its
-  `message`. A row with `files` applies in those files on top of the general rows; a row with
-  `allowed` names the loosening setting whose paths it leaves alone. The base template joins the
-  rows of every selected fragment into the one `no-restricted-syntax` rule per file set. A
-  fragment that adds only selectors needs no `template`.
+  type-checked file sets. A fragment that adds only selectors needs no `template`.
+- A fragment config takes `[[configs.selectors]]` rows, each a `selector` with its `message`.
+  A row with `files` applies in those files on top of the general rows. A row with `allowed`
+  names the loosening setting whose paths it leaves alone.
+- The base template joins the selector rows of every selected fragment into the one
+  `no-restricted-syntax` rule per file set.
+- A manifest takes `entry_files`, the files a dead-code scan starts from in the code it knows,
+  relative to the scope. The knip configuration joins them with `tools.knip.entry`.
+- A setting takes `role`, the architecture role of the folder it names, such as `harness` for
+  a test runner's support folder. A template asks for the folders of a role, never for the
+  setting by name.
+- A setting two configurations need is declared by both under one name with the same kind,
+  direction, and summary. A list merges the defaults. A framework or platform default replaces
+  a scalar one.
+- Through such a shared setting a fragment learns what another configuration knows, without
+  asking whether it is selected.
 - Tool `env` supplies literal environment settings to version probes and commands. Check
   `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that

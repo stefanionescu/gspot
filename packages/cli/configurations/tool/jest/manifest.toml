@@ -78,6 +78,7 @@ summary = "The minimum percentage of source statements covered by tests."
 name = "tools.jest.harness_directory"
 kind = "string"
 direction = "neutral"
+role = "harness"
 default = "tests/support"
 summary = "The directory containing test support code that application source cannot import."
 

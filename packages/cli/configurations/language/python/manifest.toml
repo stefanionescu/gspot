@@ -453,6 +453,27 @@ default = []
 summary = "Paths that may run pip install, such as an image that installs one build tool, each with a reason."
 
 [[settings]]
+name = "tools.ruff.select"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
+
+[[settings]]
+name = "tools.ruff.test_files"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The test files Ruff lints with the test ignores; a test runner configuration fills it."
+
+[[settings]]
+name = "tools.ruff.test_ignores"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Ruff rules and families the test files leave off, such as the assert rule."
+
+[[settings]]
 name = "tools.basedpyright.exclude"
 kind = "list"
 direction = "loosening"

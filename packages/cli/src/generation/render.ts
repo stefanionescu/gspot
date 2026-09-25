@@ -224,7 +224,6 @@ function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: 
             fragmentFiles: fragmentFilesFor(scopes, selection, config),
             fragmentSelectors: fragmentSelectorsFor(scopes, selection, config),
         };
-        if (config.per_scope) inputs.has = (configuration) => selection.view.configurations.includes(configuration);
         const file: GeneratedFile = {
             path: target,
             content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),

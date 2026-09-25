@@ -1,3 +1,6 @@
+# Where a dead-code scan starts when no framework names its own entries.
+entry_files = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "src/plugin.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}", "build.ts", "publish.ts"]
+
 [configuration]
 name = "javascript"
 kind = "language"
@@ -292,7 +295,7 @@ summary = "Ordered enabled rule settings for config-root paths, bounded by the s
 name = "tools.eslint.import_style"
 kind = "table"
 direction = "neutral"
-default = {}
+default = {"**/*" = "js"}
 summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
 [[settings]]

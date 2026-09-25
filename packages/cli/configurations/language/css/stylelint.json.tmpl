@@ -1,4 +1,4 @@
-<% const off = rulesOff('css/stylelint'); const chosen = settings['tools.stylelint.rules']; const componentRules = Object.fromEntries(Object.entries({
+<% const off = rulesOff('css/stylelint'); const chosen = settings['tools.stylelint.rules']; const ignoreAtRules = settings['tools.stylelint.ignore_at_rules']; const componentRules = Object.fromEntries(Object.entries({
     "selector-pseudo-class-no-unknown": [true, { "ignorePseudoClasses": ["deep", "global", "slotted"] }],
     "function-no-unknown": [true, { "ignoreFunctions": ["theme", "v-bind"] }]
 }).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined)); %>
@@ -7,7 +7,7 @@
     "ignoreFiles": ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.gspot/**"],
     "rules": <%= json(Object.assign({
         "no-descending-specificity": true,
-        "at-rule-no-unknown": has('nextjs') || tools.includes('tailwindcss') ? [true, { "ignoreAtRules": ["tailwind", "apply", "layer", "theme", "utility", "variant", "custom-variant", "source", "plugin", "config", "reference"] }] : true,
+        "at-rule-no-unknown": ignoreAtRules.length > 0 ? [true, { "ignoreAtRules": ignoreAtRules }] : true,
         "function-no-unknown": [true, { "ignoreFunctions": ["theme"] }],
         "import-notation": "string",
         "property-no-vendor-prefix": [true, { "ignoreProperties": ["-webkit-text-size-adjust", "-webkit-backdrop-filter"] }]

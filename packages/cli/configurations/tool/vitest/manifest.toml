@@ -84,6 +84,7 @@ summary = "The smallest share of statements the tests cover, out of 100."
 name = "tools.vitest.harness_directory"
 kind = "string"
 direction = "neutral"
+role = "harness"
 default = "tests/support"
 summary = "The folder that holds test support code, which test files import and source files never do."
 

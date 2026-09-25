@@ -62,7 +62,7 @@ function prettierPlugins(selected: Manifest[]): PrettierPlugin[] {
     );
 }
 
-function knipEntries(policy: Policy, scope: string): string[] {
+function policyEntries(policy: Policy, scope: string): string[] {
     const layers = [
         { path: '', table: policy },
         ...Object.entries(policy.scopeTables)
@@ -71,11 +71,37 @@ function knipEntries(policy: Policy, scope: string): string[] {
     ];
     return layers.flatMap(({ path, table }) => {
         const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
-        return entries.map((pattern) => {
-            if (path === '') return pattern;
-            return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
-        });
+        return entries.map((pattern) => prefixed(path, pattern));
     });
+}
+
+function prefixed(path: string, pattern: string): string {
+    if (path === '') return pattern;
+    return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
+}
+
+// The entry files of a scope: what its policy declares, then what its selected configurations know.
+function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): string[] {
+    const selected = scopes.find((entry) => entry.scope.path === scope)?.selected ?? [];
+    const declared = selected.flatMap((manifest) => manifest.entry_files).map((pattern) => prefixed(scope, pattern));
+    return [...new Set([...policyEntries(policy, scope), ...declared])];
+}
+
+// The folders the settings with this role name, read from one scope's settings.
+function roleFolders(selected: Manifest[], settings: Record<string, unknown>, role: string): string[] {
+    return selected
+        .flatMap((manifest) => manifest.settings)
+        .filter((spec) => spec.role === role)
+        .map((spec) => settings[spec.name])
+        .filter((value): value is string => typeof value === 'string' && value !== '');
+}
+
+function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
+    return scopes.toSorted(
+        (left, right) =>
+            left.scope.path.split('/').length - right.scope.path.split('/').length ||
+            left.scope.path.localeCompare(right.scope.path),
+    );
 }
 
 /**
@@ -133,14 +159,18 @@ export function templateInputs(
                 configurations: entry.selected.map((manifest) => manifest.configuration.name),
             })),
         configurationScopes: (configuration) =>
-            scopes
-                .filter((entry) => entry.view.configurations.includes(configuration))
-                .toSorted(
-                    (left, right) =>
-                        left.scope.path.split('/').length - right.scope.path.split('/').length ||
-                        left.scope.path.localeCompare(right.scope.path),
-                )
-                .map((entry) => ({ path: entry.scope.path, settings: entry.view.settings })),
+            byDepth(scopes.filter((entry) => entry.view.configurations.includes(configuration))).map((entry) => ({
+                path: entry.scope.path,
+                settings: entry.view.settings,
+            })),
+        roleFolders: (role) => roleFolders(selection.selected, view.settings, role),
+        roleScopes: (role) =>
+            byDepth(scopes)
+                .map((entry) => ({
+                    path: entry.scope.path,
+                    folders: roleFolders(entry.selected, entry.view.settings, role),
+                }))
+                .filter((entry) => entry.folders.length > 0),
         configurations: view.configurations,
         policy: policy,
         view,
@@ -151,7 +181,7 @@ export function templateInputs(
         fragmentFiles,
         fragmentSelectors,
         tool: view.tool,
-        entryFiles: (scope) => knipEntries(policy, scope),
+        entryFiles: (scope) => entryFiles(policy, scopes, scope),
         limit: view.limit,
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
@@ -163,13 +193,6 @@ export function templateInputs(
         toml: stringifyToml,
         yaml: stringifyYaml,
         tomlDate: TomlDate,
-        // Repository-wide output includes nested configurations. The configuration owner narrows per-scope output.
-        has: (configuration) =>
-            view.configurations.includes(configuration) ||
-            (selection.scope.path === '' &&
-                scopes.some((entry) =>
-                    entry.selected.some((manifest) => manifest.configuration.name === configuration),
-                )),
         importAliases: (scope) => aliasesFor(root, scope),
         tools: toolNames(scopes),
         toolPackages: toolPackages(scopes),
@@ -219,6 +242,10 @@ export type TemplateInputs = {
     scope: string;
     scopes: { path: string; configurations: string[] }[];
     configurationScopes: (configuration: string) => { path: string; settings: Record<string, unknown> }[];
+    /** The folders the selected settings with this role name, for the scope being rendered. */
+    roleFolders: (role: string) => string[];
+    /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
+    roleScopes: (role: string) => { path: string; folders: string[] }[];
     configurations: string[];
     policy: Policy;
     view: MergedView;
@@ -238,7 +265,6 @@ export type TemplateInputs = {
     toml: (value: Record<string, unknown>) => string;
     yaml: (value: Record<string, unknown>) => string;
     tomlDate: new (value: string) => Date;
-    has: (configuration: string) => boolean;
     files: (extension: string) => string[];
     importAliases: (scope: string) => Record<string, string>;
     tools: string[];

@@ -89,6 +89,13 @@ summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
+[[settings]]
+name = "tools.eslint.script_languages"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The languages a component script block declares; empty means plain JavaScript."
+
 [coverage]
 ".svelte" = ["format", "syntax", "style", "structure", "spelling"]
 

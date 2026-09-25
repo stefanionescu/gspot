@@ -24,7 +24,7 @@ const structure = policy.structure;
 const scopePaths = scopes.map((entry) => entry.path);
 const limitOf = (key, language) => limit(key, language) ?? limit(key);
 const aliases = importAliases('');
-const importStyle = eslintTool.import_style && Object.keys(eslintTool.import_style).length > 0 ? eslintTool.import_style : { '**/*': has('nextjs') || has('static-site') ? 'extensionless' : 'js' };
+const importStyle = eslintTool.import_style ?? {};
 const testFiles = settings['tools.eslint.test_files'] ?? [];
 const scriptFiles = settings['tools.eslint.script_files'] ?? [];
 const nodeVersion = settings['tools.eslint.node_version'] ?? '>=22.0.0';
@@ -34,20 +34,20 @@ const roleList = (value, fallback) => (value === undefined ? fallback : Array.is
 const elementNames = new Set(architecture.elements.map((element) => element.name));
 const roleGlobs = (name, fallback) => roleList(roles[name], fallback).flatMap((entry) => (elementNames.has(entry) ? architecture.elements.find((element) => element.name === entry).paths : [entry]));
 const envOwners = roleGlobs('env', ['src/env/**', 'config/**']);
-const testScopes = [...configurationScopes('vitest'), ...configurationScopes('jest')];
-const harnessDirectory = (values) => values['tools.jest.harness_directory'] ?? values['tools.vitest.harness_directory'] ?? 'tests/support';
+const harnessGlobs = (folders) => folders.map((folder) => `${folder}/**`);
+const harnessScopes = roleScopes('harness');
 const directionRoles = {
     types: roleGlobs('types', [`${architecture.types_directory ?? 'types'}/**`, `**/${architecture.types_directory ?? 'types'}/**`]),
     tests: roleGlobs('tests', ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**']),
-    harness: roleGlobs('harness', [`${harnessDirectory(settings)}/**`]),
+    harness: roleGlobs('harness', harnessGlobs(roleFolders('harness'))),
     config: roleGlobs('config', ['config/**']),
     env: envOwners,
     runtime: roleGlobs('runtime', ['src/**']),
 };
 const scopeRules = (isAll ? scopes : []).map((scope) => {
     const scoped = importAliases(scope.path);
-    const selected = testScopes.findLast((entry) => entry.path === scope.path);
-    const scopedRoles = { ...directionRoles, harness: roleGlobs('harness', [`${harnessDirectory(selected?.settings ?? settings)}/**`]) };
+    const selected = harnessScopes.findLast((entry) => entry.path === scope.path);
+    const scopedRoles = { ...directionRoles, harness: roleGlobs('harness', harnessGlobs(selected?.folders ?? roleFolders('harness'))) };
     const imports = {
         ...(Object.keys(scoped).length === 0 ? {} : { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }] }),
         'gspot/import-direction': ['error', { roles: scopedRoles, aliases: scoped, scope: scope.path }],
@@ -152,7 +152,6 @@ const gspotRules = {
     'gspot/import-layout': 'error',
     'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
     'gspot/no-cross-project-imports': ['error', { scopes: <%= json(scopePaths) %> }],
-    'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json(settings[has('jest') ? 'tools.jest.harness_directory' : 'tools.vitest.harness_directory'] ?? 'tests/support') %> }],
     'gspot/registry-instance-only': 'error',
     'gspot/private-before-public': 'error',
     'gspot/import-direction': ['error', { roles: <%= json(directionRoles) %>, aliases: ALIASES }],

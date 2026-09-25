@@ -251,6 +251,8 @@ const settingSchema = z.strictObject({
     summary: sentence,
     languages: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),
+    // The architecture role the folder a setting names plays, so a template finds it without naming the setting.
+    role: z.enum(['harness']).optional(),
 });
 
 export const manifestSchema = z.strictObject({
@@ -298,6 +300,8 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
+    // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
+    entry_files: stringList,
     coverage: stringListTable.default({}),
     rule_files: stringListTable.default({}),
     required_rules: stringListTable.default({}),

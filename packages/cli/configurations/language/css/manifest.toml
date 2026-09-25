@@ -119,6 +119,13 @@ why = "A class the code reads and the stylesheet lacks is undefined at run time,
 help = "Delete the class nobody reads, or define the class the code reads."
 
 [[settings]]
+name = "tools.stylelint.ignore_at_rules"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "At-rules Stylelint accepts beyond the CSS standard, such as the ones a CSS framework adds."
+
+[[settings]]
 name = "tools.stylelint.rules"
 kind = "table"
 direction = "per-rule"

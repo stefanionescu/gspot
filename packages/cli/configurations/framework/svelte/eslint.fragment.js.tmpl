@@ -1,3 +1,4 @@
+<% const scriptLanguages = settings['tools.eslint.script_languages']; const typed = scriptLanguages.includes('ts'); -%>
     // The plugin ships its recommended set as blocks, and every rule in them is an error here.
     ...sveltePlugin.configs.recommended.map((block) => ({
         ...block,
@@ -5,14 +6,14 @@
     })),
     {
         files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'],
-        languageOptions: { parser: svelteParser, parserOptions: { <% if (has('typescript')) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.svelte'] } },
+        languageOptions: { parser: svelteParser, parserOptions: { <% if (typed) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.svelte'] } },
         rules: {
             'svelte/no-at-html-tags': 'error',
             'svelte/require-each-key': 'error',
             'svelte/no-target-blank': 'error',
             'svelte/button-has-type': 'error',
             'svelte/no-reactive-reassign': 'error',
-            'svelte/block-lang': ['error', { script: [<% if (has('typescript')) { %>'ts'<% } else { %>null, 'js'<% } %>] }],
+            'svelte/block-lang': ['error', { script: <%= json(typed ? scriptLanguages : [null, 'js'], 0) %> }],
 <% if (isAll) { %>            'svelte/no-useless-mustaches': 'error',
             'svelte/prefer-const': 'error',
 <% } %>        },

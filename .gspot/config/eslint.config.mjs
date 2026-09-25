@@ -135,7 +135,6 @@ const gspotRules = {
     "packages/eslint-plugin",
     "docs"
 ] }],
-    'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }],
     'gspot/registry-instance-only': 'error',
     'gspot/private-before-public': 'error',
     'gspot/import-direction': ['error', { roles: {
