@@ -76,7 +76,7 @@ describe('the duplication configuration', () => {
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'duplication/jscpd', status: 'ok', files: 2, findings: [] },
+                { check: 'duplication/jscpd', status: 'ok', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS * 2,

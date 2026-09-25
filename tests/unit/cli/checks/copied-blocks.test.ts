@@ -13,13 +13,13 @@ describe('clone findings', () => {
                 duplicates: [
                     {
                         lines: 30,
-                        firstFile: { name: join(prefix, 'scripts', 'café.sh'), start: 3, end: 32 },
-                        secondFile: { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 },
+                        firstFile: { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 },
+                        secondFile: { name: join(prefix, 'scripts', 'café.sh'), start: 3, end: 32 },
                     },
                     {
                         lines: 30,
-                        firstFile: { name: join(prefix, 'vendor', 'copy.sh'), start: 1, end: 30 },
-                        secondFile: { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 },
+                        firstFile: { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 },
+                        secondFile: { name: join(prefix, 'vendor', 'copy.sh'), start: 1, end: 30 },
                     },
                 ],
             };

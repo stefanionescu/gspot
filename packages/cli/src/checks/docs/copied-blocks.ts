@@ -50,14 +50,14 @@ export function cloneFindings(
     const share = report.statistics.total.percentage;
     if (share <= shape.ceiling) return [];
     return report.duplicates.flatMap((clone): Finding[] => {
-        const file = relativePlace(shape.root, clone.firstFile);
+        const file = relativePlace(shape.root, clone.secondFile);
         if (!shape.claimed.has(file)) return [];
-        const other = `${relativePlace(shape.root, clone.secondFile)}:${String(clone.secondFile.start)}`;
+        const other = `${relativePlace(shape.root, clone.firstFile)}:${String(clone.firstFile.start)}`;
         return [
             {
                 check: shape.check,
                 file,
-                line: clone.firstFile.start,
+                line: clone.secondFile.start,
                 rule: 'copied-block',
                 message: `${String(clone.lines)} lines repeat ${other}. The duplicated share is ${share.toFixed(1)} of 100, over the ceiling of ${String(shape.ceiling)}.`,
                 fixable: false,
