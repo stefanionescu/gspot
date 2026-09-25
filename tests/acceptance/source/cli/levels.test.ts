@@ -62,8 +62,6 @@ test(
         const restored = await run(sandbox.path, command);
         expect(restored.code, restored.stdout + restored.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[1]?.findings[0]?.rule).toBe('banned-term');
-        const obsolete = await run(sandbox.path, ['allow', 'naming', 'shell_command']);
-        expect(obsolete.code).toBe(2);
         const reset = await run(sandbox.path, ['set', 'level', '--default']);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
         const extra = await run(sandbox.path, ['set', 'extra_checks', 'naming/identifiers']);

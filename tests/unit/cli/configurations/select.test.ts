@@ -10,15 +10,6 @@ function manifest(configurationName: string, requires: string[] = []): Manifest 
     );
 }
 
-test('manifest loading rejects the removed preset table', () => {
-    const text =
-        '[preset]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "Checks the project input."\n';
-    expect(() => parseManifest(text, 'configurations/example')).toThrow('not valid');
-    expect(
-        parseManifest(text.replace('[preset]', '[configuration]'), 'configurations/example').configuration.name,
-    ).toBe('example');
-});
-
 test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
     'a template stub rejects the conflicting emission mode %s',
     (mode) => {

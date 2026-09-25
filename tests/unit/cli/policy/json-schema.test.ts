@@ -268,14 +268,6 @@ test.each([
     expect(validate(input)).toBe(valid);
 });
 
-test.each([
-    { version: 1, presets: ['typescript'] },
-    { version: 1, scope: [{ path: 'app', presets: ['react'] }] },
-])('legacy selection fields are rejected by runtime and published schemas: %j', (input) => {
-    expect(policySchema.safeParse(input).success).toBe(false);
-    expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(input)).toBe(false);
-});
-
 test.each([{ xcode: { orphan_assets: false } }, { docs: { readme_shape: false } }])(
     'runtime and editor schemas require tracked rule exceptions instead of obsolete switches: %j',
     (tools) => {

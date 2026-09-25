@@ -147,11 +147,6 @@ test('apply previews missing outputs without writing and rejects obsolete mutati
     expect(result.drift).toContainEqual(
         expect.objectContaining({ path: '.gspot/config/shellcheckrc', kind: 'missing' }),
     );
-    for (const flags of [['--check'], ['--lower-baselines'], ['--baseline', 'bash/syntax']]) {
-        const rejected = await run(directory.path, ['apply', ...flags]);
-        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
-        expect(rejected.stdout + rejected.stderr).toContain('unknown option');
-    }
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);
 });

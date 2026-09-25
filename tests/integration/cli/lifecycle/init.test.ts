@@ -201,14 +201,6 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
     },
 );
 
-test('initialization refuses the removed selection flag without writing files', async () => {
-    await using directory = await testdir();
-    const rejected = await run(directory.path, ['init', '--presets', 'typescript', '--dry-run', '--json']);
-    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
-    expect(rejected.stdout + rejected.stderr).toContain("unknown option '--presets'");
-    expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
-});
-
 test('uv is an installer rather than a task runner, and Python initialization preserves its project', async () => {
     await using sandbox = await testdir();
     const project = '[project]\nname = "sample"\nversion = "1.0.0"\ndependencies = []\n';

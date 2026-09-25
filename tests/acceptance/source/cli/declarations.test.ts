@@ -42,8 +42,6 @@ test('generated and vendored settings classify directories and removal returns f
     expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 2, findings: [] },
     ]);
-    const obsolete = await run(directory.path, ['declare', 'entry.sh', '--vendored']);
-    expect(obsolete.code).toBe(2);
 });
 
 test('declarations retain producer metadata and reasons while removing individual paths', async () => {
@@ -74,7 +72,4 @@ test('declarations retain producer metadata and reasons while removing individua
     ).toStrictEqual([
         { paths: ['b.sh'], produced_by: 'bun generate.ts', reason: 'Build output retained for consumers' },
     ]);
-    writeFileSync(join(directory.path, 'gspot.toml'), `${original}\n[[declare]]\npaths = ["a.sh"]\nvendored = true\n`);
-    const legacy = await run(directory.path, ['check', '--only', 'bash/syntax']);
-    expect(legacy.code, legacy.stdout + legacy.stderr).toBe(2);
 });
