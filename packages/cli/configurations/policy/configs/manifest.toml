@@ -66,6 +66,7 @@ github = {name = "rhysd/actionlint", version = "v1.7.12"}
 
 [[tools]]
 name = "pinact"
+crash_pattern = '(?:ERROR|FATAL).*?(?:\b(?:401|403|408|429|5[0-9]{2})\b|dial tcp|TLS handshake|x509:|context deadline exceeded|connection reset|no such host)'
 version = "5.0.0"
 mise = "pinact"
 brew = "pinact"
@@ -215,7 +216,6 @@ stage = "push"
 runs = "per-file-list"
 requires = "network"
 command = ["pinact", "run", "--verify", "--check", "{files}"]
-tool_errors = '(?:ERROR|FATAL).*?(?:\b(?:401|403|408|429|5[0-9]{2})\b|dial tcp|TLS handshake|x509:|context deadline exceeded|connection reset|no such host)'
 claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 coverage = ["security"]
 output = {format = "lines"}

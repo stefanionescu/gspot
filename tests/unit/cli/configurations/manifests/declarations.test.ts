@@ -84,3 +84,22 @@ test('a setting names the architecture role of its folder, and only a known role
     expect(manifest.entry_files).toStrictEqual(['src/main.js']);
     expect(() => parseManifest(definition('helpers'), 'configurations/example')).toThrow('role');
 });
+
+test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
+    const definition = (page: string, crash: string) =>
+        `[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
+    const manifest = parseManifest(
+        definition('https://example.test/rules/{rule}', '^Fatal:'),
+        'configurations/example',
+    );
+    expect(manifest.tools[0]).toMatchObject({
+        rule_page: 'https://example.test/rules/{rule}',
+        crash_pattern: '^Fatal:',
+    });
+    expect(() => parseManifest(definition('https://example.test/rules', '^Fatal:'), 'configurations/example')).toThrow(
+        '{rule}',
+    );
+    expect(() =>
+        parseManifest(definition('https://example.test/rules/{rule}', '(Fatal'), 'configurations/example'),
+    ).toThrow('regular expression');
+});

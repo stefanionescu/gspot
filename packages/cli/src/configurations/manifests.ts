@@ -36,6 +36,8 @@ function toTool(raw: RawTool): ToolPin {
     if (raw.version_command !== undefined) tool.version_command = raw.version_command;
     if (raw.version_exit_code !== undefined) tool.version_exit_code = raw.version_exit_code;
     if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
+    if (raw.crash_pattern !== undefined) tool.crash_pattern = raw.crash_pattern;
+    if (raw.rule_page !== undefined) tool.rule_page = raw.rule_page;
     if (raw.suppression !== undefined) tool.suppression = raw.suppression;
     if (raw.env !== undefined) tool.env = raw.env;
     if (raw.takeover !== undefined) tool.takeover = raw.takeover;
@@ -309,6 +311,8 @@ export type ToolPin = {
     version_command?: string[];
     version_exit_code?: number;
     version_regex?: string;
+    crash_pattern?: string;
+    rule_page?: string;
     suppression?: NonNullable<RawTool['suppression']>;
     takeover?: NonNullable<RawTool['takeover']>;
     query_packs?: NonNullable<RawTool['query_packs']>;

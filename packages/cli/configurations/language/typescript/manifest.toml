@@ -23,6 +23,7 @@ version_command = ["--version"]
 
 [[tools]]
 name = "typescript-eslint"
+rule_page = "https://typescript-eslint.io/rules/{rule}"
 kind = "library"
 version = "8.70.0"
 npm = "typescript-eslint"
@@ -76,7 +77,6 @@ fix_findings_exit_codes = [1]
 claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 coverage = ["style", "structure", "security"]
 output = {format = "eslint-json"}
-tool_errors = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."

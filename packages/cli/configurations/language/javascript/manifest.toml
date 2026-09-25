@@ -19,6 +19,8 @@ tags = ["shebang:node"]
 
 [[tools]]
 name = "eslint"
+rule_page = "https://eslint.org/docs/latest/rules/{rule}"
+crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 suppression = {marker = "\\beslint-disable(?:-next-line|-line)?\\b", reason = " -- (?<reason>\\S.*)"}
 version = "9.39.5"
 npm = "eslint"
@@ -105,6 +107,7 @@ floor = "3.0.0"
 
 [[tools]]
 name = "eslint-plugin-unicorn"
+rule_page = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
 kind = "library"
 version = "65.0.1"
 npm = "eslint-plugin-unicorn"
@@ -240,7 +243,6 @@ fix_findings_exit_codes = [1]
 claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
 coverage = ["style", "structure", "security"]
 output = {format = "eslint-json"}
-tool_errors = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."

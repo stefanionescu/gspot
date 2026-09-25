@@ -1,5 +1,5 @@
 import type { CheckSpec } from '#cli/configurations/schema.ts';
-import { isToolBroken, toolOutputDetail } from '#cli/execution/broken-tool.ts';
+import { hasToolError, isToolBroken, toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import { describe, expect, test } from 'bun:test';
 
 const base = {
@@ -60,5 +60,22 @@ describe('isToolBroken', () => {
         } satisfies CheckSpec;
         const lines = { ...base, name: 'dependencies/syncpack', output: { format: 'lines' } } satisfies CheckSpec;
         for (const spec of [floor, links, lines]) expect(isToolBroken(spec, [], [here])).toBe(false);
+    });
+});
+
+describe('hasToolError', () => {
+    const output = { code: 1, stdout: '', stderr: 'Oops! Something went wrong\n', missing: false, duration: 1 };
+    const eslint = { name: 'eslint', windows: true, installers: {}, crash_pattern: '^Oops! Something went wrong' };
+
+    test("the tool's crash pattern reads a fall-over for every check that runs it", () => {
+        expect(hasToolError(base, eslint, output)).toBe(true);
+        expect(hasToolError(base, eslint, { ...output, stderr: '1 problem\n' })).toBe(false);
+        expect(hasToolError(base, undefined, output)).toBe(false);
+    });
+
+    test("a check's own pattern comes before the tool's", () => {
+        const spec = { ...base, tool_errors: '^Fatal:' } satisfies CheckSpec;
+        expect(hasToolError(spec, eslint, output)).toBe(false);
+        expect(hasToolError(spec, eslint, { ...output, stderr: 'Fatal: cannot write\n' })).toBe(true);
     });
 });

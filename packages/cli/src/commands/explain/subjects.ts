@@ -2,8 +2,9 @@
 import { explainPath } from '#cli/commands/explain/file.ts';
 import type { ListingRow } from '#cli/configurations/listing.ts';
 import { allChecks, toRow } from '#cli/configurations/listing.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { CheckSpec, SettingSpec } from '#cli/configurations/schema.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
@@ -44,14 +45,29 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
         const result = runBlocking([path, 'rules', rule], { cwd: process.cwd(), timeoutMs: TOOL_TIMEOUT_MS });
         return result.code === 0 ? result.stdout.split('\n').slice(0, SWIFTLINT_LINES).join('\n').trim() : undefined;
     },
-    shellcheck: (rule) => `https://www.shellcheck.net/wiki/${rule}`,
-    markdownlint: (rule) => `https://github.com/DavidAnson/markdownlint/blob/main/doc/${rule.toLowerCase()}.md`,
-    eslint: (rule) => {
-        const slash = rule.indexOf('/');
-        if (slash === -1) return `https://eslint.org/docs/latest/rules/${rule}`;
-        return `the ${rule.slice(0, slash)} plugin's page for ${rule.slice(slash + 1)}`;
-    },
 };
+
+function pinNamed(name: string | undefined): ToolPin | undefined {
+    if (name === undefined) return undefined;
+    return configurationManifests()
+        .values()
+        .flatMap((manifest) => manifest.tools)
+        .find((entry) => entry.name === name);
+}
+
+// The page a manifest declares for a rule: the tool's own page, or the page of the plugin whose prefix the rule carries.
+function rulePage(check: CheckSpec, tool: string, rule: string): string | undefined {
+    const slash = rule.lastIndexOf('/');
+    if (slash === -1) {
+        const pin = pinNamed(tool) ?? pinNamed(check.tool ?? check.command?.[0]);
+        return pin?.rule_page?.replace('{rule}', rule);
+    }
+    const prefix = rule.slice(0, slash).replace(/^@/u, '');
+    const plugin = [prefix, `${tool}-plugin-${prefix}`, `@${prefix}/${tool}-plugin`]
+        .map((name) => pinNamed(name))
+        .find((pin) => pin !== undefined);
+    return plugin?.rule_page?.replace('{rule}', rule.slice(slash + 1));
+}
 
 function isSelected(session: Session, configurationName: string): boolean {
     return session.scopes.some((scope) =>
@@ -87,7 +103,8 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         lines.push(`Turn one of its rules off: gspot ignore ${quoteArgument(checkName)} --rule <rule> --reason "..."`);
     if (check.fix_findings_exit_codes !== undefined)
         lines.push(`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`);
-    if (check.tool_errors !== undefined) lines.push(`Fatal tool diagnostic pattern: ${check.tool_errors}`);
+    const crashPattern = check.tool_errors ?? pinNamed(check.tool ?? check.command?.[0])?.crash_pattern;
+    if (crashPattern !== undefined) lines.push(`Fatal tool diagnostic pattern: ${crashPattern}`);
     if (check.isolated_files === true)
         lines.push('Runs with selected files and declared configuration in an isolated directory.');
     if (settings.length > 0) lines.push(`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`);
@@ -119,7 +136,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
             ...(check.fix_findings_exit_codes === undefined
                 ? {}
                 : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
-            ...(check.tool_errors === undefined ? {} : { tool_errors: check.tool_errors }),
+            ...(crashPattern === undefined ? {} : { tool_errors: crashPattern }),
             ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
             ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
             settings,
@@ -131,10 +148,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
 function toolSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
     const source = TOOL_RULE_SOURCES[tool];
     if (!source) return undefined;
-    const pin = configurationManifests()
-        .values()
-        .flatMap((manifest) => manifest.tools)
-        .find((entry) => entry.name === tool);
+    const pin = pinNamed(tool);
     const probe = session && pin ? probeTool(session, pin) : undefined;
     return source(rule, probe?.path ?? tool);
 }
@@ -147,10 +161,15 @@ function toolRuleExplanation(session: Session | undefined, tool: string, rule: s
         )?.check;
     if (!check) return undefined;
     const summary = toolSummary(session, tool, rule);
+    const page = rulePage(check, tool, rule);
     const lines = [
         `${tool}/${rule}  (run by ${check.name})`,
         '',
-        summary === undefined ? `The tool's documentation has the page for ${rule}.` : `The tool says: ${summary}`,
+        summary === undefined
+            ? page === undefined
+                ? `The tool's documentation has the page for ${rule}.`
+                : `The tool's page: ${page}`
+            : `The tool says: ${summary}`,
         '',
         `Turn it off everywhere: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --reason "..."`,
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --paths "<glob>" --reason "..."`,
@@ -160,7 +179,7 @@ function toolRuleExplanation(session: Session | undefined, tool: string, rule: s
         kind: 'tool-rule',
         subject: `${tool}/${rule}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool, rule, check: check.name, summary: summary ?? null },
+        data: { tool, rule, check: check.name, summary: summary ?? null, page: page ?? null },
     };
 }
 

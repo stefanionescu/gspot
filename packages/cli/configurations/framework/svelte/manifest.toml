@@ -68,7 +68,6 @@ tool = "eslint"
 claims = {extensions = [".svelte"]}
 coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
-tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."

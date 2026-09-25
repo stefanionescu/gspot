@@ -76,6 +76,7 @@ pypi = "deptry"
 
 [[tools]]
 name = "vulture"
+crash_pattern = '^(?:Error:|.+: invalid source code |.+:None: |.+:[0-9]+: .+ at ")'
 version = "2.16"
 floor = "2.11"
 mise = "pipx:vulture"
@@ -211,7 +212,6 @@ runs = "per-scope"
 cwd = "scope"
 command = ["vulture", ".", "--min-confidence", "80", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
 findings_exit_codes = [3]
-tool_errors = '^(?:Error:|.+: invalid source code |.+:None: |.+:[0-9]+: .+ at ")'
 claims = {extensions = [".py"]}
 coverage = ["structure"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}

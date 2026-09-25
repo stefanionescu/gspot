@@ -1,6 +1,7 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import type { Finding } from '#cli/checks/result.ts';
 import type { OutputFormat } from '#cli/configurations/output-format.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { ToolOutputError, parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
@@ -76,14 +77,15 @@ const TRUFFLEHOG_FINDINGS = 183;
 const TYPOS_FINDINGS = 2;
 
 /**
- * Match a tool's declared fatal diagnostics for checks and corrections.
- * @param spec
- * @param result
+ * Match the declared fatal diagnostics of a check or of the tool it runs, for checks and corrections.
+ * @param spec the check, whose own pattern comes first
+ * @param tool the tool the check runs, with the pattern every check of it shares
+ * @param result the completed process
+ * @returns true when the output says the tool fell over
  */
-export function hasToolError(spec: CheckSpec, result: SpawnResult): boolean {
-    return (
-        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`)
-    );
+export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
+    const pattern = spec.tool_errors ?? tool?.crash_pattern;
+    return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
 
 /**
@@ -116,7 +118,7 @@ export function checkedFindings(planned: PlannedCheck, result: SpawnResult, root
             !spec.findings_exit_codes.includes(result.code)) ||
         (isTypos && result.code !== 0 && result.code !== TYPOS_FINDINGS) ||
         (isMarkdownlint && result.code !== 0 && result.code !== 1) ||
-        hasToolError(spec, result);
+        hasToolError(spec, planned.tool, result);
     const parsed =
         spec.output?.format === 'trufflehog-json'
             ? redactedFindings(spec, result, roots[1], broken)

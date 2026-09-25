@@ -178,6 +178,25 @@ Done 2026-09-26, K-197. No template names another configuration. The template he
 - The harness folder reaches the base template through `role = "harness"` on the jest and vitest
   settings; the `tests-directory-contents` rule is emitted by the runner fragments alone.
 
+Done 2026-09-26, K-38: a tool row carries `crash_pattern` and `rule_page`. The nine check-level
+patterns moved onto their tool rows, and `explain` prints the rule page a manifest declares
+instead of a table in code. A plugin rule finds the page of the plugin whose prefix it carries.
+
+Checked without change, 2026-09-26:
+
+- K-119: the engine enum, tested.
+- K-255: a repeated check name fails to load, tested.
+- K-104: no `docsBase` remains.
+- K-99: no `editor` or `imports_allowed` default remains.
+- K-105: the manifest types derive from the schema.
+
+The architecture folder holds one sentence for K-100 and no text for the names below. Nothing
+verifiable remains under them.
+
+- K-14, K-107, K-13, K-17, K-85, K-113, K-177
+- K-203, K-223, K-199, K-220, K-183, K-106
+- K-77, K-124, K-131, K-165, K-94, K-169
+
 ### Configuration and scopes
 
 Step 2.3. Verification and confirmed repairs.

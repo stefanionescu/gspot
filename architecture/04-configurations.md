@@ -216,6 +216,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
   `[[tools.takeover]]` rows. A takeover row names a `file`, or a `key` or `table` of a shared
   manifest with `shared = true`, and what it `carries`.
+- `crash_pattern` is the output that means the tool fell over, for every check that runs it. A
+  repository command declares its own under `tool_errors`. `rule_page` is where the tool
+  documents one rule, with `{rule}` where the name goes; `explain` prints it for any tool.
 - A library tool that is a Prettier plugin declares `prettier = { entry, overrides }`: the file
   Prettier loads from the private installation, and the overrides its files need. The
   formatting generator emits both; no template names a plugin.

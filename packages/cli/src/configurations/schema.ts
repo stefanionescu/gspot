@@ -56,6 +56,10 @@ const toolSchema = z.strictObject({
     version_command: commandSchema.optional(),
     version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
     version_regex: z.string().optional(),
+    // Output that means the tool fell over rather than found something, for every check that runs it.
+    crash_pattern: suppressionPattern.optional(),
+    // Where the tool documents one rule; explain prints it with the rule name in place of {rule}.
+    rule_page: z.string().includes('{rule}', { message: 'A rule page names where {rule} goes.' }).optional(),
     suppression: z
         .strictObject({
             marker: suppressionPattern,

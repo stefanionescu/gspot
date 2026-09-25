@@ -16,6 +16,7 @@ tags = ["shebang:shell"]
 
 [[tools]]
 name = "shellcheck"
+rule_page = "https://www.shellcheck.net/wiki/{rule}"
 suppression = {marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)"}
 version = "0.11.0"
 mise = "shellcheck"

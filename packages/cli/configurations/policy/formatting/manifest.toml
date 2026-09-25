@@ -9,6 +9,7 @@ extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".js
 
 [[tools]]
 name = "prettier"
+crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 version = "3.8.1"
 npm = "prettier"
 
@@ -143,7 +144,6 @@ fix_command = ["prettier", "--write", "--config", "{config:prettier}", "--ignore
 fix_order = "format"
 coverage = ["format"]
 output = {format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it."}
-tool_errors = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
 help = "Run gspot check --fix to format every file, or prettier --write on one file."

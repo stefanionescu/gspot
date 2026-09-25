@@ -71,7 +71,7 @@ async function runCorrection(
         if (
             (result.code !== 0 && !hasRemainingFindings) ||
             failure !== undefined ||
-            hasToolError(plannedCheck.spec, result)
+            hasToolError(plannedCheck.spec, plannedCheck.tool, result)
         ) {
             const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
             return {
