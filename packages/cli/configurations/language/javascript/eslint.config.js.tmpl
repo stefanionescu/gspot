@@ -26,6 +26,8 @@ import react from 'eslint-plugin-react';
 import accessibility from 'eslint-plugin-jsx-a11y';
 import reactRefresh from 'eslint-plugin-react-refresh';
 <% } %><% if (has('react-native')) { %>import expoPlugin from 'eslint-plugin-expo';
+import reactNativePlatform from '@react-native/eslint-plugin';
+import reactNative from 'eslint-plugin-react-native';
 <% } %><% if (has('vue')) { %>import vuePlugin from 'eslint-plugin-vue';
 import vueParser from 'vue-eslint-parser';
 <% } %><% if (has('svelte')) { %>import sveltePlugin from 'eslint-plugin-svelte';
@@ -138,8 +140,7 @@ const LIBRARY_SELECTORS = [
 <% if (has('zustand')) { %>    { selector: "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]", message: 'Pass a selector to the store hook, so the component renders when its slice changes and at no other time.' },
 <% } %><% if (has('react-hook-form')) { %>    { selector: "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))", message: 'Give useForm a resolver, so the schema that types the form also validates it.' },
     { selector: "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])", message: 'A registered field is uncontrolled. Drop the value attribute, or use a Controller.' },
-<% } %><% if (has('react-native')) { %>    { selector: "JSXAttribute[name.name=/^(style|contentContainerStyle)$/] > JSXExpressionContainer > ObjectExpression", message: 'An inline style is a new object on every render. Name it in StyleSheet.create below the component.' },
-    { selector: "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message: 'Use Pressable. The Touchable components are kept for old code and get no new behavior.' },
+<% } %><% if (has('react-native')) { %>    { selector: "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message: 'Use Pressable. The Touchable components are kept for old code and get no new behavior.' },
     { selector: "JSXOpeningElement[name.name=/^(FlatList|SectionList)$/]:not(:has(JSXAttribute[name.name='keyExtractor']))", message: 'Give the list a keyExtractor, so a row keeps its state when the list changes.' },
     { selector: "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']", message: 'A ScrollView renders every row at once. Render a list that grows through FlatList.' },
     { selector: "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]", message: 'AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform.' },

@@ -52,6 +52,7 @@ import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/pro
 import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-checks.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
 import { trpcBoundaries } from '#cli/checks/trpc.ts';
+import { expoDoctor } from '#cli/checks/react-native.ts';
 import { drizzleMigrations, drizzleRelations } from '#cli/checks/drizzle.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
@@ -101,6 +102,7 @@ const checks: Record<string, Engine> = {
     'next-config': nextjsConfiguration,
     'next-types': nextjsTypes,
     'next-build': nextjsBuild,
+    'expo-doctor': expoDoctor,
     'required-rules': requiredRules,
     'dependency-alignment': dependencyAlignment,
     'locale-files': localeFiles,

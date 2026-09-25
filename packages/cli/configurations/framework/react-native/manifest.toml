@@ -4,7 +4,7 @@ kind = "framework"
 title = "React Native"
 requires = ["react"]
 recommends = ["typescript", "vitest"]
-description = "A React Native or Expo app: the Expo rules for environment variables, and lists that render through FlatList with keys. Styles sit outside the render, touch goes through Pressable, and no secret goes into AsyncStorage."
+description = "A React Native or Expo app: the React Native and Expo rules, lists that render through FlatList with keys, touch through Pressable, no secret in AsyncStorage, and Expo Doctor in an Expo project."
 
 [detect]
 dependencies = ["react-native", "expo"]
@@ -14,15 +14,47 @@ filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "e
 natures = ["source"]
 
 [[tools]]
+name = "@react-native/eslint-plugin"
+kind = "library"
+version = "0.87.1"
+npm = "@react-native/eslint-plugin"
+
+[[tools]]
+name = "eslint-plugin-react-native"
+kind = "library"
+version = "5.0.0"
+npm = "eslint-plugin-react-native"
+
+[[tools]]
 name = "eslint-plugin-expo"
 kind = "library"
 version = "1.1.0"
 npm = "eslint-plugin-expo"
 
+[[tools]]
+name = "expo-doctor"
+version = "1.20.4"
+npm = "expo-doctor"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 fragment = true
+
+[[checks]]
+name = "react-native/expo-doctor"
+title = "Expo Doctor"
+example = "An Expo project whose installed `react-native` differs from the version its Expo SDK expects reports a failed Doctor check. Install the expected version with `npx expo install --check` and rerun."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "expo-doctor"
+requires = "network"
+coverage = ["dependencies"]
+summary = "Runs Expo Doctor in a scope that depends on expo, and reports each check it fails."
+why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
+help = "Read the issues and advice Expo Doctor prints for the failed check, then run npx expo install --check."
 
 [rule_files]
 framework = ["framework/react-native/REACT-NATIVE.md"]
