@@ -6,10 +6,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-// Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
+// Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, text outside a text element, and an image the web accessibility rules would read.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../../../node_modules');
+const REPORT = '.gspot/reports/report.json';
 const INIT = [
     'init',
     '--yes',
@@ -34,56 +35,84 @@ const TSCONFIG =
 const CLEAN = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 const head = (text: string): string => `// A planted file.\n\n${text}`;
 
-const LINT: [string, string, string][] = [
-    [
-        'expo/no-env-var-destructuring',
-        'src/address.ts',
-        head(
+const LINT: { rule: string; path: string; text: string; line: number }[] = [
+    {
+        rule: 'expo/no-env-var-destructuring',
+        path: 'src/address.ts',
+        text: head(
             'const { EXPO_PUBLIC_URL } = process.env;\n\n/** Where the service lives. */\nexport const address = EXPO_PUBLIC_URL;\n',
         ),
-    ],
-    [
-        'An inline style is a new object on every render',
-        'src/Box.tsx',
-        head(
+        line: 3,
+    },
+    {
+        rule: 'react-native/no-inline-styles',
+        path: 'src/Box.tsx',
+        text: head(
             '/**\n * Draws a box.\n * @returns the box\n */\nexport function Box(): unknown {\n    return <View style={{ padding: 8 }} />;\n}\n',
         ),
-    ],
-    [
-        'Give the list a keyExtractor',
-        'src/Rows.tsx',
-        head(
+        line: 8,
+    },
+    {
+        rule: 'no-restricted-syntax',
+        path: 'src/Rows.tsx',
+        text: head(
             '/**\n * Lists rows.\n * @returns the list\n */\nexport function Rows(): unknown {\n    return <FlatList data={[]} renderItem={undefined} />;\n}\n',
         ),
-    ],
-    [
-        'AsyncStorage is plain text on the device',
-        'src/session.ts',
-        head(
+        line: 8,
+    },
+    {
+        rule: 'no-restricted-syntax',
+        path: 'src/session.ts',
+        text: head(
             "/**\n * Keeps the session.\n * @param value the session\n * @returns when it is kept\n */\nexport async function keep(value: string): Promise<void> {\n    await AsyncStorage.setItem('auth_token', value);\n}\n",
         ),
-    ],
+        line: 9,
+    },
+    {
+        rule: '@react-native/no-deep-imports',
+        path: 'src/frame.ts',
+        text: head(
+            "import View from 'react-native/Libraries/Components/View/View';\n\n/** The view each screen draws in. */\nexport const Frame = View;\n",
+        ),
+        line: 3,
+    },
+    {
+        rule: 'react-native/no-raw-text',
+        path: 'src/Label.tsx',
+        text: head(
+            '/**\n * Labels a row.\n * @returns the label\n */\nexport function Label(): unknown {\n    return <View>label</View>;\n}\n',
+        ),
+        line: 8,
+    },
 ];
 
+/**
+ * Plants the React Native repository, installs its tools at the all level, and returns the command environment.
+ * @param root the empty sandbox
+ * @returns the PATH every gspot command of the test runs with
+ */
+async function installNative(root: string): Promise<Record<string, string>> {
+    await createFileTree(root, {
+        '.gitignore': 'node_modules\n',
+        'package.json': PACKAGE,
+        'tsconfig.json': TSCONFIG,
+        'src/answer.ts': CLEAN,
+    });
+    symlinkSync(MODULES, join(root, 'node_modules'));
+    commitAll(root);
+    const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+    await install(root, INIT, environment);
+    const selected = await run(root, ['set', 'level', 'all'], environment);
+    if (selected.code !== 0) throw new Error(`The all level was not selected: ${selected.stdout}${selected.stderr}`);
+    return environment;
+}
+
 describe('the react-native configuration', () => {
-    test.each(LINT.map(([expected, path, text], index) => ({ expected, path, text, line: [3, 8, 8, 9][index]! })))(
-        '$expected in $path fails and corrected source passes',
-        async ({ expected, path, text, line }) => {
+    test.each(LINT)(
+        '$rule in $path fails and corrected source passes',
+        async ({ rule, path, text, line }) => {
             await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                '.gitignore': 'node_modules\n',
-                'package.json': PACKAGE,
-                'tsconfig.json': TSCONFIG,
-                'src/answer.ts': CLEAN,
-            });
-            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-            commitAll(sandbox.path);
-            const environment = {
-                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
-            };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const environment = await installNative(sandbox.path);
             const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const outcome = await runPlanted(
@@ -92,15 +121,9 @@ describe('the react-native configuration', () => {
                 environment,
             );
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
-                    rule: expected.startsWith('expo/') ? expected : 'no-restricted-syntax',
-                    file: path,
-                    line,
-                }),
-            );
+            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ rule, file: path, line }));
             await Bun.write(join(sandbox.path, path), CLEAN);
             const corrected = await run(
                 sandbox.path,
@@ -117,6 +140,29 @@ describe('the react-native configuration', () => {
                 environment,
             );
             expect(required.code, required.stdout + required.stderr).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS * 6,
+    );
+
+    test(
+        'the jsx-a11y rules read no native view',
+        async () => {
+            await using sandbox = await testdir();
+            const environment = await installNative(sandbox.path);
+            const photo = head(
+                '/**\n * Shows a photo.\n * @returns the photo\n */\nexport function Photo(): unknown {\n    return <img src="photo.png" />;\n}\n',
+            );
+            await runPlanted(
+                sandbox.path,
+                { check: 'typescript/eslint', files: { 'src/Photo.tsx': photo } },
+                environment,
+            );
+            const report = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+            expect(
+                report.checks
+                    .flatMap(({ findings }) => findings)
+                    .filter(({ rule }) => rule?.startsWith('jsx-a11y/') === true),
+            ).toStrictEqual([]);
         },
         PLANTED_TIMEOUT_MS * 6,
     );
