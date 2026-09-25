@@ -1,0 +1,85 @@
+import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
+import * as spawn from '#cli/platform/spawn.ts';
+import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
+import { afterEach, expect, spyOn, test } from 'bun:test';
+import { rejects } from 'node:assert/strict';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
+
+afterEach(() => {
+    removeBuildFolders();
+});
+
+test('analysis refuses an incomplete compiler log after a failed build', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
+    const run = spyOn(spawn, 'run')
+        .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
+        .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+    try {
+        await rejects(swiftAnalyze(input), /build exited 7/u);
+    } finally {
+        run.mockRestore();
+    }
+});
+
+test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict', async (code) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
+    const run = spyOn(spawn, 'run')
+        .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
+        .mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
+    try {
+        if (code === 0) expect(await swiftAnalyze(input)).toStrictEqual([]);
+        else await rejects(swiftAnalyze(input), new RegExp(`analyzer exited ${String(code)}`, 'u'));
+    } finally {
+        run.mockRestore();
+    }
+});
+
+test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async (step) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
+    const run = spyOn(spawn, 'run');
+    if (step === 'analyzer')
+        run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+    run.mockResolvedValue({ code: 1, stdout: '', stderr: '', missing: false, duration: 1, isTimedOut: true });
+    try {
+        await rejects(swiftAnalyze(input), /ran past 600 seconds and was stopped/u);
+    } finally {
+        run.mockRestore();
+    }
+});
+
+test('manual analysis clears its own compiler state without consuming the incremental build result', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
+    const compile = swiftBuildPlan(input);
+    const analyzer = swiftBuildPlan(input, 'analyze');
+    const compilerState = join(compile.folder, 'package', 'state');
+    const analyzerState = join(analyzer.scratch!, 'state');
+    mkdirSync(join(compile.folder, 'package'), { recursive: true });
+    mkdirSync(analyzer.scratch!, { recursive: true });
+    writeFileSync(compilerState, 'incremental');
+    writeFileSync(analyzerState, 'old analyzer');
+    const run = spyOn(spawn, 'run')
+        .mockResolvedValueOnce({ code: 0, stdout: 'incremental log', stderr: '', missing: false, duration: 1 })
+        .mockResolvedValueOnce({ code: 0, stdout: 'complete compiler log', stderr: '', missing: false, duration: 1 })
+        .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+    try {
+        expect(await swiftBuild(input)).toStrictEqual([]);
+        expect(await swiftAnalyze(input)).toStrictEqual([]);
+        expect(readFileSync(compilerState, 'utf8')).toBe('incremental');
+        expect(existsSync(analyzerState)).toBe(false);
+        expect(readFileSync(analyzer.log, 'utf8')).toContain('complete compiler log');
+        expect(readFileSync(compile.log, 'utf8')).toContain('incremental log');
+    } finally {
+        run.mockRestore();
+    }
+});
