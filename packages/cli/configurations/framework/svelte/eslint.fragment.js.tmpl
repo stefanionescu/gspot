@@ -1,7 +1,7 @@
     // The plugin ships its recommended set as blocks, and every rule in them is an error here.
     ...sveltePlugin.configs.recommended.map((block) => ({
         ...block,
-        ...(block.rules === undefined ? {} : { rules: Object.fromEntries(Object.entries(block.rules).map(([rule, level]) => [rule, level === 'off' || level === 0 ? 'off' : 'error'])) }),
+        ...(block.rules === undefined ? {} : { rules: errorLevels(block.rules) }),
     })),
     {
         files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'],
@@ -12,8 +12,10 @@
             'svelte/no-target-blank': 'error',
             'svelte/button-has-type': 'error',
             'svelte/no-reactive-reassign': 'error',
-            'svelte/no-useless-mustaches': 'error',
-            'svelte/prefer-const': 'error',
             'svelte/block-lang': ['error', { script: [<% if (has('typescript')) { %>'ts'<% } else { %>null, 'js'<% } %>] }],
-        },
+<% if (isAll) { %>            'svelte/no-useless-mustaches': 'error',
+            'svelte/prefer-const': 'error',
+<% } %>        },
     },
+    // The Testing Library rules read test files, and their debugging rule ships as a warning.
+    { files: TESTS, plugins: { 'testing-library': testingLibrary }, rules: errorLevels(testingLibrary.configs['flat/svelte'].rules) },

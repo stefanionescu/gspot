@@ -4,7 +4,7 @@ kind = "framework"
 title = "Svelte"
 requires = ["javascript"]
 recommends = ["typescript", "css", "vitest"]
-description = "Svelte components: ESLint reads the markup and the script together, with every recommended rule of the Svelte plugin as an error."
+description = "Svelte components: ESLint reads the markup and the script together with every recommended rule of the Svelte plugin as an error, and the Testing Library rules read test files."
 
 [detect]
 dependencies = ["svelte"]
@@ -26,6 +26,12 @@ name = "svelte-eslint-parser"
 kind = "library"
 version = "1.8.1"
 npm = "svelte-eslint-parser"
+
+[[tools]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"
