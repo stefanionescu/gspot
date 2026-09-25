@@ -23,6 +23,9 @@ export function relocatedOverrides<Options>(
 ): NativeOverride<Options>[] {
     const fromConfig = (pattern: string): string =>
         [prefix, literalGlob(base), pattern].filter((part) => part !== '' && part !== '.').join('/');
+    // A negation keeps its mark in front of the moved selector.
+    const relocated = (pattern: string, place: (selector: string) => string): string =>
+        pattern.startsWith('!') ? `!${place(pattern.slice(1))}` : place(pattern);
     return entries.flatMap((entry) => {
         const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
         const excluded =
@@ -35,29 +38,46 @@ export function relocatedOverrides<Options>(
             const patterns = files.filter((pattern) => pattern.includes('/') === hasSlash);
             if (patterns.length === 0) return [];
             if (!hasSlash && base === '') return [{ files: patterns, excludeFiles: excluded, options: entry.options }];
-            if ([...patterns, ...excluded].some((pattern) => pattern.startsWith('!')))
+            // Prettier matches every exclusion of a basename group against the basename, where a slash never occurs.
+            const basenames = excluded.map((pattern) => ({
+                isNegated: pattern.startsWith('!'),
+                basename: (pattern.startsWith('!') ? pattern.slice(1) : pattern).replace(/^(?:\*\*\/)+/u, ''),
+            }));
+            if (!hasSlash && basenames.some(({ basename }) => basename.includes('/') && /[{}()]/u.test(basename)))
                 throw new Error(
-                    'Prettier cannot relocate negated override selectors without changing their matching base. Keep the original configuration active.',
+                    'Prettier cannot relocate this basename exclusion without changing its meaning. Keep the original configuration active.',
                 );
+            // A negated exclusion that no basename matches excludes every file of the group.
+            if (!hasSlash && basenames.some(({ isNegated, basename }) => isNegated && basename.includes('/')))
+                return [];
             const exclusions = hasSlash
-                ? excluded.map(fromConfig)
-                : excluded.flatMap((pattern) => {
-                      const basename = pattern.replace(/^(?:\*\*\/)+/u, '');
-                      if (basename.includes('/')) {
-                          if (/[{}()]/u.test(basename))
-                              throw new Error(
-                                  'Prettier cannot relocate this basename exclusion without changing its meaning. Keep the original configuration active.',
-                              );
-                          return [];
-                      }
-                      return [fromConfig(`**/${basename}`)];
-                  });
-            return [
-                {
-                    files: patterns.map((pattern) => fromConfig(hasSlash ? pattern : `**/${pattern}`)),
-                    excludeFiles: exclusions,
+                ? excluded.map((pattern) => relocated(pattern, fromConfig))
+                : basenames
+                      .filter(({ basename }) => !basename.includes('/'))
+                      .map(({ isNegated, basename }) => `${isNegated ? '!' : ''}${fromConfig(`**/${basename}`)}`);
+            const place = (selector: string): string => fromConfig(hasSlash ? selector : `**/${selector}`);
+            if (base === '')
+                return [
+                    {
+                        files: patterns.map((pattern) => relocated(pattern, place)),
+                        excludeFiles: exclusions,
+                        options: entry.options,
+                    },
+                ];
+            // Below a folder, a negated selector becomes the folder less that selector, so it reaches no file outside.
+            const included = patterns.filter((pattern) => !pattern.startsWith('!'));
+            const complements = patterns
+                .filter((pattern) => pattern.startsWith('!'))
+                .map((pattern) => ({
+                    files: [fromConfig('**/*')],
+                    excludeFiles: [place(pattern.slice(1)), ...exclusions],
                     options: entry.options,
-                },
+                }));
+            return [
+                ...(included.length === 0
+                    ? []
+                    : [{ files: included.map(place), excludeFiles: exclusions, options: entry.options }]),
+                ...complements,
             ];
         });
     });
