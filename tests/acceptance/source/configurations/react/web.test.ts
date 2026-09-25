@@ -6,10 +6,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-// Planted repository for the react configuration: a hook inside a condition, a list with no keys, and markup set from a string.
+// Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../../../node_modules');
+const REPORT = '.gspot/reports/report.json';
 const INIT = [
     'init',
     '--yes',
@@ -38,77 +39,114 @@ const CLEAN = head(
     'import type { ReactNode }',
     '// eslint-disable-next-line gspot/no-trivial-files -- reason: React requires this component module.\nimport type { ReactNode }',
 );
+const TESTED =
+    "// A planted test.\nimport { render, screen } from '@testing-library/react';\n\nrender(<p>hello</p>);\nscreen.getByText('hello');\n";
+const DEBUGGED = TESTED.replace("screen.getByText('hello');", () => 'screen.debug();');
+const GAP = head(
+    '/**\n * Leaves a gap.\n * @returns the gap\n */\nexport function Gap(): ReactNode {\n    return <div></div>;\n}\n',
+);
 
-const LINT: [string, string, string][] = [
-    [
-        'react-hooks/rules-of-hooks',
-        'src/Counter.tsx',
-        '// A planted component.\nimport { useState } from "react";\nimport type { ReactNode } from "react";\n\n/**\n * Counts, some of the time.\n * @param props whether to count\n * @param props.isOn whether to count\n * @returns the count\n */\nexport function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {\n    if (isOn) {\n        const [count] = useState(0);\n        return <p>{count}</p>;\n    }\n    return <p>off</p>;\n}\n',
-    ],
-    [
-        'react/jsx-key',
-        'src/Names.tsx',
-        head(
+/** One planted defect: the check that reads it, where it is, and the file that corrects it. */
+type LintCase = { check: string; rule: string; path: string; text: string; line: number; corrected: string };
+
+const LINT: LintCase[] = [
+    {
+        check: 'typescript/eslint',
+        rule: 'react-hooks/rules-of-hooks',
+        path: 'src/Counter.tsx',
+        text: '// A planted component.\nimport { useState } from "react";\nimport type { ReactNode } from "react";\n\n/**\n * Counts, some of the time.\n * @param props whether to count\n * @param props.isOn whether to count\n * @returns the count\n */\nexport function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {\n    if (isOn) {\n        const [count] = useState(0);\n        return <p>{count}</p>;\n    }\n    return <p>off</p>;\n}\n',
+        line: 13,
+        corrected: CLEAN.replaceAll('Greeting', 'Counter'),
+    },
+    {
+        check: 'typescript/eslint',
+        rule: 'react/jsx-key',
+        path: 'src/Names.tsx',
+        text: head(
             '/**\n * Lists names.\n * @param props the names\n * @param props.names the names\n * @returns the list\n */\nexport function Names({ names }: Readonly<{ names: string[] }>): ReactNode {\n    return <ul>{names.map((name) => <li>{name}</li>)}</ul>;\n}\n',
         ),
-    ],
-    [
-        'react/no-danger',
-        'src/Raw.tsx',
-        head(
+        line: 11,
+        corrected: CLEAN.replaceAll('Greeting', 'Names'),
+    },
+    {
+        check: 'typescript/eslint',
+        rule: 'react/no-danger',
+        path: 'src/Raw.tsx',
+        text: head(
             '/**\n * Shows markup it was handed.\n * @param props the markup\n * @param props.html the markup\n * @returns the element\n */\nexport function Raw({ html }: Readonly<{ html: string }>): ReactNode {\n    return <div dangerouslySetInnerHTML={{ __html: html }} />;\n}\n',
         ),
-    ],
+        line: 11,
+        corrected: CLEAN.replaceAll('Greeting', 'Raw'),
+    },
+    {
+        check: 'typescript/eslint',
+        rule: 'jsx-a11y/alt-text',
+        path: 'src/Picture.tsx',
+        text: head(
+            '/**\n * Shows a picture.\n * @returns the picture\n */\nexport function Picture(): ReactNode {\n    return <img src="picture.png" />;\n}\n',
+        ),
+        line: 9,
+        corrected: CLEAN.replaceAll('Greeting', 'Picture'),
+    },
+    {
+        check: 'typescript/eslint',
+        rule: 'react-refresh/only-export-components',
+        path: 'src/Badge.tsx',
+        text: head(
+            '/** The size of a badge. */\nexport const badgeSize = 2;\n\n/**\n * Shows a badge.\n * @returns the badge\n */\nexport function Badge(): ReactNode {\n    return <span>{badgeSize}</span>;\n}\n',
+        ),
+        line: 5,
+        corrected: CLEAN.replaceAll('Greeting', 'Badge'),
+    },
+    {
+        check: 'javascript/eslint',
+        rule: 'testing-library/no-debugging-utils',
+        path: 'src/greeting.test.jsx',
+        text: DEBUGGED,
+        line: 5,
+        corrected: TESTED,
+    },
 ];
 
+/**
+ * Plants the React repository, installs its tools, and returns the command environment.
+ * @param root the empty sandbox
+ * @returns the PATH every gspot command of the test runs with
+ */
+async function installReact(root: string): Promise<Record<string, string>> {
+    await createFileTree(root, {
+        '.gitignore': 'node_modules\n',
+        'package.json': PACKAGE,
+        'tsconfig.json': TSCONFIG,
+        'src/Greeting.tsx': CLEAN,
+    });
+    symlinkSync(MODULES, join(root, 'node_modules'));
+    commitAll(root);
+    const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+    await install(root, INIT, environment);
+    return environment;
+}
+
 describe('the react configuration', () => {
-    test.each(LINT.map(([expected, path, text], index) => ({ expected, path, text, line: [13, 11, 11][index]! })))(
-        '$expected in $path fails and corrected source passes',
-        async ({ expected, path, text, line }) => {
+    test.each(LINT)(
+        '$rule in $path fails and corrected source passes',
+        async ({ check, rule, path, text, line, corrected }) => {
             await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                '.gitignore': 'node_modules\n',
-                'package.json': PACKAGE,
-                'tsconfig.json': TSCONFIG,
-                'src/Greeting.tsx': CLEAN,
-            });
-            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-            commitAll(sandbox.path);
-            const environment = {
-                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
-            };
-            await install(sandbox.path, INIT, environment);
+            const environment = await installReact(sandbox.path);
             const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', check, '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            const outcome = await runPlanted(
-                sandbox.path,
-                { check: 'typescript/eslint', files: { [path]: text } },
-                environment,
-            );
+            const outcome = await runPlanted(sandbox.path, { check, files: { [path]: text } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
-                    rule: expected,
-                    file: path,
-                    line,
-                }),
-            );
-            await Bun.write(
-                join(sandbox.path, path),
-                CLEAN.replaceAll('Greeting', path.split('/').at(-1)!.replace('.tsx', '')),
-            );
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'typescript/eslint', status: 'ok', findings: [] },
+            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+            expect(failed.checks).toMatchObject([{ check, status: 'fail' }]);
+            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ rule, file: path, line }));
+            await Bun.write(join(sandbox.path, path), corrected);
+            const fixed = await run(sandbox.path, ['check', '--only', check, '--no-cache', '--json'], environment);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(fixed.stdout)).checks).toMatchObject([
+                { check, status: 'ok', findings: [] },
             ]);
             const required = await run(
                 sandbox.path,
@@ -116,6 +154,38 @@ describe('the react configuration', () => {
                 environment,
             );
             expect(required.code, required.stdout + required.stderr).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS * 6,
+    );
+
+    test(
+        'react/self-closing-comp waits for the all level, and the Testing Library rules stay in test files',
+        async () => {
+            await using sandbox = await testdir();
+            const environment = await installReact(sandbox.path);
+            await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
+            const recommended = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+            expect(recommended.checks.flatMap(({ findings }) => findings).map(({ rule }) => rule)).not.toContain(
+                'react/self-closing-comp',
+            );
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
+            const all = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+            expect(all.checks.flatMap(({ findings }) => findings)).toContainEqual(
+                expect.objectContaining({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 }),
+            );
+            await runPlanted(
+                sandbox.path,
+                { check: 'javascript/eslint', files: { 'src/debugging.jsx': DEBUGGED } },
+                environment,
+            );
+            const outside = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+            expect(
+                outside.checks
+                    .flatMap(({ findings }) => findings)
+                    .filter(({ rule }) => rule?.startsWith('testing-library/') === true),
+            ).toStrictEqual([]);
         },
         PLANTED_TIMEOUT_MS * 6,
     );
