@@ -1,22 +1,26 @@
-    // The plugin ships its recommended set as blocks with warnings in them, and the gate allows no warning.
+    // The plugin ships its recommended set as blocks with warnings in them.
     ...vuePlugin.configs['flat/recommended'].map((block) => ({
         ...block,
-        ...(block.rules === undefined ? {} : { rules: Object.fromEntries(Object.entries(block.rules).map(([rule, level]) => [rule, level === 'off' || level === 0 ? 'off' : 'error'])) }),
+        ...(block.rules === undefined ? {} : { rules: errorLevels(block.rules) }),
     })),
+    // The accessibility set also sets browser globals, so each of its blocks stays with component files.
+    ...vueAccessibility.configs['flat/recommended'].map((block) => ({ ...block, files: ['**/*.vue'] })),
     {
         files: ['**/*.vue'],
         languageOptions: { parser: vueParser, parserOptions: { <% if (has('typescript')) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.vue'], sourceType: 'module' } },
         rules: {
             'vue/no-v-html': 'error',
-            'vue/component-api-style': ['error', ['script-setup']],
             'vue/block-lang': ['error', { script: { lang: <% if (has('typescript')) { %>'ts'<% } else { %>['js']<% } %> } }],
             'vue/define-props-declaration': 'error',
             'vue/define-emits-declaration': 'error',
             'vue/no-unused-refs': 'error',
-            'vue/no-useless-v-bind': 'error',
-            'vue/prefer-true-attribute-shorthand': 'error',
             'vue/require-typed-ref': 'error',
             'vue/html-button-has-type': 'error',
             'vue/no-template-target-blank': 'error',
-        },
+<% if (isAll) { %>            'vue/component-api-style': ['error', ['script-setup']],
+            'vue/no-useless-v-bind': 'error',
+            'vue/prefer-true-attribute-shorthand': 'error',
+<% } %>        },
     },
+    // The Testing Library rules read test files, and their debugging rule ships as a warning.
+    { files: TESTS, plugins: { 'testing-library': testingLibrary }, rules: errorLevels(testingLibrary.configs['flat/vue'].rules) },

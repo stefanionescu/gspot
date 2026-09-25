@@ -4,7 +4,7 @@ kind = "framework"
 title = "Vue"
 requires = ["javascript"]
 recommends = ["typescript", "css", "vitest"]
-description = "Vue single-file components: ESLint reads the template and the script together, with every recommended rule of the Vue plugin as an error."
+description = "Vue single-file components: ESLint reads the template and the script together, with the recommended Vue and accessibility rules as errors, and the Testing Library rules read test files."
 
 [detect]
 dependencies = ["vue"]
@@ -25,6 +25,18 @@ name = "vue-eslint-parser"
 kind = "library"
 version = "10.4.1"
 npm = "vue-eslint-parser"
+
+[[tools]]
+name = "eslint-plugin-vuejs-accessibility"
+kind = "library"
+version = "2.6.0"
+npm = "eslint-plugin-vuejs-accessibility"
+
+[[tools]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"

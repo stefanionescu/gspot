@@ -30,6 +30,7 @@ import reactNativePlatform from '@react-native/eslint-plugin';
 import reactNative from 'eslint-plugin-react-native';
 <% } %><% if (has('vue')) { %>import vuePlugin from 'eslint-plugin-vue';
 import vueParser from 'vue-eslint-parser';
+import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
 <% } %><% if (has('svelte')) { %>import sveltePlugin from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 <% } %><% if (has('react') || has('vue') || has('svelte')) { %>import testingLibrary from 'eslint-plugin-testing-library';
