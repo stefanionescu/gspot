@@ -229,14 +229,14 @@ export function prepareCommand(
  * @param session the session
  * @param planned the check to run
  * @param command the command prepared by an adapter, or the command of the definition
- * @param isolatedRoot a copy of the repository the command runs in; the tool is still found in the repository
+ * @param workspace a copy of the repository the command runs in; the tool is found in the repository
  * @returns the check result with its findings
  */
 export async function runToolCheck(
     session: Session,
     planned: PlannedCheck,
     command = planned.spec.command,
-    isolatedRoot?: string,
+    workspace?: string,
 ): Promise<CheckResult> {
     const { spec, tool, scope } = planned;
     const base: CheckResult = {
@@ -268,14 +268,14 @@ export async function runToolCheck(
     if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
     if (probe.state === 'missing' || probe.state === 'outdated')
         return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
-    using workspace =
-        spec.isolated_files === true
+    using created =
+        workspace === undefined && spec.isolated_files === true
             ? createFileWorkspace(session.root, [
                   ...planned.files.map(({ path }) => path),
                   ...commandConfigurations(session, planned, command),
               ])
             : undefined;
-    const executionRoot = workspace?.root ?? isolatedRoot;
+    const executionRoot = workspace ?? created?.root;
     const execution = executionRoot === undefined ? session : { ...session, root: executionRoot };
     const prepared = prepareCommand(execution, planned, command, probe.path);
     const result = await runCommands(execution, planned, tool, prepared, base);
