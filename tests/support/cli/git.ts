@@ -34,6 +34,18 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
 }
 
 /**
+ * Runs git and returns what it printed, for a command a test needs the answer of.
+ * @param cwd the planted repository
+ * @param argv the command line after git
+ * @returns the trimmed standard output
+ */
+export function gitOutput(cwd: string, argv: string[]): string {
+    const result = git(cwd, argv);
+    if (result.code !== 0) throw new Error(`git ${argv.join(' ')} failed: ${result.stderr}${result.stdout}`);
+    return result.stdout.trim();
+}
+
+/**
  * Makes the planted directory a git repository with one commit, the state init expects.
  * @param cwd the planted repository
  */
