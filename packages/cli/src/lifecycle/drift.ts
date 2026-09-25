@@ -1,17 +1,16 @@
-import { createTwoFilesPatch } from 'diff';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
-import { isMergeStubHeld } from '#cli/generation/stubs.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import { createTwoFilesPatch } from 'diff';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
+import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { GeneratedProposal } from '#cli/generation/targets.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { pythonLockDrift } from '#cli/tools/python-project.ts';
-import { packageLockDrift } from '#cli/tools/package-project.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { packageLockDrift } from '#cli/tools/packages/project.ts';
+import { pythonLockDrift } from '#cli/tools/python-project.ts';
 
 const NEVER_STRAY = new Set([
     'gspot.toml',
@@ -84,7 +83,7 @@ function presenceDrift(root: string, path: string): DriftEntry {
 function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
     for (const merge of rendered.merges)
-        if (!isMergeStubHeld(root, merge.stub, merge.path, merge.target)) entries.push(presenceDrift(root, merge.path));
+        if (!hasConfiguration(root, merge)) entries.push(presenceDrift(root, merge.path));
     for (const output of rendered.configurations)
         if (!hasConfiguration(root, output)) entries.push(presenceDrift(root, output.path));
     return entries;

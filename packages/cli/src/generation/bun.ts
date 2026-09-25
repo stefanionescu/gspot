@@ -1,4 +1,4 @@
-import type { ConfigurationOutput } from '#cli/generation/targets.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 

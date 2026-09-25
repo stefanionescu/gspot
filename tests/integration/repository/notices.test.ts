@@ -1,7 +1,7 @@
-import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { dependencyNotices } from '../../../packages/cli/scripts/notices.ts';
+import { dependencyNotices } from '../../../packages/cli/build/notices.ts';
 
 test('bundled dependency notices preserve installed license and attribution bytes without fetching', async () => {
     await using directory = await testdir();

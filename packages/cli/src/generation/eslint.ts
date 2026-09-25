@@ -1,4 +1,5 @@
 import type { Policy } from '#cli/policy/normalize.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import type { EslintSettings } from '#cli/policy/schema.ts';
 import type { PathExpressions } from '#cli/repository/paths.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
@@ -37,3 +38,25 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
 }
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+
+export function structuralRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
+    const blocks: EslintRuleBlock[] = [];
+    for (const selection of scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {
+        for (const [language, pattern] of [
+            ['javascript', '**/*.{js,mjs,cjs,jsx}'],
+            ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte}'],
+        ] as const) {
+            const maxStatements =
+                selection.view.limit('trivial_statements', language) ?? selection.view.limit('trivial_statements');
+            blocks.push({
+                scope: selection.scope.path,
+                ...pathExpressions([pattern]),
+                rules: {
+                    'gspot/no-trivial-files': ['error', { maxStatements }],
+                    'gspot/no-trivial-functions': ['error', { maxStatements }],
+                },
+            });
+        }
+    }
+    return blocks;
+}

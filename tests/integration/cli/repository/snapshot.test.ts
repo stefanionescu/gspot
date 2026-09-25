@@ -1,18 +1,18 @@
-import * as promises from 'node:fs/promises';
-import { expect, spyOn, test } from 'bun:test';
-import { dirname, join } from 'node:path';
-import { rejects } from 'node:assert/strict';
+import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
+import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { pushedRevisions } from '#cli/repository/staged.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
-import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
-import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import { existsSync, mkdirSync, readdirSync, symlinkSync, unlinkSync, writeFileSync, readFileSync } from 'node:fs';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { pushedRevisions } from '#cli/repository/revisions/selection.ts';
+import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { rejects } from 'node:assert/strict';
+import { existsSync, mkdirSync, readdirSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import * as promises from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

@@ -1,13 +1,13 @@
-import { ESLint } from 'eslint';
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/generation/targets.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { emitAll } from '#cli/generation/render.ts';
+import { expect, test } from 'bun:test';
+import { ESLint } from 'eslint';
+import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();

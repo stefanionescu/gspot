@@ -1,11 +1,11 @@
-import type { JSONSchema } from 'zod/v4/core';
-import { isDeepStrictEqual } from 'node:util';
-import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
-import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
-import type { Manifest } from '@gspot/cli/src/configurations/read-manifests.ts';
+import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
 import type { SettingSpec } from '@gspot/cli/src/configurations/schema.ts';
-import { referencePage, cell, table } from './page';
+import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
+import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
+import { isDeepStrictEqual } from 'node:util';
+import type { JSONSchema } from 'zod/v4/core';
 import type { ReferencePage } from './page';
+import { cell, referencePage, table } from './page';
 
 function schemaCell(value: string): string {
     return value

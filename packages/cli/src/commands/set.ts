@@ -1,22 +1,22 @@
-import type { Command } from 'commander';
-import { parse as parseToml } from 'smol-toml';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
+import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { openSession } from '#cli/execution/session.ts';
-import * as messages from '#cli/policy/messages.ts';
-import type { Mutation } from '#cli/policy/write.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { isLoosening } from '#cli/policy/loosening.ts';
-import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { directoryOf, textEntry } from '#cli/commands/flags.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import type { Session } from '#cli/execution/session.ts';
+import { isLoosening } from '#cli/policy/loosening.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { PolicyError } from '#cli/policy/read.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
+import { settingValue, specFor } from '#cli/policy/settings.ts';
+import type { Mutation } from '#cli/policy/write.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import type { Command } from 'commander';
+import { parse as parseToml } from 'smol-toml';
 
 type SetOptions = {
     cwd: string;

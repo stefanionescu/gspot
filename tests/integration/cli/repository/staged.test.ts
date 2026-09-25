@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { changedFiles, stagedFiles, pushBase } from '#cli/repository/staged.ts';
+import { changedFiles, pushBase, stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { describe, expect, test } from 'bun:test';
+import { existsSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });

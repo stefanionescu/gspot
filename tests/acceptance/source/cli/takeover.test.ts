@@ -1,14 +1,14 @@
-import prettier from 'prettier';
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
+import { readPolicy } from '#cli/policy/read.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { readPolicy } from '#cli/policy/read-policy.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { describe, expect, test } from 'bun:test';
+import { join } from 'node:path';
+import prettier from 'prettier';
+import { createFileTree, testdir } from 'testdirs';
 // Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';

@@ -1,4 +1,4 @@
-import type { ConfigurationOutput } from '#cli/generation/targets.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';

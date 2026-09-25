@@ -1,8 +1,8 @@
 import plugin from '#plugin/plugin.ts';
-import type { Manifest } from '@gspot/cli/src/configurations/read-manifests.ts';
+import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
 import type { CheckSpec } from '@gspot/cli/src/configurations/schema.ts';
-import { referencePage, bullets, section, cell, table } from './page';
 import type { ReferencePage } from './page';
+import { bullets, cell, referencePage, section, table } from './page';
 
 /**
  * Read standalone plugin documentation from the rule definitions and actual configurations.

@@ -1,6 +1,6 @@
-import { join } from 'node:path';
+import { acceptanceArguments } from '#tests/support/acceptance.ts';
 import { expect, test } from 'bun:test';
-import { acceptanceArguments } from '#tests/support/acceptance/run.ts';
+import { join } from 'node:path';
 
 const root = join(import.meta.dir, '../../..');
 const acceptance = join(root, 'tests/acceptance/source');

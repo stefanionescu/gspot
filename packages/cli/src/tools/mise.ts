@@ -1,6 +1,6 @@
-import type { InstallerPin, Manifest, ToolPin } from '#cli/configurations/read-manifests.ts';
+import type { InstallerPin, Manifest, ToolPin } from '#cli/configurations/manifests.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/installation.ts';
+import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
 import { parse as parseToml } from 'smol-toml';
 import { z } from 'zod';
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);

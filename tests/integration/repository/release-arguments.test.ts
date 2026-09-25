@@ -1,42 +1,45 @@
-import { fileURLToPath } from 'node:url';
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { treeContents } from '#tests/support/cli/contents.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createFileTree, testdir } from 'testdirs';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 describe('build script arguments', () => {
     test('rejects malformed targets before writes', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'packages/cli/build.ts': readFileSync(join(ROOT, 'packages/cli/build.ts'), 'utf8'),
+            'packages/cli/build/command.ts': readFileSync(join(ROOT, 'packages/cli/build/command.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
-            'packages/cli/scripts/publish.ts': readFileSync(join(ROOT, 'packages/cli/scripts/publish.ts'), 'utf8'),
+            'packages/cli/build/publish.ts': readFileSync(join(ROOT, 'packages/cli/build/publish.ts'), 'utf8'),
             'packages/npm/targets.json': readFileSync(join(ROOT, 'packages/npm/targets.json'), 'utf8'),
             ...Object.fromEntries(
                 [
                     'LICENSE.md',
-                    'packages/cli/scripts/notices.ts',
+                    'packages/cli/build/notices.ts',
+                    'packages/cli/build/assets.ts',
+                    'packages/cli/build/compile.ts',
+                    'packages/cli/build/targets.ts',
                     'packages/cli/src/platform/assets.ts',
                     'packages/cli/src/platform/paths.ts',
                     'packages/cli/src/platform/environment.ts',
                     'packages/cli/src/repository/hooks.ts',
-                    'packages/cli/scripts/inputs.ts',
+                    'packages/cli/build/inputs.ts',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
             ),
-            'packages/cli/build/entry.ts': '// existing entry\n',
+            'packages/cli/.build/entry.ts': '// existing entry\n',
             'packages/cli/configurations/fixture.txt': 'asset fixture\n',
             'dist/gspot-linux-arm64': 'existing binary',
         });
-        symlinkSync(join(ROOT, 'packages/cli/build/swift.wasm'), join(sandbox.path, 'packages/cli/build/swift.wasm'));
+        symlinkSync(join(ROOT, 'packages/cli/.build/swift.wasm'), join(sandbox.path, 'packages/cli/.build/swift.wasm'));
         for (const path of ['node_modules', 'packages/cli/node_modules'])
             symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
-        const outputs = ['packages/cli/build', 'dist'];
+        const outputs = ['packages/cli/.build', 'dist'];
         const before = outputs.map((path) => treeContents(join(sandbox.path, path)));
         const execute = (args: string[]) =>
-            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/build.ts'), ...args], {
+            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/build/command.ts'), ...args], {
                 cwd: sandbox.path,
                 stdout: 'pipe',
                 stderr: 'pipe',
@@ -73,7 +76,7 @@ describe('publish script arguments', () => {
             const registry = 'http://127.0.0.1:4873';
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'packages/cli/scripts/publish.ts': readFileSync(join(ROOT, 'packages/cli/scripts/publish.ts'), 'utf8'),
+                'packages/cli/build/publish.ts': readFileSync(join(ROOT, 'packages/cli/build/publish.ts'), 'utf8'),
                 'packages/cli/package.json': manifest,
                 ...Object.fromEntries(
                     [
@@ -81,7 +84,8 @@ describe('publish script arguments', () => {
                         'packages/npm/package.json',
                         'packages/npm/gspot.js',
                         'packages/npm/targets.json',
-                        'packages/cli/scripts/publish.ts',
+                        'packages/cli/build/publish.ts',
+                        'packages/cli/build/targets.ts',
                     ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
                 ),
                 ...Object.fromEntries(
@@ -112,7 +116,7 @@ const argv = process.argv.slice(2);
             chmodSync(join(sandbox.path, 'bin/npm'), 0o755);
             const before = treeContents(join(sandbox.path, 'dist'));
             const execute = (args: string[]) =>
-                Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/scripts/publish.ts'), ...args], {
+                Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/cli/build/publish.ts'), ...args], {
                     cwd: sandbox.path,
                     stdout: 'pipe',
                     stderr: 'pipe',

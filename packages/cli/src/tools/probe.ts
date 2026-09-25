@@ -1,19 +1,19 @@
-import semver from 'semver';
+import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { miseHome } from '#cli/platform/environment.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
+import { installHint } from '#cli/tools/install-hints.ts';
+import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { miseHome } from '#cli/platform/environment.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
-import { installHint } from '#cli/tools/install-hints.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
-import { hasPolicy, readPolicy } from '#cli/policy/read-policy.ts';
-import { privateToolInstallation } from '#cli/tools/installation.ts';
-import type { Manifest, ToolPin } from '#cli/configurations/read-manifests.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
+import semver from 'semver';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };
@@ -314,5 +314,5 @@ export type ToolContext = {
     root: string;
     cwd?: string;
     probes: Map<string, ToolProbe>;
-    policyFiles?: import('#cli/policy/read-policy.ts').PolicyFiles;
+    policyFiles?: import('#cli/policy/read.ts').PolicyFiles;
 };

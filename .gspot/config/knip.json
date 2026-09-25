@@ -2,7 +2,8 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
-        "packages/cli/scripts/inputs.ts",
+        "packages/cli/build/command.ts",
+        "packages/cli/build/inputs.ts",
         "**/publish.ts",
         "packages/cli/src/agents/lint.ts",
         "packages/npm/gspot.js",
@@ -162,7 +163,8 @@
         ".": {
             "entry": [
                 "**/build.ts",
-                "packages/cli/scripts/inputs.ts",
+                "packages/cli/build/command.ts",
+                "packages/cli/build/inputs.ts",
                 "**/publish.ts",
                 "packages/cli/src/agents/lint.ts",
                 "packages/npm/gspot.js",
@@ -183,7 +185,8 @@
         "packages/cli": {
             "entry": [
                 "**/build.ts",
-                "scripts/inputs.ts",
+                "build/command.ts",
+                "build/inputs.ts",
                 "**/publish.ts",
                 "src/agents/lint.ts",
                 "src/main.{ts,js}",

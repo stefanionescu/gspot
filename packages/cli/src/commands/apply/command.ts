@@ -1,18 +1,18 @@
-import type { Command } from 'commander';
-import { emitAll } from '#cli/generation/targets.ts';
-import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import type { ApplyReport } from '#cli/lifecycle/apply.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { emitAll } from '#cli/generation/render.ts';
+import type { ApplyReport } from '#cli/lifecycle/apply.ts';
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
+import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
 import packageManifest from '#package' with { type: 'json' };
+import type { Command } from 'commander';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

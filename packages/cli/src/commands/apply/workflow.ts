@@ -1,13 +1,13 @@
 import type { Session } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/targets.ts';
-import { publishGenerated } from '#cli/lifecycle/apply.ts';
+import { emitAll } from '#cli/generation/render.ts';
 import type { ApplyReport } from '#cli/lifecycle/apply.ts';
+import { publishGenerated } from '#cli/lifecycle/apply.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { hasPackages, installPackages } from '#cli/tools/vale.ts';
+import { resolvePackageProject } from '#cli/tools/packages/project.ts';
 import { resolvePythonProject } from '#cli/tools/python-project.ts';
-import { resolvePackageProject } from '#cli/tools/package-project.ts';
+import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>

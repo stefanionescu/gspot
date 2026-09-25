@@ -1,7 +1,7 @@
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {
     agent: 'How to work here',

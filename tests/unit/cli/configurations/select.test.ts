@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'bun:test';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { configurationManifests, parseManifest, validateManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
-import { parseManifest, configurationManifests, validateManifests } from '#cli/configurations/read-manifests.ts';
+import { describe, expect, test } from 'bun:test';
 
 function manifest(configurationName: string, requires: string[] = []): Manifest {
     return parseManifest(

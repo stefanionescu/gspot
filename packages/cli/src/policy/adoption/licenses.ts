@@ -1,4 +1,4 @@
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { licenseResponse } from '#cli/evaluation/protocol.ts';
 import { appendSetting, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';

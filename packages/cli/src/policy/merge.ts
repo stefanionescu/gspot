@@ -1,8 +1,8 @@
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
-import type { PolicyScopeLayer, ExposedSettings } from '#cli/policy/settings.ts';
-import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { FormatSettings, IgnoreEntry, Policy } from '#cli/policy/normalize.ts';
+import type { ExposedSettings, PolicyScopeLayer } from '#cli/policy/settings.ts';
+import { listSettings, policyTables, settingValue } from '#cli/policy/settings.ts';
 
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);

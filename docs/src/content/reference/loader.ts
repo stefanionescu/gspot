@@ -1,12 +1,12 @@
-import type { Loader } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
-import { configurationManifests } from '@gspot/cli/src/configurations/read-manifests.ts';
+import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
+import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands';
-import { pluginReferencePages, configurationPage, rulePage, enginesPage } from './definitions';
-import { configurationReference, settingsPage } from './policy';
-import { referencePage, section, bullets } from './page';
+import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions';
 import type { ReferencePage } from './page';
+import { bullets, referencePage, section } from './page';
+import { configurationReference, settingsPage } from './policy';
 
 export function referencePages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();

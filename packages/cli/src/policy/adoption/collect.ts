@@ -32,7 +32,7 @@ import { collectFormatting } from '#cli/policy/adoption/formatting.ts';
 
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
 

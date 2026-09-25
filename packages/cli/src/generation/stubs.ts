@@ -1,13 +1,13 @@
-import { dirname, relative } from 'node:path';
 import type { StubSpec } from '#cli/configurations/schema.ts';
-import type { GeneratedFile } from '#cli/generation/targets.ts';
-import { headerFor } from '#cli/generation/templates.ts';
+import { headerFor } from '#cli/generation/headers.ts';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/lifecycle/apply.ts';
+import { dirname, relative } from 'node:path';
+
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { applyEdits, modify, parse as parseJsonc, type ParseError } from 'jsonc-parser';
+import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
-const JSON_INDENT = 4;
 
 function parseStub(text: string, stubPath: string): Record<string, unknown> {
     const errors: ParseError[] = [];
@@ -71,38 +71,20 @@ export function bodyStub(
  * @param targetPath the generated file's path
  * @returns the path, the new text and the keys gspot owns
  */
-export function mergeStub(
-    root: string,
-    stub: StubSpec,
-    stubPath: string,
-    targetPath: string,
-): { path: string; content: string; keys: string[] } {
-    let text = openConfinedRoot(root).read(stubPath)?.bytes.toString('utf8') ?? '{}\n';
-    parseStub(text, stubPath);
-    const entries = Object.entries(stub.merge ?? {});
-    for (const [key, value] of entries) {
-        const edits = modify(text, [key], fillTarget(value, stubPath, targetPath), {
-            formattingOptions: { insertSpaces: true, tabSize: JSON_INDENT },
-        });
-        text = applyEdits(text, edits);
+export function mergeStub(root: string, stub: StubSpec, stubPath: string, targetPath: string): ConfigurationOutput {
+    const files = openConfinedRoot(root);
+    try {
+        const text = files.read(stubPath)?.bytes.toString('utf8') ?? '{}\n';
+        parseStub(text, stubPath);
+        return {
+            path: stubPath,
+            format: 'json',
+            changes: Object.entries(stub.merge ?? {}).map(([key, value]) => ({
+                path: [key],
+                value: fillTarget(value, stubPath, targetPath),
+            })),
+        };
+    } finally {
+        files.close();
     }
-    return { path: stubPath, content: text, keys: entries.map(([key]) => key) };
-}
-
-/**
- * True when a merge stub's keys already hold the wanted values.
- * @param root the repository root
- * @param stub the stub spec
- * @param stubPath the stub's path
- * @param targetPath the generated file's path
- * @returns whether nothing needs writing
- */
-export function isMergeStubHeld(root: string, stub: StubSpec, stubPath: string, targetPath: string): boolean {
-    const current = openConfinedRoot(root).read(stubPath);
-    if (current === undefined) return false;
-    const parsed = parseStub(current.bytes.toString('utf8'), stubPath);
-    const entries = Object.entries(stub.merge ?? {});
-    return entries.every(
-        ([key, value]) => JSON.stringify(parsed[key]) === JSON.stringify(fillTarget(value, stubPath, targetPath)),
-    );
 }

@@ -1,14 +1,14 @@
-import * as messages from '#cli/policy/messages.ts';
-import { PolicyError } from '#cli/policy/read-policy.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
-import { join } from 'node:path';
-import type { Mutation } from '#cli/policy/write.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import { openSession } from '#cli/execution/session.ts';
 import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { PolicyError } from '#cli/policy/read.ts';
+import type { Mutation } from '#cli/policy/write.ts';
+import { join } from 'node:path';
 
 /**
  * Applies one mutation to gspot.toml and runs apply, or prints the change on a dry run.

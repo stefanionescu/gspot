@@ -126,7 +126,7 @@ fail the build.
 Source checkout setup and release builds download the upstream Swift 0.7.3 WebAssembly parser.
 The input preparation script records its release URL and SHA-256. Preparation verifies cached
 bytes and rejects a failed download or checksum mismatch. The cache lives in ignored
-`packages/cli/build/swift.wasm`; no compiler or Docker is required for this preparation.
+`packages/cli/.build/swift.wasm`; no compiler or Docker is required for this preparation.
 
 ```shell
 mise run prepare:grammar

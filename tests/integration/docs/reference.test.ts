@@ -1,11 +1,11 @@
-import * as fs from 'node:fs';
-import { join } from 'node:path';
+import * as programDefinition from '#cli/commands/program.ts';
+import * as manifestDefinitions from '#cli/configurations/manifests.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
 import plugin from '#plugin/plugin.ts';
 import { expect, spyOn, test } from 'bun:test';
-import * as programDefinition from '#cli/commands/program.ts';
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
+import * as fs from 'node:fs';
+import { join } from 'node:path';
 import { referencePages } from '../../../docs/src/content/reference/loader.ts';
-import * as manifestDefinitions from '#cli/configurations/read-manifests.ts';
 import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {

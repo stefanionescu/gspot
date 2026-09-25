@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 // An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
+import { environmentVariables } from '#cli/platform/environment.ts';
+import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import type { SpawnOutcome } from '#tests/support/cli/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 /** A local npm registry the release tests publish into. */
 export type Registry = {
@@ -157,7 +157,7 @@ export async function startRegistry(
 export function publishTo(registry: Registry, version: string, checkout: string): SpawnOutcome {
     registry.assertRunning();
     const result = Bun.spawnSync(
-        ['bun', 'packages/cli/scripts/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
+        ['bun', 'packages/cli/build/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
         {
             cwd: checkout,
             env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },

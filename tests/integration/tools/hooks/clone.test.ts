@@ -1,12 +1,12 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { run } from '#cli/platform/spawn.ts';
+import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'])(
     'a fresh %s clone installs without tracked changes and enforces staged source through real commits',
@@ -88,7 +88,14 @@ format = "lines"
         }
         expect(existsSync(join(clone.path, '.gspot/state/ownership.json'))).toBe(false);
         expect(existsSync(join(clone.path, 'node_modules'))).toBe(false);
-        expect(hookStatus(await openSession(clone.path)).ready).toBe(false);
+        expect(
+            hookStatus(
+                await openSession(clone.path).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                })),
+            ).ready,
+        ).toBe(false);
         if (manager === 'simple-git-hooks') {
             const path = join(clone.path, '.gspot/integrations/simple-git-hooks/pre-commit');
             const original = readFileSync(path);
@@ -119,10 +126,24 @@ format = "lines"
             expect(installed.code, installed.stderr).toBe(0);
             const hooks = await run([process.execPath, main, 'install'], { cwd: clone.path, timeoutMs: 60_000 });
             expect(hooks.code, hooks.stdout + hooks.stderr).toBe(0);
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(true);
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(true);
             const applied = await run([process.execPath, main, 'apply'], { cwd: clone.path, timeoutMs: 60_000 });
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(true);
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(true);
             const status = await run(['git', 'status', '--porcelain'], { cwd: clone.path });
             expect(status.code, status.stderr).toBe(0);
             expect(status.stdout).toBe('');
@@ -179,9 +200,29 @@ format = "lines"
             writeFileSync(originalPath, original);
             const changed = await run([process.execPath, main, 'apply'], options);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(false);
-            await installHookManager(await openSession(clone.path));
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(true);
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(false);
+            await installHookManager(
+                await openSession(clone.path).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            );
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(true);
             const dispatched = await run(['bash', '.gspot/integrations/simple-git-hooks/pre-commit'], {
                 ...options,
                 env: { PATH: `${launcher.path}${delimiter}${options.env.PATH}` },
@@ -196,9 +237,29 @@ format = "lines"
             writeFileSync(join(clone.path, 'gspot.toml'), policy);
             const restoredRunner = await run([process.execPath, main, 'apply'], options);
             expect(restoredRunner.code, restoredRunner.stdout + restoredRunner.stderr).toBe(0);
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(false);
-            await installHookManager(await openSession(clone.path));
-            expect(hookStatus(await openSession(clone.path)).ready).toBe(true);
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(false);
+            await installHookManager(
+                await openSession(clone.path).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            );
+            expect(
+                hookStatus(
+                    await openSession(clone.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(true);
             const roundTrip = await run(['git', 'status', '--porcelain'], options);
             expect(roundTrip.code, roundTrip.stderr).toBe(0);
             expect(roundTrip.stdout, (await run(['git', 'diff', '--', 'package.json'], options)).stdout).toBe('');

@@ -1,11 +1,11 @@
+import { expect, spyOn, test } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync, readFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { prepareInput, SWIFT_GRAMMAR } from '../../../packages/cli/scripts/inputs.ts';
+import { prepareInput, SWIFT_GRAMMAR } from '../../../packages/cli/build/inputs.ts';
 
-const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/build/swift.wasm', import.meta.url)));
+const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));
 
 test('verified upstream grammar is cached and reused without another download', async () => {
     await using sandbox = await testdir();

@@ -26,5 +26,5 @@
         }
     },
     "include": ["packages/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build"]
+    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/.build"]
 }

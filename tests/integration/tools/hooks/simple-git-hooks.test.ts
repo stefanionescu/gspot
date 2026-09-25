@@ -1,13 +1,13 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { run } from '#cli/platform/spawn.ts';
+import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
@@ -49,26 +49,71 @@ test.each(['', "apps/worker's tools"])(
         const manifest = readFileSync(join(root, 'package.json'), 'utf8');
         expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(manifest);
-        await installHookManager(await openSession(root));
+        await installHookManager(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+                tools: session,
+            })),
+        );
         const hook = readFileSync(join(location.absolute, 'pre-push'), 'utf8');
-        await installHookManager(await openSession(root));
+        await installHookManager(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+                tools: session,
+            })),
+        );
         expect(readFileSync(join(location.absolute, 'pre-push'), 'utf8')).toBe(hook);
-        expect(hookStatus(await openSession(root)).ready).toBe(true);
+        expect(
+            hookStatus(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                })),
+            ).ready,
+        ).toBe(true);
         const managerPath = join(location.absolute, 'pre-push.gspot-manager');
         const manager = readFileSync(managerPath);
         unlinkSync(managerPath);
-        const missingManager = hookStatus(await openSession(root));
+        const missingManager = hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        );
         expect(missingManager.ready).toBe(false);
         expect(missingManager.text).toContain('pre-push.gspot-manager');
         writeFileSync(managerPath, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
-        expect(hookStatus(await openSession(root)).ready).toBe(false);
+        expect(
+            hookStatus(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                })),
+            ).ready,
+        ).toBe(false);
         writeFileSync(managerPath, manager);
         if (process.platform !== 'win32') {
             chmodSync(managerPath, 0o644);
-            expect(hookStatus(await openSession(root)).ready).toBe(false);
+            expect(
+                hookStatus(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                    })),
+                ).ready,
+            ).toBe(false);
             chmodSync(managerPath, 0o755);
         }
-        expect(hookStatus(await openSession(root)).ready).toBe(true);
+        expect(
+            hookStatus(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                })),
+            ).ready,
+        ).toBe(true);
         const input = 'refs/heads/main a refs/heads/main b\nrefs/heads/other c refs/heads/other d\n';
         writeFileSync(join(root, 'push-input'), input);
         const args = [

@@ -1,8 +1,8 @@
+import { describe, expect, test } from 'bun:test';
+import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync, copyFileSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';
@@ -33,7 +33,7 @@ describe('development assets', () => {
             ...sources,
             [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: CONFIGURATION,
             [`${CHECKOUT}/probe.ts`]: PROBE,
-            [`${CHECKOUT}/packages/cli/build/undeclared.wasm`]: 'not a declared asset',
+            [`${CHECKOUT}/packages/cli/.build/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
@@ -46,7 +46,7 @@ describe('development assets', () => {
         const missing = execute();
         expect(missing.exitCode).toBe(1);
         expect(missing.stderr.toString()).toContain('run mise run prepare:grammar');
-        copyFileSync(join(ROOT, 'packages/cli/build/swift.wasm'), join(cwd, 'packages/cli/build/swift.wasm'));
+        copyFileSync(join(ROOT, 'packages/cli/.build/swift.wasm'), join(cwd, 'packages/cli/.build/swift.wasm'));
         const result = execute();
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toStrictEqual({

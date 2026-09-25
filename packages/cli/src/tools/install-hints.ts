@@ -1,5 +1,5 @@
-import { MISE_BACKENDS } from '#cli/tools/installation.ts';
-import type { ToolPin } from '#cli/configurations/read-manifests.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
+import { MISE_BACKENDS } from '#cli/tools/pins.ts';
 
 const HOST_HINTS: Record<string, string> = {
     xcodebuild: 'install Xcode from the App Store',

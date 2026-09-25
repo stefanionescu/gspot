@@ -1,28 +1,27 @@
-import { z } from 'zod';
-import { tmpdir } from 'node:os';
-import { parse, stringify } from 'smol-toml';
-import { isDeepStrictEqual } from 'node:util';
-import { join, resolve, isAbsolute } from 'node:path';
-import { runToolCommand } from '#cli/tools/command.ts';
-import type { GeneratedFile } from '#cli/generation/targets.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { InstallationError } from '#cli/tools/install-error.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { tmpdir } from 'node:os';
+import { isAbsolute, join, resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
+import { parse, stringify } from 'smol-toml';
+import { z } from 'zod';
 
 import {
+    chmodSync,
+    copyFileSync,
+    lstatSync,
     mkdtempSync,
     readFileSync,
-    writeFileSync,
-    rmSync,
-    lstatSync,
     realpathSync,
+    rmSync,
     unlinkSync,
-    copyFileSync,
-    chmodSync,
+    writeFileSync,
 } from 'node:fs';
 
 const PROJECT = '.gspot/pyproject.toml';

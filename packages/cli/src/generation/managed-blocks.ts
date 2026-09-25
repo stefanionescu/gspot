@@ -1,7 +1,7 @@
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
 
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.

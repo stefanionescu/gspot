@@ -1,54 +1,34 @@
-import { waitForExit } from '#tests/support/cli/process.ts';
-import { testdir } from 'testdirs';
-import prettier from 'prettier';
-import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
-import { runProcess as run } from '#tests/support/cli/command.ts';
-import { beforeAll, afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
-import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
+import { runProcess as run } from '#tests/support/cli/command.ts';
+import { waitForExit } from '#tests/support/cli/process.ts';
+import { createConsumer } from '#tests/support/release/consumer.ts';
+import {
+    BINARY,
+    RELEASE_TIMEOUT_MS,
+    environment,
+    host,
+    preparePackages,
+    requireCli,
+    root,
+} from '#tests/support/release/packages.ts';
+import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { fileURLToPath } from 'node:url';
+import prettier from 'prettier';
 // Installs built packages from an isolated registry and checks a fresh consumer.
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { delimiter, dirname, join, relative } from 'node:path';
 
 import {
     copyFileSync,
-    cpSync,
     existsSync,
     lstatSync,
     mkdirSync,
     readFileSync,
     realpathSync,
     rmSync,
-    symlinkSync,
     writeFileSync,
 } from 'node:fs';
-
-const root = fileURLToPath(new URL('../../..', import.meta.url));
-const requireCli = createRequire(join(root, 'packages/cli/package.json'));
-const { familySync } = requireCli('detect-libc') as { familySync: () => string | null };
-const libc = process.platform === 'linux' ? familySync() : null;
-const host = releaseTargets.find(
-    (target) => target.os === process.platform && target.cpu === process.arch && target.libc === libc,
-)!;
-const BINARY = host.binary;
-const RELEASE_TIMEOUT_MS = 180_000;
-
-// Consumer processes cannot discover executables from the source checkout.
-const environment: Record<string, string | undefined> = {
-    ...environmentVariables(),
-    NODE_PATH: undefined,
-    NODE_OPTIONS: undefined,
-};
-environment['PATH'] = (environment['PATH'] ?? '')
-    .split(delimiter)
-    .filter((entry) => {
-        const path = relative(root, resolve(entry));
-        return path.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || path === '..' || isAbsolute(path);
-    })
-    .join(delimiter);
 
 let registry: Awaited<ReturnType<typeof startRegistry>>;
 let toolNpmrc: string;
@@ -63,20 +43,7 @@ beforeAll(async () => {
     expect(built.code, built.stdout + built.stderr).toBe(0);
     version = built.stdout.trim();
     expect(version).toMatch(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u);
-    const checkout = join(registry.work, 'publish');
-    for (const path of [
-        'dist',
-        'packages/npm',
-        'packages/cli/package.json',
-        'packages/cli/scripts/publish.ts',
-        'tsconfig.json',
-    ]) {
-        const target = join(checkout, path);
-        mkdirSync(dirname(target), { recursive: true });
-        cpSync(join(root, path), target, { recursive: true });
-    }
-    symlinkSync(join(root, 'node_modules'), join(checkout, 'node_modules'), 'dir');
-    symlinkSync(join(root, 'packages/cli/node_modules'), join(checkout, 'packages/cli/node_modules'), 'dir');
+    const checkout = preparePackages(registry.work);
     const missing = join(checkout, 'dist', 'gspot-linux-arm64-musl');
     rmSync(missing);
     const refused = publishTo(registry, version, checkout);
@@ -113,36 +80,9 @@ afterAll(async () => {
 });
 
 async function installedConsumer() {
-    const workspace = await testdir();
+    const fixture = await createConsumer(registry, version);
+    const { installed, consumer } = fixture;
     try {
-        const consumer = join(workspace.path, 'consumer');
-        mkdirSync(consumer);
-        writeFileSync(join(consumer, 'package.json'), '{"name":"consumer","private":true}\n');
-        const editorconfig = 'root = true\n[*]\nindent_size = 2\n[*.json]\nindent_size = 4\n';
-        writeFileSync(join(consumer, '.editorconfig'), editorconfig, { mode: 0o640 });
-        const formatter =
-            'console.log("formatter stdout"); console.error("formatter stderr"); export default { semi: false };\n';
-        writeFileSync(join(consumer, 'prettier.config.mjs'), formatter);
-        writeFileSync(join(consumer, 'source.js'), 'const greeting="hello";');
-        writeFileSync(join(consumer, 'broken.sh'), 'if then\n');
-        writeFileSync(join(consumer, 'authored.txt'), 'Preserve this authored file.\n');
-        const installed = await run(
-            [
-                'npm',
-                'install',
-                `gspot@${version}`,
-                '--ignore-scripts',
-                '--registry',
-                registry.url,
-                '--no-audit',
-                '--no-fund',
-            ],
-            {
-                cwd: consumer,
-                env: { ...environment, NPM_CONFIG_USERCONFIG: registry.npmrc },
-                timeoutMs: RELEASE_TIMEOUT_MS,
-            },
-        );
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const launcherDirectory = join(consumer, 'node_modules', 'gspot');
         const platformName = host.package;
@@ -162,39 +102,9 @@ async function installedConsumer() {
         expect(readFileSync(join(platformDirectory, 'NOTICE.md'), 'utf8')).toBe(
             readFileSync(join(root, 'dist/NOTICE.md'), 'utf8'),
         );
-        const command = ['node', join(launcherDirectory, 'gspot.js')];
-        const options = {
-            cwd: consumer,
-            env: {
-                ...environment,
-                NO_COLOR: '1',
-                CI: '1',
-                HTTP_PROXY: 'http://127.0.0.1:1',
-                HTTPS_PROXY: 'http://127.0.0.1:1',
-                ALL_PROXY: 'http://127.0.0.1:1',
-                NO_PROXY: '',
-                http_proxy: undefined,
-                https_proxy: undefined,
-                all_proxy: undefined,
-                no_proxy: undefined,
-            },
-            timeoutMs: RELEASE_TIMEOUT_MS,
-        };
-        const setupOptions = { ...options, env: { ...environment, NO_COLOR: '1', CI: '1' } };
-        return {
-            consumer,
-            command,
-            options,
-            setupOptions,
-            editorconfig,
-            formatter,
-            workspace: workspace.path,
-            [Symbol.asyncDispose]: async () => {
-                await workspace[Symbol.asyncDispose]();
-            },
-        };
+        return fixture;
     } catch (error) {
-        await workspace[Symbol.asyncDispose]();
+        await fixture[Symbol.asyncDispose]();
         throw error;
     }
 }

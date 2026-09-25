@@ -1,10 +1,10 @@
-import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { stringify as stringifyToml } from 'smol-toml';
-import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
+import { parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
+import { assertPolicyComplete } from '#cli/policy/validate.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
+import { patch } from '@decimalturn/toml-patch';
+import { stringify as stringifyToml } from 'smol-toml';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

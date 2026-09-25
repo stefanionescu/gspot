@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/generation/targets.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { expect, test } from 'bun:test';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 for (const language of ['python', 'swift']) {
     test.each([7, 8])(`${language} counts declared parameters with maximum %i`, async (maximum) => {

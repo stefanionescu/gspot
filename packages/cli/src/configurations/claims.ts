@@ -1,9 +1,9 @@
-import { pathMatcher, isInScope } from '#cli/repository/paths.ts';
+import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 // Which selected configuration claims which file, per scope.
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { Claims } from '#cli/configurations/schema.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 const GLOB_CHARS = /[*?{]/u;

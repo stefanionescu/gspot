@@ -1,9 +1,9 @@
+import { parsePolicyText, PolicyError, readPolicy } from '#cli/policy/read.ts';
+import { describe, expect, test } from 'bun:test';
+import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
-import { parsePolicyText, PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
 
 const minimal = 'version = 1\nconfigurations = ["bash"]\n';
 

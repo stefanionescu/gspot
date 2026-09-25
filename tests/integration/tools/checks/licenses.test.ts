@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 
-import { run } from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/targets.ts';
-import { expect, test } from 'bun:test';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { emitAll } from '#cli/generation/render.ts';
+import { run } from '#cli/platform/spawn.ts';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import type { EngineInput } from '#cli/checks/input.ts';

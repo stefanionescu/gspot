@@ -1,16 +1,16 @@
-import { toolPin } from '#cli/tools/probe.ts';
-import type { RunReport } from '#cli/execution/report.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 import { configurationName } from '#cli/configurations/targets.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import { toolPin } from '#cli/tools/probe.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
-import type { Session } from '#cli/execution/session.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
-import { checkState, waitingSetting, repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { Manifest, ToolPin } from '#cli/configurations/read-manifests.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
+import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { checkState, repositoryCheckSpec, waitingSetting } from '#cli/policy/check-state.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };

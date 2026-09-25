@@ -1,11 +1,11 @@
-import { isDeepStrictEqual } from 'node:util';
-import { fileMissing } from '#cli/policy/messages.ts';
-import { PolicyError } from '#cli/policy/read-policy.ts';
-import { proposePolicy } from '#cli/policy/write.ts';
-import type { Mutation, WriteResult } from '#cli/policy/write.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { fileMissing } from '#cli/policy/messages.ts';
+import { PolicyError } from '#cli/policy/read.ts';
+import type { Mutation, WriteResult } from '#cli/policy/write.ts';
+import { proposePolicy } from '#cli/policy/write.ts';
+import { isDeepStrictEqual } from 'node:util';
 
 /** Capture the input bytes and mode before evaluating and validating a policy mutation. */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {

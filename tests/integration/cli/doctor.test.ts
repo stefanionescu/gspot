@@ -1,14 +1,14 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { installHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { expect, test } from 'bun:test';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();
@@ -121,7 +121,12 @@ test('doctor fails missing and edited hook integration and accepts installed hoo
     const missing = await doctorCommand({ cwd: sandbox.path });
     expect(missing.exitCode).toBe(1);
     expect(missing.text).toContain('missing or edited pre-commit');
-    installHooks(await openSession(sandbox.path));
+    installHooks(
+        await openSession(sandbox.path).then((session) => ({
+            policy: session.policyFiles.policy,
+            repository: session.repository,
+        })),
+    );
     expect((await doctorCommand({ cwd: sandbox.path })).exitCode).toBe(0);
     writeFileSync(join(hookLocation(sandbox.path).absolute, 'pre-commit'), '#!/bin/sh\nexit 0\n');
     const edited = await doctorCommand({ cwd: sandbox.path });

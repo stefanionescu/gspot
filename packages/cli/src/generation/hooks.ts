@@ -1,4 +1,4 @@
-import type { ConfigurationOutput } from '#cli/generation/targets.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';

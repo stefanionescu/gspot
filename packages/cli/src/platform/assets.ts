@@ -1,9 +1,9 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
-import { globbySync } from 'globby';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { readFileSync, statSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
+import { globbySync } from 'globby';
+import { readFileSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const GRAMMAR_SOURCES: Record<string, string> = {
     'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',
@@ -97,7 +97,7 @@ export function grammarPath(name: string): string {
     }
     const root = developmentRoot();
     if (name === 'swift.wasm') {
-        const path = join(root, 'packages', 'cli', 'build', name);
+        const path = join(root, 'packages', 'cli', '.build', name);
         if (statSync(path, { throwIfNoEntry: false }) === undefined)
             throw new Error('The Swift grammar is not prepared; run mise run prepare:grammar.');
         return path;

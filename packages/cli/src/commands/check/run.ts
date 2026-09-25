@@ -1,28 +1,28 @@
-import { readFileSync } from 'node:fs';
+import type { RunOptions } from '#cli/execution/execute.ts';
 import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { runText } from '#cli/output/reporter.ts';
-import type { Session } from '#cli/execution/session.ts';
 import type { FixReport } from '#cli/execution/fixers.ts';
 import type { StageFilter } from '#cli/execution/plan.ts';
-import { writeReport } from '#cli/output/report.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { note, warn } from '#cli/output/messages.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import { note, warn } from '#cli/output/messages.ts';
+import { writeReport } from '#cli/output/report.ts';
+import { runText } from '#cli/output/reporter.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import { readFileSync } from 'node:fs';
 // check: open the session, honor the pin, run, render, decide the exit code.
-import { SelectionError } from '#cli/configurations/select.ts';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import type { ChangedSet, StagedSet } from '#cli/repository/staged.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import type { PushReport, RunReport } from '#cli/execution/report.ts';
 import type { CheckResult } from '#cli/checks/result.ts';
-import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/staged.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
+import type { PushReport, RunReport } from '#cli/execution/report.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
+import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
+import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 
 const CHANGED_SHOWN = 8;
 function stagedEnvironmentFiles(staged: string[]): string[] {
@@ -202,9 +202,11 @@ async function checkContent(
     if (unknown !== undefined) return unknown;
     if (revision?.content !== 'commit') {
         const hooks = hookStatus({
-            root: revision?.reportRoot ?? root,
-            policyFiles: session.policyFiles,
-            repository: { hasGit: revision?.reportRoot !== undefined || session.repository.hasGit },
+            policy: session.policyFiles.policy,
+            repository: {
+                root: revision?.reportRoot ?? root,
+                hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
+            },
         });
         if (!hooks.ready) warn(`Configured hooks are not ready in this clone. ${hooks.text}`);
     }

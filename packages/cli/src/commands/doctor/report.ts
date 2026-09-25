@@ -1,17 +1,17 @@
-import type { CoverageReport } from '#cli/execution/coverage.ts';
-import type { Colors } from 'picocolors/types';
-import { colors } from '#cli/output/messages.ts';
-import type { Session } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
-import { coverageLines } from '#cli/output/coverage.ts';
-import type { ToolProbe } from '#cli/tools/probe.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
-import { collectPins } from '#cli/tools/installation.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import type { CoverageReport } from '#cli/execution/coverage.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import { coverageLines } from '#cli/output/coverage.ts';
+import { colors } from '#cli/output/messages.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
+import { collectPins } from '#cli/tools/pins.ts';
+import type { ToolProbe } from '#cli/tools/probe.ts';
+import { probeTool } from '#cli/tools/probe.ts';
+import type { Colors } from 'picocolors/types';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;
@@ -141,7 +141,7 @@ function versionLine(report: DoctorReport): string {
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
     const tools = collectPins(everyManifest(session.scopes)).map((tool) => probeTool(session, tool));
     const { policy } = session.policyFiles;
-    const hooks = hookStatus(session);
+    const hooks = hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
     const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
     return {
         submodules: submodulePaths(session.root),

@@ -1,11 +1,11 @@
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 
+import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { runBlocking, run } from '#cli/platform/spawn.ts';
 
-import { withRevisionSnapshot } from '#cli/repository/snapshot.ts';
-import { readdirSync, symlinkSync, unlinkSync, writeFileSync, readFileSync, readlinkSync } from 'node:fs';
+import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { readdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

@@ -1,11 +1,11 @@
-import { mergeForScope } from '#cli/policy/merge.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
+import { mergeForScope } from '#cli/policy/merge.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { ExposedSettings } from '#cli/policy/settings.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
-import type { ExposedSettings } from '#cli/policy/settings.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
 
 export function resolveScopes(
     policy: Policy,

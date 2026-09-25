@@ -1,15 +1,14 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/generation/targets.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
-import { runProcess as spawn } from '#tests/support/cli/command.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { emitAll } from '#cli/generation/render.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
+import { run, runProcess as spawn } from '#tests/support/cli/command.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',

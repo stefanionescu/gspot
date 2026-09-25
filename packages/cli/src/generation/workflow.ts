@@ -1,7 +1,8 @@
-import { stringify } from 'yaml';
+import { headerFor } from '#cli/generation/headers.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
-import type { GeneratedFile } from '#cli/generation/targets.ts';
-import { headerFor } from '#cli/generation/templates.ts';
+import { stringify } from 'yaml';
+
 import type { Policy } from '#cli/policy/normalize.ts';
 import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
 

@@ -1,9 +1,12 @@
-import { isMap, parseDocument } from 'yaml';
+import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { patch as patchToml } from '@decimalturn/toml-patch';
+import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { patch as patchToml } from '@decimalturn/toml-patch';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
+import { isMap, parseDocument } from 'yaml';
+import { z } from 'zod';
 
 function jsonDocument(text: string) {
     const errors: ParseError[] = [];
@@ -127,6 +130,120 @@ export function configurationDocument(source: string, format: 'json' | 'yaml' | 
         },
         text(): string {
             return text;
+        },
+    };
+}
+
+/**
+ * Remove empty containers only when this owner created them for managed fields.
+ * @param document
+ * @param parents
+ * @param protectedFields
+ */
+export function pruneConfigurationParents(
+    document: ReturnType<typeof configurationDocument>,
+    parents: (string | number)[][],
+    protectedFields: (string | number)[][] = [],
+): (string | number)[][] {
+    for (const parent of parents.toSorted((left, right) => right.length - left.length)) {
+        if (
+            protectedFields.some(
+                (field) => field.length <= parent.length && field.every((part, index) => part === parent[index]),
+            )
+        )
+            continue;
+        const value = document.value(parent);
+        if (value === null || typeof value !== 'object') continue;
+        if (
+            !Array.isArray(value) &&
+            Object.getPrototypeOf(value) !== Object.prototype &&
+            Object.getPrototypeOf(value) !== null
+        )
+            continue;
+        if (Object.keys(value).length === 0) document.set(parent, undefined);
+    }
+    return parents.filter((parent) => document.value(parent) !== undefined);
+}
+
+export function planConfiguration(
+    path: string,
+    format: 'json' | 'yaml' | 'toml',
+    changes: { path: (string | number)[]; value: unknown }[],
+    current: FileSnapshot | undefined,
+    existing: OwnershipEntry | undefined,
+    matchesInstalled: boolean,
+    takeover: boolean,
+):
+    | {
+          next: FileSnapshot;
+          configuration: NonNullable<OwnershipEntry['configuration']>;
+          status: 'changed' | 'unchanged';
+      }
+    | undefined {
+    const text = current?.bytes.toString('utf8') ?? (format === 'toml' ? '' : '{}\n');
+    if (current !== undefined && !Buffer.from(text).equals(current.bytes))
+        throw new Error(`Shared configuration is not UTF-8 text: ${path}`);
+    const document = configurationDocument(text, format, current === undefined);
+    if (existing?.configuration !== undefined && existing.configuration.format !== format) return undefined;
+    const requested = changes.map((change) => ({
+        path: change.path,
+        installed: z.json().parse(change.value),
+    }));
+    configurationFieldsSchema.parse(requested);
+    const fields = [...(existing?.configuration?.fields ?? [])];
+    let parents = [...(existing?.configuration?.parents ?? [])];
+    if (existing !== undefined && existing.configuration === undefined && current !== undefined && !matchesInstalled)
+        return undefined;
+    for (const previous of [...fields]) {
+        if (requested.some((field) => isDeepStrictEqual(field.path, previous.path))) continue;
+        if (!isDeepStrictEqual(document.value(previous.path), previous.installed)) return undefined;
+        document.set(previous.path, previous.original);
+        fields.splice(fields.indexOf(previous), 1);
+    }
+    for (const field of requested) {
+        const value = document.value(field.path);
+        const previous = fields.find((entry) => isDeepStrictEqual(entry.path, field.path));
+        if (previous !== undefined && !isDeepStrictEqual(value, previous.installed)) return undefined;
+        if (previous === undefined && current !== undefined && !takeover && !isDeepStrictEqual(value, field.installed))
+            return undefined;
+        const original =
+            previous === undefined ? (value === undefined ? undefined : z.json().parse(value)) : previous.original;
+        const entry = { ...field, ...(original === undefined ? {} : { original }) };
+        const index = fields.findIndex((entry) => isDeepStrictEqual(entry.path, field.path));
+        if (index === -1) fields.push(entry);
+        else fields[index] = entry;
+        for (let length = 1; length < field.path.length; length++) {
+            const parent = field.path.slice(0, length);
+            if (document.value(parent) === undefined && !parents.some((path) => isDeepStrictEqual(path, parent)))
+                parents.push(parent);
+        }
+        document.set(field.path, field.installed);
+    }
+    parents = pruneConfigurationParents(
+        document,
+        parents,
+        requested.map((field) => field.path),
+    );
+    const nextText = document.text();
+    const next = { bytes: Buffer.from(nextText), mode: current?.mode ?? 0o644 };
+    const edited =
+        existing?.configuration?.edited === true ||
+        (existing !== undefined && current !== undefined && !matchesInstalled);
+    if (
+        existing?.configuration !== undefined &&
+        isDeepStrictEqual(fields, existing.configuration.fields) &&
+        nextText === text
+    )
+        return { next, configuration: existing.configuration, status: 'unchanged' };
+    return {
+        next,
+        status: nextText === text ? 'unchanged' : 'changed',
+        configuration: {
+            format,
+            fields,
+            ...(parents.length === 0 ? {} : { parents }),
+            edited,
+            created: existing?.configuration?.created ?? current === undefined,
         },
     };
 }

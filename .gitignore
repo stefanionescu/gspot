@@ -33,7 +33,7 @@ bun-debug.log*
 
 # Build output and files copied from packages at build time
 /dist/
-/packages/cli/build/
+/packages/cli/.build/
 
 # Build output of the workspace packages
 /packages/*/dist/

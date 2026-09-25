@@ -1,11 +1,11 @@
-import { expect, test } from 'bun:test';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 test.each([
     { source: 'import XCTest\n', selected: true },

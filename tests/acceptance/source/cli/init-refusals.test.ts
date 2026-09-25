@@ -1,14 +1,14 @@
 import { delimiter, join } from 'node:path';
 // Planted repositories: what init refuses before it writes.
-import { existsSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { parsePolicyText } from '#cli/policy/read.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { describe, expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 

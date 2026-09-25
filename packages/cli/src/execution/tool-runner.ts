@@ -1,27 +1,27 @@
-import { isAbsolute, join } from 'node:path';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { fileBatches } from '#cli/execution/file-batches.ts';
-import { ToolOutputError } from '#cli/execution/parse-output.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
-import { probeTool, toolPin } from '#cli/tools/probe.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { fileBatches } from '#cli/execution/file-batches.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
+import { ToolOutputError } from '#cli/execution/output/parse.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { MissingToolError } from '#cli/tools/errors.ts';
+import { probeTool, toolPin } from '#cli/tools/probe.ts';
+import { isAbsolute, join } from 'node:path';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import type { CheckResult, Finding } from '#cli/checks/result.ts';
-import type { ToolPin } from '#cli/configurations/read-manifests.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
-import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/execution/broken-tool.ts';
+import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
 import {
     commandConfigurations,
     perFileCommands,
     substitute,
     substituteValue,
 } from '#cli/execution/command-expansion.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
+import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 
 /** What one tool run accumulates across its spawns. */
 type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

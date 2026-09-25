@@ -37,8 +37,7 @@ const SCRIPTS = [
     "**/*.config.{js,mjs,cjs,ts}",
     ".mise/tasks/**",
     "packages/npm/**",
-    "packages/cli/scripts/**",
-    "packages/cli/build.ts",
+    "packages/cli/build/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**"
 ];

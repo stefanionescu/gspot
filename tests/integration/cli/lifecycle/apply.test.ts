@@ -1,14 +1,14 @@
-import * as fs from 'node:fs';
-import { join } from 'node:path';
-import { emitAll } from '#cli/generation/targets.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
+import { emitAll } from '#cli/generation/render.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, spyOn, test } from 'bun:test';
+import * as fs from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

@@ -99,8 +99,8 @@ owns file classification. The suppression check owns its directive constant.
 
 Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
 
-The CLI binary build entry is `packages/cli/build.ts`; input preparation, notice assembly, and
-publication live under `packages/cli/scripts/`. The binary builder uses Bun's build API
+The CLI binary build entry is `packages/cli/build/command.ts`; input preparation, notice assembly, and
+publication live under `packages/cli/build/`. The binary builder uses Bun's build API
 and passes dependency metadata directly to notice generation. It preserves the ignored build
 directory, embedded evaluator asset key, EditorConfig WASM integration, and platform signing.
 Swift parser preparation downloads a checksum-pinned upstream release into ignored build output.

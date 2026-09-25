@@ -1,17 +1,17 @@
+import type { Policy } from '#cli/policy/normalize.ts';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
-import type { Policy } from '#cli/policy/normalize.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
-import { hookLocation } from '#cli/lifecycle/hooks.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { configurationSection } from '#cli/repository/configuration-section.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import type { ToolPin } from '#cli/configurations/read-manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
 
 import {
     AGENT_FILE_NAMES,

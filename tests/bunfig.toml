@@ -2,4 +2,4 @@
 root = "."
 coverageReporter = ["text", "lcov"]
 coverageDir = "../coverage"
-coveragePathIgnorePatterns = ["support/**", "**/testdirs-*/**", "**/tests/**", "**/.gspot/**", "**/dist/**", "**/fixtures/**", "**/vendor/**", "**/node_modules/**", "**/build/**"]
+coveragePathIgnorePatterns = ["support/**", "**/testdirs-*/**", "**/tests/**", "**/.gspot/**", "**/dist/**", "**/fixtures/**", "**/vendor/**", "**/node_modules/**", "**/.build/**"]

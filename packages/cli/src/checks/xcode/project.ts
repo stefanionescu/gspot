@@ -1,12 +1,12 @@
-import { readSource } from '#cli/repository/tracked.ts';
-import { posix } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import type { TestPlan } from '#cli/checks/xcode/types.ts';
-import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
+import type { TestPlan } from '#cli/checks/xcode/types.ts';
+import { gitBlobs, gitEntries } from '#cli/repository/revisions/snapshot.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { posix } from 'node:path';
 
 const PROJECT_FILE = '.xcodeproj/project.pbxproj';
 const SYMLINK_MODE = '120000';

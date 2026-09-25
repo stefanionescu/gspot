@@ -1,12 +1,12 @@
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
-import { pushBase } from '#cli/repository/staged.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
 import type { CheckResult } from '#cli/checks/result.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { pushBase } from '#cli/repository/revisions/selection.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * Check every selected commit message, including empty commits with identical source trees.

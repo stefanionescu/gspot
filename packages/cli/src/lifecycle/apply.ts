@@ -1,22 +1,14 @@
-import type { GeneratedProposal } from '#cli/generation/targets.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { parse as parseJsonc } from 'jsonc-parser';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
     for (const merge of generated.merges) {
-        const proposed = parseJsonc(merge.content) as Record<string, unknown>;
         proposals.push({
             package: false,
-            proposal: owner.proposeConfiguration(
-                merge.path,
-                'json',
-                merge.keys.map((key) => ({ path: [key], value: proposed[key] })),
-                takeover,
-            ),
+            proposal: owner.proposeConfiguration(merge.path, merge.format, merge.changes, takeover),
         });
     }
     for (const output of generated.configurations) {
@@ -126,4 +118,31 @@ export type ApplyReport = {
     blocks: string[];
     packages: string[];
     notes: string[];
+};
+
+export type GeneratedFile = {
+    rulesPath?: string[];
+    path: string;
+    content: string;
+    readOnly: boolean;
+    executable?: boolean;
+    observed?: FileSnapshot;
+    kind: 'lock' | 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
+    configuration?: string;
+};
+
+export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
+
+export type ConfigurationOutput = {
+    path: string;
+    format: 'json' | 'yaml' | 'toml';
+    changes: { path: (string | number)[]; value: unknown }[];
+};
+
+export type GeneratedProposal = {
+    notes: string[];
+    files: GeneratedFile[];
+    blocks: BlockOutput[];
+    merges: ConfigurationOutput[];
+    configurations: ConfigurationOutput[];
 };

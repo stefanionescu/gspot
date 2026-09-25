@@ -1,16 +1,15 @@
-import semver from 'semver';
-import type { Session } from '#cli/execution/session.ts';
-import { installHooks } from '#cli/lifecycle/hooks.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
-import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { InstallationError } from '#cli/tools/install-error.ts';
-import { installPythonProject } from '#cli/tools/python-project.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
-import { installPackageProject } from '#cli/tools/package-project.ts';
-import { packageEnvironment } from '#cli/tools/package-environment.ts';
-import { UV_INSTALLER, pythonPins } from '#cli/tools/installation.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import { packageEnvironment } from '#cli/tools/packages/environment.ts';
+import { installPackageProject } from '#cli/tools/packages/project.ts';
+import { UV_INSTALLER, pythonPins } from '#cli/tools/pins.ts';
+import { installPythonProject } from '#cli/tools/python-project.ts';
+import semver from 'semver';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];
@@ -46,8 +45,12 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
         const hookNote = ['simple-git-hooks', 'pre-commit', 'lefthook', 'husky'].includes(
             session.policyFiles.policy.hooks?.tool ?? '',
         )
-            ? await installHookManager(session)
-            : installHooks(session);
+            ? await installHookManager({
+                  policy: session.policyFiles.policy,
+                  repository: session.repository,
+                  tools: session,
+              })
+            : installHooks({ policy: session.policyFiles.policy, repository: session.repository });
         if (hookNote !== '') notes.push(hookNote);
     } catch (error) {
         failures.push(error instanceof Error ? error : new Error('Hook installation failed.'));

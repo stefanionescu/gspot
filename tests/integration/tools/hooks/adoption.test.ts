@@ -1,12 +1,12 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { hookLocation } from '#cli/lifecycle/hooks.ts';
-import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
+import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { run } from '#cli/platform/spawn.ts';
+import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 
@@ -71,7 +71,15 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         const edited = readFileSync(join(location.absolute, 'commit-msg'), 'utf8') + '\n# Authored launcher edit\n';
         writeFileSync(join(location.absolute, 'commit-msg'), edited);
         const gitConfig = readFileSync(join(root, '.git/config'));
-        await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained differing native hook');
+        await expect(
+            installHookManager(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            ),
+        ).rejects.toThrow('Retained differing native hook');
         expect(readFileSync(join(location.absolute, 'commit-msg'), 'utf8')).toBe(edited);
         for (const [index, name] of names.entries()) {
             if (name !== 'commit-msg')
@@ -85,7 +93,15 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
             writeFileSync(join(location.absolute, 'commit-msg'), message);
             const config = join(root, 'lefthook.yml');
             writeFileSync(config, readFileSync(config, 'utf8') + '\nrc: ./native-init.sh\n');
-            await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained differing native hook');
+            await expect(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            ).rejects.toThrow('Retained differing native hook');
             expect(readFileSync(join(location.absolute, 'commit-msg'))).toStrictEqual(message);
         }
         const regenerated = await run(prepare, options);
@@ -95,12 +111,26 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
             const native = readFileSync(helper);
             const editedHelper = native.toString('utf8') + '\n# Authored helper edit\n';
             writeFileSync(helper, editedHelper);
-            await expect(installHookManager(await openSession(root))).rejects.toThrow('Retained differing native hook');
+            await expect(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            ).rejects.toThrow('Retained differing native hook');
             expect(readFileSync(helper, 'utf8')).toBe(editedHelper);
             for (const name of names) expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
             writeFileSync(helper, native);
         }
-        await installHookManager(await openSession(root));
+        await installHookManager(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+                tools: session,
+            })),
+        );
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(readFileSync(join(root, 'observed'), 'utf8')).toBe('x');

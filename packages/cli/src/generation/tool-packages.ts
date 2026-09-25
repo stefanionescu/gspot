@@ -1,7 +1,7 @@
-import type { Manifest } from '#cli/configurations/read-manifests.ts';
-import type { GeneratedFile } from '#cli/generation/targets.ts';
-import { npmPins } from '#cli/tools/installation.ts';
-import type { ToolPackageManager } from '#cli/tools/package-manager.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
+import { npmPins } from '#cli/tools/pins.ts';
 import semver from 'semver';
 
 /**

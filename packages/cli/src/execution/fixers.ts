@@ -7,7 +7,7 @@ import { toPlatform } from '#cli/platform/paths.ts';
 import { probeTool, toolPin } from '#cli/tools/probe.ts';
 import { createTwoFilesPatch } from 'diff';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import type { ToolPin } from '#cli/configurations/read-manifests.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { executionFailure, hasToolError } from '#cli/execution/broken-tool.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { createFileWorkspace, scratchCopy } from '#cli/execution/file-workspace.ts';
