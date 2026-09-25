@@ -153,7 +153,12 @@ function assertNoneRequired(options: InitInputs['options'], named: string[], man
     if (left.length > 0) throw new SelectionError(left);
 }
 
-// The configurations a selection recommends, minus the ones the person left out; a recommendation recommends nothing further.
+// A manifest that lists nothing to detect is selected on recommendation alone.
+function hasDetection(manifest: Manifest | undefined): boolean {
+    return manifest !== undefined && Object.values(manifest.detect).some((list) => list.length > 0);
+}
+
+// The configurations a selection recommends, minus the ones the person left out and the ones whose detection found nothing; a recommendation recommends nothing further.
 function recommendedAdded(
     ids: string[],
     manifests: Map<string, Manifest>,
@@ -164,11 +169,7 @@ function recommendedAdded(
     return [
         ...new Set([
             ...ids,
-            ...recommended.filter((id) => {
-                if (without.has(id)) return false;
-                const kind = manifests.get(id)?.configuration.kind;
-                return (kind !== 'tool' && kind !== 'library') || detected.has(id);
-            }),
+            ...recommended.filter((id) => !without.has(id) && (!hasDetection(manifests.get(id)) || detected.has(id))),
         ]),
     ];
 }
