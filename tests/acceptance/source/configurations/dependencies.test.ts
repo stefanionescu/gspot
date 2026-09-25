@@ -20,12 +20,9 @@ const INIT = [
     '--no-rules',
     '--no-install',
 ];
-const CLEAN =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@1.3.11"\n}\n';
-const RANGED =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@1.3.11",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n';
-const PUBLIC_ROOT =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@1.3.11",\n    "workspaces": ["packages/*"]\n}\n';
+const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
+const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
+const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
 
 // The scheme arrives as an argument, because a fixer rewrites a plain-text URL without TLS into one with it.
 function lockfileFrom(scheme: string): string {

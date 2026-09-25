@@ -7,7 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
-const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
+import { QUIET_INIT } from '#tests/support/cli/init.ts';
 
 /** The strict compiler options a planted TypeScript repository reads. */
 export const COMPONENT_TSCONFIG =
@@ -59,7 +59,15 @@ export async function installSandbox(root: string, sandbox: Sandbox): Promise<Re
     commitAll(root);
     const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
     const without = ['naming', 'spelling', ...(sandbox.without ?? [])];
-    const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, '--without', ...without, ...QUIET];
+    const argv = [
+        'init',
+        '--yes',
+        '--configurations',
+        ...sandbox.configurations,
+        '--without',
+        ...without,
+        ...QUIET_INIT,
+    ];
     await install(root, argv, environment);
     const level = sandbox.level ?? 'all';
     const selected = await run(root, ['set', 'level', level], environment);

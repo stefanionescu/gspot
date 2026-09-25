@@ -13,10 +13,10 @@ test('acceptance selection keeps its default suite when filtering names', () => 
         'findings',
         acceptance,
     ]);
-    expect(acceptanceArguments([join(acceptance, 'cli/checks.test.ts')])).toStrictEqual([
+    expect(acceptanceArguments([join(acceptance, 'cli/checks/declared.test.ts')])).toStrictEqual([
         '--timeout',
         '60000',
-        join(acceptance, 'cli/checks.test.ts'),
+        join(acceptance, 'cli/checks/declared.test.ts'),
     ]);
 });
 
