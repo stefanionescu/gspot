@@ -8,5 +8,17 @@ description = "React Hook Form: a form validates through a resolver, and a regis
 [detect]
 dependencies = ["react-hook-form"]
 
+[[configs]]
+target = ".gspot/config/eslint.config.mjs"
+fragment = true
+
+[[configs.selectors]]
+selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
+message = "Give useForm a resolver, so the schema that types the form also validates it."
+
+[[configs.selectors]]
+selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])"
+message = "A registered field is uncontrolled. Drop the value attribute, or use a Controller."
+
 [rule_files]
 library = ["library/react-hook-form/REACTHOOKFORM.md"]

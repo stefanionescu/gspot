@@ -1,6 +1,6 @@
 import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
-import type { EslintRuleBlock } from '#cli/generation/eslint.ts';
+import type { EslintRuleBlock, SelectorGroup } from '#cli/generation/eslint.ts';
 import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
 import type { EditorconfigOverride, PrettierPlugin } from '#cli/generation/format.ts';
 import { editorconfigOverrides, prettierConfig } from '#cli/generation/format.ts';
@@ -88,6 +88,8 @@ function knipEntries(policy: Policy, scope: string): string[] {
  * @param selection the scope being rendered
  * @param fragments the fragment text other configurations contribute
  * @param fragmentImports the import lines those fragments declare
+ * @param fragmentFiles the code file globs those fragments add
+ * @param fragmentSelectors the syntax selectors those fragments add, grouped by file set
  * @returns the template inputs
  */
 export function templateInputs(
@@ -99,6 +101,8 @@ export function templateInputs(
     version: string,
     fragments = '',
     fragmentImports = '',
+    fragmentFiles: string[] = [],
+    fragmentSelectors: SelectorGroup[] = [],
 ): TemplateInputs {
     const { view } = selection;
     const files = (extension: string): string[] =>
@@ -144,6 +148,8 @@ export function templateInputs(
         settings: view.settings,
         fragments,
         fragmentImports,
+        fragmentFiles,
+        fragmentSelectors,
         tool: view.tool,
         entryFiles: (scope) => knipEntries(policy, scope),
         limit: view.limit,
@@ -220,6 +226,8 @@ export type TemplateInputs = {
     settings: Record<string, unknown>;
     fragments: string;
     fragmentImports: string;
+    fragmentFiles: string[];
+    fragmentSelectors: SelectorGroup[];
     tool: (name: string) => Record<string, unknown>;
     entryFiles: (scope: string) => string[];
     limit: (key: string, language?: string) => number | undefined;

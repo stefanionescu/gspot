@@ -16,9 +16,7 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
-<% if (has('typescript')) { %>import tseslint from 'typescript-eslint';
-import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-<% } %><%~ fragmentImports %>
+<%~ fragmentImports %>
 <%
 const eslintTool = tool('eslint');
 const architecture = policy.architecture;
@@ -60,9 +58,11 @@ const restricted = settings['tools.eslint.restricted_imports'] ?? [];
 const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
 %>
 const root = fileURLToPath(new URL('../..', import.meta.url));
-const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
+// The component files a selected framework adds to the code and type-checked file sets.
+const FRAGMENT_FILES = <%~ json(fragmentFiles, 0) %>;
+const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
-const TYPESCRIPT = [...TYPESCRIPT_SOURCE<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = <%= json(testFiles) %>;
 const SCRIPTS = <%= json(scriptFiles) %>;
@@ -116,37 +116,12 @@ const BASE_SELECTORS = [
         { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
 ];
-const LIBRARY_SELECTORS = [
-<% if (has('zustand')) { %>    { selector: "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]", message: 'Pass a selector to the store hook, so the component renders when its slice changes and at no other time.' },
-<% } %><% if (has('react-hook-form')) { %>    { selector: "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))", message: 'Give useForm a resolver, so the schema that types the form also validates it.' },
-    { selector: "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])", message: 'A registered field is uncontrolled. Drop the value attribute, or use a Controller.' },
-<% } %><% if (has('react-native')) { %>    { selector: "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message: 'Use Pressable. The Touchable components are kept for old code and get no new behavior.' },
-    { selector: "JSXOpeningElement[name.name=/^(FlatList|SectionList)$/]:not(:has(JSXAttribute[name.name='keyExtractor']))", message: 'Give the list a keyExtractor, so a row keeps its state when the list changes.' },
-    { selector: "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']", message: 'A ScrollView renders every row at once. Render a list that grows through FlatList.' },
-    { selector: "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]", message: 'AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform.' },
-<% } %><% if (has('nestjs')) { %>    { selector: "CallExpression[callee.name='forwardRef']", message: 'forwardRef papers over two modules that import each other. Move what both need into a third module.' },
-    { selector: "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message: 'Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }.' },
-<% } %>];
-const RAW_SQL_SELECTORS = [
-<% if (has('drizzle')) { %>    { selector: "TaggedTemplateExpression[tag.name='sql']", message: 'Raw SQL skips the types of the schema. Use the query builder, or allow the path under tools.drizzle.raw_sql_allowed with a reason.' },
-<% } %>];
-const PROCEDURE_SELECTORS = [
-<% if (has('trpc')) { %>    { selector: "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))", message: 'Give the procedure an input schema before its resolver, even when the input is nothing.' },
-<% } %>];
-// A controller turns a request into a call, and a service owns the data.
-const CONTROLLER_SELECTORS = [
-<% if (has('nestjs')) { %>    { selector: "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
-    { selector: "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
-<% } %>];
-const CONTROLLER_FILES = ['**/*.controller.ts'];
-const RAW_SQL_ALLOWED = <%~ json((settings['tools.drizzle.raw_sql_allowed'] ?? []).flatMap((entry) => entry.paths ?? []), 0) %>;
-const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
-const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length + CONTROLLER_SELECTORS.length === 0 ? [] : [
-    { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
-    ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
-    ...(CONTROLLER_SELECTORS.length === 0 ? [] : [{ files: CONTROLLER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...CONTROLLER_SELECTORS] } }]),
-    ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
-];
+// The selectors the selected libraries add, grouped by the files each group reads: an absent files list means every code file.
+const FRAGMENT_SELECTORS = <%~ json(fragmentSelectors) %>;
+const librarySelectorBlocks = FRAGMENT_SELECTORS.map((group) => ({
+    files: group.files ?? CODE,
+    rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] },
+}));
 
 const coreRules = {
     'no-useless-constructor': 'error',

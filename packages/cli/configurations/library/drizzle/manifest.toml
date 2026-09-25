@@ -25,6 +25,11 @@ target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
+[[configs.selectors]]
+selector = "TaggedTemplateExpression[tag.name='sql']"
+message = "Raw SQL skips the types of the schema. Use the query builder, or allow the path under tools.drizzle.raw_sql_allowed with a reason."
+allowed = "tools.drizzle.raw_sql_allowed"
+
 [[checks]]
 name = "drizzle/relations-complete"
 title = "Declare every Drizzle relation"

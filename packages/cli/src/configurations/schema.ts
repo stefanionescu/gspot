@@ -133,17 +133,32 @@ const stubSchema = z
         'Directory stubs require a body without merge, copy, or template.',
     );
 
-const configSchema = z.strictObject({
-    template: z.string(),
-    imports: z.string().optional(),
-    target: z.string(),
-    rules_path: z.array(z.string()).optional(),
-    stub: stubSchema.optional(),
-    fragment: z.boolean().default(false),
-    per_scope: z.boolean().default(false),
-    header: z.boolean().default(true),
-    needs: z.string().optional(),
+// A syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
+const selectorSchema = z.strictObject({
+    selector: z.string().min(1),
+    message: z.string().min(1),
+    files: z.array(z.string().min(1)).min(1).optional(),
+    allowed: z.string().min(1).optional(),
 });
+
+const configSchema = z
+    .strictObject({
+        template: z.string().optional(),
+        imports: z.string().optional(),
+        target: z.string(),
+        rules_path: z.array(z.string()).optional(),
+        stub: stubSchema.optional(),
+        fragment: z.boolean().default(false),
+        per_scope: z.boolean().default(false),
+        header: z.boolean().default(true),
+        needs: z.string().optional(),
+        code_files: z.array(z.string().min(1)).default([]),
+        selectors: z.array(selectorSchema).default([]),
+    })
+    .refine(
+        (config) => config.fragment || config.template !== undefined,
+        'A config that is not a fragment names its template.',
+    );
 
 const SENTENCE_MIN = 12;
 const sentence = z.string().min(SENTENCE_MIN);
@@ -301,6 +316,8 @@ export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
 export type Claims = RawManifest['claims'];
 
 export type ConfigurationTarget = RawManifest['configs'][number];
+
+export type FragmentSelector = z.infer<typeof selectorSchema>;
 
 export type StubSpec = NonNullable<ConfigurationTarget['stub']>;
 

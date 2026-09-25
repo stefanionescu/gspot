@@ -8,6 +8,15 @@ description = "tRPC routers: every procedure validates its input, and client cod
 [detect]
 dependencies = ["@trpc/server"]
 
+[[configs]]
+target = ".gspot/config/eslint.config.mjs"
+fragment = true
+
+[[configs.selectors]]
+selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
+message = "Give the procedure an input schema before its resolver, even when the input is nothing."
+files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]
+
 [[checks]]
 name = "trpc/router-boundaries"
 title = "Router boundaries"

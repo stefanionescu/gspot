@@ -111,7 +111,9 @@ function configurationProblems(raw: RawManifest): string[] {
         .filter((config) => !config.fragment && config.stub === undefined)
         .filter((config) => {
             const name = configurationName(config.target);
-            const isReadByTemplate = raw.configs.some((other) => other !== config && other.template.includes(name));
+            const isReadByTemplate = raw.configs.some(
+                (other) => other !== config && other.template?.includes(name) === true,
+            );
             return !readers.has(name) && !isReadByTemplate;
         })
         .map(
@@ -152,6 +154,9 @@ export function parseManifest(text: string, dir: string): Manifest {
         ...raw.configs
             .filter((config) => config.imports !== undefined && !config.fragment)
             .map((config) => `config ${config.target} declares imports, which only a fragment renders.`),
+        ...raw.configs
+            .filter((config) => !config.fragment && (config.code_files.length > 0 || config.selectors.length > 0))
+            .map((config) => `config ${config.target} declares code files or selectors, which only a fragment adds.`),
     ];
     if (raw.checks.some((check) => raw.configuration.check_references?.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');

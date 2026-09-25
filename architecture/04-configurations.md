@@ -219,6 +219,12 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A library tool that is a Prettier plugin declares `prettier = { entry, overrides }`: the file
   Prettier loads from the private installation, and the overrides its files need. The
   formatting generator emits both; no template names a plugin.
+- A fragment config takes `code_files`, the file globs its framework adds to the code and
+  type-checked file sets, and `[[configs.selectors]]` rows, each a `selector` with its
+  `message`. A row with `files` applies in those files on top of the general rows; a row with
+  `allowed` names the loosening setting whose paths it leaves alone. The base template joins the
+  rows of every selected fragment into the one `no-restricted-syntax` rule per file set. A
+  fragment that adds only selectors needs no `template`.
 - Tool `env` supplies literal environment settings to version probes and commands. Check
   `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that

@@ -2,10 +2,12 @@ import { assembleRules } from '#cli/agents/assemble.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
+import type { ConfigurationTarget, FragmentSelector } from '#cli/configurations/schema.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
+import type { ResolvedSelector, SelectorGroup } from '#cli/generation/eslint.ts';
+import { selectorGroups } from '#cli/generation/eslint.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
 import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
 import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
@@ -93,9 +95,54 @@ function fragmentsFor(
         .flatMap((manifest) =>
             manifest.configs
                 .filter((fragment) => fragment.fragment && fragment.target === owner.target)
-                .map((fragment) => eta.renderString(readAsset(`${manifest.dir}/${fragment.template}`), inputs)),
+                .flatMap((fragment) =>
+                    fragment.template === undefined
+                        ? []
+                        : [eta.renderString(readAsset(`${manifest.dir}/${fragment.template}`), inputs)],
+                ),
         )
         .join('\n');
+}
+
+// The fragment entries of a target across its owners, in configuration order.
+function fragmentEntries(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget) {
+    return fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
+        manifest.configs.filter((fragment) => fragment.fragment && fragment.target === owner.target),
+    );
+}
+
+// The file globs the selected fragments add to the code files of a target, each once.
+function fragmentFilesFor(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): string[] {
+    return [...new Set(fragmentEntries(scopes, selection, owner).flatMap((fragment) => fragment.code_files))];
+}
+
+// The paths a loosening setting allows: every entry's paths, in the order written.
+function allowedPaths(selection: ScopeSelection, setting: string): string[] {
+    const value = selection.view.settings[setting];
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((entry: unknown) => {
+        const paths = typeof entry === 'object' && entry !== null ? (entry as { paths?: unknown }).paths : undefined;
+        return Array.isArray(paths) ? paths.filter((path): path is string => typeof path === 'string') : [];
+    });
+}
+
+// The selectors the selected fragments add, grouped by the file set each one applies to.
+function fragmentSelectorsFor(
+    scopes: ScopeSelection[],
+    selection: ScopeSelection,
+    owner: ConfigurationTarget,
+): SelectorGroup[] {
+    const resolved = fragmentEntries(scopes, selection, owner).flatMap((fragment) =>
+        fragment.selectors.map(
+            (entry: FragmentSelector): ResolvedSelector => ({
+                selector: entry.selector,
+                message: entry.message,
+                ...(entry.files === undefined ? {} : { files: entry.files }),
+                ...(entry.allowed === undefined ? {} : { except: allowedPaths(selection, entry.allowed) }),
+            }),
+        ),
+    );
+    return selectorGroups(resolved);
 }
 
 // The import lines the selected fragments declare, each once, in configuration order.
@@ -168,12 +215,14 @@ function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: 
             out.files.push(...directoryStubs(context, config, target));
             continue;
         }
-        if (seen.has(target)) continue;
+        if (seen.has(target) || config.template === undefined) continue;
         seen.add(target);
         const inputs = {
             ...context.inputs,
             fragments: fragmentsFor(scopes, selection, config, context.inputs),
             fragmentImports: fragmentImportsFor(scopes, selection, config),
+            fragmentFiles: fragmentFilesFor(scopes, selection, config),
+            fragmentSelectors: fragmentSelectorsFor(scopes, selection, config),
         };
         if (config.per_scope) inputs.has = (configuration) => selection.view.configurations.includes(configuration);
         const file: GeneratedFile = {

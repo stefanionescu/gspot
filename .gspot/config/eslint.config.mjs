@@ -17,14 +17,16 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
+import jest from 'eslint-plugin-jest';
 import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-import jest from 'eslint-plugin-jest';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
-const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'];
+// The component files a selected framework adds to the code and type-checked file sets.
+const FRAGMENT_FILES = [];
+const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
-const TYPESCRIPT = [...TYPESCRIPT_SOURCE];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = [
     "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
@@ -94,24 +96,12 @@ const BASE_SELECTORS = [
         { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
 ];
-const LIBRARY_SELECTORS = [
-];
-const RAW_SQL_SELECTORS = [
-];
-const PROCEDURE_SELECTORS = [
-];
-// A controller turns a request into a call, and a service owns the data.
-const CONTROLLER_SELECTORS = [
-];
-const CONTROLLER_FILES = ['**/*.controller.ts'];
-const RAW_SQL_ALLOWED = [];
-const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
-const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length + CONTROLLER_SELECTORS.length === 0 ? [] : [
-    { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
-    ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
-    ...(CONTROLLER_SELECTORS.length === 0 ? [] : [{ files: CONTROLLER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...CONTROLLER_SELECTORS] } }]),
-    ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
-];
+// The selectors the selected libraries add, grouped by the files each group reads: an absent files list means every code file.
+const FRAGMENT_SELECTORS = [];
+const librarySelectorBlocks = FRAGMENT_SELECTORS.map((group) => ({
+    files: group.files ?? CODE,
+    rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] },
+}));
 
 const coreRules = {
     'no-useless-constructor': 'error',
