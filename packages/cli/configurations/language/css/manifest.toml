@@ -4,7 +4,7 @@ kind = "language"
 title = "CSS"
 requires = ["formatting"]
 recommends = ["spelling"]
-description = "Stylesheets: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
+description = "Stylesheets and the style blocks of Vue and Svelte components: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
 
 [detect]
 extensions = [".css", ".scss", ".pcss"]
@@ -71,6 +71,12 @@ kind = "library"
 version = "39.0.0"
 npm = "stylelint-config-standard"
 
+[[tools]]
+name = "postcss-html"
+kind = "library"
+version = "2.0.0"
+npm = "postcss-html"
+
 [[configs]]
 template = "stylelint.json.tmpl"
 target = ".gspot/config/stylelint.json"
@@ -90,6 +96,7 @@ fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir"
 fix_order = "codemod"
 findings_exit_codes = [2]
 fix_findings_exit_codes = [2]
+claims = {extensions = [".css", ".scss", ".pcss", ".vue", ".svelte"]}
 coverage = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
