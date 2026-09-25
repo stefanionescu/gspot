@@ -48,7 +48,8 @@ export async function install(cwd: string, argv: string[], environment: Record<s
 
 /** Install generated, locked tool projects through the public command. */
 export async function installPrivateTools(cwd: string): Promise<void> {
-    const outcome = await run(cwd, ['install']);
+    // No release of gspot exists yet, so a sandbox with a mise runner skips its own pin as this repository does.
+    const outcome = await run(cwd, ['install'], { MISE_DISABLE_TOOLS: 'github:stefanionescu/gspot' });
     if (outcome.code !== 0)
         throw new Error(
             `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
