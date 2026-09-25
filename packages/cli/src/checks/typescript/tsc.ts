@@ -66,7 +66,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
         if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
         else if (config?.options.incremental || config?.options.composite)
             command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'tsconfig.check.tsbuildinfo'));
-        const result = await runToolCheck({ ...session, root: scratch }, planned, command);
+        const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)
             result.command = result.command.map((part) => part.replace(scratch, () => session.root));
         return result;
@@ -118,7 +118,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
         if (roots !== undefined) command.push('--typeRoots', roots.join(','));
         if (config?.options.incremental || config?.options.composite)
             command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'jsconfig.check.tsbuildinfo'));
-        const result = await runToolCheck({ ...session, root: scratch }, planned, command);
+        const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)
             result.command = result.command.map((part) => part.replaceAll(scratch, () => session.root));
         return result;
