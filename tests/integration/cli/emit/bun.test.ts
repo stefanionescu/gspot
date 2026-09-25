@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
@@ -15,9 +15,11 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,
     });
-    const generated = emitAll(await openSession(repository.path)).configurations.find(
-        (entry) => entry.path === 'bunfig.toml',
-    )!;
+    const renderSession1 = await openSession(repository.path);
+    const generated = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).configurations.find((entry) => entry.path === 'bunfig.toml')!;
     const owner = openLifecycleOwner(repository.path);
     owner.applyProposal(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
     const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');

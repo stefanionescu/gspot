@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { currentBlock } from '#cli/emit/managed-blocks.ts';
+import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 

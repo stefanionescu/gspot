@@ -1,7 +1,6 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-// Every written key checked against the surface: unknown keys, loosenings without a reason, extra keys with a slot.
-import { shippedPolicy } from '#cli/naming/policy.ts';
+import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
@@ -170,8 +169,6 @@ export function validateAgainstSurface(
     }
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
-    const surfaceFor = (scope: string | undefined): ExposedSettings =>
-        scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
     const tables: { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] = [
         { table: policy, path: [] },
         ...policy.scopes.flatMap((scope, index) => {
@@ -181,7 +178,12 @@ export function validateAgainstSurface(
     ];
     for (const { table, scope, path } of tables)
         problems.push(
-            ...tableProblems(surfaceFor(scope), table, scope, policy.requireReasons).map((problem) => ({
+            ...tableProblems(
+                scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface),
+                table,
+                scope,
+                policy.requireReasons,
+            ).map((problem) => ({
                 ...problem,
                 path: [...path, ...problem.path],
             })),

@@ -1,8 +1,7 @@
-import type { Finding } from '#cli/output/schema.ts';
-// The key that bypasses row level security, named only where the policy allows it.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const DEFAULT_PATHS = [

@@ -1,13 +1,12 @@
-// Selects compiler project mode and confines build metadata to a disposable copy.
 import ts from 'typescript';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import type { Session } from '#cli/run/session.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
-import { targetInScope } from '#cli/run/scope-paths.ts';
-import type { CheckResult } from '#cli/output/schema.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { targetInScope } from '#cli/configurations/targets.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';

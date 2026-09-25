@@ -1,17 +1,17 @@
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { emitAll } from '#cli/emit/targets.ts';
+import type { GeneratedFile } from '#cli/generation/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { head } from '#cli/repository/tracked.ts';
-import type { Session } from '#cli/run/session.ts';
-import { hasHeader } from '#cli/emit/templates.ts';
-import { isOwned } from '#cli/adoption/collect.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { hasHeader } from '#cli/generation/templates.ts';
+import { isOwned } from '#cli/policy/adoption/collect.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-// What changed in the repository after init: configurations detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { pinnedTwice, MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { pinnedTwice, MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import type { ChangeReport, ChangeRow } from '#cli/commands/doctor/report.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
@@ -38,7 +38,7 @@ function detectedNotSelected(
 
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
     const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
-    for (const manifest of everyManifest(session))
+    for (const manifest of everyManifest(session.scopes))
         for (const id of manifest.configuration.recommends)
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
@@ -66,9 +66,14 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     };
 }
 
-function configurationNotOwned(session: Session, tooling: ExistingTooling, selected: Set<string>): ChangeRow[] {
+function configurationNotOwned(
+    session: Session,
+    tooling: ExistingTooling,
+    selected: Set<string>,
+    files: GeneratedFile[],
+): ChangeRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
-    const rendered = new Set(emitAll(session).files.map((file) => file.path));
+    const rendered = new Set(files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
         .filter((config) => !hasHeader(head(session.root, config.path, HEAD_BYTES)))
@@ -101,12 +106,8 @@ function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
     });
 }
 
-function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
-    const generated = new Set(
-        emitAll(session)
-            .files.filter((file) => file.kind === 'workflow')
-            .map((file) => file.path),
-    );
+function workflowRows(session: Session, tooling: ExistingTooling, files: GeneratedFile[]): ChangeRow[] {
+    const generated = new Set(files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return ciLintJobs(
         session.root,
         tooling.ci.filter((path) => !generated.has(path)),
@@ -120,13 +121,17 @@ function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
  */
 export function changeReport(session: Session): ChangeReport {
     const facts = readManifests(session.root, session.repository.files);
-    const selected = new Set(everyManifest(session).map((manifest) => manifest.configuration.name));
+    const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
     const tooling = existingTooling(session.root, session.repository.files, facts);
+    const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    });
     return {
         detectedNotSelected: detectedNotSelected(session, facts, selected),
         recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: [
-            ...configurationNotOwned(session, tooling, selected),
+            ...configurationNotOwned(session, tooling, selected, rendered.files),
             ...unownedGeneratedFiles(session),
             ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) !== undefined
                 ? [
@@ -138,8 +143,8 @@ export function changeReport(session: Session): ChangeReport {
                   ]
                 : []),
         ],
-        changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling)],
-        pinnedTwice: pinnedTwice(session.root, everyManifest(session)).map((pin) => ({
+        changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling, rendered.files)],
+        pinnedTwice: pinnedTwice(session.root, everyManifest(session.scopes)).map((pin) => ({
             tool: pin.tool,
             version: pin.version,
             places: [pin.place, MISE_CONFIG_PATH],

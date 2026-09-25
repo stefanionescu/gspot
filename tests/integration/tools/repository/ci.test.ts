@@ -6,8 +6,10 @@ import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { toolsPath } from '#tests/support/cli/tools.ts';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const workflow = Bun.YAML.parse(readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8')) as {

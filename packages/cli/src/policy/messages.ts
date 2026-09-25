@@ -1,5 +1,4 @@
 import { quoteArgument } from '#cli/platform/arguments.ts';
-// Every load and write message, in plain English. One function per message.
 
 const LIST_LIMIT = 8;
 
@@ -215,16 +214,6 @@ export function versionMismatch(pinned: string, running: string): string {
 export function unknownCheck(checkName: string, near: string[]): string {
     const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
     return `There is no check called \`${checkName}\`.${hint}`;
-}
-
-/**
- * A value the schema refuses.
- * @param where the key or table
- * @param detail what is wrong with the value
- * @returns the message
- */
-export function invalidValue(where: string, detail: string): string {
-    return `${where}: ${detail}`;
 }
 
 /**

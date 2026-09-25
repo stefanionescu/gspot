@@ -1,7 +1,7 @@
-// Build settings, entitlements and transport security: the files that decide what the app may do.
-import type { Finding } from '#cli/output/schema.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
 const INCLUDE_LINE = /^#include\??\s+"[^"]+"$/u;
@@ -21,7 +21,8 @@ function isSetting(line: string): boolean {
  */
 export function xcconfigLines(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcconfig']).flatMap((path) =>
-        textOf(input, path)
+        readSource(input.root, path, input.observations)
+            .toString('utf8')
             .split('\n')
             .flatMap((raw, index): Finding[] => {
                 const line = raw.trim();
@@ -48,7 +49,7 @@ export function xcconfigLines(input: EngineInput): Finding[] {
 export function entitlementsPolicy(input: EngineInput): Finding[] {
     const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
     return trackedEnding(input, ['.entitlements']).flatMap((path) => {
-        const text = textOf(input, path);
+        const text = readSource(input.root, path, input.observations).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
@@ -72,7 +73,7 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
  */
 export function transportSecurity(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
-        const text = textOf(input, path);
+        const text = readSource(input.root, path, input.observations).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
         const line = text.slice(0, found.index).split('\n').length;

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';

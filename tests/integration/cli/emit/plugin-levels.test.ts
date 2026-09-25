@@ -1,8 +1,8 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -16,9 +16,11 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
         'sample.test.js': '',
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-    const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession1 = await openSession(sandbox.path);
+    const config = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
     const rules = new Set(['max-lines', 'max-lines-per-function', 'max-statements']);
@@ -47,9 +49,11 @@ test.each([
         'sample.test.js': '',
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-    const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession2 = await openSession(sandbox.path);
+    const config = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+        version: renderSession2.version,
+        packageManager: renderSession2.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
     const args = ['value', '"A custom failure message."', '"Unexpected argument."'];
@@ -80,7 +84,11 @@ test.each([
         'app/client.js': '',
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession3 = await openSession(sandbox.path);
+    const output = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
+        version: renderSession3.version,
+        packageManager: renderSession3.packageManager,
+    });
     const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(sandbox.path, config.path), config.content);
@@ -128,9 +136,11 @@ test.each(['recommended', 'all'])(
             'client.js': description + 'export function measure(value) { return value.length; }\n',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession4 = await openSession(sandbox.path);
+        const config = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
+            version: renderSession4.version,
+            packageManager: renderSession4.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
@@ -212,9 +222,11 @@ test.each(
             'sample.test.js': '',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession5 = await openSession(sandbox.path);
+        const config = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
+            version: renderSession5.version,
+            packageManager: renderSession5.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         await Bun.write(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
         const prefix = `import { describe, test, expect } from '${globalPackage}';\n`;
@@ -247,9 +259,11 @@ test.each(['js', 'jsx'])(
                 'import { value } from "../tests/fixtures/helpers.js"; export const result = value + 1;\n',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession6 = await openSession(sandbox.path);
+        const config = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
+            version: renderSession6.version,
+            packageManager: renderSession6.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
@@ -309,9 +323,11 @@ test.each(['recommended', 'all'])(
             'app/main.js': '',
         });
         symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-        const config = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession7 = await openSession(sandbox.path);
+        const config = emitAll(renderSession7.policyFiles.policy, renderSession7.repository, renderSession7.scopes, {
+            version: renderSession7.version,
+            packageManager: renderSession7.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         await Bun.write(join(sandbox.path, config.path), config.content);
         const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
         for (const filePath of ['main.js', 'app/main.js']) {
@@ -345,9 +361,11 @@ test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit type
         'contracts/value.ts': source,
     });
     symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
-    const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession8 = await openSession(sandbox.path);
+    const config = emitAll(renderSession8.policyFiles.policy, renderSession8.repository, renderSession8.scopes, {
+        version: renderSession8.version,
+        packageManager: renderSession8.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const eslint = new ESLint({ cwd: sandbox.path, overrideConfigFile: join(sandbox.path, config.path) });
     const defect = await eslint.lintFiles(['value.ts']);

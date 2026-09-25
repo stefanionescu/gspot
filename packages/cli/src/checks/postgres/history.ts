@@ -1,8 +1,7 @@
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-// The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
 import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
 
 const FROZEN_NONE = 'none';

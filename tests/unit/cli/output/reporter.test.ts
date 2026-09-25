@@ -1,8 +1,8 @@
-import { main } from '#cli/program.ts';
+import { main } from '#cli/commands/program.ts';
 import { describe, expect, test } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { RunReport } from '#cli/output/schema.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 import { configureOutput } from '#cli/output/messages.ts';
 
 const report: RunReport = {

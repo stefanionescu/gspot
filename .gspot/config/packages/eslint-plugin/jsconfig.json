@@ -27,7 +27,6 @@
         "../../../../packages/eslint-plugin/**/build/**",
         "../../../../packages/eslint-plugin/**/coverage/**",
         "../../../../packages/eslint-plugin/**/.build/**",
-        "../../../../packages/eslint-plugin/**/DerivedData/**",
-        "../../../../packages/eslint-plugin/packages/cli/release/notices.json"
+        "../../../../packages/eslint-plugin/**/DerivedData/**"
     ]
 }

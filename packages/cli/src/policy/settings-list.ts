@@ -1,4 +1,3 @@
-// The settings listing: every setting, its value, and where it came from.
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { listSettings } from '#cli/policy/settings.ts';

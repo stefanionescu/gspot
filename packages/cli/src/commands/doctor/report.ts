@@ -1,16 +1,15 @@
-import type { CoverageReport } from '#cli/run/coverage.ts';
+import type { CoverageReport } from '#cli/execution/coverage.ts';
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
-import type { Session } from '#cli/run/session.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { probeTool } from '#cli/tools/tool-probe.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
+import { probeTool } from '#cli/tools/probe.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
-import type { ToolProbe } from '#cli/tools/tool-probe.ts';
-// What doctor prints, as data and as text.
+import type { ToolProbe } from '#cli/tools/probe.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { collectPins } from '#cli/tools/tool-installation.ts';
+import { collectPins } from '#cli/tools/installation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 
@@ -140,7 +139,7 @@ function versionLine(report: DoctorReport): string {
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session, tool));
+    const tools = collectPins(everyManifest(session.scopes)).map((tool) => probeTool(session, tool));
     const { policy } = session.policyFiles;
     const hooks = hookStatus(session);
     const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
@@ -156,7 +155,11 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
                 : policy.ci.provider === 'github'
                   ? '.github/workflows/gspot.yml'
                   : '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)',
-        rules: { files: policy.rules.install ? selectRuleFiles(session).length : 0 },
+        rules: {
+            files: policy.rules.install
+                ? selectRuleFiles(session.policyFiles.policy.rules, everyManifest(session.scopes)).length
+                : 0,
+        },
         version: {
             running: session.version,
             ...(pinned === undefined ? {} : { pinned }),

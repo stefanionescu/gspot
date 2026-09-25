@@ -1,8 +1,8 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -28,7 +28,11 @@ for (const language of ['javascript', 'typescript']) {
             [`example.${extension}`]: source,
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        const files = emitAll(await openSession(directory.path)).files;
+        const renderSession1 = await openSession(directory.path);
+        const files = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+            version: renderSession1.version,
+            packageManager: renderSession1.packageManager,
+        }).files;
         const configName = '.gspot/config/eslint.config.mjs';
         const config = files.find(({ path }) => path === configName)!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { rmSync, readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/run/session.ts';
-import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 import { buildFolder } from '#cli/platform/paths.ts';
 
 const PROJECT = `// !$*UTF8*$!

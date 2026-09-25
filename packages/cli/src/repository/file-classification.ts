@@ -1,4 +1,4 @@
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 // Every tracked path has one nature: source, generated, vendored, binary.
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileDeclaration } from '#cli/policy/normalize.ts';
@@ -97,7 +97,7 @@ export function isValePackageFile(path: string): boolean {
 }
 
 /**
- * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, the gspot installs, banners, vendored directories, the binary sniff.
+ * Classify from declarations, attributes, binary content, managed paths, banners, then vendored directories.
  * @param path the file, relative to the root
  * @param declarations the generated and vendored declarations
  * @param isBinary whether the content sniff found binary bytes
@@ -132,7 +132,7 @@ export function readAttributes(root: string): Attribute[] {
     try {
         return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
             .split('\n')
-            .map((line) => attributeRule(line))
+            .map(attributeRule)
             .filter((rule) => rule !== undefined);
     } finally {
         files.close();

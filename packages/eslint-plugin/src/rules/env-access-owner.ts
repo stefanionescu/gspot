@@ -1,38 +1,8 @@
-// process.env, import.meta.env, Bun.env and Deno.env read outside the declared configuration owner.
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { isGlobalEnvironmentHost, memberName } from '#plugin/environment.ts';
+import { isAnyGlobMatch, lintedFile, lintedRoot, relativeToRoot } from '#plugin/files.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-
-const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
-
-/**
- *
- * @param node
- */
-export function memberName(node: TSESTree.MemberExpression): string | undefined {
-    if (node.computed) return node.property.type === AST_NODE_TYPES.Literal ? String(node.property.value) : undefined;
-    return node.property.type === AST_NODE_TYPES.Identifier ? node.property.name : undefined;
-}
-
-/**
- *
- * @param context
- * @param node
- */
-export function isGlobalEnvironmentHost(
-    context: Readonly<TSESLint.RuleContext<string, unknown[]>>,
-    node: TSESTree.Node,
-): boolean {
-    if (node.type !== AST_NODE_TYPES.Identifier || !ENVIRONMENT_HOSTS.has(node.name)) return false;
-    let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
-    while (scope !== null) {
-        const variable = scope.set.get(node.name);
-        if (variable !== undefined) return variable.defs.length === 0;
-        scope = scope.upper;
-    }
-    return true;
-}
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isEnvironmentRead(
     context: Readonly<TSESLint.RuleContext<string, unknown[]>>,

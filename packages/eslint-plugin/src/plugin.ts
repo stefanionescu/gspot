@@ -1,7 +1,6 @@
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
-// The plugin object: rules and configs. The package entry; the flat config registers it under the key `gspot`.
 import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';

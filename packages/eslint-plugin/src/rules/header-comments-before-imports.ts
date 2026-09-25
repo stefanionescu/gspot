@@ -1,8 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { isImportLike } from '#plugin/rules/import-layout.ts';
-// A file comment placed after the import block.
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { isImportLike } from '#plugin/imports.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 const DIRECTIVE_PREFIXES = [
     'eslint',
@@ -31,13 +30,9 @@ function isDirective(value: string): boolean {
     return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
 }
 
-function isBlank(text: string): boolean {
-    return BLANK.test(text);
-}
-
 function isTrailing(text: string, comment: TSESTree.Comment, node: TSESTree.Node): boolean {
     if (comment.loc.start.line !== node.loc.end.line || comment.range[0] < node.range[1]) return false;
-    return isBlank(text.slice(node.range[1], comment.range[0]));
+    return BLANK.test(text.slice(node.range[1], comment.range[0]));
 }
 
 // A decorator written above export belongs to the class, and the parser starts the export statement after it.
@@ -74,12 +69,12 @@ function isLeading(
         const to = directive.range[1] - comment.range[1];
         between = between.slice(0, from) + between.slice(to).replace(/^[\t ]*\r?\n/u, '');
     }
-    if (!isBlank(between)) return false;
+    if (!BLANK.test(between)) return false;
     const distance = between.split('\n').length - 1;
     if (distance > (isBlankLineAllowed ? 2 : 1)) return false;
     if (!isBlankLineAllowed && BLANK_LINE.test(between)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
-    return isBlank(text.slice(lineStart, comment.range[0]));
+    return BLANK.test(text.slice(lineStart, comment.range[0]));
 }
 
 function firstOtherIndex(body: TSESTree.Statement[], firstImport: number, isRequireAllowed: boolean): number {

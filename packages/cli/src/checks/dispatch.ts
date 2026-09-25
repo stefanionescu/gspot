@@ -1,4 +1,3 @@
-// The integrity engine: one function per check, chosen by `analysis =` in the manifest.
 import type { Engine } from '#cli/checks/input.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
@@ -22,13 +21,13 @@ import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 import { dockerignore } from '#cli/checks/docker/ignore-file.ts';
 import { envExample } from '#cli/checks/security/env/example.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
-import { SWIFT_STRUCTURE } from '#cli/structure/swift/analyses.ts';
+import { SWIFT_STRUCTURE } from '#cli/checks/swift/analyses.ts';
 import { denoCheck, denoLint } from '#cli/checks/supabase/deno.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import { readmePresent } from '#cli/checks/docs/readme/present.ts';
 import { referenceOwners } from '#cli/checks/xctest/references.ts';
 import { taskPolicy } from '#cli/checks/repository/task-policy.ts';
-import { PYTHON_STRUCTURE } from '#cli/structure/python/analyses.ts';
+import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
 import { migrationDocs } from '#cli/checks/postgres/migration-docs.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
@@ -52,7 +51,8 @@ import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/checks/swift/buil
 import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/project.ts';
 import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-checks.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
-import { drizzleMigrations, drizzleRelations, trpcBoundaries } from '#cli/checks/libraries.ts';
+import { trpcBoundaries } from '#cli/checks/trpc.ts';
+import { drizzleMigrations, drizzleRelations } from '#cli/checks/drizzle.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
 import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/checks/python/project.ts';

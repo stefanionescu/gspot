@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mutationPath } from '#cli/platform/filesystem.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SiteBuild } from '#cli/checks/static-site/build.ts';
-// The checks that read the built output of a static site.
 import { isAbsolute, join, relative as relativePath } from 'node:path';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 
@@ -180,7 +179,7 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
     return limits.flatMap((limit) => {
         const isCounted = pathMatcher(limit.paths);
         const bytes = files
-            .filter((path) => isCounted(path))
+            .filter(isCounted)
             .reduce((sum, path) => sum + gzipSync(readSource(build.output, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kb
@@ -210,7 +209,7 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
         .matchAll(SITEMAP_LOCATION)
         .map((match) => match.groups!['url']!)
         .toArray();
-    const listed = new Set(urls.flatMap((url) => pageOf(url)));
+    const listed = new Set(urls.flatMap(pageOf));
     const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))

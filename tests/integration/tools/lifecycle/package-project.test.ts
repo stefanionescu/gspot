@@ -1,14 +1,15 @@
+import { emitAll } from '#cli/generation/targets.ts';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { expect, spyOn, test } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
-import { computeDrift } from '#cli/emit/drift.ts';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { probeTool } from '#cli/tools/tool-probe.ts';
+import { probeTool } from '#cli/tools/probe.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/package-project.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
@@ -161,7 +162,18 @@ test.each([
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(stale);
             expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
-            expect(computeDrift(await openSession(repository.path))).toContainEqual({
+            const observed = await openSession(repository.path);
+            expect(
+                computeDrift(
+                    observed.root,
+                    observed.policyFiles.policy,
+                    observed.packageManager !== undefined,
+                    emitAll(observed.policyFiles.policy, observed.repository, observed.scopes, {
+                        version: observed.version,
+                        packageManager: observed.packageManager,
+                    }),
+                ),
+            ).toContainEqual({
                 path: `.gspot/${LOCKS[manager]}`,
                 kind: 'changed',
             });
@@ -276,7 +288,18 @@ ${lock.toString('utf8')}
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const checked = await run([executable, '--check', 'source.js'], { cwd: repository.path });
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            expect(computeDrift(await openSession(repository.path))).toStrictEqual([]);
+            const resolvedSession = await openSession(repository.path);
+            expect(
+                computeDrift(
+                    resolvedSession.root,
+                    resolvedSession.policyFiles.policy,
+                    resolvedSession.packageManager !== undefined,
+                    emitAll(resolvedSession.policyFiles.policy, resolvedSession.repository, resolvedSession.scopes, {
+                        version: resolvedSession.version,
+                        packageManager: resolvedSession.packageManager,
+                    }),
+                ),
+            ).toStrictEqual([]);
             const second = await applyAll(await openSession(repository.path));
             expect(second.written).toStrictEqual([]);
             expect(readFileSync(lockPath)).toStrictEqual(lock);

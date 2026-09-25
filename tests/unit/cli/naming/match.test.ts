@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { bannedTerm, compileTerms, isReservedUseAllowed } from '#cli/naming/match.ts';
+import { bannedTerm, compileTerms, isReservedUseAllowed } from '#cli/checks/naming/match.ts';
 
 const TERMS = compileTerms(['common', 'edge case', 'load-bearing'], 'test');
 

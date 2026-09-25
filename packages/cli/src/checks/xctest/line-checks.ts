@@ -1,10 +1,10 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import type { Node } from 'web-tree-sitter';
-// Swift test syntax: skip reasons, sleep calls, and snapshot recording modes.
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
-import { textOf, xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const COMMENT = /^\s*\/\/\s*\S{3,}/u;
 const SLEEP = /^(?:(?:Darwin\.|Glibc\.)?(?:sleep|usleep)|Thread\.sleep|Task(?:<[^>]+>)?\.sleep)$/u;
@@ -27,7 +27,7 @@ async function testFindings(
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.tags.includes('swift-test')) continue;
-        const source = textOf(input, file.path);
+        const source = readSource(input.root, file.path, input.observations).toString('utf8');
         const tree = await parseSource('swift', source, input);
         if (tree === null) throw new Error('Swift test analysis could not parse the source.');
         try {

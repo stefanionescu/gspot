@@ -1,7 +1,6 @@
-// An ignore file beside every Dockerfile, with the entries that keep history, dependencies and secrets out of the build.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 

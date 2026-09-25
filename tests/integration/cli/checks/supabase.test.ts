@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { expect, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
-import type { Session } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
 

@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -33,9 +33,11 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
     );
-    const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession1 = await openSession(directory.path);
+    const generated = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -146,9 +148,11 @@ test.each(['object', 'named'])(
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const generated = emitAll(await openSession(directory.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession2 = await openSession(directory.path);
+        const generated = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+            version: renderSession2.version,
+            packageManager: renderSession2.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);
         const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -202,9 +206,11 @@ test.each([
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const generated = emitAll(await openSession(directory.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession3 = await openSession(directory.path);
+        const generated = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
+            version: renderSession3.version,
+            packageManager: renderSession3.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);
         const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -264,9 +270,11 @@ test.each(['namespace', 'named export with dots'])(
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const generated = emitAll(await openSession(directory.path)).files.find(
-            (file) => file.path === '.gspot/config/eslint.config.mjs',
-        )!;
+        const renderSession4 = await openSession(directory.path);
+        const generated = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
+            version: renderSession4.version,
+            packageManager: renderSession4.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);
         const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -310,9 +318,11 @@ test('legacy ESLint adoption preserves inherited overrides and ignores for futur
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
     );
-    const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession5 = await openSession(directory.path);
+    const generated = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
+        version: renderSession5.version,
+        packageManager: renderSession5.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -365,9 +375,11 @@ test('legacy ESLint adoption preserves inherited plugin environments and extensi
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
     );
-    const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession6 = await openSession(directory.path);
+    const generated = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
+        version: renderSession6.version,
+        packageManager: renderSession6.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     symlinkSync(modules, join(directory.path, '.gspot/node_modules'));
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -495,9 +507,11 @@ test('cascading legacy ESLint preserves root resets and directory-relative overr
             tools: { eslint: { adopted: carried.tools.get('eslint')?.settings['adopted'] } },
         }),
     );
-    const generated = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession7 = await openSession(directory.path);
+    const generated = emitAll(renderSession7.policyFiles.policy, renderSession7.repository, renderSession7.scopes, {
+        version: renderSession7.version,
+        packageManager: renderSession7.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });
@@ -564,9 +578,12 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
             tools: { eslint: carried.tools.get('eslint')!.settings },
         }),
     );
-    const generated = emitAll(await openSession(directory.path), carried.observed).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession8 = await openSession(directory.path);
+    const generated = emitAll(renderSession8.policyFiles.policy, renderSession8.repository, renderSession8.scopes, {
+        version: renderSession8.version,
+        packageManager: renderSession8.packageManager,
+        takeover: carried.observed,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, generated.path) });

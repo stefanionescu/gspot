@@ -1,11 +1,11 @@
 import { expect, spyOn, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { swiftSources } from '#cli/structure/swift/sources.ts';
-import { pythonModules } from '#cli/structure/python/modules.ts';
+import { swiftSources } from '#cli/checks/swift/sources.ts';
+import { pythonModules } from '#cli/checks/python/modules.ts';
 
 for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {

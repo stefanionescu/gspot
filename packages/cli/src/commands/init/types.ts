@@ -1,4 +1,4 @@
-import type { Profile } from '#cli/profile/read.ts';
+import type { Profile } from '#cli/policy/profiles/read.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
@@ -10,7 +10,7 @@ import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import type { CarriedConfiguration, CarriedFormatter } from '#cli/adoption/native.ts';
+import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
 
 export type InitOptions = {
     cwd: string;

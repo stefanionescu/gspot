@@ -4,9 +4,11 @@ import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '../../../../docs/src/components/home/bash-syntax.json';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 test('the published syntax example produces the captured finding and accepts its correction', async () => {
     await using sandbox = await testdir();

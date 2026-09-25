@@ -1,4 +1,3 @@
-// Read, parse and validate gspot.toml; normalize into the Policy shape.
 import type { z } from 'zod';
 import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
@@ -20,11 +19,11 @@ function issueText(issue: z.core.$ZodIssue): string {
         return issue.keys.map((key) => messages.unknownKey(where, key, known)).join('\n');
     }
     const shown = where === '' ? 'gspot.toml' : where;
-    return messages.invalidValue(shown, issue.message);
+    return `${shown}: ${issue.message}`;
 }
 
 /**
- *
+ * Parse TOML and retain the parser location in policy errors.
  * @param text
  * @param path
  */

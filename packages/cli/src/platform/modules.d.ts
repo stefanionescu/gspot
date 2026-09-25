@@ -1,5 +1,3 @@
-// Ambient declarations for packages that ship none.
-
 // The Emscripten factory inside the libpg-query package, which ships no types for it.
 declare module 'libpg-query/wasm/libpg-query.js' {
     const createModule: (options: {

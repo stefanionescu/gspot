@@ -1,11 +1,10 @@
 import { z } from 'zod';
-// Deno over every edge function, each with its own deno.json when it has one.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({
@@ -70,23 +69,15 @@ async function typed(input: EngineInput, folder: string): Promise<Finding[]> {
     return result.code === 0 ? [] : [firstError(input, folder, result.stderr)];
 }
 
-async function overFunctions(
-    input: EngineInput,
-    each: (input: EngineInput, folder: string) => Promise<Finding[]>,
-): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    const folders = functionFolders(input);
-    for (const folder of folders) findings.push(...(await each(input, folder)));
-    return findings;
-}
-
 /**
  * The deno lint findings of every edge function.
  * @param input the engine input
  * @returns the findings
  */
-export function denoLint(input: EngineInput): Promise<Finding[]> {
-    return overFunctions(input, linted);
+export async function denoLint(input: EngineInput): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    for (const folder of functionFolders(input)) findings.push(...(await linted(input, folder)));
+    return findings;
 }
 
 /**
@@ -94,6 +85,8 @@ export function denoLint(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function denoCheck(input: EngineInput): Promise<Finding[]> {
-    return overFunctions(input, typed);
+export async function denoCheck(input: EngineInput): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    for (const folder of functionFolders(input)) findings.push(...(await typed(input, folder)));
+    return findings;
 }

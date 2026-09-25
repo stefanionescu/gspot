@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';

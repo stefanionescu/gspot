@@ -2,7 +2,7 @@ import { delimiter, join } from 'node:path';
 // Planted repository for the secrets configuration: a staged key, a pushed key, a tracked environment file and a baseline with no reason.
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema, pushReportSchema } from '#cli/output/schema.ts';
+import { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';

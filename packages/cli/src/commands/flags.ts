@@ -1,5 +1,3 @@
-// The readers for the flag values commander hands over as unknown.
-
 import { resolve } from 'node:path';
 /**
  * A text flag, undefined when absent or empty.

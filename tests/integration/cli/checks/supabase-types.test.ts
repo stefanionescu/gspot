@@ -3,9 +3,9 @@ import { chmodSync, readFileSync, statSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
-import { engineInput, runEngineCheck } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 
 const generated = 'export type Database = { public: { Tables: {} } };\n';

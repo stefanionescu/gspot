@@ -1,8 +1,8 @@
-import { identifiersOf } from '#cli/naming/extract.ts';
+import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import { scriptFunctions } from '#cli/structure/parser.ts';
-import { codeLines, withoutComment } from '#cli/structure/code-lines.ts';
+import { scriptFunctions } from '#cli/checks/structure/parser.ts';
+import { codeLines, withoutComment } from '#cli/checks/structure/code-lines.ts';
 
 test('shared parse handles retain grammar, source, and independent disposal boundaries', async () => {
     const observations = { root: '/repository', sources: new Map<string, Buffer>() };

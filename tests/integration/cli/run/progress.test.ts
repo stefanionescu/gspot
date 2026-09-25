@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { CheckResult } from '#cli/output/schema.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
     await using sandbox = await testdir();

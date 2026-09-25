@@ -1,12 +1,12 @@
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { realpathSync } from 'node:fs';
 
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
@@ -49,7 +49,10 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     expect(version.stdout.toString().trim()).toBe(
         `ruff ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'ruff')!.version}`,
     );
-    const config = emitAll(session).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
+    const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const run = () =>
         Bun.spawnSync(
@@ -105,7 +108,10 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
     const session = await openSession(sandbox.path);
-    const config = emitAll(session).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
+    const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
     expect(after.exitCode, after.stderr.toString()).toBe(1);
@@ -174,9 +180,11 @@ test('Ruff inheritance retains native merges and each parent selector directory'
         join(sandbox.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
-    const config = emitAll(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/config/ruff.toml',
-    )!;
+    const renderSession1 = await openSession(sandbox.path);
+    const config = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
     expect(after.exitCode, after.stderr.toString()).toBe(1);

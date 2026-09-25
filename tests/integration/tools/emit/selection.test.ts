@@ -1,8 +1,8 @@
-import { executeRun } from '#cli/run/execute.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { chmodSync, statSync } from 'node:fs';
-import type { RunReport } from '#cli/output/schema.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
@@ -11,9 +11,9 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { parse, stringify } from 'smol-toml';
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 
@@ -38,7 +38,11 @@ test.each([
         }),
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, 'teh\n'])),
     });
-    const outputs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) => path.endsWith('typos.toml'));
+    const renderSession1 = await openSession(sandbox.path);
+    const outputs = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.filter(({ path }) => path.endsWith('typos.toml'));
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
     for (const path of paths) {
         const original = Bun.spawnSync(
@@ -65,7 +69,11 @@ test('spelling locales and word allowances remain scoped in generated configurat
         'sample.txt': 'colour teh\n',
         'british/child/sample.txt': 'colour teh\n',
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession2 = await openSession(sandbox.path);
+    const output = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+        version: renderSession2.version,
+        packageManager: renderSession2.packageManager,
+    });
     const configs = output.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path).sort()).toStrictEqual([
         '.gspot/config/british/child/typos.toml',
@@ -108,7 +116,11 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         'tests/test_example.py': defect,
         'app/tests/test_example.py': defect,
     });
-    const configs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) => path.endsWith('/ruff.toml'));
+    const renderSession3 = await openSession(sandbox.path);
+    const configs = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
+        version: renderSession3.version,
+        packageManager: renderSession3.packageManager,
+    }).files.filter(({ path }) => path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).sort()).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
@@ -154,7 +166,11 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         'migration.sql': defect,
         'transactional/child/migration.sql': 'SELECT 1;\n',
     });
-    const configs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) => path.endsWith('/squawk.toml'));
+    const renderSession4 = await openSession(sandbox.path);
+    const configs = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
+        version: renderSession4.version,
+        packageManager: renderSession4.packageManager,
+    }).files.filter(({ path }) => path.endsWith('/squawk.toml'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, parse(content)['assume_in_transaction']])),
     ).toStrictEqual({
@@ -188,7 +204,10 @@ test('SQLFluff honors root and nested dialect settings over the database default
         'warehouse/child/query.sql': 'SELECT 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const configs = emitAll(session).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
+    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, /^dialect = (.+)$/mu.exec(content)?.[1]])),
     ).toStrictEqual({
@@ -227,9 +246,11 @@ test.each(['recommended', 'all'])(
         const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["bash", "security"]\n[rules]\ninstall = false\n`;
         const source = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'script.sh': source });
-        const outputs = emitAll(await openSession(sandbox.path)).files.filter(
-            ({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml',
-        );
+        const renderSession5 = await openSession(sandbox.path);
+        const outputs = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
+            version: renderSession5.version,
+            packageManager: renderSession5.packageManager,
+        }).files.filter(({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml');
         await withLifecycleOwner(sandbox.path, async (owner) => {
             await resolvePythonProject(sandbox.path, outputs, owner);
         });
@@ -269,7 +290,11 @@ test('framework security packs stay within inherited scopes and preserve sibling
         'app/child/ignored.js': 'eval(input);\n',
         'sibling/ignored.js': 'eval(input);\n',
     });
-    const outputs = emitAll(await openSession(sandbox.path)).files.filter(
+    const renderSession6 = await openSession(sandbox.path);
+    const outputs = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
+        version: renderSession6.version,
+        packageManager: renderSession6.packageManager,
+    }).files.filter(
         ({ path }) => path.includes('/semgrep/') || path.endsWith('.semgrepignore') || path === '.gspot/pyproject.toml',
     );
     await withLifecycleOwner(sandbox.path, async (owner) => {
@@ -338,7 +363,10 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'untracked/Dockerfile'), source);
     const session = await openSession(sandbox.path);
-    for (const file of emitAll(session).files.filter((file) => file.kind === 'config'))
+    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter((file) => file.kind === 'config'))
         await Bun.write(join(sandbox.path, file.path), file.content);
     const options = {
         stage: 'push' as const,
@@ -406,9 +434,11 @@ test.each([false, true])(
                   }
                 : {}),
         });
-        const generated = emitAll(await openSession(sandbox.path)).files.find(
-            ({ path }) => path === '.gspot/config/jsconfig.json',
-        )!;
+        const renderSession7 = await openSession(sandbox.path);
+        const generated = emitAll(renderSession7.policyFiles.policy, renderSession7.repository, renderSession7.scopes, {
+            version: renderSession7.version,
+            packageManager: renderSession7.packageManager,
+        }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         await Bun.write(join(sandbox.path, generated.path), generated.content);
         chmodSync(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
@@ -459,9 +489,11 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         'app/child/source.js': bad,
         'sibling/source.js': corrected,
     });
-    const outputs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) =>
-        path.endsWith('/jsconfig.json'),
-    );
+    const renderSession8 = await openSession(sandbox.path);
+    const outputs = emitAll(renderSession8.policyFiles.policy, renderSession8.repository, renderSession8.scopes, {
+        version: renderSession8.version,
+        packageManager: renderSession8.packageManager,
+    }).files.filter(({ path }) => path.endsWith('/jsconfig.json'));
     expect(outputs.map(({ path }) => path).sort()).toStrictEqual([
         '.gspot/config/app/child/jsconfig.json',
         '.gspot/config/app/jsconfig.json',

@@ -1,9 +1,9 @@
 import { nearMatches } from '#cli/policy/near.ts';
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
-import type { Session } from '#cli/run/session.ts';
-import type { GeneratedFile } from '#cli/emit/targets.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
+import type { GeneratedFile } from '#cli/generation/targets.ts';
 import type { RuleFile } from '#cli/agents/instructions.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 
 const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);
@@ -29,8 +29,8 @@ function agentLayerFiles(): { source: string; layer: string; configuration: stri
     );
 }
 
-function manifestFiles(session: Session): { source: string; layer: string; configuration: string }[] {
-    return everyManifest(session).flatMap((manifest) =>
+function manifestFiles(manifests: Manifest[]): { source: string; layer: string; configuration: string }[] {
+    return manifests.flatMap((manifest) =>
         Object.entries(manifest.rule_files).flatMap(([layer, paths]) =>
             paths.map((source) => ({ source, layer, configuration: manifest.configuration.name })),
         ),
@@ -42,19 +42,20 @@ export const FIRST_READ = ['general/agent/WORKING.md', 'general/prose/WRITING.md
 
 /**
  * The rule files the selection installs, in layer order, deduplicated.
- * @param session the session
+ * @param rules the rule policy
+ * @param manifests the selected configurations
  * @returns the rule files with their targets and titles
  */
-export function selectRuleFiles(session: Session): RuleFile[] {
+export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[]): RuleFile[] {
     const available = new Set(listAssets(RULES_PREFIX));
-    const { exclude } = session.policyFiles.policy.rules;
+    const { exclude } = rules;
     const files = new Map<string, RuleFile>();
-    for (const { source, layer, configuration } of [...agentLayerFiles(), ...manifestFiles(session)]) {
+    for (const { source, layer, configuration } of [...agentLayerFiles(), ...manifestFiles(manifests)]) {
         const path = `${RULES_PREFIX}${source}`;
         if (!available.has(path) || files.has(source) || isExcluded(source, exclude)) continue;
         files.set(source, {
             source,
-            target: `${session.policyFiles.policy.rules.directory}/${source}`,
+            target: `${rules.directory}/${source}`,
             layer,
             configuration,
             title: titleOf(readAsset(path)),
@@ -65,12 +66,13 @@ export function selectRuleFiles(session: Session): RuleFile[] {
 
 /**
  * The rule files as generated files. Content is the rule text unchanged.
- * @param session the session
+ * @param rules the rule policy
+ * @param manifests the selected configurations
  * @returns the files to write under the rules directory
  */
-export function assembleRules(session: Session): GeneratedFile[] {
-    if (!session.policyFiles.policy.rules.install) return [];
-    return selectRuleFiles(session).map((file) => ({
+export function assembleRules(rules: Policy['rules'], manifests: Manifest[]): GeneratedFile[] {
+    if (!rules.install) return [];
+    return selectRuleFiles(rules, manifests).map((file) => ({
         path: file.target,
         content: readAsset(`${RULES_PREFIX}${file.source}`),
         readOnly: true,

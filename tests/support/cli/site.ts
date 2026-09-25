@@ -1,6 +1,6 @@
 import { createFileTree } from 'testdirs';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 
 /** Select source files for an isolated site build owned by the test resource stack. */

@@ -57,7 +57,7 @@ const PYTHON_PATH_SPANS = z.array(
 );
 
 /**
- *
+ * Copy verified journal-owned Vale packages matching the selected configuration.
  * @param root
  * @param snapshot
  * @param paths
@@ -130,7 +130,7 @@ async function validateCopiedLinks(
 }
 
 /**
- *
+ * Copy matching installed dependencies and relocate their revision-specific loader paths.
  * @param root
  * @param snapshot
  * @param paths

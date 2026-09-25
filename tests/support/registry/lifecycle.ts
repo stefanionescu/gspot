@@ -157,7 +157,7 @@ export async function startRegistry(
 export function publishTo(registry: Registry, version: string, checkout: string): SpawnOutcome {
     registry.assertRunning();
     const result = Bun.spawnSync(
-        ['bun', 'packages/cli/release/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
+        ['bun', 'packages/cli/scripts/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
         {
             cwd: checkout,
             env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },

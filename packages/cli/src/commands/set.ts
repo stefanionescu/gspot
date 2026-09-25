@@ -1,21 +1,20 @@
 import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Mutation } from '#cli/policy/write.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { isLoosening } from '#cli/policy/loosening.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
-import type { Session } from '#cli/run/session.ts';
+import type { Session } from '#cli/execution/session.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
-// gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
 
@@ -156,10 +155,7 @@ function writeValue(
     if (o.items.length === 0)
         throw new PolicyError([`gspot set ${o.key} needs a value, or --default to remove yours.`]);
     const isList = spec.kind === 'list';
-    const parsed = shaped(
-        o.items.map((text) => parseValue(text)),
-        isList,
-    );
+    const parsed = shaped(o.items.map(parseValue), isList);
     const isDeclaration = o.key === 'generated' || o.key === 'vendored';
     const paths = isDeclaration && Array.isArray(parsed) && parsed.every((item) => typeof item === 'string');
     const value = reasonsFilled(paths && !o.remove ? [{ paths: parsed }] : parsed, isList ? o.reason : undefined);

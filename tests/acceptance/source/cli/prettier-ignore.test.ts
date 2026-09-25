@@ -2,7 +2,7 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

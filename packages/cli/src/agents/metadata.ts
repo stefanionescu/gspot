@@ -1,4 +1,3 @@
-// The front matter of a rule file: layer, configuration and title, and whether they agree with the path and the H1.
 import { RULE_LAYERS } from '#cli/agents/terms.ts';
 import type { RuleFinding } from '#cli/agents/lint.ts';
 
@@ -15,11 +14,6 @@ function fieldsOf(lines: string[]): Record<string, string> {
         fields[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
     }
     return fields;
-}
-
-function headingOf(lines: string[]): string | undefined {
-    const heading = lines.find((line) => line.startsWith('# '));
-    return heading?.slice('# '.length);
 }
 
 /**
@@ -77,7 +71,11 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
             line: 3,
             message: `configuration '${matter.configuration}' is not a configuration id or none`,
         });
-    const heading = headingOf(text.split('\n')) ?? '';
+    const heading =
+        text
+            .split('\n')
+            .find((line) => line.startsWith('# '))
+            ?.slice(2) ?? '';
     if (heading !== matter.title)
         findings.push({ file: path, line: 4, message: `title '${matter.title}' does not equal the H1 '${heading}'` });
     return findings;

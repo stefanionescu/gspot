@@ -1,7 +1,6 @@
-// A Markdown heading from the banned list: an inventory where an explanation belongs.
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';

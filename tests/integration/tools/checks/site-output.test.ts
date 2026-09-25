@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as toolRunner from '#cli/run/tool-runner.ts';
+import * as toolRunner from '#cli/execution/tool-runner.ts';
 import { siteBuild } from '#cli/checks/static-site/build.ts';
 import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
 import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';

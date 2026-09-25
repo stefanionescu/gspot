@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { describe, expect, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { astGrepMatches } from '#cli/structure/ast-grep.ts';
+import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { fileMode, mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';

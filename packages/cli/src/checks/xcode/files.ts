@@ -1,8 +1,6 @@
-// What the xcode checks share: the tracked files by ending, their text, and the finding shape.
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 
 /**
  * The tracked source files whose path ends one of the given ways.
@@ -19,16 +17,6 @@ export function trackedEnding(input: EngineInput, endings: string[]): string[] {
                 endings.some((ending) => file.path.endsWith(ending)),
         )
         .map((file) => file.path);
-}
-
-/**
- * The text of a tracked file.
- * @param input the engine input
- * @param path the repository-relative path
- * @returns the text
- */
-export function textOf(input: EngineInput, path: string): string {
-    return readSource(input.root, path, input.observations).toString('utf8');
 }
 
 /**

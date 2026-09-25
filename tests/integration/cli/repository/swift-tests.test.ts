@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readRepository } from '#cli/repository/tree.ts';

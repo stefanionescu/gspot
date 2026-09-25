@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';

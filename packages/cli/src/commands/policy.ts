@@ -1,11 +1,10 @@
 import * as messages from '#cli/policy/messages.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
 import { join } from 'node:path';
-// Writing commands publish one validated policy mutation and then apply its generated configuration.
 import type { Mutation } from '#cli/policy/write.ts';
 import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';

@@ -27,7 +27,7 @@ separate documentation fixture system or root examples inventory is required.
 The project already has a custom Astro landing page, Starlight navigation and guides, shared
 light/dark tokens and a real finding/correction transcript. The implementation is
 visible in `docs/src/pages/index.astro`, `docs/src/styles/theme.css`, and `docs/astro.config.ts`.
-The content configuration currently uses Starlight's loader, and `docs/src/content/reference.ts`
+The content configuration currently uses Starlight's loader, and `docs/src/content/reference/loader.ts`
 loads references into Astro content storage. The reference contract below governs
 that content loader. It does not require rebuilding the site shell.
 

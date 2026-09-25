@@ -1,5 +1,3 @@
-// A check that needs a command nobody installed did not break: it never started. The runner reports it as missing.
-
 /** Thrown by an analysis when the command it runs is not installed. */
 export class MissingToolError extends Error {
     /**

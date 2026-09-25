@@ -5,8 +5,10 @@ import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const entry = fileURLToPath(new URL('../../../docs/scripts/verify-release.ts', import.meta.url));
 

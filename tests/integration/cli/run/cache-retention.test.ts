@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { cacheInputs, cacheKey, fileHash, pruneCache, writeCached } from '#cli/run/cache.ts';
+import { cacheInputs, cacheKey, fileHash, pruneCache, writeCached } from '#cli/execution/cache.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 
 test('cache pruning removes only expired unchanged owned results', async () => {

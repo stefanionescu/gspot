@@ -66,7 +66,7 @@ Cache keys must include the actual source, policy, tool, and scope inputs they d
 Distinguish applicability from execution. Report explicit skips, unavailable platforms, missing
 prerequisites, missing tools, and delegated coverage accurately. Validate `reported_by` and
 `takes_over` ownership so descriptive coverage never impersonates an executed check.
-Infrastructure stays independent of domain check catalogs.
+Infrastructure stays independent of domain check definitions.
 
 Command arguments must retain boundaries, including spaces, quotes, and empty arguments.
 Do not interpret configured build or generator commands with `split(' ')`. Resolve their syntax

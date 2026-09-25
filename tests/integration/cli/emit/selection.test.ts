@@ -2,8 +2,8 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { writeFileSync, symlinkSync, mkdirSync } from 'node:fs';
 
@@ -20,10 +20,20 @@ test.each([
         'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
     });
     const target = `.gspot/config/semgrep/${name}.yml`;
-    const plainOutput = emitAll(await openSession(sandbox.path));
+    const renderSession1 = await openSession(sandbox.path);
+    const plainOutput = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    });
     expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
     writeFileSync(join(sandbox.path, 'gspot.toml'), `version = 1\nconfigurations = ["${configuration}", "security"]\n`);
-    const securityOutput = emitAll(await openSession(sandbox.path));
+    const renderSession2 = await openSession(sandbox.path);
+    const securityOutput = emitAll(
+        renderSession2.policyFiles.policy,
+        renderSession2.repository,
+        renderSession2.scopes,
+        { version: renderSession2.version, packageManager: renderSession2.packageManager },
+    );
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toContain('rules:');
 });
@@ -41,7 +51,11 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
         join(sandbox.path, 'node_modules'),
         'dir',
     );
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession3 = await openSession(sandbox.path);
+    const output = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
+        version: renderSession3.version,
+        packageManager: renderSession3.packageManager,
+    });
     const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
     expect(config).toBeDefined();
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
@@ -67,9 +81,11 @@ test('license configuration retains scoped exceptions and inherited license allo
         'gspot.toml':
             'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
     });
-    const configs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) =>
-        path.endsWith('/licenses.json'),
-    );
+    const renderSession4 = await openSession(sandbox.path);
+    const configs = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
+        version: renderSession4.version,
+        packageManager: renderSession4.packageManager,
+    }).files.filter(({ path }) => path.endsWith('/licenses.json'));
     const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content)]));
     expect(parsed.size).toBe(4);
     for (const path of [

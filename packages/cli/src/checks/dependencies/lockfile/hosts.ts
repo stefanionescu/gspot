@@ -1,8 +1,7 @@
-import type { Finding } from '#cli/output/schema.ts';
-// Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
+import { LOCKFILES } from '#cli/repository/locked-packages.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

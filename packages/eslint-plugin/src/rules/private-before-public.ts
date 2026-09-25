@@ -1,6 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-// An exported declaration above a non-exported one: private first, public last.
-import { createRule } from '#plugin/rules/definition.ts';
+import { createRule } from '#plugin/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const DECLARATIONS = new Set([
@@ -64,7 +63,7 @@ export const privateBeforePublic = createRule<[], 'order'>({
     create(context) {
         return {
             Program(node) {
-                const firstExport = node.body.find((statement) => isExport(statement));
+                const firstExport = node.body.find(isExport);
                 if (firstExport === undefined) return;
                 const after = node.body.slice(node.body.indexOf(firstExport) + 1);
                 for (const statement of after)

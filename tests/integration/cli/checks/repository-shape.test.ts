@@ -1,8 +1,8 @@
 import { checkInput } from '#tests/support/cli/input.ts';
 import { describe, expect, test } from 'bun:test';
 // The repository-shape integrity analyses: suppressions, policy patterns, large files and configuration purity.
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 import { createFileTree, testdir } from 'testdirs';
 

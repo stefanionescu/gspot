@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { describe, expect, spyOn, test } from 'bun:test';

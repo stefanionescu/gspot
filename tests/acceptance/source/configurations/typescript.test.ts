@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
-import { reportSchema, type RunReport } from '#cli/output/schema.ts';
+import { reportSchema, type RunReport } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

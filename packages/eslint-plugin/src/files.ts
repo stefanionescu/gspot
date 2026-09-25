@@ -1,4 +1,3 @@
-// Index and barrel detection, file classes, directory reads and the small glob matcher the rules share.
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
@@ -21,15 +20,6 @@ const FILE_SCHEME = 'file://';
 const DECLARATION_SUFFIX = '.d.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
-
-function aliasTarget(source: string, prefix: string, target: string): string | undefined {
-    const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
-    const bare = clean.endsWith('/') ? clean.slice(0, -1) : clean;
-    if (source !== bare && !source.startsWith(clean)) return undefined;
-    const rest = source.slice(clean.length);
-    const base = target.endsWith('*') ? target.slice(0, -1) : target;
-    return posix.join(base, rest);
-}
 
 /** The extensions of code files the rules look at. */
 export const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.vue', '.svelte'];
@@ -147,31 +137,6 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
  */
 export function relativeToRoot(root: string, path: string): string {
     return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
-}
-
-/**
- * The file an import source names, relative imports against the importer and aliases against the root; undefined for packages.
- * @param importer the importing file
- * @param source the import source as written
- * @param root the repository root
- * @param aliases alias prefix to target directory, both optionally ending in `*`
- * @returns the file's path without an extension check, or undefined
- */
-export function importFile(
-    importer: string,
-    source: string,
-    root: string,
-    aliases: Readonly<Record<string, string>> = {},
-): string | undefined {
-    if (source.startsWith('.')) {
-        const joined = posix.join(posix.dirname(importer), source);
-        return normalizePath(posix.normalize(joined));
-    }
-    for (const [prefix, target] of Object.entries(aliases)) {
-        const aliased = aliasTarget(source, prefix, target);
-        if (aliased !== undefined) return normalizePath(posix.normalize(posix.join(root, aliased)));
-    }
-    return undefined;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 // What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
-import { DEFAULT_SCHEMA } from '#cli/checks/postgres/schema/names.ts';
+export const DEFAULT_SCHEMA = 'public';
 import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
 
@@ -28,7 +28,6 @@ function named(parts: string[]): string {
     return `${parts.length === 1 ? DEFAULT_SCHEMA : parts.at(-2)}.${parts.at(-1)}`;
 }
 
-// The part before the last in a qualified name: the schema of a table.
 const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
 
 // One constraint of a table: a foreign key is recorded, and a primary or unique key counts as an index on its first column.

@@ -22,7 +22,6 @@
         "../../../docs/**/build/**",
         "../../../docs/**/coverage/**",
         "../../../docs/**/.build/**",
-        "../../../docs/**/DerivedData/**",
-        "../../../docs/packages/cli/release/notices.json"
+        "../../../docs/**/DerivedData/**"
     ]
 }

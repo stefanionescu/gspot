@@ -1,17 +1,17 @@
 import { renameSync } from 'node:fs';
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { rejects } from 'node:assert/strict';
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 
-import { engineInput, resolveCheck } from '#cli/run/engines.ts';
-import { isToolBroken, checkedFindings } from '#cli/run/broken-tool.ts';
-import { parseOutput, ToolOutputError } from '#cli/run/parse-output.ts';
+import { engineInput, resolveCheck } from '#cli/execution/engines.ts';
+import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
+import { parseOutput, ToolOutputError } from '#cli/execution/parse-output.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 test('native image reports distinguish a generated test key, invalid configuration, and a clean image', async () => {
@@ -75,7 +75,10 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
     });
     const session = await openSession(sandbox.path);
-    const configuration = emitAll(session).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
+    const configuration = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     await Bun.write(join(sandbox.path, configuration.path), configuration.content);
     const planned = (await planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] }))[0]!;
     const command = [

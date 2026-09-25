@@ -1,6 +1,5 @@
-// Two or more entries in one directory sharing a name prefix, at or above the threshold.
 import { posix } from 'node:path';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 import {
     isIndexFile,

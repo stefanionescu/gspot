@@ -1,5 +1,4 @@
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
-// An import from a test-harness barrel.
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 
 export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'barrel'>({

@@ -1,4 +1,4 @@
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';

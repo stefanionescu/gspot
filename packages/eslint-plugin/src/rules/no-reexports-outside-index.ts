@@ -1,5 +1,4 @@
-import { createRule } from '#plugin/rules/definition.ts';
-// A re-export in a file that is not an index.
+import { createRule } from '#plugin/definition.ts';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 
 export const noReexportsOutsideIndex = createRule<[], 'outsideIndex'>({

@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
@@ -113,7 +113,7 @@ test.each(['custom', 'native'])(
             [
                 process.execPath,
                 '-e',
-                `import { installHookManager } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/lifecycle/hook-managers.ts'))}; import { openSession } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/run/session.ts'))}; await installHookManager(await openSession(${JSON.stringify(root)}));`,
+                `import { installHookManager } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/lifecycle/hook-managers.ts'))}; import { openSession } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/execution/session.ts'))}; await installHookManager(await openSession(${JSON.stringify(root)}));`,
             ],
             {
                 cwd: root,

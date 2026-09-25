@@ -1,18 +1,19 @@
 import { waitForExit } from '#tests/support/cli/process.ts';
 import * as os from 'node:os';
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 
-import { executeRun } from '#cli/run/execute.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 
-import { openSession } from '#cli/run/session.ts';
-import type { Session } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
 
 import { expect, spyOn, test } from 'bun:test';
-import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
-import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
+import { prepareCommand, runToolCheck } from '#cli/execution/tool-runner.ts';
+import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 

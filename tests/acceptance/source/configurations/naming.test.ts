@@ -3,7 +3,7 @@ import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { RunReport } from '#cli/output/schema.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();

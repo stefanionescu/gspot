@@ -27,7 +27,7 @@ published release or native verification on every target platform.
   <img src="docs/public/brand/readme/tool-semgrep.svg" alt="Semgrep" width="144" height="40">
 </p>
 
-See the [configuration catalog](https://gspot.dev/reference/configurations/) for supported technologies.
+See the [configuration reference](https://gspot.dev/reference/configurations/) for supported technologies.
 
 ## Check a JavaScript module
 

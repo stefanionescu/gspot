@@ -1,19 +1,9 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { isImportLike } from '#plugin/imports.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-// Imports grouped and sorted by statement shape and length: one-line imports first, multi-line second, each by length.
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 const BLANK = /^\s*$/u;
 const SPACES = /\s+/gu;
-
-function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
-    return (
-        node?.type === AST_NODE_TYPES.CallExpression &&
-        node.callee.type === AST_NODE_TYPES.Identifier &&
-        node.callee.name === 'require' &&
-        node.arguments.length === 1
-    );
-}
 
 function isOwnLineComment(text: string, comment: TSESTree.Comment, before: number): boolean {
     if (!BLANK.test(text.slice(comment.range[1], before))) return false;
@@ -99,23 +89,6 @@ function joined(expected: ImportLayoutEntry[]): string {
         wasMultiLine = entry.multiLine;
     }
     return text;
-}
-
-/**
- * True for an import declaration or, when asked, a require statement.
- * @param node the statement
- * @param isRequireAllowed whether a top-level require counts as an import
- * @returns whether the statement belongs to the import block
- */
-export function isImportLike(node: TSESTree.Statement, isRequireAllowed: boolean): boolean {
-    if (node.type === AST_NODE_TYPES.ImportDeclaration) return true;
-    if (!isRequireAllowed) return false;
-    if (node.type === AST_NODE_TYPES.ExpressionStatement) return isRequireCall(node.expression);
-    return (
-        node.type === AST_NODE_TYPES.VariableDeclaration &&
-        node.declarations.length === 1 &&
-        isRequireCall(node.declarations[0].init)
-    );
 }
 
 export const importLayout = createRule<ImportLayoutOptions, 'layout'>({

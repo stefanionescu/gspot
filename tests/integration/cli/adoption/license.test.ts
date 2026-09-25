@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { mkdirSync, symlinkSync } from 'node:fs';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
@@ -97,7 +97,10 @@ test.each(['root', 'nested'])(
             );
             await Bun.write(join(root, 'sibling/package.json'), '{"private":true}');
             const session = await openSession(root);
-            const emitted = emitAll(session).files;
+            const emitted = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+                version: session.version,
+                packageManager: session.packageManager,
+            }).files;
             const projectConfig = emitted.find((file) => file.path === '.gspot/config/project/licenses.json')!;
             const siblingConfig = emitted.find((file) => file.path === '.gspot/config/sibling/licenses.json')!;
             expect(JSON.parse(projectConfig.content).packages_allowed).toHaveLength(2);

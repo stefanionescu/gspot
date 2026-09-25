@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-import { statementCount } from '#plugin/rules/no-trivial-functions.ts';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { statementCount } from '#plugin/statements.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({
     name: 'no-trivial-files',

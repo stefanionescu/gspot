@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runProcess as spawn } from '#tests/support/cli/command.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { applyBlock } from '#cli/emit/managed-blocks.ts';
+import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
@@ -303,7 +303,10 @@ test.each([false, true])(
             'entry.sh': 'echo example\n',
         });
         const session = await openSession(directory.path);
-        const generated = emitAll(session);
+        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        });
         const config = generated.files.find((file) => file.path === '.gspot/config/shellcheckrc')!;
         const instructions = generated.blocks.find((block) => block.path === 'AGENTS.md')!;
         const originals = {

@@ -5,11 +5,13 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { applyCommand } from '#cli/commands/apply.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { initCommand } from '#cli/commands/init/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
     await using directory = await testdir();

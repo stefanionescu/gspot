@@ -1,10 +1,8 @@
-import { parseShell } from '@yarnpkg/parsers';
-// The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/settings.ts';
+import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/configurations/settings.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 import type { NamingCategoryTable, NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
 
@@ -363,29 +361,6 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
         .toArray()
         .toSorted((a, b) => a.localeCompare(b));
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
-}
-
-/**
- * Read a configured executable and literal arguments, preserving shell quoting.
- * @param source
- */
-export function commandArguments(source: string): string[] {
-    const lines = parseShell(source, { isGlobPattern: () => false });
-    const line = lines[0];
-    if (lines.length !== 1 || line?.type !== ';' || line.command.then !== undefined)
-        throw new Error('Configure one executable with literal arguments.');
-    const command = line.command.chain;
-    if (command.type !== 'command' || command.then !== undefined || command.envs.length > 0)
-        throw new Error('Configure one executable with literal arguments.');
-    return command.args.map((argument) => {
-        if (argument.type !== 'argument') throw new Error('Command redirection is not supported.');
-        return argument.segments
-            .map((segment) => {
-                if (segment.type !== 'text') throw new Error('Command arguments must be literal values.');
-                return segment.text;
-            })
-            .join('');
-    });
 }
 
 export type ResolvedSetting = {

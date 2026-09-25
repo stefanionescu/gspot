@@ -1,11 +1,11 @@
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { createFileTree, testdir } from 'testdirs';
 
 const LOCKS: [string, string][] = [

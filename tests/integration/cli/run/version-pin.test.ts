@@ -1,6 +1,9 @@
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { assertPinMatches, pinnedVersion, writePin, GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { assertPinMatches, pinnedVersion, writePin } from '#cli/lifecycle/version-pin.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 describe('the version pin', () => {
     test('is written, read, and refused when it differs', async () => {

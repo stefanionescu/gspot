@@ -1,7 +1,6 @@
-// A relative import that crosses a sibling top-level folder; use the alias.
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {

@@ -112,4 +112,4 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 - gspot does not manage product configuration. A check that needs a product fact reads the
   product's file.
 - gspot does not host every linter for every language. It covers the languages in
-  [configuration catalog](04-configurations.md#catalog) through the agreed ledger. Additional integrations require a concrete product requirement.
+  [configuration reference](04-configurations.md#available-configurations) through the agreed ledger. Additional integrations require a concrete product requirement.

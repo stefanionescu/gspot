@@ -1,4 +1,3 @@
-// gspot.schema.json from the zod schema, published with each release and submitted to SchemaStore.
 import { z } from 'zod';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';

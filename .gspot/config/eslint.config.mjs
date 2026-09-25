@@ -37,9 +37,10 @@ const SCRIPTS = [
     "**/*.config.{js,mjs,cjs,ts}",
     ".mise/tasks/**",
     "packages/npm/**",
-    "packages/cli/release/**",
+    "packages/cli/scripts/**",
+    "packages/cli/build.ts",
     "packages/eslint-plugin/build.ts",
-    "docs/src/content/reference.ts"
+    "docs/src/content/reference/**"
 ];
 const ALIASES = {
     "#cli/": "packages/cli/src/",
@@ -775,8 +776,7 @@ export default [
     "**/dist/**",
     "**/build/**",
     "**/coverage/**",
-    ".gspot/**",
-    "packages/cli/release/notices.json"
+    ".gspot/**"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },

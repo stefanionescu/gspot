@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 
-import { isToolBroken, checkedFindings } from '#cli/run/broken-tool.ts';
-import { parseOutput, ToolOutputError } from '#cli/run/parse-output.ts';
+import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
+import { parseOutput, ToolOutputError } from '#cli/execution/parse-output.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 test.each([
     '403 API rate limit exceeded',

@@ -1,4 +1,4 @@
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import { run, type SpawnOutcome } from '#tests/support/cli/command.ts';
 import { plant, type PlantedInput } from '#tests/support/cli/preservation.ts';
 

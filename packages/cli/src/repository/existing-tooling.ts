@@ -3,8 +3,8 @@ import { parse as parseYaml } from 'yaml';
 import type { Policy } from '#cli/policy/normalize.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
-import { readGitSetting } from '#cli/platform/spawn.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { readGitSetting } from '#cli/repository/git-config.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
@@ -51,9 +51,10 @@ function listDir(root: string, rel: string): string[] {
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
-    if (hooksPath === dir || listDir(root, dir).length === 0) return undefined;
-    if (dir === '.husky') return { kind: 'husky', path: dir, files: listDir(root, dir) };
-    return { kind: 'githooks', path: dir, files: listDir(root, dir) };
+    if (hooksPath === dir) return undefined;
+    const files = listDir(root, dir);
+    if (files.length === 0) return undefined;
+    return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
 }
 
 function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {

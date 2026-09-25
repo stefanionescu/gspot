@@ -1,10 +1,9 @@
 import { statSync } from 'node:fs';
-// The generated database types, compared with what the CLI writes from the local database.
 import { join, posix } from 'node:path';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**
@@ -17,7 +16,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     if (typeof named !== 'string' || named === '') return [];
     const path = posix.join(input.scope, named);
     const at = { file: path, line: 1 };
-    if (!(statSync(join(input.root, path), { throwIfNoEntry: false }) !== undefined))
+    if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
         return [supabaseFinding(input, at, 'types', 'The types file does not exist.')];
     const result = await runCheckCommand(input, ['supabase', 'gen', 'types', 'typescript', '--local'], {
         cwd: join(input.root, input.scope),

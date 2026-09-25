@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 
 const PRE_COMMIT_POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';

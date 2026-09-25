@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 

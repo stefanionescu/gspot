@@ -1,7 +1,7 @@
 # Configurations
 
 This document decides the unit of selection: its manifest, how it is detected, how configurations
-combine, and the catalog.
+combine, and the available configurations.
 
 ## Policy ownership
 
@@ -340,7 +340,7 @@ A framework changes which plugins run. It does not change the rules of the langu
 | vue          | `eslint-plugin-vue`                                                                                     | `eslint-plugin-vuejs-accessibility`   | `vue-tsc`             | vitest, testing-library         | nothing                                                                             |
 | svelte       | `eslint-plugin-svelte`                                                                                  | `svelte-check`                        | `svelte-check`        | vitest, testing-library         | the one-file-folder rule, for SvelteKit route files                                 |
 
-## Catalog
+## Available configurations
 
 The [enforcement ledger](06-enforcement-ledger.md#configuration-enforcement-contracts) preserves
 the detection, settings, and checks of each agreed configuration. The v1 set is every configuration the four reference repositories need. That covers a Python API, a Swift
@@ -529,7 +529,7 @@ gspot pins itself in the mise file as `"github:stefanionescu/gspot"`, not throug
 ### Acceptance K-79
 
 Checks belong to the domain they inspect. Shared parsers and platform
-operations live outside catalogs. Infrastructure must not import the catalog for basic work.
+operations live outside configuration definitions. Infrastructure must not import configuration definitions for basic work.
 
 Actual planned checks execute once and report intended defects at their
 locations. Valid inputs pass; invalid manifest combinations fail at loading. Registry metadata

@@ -1,4 +1,4 @@
-import { parseJson } from '#cli/output/json.ts';
+import { parseJson } from '#cli/execution/json-output.ts';
 import { describe, expect, test } from 'bun:test';
 
 describe('parseJson', () => {

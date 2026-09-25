@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { routeFor, routeGroups } from '#cli/prose/grammars.ts';
+import { routeFor, routeGroups } from '#cli/checks/prose/grammars.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 function tracked(path: string, tags: string[] = ['text']): TrackedFile {

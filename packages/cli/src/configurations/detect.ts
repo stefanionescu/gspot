@@ -1,10 +1,9 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import * as linguistLanguages from 'linguist-languages';
 import type { TreeFacts } from '#cli/repository/tree.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import { SHEBANG_INTERPRETERS } from '#cli/repository/patterns.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
@@ -17,7 +16,6 @@ type LinguistEntry = {
 
 const SHEBANG_TAG = 'shebang:';
 const GLOB_CHARS = /[*?{]/u;
-const ENV_SUFFIX = '/env';
 const LANGUAGE_BY_FILENAME = new Map(
     Object.entries(linguistLanguages).flatMap(([language, value]) =>
         ((value as LinguistEntry).filenames ?? []).map((filename) => [filename, language] as const),
@@ -137,12 +135,6 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined 
     return undefined;
 }
 
-function withoutTrailingVersion(word: string): string {
-    let end = word.length;
-    while (end > 0 && '0123456789.'.includes(word[end - 1] ?? '')) end -= 1;
-    return word.slice(0, end);
-}
-
 /**
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
@@ -195,33 +187,6 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
             count: entry.count,
         }))
         .toSorted((a, b) => b.count - a.count);
-}
-
-/**
- * Reads the executable token, including env -S and interpreter arguments.
- * @param firstLine the first line of the file
- * @returns the executable basename or undefined without a shebang
- */
-export function shebangExecutable(firstLine: string): string | undefined {
-    if (!firstLine.startsWith('#!')) return undefined;
-    const tokens = firstLine.slice(2).trim().split(/\s+/u);
-    let index = 0;
-    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
-    if (tokens[index] === '-S') index += 1;
-    const word = tokens[index];
-    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
-}
-
-/**
- * The interpreter a shebang names, or undefined.
- * @param firstLine the first line of the file
- * @returns the interpreter name the table knows
- */
-export function shebangInterpreter(firstLine: string): string | undefined {
-    const word = shebangExecutable(firstLine);
-    if (word === undefined) return undefined;
-    const stripped = withoutTrailingVersion(word);
-    return SHEBANG_INTERPRETERS[word] ?? SHEBANG_INTERPRETERS[stripped];
 }
 
 export type Proposal = { configuration: string; evidence: string; kind: string; count?: number };

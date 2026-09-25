@@ -3,7 +3,7 @@ import { rejects } from 'node:assert/strict';
 import * as messages from '#cli/output/messages.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
-import { askConfirmation, askMany, PromptError } from '#cli/output/prompts.ts';
+import { askConfirmation, askMany, PromptError } from '#cli/commands/prompts.ts';
 
 function mockTerminal(isTerminal: boolean): () => void {
     const streams = [process.stdin, process.stdout].map((stream) => ({

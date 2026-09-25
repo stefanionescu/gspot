@@ -254,12 +254,12 @@ with `npm pack --dry-run` before it publishes the first, and each package includ
 the project license from distribution output. Platform packages also include `NOTICE.md` for bundled
 inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
 The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
-lives beside the build entry point; pinned upstream supplements and provenance live in
-`packages/cli/release/notices.json`. Retain upstream text until installed dependencies supply the required
-material. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree
+lives in `packages/cli/scripts/notices.ts`. It reads installed license files and fetches missing
+supplemental notices from pinned upstream sources. Downloaded and cached bytes must match
+recorded SHA-256 values. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree
 scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
 
-`packages/cli/release/grammar.ts` downloads the pinned upstream Swift parser and verifies its SHA-256 before caching or embedding it. An install hint
+`packages/cli/scripts/inputs.ts` downloads the pinned upstream Swift parser and verifies its SHA-256 before caching or embedding it. An install hint
 names Homebrew only for a tool with no pin, and a `github` installer takes the tag form its
 repository uses. The owner publishes a placeholder of `gspot` on npm before the release workflow
 first runs.

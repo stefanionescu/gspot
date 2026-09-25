@@ -1,7 +1,8 @@
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { MISE_CONFIG_PATH, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
+import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
 
 /**
  * Report missing or changed task bodies through the same field owner used by generation.

@@ -1,5 +1,3 @@
-// Closest-match suggestions for a mistyped name.
-
 const NEAR_LIMIT = 3;
 const TYPO_MIN = 2;
 const TYPO_FRACTION = 3;

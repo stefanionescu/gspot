@@ -1,5 +1,4 @@
 import { shippedFormat } from '#cli/configurations/listing.ts';
-// The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { PolicyScopeLayer, ExposedSettings } from '#cli/policy/settings.ts';
 import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';

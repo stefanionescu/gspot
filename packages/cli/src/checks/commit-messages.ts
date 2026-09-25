@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import type { Session } from '#cli/run/session.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { Session } from '#cli/execution/session.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { pushBase } from '#cli/repository/staged.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { CheckResult } from '#cli/output/schema.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 /**

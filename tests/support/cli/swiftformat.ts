@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
-import { emitTarget, templateInputs } from '#cli/emit/templates.ts';
+import { emitTarget, templateInputs } from '#cli/generation/templates.ts';
 
 async function output(command: string[]): Promise<string> {
     const result = await run(command, { cwd: process.cwd() });
@@ -42,7 +42,14 @@ async function installSwiftFormat(): Promise<void> {
             emitTarget(
                 'packages/cli/configurations/language/swift/swiftformat.tmpl',
                 '.gspot/config/swiftformat',
-                templateInputs(session, session.scopes[0]!),
+                templateInputs(
+                    session.root,
+                    session.policyFiles.policy,
+                    session.repository.files,
+                    session.scopes,
+                    session.scopes[0]!,
+                    session.version,
+                ),
             ),
         );
         const configured = await run([destination, '--lint', '--config', config, source], { cwd: staging });

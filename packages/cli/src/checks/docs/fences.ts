@@ -1,13 +1,12 @@
 import { parseAllDocuments } from 'yaml';
-// Every fenced code block with a language tag parses in that language.
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { GrammarName } from '#cli/parsers/tree-sitter.ts';
 
 type FencedBlock = { line: number; language: string; body: string };
@@ -24,14 +23,10 @@ function fencesOf(text: string): FencedBlock[] {
     return out;
 }
 
-function firstLine(text: string): string | undefined {
-    return text.split('\n', 1)[0];
-}
-
 // A stream of YAML documents, as front matter examples are, parses document by document.
 function yamlProblem(body: string): string | undefined {
     const failed = parseAllDocuments(body).find((document) => document.errors.length > 0);
-    return failed?.errors[0] === undefined ? undefined : firstLine(failed.errors[0].message);
+    return failed?.errors[0] === undefined ? undefined : failed.errors[0].message.split('\n', 1)[0];
 }
 
 function structuredProblem(parser: string, body: string): string | undefined {
@@ -41,7 +36,7 @@ function structuredProblem(parser: string, body: string): string | undefined {
         else return yamlProblem(body);
         return undefined;
     } catch (error) {
-        return firstLine((error as Error).message);
+        return (error as Error).message.split('\n', 1)[0];
     }
 }
 

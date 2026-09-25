@@ -1,7 +1,6 @@
-// Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 

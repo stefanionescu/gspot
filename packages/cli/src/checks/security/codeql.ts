@@ -1,16 +1,15 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import { toolPin } from '#cli/tools/tool-probe.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { toolPin } from '#cli/tools/probe.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-// CodeQL on request: one database and one analysis per language, with the accepted results taken out by rule and path.
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import { mutationTarget } from '#cli/platform/filesystem.ts';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };

@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
-// Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 
 const TOOL = 'jscpd';

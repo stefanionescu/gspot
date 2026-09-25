@@ -1,4 +1,3 @@
-// The loosening-needs-a-reason rule.
 import type { SettingSpec } from '#cli/configurations/schema.ts';
 import { MINIMUM_REASON_WORDS, REFUSED_REASONS } from '#cli/policy/reasons.ts';
 

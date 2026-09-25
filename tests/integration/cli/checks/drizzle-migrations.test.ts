@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { drizzleMigrations } from '#cli/checks/libraries.ts';
+import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 

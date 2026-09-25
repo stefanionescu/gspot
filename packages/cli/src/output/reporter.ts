@@ -1,9 +1,9 @@
 import type { Colors } from 'picocolors/types';
-// Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { invokingHook } from '#cli/platform/environment.ts';
-import type { RunReport, CheckResult, Finding } from '#cli/output/schema.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import type { CheckResult, Finding } from '#cli/checks/result.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;
@@ -149,8 +149,7 @@ function summaryLine(report: RunReport, colors: Colors): string {
  * @returns the text for stdout
  */
 export function runText(report: RunReport, options: ReportOptions): string {
-    const isHidden = (check: CheckResult): boolean => QUIET_HIDES.has(check.status);
-    const shown = report.checks.filter((check) => !isHidden(check));
+    const shown = report.checks.filter((check) => !QUIET_HIDES.has(check.status));
     const columns: Columns = {
         scope: Math.max(SCOPE_WIDTH_MIN, ...report.checks.map((check) => scopeName(check.scope).length)),
         check: Math.max(ID_WIDTH_MIN, ...report.checks.map((check) => check.check.length)),

@@ -2,9 +2,8 @@ import type { Command } from 'commander';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-// gspot ignore: one [[ignore]] entry with its reason, or the removal of the entries that match.
 import { allChecks } from '#cli/configurations/listing.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { appendEntry, removeEntries } from '#cli/policy/write.ts';

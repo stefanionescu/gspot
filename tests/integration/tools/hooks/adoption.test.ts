@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';

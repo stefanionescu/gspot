@@ -1,10 +1,10 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
@@ -33,9 +33,11 @@ test('apply preview names a generated ESLint rule change using installed depende
         '.gspot/config/.keep': '',
     });
     symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(directory.path, '.gspot/node_modules'), 'dir');
-    const original = emitAll(await openSession(directory.path)).files.find(
-        (file) => file.path === '.gspot/config/eslint.config.mjs',
-    )!;
+    const renderSession1 = await openSession(directory.path);
+    const original = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(directory.path, original.path), original.content);
     const nativeBefore = await new ESLint({
         cwd: directory.path,
@@ -47,7 +49,11 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(preview.text).toContain('rules: changed no-console');
     expect(preview.text).not.toContain('Rule comparison failed');
     expect(readFileSync(join(directory.path, original.path), 'utf8')).toBe(original.content);
-    const corrected = emitAll(await openSession(directory.path)).files.find((file) => file.path === original.path)!;
+    const renderSession2 = await openSession(directory.path);
+    const corrected = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+        version: renderSession2.version,
+        packageManager: renderSession2.packageManager,
+    }).files.find((file) => file.path === original.path)!;
     writeFileSync(join(directory.path, original.path), corrected.content);
     const nativeAfter = await new ESLint({
         cwd: directory.path,

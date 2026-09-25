@@ -2,12 +2,12 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
-import { planRun } from '#cli/run/plan.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { prepareCommand } from '#cli/run/tool-runner.ts';
+import { prepareCommand } from '#cli/execution/tool-runner.ts';
 import { parse as parseToml, stringify } from 'smol-toml';
 
 test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {
@@ -23,7 +23,12 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
         'sample.sh': 'echo example\n',
     });
     const session = await openSession(directory.path);
-    const generated = new Map(emitAll(session).files.map((file) => [file.path, file.content]));
+    const generated = new Map(
+        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.map((file) => [file.path, file.content]),
+    );
     const [shell] = await planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
     const command = prepareCommand(session, shell!, shell!.spec.command!);
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
@@ -59,8 +64,12 @@ test('an explicit YAML width override remains consistent between EditorConfig an
         }),
         'sample.yaml': 'parent:\n child: value\n',
     });
+    const renderSession1 = await openSession(directory.path);
     const generated = new Map(
-        emitAll(await openSession(directory.path)).files.map((file) => [file.path, file.content]),
+        emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+            version: renderSession1.version,
+            packageManager: renderSession1.packageManager,
+        }).files.map((file) => [file.path, file.content]),
     );
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     await Bun.write(join(directory.path, '.gspot/config/prettier.json'), generated.get('.gspot/config/prettier.json')!);

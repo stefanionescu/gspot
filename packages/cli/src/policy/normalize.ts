@@ -1,5 +1,3 @@
-// From the validated raw document to the Policy shape: reasoned values unwrapped, defaults filled, scopes split.
-
 import type { RawPolicy, RawScope, Defined } from '#cli/policy/schema.ts';
 
 const NAMING_LIST_KEYS = new Set([
@@ -74,7 +72,7 @@ export function compact<T extends object>(value: T): Defined<T> {
  * @returns the compacted objects
  */
 export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
-    return (entries ?? []).map((value) => compact(value));
+    return (entries ?? []).map(compact);
 }
 
 /**

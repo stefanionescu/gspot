@@ -2,7 +2,6 @@ import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { stringify as stringifyToml } from 'smol-toml';
-// Policy mutations preserve comments and order and validate the resulting document.
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';

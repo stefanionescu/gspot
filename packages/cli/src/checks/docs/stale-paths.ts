@@ -1,13 +1,12 @@
-// Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 
 type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
 
@@ -81,7 +80,7 @@ function withoutTrailingPunctuation(token: string): string {
 function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
-        .map((token) => withoutTrailingPunctuation(token))
+        .map(withoutTrailingPunctuation)
         .filter(
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),

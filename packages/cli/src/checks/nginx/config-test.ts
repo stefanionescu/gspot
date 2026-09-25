@@ -1,10 +1,9 @@
-// nginx -t in a container over every main configuration file.
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';

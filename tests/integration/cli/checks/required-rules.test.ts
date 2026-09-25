@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { emitAll } from '#cli/emit/targets.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
@@ -28,7 +28,10 @@ test('required ESLint rules inspect later file overrides and accept their correc
         spec: spec,
         files: session.repository.files,
     });
-    const generated = emitAll(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);
     const base = join(sandbox.path, '.gspot/config/base.mjs');

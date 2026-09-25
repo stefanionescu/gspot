@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
-import { reportSchema } from '#cli/output/schema.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const policy = `version = 1
 configurations = []

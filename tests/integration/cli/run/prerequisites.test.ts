@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { planRun } from '#cli/run/plan.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { resolveCheck } from '#cli/run/engines.ts';
+import { resolveCheck } from '#cli/execution/engines.ts';
 
 const POLICY =
     'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';

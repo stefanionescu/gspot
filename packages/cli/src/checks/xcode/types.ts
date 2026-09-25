@@ -1,5 +1,3 @@
-// Types of the xcode and xctest checks.
-
 /** The part of a string catalog the checks read. */
 export type StringsFile = {
     sourceLanguage?: string;

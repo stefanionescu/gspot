@@ -1,8 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-// `process.env` in a client module beyond NEXT_PUBLIC_* and NODE_ENV (Next.js).
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
-import { memberName, isGlobalEnvironmentHost } from '#plugin/rules/env-access-owner.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 
 function readName(node: TSESTree.MemberExpression): string | undefined {
     const { parent } = node;

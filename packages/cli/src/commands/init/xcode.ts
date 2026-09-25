@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
-// What init proposes for an Xcode project: the project of the scope, and a shared scheme.
 import { posix } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfinedRoot } from '#cli/platform/filesystem.ts';

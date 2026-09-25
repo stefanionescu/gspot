@@ -1,10 +1,9 @@
-// The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import type { CarriedFormatter, CarriedConfiguration } from '#cli/adoption/native.ts';
+import type { CarriedFormatter, CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 
 const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 

@@ -1,6 +1,5 @@
-// A leaf folder holding one code file.
 import { posix } from 'node:path';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 import {
     CODE_EXTENSIONS,

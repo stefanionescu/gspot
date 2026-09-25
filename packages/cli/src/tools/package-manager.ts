@@ -59,3 +59,5 @@ export const packageManagerSchema = z.strictObject({
     name: z.enum(['npm', 'bun', 'pnpm', 'yarn']),
     version: z.string().refine((value) => semver.valid(value) !== null, 'Package manager version must be exact.'),
 });
+
+export type ToolPackageManager = z.infer<typeof packageManagerSchema>;

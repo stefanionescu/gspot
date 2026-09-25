@@ -1,8 +1,8 @@
-import { openSession } from '#cli/run/session.ts';
-import type { Session } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/execution/session.ts';
 import { Argument, type Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
@@ -38,7 +38,7 @@ function settingsText(session: Session): CommandResult {
 }
 
 function configurationsResult(session: Session): CommandResult {
-    const selected = everyManifest(session);
+    const selected = everyManifest(session.scopes);
     const names = new Set(selected.map((manifest) => manifest.configuration.name));
     const installed = selected.map((manifest) => ({
         name: manifest.configuration.name,

@@ -1,7 +1,6 @@
-// A name exported twice from one index, including through two `export *`.
 import { dirname, join, resolve } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule } from '#plugin/rules/definition.ts';
+import { createRule } from '#plugin/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -64,7 +63,7 @@ function namesInBraces(rest: string): string[] {
     return body
         .slice(1, close)
         .split(',')
-        .map((part) => exportedName(part))
+        .map(exportedName)
         .filter((name) => name !== undefined);
 }
 

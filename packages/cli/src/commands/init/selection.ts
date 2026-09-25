@@ -7,7 +7,6 @@ import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import type { Proposal, UnknownLanguage } from '#cli/configurations/detect.ts';
-// What init selects: configurations at the root and per scope from detection and flags, then the closure of requires.
 import type { InitContext, InitInputs, InitSelection } from '#cli/commands/init/types.ts';
 import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
 

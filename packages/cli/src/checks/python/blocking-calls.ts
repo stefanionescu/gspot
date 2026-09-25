@@ -1,8 +1,7 @@
-import type { Node } from 'web-tree-sitter';
-import type { Finding } from '#cli/output/schema.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-// Blocking calls inside an async function: they stop the event loop for every other task.
+import type { Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 
 const BLOCKING_NAMES = new Set([
@@ -39,7 +38,7 @@ function callsOf(node: Node): Node[] {
 export function blockingCalls(root: Node): { line: number; callee: string }[] {
     return root
         .descendantsOfType('function_definition')
-        .filter((definition) => isAsync(definition))
+        .filter(isAsync)
         .flatMap((definition) => {
             const body = definition.childForFieldName('body');
             return body === null ? [] : callsOf(body);

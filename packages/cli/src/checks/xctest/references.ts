@@ -1,5 +1,4 @@
-import type { Finding } from '#cli/output/schema.ts';
-// Snapshot references belong to a semantic Swift test file beside their configured layout.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 

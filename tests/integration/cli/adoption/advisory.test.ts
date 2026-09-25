@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { parse, stringify, TomlDate } from 'smol-toml';
 import { readRepository } from '#cli/repository/tree.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
@@ -27,9 +27,11 @@ test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
                 tools: Object.fromEntries([...carried.tools].map(([tool, entry]) => [tool, entry.settings])),
             }),
         );
-        const output = emitAll(await openSession(sandbox.path)).files.find(
-            (file) => file.path === '.gspot/config/osv-scanner.toml',
-        )!;
+        const renderSession1 = await openSession(sandbox.path);
+        const output = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+            version: renderSession1.version,
+            packageManager: renderSession1.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/osv-scanner.toml')!;
         const parsed = parse(output.content) as { IgnoredVulns: { ignoreUntil: TomlDate }[] };
         expect(parsed.IgnoredVulns[0]!.ignoreUntil.toISOString()).toBe(new TomlDate(expiration).toISOString());
         expect(await Bun.file(join(sandbox.path, 'osv-scanner.toml')).text()).toBe(original);

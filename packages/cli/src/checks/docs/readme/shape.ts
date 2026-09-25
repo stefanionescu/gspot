@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-// The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';

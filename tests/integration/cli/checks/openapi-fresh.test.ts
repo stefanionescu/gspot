@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';

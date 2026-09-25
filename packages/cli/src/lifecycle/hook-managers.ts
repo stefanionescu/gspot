@@ -1,20 +1,27 @@
-import { z } from 'zod';
-import semver from 'semver';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
-import type { Session } from '#cli/run/session.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
-import { probeTool } from '#cli/tools/tool-probe.ts';
-import { installHooks } from '#cli/lifecycle/hooks.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
-import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
+import type { Session } from '#cli/execution/session.ts';
+import {
+    hookPrefix,
+    huskyLines,
+    lefthookCommand,
+    lefthookConfiguration,
+    simpleGitHookCommand,
+} from '#cli/generation/hooks.ts';
+import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
+import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { hookPrefix, huskyLines, huskyReady, lefthookCommand, lefthookConfiguration } from '#cli/emit/hooks.ts';
-import { simpleGitHookCommand, simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
+import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hook-state.ts';
+import { installHooks } from '#cli/lifecycle/hooks.ts';
+import { binaryPath } from '#cli/platform/assets.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import { probeTool } from '#cli/tools/probe.ts';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import semver from 'semver';
+import { z } from 'zod';
 
 /**
  * Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner.
@@ -37,7 +44,10 @@ export async function installHookManager(session: Session): Promise<string> {
             : lefthook === undefined
               ? manager === 'simple-git-hooks'
                   ? simpleGitHooksReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
-                  : preCommitReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
+                  : hasConfiguration(
+                        session.root,
+                        preCommitConfiguration(session.root, session.policyFiles.policy.runner?.tool, binaryPath()),
+                    )
               : hasConfiguration(session.root, lefthook);
     if (!ready) throw new Error(`${manager} integration is missing or edited. Run gspot apply before installing.`);
     const tool = probeTool(session, {

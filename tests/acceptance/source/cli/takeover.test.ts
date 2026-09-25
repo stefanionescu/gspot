@@ -2,7 +2,7 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';

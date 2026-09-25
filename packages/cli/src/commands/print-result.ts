@@ -1,6 +1,4 @@
-// What every command does with its result: print text or JSON, set the exit code, turn errors into exit 2.
-import { printJson } from '#cli/output/json.ts';
-import { fail, print } from '#cli/output/messages.ts';
+import { fail, print, printJson } from '#cli/output/messages.ts';
 
 const KNOWN_ERRORS = new Set([
     'PolicyError',

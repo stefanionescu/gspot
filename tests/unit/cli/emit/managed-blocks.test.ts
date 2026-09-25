@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { currentBlock, applyBlock } from '#cli/emit/managed-blocks.ts';
+import { currentBlock, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 
 describe('managed blocks', () => {
     test('are appended and replaced without changing authored text', () => {

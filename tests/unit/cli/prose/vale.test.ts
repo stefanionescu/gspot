@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { parseAlerts } from '#cli/prose/vale.ts';
+import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { describe, expect, test } from 'bun:test';
 
 describe('vale output', () => {

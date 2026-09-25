@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
 import { expect, spyOn, test } from 'bun:test';
-import * as programDefinition from '#cli/program.ts';
+import * as programDefinition from '#cli/commands/program.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { referencePages } from '../../../docs/src/content/reference.ts';
+import { referencePages } from '../../../docs/src/content/reference/loader.ts';
 import * as manifestDefinitions from '#cli/configurations/read-manifests.ts';
 import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 
@@ -28,21 +28,21 @@ test('command reference includes inherited options and nested usage while omitti
     const build = spyOn(programDefinition, 'buildProgram').mockReturnValue(program);
     try {
         const pages = referencePages();
-        const nested = pages.get('commands/account/show.md')!;
+        const nested = pages.get('commands/account/show.md')!.body;
         expect(nested).toContain('gspot account show [options] <name>');
         expect(nested).toContain('`--region <name>`');
         for (const flag of ['--json', '--quiet', '--verbose', '--no-color', '-C <dir>']) {
             expect(nested.split(`| \`${flag}\` |`)).toHaveLength(2);
         }
         expect(pages.has('commands/account/internal.md')).toBe(false);
-        expect(pages.get('commands/check.md')).not.toContain('--message-file');
+        expect(pages.get('commands/check.md')?.body).not.toContain('--message-file');
     } finally {
         build.mockRestore();
     }
 });
 
 test('identical setting definitions list every configuration owner and global settings remain visible', () => {
-    const settings = referencePages().get('settings.md')!;
+    const settings = referencePages().get('settings.md')!.body;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
     expect(shared).toContain('/reference/configurations/express/');
     expect(shared).toContain('/reference/configurations/fastapi/');
@@ -66,7 +66,7 @@ test('conflicting setting definitions stop reference generation', () => {
 test('configuration-specific defaults retain distinct values and their owning configurations', () => {
     const rows = referencePages()
         .get('settings.md')!
-        .split('\n')
+        .body.split('\n')
         .filter((line) => line.includes('`tools.sqlfluff.dialect`'));
     expect(rows).toHaveLength(2);
     expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/configurations/sql/');
@@ -75,13 +75,12 @@ test('configuration-specific defaults retain distinct values and their owning co
 
 test('generated source links resolve to their actual owner and display the current product version', () => {
     for (const page of referencePages().values()) {
-        const owner =
-            /^editUrl: "https:\/\/github.com\/stefanionescu\/gspot\/blob\/(?:main|[a-f0-9]{40})\/(.+)"$/mu.exec(
-                page,
-            )?.[1];
+        const owner = /^https:\/\/github.com\/stefanionescu\/gspot\/blob\/(?:main|[a-f0-9]{40})\/(.+)$/u.exec(
+            page.data.editUrl,
+        )?.[1];
         expect(owner).toBeDefined();
         expect(fs.statSync(join(import.meta.dir, '../../..', owner!)).isFile()).toBe(true);
-        expect(page).toContain(`gspot ${packageManifest.version} · [Source definition]`);
+        expect(page.body).toContain(`gspot ${packageManifest.version} · [Source definition]`);
     }
 });
 
@@ -107,19 +106,19 @@ test('command references render definition-owned effects, exits, and examples', 
     const build = spyOn(programDefinition, 'buildProgram').mockReturnValue(program);
     try {
         const pages = referencePages();
-        expect(pages.get('commands/sample.md')).toContain('Reads the sample.');
-        expect(pages.get('commands/check.md')).toContain('invalid reports');
-        expect(pages.get('commands/check.md')).toContain('/packages/cli/src/commands/check.ts');
-        expect(pages.get('commands/completion.md')).toContain('/packages/cli/src/output/completion.ts');
-        expect(pages.get('commands/apply.md')).toContain('without writing project files');
-        expect(pages.get('commands/doctor.md')).toContain('1: a selected tool or hook');
-        const settings = pages.get('settings.md')!;
+        expect(pages.get('commands/sample.md')?.body).toContain('Reads the sample.');
+        expect(pages.get('commands/check.md')?.body).toContain('invalid reports');
+        expect(pages.get('commands/check.md')?.body).toContain('/packages/cli/src/commands/check/command.ts');
+        expect(pages.get('commands/completion.md')?.body).toContain('/packages/cli/src/commands/completion.ts');
+        expect(pages.get('commands/apply.md')?.body).toContain('without writing project files');
+        expect(pages.get('commands/doctor.md')?.body).toContain('1: a selected tool or hook');
+        const settings = pages.get('settings.md')!.body;
         const policy = /```toml\n([\s\S]*?)```/u.exec(settings)?.[1];
         expect(policy).toBeDefined();
         expect(
             parsePolicyText(policy!, 'reference settings').scopeTables['app']?.limits?.root['file_lines']?.value,
         ).toBe(100);
-        expect(pages.get('rules/bash/syntax.md')).toContain('## Defect and correction');
+        expect(pages.get('rules/bash/syntax.md')?.body).toContain('## Defect and correction');
     } finally {
         build.mockRestore();
     }
@@ -138,17 +137,19 @@ test('reference generation rejects a public command without behavioral documenta
 
 test('check references invoke the reporting check and expose execution restrictions', () => {
     const pages = referencePages();
-    const json = pages.get('rules/configs/json.md')!;
+    const json = pages.get('rules/configs/json.md')!.body;
     expect(json).toContain('gspot check --stage commit --only formatting/prettier --no-cache');
     expect(json).not.toContain('--only configs/json');
     expect(json).toContain('gspot ignore formatting/prettier --paths');
     expect(json).not.toContain('gspot ignore configs/json');
     expect(json).toContain('This entry does not execute a separate check.');
     expect(json).toContain('Scope: follows the reporting check.');
-    expect(pages.get('rules/bash/syntax.md')).toContain('selected file lists under the applicable scope policy');
-    expect(pages.get('rules/nextjs/build.md')).toContain('`tools.next.build_in_gate`; skipped until configured.');
-    expect(pages.get('rules/nextjs/build.md')).toContain('each selected scope, excluding files owned by child scopes');
-    expect(pages.get('rules/xctest/coverage.md')).toContain('Platform selection: macos');
+    expect(pages.get('rules/bash/syntax.md')?.body).toContain('selected file lists under the applicable scope policy');
+    expect(pages.get('rules/nextjs/build.md')?.body).toContain('`tools.next.build_in_gate`; skipped until configured.');
+    expect(pages.get('rules/nextjs/build.md')?.body).toContain(
+        'each selected scope, excluding files owned by child scopes',
+    );
+    expect(pages.get('rules/xctest/coverage.md')?.body).toContain('Platform selection: macos');
 });
 
 test('plugin references reject an empty example before publishing pages', () => {
@@ -161,7 +162,7 @@ test('plugin references reject an empty example before publishing pages', () => 
     } finally {
         docs.example = original;
     }
-    expect(referencePages().get('plugin/no-trivial-files.md')).toContain(original);
+    expect(referencePages().get('plugin/no-trivial-files.md')?.body).toContain(original);
 });
 
 test('reference titles come from their definitions and exact rule identifiers remain searchable', () => {
@@ -170,22 +171,22 @@ test('reference titles come from their definitions and exact rule identifiers re
     for (const command of program.createHelp().visibleCommands(program)) {
         if (command.name() === 'help') continue;
         expect(command.summary().trim().length).toBeGreaterThan(0);
-        const page = pages.get(`commands/${command.name()}.md`)!;
-        expect(page).toContain(`title: ${JSON.stringify(command.summary())}`);
+        const page = pages.get(`commands/${command.name()}.md`)!.body;
+        expect(pages.get(`commands/${command.name()}.md`)!.data.title).toBe(command.summary());
         expect(page).toContain(`gspot ${command.name()}`);
     }
     for (const manifest of manifestDefinitions.configurationManifests().values()) {
         for (const check of manifest.checks) {
             expect(check.title?.trim().length).toBeGreaterThan(0);
-            const page = pages.get(`rules/${check.name}.md`)!;
+            const page = pages.get(`rules/${check.name}.md`)!.body;
             expect(page).toContain(check.name);
-            expect(page).toContain(`title: ${JSON.stringify(check.title)}`);
+            expect(pages.get(`rules/${check.name}.md`)!.data.title).toBe(check.title!);
         }
     }
     for (const [name, rule] of Object.entries(plugin.rules)) {
-        const page = pages.get(`plugin/${name}.md`)!;
+        const page = pages.get(`plugin/${name}.md`)!.body;
         expect(page).toContain(`gspot/${name}`);
-        expect(page).toContain(`title: ${JSON.stringify(rule.meta.docs!.title)}`);
+        expect(pages.get(`plugin/${name}.md`)!.data.title).toBe(rule.meta.docs!.title);
     }
     expect([...pages.keys()].some((path) => path.startsWith('presets/'))).toBe(false);
 });

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { planRun } from '#cli/run/plan.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import * as toolRunner from '#cli/run/tool-runner.ts';
+import * as toolRunner from '#cli/execution/tool-runner.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
 import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';

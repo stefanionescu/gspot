@@ -131,12 +131,12 @@ export function sourceConfigurations(selected: Manifest[]): Manifest[] {
 
 /**
  * Every distinct manifest across the scopes, in first-seen order.
- * @param session the session
+ * @param scopes the selected scopes
  * @returns the manifests
  */
-export function everyManifest(session: { scopes: { selected: Manifest[] }[] }): Manifest[] {
+export function everyManifest(scopes: { selected: Manifest[] }[]): Manifest[] {
     const seen = new Map<string, Manifest>();
-    for (const scope of session.scopes)
+    for (const scope of scopes)
         for (const manifest of scope.selected)
             if (!seen.has(manifest.configuration.name)) seen.set(manifest.configuration.name, manifest);
     return seen.values().toArray();

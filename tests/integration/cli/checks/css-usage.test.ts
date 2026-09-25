@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/run/session.ts';
-import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 
 const options = {
     stage: 'all' as const,

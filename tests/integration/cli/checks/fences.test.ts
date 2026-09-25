@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { describe, expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { fences } from '#cli/checks/docs/fences.ts';
 import type { EngineInput } from '#cli/checks/input.ts';

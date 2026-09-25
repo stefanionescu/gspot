@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/run/plan.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { commandConfigurations } from '#cli/run/command-expansion.ts';
+import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 
 const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
 const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n';
@@ -23,7 +23,10 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
         [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
     });
     const session = await openSession(root);
-    const outputs = emitAll(session).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
     expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
     for (const output of outputs) await Bun.write(join(root, output.path), output.content);
     const planned = await planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
@@ -75,7 +78,11 @@ test.each(
         'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[[scope]]\npath = "${scope}"\nconfigurations = ["xctest"]\n`,
         [`${scope}/Value.swift`]: DEFECT,
     });
-    const outputs = emitAll(await openSession(sandbox.path)).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+    const renderSession1 = await openSession(sandbox.path);
+    const outputs = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
     expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
     const native = await runProcess(

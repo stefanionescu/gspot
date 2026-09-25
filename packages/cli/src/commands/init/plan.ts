@@ -1,18 +1,18 @@
 import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
 import type { Proposal } from '#cli/commands/init/propose.ts';
-import { noLongerRuns } from '#cli/adoption/collect.ts';
+import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { RunnerTaskNames } from '#cli/policy/runner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
-import type { CarriedConfiguration } from '#cli/adoption/native.ts';
+import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
-import { pythonPins, npmPins } from '#cli/tools/tool-installation.ts';
-// The proposal init writes and the plan it prints: what is written, removed, carried, changed, and stops running.
+import { pythonPins, npmPins } from '#cli/tools/installation.ts';
 import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
-import { MISE_CONFIG_PATH, misePins, pinnedTwice, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
+import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
 
 function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
     const rows = [...carried.tools].flatMap(([tool, entries]) => {
@@ -87,14 +87,6 @@ function runnerRows(
     return rows;
 }
 
-function xcodeFor(root: string, selection: InitSelection): Proposal['xcode'] {
-    if (!selection.selectedIds.has('xcode')) return undefined;
-    return xcodeProposal(
-        root,
-        selection.scopes.map((scope) => scope.path),
-    );
-}
-
 /**
  * Builds the proposal gspot.toml is rendered from.
  * @param root the repository root
@@ -144,7 +136,12 @@ export function buildProposal(
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const hasCommitScopes = scopes.length > 0 && selection.selectedIds.has('commits');
     const commitScopes = hasCommitScopes ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'] : undefined;
-    const xcode = xcodeFor(root, selection);
+    const xcode = selection.selectedIds.has('xcode')
+        ? xcodeProposal(
+              root,
+              selection.scopes.map((scope) => scope.path),
+          )
+        : undefined;
     return {
         configurations: selection.rootIds,
         scopes: scopes.map((scope) => ({
@@ -169,6 +166,7 @@ export function buildProposal(
  */
 export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
     const { root, tooling, everySelected, how, answers, carried, policyLines, profile } = inputs;
+    const lintJobs = ciLintJobs(root, tooling.ci);
     const agentRows =
         inputs.agents.length > 0
             ? [
@@ -211,13 +209,13 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         retained: [
             ...carried.retained,
             ...submodulePaths(root).map((path) => ({ path, note: 'submodule; contents are not read' })),
-            ...(answers.ci === 'none' && tooling.ci.length > 0 && ciLintJobs(root, tooling.ci).length === 0
+            ...(answers.ci === 'none' && tooling.ci.length > 0 && lintJobs.length === 0
                 ? tooling.ci.map((path) => ({
                       path,
                       note: 'CI retained; add commands to install the pinned gspot version, gspot install, and gspot check',
                   }))
                 : []),
-            ...ciLintJobs(root, tooling.ci).map((path) => ({
+            ...lintJobs.map((path) => ({
                 path,
                 note: 'existing lint job retained; no duplicate CI job proposed',
             })),

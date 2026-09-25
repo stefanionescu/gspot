@@ -58,7 +58,7 @@ copies in ignored build output. Notice assembly belongs to packaging; plugin dep
 external. The launcher, plugin, and platform packages each carry the required license.
 
 Domain checks share parsers and preparation where useful and preserve language semantics.
-Infrastructure must not import an entire check catalog for a basic operation. Change an owner
+Infrastructure must not import all check definitions for a basic operation. Change an owner
 with its callers, assets, and build inputs in the same implementation batch. Update all consumers directly when moving or deleting implementations.
 
 Use `testdirs` directly for temporary test directories. Register disposal before creating files
@@ -69,8 +69,8 @@ through real product journeys.
 
 The executable entry delegates to Commander composition. Command adapters parse flags and
 present command results. Execution planning, scheduling, cancellation, and diagnostic parsing
-remain separate from check implementations. Policy owns validation and mutation proposals;
-configurations own shipped check definitions and selection. Output owns terminal and report formats.
+remain separate from check implementations. Policy owns validation and mutation proposals. The `configurations` owner provides shipped check
+definitions and selection. Output owns terminal and report formats.
 Naming and structure analyses retain their language-specific semantics beside their consumers.
 
 Next.js source checks and execution live in `checks/nextjs/source.ts` and `checks/nextjs/build.ts`.
@@ -80,17 +80,16 @@ dependency directory names belong to repository file classification. Dependency 
 lockfile formats. Other check constants stay with their consumers.
 
 Agent metadata and generated instructions belong to `agents/metadata.ts` and
-`agents/instructions.ts`. The authored catalog and its runtime owner are both named
-`configurations/`. Homepage components live under `docs/src/components/home/`; Starlight
-overrides stay at `docs/src/components/`. Artwork is grouped by home, identity, README, badges,
+`agents/instructions.ts`. Shipped assets remain under `packages/cli/configurations/`; source definitions and selection belong
+to `packages/cli/src/configurations/`. Homepage components live under `docs/src/components/home/`; Starlight
+overrides live under `docs/src/components/starlight/`. Artwork is grouped by home, identity, README, badges,
 and diagrams under `docs/public/brand/`.
 
 Generation proposes configuration content. Lifecycle applies those proposals through recorded
 ownership, preserves local edits, and restores recovery copies. Apply registration, previews, and command orchestration belong to commands. Shared publication stays in lifecycle. Tool acquisition owns installation, version probes, installer hints,
 package-manager connection settings, locked npm and Python projects, and installed-file
 publication. It uses filesystem confinement and lifecycle ownership for repository writes. Hook adoption
-and restoration remain lifecycle operations. Vale package assembly stays with prose because it
-combines the shipped styles with the selected external style packages.
+and restoration remain lifecycle operations. Vale checking belongs to checks, style rendering to generation, and package installation to tools.
 
 Shared SQL parsing and Tree-sitter loading belong to parsers. Grammar names belong to the asset boundary;
 language-specific identifier extraction and analysis remain in naming and checks. Agent-guide
@@ -98,14 +97,15 @@ assembly and validation are distinct from executable checks. Their internal owne
 change the public rules configuration or the embedded rules asset paths. Repository discovery
 owns file classification. The suppression check owns its directive constant.
 
-Platform provides process execution, environment access, paths, embedded assets, and release
-targets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
+Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
 
-CLI release operations live in `packages/cli/release/`. The binary builder uses Bun's build API
+The CLI binary build entry is `packages/cli/build.ts`; input preparation, notice assembly, and
+publication live under `packages/cli/scripts/`. The binary builder uses Bun's build API
 and passes dependency metadata directly to notice generation. It preserves the ignored build
 directory, embedded evaluator asset key, EditorConfig WASM integration, and platform signing.
 Swift parser preparation downloads a checksum-pinned upstream release into ignored build output.
-The release notice data retains its license and supplemental dependency notices. Other parser
+Notice assembly fetches missing supplemental licenses and Bun and Swift notices from pinned
+sources. Every downloaded or cached input must match its recorded SHA-256. Other parser
 assets resolve from locked packages. Installed binaries embed the parser and perform no download.
 The asset boundary declares every supported parser and rejects undeclared filenames.
 
@@ -189,7 +189,7 @@ recovery layouts remain unowned data and are not converted or deleted.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
 including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,
-embedded grammars, and Bun; `packages/cli/release/notices.json` owns pinned supplemental text and provenance.
+embedded grammars, and Bun; the notice script owns pinned supplemental sources, checksums, and attribution.
 The plugin leaves dependencies external and does not copy unrelated CLI notices. Native
 packaging does not assemble licenses for a compiled binary, so the small build-owned notice
 assembler remains. Do not replace it with a scanner of the entire dependency tree.
@@ -379,7 +379,7 @@ settings, inherited options, plugin exports, search, source links, and `llms.txt
 design, and release-aligned deployment and rollback. Guide length
 follows the task; no page quota, separate fixture system, or universal prose parser is required.
 
-Documentation content loading belongs in `docs/src/content/reference.ts`. The executable checks
+Documentation content loading belongs in `docs/src/content/reference/loader.ts`. The executable checks
 for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
 and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers.
 

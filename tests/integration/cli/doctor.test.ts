@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';

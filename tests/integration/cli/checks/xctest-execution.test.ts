@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { afterEach, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';

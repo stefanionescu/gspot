@@ -55,3 +55,17 @@ export const runnerSchema = z
                         message: 'Package lifecycle scripts cannot be replaced.',
                     });
     });
+
+export const RUNNER_TASKS: (RunnerTask & { key: keyof RunnerTaskNames })[] = [
+    { key: 'check', name: 'gspot:check', description: 'Run selected checks', run: 'gspot check' },
+    { key: 'fix', name: 'gspot:fix', description: 'Apply corrections and check again', run: 'gspot check --fix' },
+    { key: 'apply', name: 'gspot:apply', description: 'Generate configuration from gspot.toml', run: 'gspot apply' },
+    {
+        key: 'doctor',
+        name: 'gspot:doctor',
+        description: 'Report tools, coverage, and configuration changes',
+        run: 'gspot doctor',
+    },
+];
+
+export type RunnerTask = { name: string; description: string; run: string };

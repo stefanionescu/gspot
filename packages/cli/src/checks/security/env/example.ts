@@ -1,5 +1,4 @@
-import type { Finding } from '#cli/output/schema.ts';
-// Every environment variable the code reads appears in the environment template.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
@@ -87,7 +86,7 @@ export function envExample(input: EngineInput): Finding[] {
     if (templates.length === 0) return [];
     const known = new Set(templates.flatMap((file) => keysOfTemplate(input, file)));
     const patterns = readPatterns(input);
-    const searched = inScope.filter((entry) => isSearched(entry));
+    const searched = inScope.filter(isSearched);
     return searched.flatMap((file) =>
         firstMissing(readsIn(input, file, patterns), known).map((read) => ({
             check: input.spec.name,

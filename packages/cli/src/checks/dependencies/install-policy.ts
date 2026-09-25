@@ -1,10 +1,9 @@
-// The install configuration: a minimum release age, and the security scanner where the package manager has one.
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILES } from '#cli/checks/dependencies/lockfile/formats.ts';
+import { LOCKFILES } from '#cli/repository/locked-packages.ts';
 
 type Reporter = (file: string, rule: string, text: string) => Finding;
 

@@ -1,8 +1,7 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-// An import path that names an index file or a barrel.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 const DEFAULT_PATTERNS = [
     String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,

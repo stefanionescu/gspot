@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import type { Session } from '#cli/run/session.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
+import type { Session } from '#cli/execution/session.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { CheckResult } from '#cli/output/schema.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
 
 const COMMAND = ['actionlint', '-no-color', '{files}'];

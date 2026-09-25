@@ -1,9 +1,7 @@
-import { z } from 'zod';
-import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-// Readers for the manifests detection and takeover need: package.json, pyproject.toml, Package.swift and the rest.
-import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+import { parse as parseToml } from 'smol-toml';
+import { z } from 'zod';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 const NAMED_REQUIREMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(?=$|[\s<>=!~;[@])/u;
@@ -181,6 +179,14 @@ const pythonManifestSchema = z.object({
     tool: pythonTools.optional(),
 });
 const workspacePackages = z.object({ packages: stringList });
+
+/**
+ * Normalize a Python distribution name for package identity comparisons.
+ * @param name
+ */
+export function normalizedPythonPackage(name: string): string {
+    return name.toLowerCase().replaceAll(/[._-]+/gu, '-');
+}
 
 export const packageManifestSchema = z.object({
     imports: z.record(z.string(), z.unknown()).optional(),

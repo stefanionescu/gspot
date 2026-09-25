@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 
 import { run } from '#tests/support/cli/command.ts';
@@ -18,7 +18,13 @@ test.each(['recommended', 'all'])('Swift documentation comment style has native 
     const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n`;
     await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SOURCE });
     const generate = async (): Promise<void> => {
-        for (const file of emitAll(await openSession(root)).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
+        const renderSession1 = await openSession(root);
+        for (const file of emitAll(
+            renderSession1.policyFiles.policy,
+            renderSession1.repository,
+            renderSession1.scopes,
+            { version: renderSession1.version, packageManager: renderSession1.packageManager },
+        ).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
             await Bun.write(join(root, file.path), file.content);
     };
     const native = async () =>
@@ -80,7 +86,13 @@ test('Swift inline documentation retains native exceptions and original source p
     ].join('\n');
     await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': text });
     const generate = async () => {
-        for (const file of emitAll(await openSession(root)).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
+        const renderSession2 = await openSession(root);
+        for (const file of emitAll(
+            renderSession2.policyFiles.policy,
+            renderSession2.repository,
+            renderSession2.scopes,
+            { version: renderSession2.version, packageManager: renderSession2.packageManager },
+        ).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
             await Bun.write(join(root, file.path), file.content);
     };
     const check = async (code: 0 | 1) => {

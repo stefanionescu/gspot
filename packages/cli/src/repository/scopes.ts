@@ -2,24 +2,25 @@ import { z } from 'zod';
 import JSON5 from 'json5';
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { globbySync } from 'globby';
-import { relative } from 'node:path';
+import { relative, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
-import { readdirSync, type Dirent } from 'node:fs';
+import { readdirSync, statSync, type Dirent } from 'node:fs';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
-function lastSegment(path: string): string {
-    return path.slice(path.lastIndexOf('/') + 1);
-}
-
 function workspaceEntry(path: string): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
-    return { name: lastSegment(trimmed), path: trimmed, configurations: [], source: 'workspace' };
+    return {
+        name: trimmed.slice(trimmed.lastIndexOf('/') + 1),
+        path: trimmed,
+        configurations: [],
+        source: 'workspace',
+    };
 }
 
 // Validate filesystem access before the workspace resolver reads package manifests.
@@ -119,7 +120,7 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
     try {
         return members
             .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory())
-            .map((member) => workspaceEntry(member));
+            .map(workspaceEntry);
     } finally {
         files.close();
     }
@@ -174,7 +175,7 @@ export function policyScopes(entries: { path: string; configurations: string[] }
         { name: 'root', path: '', configurations: [], source: 'root' },
         ...entries.map(
             (entry): ScopeEntry => ({
-                name: lastSegment(entry.path),
+                name: entry.path.slice(entry.path.lastIndexOf('/') + 1),
                 path: entry.path,
                 configurations: entry.configurations,
                 source: 'gspot.toml',
@@ -221,3 +222,13 @@ export type ScopeEntry = {
     configurations: string[];
     source: 'root' | 'gspot.toml' | 'workspace';
 };
+
+/**
+ * Whether a scope is a package the package manager knows: a workspace flag names only a folder with a package.json.
+ * @param root the repository root
+ * @param scope the scope path
+ * @returns true for a scope that holds a package.json
+ */
+export function isWorkspace(root: string, scope: string): boolean {
+    return scope !== '' && statSync(join(root, scope, 'package.json'), { throwIfNoEntry: false }) !== undefined;
+}

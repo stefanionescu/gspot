@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';

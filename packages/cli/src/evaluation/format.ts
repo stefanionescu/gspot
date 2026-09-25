@@ -7,9 +7,9 @@ import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { CarriedFormatter } from '#cli/adoption/native.ts';
+import type { CarriedFormatter } from '#cli/policy/adoption/results.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
-import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/emit/format.ts';
+import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/generation/format.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
 
 function supportedOptions(value: unknown) {
@@ -39,7 +39,7 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
     return loaded;
 }
 /**
- *
+ * Preserve native formatting defaults and nested overrides as policy data.
  * @param request
  */
 export async function evaluateFormat(request: z.infer<typeof formatRequest>): Promise<CarriedFormatter> {

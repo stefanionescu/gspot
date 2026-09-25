@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { hookBody } from '#cli/emit/hooks.ts';
+import { hookBody } from '#cli/generation/hooks.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 

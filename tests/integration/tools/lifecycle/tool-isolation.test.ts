@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { probeTool } from '#cli/tools/tool-probe.ts';
+import { probeTool } from '#cli/tools/probe.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';

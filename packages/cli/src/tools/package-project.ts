@@ -6,7 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { GeneratedFile } from '#cli/emit/targets.ts';
+import type { GeneratedFile } from '#cli/generation/targets.ts';
 import { yarnSettings } from '#cli/tools/yarn-settings.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -19,7 +19,7 @@ import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { packageEnvironment } from '#cli/tools/package-environment.ts';
 import { parse as parseJsonc, modify, applyEdits } from 'jsonc-parser';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
-import { observeToolVersion, toolVersionState } from '#cli/tools/tool-probe.ts';
+import { observeToolVersion, toolVersionState } from '#cli/tools/probe.ts';
 
 const PROJECT = '.gspot/package.json';
 const SETUP = 'Run: gspot apply, then gspot install';

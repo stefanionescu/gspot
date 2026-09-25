@@ -1,9 +1,9 @@
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
-import type { ToolContext } from '#cli/tools/tool-probe.ts';
+import type { ToolContext } from '#cli/tools/probe.ts';
 import type { PolicyFiles } from '#cli/policy/read-policy.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
@@ -23,7 +23,7 @@ export type EngineInput = {
     cancelSignal?: AbortSignal;
     scopeRoot: string;
     repositoryFiles?: TrackedFile[];
-    generatedDrift?: () => import('#cli/emit/drift.ts').DriftEntry[];
+    generatedDrift?: () => import('#cli/lifecycle/drift.ts').DriftEntry[];
     suppressions?: SuppressionComment[];
     root: string;
     scope: string;

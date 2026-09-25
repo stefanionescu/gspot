@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { RunReport } from '#cli/output/schema.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 
 import {
     chmodSync,

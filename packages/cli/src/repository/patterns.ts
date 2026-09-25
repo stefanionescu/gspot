@@ -172,6 +172,3 @@ export const VALE_OWN_PREFIXES = [
     '.gspot/config/vale/styles/gspot/',
     '.gspot/config/vale/styles/config/vocabularies/gspot/',
 ];
-
-/** Compiled selectors over config-root POSIX paths. */
-export type PathExpressions = { includes: string[]; excludes: string[] };

@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { beforeAll, afterAll, expect, test } from 'bun:test';
-import { reportSchema } from '#cli/output/schema.ts';
-import { releaseTargets } from '#cli/platform/release-targets.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
 // Installs built packages from an isolated registry and checks a fresh consumer.
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
@@ -68,8 +68,7 @@ beforeAll(async () => {
         'dist',
         'packages/npm',
         'packages/cli/package.json',
-        'packages/cli/release/publish.ts',
-        'packages/cli/src/platform/release-targets.ts',
+        'packages/cli/scripts/publish.ts',
         'tsconfig.json',
     ]) {
         const target = join(checkout, path);

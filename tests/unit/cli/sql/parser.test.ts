@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { parseSql } from '#cli/parsers/sql/parser.ts';
-import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
+import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 

@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import stylelint from 'stylelint';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
@@ -109,9 +109,10 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
         }),
     );
     const session = await openSession(sandbox.path);
-    for (const file of emitAll(session).files.filter(
-        (file) => file.kind === 'config' || file.path.endsWith('.stylelintrc.json'),
-    ))
+    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter((file) => file.kind === 'config' || file.path.endsWith('.stylelintrc.json')))
         await Bun.write(join(sandbox.path, file.path), file.content);
     for (const { path, code, expected } of samples) {
         const result = await stylelint.lint({ code, codeFilename: join(sandbox.path, path) });
@@ -281,7 +282,10 @@ test.each([false, true])(
             }),
         );
         const session = await openSession(sandbox.path);
-        const generated = emitAll(session).files.find((file) => file.path === '.gspot/config/stylelint.json')!;
+        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.find((file) => file.path === '.gspot/config/stylelint.json')!;
         for (const code of ['#example { color: red; }', 'a { color: #abc; }', 'a { color: #ggg; }', 'a {}']) {
             const before = await stylelint.lint({ code, configFile: join(sandbox.path, '.stylelintrc.json') });
             const after = await stylelint.lint({

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import * as spawn from '#cli/platform/spawn.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';

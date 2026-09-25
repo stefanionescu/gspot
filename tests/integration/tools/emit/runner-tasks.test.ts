@@ -2,18 +2,21 @@ import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 
 import { parse as parseToml } from 'smol-toml';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { parseProfile } from '#cli/profile/read.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { exportedProfile } from '#cli/profile/export.ts';
+import { parseProfile } from '#cli/policy/profiles/read.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-import { MISE_MIN_VERSION, miseTasks } from '#cli/emit/runner-tasks.ts';
+import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import { miseTasks } from '#cli/generation/runner-tasks.ts';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 test.each([undefined, 'yarn'])(
     'Yarn initialization with runner %s writes executable tasks and round-trips the profile',

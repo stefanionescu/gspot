@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';

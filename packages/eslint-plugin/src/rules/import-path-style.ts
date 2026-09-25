@@ -1,7 +1,6 @@
 import { staticString } from '#plugin/files.ts';
-// An internal import using the wrong suffix style for its runtime boundary.
 import type { TSESTree } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 const DEFAULT_PREFIXES = ['./', '../', '@/', '#'];
 

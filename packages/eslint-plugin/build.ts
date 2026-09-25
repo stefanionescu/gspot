@@ -2,7 +2,6 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import packageManifest from '#plugin-package' with { type: 'json' };
-// Builds the plugin to ESM and CommonJS under dist/, with a declaration file.
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));

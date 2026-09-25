@@ -1,14 +1,13 @@
-import { readGitSetting } from '#cli/platform/spawn.ts';
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { readGitSetting } from '#cli/repository/git-config.ts';
+import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { CarriedFormatter } from '#cli/adoption/native.ts';
+import type { CarriedFormatter } from '#cli/policy/adoption/results.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { askChoice, askConfirmation, askMany } from '#cli/output/prompts.ts';
-// The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
+import { askChoice, askConfirmation, askMany } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/commands/init/types.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [

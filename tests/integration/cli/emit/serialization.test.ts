@@ -3,13 +3,13 @@ import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { parse, stringify } from 'smol-toml';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
+import { isMergeStubHeld, mergeStub } from '#cli/generation/stubs.ts';
 import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
@@ -25,7 +25,11 @@ test('typos output preserves quoted keys and paths without creating settings', a
             tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
         }),
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession1 = await openSession(sandbox.path);
+    const output = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    });
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     const parsed = parse(target!.content);
@@ -74,7 +78,11 @@ test('profile spelling values use the same TOML emission path', async () => {
     const policy = proposal.json['policy'];
     if (typeof policy !== 'string') throw new Error('The initialization proposal has no policy text.');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession2 = await openSession(sandbox.path);
+    const output = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+        version: renderSession2.version,
+        packageManager: renderSession2.packageManager,
+    });
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
     expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
@@ -102,7 +110,11 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
         }),
         'migrations/20260101_initial.sql': 'select 1;\n',
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession3 = await openSession(sandbox.path);
+    const output = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
+        version: renderSession3.version,
+        packageManager: renderSession3.packageManager,
+    });
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
     );
@@ -143,7 +155,12 @@ test('an OSV expiry cannot inject another TOML table', async () => {
         }),
     });
     const session = await openSession(sandbox.path);
-    expect(() => emitAll(session)).toThrow();
+    expect(() =>
+        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }),
+    ).toThrow();
 });
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {
@@ -167,7 +184,11 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
                 ignore: [{ check: 'prose/vale', rule: 'Vale.Spelling', reason }],
             }),
         });
-        const output = emitAll(await openSession(sandbox.path));
+        const renderSession4 = await openSession(sandbox.path);
+        const output = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
+            version: renderSession4.version,
+            packageManager: renderSession4.packageManager,
+        });
         const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
         expect(script).toBeDefined();
         const tree = parser.parse(script!.content);
@@ -218,7 +239,11 @@ test('JSON option keys and YAML values keep their literal structure', async () =
             },
         }),
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession5 = await openSession(sandbox.path);
+    const output = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
+        version: renderSession5.version,
+        packageManager: renderSession5.packageManager,
+    });
     for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json', '.gspot/config/markdownlint.jsonc']) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();
@@ -263,7 +288,11 @@ test('runtime names remain data in generated JavaScript', async () => {
                 tools: { eslint: { globals: { '**/*.js': runtime } } },
             }),
         });
-        const output = emitAll(await openSession(sandbox.path));
+        const renderSession6 = await openSession(sandbox.path);
+        const output = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
+            version: renderSession6.version,
+            packageManager: renderSession6.packageManager,
+        });
         const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
         expect(file).toBeDefined();
         const tree = parser.parse(file!.content);

@@ -1,7 +1,6 @@
 import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
-// Lints the rule files: front matter, links, size, layer boundary, fences, corruption.
 import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
 
 import {
@@ -75,34 +74,26 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
     ];
 }
 
-function fenceStep(walk: FenceWalk, line: string, number: number): void {
-    if (walk.open !== undefined) {
-        if (line.trim() === walk.open.ticks) walk.open = undefined;
-        return;
-    }
-    const opening = fenceOpening(line);
-    if (opening === undefined) {
-        walk.onProse(line, number);
-        return;
-    }
-    walk.open = { ticks: opening.ticks, line: number };
-    const finding = fenceFinding(walk.file, number, opening.language);
-    if (finding !== undefined) walk.findings.push(finding);
-}
-
-function fenceWalk(file: string, lines: string[], onProse: (line: string, number: number) => void): RuleFinding[] {
-    const walk: FenceWalk = { file, findings: [], open: undefined, onProse };
-    for (const [index, line] of lines.entries()) fenceStep(walk, line, index + 1);
-    if (walk.open !== undefined) walk.findings.push({ file, line: walk.open.line, message: 'unclosed fenced block' });
-    return walk.findings;
-}
-
 function lineFindings(file: string, lines: string[]): RuleFinding[] {
     const layer = file.startsWith('templates/') ? 'template' : layerOfPath(file);
     const prose: RuleFinding[] = [];
-    const fences = fenceWalk(file, lines, (line, number) => {
-        prose.push(...proseLineFindings(file, line, number, layer));
-    });
+    const fences: RuleFinding[] = [];
+    let open: { ticks: string; line: number } | undefined;
+    for (const [index, line] of lines.entries()) {
+        const number = index + 1;
+        if (open !== undefined) {
+            if (line.trim() === open.ticks) open = undefined;
+            continue;
+        }
+        const opening = fenceOpening(line);
+        if (opening === undefined) prose.push(...proseLineFindings(file, line, number, layer));
+        else {
+            open = { ticks: opening.ticks, line: number };
+            const finding = fenceFinding(file, number, opening.language);
+            if (finding !== undefined) fences.push(finding);
+        }
+    }
+    if (open !== undefined) fences.push({ file, line: open.line, message: 'unclosed fenced block' });
     return [...fences, ...prose];
 }
 
@@ -142,14 +133,14 @@ export function isRulePath(path: string): boolean {
  * @returns the findings and file count
  */
 export function lintRules(files: RuleText[]): RulesLintReport {
-    return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
+    return { findings: files.flatMap(fileReport), files: files.length };
 }
 
 if (import.meta.main) {
     const rulesFolder = fileURLToPath(new URL('../../rules/', import.meta.url));
     const paths = await globby(['**/*.md'], { cwd: rulesFolder });
     const files = paths
-        .filter((path) => isRulePath(path))
+        .filter(isRulePath)
         .toSorted((a, b) => a.localeCompare(b))
         .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
     const report = lintRules(files);
@@ -166,11 +157,3 @@ export type RuleText = { path: string; text: string };
 
 /** The rule lint's result. */
 export type RulesLintReport = { findings: RuleFinding[]; files: number };
-
-/** The state of a walk over a file's fenced blocks. */
-export type FenceWalk = {
-    file: string;
-    findings: RuleFinding[];
-    open: { ticks: string; line: number } | undefined;
-    onProse: (line: string, number: number) => void;
-};

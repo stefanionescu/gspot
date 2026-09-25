@@ -20,3 +20,5 @@ export const hooksSchema = z.strictObject({
         .default('changed')
         .describe('Check affected paths or the full tree of each pushed revision.'),
 });
+
+export const SIMPLE_GIT_HOOKS_DIRECTORY = '.gspot/integrations/simple-git-hooks';

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/run/plan.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
-import { valeFindings } from '#cli/prose/vale.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { valeFindings } from '#cli/checks/prose/vale.ts';
 
 import { createFileTree, testdir } from 'testdirs';
 
-import { runEngineCheck } from '#cli/run/engines.ts';
+import { runEngineCheck } from '#cli/execution/engines.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {

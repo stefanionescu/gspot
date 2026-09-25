@@ -1,20 +1,22 @@
 import { fileURLToPath } from 'node:url';
 import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { join, delimiter, relative } from 'node:path';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
+import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
 import { existsSync, readFileSync, symlinkSync, chmodSync, writeFileSync, statSync, rmSync } from 'node:fs';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 test.each([true, false])(
     'uninstall describes only owned hooks and preserves hooksPath when an original exists: %s',

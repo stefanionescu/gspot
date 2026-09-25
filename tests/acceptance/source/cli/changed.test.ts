@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 
 function git(root: string, ...argv: string[]): string {

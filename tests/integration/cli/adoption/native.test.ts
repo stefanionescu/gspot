@@ -5,7 +5,7 @@ import { symlinkSync, unlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 
 import { readRepository } from '#cli/repository/tree.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';

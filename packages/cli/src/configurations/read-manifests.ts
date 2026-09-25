@@ -1,8 +1,7 @@
-// Read every embedded manifest, validate it, and refuse the shapes the design forbids.
 import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
-import { configurationName } from '#cli/run/scope-paths.ts';
+import { configurationName } from '#cli/configurations/targets.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema, INSTALLER_KEYS } from '#cli/configurations/schema.ts';
 import type { SettingSpec, RawCheck, RawManifest, RawTool, CheckSpec } from '#cli/configurations/schema.ts';
@@ -120,10 +119,6 @@ function configurationProblems(raw: RawManifest): string[] {
         );
 }
 
-function refusals(raw: RawManifest): string[] {
-    return [...raw.checks.flatMap((check) => checkProblems(check)), ...configurationProblems(raw)];
-}
-
 /** A manifest that the schema or the design refuses. */
 export class ManifestError extends Error {
     /**
@@ -150,7 +145,7 @@ export function parseManifest(text: string, dir: string): Manifest {
     if (!result.success)
         throw new ManifestError(configurationName, [...new Set(result.error.issues.flatMap(issueLines))]);
     const raw = result.data;
-    const problems = refusals(raw);
+    const problems = [...raw.checks.flatMap(checkProblems), ...configurationProblems(raw)];
     if (raw.checks.some((check) => raw.configuration.check_references?.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');
     if (problems.length > 0) throw new ManifestError(raw.configuration.name, problems);
@@ -159,9 +154,9 @@ export function parseManifest(text: string, dir: string): Manifest {
         untracked: raw.untracked,
         detect: raw.detect,
         claims: raw.claims,
-        tools: raw.tools.map((tool) => toTool(tool)),
+        tools: raw.tools.map(toTool),
         configs: raw.configs,
-        checks: raw.checks.map((check) => toCheck(check)),
+        checks: raw.checks.map(toCheck),
         settings: raw.settings.map((setting) => compact(setting)),
         coverage: raw.coverage,
         rule_files: raw.rule_files,

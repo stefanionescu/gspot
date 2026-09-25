@@ -1,10 +1,10 @@
-// The string files and the asset folders of a project: every string has every locale, and every image set has an image that exists and that code names.
+import { readSource } from '#cli/repository/tracked.ts';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
-import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const NOT_WORD = /[^A-Za-z\d]/u;
 const IMAGE_SET = '.imageset/Contents.json';
@@ -12,7 +12,7 @@ const NAMED_SETS = ['.imageset/Contents.json', '.colorset/Contents.json'];
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
-    const text = textOf(input, path);
+    const text = readSource(input.root, path, input.observations).toString('utf8');
     try {
         return { value: JSON.parse(text) as unknown, error: undefined };
     } catch (error) {
@@ -66,7 +66,9 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
 
 function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
     if (input.policyFiles.policy.level !== 'all') return [];
-    const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) => textOf(input, path));
+    const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
+        readSource(input.root, path, input.observations).toString('utf8'),
+    );
     return sets
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {

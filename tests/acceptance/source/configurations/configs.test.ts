@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 // The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';

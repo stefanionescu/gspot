@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/run/session.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { emitAll } from '#cli/emit/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/tools/tool-probe.ts';
-import { checkSwiftlint } from '#cli/structure/swift/lint.ts';
+import * as probes from '#cli/tools/probe.ts';
+import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 
 test('Swift documentation adapter rejects malformed native output and removes its selected workspace', async () => {
     await using sandbox = await testdir();
@@ -17,7 +17,11 @@ test('Swift documentation adapter rejects malformed native output and removes it
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n',
         'nested/Value.swift': text,
     });
-    for (const file of emitAll(await openSession(root)).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
+    const renderSession1 = await openSession(root);
+    for (const file of emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    }).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
         await Bun.write(join(root, file.path), file.content);
     const session = await openSession(root);
     const planned = (await planRun(session, { stage: 'all', only: ['swift/swiftlint'], skips: [] }))[0]!;

@@ -1,13 +1,12 @@
-// The files Cloudflare reads by name: the headers file, the redirects file, the wrangler configuration, and the generated environment types.
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
-import { scratchCopy } from '#cli/run/fixers.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;

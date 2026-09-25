@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { identifiersOf } from '#cli/naming/extract.ts';
+import { identifiersOf } from '#cli/checks/naming/extract.ts';
 
 const TS = `
 export function parseHttpUrl(rawInput: string, { retries = 3, ...rest }: Options, [first, second]: string[]): void {}

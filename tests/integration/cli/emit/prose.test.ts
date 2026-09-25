@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { hasPackages } from '#cli/prose/vale.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { hasPackages } from '#cli/tools/vale.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -13,7 +13,11 @@ test('generated vocabulary combines shipped and project words without duplicates
         'gspot.toml':
             'version = 1\nconfigurations = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
     });
-    const output = emitAll(await openSession(sandbox.path));
+    const renderSession1 = await openSession(sandbox.path);
+    const output = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+        version: renderSession1.version,
+        packageManager: renderSession1.packageManager,
+    });
     const vocabulary = output.files.find(
         (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt',
     )!;

@@ -1,11 +1,11 @@
 import { stringify } from 'smol-toml';
 import { dirname, join } from 'node:path';
-import { emitAll } from '#cli/emit/targets.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { explain } from '#cli/output/explain.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { explain } from '#cli/commands/explain/subjects.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunOptions } from '#cli/run/execute.ts';
+import type { RunOptions } from '#cli/execution/execute.ts';
 import { expect, test } from 'bun:test';
 
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
@@ -236,7 +236,10 @@ test.each([
             copyFileSync(ruff, join(bin, process.platform === 'win32' ? 'ruff.exe' : 'ruff'));
         }
         const session = await openSession(sandbox.path);
-        for (const output of emitAll(session).files.filter((file) => file.kind === 'config'))
+        for (const output of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.filter((file) => file.kind === 'config'))
             await Bun.write(join(sandbox.path, output.path), output.content);
         const options = { stage: 'all', skips: [], only: [check], fix: true, isDryRun: false, noCache: true } as const;
         const failed = await executeRun(session, { ...options, skips: [], only: [check] });

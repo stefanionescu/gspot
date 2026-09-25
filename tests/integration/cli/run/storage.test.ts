@@ -1,15 +1,15 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import * as cache from '#cli/run/cache.ts';
+import * as cache from '#cli/execution/cache.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { readCached } from '#cli/run/cache.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { readCached } from '#cli/execution/cache.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { rejects, throws } from 'node:assert/strict';
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import type { Stage } from '#cli/configurations/schema.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 

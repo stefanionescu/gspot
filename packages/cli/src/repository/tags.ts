@@ -2,7 +2,7 @@
 import type { RawEntry } from '#cli/repository/tracked.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/repository/patterns.ts';
-import { shebangExecutable, shebangInterpreter } from '#cli/configurations/detect.ts';
+import { shebangExecutable, shebangInterpreter } from '#cli/repository/shebang.ts';
 
 const EXTENSION_TAGS: Record<string, string[]> = {
     '.sh': ['shell', 'bash', 'text'],

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { templateInputs } from '#cli/emit/templates.ts';
+import { templateInputs } from '#cli/generation/templates.ts';
 import { writeFileSync, mkdirSync, rmSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test.each(['package.json', 'tsconfig.json'])(
@@ -16,7 +16,12 @@ test.each(['package.json', 'tsconfig.json'])(
         });
         const session = await openSession(sandbox.path);
         writeFileSync(join(sandbox.path, path), '{ "compilerOptions": { "paths": {} },');
-        expect(() => emitAll(session)).toThrow(
+        expect(() =>
+            emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+                version: session.version,
+                packageManager: session.packageManager,
+            }),
+        ).toThrow(
             path === 'tsconfig.json'
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
                 : 'Cannot read package manifest package.json',
@@ -28,7 +33,16 @@ test.each(['package.json', 'tsconfig.json'])(
                 ? '{"imports":{"#app/*":"./src/*"}}'
                 : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
         );
-        expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({ '#app/': 'src/' });
+        expect(
+            templateInputs(
+                session.root,
+                session.policyFiles.policy,
+                session.repository.files,
+                session.scopes,
+                session.scopes[0]!,
+                session.version,
+            ).importAliases(''),
+        ).toStrictEqual({ '#app/': 'src/' });
     },
 );
 
@@ -43,7 +57,12 @@ test.each(['package.json', 'tsconfig.json'])(
         const session = await openSession(sandbox.path);
         rmSync(join(sandbox.path, path));
         mkdirSync(join(sandbox.path, path));
-        expect(() => emitAll(session)).toThrow(
+        expect(() =>
+            emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+                version: session.version,
+                packageManager: session.packageManager,
+            }),
+        ).toThrow(
             path === 'tsconfig.json'
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
                 : 'Cannot read package manifest package.json',
@@ -55,7 +74,16 @@ test.each(['package.json', 'tsconfig.json'])(
                 ? '{"imports":{"#app/*":"./src/*"}}'
                 : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
         );
-        expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({ '#app/': 'src/' });
+        expect(
+            templateInputs(
+                session.root,
+                session.policyFiles.policy,
+                session.repository.files,
+                session.scopes,
+                session.scopes[0]!,
+                session.version,
+            ).importAliases(''),
+        ).toStrictEqual({ '#app/': 'src/' });
     },
 );
 
@@ -71,7 +99,14 @@ test('alias generation rejects a package manifest link planted after inventory a
     const path = join(sandbox.path, 'package.json');
     unlinkSync(path);
     symlinkSync(join(outside.path, 'package.json'), path);
-    const inputs = templateInputs(session, session.scopes[0]!);
+    const inputs = templateInputs(
+        session.root,
+        session.policyFiles.policy,
+        session.repository.files,
+        session.scopes,
+        session.scopes[0]!,
+        session.version,
+    );
     expect(() => inputs.importAliases('')).toThrow('Unsafe lifecycle destination');
     unlinkSync(path);
     writeFileSync(path, '{"imports":{"#app/*":"./src/*"}}');
@@ -94,7 +129,14 @@ test.each(['tsconfig.json', 'base.json'])('TypeScript alias reads refuse a linke
     const path = join(sandbox.path, name);
     unlinkSync(path);
     symlinkSync(join(outside.path, 'config.json'), path);
-    const inputs = templateInputs(session, session.scopes[0]!);
+    const inputs = templateInputs(
+        session.root,
+        session.policyFiles.policy,
+        session.repository.files,
+        session.scopes,
+        session.scopes[0]!,
+        session.version,
+    );
     expect(() => inputs.importAliases('')).toThrow('private regular file');
     unlinkSync(path);
     writeFileSync(path, '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');
@@ -113,7 +155,16 @@ test('TypeScript alias reads retain a declared external dependency configuration
     mkdirSync(join(sandbox.path, 'node_modules'));
     symlinkSync(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
     const session = await openSession(sandbox.path);
-    expect(templateInputs(session, session.scopes[0]!).importAliases('')).toStrictEqual({});
+    expect(
+        templateInputs(
+            session.root,
+            session.policyFiles.policy,
+            session.repository.files,
+            session.scopes,
+            session.scopes[0]!,
+            session.version,
+        ).importAliases(''),
+    ).toStrictEqual({});
     expect(await Bun.file(join(dependency.path, 'tsconfig.json')).text()).toBe('{"compilerOptions":{"strict":true}}');
 });
 
@@ -123,7 +174,14 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
         'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
     });
     const session = await openSession(sandbox.path);
-    const inputs = templateInputs(session, session.scopes[0]!);
+    const inputs = templateInputs(
+        session.root,
+        session.policyFiles.policy,
+        session.repository.files,
+        session.scopes,
+        session.scopes[0]!,
+        session.version,
+    );
     expect(inputs.importAliases('')).toStrictEqual({});
     writeFileSync(
         join(sandbox.path, 'tsconfig.json'),
@@ -143,7 +201,14 @@ test('inherited aliases resolve from the configuration that declares them', asyn
         'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
     });
     const session = await openSession(sandbox.path);
-    const inputs = templateInputs(session, session.scopes[0]!);
+    const inputs = templateInputs(
+        session.root,
+        session.policyFiles.policy,
+        session.repository.files,
+        session.scopes,
+        session.scopes[0]!,
+        session.version,
+    );
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
     writeFileSync(
         join(sandbox.path, 'configs/tsconfig.json'),
@@ -159,9 +224,21 @@ test('generation preserves authored aliases and reports missing authored bases',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}',
     });
     const session = await openSession(sandbox.path);
-    const inputs = templateInputs(session, session.scopes[0]!);
+    const inputs = templateInputs(
+        session.root,
+        session.policyFiles.policy,
+        session.repository.files,
+        session.scopes,
+        session.scopes[0]!,
+        session.version,
+    );
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
-    expect(emitAll(session).files.some((file) => file.path === '.gspot/config/tsconfig.check.json')).toBe(true);
+    expect(
+        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.some((file) => file.path === '.gspot/config/tsconfig.check.json'),
+    ).toBe(true);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);
     writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
     expect(() => inputs.importAliases('')).toThrow('missing-base.json');

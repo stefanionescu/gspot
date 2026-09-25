@@ -3,12 +3,12 @@ import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { miseTasks } from '#cli/emit/runner-tasks.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { miseTasks } from '#cli/generation/runner-tasks.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
 
@@ -48,8 +48,8 @@ test.each([
                 })),
             })),
         };
-        const proposals = toolEnvironment(selected);
-        if (runner === 'mise') proposals.push(miseTasks(everyManifest(selected), selected.version, false));
+        const proposals = toolEnvironment(everyManifest(selected.scopes));
+        if (runner === 'mise') proposals.push(miseTasks(everyManifest(selected.scopes), selected.version, false));
         const binary = Bun.which('ruff');
         expect(binary).not.toBeNull();
         const version = await run([binary!, '--version'], { cwd: repository.path });
@@ -236,7 +236,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
             await expect(installPythonProject(repository.path)).rejects.toThrow('Run: gspot apply, then gspot install');
-            const repaired = toolEnvironment(selected);
+            const repaired = toolEnvironment(everyManifest(selected.scopes));
             await withLifecycleOwner(repository.path, async (owner) => {
                 await resolvePythonProject(repository.path, repaired, owner);
                 for (const file of repaired)

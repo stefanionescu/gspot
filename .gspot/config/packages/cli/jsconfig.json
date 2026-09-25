@@ -27,7 +27,6 @@
         "../../../../packages/cli/**/build/**",
         "../../../../packages/cli/**/coverage/**",
         "../../../../packages/cli/**/.build/**",
-        "../../../../packages/cli/**/DerivedData/**",
-        "../../../../packages/cli/packages/cli/release/notices.json"
+        "../../../../packages/cli/**/DerivedData/**"
     ]
 }

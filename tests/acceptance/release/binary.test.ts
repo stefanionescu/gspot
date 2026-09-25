@@ -6,14 +6,16 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
-import { releaseTargets } from '#cli/platform/release-targets.ts';
+import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 // The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -89,7 +91,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const options = { cwd: checkout, timeoutMs: 180_000 };
     const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const built = await runProcess([process.execPath, 'packages/cli/release/build.ts'], options);
+    const built = await runProcess([process.execPath, 'packages/cli/build.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
     copyFileSync(join(checkout, 'dist', host.binary), executable);

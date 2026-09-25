@@ -1,5 +1,4 @@
-import { createRule } from '#plugin/rules/definition.ts';
-// A server module without `import 'server-only'` (Next.js).
+import { createRule } from '#plugin/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const requireServerOnly = createRule<[], 'missing'>({

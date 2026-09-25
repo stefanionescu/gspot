@@ -1,10 +1,9 @@
-// Every lockfile matches its manifest: the package manager installs from it without wanting to change it.
 import { dirname, join } from 'node:path';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 
 const SHOWN_LINES = 3;
 const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {

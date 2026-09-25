@@ -3,8 +3,7 @@ import ts from 'typescript';
 import { posix } from 'node:path';
 import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
-import type { Finding } from '#cli/output/schema.ts';
-// CSS modules against the code that imports them: every class defined is read, and every class read is defined.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 

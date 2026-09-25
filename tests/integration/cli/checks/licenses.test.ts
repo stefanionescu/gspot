@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/run/engines.ts';
-import { openSession } from '#cli/run/session.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
@@ -13,7 +13,10 @@ import { chmodSync, existsSync, readFileSync, unlinkSync, symlinkSync } from 'no
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
-    for (const file of emitAll(session).files.filter(({ path }) => path.endsWith('/licenses.json')))
+    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter(({ path }) => path.endsWith('/licenses.json')))
         await Bun.write(join(root, file.path), file.content);
     const selected = session.scopes[0]!;
     const spec = selected.selected

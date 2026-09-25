@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
-// The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 
@@ -23,7 +22,7 @@ const SHARED_PREFIX = '_';
 export function readProject(input: EngineInput): z.infer<typeof projectSchema> | string | undefined {
     const local = posix.join(input.scope, SUPABASE_CONFIG);
     const path = join(input.root, local);
-    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) return undefined;
+    if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
     const text = readSource(input.root, local, input.observations).toString('utf8');
     try {
         return projectSchema.parse(parse(text));

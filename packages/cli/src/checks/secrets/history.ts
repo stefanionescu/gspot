@@ -1,9 +1,9 @@
-import type { Session } from '#cli/run/session.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
+import type { Session } from '#cli/execution/session.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { pushBase } from '#cli/repository/staged.ts';
-import { fileBatches } from '#cli/run/file-batches.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
-import type { CheckResult } from '#cli/output/schema.ts';
+import { fileBatches } from '#cli/execution/file-batches.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 
 /**
  * Scan the exact selected commits, including secrets removed before the final pushed tree.

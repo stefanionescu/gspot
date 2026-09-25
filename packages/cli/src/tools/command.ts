@@ -1,4 +1,4 @@
-import { TOOL_DEADLINE } from '#cli/run/settings.ts';
+import { TOOL_DEADLINE } from '#cli/configurations/settings.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import { run, type SpawnOptions, type SpawnResult } from '#cli/platform/spawn.ts';
 

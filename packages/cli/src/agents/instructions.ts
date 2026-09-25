@@ -1,4 +1,5 @@
-import type { Session } from '#cli/run/session.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { Manifest } from '#cli/configurations/read-manifests.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
@@ -22,22 +23,18 @@ const CHECKS_INSTALLED =
 const RULES_ALONE =
     'These files are installed copies. Change `[rules]` in `gspot.toml` and run `gspot apply`, and never edit files under the rules directory.';
 
-function areaFor(file: RuleFile): string {
-    return AREA_BY_LAYER[file.layer] ?? file.layer;
-}
-
 function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
-        const list = rows.get(areaFor(file)) ?? [];
+        const list = rows.get(AREA_BY_LAYER[file.layer] ?? file.layer) ?? [];
         list.push(`\`${file.target}\``);
-        rows.set(areaFor(file), list);
+        rows.set(AREA_BY_LAYER[file.layer] ?? file.layer, list);
     }
     return [...rows];
 }
 
-function indexLines(session: Session, files: RuleFile[]): string[] {
-    const { directory, project } = session.policyFiles.policy.rules;
+function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
+    const { directory, project } = rules;
     const projectRow: [string, string[]][] =
         project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
     return [
@@ -54,13 +51,14 @@ function indexLines(session: Session, files: RuleFile[]): string[] {
 
 /**
  * The managed block text for a session.
- * @param session the session
+ * @param rules the rule policy
+ * @param manifests the selected configurations
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
-export function managedBlock(session: Session): string {
-    const files = selectRuleFiles(session);
-    const index = files.length > 0 ? indexLines(session, files) : [];
-    const hasChecks = session.scopes.some((scope) => scope.selected.some((manifest) => manifest.checks.length > 0));
+export function managedBlock(rules: Policy['rules'], manifests: Manifest[]): string {
+    const files = selectRuleFiles(rules, manifests);
+    const index = files.length > 0 ? indexLines(rules, files) : [];
+    const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
     return ['# Engineering Guidelines', '', ...index, closing].join('\n');
 }
@@ -79,7 +77,5 @@ export function agentFiles(root: string, configured: string[] = []): string[] {
     if (files.stat('.cursor')?.isDirectory() === true) detected.push('.cursor/rules/gspot.mdc');
     return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }
-
-// Type aliases of the rules modules.
 
 export type RuleFile = { source: string; target: string; layer: string; configuration: string; title: string };

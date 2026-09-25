@@ -1,7 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-// An exported `new` instance outside a registry file.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ChainExpression']);

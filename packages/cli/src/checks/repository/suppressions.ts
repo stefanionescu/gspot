@@ -1,13 +1,14 @@
-import type { Session } from '#cli/run/session.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { EngineInput, SuppressionComment } from '#cli/checks/input.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/run/ignores.ts';
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/execution/ignores.ts';
 
 const GSPOT_SUPPRESSION = {
     marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
@@ -35,15 +36,23 @@ function commentOf(line: string, style: string): string | undefined {
 
 /**
  * Observe comments once through the selected tool definitions for each file scope.
- * @param session
+ * @param root
+ * @param selections
+ * @param observations
  * @param files
  */
-export function suppressionComments(session: Session, files: TrackedFile[]): SuppressionComment[] {
+export function suppressionComments(
+    root: string,
+    selections: ScopeSelection[],
+    observations: SourceObservations,
+    files: TrackedFile[],
+): SuppressionComment[] {
+    const scopes = selections.map((selection) => selection.scope);
     return files.flatMap((file) => {
         const style = styleOf(file);
         if (style === undefined) return [];
-        const scope = scopeOf(file.path, session.repository.scopes);
-        const selected = session.scopes.find((selection) => selection.scope.path === scope.path)!.selected;
+        const scope = scopeOf(file.path, scopes);
+        const selected = selections.find((selection) => selection.scope.path === scope.path)!.selected;
         const readers = new Set(
             selected.flatMap((manifest) =>
                 manifest.checks.flatMap((check) =>
@@ -69,7 +78,7 @@ export function suppressionComments(session: Session, files: TrackedFile[]): Sup
             reason: new RegExp(definition.reason, 'u'),
             forbidden: definition.forbidden === true,
         }));
-        return readSource(session.root, file.path, session.observations)
+        return readSource(root, file.path, observations)
             .toString('utf8')
             .split('\n')
             .flatMap((line, index) => {

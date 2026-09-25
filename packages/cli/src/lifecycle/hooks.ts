@@ -1,20 +1,21 @@
-import { isDeepStrictEqual } from 'node:util';
-import type { Session } from '#cli/run/session.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
-import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import type { PreparedHook } from '#cli/lifecycle/hook-managers.ts';
-import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { hookBody, hookCommand, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
+import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import type { PreparedHook } from '#cli/lifecycle/hook-managers.ts';
+import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hook-state.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { binaryPath } from '#cli/platform/assets.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
 import { basename, dirname, isAbsolute, posix, relative, resolve } from 'node:path';
-import { simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
-import { hookBody, hookCommand, huskyLines, huskyReady, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { isDeepStrictEqual } from 'node:util';
 
 function rejectDifferingNativeHook(
     path: string,
@@ -312,7 +313,10 @@ export function hookStatus(
     );
     if (
         session.policyFiles.policy.hooks.tool === 'pre-commit' &&
-        !preCommitReady(session.root, session.policyFiles.policy.runner?.tool, binaryPath())
+        !hasConfiguration(
+            session.root,
+            preCommitConfiguration(session.root, session.policyFiles.policy.runner?.tool, binaryPath()),
+        )
     )
         return { ready: false, text: 'pre-commit integration is missing or edited; run gspot apply' };
     if (

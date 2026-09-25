@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/run/plan.ts';
-import { executeRun } from '#cli/run/execute.ts';
-import { explain } from '#cli/output/explain.ts';
-import { openSession } from '#cli/run/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { explain } from '#cli/commands/explain/subjects.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { runEngineCheck } from '#cli/run/engines.ts';
-import { coverageReport } from '#cli/run/coverage.ts';
+import { runEngineCheck } from '#cli/execution/engines.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { settingRows } from '#cli/policy/settings-list.ts';
 

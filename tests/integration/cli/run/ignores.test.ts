@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/output/schema.ts';
-import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { inlineIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 import { mkdirSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {

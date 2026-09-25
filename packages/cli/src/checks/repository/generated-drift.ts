@@ -1,6 +1,5 @@
-import type { DriftEntry } from '#cli/emit/drift.ts';
-import type { Finding } from '#cli/output/schema.ts';
-// Does every generated file match its render? Runs apply --dry-run in memory.
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 
 const MESSAGES: Record<DriftEntry['kind'], string> = {

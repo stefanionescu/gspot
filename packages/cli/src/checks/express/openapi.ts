@@ -1,13 +1,12 @@
-// The OpenAPI document of an express service: it lints, and it matches the code that writes it.
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import type { Finding } from '#cli/output/schema.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { commandArguments } from '#cli/policy/settings.ts';
-import { toolOutputDetail } from '#cli/run/broken-tool.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { commandArguments } from '#cli/platform/arguments.ts';
+import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;

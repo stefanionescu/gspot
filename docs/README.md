@@ -43,7 +43,7 @@ Guides, Reference, and Development.
 
 References describe accepted inputs, defaults, scope, effects, exits, and limitations. Change
 the owning CLI help, schema, manifest, or rule definition rather than maintaining a copied
-reference page. `src/content/reference.ts` renders those definitions and rejects duplicate
+reference page. `src/content/reference/` renders those definitions and rejects duplicate
 identities. Every shipped check and plugin rule requires a nonempty Markdown `example` in its
 metadata. Describe the defect, correction, and required context there, and exercise that behavior
 in the existing tests for its owner. Do not create a second example generator. Keep authored

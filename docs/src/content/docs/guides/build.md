@@ -110,18 +110,21 @@ mise run build -- --target \
     bun-windows-x64-baseline
 ```
 
-The target definitions in `packages/npm/gspot/targets.json` own the compiler targets, binary
+The target definitions in `packages/npm/targets.json` own the compiler targets, binary
 names, npm identities, and libc selection. macOS builds run `codesign` when built on macOS.
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
 The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-upstream records in `packages/cli/release/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
-the Swift grammar provenance and Bun runtime notices. Failed parser downloads, mismatched checksums, and unrecorded license notices fail the build.
+sources supply licenses for packages that omit a separate license file. The build downloads
+Bun and Swift notices from pinned sources and verifies all downloaded and cached bytes against
+recorded SHA-256 values. Notice inputs are cached in ignored build output. `NOTICE.md` retains
+upstream attribution. Failed downloads, mismatched checksums, and unrecorded notice versions
+fail the build.
 
 ## Prepare the Swift parser
 
 Source checkout setup and release builds download the upstream Swift 0.7.3 WebAssembly parser.
-`packages/cli/release/notices.json` records its release URL, SHA-256, and license. Preparation verifies cached
+The input preparation script records its release URL and SHA-256. Preparation verifies cached
 bytes and rejects a failed download or checksum mismatch. The cache lives in ignored
 `packages/cli/build/swift.wasm`; no compiler or Docker is required for this preparation.
 
@@ -132,7 +135,7 @@ mise run prepare:grammar
 Test tasks prepare the grammar automatically. Before invoking Bun tests directly, run repository
 setup or the preparation task. Source checks report a missing cache without downloading it.
 Release binaries embed the verified parser and require no parser download at runtime.
-The Swift license and attribution are included in the release notice data.
+Builds fetch the pinned Swift license and include its attribution in the release notices.
 
 ## Validate packages locally
 

@@ -2,11 +2,11 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
-        "packages/cli/release/grammar.ts",
+        "packages/cli/scripts/inputs.ts",
         "**/publish.ts",
         "packages/cli/src/agents/lint.ts",
-        "packages/npm/gspot/gspot.js",
-        "docs/src/content/reference.ts",
+        "packages/npm/gspot.js",
+        "docs/src/content/reference/loader.ts",
         "docs/astro.config.ts",
         "docs/src/content.config.ts",
         "docs/src/route-metadata.ts",
@@ -20,7 +20,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}", "packages/cli/release/notices.json"],
+    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
         "eslint-config-prettier",
@@ -162,11 +162,11 @@
         ".": {
             "entry": [
                 "**/build.ts",
-                "packages/cli/release/grammar.ts",
+                "packages/cli/scripts/inputs.ts",
                 "**/publish.ts",
                 "packages/cli/src/agents/lint.ts",
-                "packages/npm/gspot/gspot.js",
-                "docs/src/content/reference.ts",
+                "packages/npm/gspot.js",
+                "docs/src/content/reference/loader.ts",
                 "docs/astro.config.ts",
                 "docs/src/content.config.ts",
                 "docs/src/route-metadata.ts",
@@ -183,7 +183,7 @@
         "packages/cli": {
             "entry": [
                 "**/build.ts",
-                "release/grammar.ts",
+                "scripts/inputs.ts",
                 "**/publish.ts",
                 "src/agents/lint.ts",
                 "src/main.{ts,js}",
@@ -214,7 +214,7 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
-                "src/content/reference.ts",
+                "src/content/reference/loader.ts",
                 "astro.config.ts",
                 "src/content.config.ts",
                 "src/route-metadata.ts",

@@ -3,8 +3,10 @@ import { expect, test } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/output/schema.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 test('Python dependency ownership applies only to locked scopes and accepts removal of the duplicate list', async () => {
     await using sandbox = await testdir();

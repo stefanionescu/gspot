@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
-import { executeRun } from '#cli/run/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 
 // This compatibility fixture uses the installed CLI release and its database image selection.
 const CLI_VERSION = '2.72.7';

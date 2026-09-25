@@ -1,13 +1,14 @@
+import { everyManifest } from '#cli/configurations/select.ts';
 import type { Command } from 'commander';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { hookLocation } from '#cli/lifecycle/hooks.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import { installTools } from '#cli/tools/install-tools.ts';
-import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import { installTools } from '#cli/tools/install.ts';
+import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { packageInstallSteps } from '#cli/tools/package-project.ts';
@@ -49,7 +50,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         const failures: string[] = [];
         const projects = [
             { selected: session.packageManager !== undefined, preview: packageInstallSteps },
-            { selected: toolEnvironment(session).length > 0, preview: pythonInstallSteps },
+            { selected: toolEnvironment(everyManifest(session.scopes)).length > 0, preview: pythonInstallSteps },
         ];
         for (const project of projects) {
             if (!project.selected) continue;

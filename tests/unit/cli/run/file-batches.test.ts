@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { fileBatches } from '#cli/run/file-batches.ts';
+import { fileBatches } from '#cli/execution/file-batches.ts';
 
 describe('file batches', () => {
     test('a list that fits is one batch, and a long list splits under the budget in order', () => {

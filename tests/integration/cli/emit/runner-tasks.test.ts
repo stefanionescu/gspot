@@ -3,17 +3,17 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { parseProfile } from '#cli/profile/read.ts';
+import { parseProfile } from '#cli/policy/profiles/read.ts';
 
-import { exportedProfile } from '#cli/profile/export.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { pinnedTwice } from '#cli/emit/runner-tasks.ts';
+import { pinnedTwice } from '#cli/tools/mise.ts';
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 

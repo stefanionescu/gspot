@@ -2,7 +2,6 @@ import { nearMatches } from '#cli/policy/near.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
-// The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
 import type { PolicyFiles } from '#cli/policy/read-policy.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { selectForScope } from '#cli/configurations/select.ts';

@@ -2,7 +2,7 @@ import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';

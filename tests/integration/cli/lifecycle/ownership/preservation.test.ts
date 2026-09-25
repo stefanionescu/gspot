@@ -4,7 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { applyBlock } from '#cli/emit/managed-blocks.ts';
+import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';

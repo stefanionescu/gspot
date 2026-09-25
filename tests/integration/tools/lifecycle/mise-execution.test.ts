@@ -1,14 +1,16 @@
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { delimiter, dirname, join } from 'node:path';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 

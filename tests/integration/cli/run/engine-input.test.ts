@@ -1,15 +1,15 @@
 import * as fs from 'node:fs';
-import { executeRun } from '#cli/run/execute.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { existsSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/fixers.ts';
-import { openSession } from '#cli/run/session.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { claimedInputs, planRun } from '#cli/run/plan.ts';
-import { scriptIndex } from '#cli/structure/cross-file-index.ts';
-import { engineInput, runEngineCheck } from '#cli/run/engines.ts';
+import { claimedInputs, planRun } from '#cli/execution/plan.ts';
+import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
+import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 
 test.each([
     {

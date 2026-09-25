@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the nginx configuration: a proxy target the request chooses.
-import { reportSchema } from '#cli/output/schema.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';

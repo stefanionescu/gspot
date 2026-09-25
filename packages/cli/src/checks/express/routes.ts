@@ -1,8 +1,7 @@
-import type { Finding } from '#cli/output/schema.ts';
-// Each governed route has an importing test in its own scope.
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { scopeImports } from '#cli/structure/imports.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
+import { scopeImports } from '#cli/checks/structure/imports.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 
 /**
  * Reports routes without a test that imports their resolved module in the same scope.

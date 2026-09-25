@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { exportedProfile } from '#cli/profile/export.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
 

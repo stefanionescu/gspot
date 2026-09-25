@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -54,9 +54,11 @@ test.each(['recommended', 'all'])(
             'scripts/build.js': SCRIPTS,
             'Info.plist': PLIST,
         });
-        const files = emitAll(await openSession(root)).files.filter(
-            ({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml',
-        );
+        const renderSession1 = await openSession(root);
+        const files = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
+            version: renderSession1.version,
+            packageManager: renderSession1.packageManager,
+        }).files.filter(({ path }) => path.startsWith('.gspot/config/semgrep/') || path === '.gspot/pyproject.toml');
         await withLifecycleOwner(root, async (owner) => {
             await resolvePythonProject(root, files, owner);
         });

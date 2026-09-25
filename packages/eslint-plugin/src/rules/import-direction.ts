@@ -1,9 +1,9 @@
-// The four shipped direction rules: types import only types; runtime never imports tests or harness; tests and harness reach runtime only through contracts or types; config and env never import runtime.
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, importFile, staticString } from '#plugin/files.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
+import { importFile } from '#plugin/imports.ts';
 
 const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
     types: ['**/types/**'],

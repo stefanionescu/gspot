@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import type { Defined } from '#cli/policy/schema.ts';
-// The zod schema of manifest.toml, and the refusals the loader applies.
-import { outputSchema } from '#cli/run/output-format.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
+import { outputSchema } from '#cli/configurations/output-format.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
 

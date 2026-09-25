@@ -4,8 +4,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { RunReport } from '#cli/output/schema.ts';
-import { exportedProfile } from '#cli/profile/export.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const POLICY = `version = 1

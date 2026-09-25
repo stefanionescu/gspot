@@ -3,34 +3,34 @@ import type { z } from 'zod';
 import { Option } from 'commander';
 import type { Command } from 'commander';
 import { isDeepStrictEqual } from 'node:util';
-import { emitAll } from '#cli/emit/targets.ts';
+import { emitAll } from '#cli/generation/targets.ts';
 import { ciSchema } from '#cli/policy/schema.ts';
-import { openSession } from '#cli/run/session.ts';
-import { applyAll } from '#cli/lifecycle/apply.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { compact } from '#cli/policy/normalize.ts';
-import { readProfile } from '#cli/profile/read.ts';
+import { readProfile } from '#cli/policy/profiles/read.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Profile } from '#cli/profile/read.ts';
+import type { Profile } from '#cli/policy/profiles/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { initPlanText } from '#cli/output/plan-text.ts';
+import packageManifest from '#package' with { type: 'json' };
+import { initPlanText } from '#cli/commands/init/plan-text.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
-import { askConfirmation } from '#cli/output/prompts.ts';
-import { detectionText } from '#cli/output/detection.ts';
+import { askConfirmation } from '#cli/commands/prompts.ts';
+import { detectionText } from '#cli/commands/init/detection.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { installTools } from '#cli/tools/install-tools.ts';
+import { installTools } from '#cli/tools/install.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { MissingToolError } from '#cli/tools/missing-tool.ts';
 import { colors, note, print } from '#cli/output/messages.ts';
 import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { InstallationError } from '#cli/tools/install-error.ts';
-import { proposedRunnerTasks } from '#cli/emit/runner-tasks.ts';
+import { proposedRunnerTasks } from '#cli/lifecycle/runner-tasks.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { unknownLanguages } from '#cli/configurations/detect.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -38,15 +38,16 @@ import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
-// init: read the repository, propose a policy, print the plan, write it after a yes, install the tools.
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
-import { collectCarried, ownedTools, unownedTools } from '#cli/adoption/collect.ts';
+import { collectCarried, ownedTools, unownedTools } from '#cli/policy/adoption/collect.ts';
 import { retireReplaced } from '#cli/lifecycle/retire.ts';
 import type { InitInputs, InitOptions, InitPrepared, InitResult, InitSelection } from '#cli/commands/init/types.ts';
+
+const { version: GSPOT_VERSION } = packageManifest;
 
 const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
@@ -71,10 +72,6 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,
         rules: install === undefined ? undefined : install ? 'yes' : 'no',
     });
-}
-
-function optionsFromProfile(options: InitOptions, profile: Profile): InitOptions {
-    return { ...profileAnswers(profile), ...options, profile };
 }
 
 function profileLine(profile: Profile, selection: InitSelection): NonNullable<TakeoverPlan['profile']> {
@@ -184,7 +181,11 @@ async function write(
         owner.replace('gspot.toml', { bytes: Buffer.from(prepared.policyText), mode: 0o644 }, 'policy', true);
         if (isGitRepository(root)) owner.replaceBlock('.gitignore', gitignoreBlock(), 'hash');
         const session = await openSession(root);
-        const outputs = emitAll(session, takeover);
+        const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+            takeover: takeover,
+        });
         const generated = new Set(
             [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.configurations].map(
                 (output) => output.path,
@@ -234,10 +235,8 @@ async function write(
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root)) return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: 2 };
-    const effective =
-        options.from === undefined
-            ? options
-            : optionsFromProfile(options, await readProfile(options.from, options.cwd));
+    const profile = options.from === undefined ? undefined : await readProfile(options.from, options.cwd);
+    const effective = profile === undefined ? options : { ...profileAnswers(profile), ...options, profile };
     const prepared = await prepare(root, effective);
     const { plan, policyText } = prepared;
     if (!options.json) print(initPlanText(plan));

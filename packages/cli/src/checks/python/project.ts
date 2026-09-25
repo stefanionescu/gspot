@@ -1,15 +1,14 @@
 import { z } from 'zod';
-// The project checks of a Python scope: import contracts, who owns the dependencies, and which files the type check leaves out.
+import type { EngineInput } from '#cli/checks/input.ts';
+import type { Finding } from '#cli/checks/result.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { statSync } from 'node:fs';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/output/schema.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import { pathMatcher } from '#cli/configurations/claims.ts';
-import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 
 const MANIFEST = 'pyproject.toml';
 const importConfiguration = z.object({
@@ -31,7 +30,7 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`;
-    if (!(statSync(join(input.root, manifest), { throwIfNoEntry: false }) !== undefined))
+    if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
         throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
     const project = importConfiguration.parse(
         parse(readSource(input.root, manifest, input.observations).toString('utf8')),

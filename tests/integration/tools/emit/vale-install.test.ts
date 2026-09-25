@@ -3,7 +3,8 @@ import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
-import { installPackages, parseAlerts, hasPackages } from '#cli/prose/vale.ts';
+import { installPackages, hasPackages } from '#cli/tools/vale.ts';
+import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 

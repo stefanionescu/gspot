@@ -1,6 +1,5 @@
-// A file that is not a test, sitting beside test files.
 import { posix } from 'node:path';
-import { createRule, optionsSchema } from '#plugin/rules/definition.ts';
+import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
 const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;

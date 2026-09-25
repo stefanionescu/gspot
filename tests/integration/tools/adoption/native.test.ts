@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/generation/targets.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { unlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { collectCarried } from '#cli/adoption/collect.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
 
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
@@ -53,9 +53,10 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
         }),
     );
     const session = await openSession(sandbox.path);
-    const configurations = emitAll(session).files.filter(
-        (file) => file.kind === 'config' || file.path.endsWith('.markdownlint-cli2.jsonc'),
-    );
+    const configurations = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageManager: session.packageManager,
+    }).files.filter((file) => file.kind === 'config' || file.path.endsWith('.markdownlint-cli2.jsonc'));
     for (const file of configurations) await Bun.write(join(sandbox.path, file.path), file.content);
     for (const { path } of carried.removed) unlinkSync(join(sandbox.path, path));
     for (const [scope, rule] of [
@@ -132,9 +133,13 @@ test.each([false, true])(
                 runner: 'none',
             }),
         );
-        const configuration = emitAll(await openSession(sandbox.path)).files.find(
-            ({ path }) => path === '.gspot/config/markdownlint.jsonc',
-        )!;
+        const renderSession1 = await openSession(sandbox.path);
+        const configuration = emitAll(
+            renderSession1.policyFiles.policy,
+            renderSession1.repository,
+            renderSession1.scopes,
+            { version: renderSession1.version, packageManager: renderSession1.packageManager },
+        ).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
         await Bun.write(join(sandbox.path, 'generated.jsonc'), configuration.content);
         // Remove discovery input so the generated file alone determines the native result.
         unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
@@ -197,9 +202,11 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
             runner: 'none',
         }),
     );
-    const generated = emitAll(await openSession(sandbox.path)).files.find(
-        ({ path }) => path === '.gspot/config/markdownlint.jsonc',
-    )!;
+    const renderSession2 = await openSession(sandbox.path);
+    const generated = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
+        version: renderSession2.version,
+        packageManager: renderSession2.packageManager,
+    }).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
     await Bun.write(join(sandbox.path, 'generated.jsonc'), generated.content);
     unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
     const after = native('generated.jsonc');
@@ -256,9 +263,10 @@ test.each([false, true])(
         expect(session.policyFiles.policy.scopes).toStrictEqual([
             { path: 'nested', configurations: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);
-        const outputs = emitAll(session).files.filter(
-            ({ path }) => path.startsWith('.gspot/') && path.endsWith('typos.toml'),
-        );
+        const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('typos.toml'));
         for (const config of outputs) await Bun.write(join(sandbox.path, config.path), config.content);
         const run = (config: string, path: string) =>
             Bun.spawnSync(
@@ -287,7 +295,10 @@ test.each([false, true])(
         await Bun.write(join(sandbox.path, 'sample.txt'), 'color the\n');
         expect(run('.gspot/config/typos.toml', 'sample.txt').exitCode).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'nested/typos.toml')).text()).toBe(original);
-        const editor = emitAll(session).files.find(({ path }) => path === 'nested/typos.toml')!;
+        const editor = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageManager: session.packageManager,
+        }).files.find(({ path }) => path === 'nested/typos.toml')!;
         await Bun.write(join(sandbox.path, editor.path), editor.content);
         for (const [path, status] of expected) {
             const checked = native(path);

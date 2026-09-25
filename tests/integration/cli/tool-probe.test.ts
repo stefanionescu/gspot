@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
-import { locateTool, probeTool } from '#cli/tools/tool-probe.ts';
+import { locateTool, probeTool } from '#cli/tools/probe.ts';
 import type { ToolPin } from '#cli/configurations/read-manifests.ts';
-import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import { privateToolInstallation } from '#cli/tools/installation.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 

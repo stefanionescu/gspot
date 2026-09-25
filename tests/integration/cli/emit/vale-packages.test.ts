@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 
 import { createFileTree, testdir } from 'testdirs';
 
-import { hasPackages } from '#cli/prose/vale.ts';
+import { hasPackages } from '#cli/tools/vale.ts';
 
 import { readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 

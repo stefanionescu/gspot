@@ -1,12 +1,11 @@
 import type { Command } from 'commander';
-import { openSession } from '#cli/run/session.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { pinnedVersion } from '#cli/run/version-pin.ts';
+import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import type { DoctorOptions } from '#cli/commands/doctor/report.ts';
-// Reports problems with the configured repository.
 import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 
 /**

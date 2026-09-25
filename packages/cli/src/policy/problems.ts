@@ -2,7 +2,6 @@ import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Policy, Reasoned, ToolTable } from '#cli/policy/normalize.ts';
-// The checks on a normalized policy that the schema cannot state: reasons present, selectors precise, scopes real.
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EditorconfigAdoption, EslintAdoption } from '#cli/policy/schema.ts';
 

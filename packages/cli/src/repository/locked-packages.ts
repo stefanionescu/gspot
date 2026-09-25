@@ -1,9 +1,9 @@
-import { z } from 'zod';
-import { parse as parseYaml } from 'yaml';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import { parseSyml } from '@yarnpkg/parsers';
 import { parse as parseToml } from 'smol-toml';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+import { parse as parseYaml } from 'yaml';
+import { z } from 'zod';
 
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });
@@ -94,3 +94,11 @@ export function lockedPackages(filename: string, text: string): Set<string> {
     }
     throw new Error('This lockfile format does not support package exception verification.');
 }
+
+export const LOCKFILES: Record<string, string> = {
+    'bun.lock': 'bun',
+    'bun.lockb': 'bun',
+    'package-lock.json': 'npm',
+    'pnpm-lock.yaml': 'pnpm',
+    'yarn.lock': 'yarn',
+};

@@ -2,9 +2,9 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#tests/support/cli/command.ts';
 import { delimiter, dirname, join } from 'node:path';
 import { readPolicy } from '#cli/policy/read-policy.ts';
-import { probeTool, toolPin } from '#cli/tools/tool-probe.ts';
+import { probeTool, toolPin } from '#cli/tools/probe.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { privateToolInstallation } from '#cli/tools/tool-installation.ts';
+import { privateToolInstallation } from '#cli/tools/installation.ts';
 import { configurationManifests } from '#cli/configurations/read-manifests.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));

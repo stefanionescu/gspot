@@ -1,5 +1,4 @@
 import { z } from 'zod';
-// Read OpenStep project structure before resolving source membership through its groups.
 import { posix } from 'node:path';
 
 type Plist = string | Plist[] | { [key: string]: Plist };
