@@ -16,7 +16,8 @@
 <% if (selected.settings['tools.nestjs.swagger'] !== true) { %>            // The service documents no API with Swagger, so the Swagger rules have nothing to read.
             ...Object.assign({}, ...nestjsTyped.configs.flatNoSwagger.map((block) => block.rules)),
 <% } %>            // ESLint runs from the root, so the provider rule searches the TypeScript files of this scope.
-            '@darraghor/nestjs-typed/injectable-should-be-provided': ['error', { src: [<%= json(`${prefix}**/*.ts`, 0) %>], filterFromPaths: ['dist', 'node_modules', '.test.', '.spec.'] }],
+            // The rule reads each filter as a regular expression over the absolute path, so the dots and folder names are exact.
+            '@darraghor/nestjs-typed/injectable-should-be-provided': ['error', { src: [<%= json(`${prefix}**/*.ts`, 0) %>], filterFromPaths: ['/dist/', '/node_modules/', String.raw`\.test\.`, String.raw`\.spec\.`] }],
         },
     },
 <% } %>
