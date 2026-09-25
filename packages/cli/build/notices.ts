@@ -45,9 +45,9 @@ const UPSTREAM_NOTICES: Record<string, UpstreamNotice> = {
         attribution:
             'Copyright © 2010-2015 Linux Foundation and its Contributors. Licensed under the Creative Commons Attribution License 3.0 Unported. All other rights are expressly reserved. Source: spdx-exceptions 2.5.0 README.md.',
     },
-    'bun@1.3.11': {
-        source: 'https://raw.githubusercontent.com/oven-sh/bun/bun-v1.3.11/LICENSE.md',
-        sha256: '7068a9711ef8196d654e143447ed7976b3678ce21145b9da16e1f786528f15bb',
+    'bun@1.4.2': {
+        source: 'https://raw.githubusercontent.com/oven-sh/bun/bun-v1.4.2/LICENSE.md',
+        sha256: 'b9caf52728691b4057e371232c221a132883198be2f3d2ddf92c90404c984b1a',
     },
     'tree-sitter-swift@0.7.3': {
         source: 'https://raw.githubusercontent.com/alex-pinkus/tree-sitter-swift/b8b22bffbb3441780e6471665bacfb263741c86a/LICENSE',
