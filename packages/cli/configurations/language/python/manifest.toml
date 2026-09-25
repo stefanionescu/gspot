@@ -226,10 +226,11 @@ example = "The project metadata `version = 7` in `pyproject.toml` reports an inv
 level = "recommended"
 stage = "commit"
 command = ["validate-pyproject", "{file}"]
+findings_exit_codes = [1]
 claims = {filenames = ["pyproject.toml"]}
 tool = "validate-pyproject"
 coverage = ["schema"]
-output = {format = "lines"}
+output = {format = "regex", pattern = "^\\[ERROR\\] (?<message>.*)$"}
 summary = "Validates every pyproject.toml against the packaging schemas."
 why = "A key the build backend does not know is ignored without a word."
 help = "Correct the key the message names."
