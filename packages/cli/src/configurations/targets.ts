@@ -1,5 +1,6 @@
 import { CONFIGURATION_DIRECTORY } from '#cli/platform/paths.ts';
 import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 
 const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
 
@@ -25,4 +26,16 @@ export function configurationName(target: string): string {
     const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);
+}
+
+/**
+ * The generated target with this configuration name among the selected manifests, or undefined.
+ * @param selected the selected manifests of the scope
+ * @param name the name a `{config:<name>}` placeholder uses
+ * @returns the target
+ */
+export function selectedTarget(selected: Pick<Manifest, 'configs'>[], name: string): ConfigurationTarget | undefined {
+    return selected
+        .flatMap((manifest) => manifest.configs)
+        .find((config) => !config.fragment && configurationName(config.target) === name);
 }
