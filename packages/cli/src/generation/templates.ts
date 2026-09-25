@@ -87,6 +87,7 @@ function knipEntries(policy: Policy, scope: string): string[] {
  * @param version
  * @param selection the scope being rendered
  * @param fragments the fragment text other configurations contribute
+ * @param fragmentImports the import lines those fragments declare
  * @returns the template inputs
  */
 export function templateInputs(
@@ -97,6 +98,7 @@ export function templateInputs(
     selection: ScopeSelection,
     version: string,
     fragments = '',
+    fragmentImports = '',
 ): TemplateInputs {
     const { view } = selection;
     const files = (extension: string): string[] =>
@@ -141,6 +143,7 @@ export function templateInputs(
         format: view.format,
         settings: view.settings,
         fragments,
+        fragmentImports,
         tool: view.tool,
         entryFiles: (scope) => knipEntries(policy, scope),
         limit: view.limit,
@@ -216,6 +219,7 @@ export type TemplateInputs = {
     format: MergedView['format'];
     settings: Record<string, unknown>;
     fragments: string;
+    fragmentImports: string;
     tool: (name: string) => Record<string, unknown>;
     entryFiles: (scope: string) => string[];
     limit: (key: string, language?: string) => number | undefined;

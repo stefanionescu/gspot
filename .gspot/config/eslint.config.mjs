@@ -21,7 +21,6 @@ import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import jest from 'eslint-plugin-jest';
 
-
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
@@ -1013,7 +1012,6 @@ export default [
             'gspot/no-harness-barrel-imports': ['error', { barrels: [
     "#tests"
 ] }],
-
         },
     },
     { files: ['**/package.json'], ...packageJson.configs.recommended },

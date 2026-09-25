@@ -98,6 +98,19 @@ function fragmentsFor(
         .join('\n');
 }
 
+// The import lines the selected fragments declare, each once, in configuration order.
+function fragmentImportsFor(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): string {
+    const lines = fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
+        manifest.configs
+            .filter(
+                (fragment) => fragment.fragment && fragment.target === owner.target && fragment.imports !== undefined,
+            )
+            .flatMap((fragment) => readAsset(`${manifest.dir}/${fragment.imports!}`).split('\n'))
+            .filter((line) => line.trim() !== ''),
+    );
+    return [...new Set(lines)].join('\n');
+}
+
 function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: GeneratedProposal): void {
     const { root, inputs, selection, manifest } = context;
     const { stub } = config;
@@ -157,7 +170,11 @@ function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: 
         }
         if (seen.has(target)) continue;
         seen.add(target);
-        const inputs = { ...context.inputs, fragments: fragmentsFor(scopes, selection, config, context.inputs) };
+        const inputs = {
+            ...context.inputs,
+            fragments: fragmentsFor(scopes, selection, config, context.inputs),
+            fragmentImports: fragmentImportsFor(scopes, selection, config),
+        };
         if (config.per_scope) inputs.has = (configuration) => selection.view.configurations.includes(configuration);
         const file: GeneratedFile = {
             path: target,

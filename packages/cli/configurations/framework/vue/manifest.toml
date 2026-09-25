@@ -46,6 +46,7 @@ npm = "vue-tsc"
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
+imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[checks]]

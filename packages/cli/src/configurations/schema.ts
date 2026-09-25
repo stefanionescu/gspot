@@ -135,6 +135,7 @@ const stubSchema = z
 
 const configSchema = z.strictObject({
     template: z.string(),
+    imports: z.string().optional(),
     target: z.string(),
     rules_path: z.array(z.string()).optional(),
     stub: stubSchema.optional(),

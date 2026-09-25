@@ -146,7 +146,13 @@ export function parseManifest(text: string, dir: string): Manifest {
     if (!result.success)
         throw new ManifestError(configurationName, [...new Set(result.error.issues.flatMap(issueLines))]);
     const raw = result.data;
-    const problems = [...raw.checks.flatMap(checkProblems), ...configurationProblems(raw)];
+    const problems = [
+        ...raw.checks.flatMap(checkProblems),
+        ...configurationProblems(raw),
+        ...raw.configs
+            .filter((config) => config.imports !== undefined && !config.fragment)
+            .map((config) => `config ${config.target} declares imports, which only a fragment renders.`),
+    ];
     if (raw.checks.some((check) => raw.configuration.check_references?.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');
     if (problems.length > 0) throw new ManifestError(raw.configuration.name, problems);

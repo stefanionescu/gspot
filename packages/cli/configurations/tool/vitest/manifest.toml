@@ -23,6 +23,12 @@ kind = "library"
 version = "1.3.4"
 npm = "@vitest/eslint-plugin"
 
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+
 [[checks]]
 name = "vitest/coverage"
 title = "Check Vitest coverage"

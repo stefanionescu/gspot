@@ -1,0 +1,17 @@
+    {
+        files: TESTS,
+        plugins: { vitest },
+        rules: {
+            ...vitest.configs.recommended.rules,
+            'vitest/no-focused-tests': ['error', { fixable: false }],
+            'vitest/no-disabled-tests': 'error',
+            'vitest/no-identical-title': 'error',
+            'vitest/no-standalone-expect': 'error',
+            'vitest/no-commented-out-tests': 'error',
+            'vitest/expect-expect': 'error',
+            'vitest/valid-describe-callback': 'error',
+            'vitest/no-conditional-expect': 'error',
+            'vitest/valid-expect': 'error',
+            'vitest/prefer-strict-equal': 'error',
+        },
+    },

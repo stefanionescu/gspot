@@ -18,28 +18,7 @@ import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 <% if (has('typescript')) { %>import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
-<% } %><% if (has('jest')) { %>import jest from 'eslint-plugin-jest';
-<% } %><% if (has('vitest')) { %>import vitest from '@vitest/eslint-plugin';
-<% } %><% if (has('nextjs')) { %>import nextPlugin from '@next/eslint-plugin-next';
-<% } %><% if (has('react')) { %>import reactHooks from 'eslint-plugin-react-hooks';
-import react from 'eslint-plugin-react';
-import accessibility from 'eslint-plugin-jsx-a11y';
-import reactRefresh from 'eslint-plugin-react-refresh';
-<% } %><% if (has('react-native')) { %>import expoPlugin from 'eslint-plugin-expo';
-import reactNativePlatform from '@react-native/eslint-plugin';
-import reactNative from 'eslint-plugin-react-native';
-<% } %><% if (has('vue')) { %>import vuePlugin from 'eslint-plugin-vue';
-import vueParser from 'vue-eslint-parser';
-import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
-<% } %><% if (has('svelte')) { %>import sveltePlugin from 'eslint-plugin-svelte';
-import svelteParser from 'svelte-eslint-parser';
-<% } %><% if (has('react') || has('vue') || has('svelte')) { %>import testingLibrary from 'eslint-plugin-testing-library';
-<% } %><% if (has('nestjs')) { %>import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';
-<% } %><% if (has('i18n')) { %>import i18next from 'eslint-plugin-i18next';
-<% } %><% if (has('zod')) { %>import zodPlugin from 'eslint-plugin-zod';
-<% } %><% if (has('tanstack-query')) { %>import tanstackQuery from '@tanstack/eslint-plugin-query';
-<% } %><% if (has('drizzle')) { %>import drizzlePlugin from 'eslint-plugin-drizzle';
-<% } %>
+<% } %><%~ fragmentImports %>
 <%
 const eslintTool = tool('eslint');
 const architecture = policy.architecture;
@@ -79,7 +58,6 @@ const scopeRules = (isAll ? scopes : []).map((scope) => {
 });
 const restricted = settings['tools.eslint.restricted_imports'] ?? [];
 const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
-const testOverrides = has('vitest');
 %>
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
@@ -507,21 +485,8 @@ export default [
             'gspot/no-trivial-files': 'off',
             'max-nested-callbacks': ['error', limits.nestedCallbacks + 2],
 <% if (isAll) { %>            'gspot/no-harness-barrel-imports': ['error', { barrels: <%= json(Object.keys(aliases).filter((prefix) => /tests?\//.test(aliases[prefix]) || prefix.includes('tests')).map((prefix) => prefix.replace(/\/$/, ''))) %> }],
-<% } %>
-<% if (testOverrides) { %>            ...vitest.configs.recommended.rules,
-            'vitest/no-focused-tests': ['error', { fixable: false }],
-            'vitest/no-disabled-tests': 'error',
-            'vitest/no-identical-title': 'error',
-            'vitest/no-standalone-expect': 'error',
-            'vitest/no-commented-out-tests': 'error',
-            'vitest/expect-expect': 'error',
-            'vitest/valid-describe-callback': 'error',
-            'vitest/no-conditional-expect': 'error',
-            'vitest/valid-expect': 'error',
-            'vitest/prefer-strict-equal': 'error',
 <% } %>        },
-<% if (testOverrides) { %>        plugins: { vitest },
-<% } %>    },
+    },
 <% if (restricted.length > 0) { %>    { files: CODE, rules: { 'no-restricted-imports': ['error', { paths: <%= json(restricted) %> }] } },
 <% } %>    { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
