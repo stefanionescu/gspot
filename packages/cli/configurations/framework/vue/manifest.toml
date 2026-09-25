@@ -38,6 +38,11 @@ kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
+[[tools]]
+name = "vue-tsc"
+version = "3.3.11"
+npm = "vue-tsc"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
@@ -63,6 +68,24 @@ tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_
 summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+name = "vue/typecheck"
+title = "Check Vue types"
+example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+tool = "vue-tsc"
+analysis = "typescript"
+takes_over = "typescript/tsc"
+claims = {extensions = [".vue"]}
+coverage = ["types"]
+output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
+why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
+help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
 
 [coverage]
 ".vue" = ["format", "syntax", "style", "structure", "spelling"]

@@ -10,6 +10,7 @@ import type { CheckResult } from '#cli/checks/result.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {
     if (visited.has(path)) return;
@@ -40,6 +41,17 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
  * @returns compiler findings and the shared tool execution status
  */
 export async function checkTypescript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    // A component type checker reads the compiler options of the typescript configuration, which a JavaScript scope lacks.
+    if (!planned.scope.view.configurations.includes('typescript'))
+        return {
+            check: planned.check,
+            scope: planned.scope.scope.path,
+            status: 'skipped',
+            files: planned.files.length,
+            duration: 0,
+            findings: [],
+            note: 'this scope selects no typescript configuration, whose compiler options the type check reads',
+        };
     const config = getTsconfig(session.root, join(session.root, planned.scope.scope.path, 'tsconfig.json'));
     const references = (config?.projectReferences?.length ?? 0) > 0;
     const command = references
@@ -47,12 +59,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
         : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
     const scratch = scratchCopy(
         session.root,
-        [
-            ...session.repository.files.map((file) => file.path),
-            ...(planned.manifest?.configs ?? [])
-                .filter((entry) => entry.target === '.gspot/config/tsconfig.check.json')
-                .map((entry) => targetInScope(planned.scope.scope.path, entry)),
-        ],
+        [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
         session.repository.scopes.map((scope) => scope.path),
     );
     try {
