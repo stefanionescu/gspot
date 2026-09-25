@@ -43,11 +43,11 @@ const FROZEN_POLICY = '[tools.squawk]\nfrozen_through = "20240101000000"\n';
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
         check: 'postgres/squawk',
-        files: { [later('add_size')]: 'ALTER TABLE public.teams ADD COLUMN size INT NOT NULL;\n' },
+        files: { [later('add_size')]: 'ALTER TABLE public.teams ADD COLUMN size BIGINT NOT NULL;\n' },
         expected: { file: later('add_size'), rule: 'adding-required-field', line: 1 },
         corrected: {
             [later('add_size')]:
-                "BEGIN;\nSET LOCAL lock_timeout = '5s';\nSET LOCAL statement_timeout = '30s';\nALTER TABLE public.teams ADD COLUMN size INT;\nCOMMIT;\n",
+                "BEGIN;\nSET LOCAL lock_timeout = '5s';\nSET LOCAL statement_timeout = '30s';\nALTER TABLE public.teams ADD COLUMN size BIGINT;\nCOMMIT;\n",
         },
     },
     {
@@ -102,7 +102,7 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
             [later('create_touch')]:
                 'CREATE FUNCTION public.touch() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n',
         },
-        expected: { file: later('create_touch'), rule: 'search_path', line: 1 },
+        expected: { file: later('create_touch'), rule: 'definer-search-path', line: 1 },
         corrected: {
             [later('create_touch')]:
                 "CREATE FUNCTION public.touch() RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$ SELECT 1 $$;\n",
@@ -114,7 +114,8 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
             [later('create_members')]:
                 'CREATE TABLE IF NOT EXISTS private.members (\n    id UUID PRIMARY KEY,\n    team_id UUID REFERENCES public.teams (id)\n);\n',
         },
-        expected: { file: later('create_members'), rule: 'foreign-key-index', line: 3 },
+        // The SQL reader places every finding at the statement, as K-178 says.
+        expected: { file: later('create_members'), rule: 'foreign-key-index', line: 1 },
         corrected: {
             [later('create_members')]:
                 'CREATE TABLE private.members (id UUID PRIMARY KEY, team_id UUID REFERENCES public.teams (id));\nCREATE INDEX members_team ON private.members (team_id);\n',
