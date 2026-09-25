@@ -5,13 +5,19 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
+// Nest injects by the emitted types of constructor parameters, which takes both decorator options.
+const DECORATOR_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true };
+
 function isTsconfigName(path: string): boolean {
     const name = path.slice(path.lastIndexOf('/') + 1);
     return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
 }
 
 function missingOptions(input: EngineInput, path: string, options: CompilerOptions): Finding[] {
-    return Object.keys(ALL_COMPILER_OPTIONS)
+    const required = input.view.configurations.includes('nestjs')
+        ? { ...ALL_COMPILER_OPTIONS, ...DECORATOR_OPTIONS }
+        : ALL_COMPILER_OPTIONS;
+    return Object.keys(required)
         .filter((option) => options[option] !== true)
         .map((option) => ({
             check: input.spec.name,

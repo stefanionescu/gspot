@@ -7,3 +7,16 @@
             'class-methods-use-this': 'off',
         },
     },
+<% for (const selected of configurationScopes('nestjs')) { const prefix = selected.path === '' ? '' : `${selected.path}/`; %>
+    {
+        files: TYPESCRIPT_SOURCE.map((pattern) => [<%= json(`${prefix}**/*`, 0) %>, pattern]),
+        plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin },
+        rules: {
+            ...Object.assign({}, ...nestjsTyped.configs.flatRecommended.map((block) => block.rules ?? {})),
+<% if (selected.settings['tools.nestjs.swagger'] !== true) { %>            // The service documents no API with Swagger, so the Swagger rules have nothing to read.
+            ...Object.assign({}, ...nestjsTyped.configs.flatNoSwagger.map((block) => block.rules)),
+<% } %>            // ESLint runs from the root, so the provider rule searches the TypeScript files of this scope.
+            '@darraghor/nestjs-typed/injectable-should-be-provided': ['error', { src: [<%= json(`${prefix}**/*.ts`, 0) %>], filterFromPaths: ['dist', 'node_modules', '.test.', '.spec.'] }],
+        },
+    },
+<% } %>

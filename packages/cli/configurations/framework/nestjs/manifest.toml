@@ -4,7 +4,7 @@ kind = "framework"
 title = "NestJS"
 requires = ["typescript"]
 recommends = ["vitest", "security", "dependencies"]
-description = "A NestJS service: the compiler options decorators need, decorated classes that lint cleanly, controllers that reach data through a service, and no circular modules."
+description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, controllers that reach data through a service, and no circular modules."
 
 [detect]
 dependencies = ["@nestjs/core"]
@@ -14,10 +14,23 @@ filenames = ["nest-cli.json"]
 filenames = ["nest-cli.json"]
 natures = ["source"]
 
+[[tools]]
+name = "@darraghor/eslint-plugin-nestjs-typed"
+kind = "library"
+version = "7.5.5"
+npm = "@darraghor/eslint-plugin-nestjs-typed"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 fragment = true
+
+[[settings]]
+name = "tools.nestjs.swagger"
+kind = "boolean"
+direction = "tightening"
+default = false
+summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."
 
 [rule_files]
 framework = ["framework/nestjs/NESTJS.md"]
