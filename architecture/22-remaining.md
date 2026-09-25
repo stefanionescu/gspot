@@ -24,6 +24,36 @@ commit per step with `[skip ci]`. Lint remediation and the other phases remain u
 Repository-wide findings block the pre-commit hook, so the owner authorized `--no-verify` for
 these commits alone.
 
+On the evening of 2026-09-25 the owner asked for three things in order. Every lane passes. The
+workarounds of the phase 4 work go. The test suite holds only tests with a clear purpose. Each
+step is one commit on `main`, still `[skip ci]` and `--no-verify`.
+
+Stage 1 commits:
+
+- step 2.1, the fixture paths
+- the hook installer receives its declared input
+- a per-file finding without a path belongs to its file
+- a copied block is reported on the copy
+- sandbox installs skip the unreleased gspot pin
+- the retired baseline assertions are gone
+
+Stage 2 commits:
+
+- Prettier plugins are manifest data
+- a check declares the configuration it `needs`
+- the Svelte type check finds its tsconfig through the selection
+- the tool runner has one workspace parameter
+- Expo Doctor has a precondition and a pure parser
+- fragments carry their own imports (K-197)
+- `init` selects a recommendation only when its detection matches (K-182)
+- one sandbox helper serves the framework tests
+- tests of retired commands and flags are deleted
+- every test file over 300 lines is split by behavior, with shared fixtures in `tests/support/`
+- Bun is 1.4.2, because 1.3.11 loses every child's captured output late in a long run
+
+Lanes after stage 2: unit and integration 1722 pass, build passes, release 12 pass, the touched
+acceptance files pass, and the two Docker cases still need a daemon.
+
 When implementation resumes, follow phases 1 through 10 and their substeps in the printed
 order. Complete each phase's exit condition before proceeding to dependent work. A verification
 step requires inspection and execution of existing behavior, with repairs only for established
@@ -116,6 +146,9 @@ file imports, including attempted evaluator side-effect destinations. Dependenci
 the current test layout. Completion evidence: focused scenarios reach their intended assertions,
 then deterministic discovery and execution retain all scenarios. Acceptance: T-1, T-2, T-3, T-7,
 T-13, K-193.
+
+Done 2026-09-25: the fixtures import `./rules.mjs`, `./plugin.cjs`, `./processing.mjs`, and
+`./private/router.js`, and the evaluator side-effect destination sits inside the sandbox.
 
 ### Manifest and schema ownership
 
@@ -559,6 +592,17 @@ Owner: `tests/`. Dependencies: stable source, native tools, isolated registry. C
 
 Acceptance: T-27, T-4, T-8, T-21, T-24, T-1, T-2, T-32, T-3, T-6, T-7, T-13, T-28, T-17, T-14, T-30, G-2, T-29, T-26, T-5, T-18, T-23, T-10, T-15, T-16, K-28, T-36, T-22, T-25, T-20, T-35, T-9.
 
+Audit 2026-09-25: every test file under `tests/` read in full. Every retained test plants a defect
+and its correction through gspot, or feeds a pure function fixture input. The deleted assertions
+covered retired behavior: the `allow` and `declare` commands, `apply --check`,
+`--lower-baselines`, `--baseline`, `init --presets`, the `[preset]` manifest table, and the
+`presets` policy field.
+Two files stay over 300 lines because each is one test callback:
+`tests/integration/tools/hooks/lefthook.test.ts` and
+`tests/integration/tools/tools/packages/project.test.ts`; step 8.1 splits them with the other
+long callbacks. bun runs test files breadth-first by depth, so a file moved into a folder runs
+after every file above it.
+
 ### Repository checks and tooling
 
 Step 7.4. Verification and confirmed repairs.
@@ -585,6 +629,12 @@ evidence in step 9.8.
 ### Step 8.1
 
 Repair TypeScript and ESLint findings, including authored build code.
+
+Measured 2026-09-25 at level all: 8,881 ESLint findings (tests 3,667; cli 4,898; plugin 201;
+docs 115). 4,410 are `gspot/no-trivial-functions`, which reports every arrow callback of two
+statements or fewer, so the rule's treatment of inline callbacks is decided here before the
+repairs. 131 test callbacks are over 60 lines; 52 files are over 300 lines, 14 of them under
+`packages/cli/src`.
 
 ### Step 8.2
 
