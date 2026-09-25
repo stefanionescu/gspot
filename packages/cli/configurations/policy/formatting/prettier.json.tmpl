@@ -1,1 +1,1 @@
-<%= json(prettierConfig(targetPath)) %>
+<% const config = prettierConfig(targetPath); const plugins = [...(config.plugins ?? []), ...(has('svelte') ? [`${'../'.repeat(targetPath.split('/').length - 1) || './'}.gspot/node_modules/prettier-plugin-svelte/plugin.js`] : [])]; %><%= json(plugins.length === 0 ? config : { ...config, plugins }) %>

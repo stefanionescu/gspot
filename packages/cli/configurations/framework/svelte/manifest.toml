@@ -38,6 +38,12 @@ name = "svelte-check"
 version = "4.7.6"
 npm = "svelte-check"
 
+[[tools]]
+name = "prettier-plugin-svelte"
+kind = "library"
+version = "4.1.1"
+npm = "prettier-plugin-svelte"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"

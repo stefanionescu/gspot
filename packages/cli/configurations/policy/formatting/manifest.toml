@@ -5,7 +5,7 @@ title = "Formatting"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 
 [claims]
-extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".graphql"]
+extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".svelte", ".graphql"]
 
 [[tools]]
 name = "prettier"
