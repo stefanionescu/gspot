@@ -509,7 +509,7 @@ Each rule test gains a case with no option, which expects no report.
 
 ### Acceptance K-211
 
-Implement the agreed React, Next.js, React Native, NestJS, Vue, and Svelte integrations recorded in the enforcement ledger. Preserve the planned Jest configuration and testing-library integrations even where no manifest exists. Test focused-test failures under Jest and Vitest. This is a bounded integration commitment, not an instruction to add every available linter.
+Implement the agreed React, Next.js, React Native, NestJS, Vue, and Svelte integrations recorded in the enforcement ledger. Provide the agreed Jest configuration and Testing Library integrations, including capabilities not yet represented by a manifest. Test focused-test failures under Jest and Vitest. This is a bounded integration commitment, not an instruction to add every available linter.
 
 ### Acceptance K-50
 

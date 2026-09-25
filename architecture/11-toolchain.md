@@ -219,7 +219,7 @@ system software unasked.
 
 `install-tools.ts` picks the package manager in this order: the root, the
 first JavaScript project, bun or npm on the machine, then bun from the mise file of gspot.
-`emit/mise.ts` pins bun only in that last case, and pins uv where a Python tool is selected.
+The tool-environment generator pins bun only in that last case, and pins uv where a Python tool is selected.
 
 Each step of the install runs even when an earlier one failed. The command ends with one list of what
 is left, each entry with its command. It exits 2 when a tool gspot installs itself is on the
@@ -253,7 +253,10 @@ K-305 validates all script arguments before any writes or registry operations. B
 with `npm pack --dry-run` before it publishes the first, and each package includes
 the project license from distribution output. Platform packages also include `NOTICE.md` for bundled
 inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
-The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
+The build command is `bun packages/cli/build/command.ts`; publication uses
+`bun packages/cli/build/publish.ts`. Both consume shared validation in the authored build target
+owner. Generated input and notice caches live in `packages/cli/.build/`, and root `dist/` holds
+release payloads. The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
 lives in `packages/cli/build/notices.ts`. It reads installed license files and fetches missing
 supplemental notices from pinned upstream sources. Downloaded and cached bytes must match
 recorded SHA-256 values. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree

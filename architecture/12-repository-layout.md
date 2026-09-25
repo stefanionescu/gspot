@@ -27,7 +27,11 @@ compatibility aliases, Changesets, or release-PR promises. Configurations live a
 
 The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
 arguments and present results; output renders the statuses and findings computed by the runner.
-Generators return proposals. Lifecycle owns collisions, recorded ownership, recovery, and removal.
+Generators return proposed files, managed blocks, and structured configuration edits. Lifecycle
+owns publication contracts, collisions, recorded ownership, recovery, and removal. Stateless
+configuration planning belongs to the configuration-document owner. The lifecycle owner retains
+writer locks, original-byte observations, stale-input checks, permissions, journal transitions,
+and recovery ordering. Package and Python lock resolution receive the proposed files they modify.
 A generated header or directory name does not authorize deletion.
 
 The independent ESLint plugin owns editor enforcement and its public exports. The npm launcher
@@ -99,25 +103,27 @@ owns file classification. The suppression check owns its directive constant.
 
 Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
 
-The CLI binary build entry is `packages/cli/build/command.ts`; input preparation, notice assembly, and
-publication live under `packages/cli/build/`. The binary builder uses Bun's build API
-and passes dependency metadata directly to notice generation. It preserves the ignored build
-directory, embedded evaluator asset key, EditorConfig WASM integration, and platform signing.
-Swift parser preparation downloads a checksum-pinned upstream release into ignored build output.
-Notice assembly fetches missing supplemental licenses and Bun and Swift notices from pinned
-sources. Every downloaded or cached input must match its recorded SHA-256. Other parser
-assets resolve from locked packages. Installed binaries embed the parser and perform no download.
-The asset boundary declares every supported parser and rejects undeclared filenames.
+The CLI build command is `bun packages/cli/build/command.ts`. Authored build modules live in
+`packages/cli/build/`: command parsing and orchestration, compilation, embedded assets, shared
+target validation, pinned inputs, notices, and publication each have a behavioral owner.
+Compilation and publication both consume validated npm target definitions. Compilation does not
+import the publication command. The plugin retains its independent build entry.
 
-These boundaries use the entry/command separation and development-script ownership inspected
-in Nx revision `59b35fba73` and Turborepo revision `1dead3cc9d`. They retain Bun, mise, and the
-existing packages without introducing a task framework or compatibility modules.
+Generated inputs, entries, evaluator bundles, and notice caches live in `packages/cli/.build/`.
+Release artifacts live in root `dist/`. Authored build modules participate in TypeScript, lint,
+and coverage inputs. Embedded asset identities are explicit where physical paths differ:
+the evaluator retains `packages/cli/build/configuration-process.js`; parser keys remain under
+`grammars/`. Keep evaluator embedding, EditorConfig WASM integration, and macOS signing.
+Swift preparation is independent of notices. Every downloaded or cached input must match its
+pinned SHA-256; atomic cache publication preserves failed-download behavior.
 
 Types and runtime validators live with their feature owners. Filesystem and process operations
 own their boundary contracts. Policy, manifest, profile, journal, and report schemas sit with their
 features. Evaluation request and response schemas form a shared protocol independent of the
 evaluators. Command and check-output validation remain shared boundaries used by both policy
-and configuration manifests. Emitter shapes belong to the corresponding emitters. Tool command
+and configuration manifests. Publication shapes belong to lifecycle application. Generation normalizes merge stubs into
+structured edits before publication and retains rendering decisions. Drift compares retained
+fields through the configuration-document owner. Tool command
 execution serves checking, installation, and detection without importing the check runner.
 
 Check input contracts belong to the check feature, independently of the runtime dispatcher.
@@ -133,6 +139,18 @@ under the lifecycle lock before applying generated configuration.
 Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initialization planning,
 questions, and selection belong to `commands/init/`. Shared coverage analysis belongs to execution,
 and its text rendering belongs to output. Direct imports include type and dynamic dependencies.
+
+Generation orchestration belongs to `generation/render.ts`. JavaScript preparation, headers,
+and ESLint preparation stay with their respective generators. Hook operations receive policy,
+repository facts, and tool observations rather than the execution session. Lifecycle hooks,
+package-manager operations, revision materialization, and diagnostic parsing each form a local
+group. Pin selection remains separate from installation; prerequisite skips belong to results.
+
+Tests group generation, execution, policy adoption, lifecycle, commands, parsers, checks, and
+tools by behavior. Native-tool tests stay under `tests/integration/tools/`. The source acceptance
+runner is `tests/support/acceptance.ts`. Release support owns package staging and consumer setup;
+journey assertions remain in the release suite with one registry lifecycle. Mixed installation,
+ESLint adoption, preservation, and native selection suites separate their distinct contracts.
 
 ## Native configuration and packaging
 
@@ -357,7 +375,7 @@ suite. A reduced test count is neither a success criterion nor evidence of lost 
 Platform prerequisites remain explicit. Invoke every required candidate suite through its task;
 missing required tools fail instead of silently skipping tests. Source acceptance and installed
 release consumers run sequentially because they exercise shared build and parser assets. The actionable cleanup is in
-[22-remaining.md](22-remaining.md#grouped-dispositions).
+[22-remaining.md](22-remaining.md#verification-still-required).
 
 ## Self-lint
 

@@ -4,10 +4,10 @@ The [active CI bypass](22-remaining.md#active-ci-bypass) governs all implementat
 Skip CI on every commit and push until the user explicitly re-enables it.
 
 This folder specifies the product contract. It does not certify the current implementation.
-Start with [development readiness and next work](22-remaining.md#development-readiness-and-next-work)
-to distinguish the completed layout cleanup from remaining defects and verification. Follow the
-[cleanup constraints](22-remaining.md#cleanup-before-feature-work) while repairing existing behavior.
-Repository lint cleanup is a later phase; keep its findings visible.
+Use the [remaining-work record](22-remaining.md) for active constraints, implementation defects,
+missing features, verification tasks, required lint remediation, and deferred external work. Each task names its
+owner, dependencies, completion evidence, and acceptance clauses. Contracts stay in their
+owning documents; Git retains historical handoffs.
 
 ## What gspot is
 
@@ -24,7 +24,7 @@ policy, and on a yes it:
 Every repository on the same gspot version runs the same rules. Upgrading gspot upgrades all three.
 
 The [remaining-work record](22-remaining.md) distinguishes current implementation,
-open requirements, historical completion claims, and deferred verification.
+open requirements and deferred verification.
 
 ## Reading order
 
@@ -126,7 +126,10 @@ Acceptance clauses describe the target; only remaining work records completion e
 | Website source, released docs and deployment                         | [21-documentation.md](21-documentation.md)       |
 | Implementation verification and app branch handoff                   | [22-remaining.md](22-remaining.md)               |
 
-The [grouped dispositions](22-remaining.md#grouped-dispositions) own all status. The ledger
+The [remaining-work record](22-remaining.md) owns all status.
+Start with [missing implementation](22-remaining.md#missing-implementation) and
+[confirmed defects](22-remaining.md#confirmed-defects); the
+[verification backlog](22-remaining.md#verification-still-required) identifies unresolved evidence. The ledger
 preserves agreed configuration capabilities, including those without a manifest. Directory inventories,
 cosmetic rename campaigns, and fixed rule totals do not establish completion. Updating this
 folder does not authorize implementation changes, publication, deployment, or changes to
