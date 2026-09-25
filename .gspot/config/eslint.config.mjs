@@ -70,6 +70,15 @@ const sizeRules = {
     complexity: ['error', limits.cyclomatic],
 };
 
+// A plugin set can hold warnings, and the gate allows no warning: each rule that is on becomes an error with its options kept.
+const errorLevels = (rules) =>
+    Object.fromEntries(
+        Object.entries(rules).map(([rule, entry]) => {
+            const [level, ...options] = Array.isArray(entry) ? entry : [entry];
+            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
+        }),
+    );
+
 // One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
 // selectors join the base ones here, and each block below lists all that apply to its files.
 const BASE_SELECTORS = [

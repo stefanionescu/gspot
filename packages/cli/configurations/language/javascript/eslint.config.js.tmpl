@@ -23,11 +23,14 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 <% } %><% if (has('nextjs')) { %>import nextPlugin from '@next/eslint-plugin-next';
 <% } %><% if (has('react')) { %>import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
+import accessibility from 'eslint-plugin-jsx-a11y';
+import reactRefresh from 'eslint-plugin-react-refresh';
 <% } %><% if (has('react-native')) { %>import expoPlugin from 'eslint-plugin-expo';
 <% } %><% if (has('vue')) { %>import vuePlugin from 'eslint-plugin-vue';
 import vueParser from 'vue-eslint-parser';
 <% } %><% if (has('svelte')) { %>import sveltePlugin from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
+<% } %><% if (has('react') || has('vue') || has('svelte')) { %>import testingLibrary from 'eslint-plugin-testing-library';
 <% } %><% if (has('i18n')) { %>import i18next from 'eslint-plugin-i18next';
 <% } %><% if (has('zod')) { %>import zodPlugin from 'eslint-plugin-zod';
 <% } %><% if (has('tanstack-query')) { %>import tanstackQuery from '@tanstack/eslint-plugin-query';
@@ -105,6 +108,15 @@ const sizeRules = {
     'max-nested-callbacks': ['error', limits.nestedCallbacks],
     complexity: ['error', limits.cyclomatic],
 };
+
+// A plugin set can hold warnings, and the gate allows no warning: each rule that is on becomes an error with its options kept.
+const errorLevels = (rules) =>
+    Object.fromEntries(
+        Object.entries(rules).map(([rule, entry]) => {
+            const [level, ...options] = Array.isArray(entry) ? entry : [entry];
+            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
+        }),
+    );
 
 // One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
 // selectors join the base ones here, and each block below lists all that apply to its files.

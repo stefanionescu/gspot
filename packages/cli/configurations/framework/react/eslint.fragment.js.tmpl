@@ -1,17 +1,24 @@
     {
         files: ['**/*.{js,jsx,ts,tsx}'],
-        plugins: { 'react-hooks': reactHooks, react },
+        plugins: { 'react-hooks': reactHooks, react, 'jsx-a11y': accessibility, 'react-refresh': reactRefresh },
+        languageOptions: react.configs.flat.recommended.languageOptions,
         settings: { react: { version: 'detect' } },
         rules: {
-            // The plugin ships this set as a list of one block, and its warnings are errors here: the gate allows no warning.
-            ...Object.fromEntries(Object.keys(reactHooks.configs['recommended-latest'][0].rules).map((rule) => [rule, 'error'])),
-            'react/jsx-key': 'error',
-            'react/jsx-no-target-blank': 'error',
+            ...react.configs.flat.recommended.rules,
+            ...react.configs.flat['jsx-runtime'].rules,
+            // The hooks plugin ships two of these rules as warnings.
+            ...errorLevels(reactHooks.configs.flat['recommended-latest'].rules),
+            // The accessibility rules enforce the accessibility guide.
+            ...accessibility.flatConfigs.recommended.rules,
+            // A file of components keeps their state on a reload only when it exports nothing else.
+            ...reactRefresh.configs.recommended.rules,
             'react/no-array-index-key': 'error',
             'react/no-danger': 'error',
             'react/no-unstable-nested-components': 'error',
             'react/jsx-no-constructed-context-values': 'error',
             'react/no-object-type-as-default-prop': 'error',
-            'react/self-closing-comp': 'error',
-        },
+<% if (isAll) { %>            'react/self-closing-comp': 'error',
+<% } %>        },
     },
+    // The Testing Library rules read test files, and their debugging rule ships as a warning.
+    { files: TESTS, plugins: { 'testing-library': testingLibrary }, rules: errorLevels(testingLibrary.configs['flat/react'].rules) },
