@@ -167,6 +167,7 @@ const checkFields = z.strictObject({
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
     takes_over: z.string().optional(),
+    needs: z.string().optional(),
     limit: z.string().optional(),
     count_regex: z.string().optional(),
     tool_errors: z.string().optional(),

@@ -208,6 +208,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A check carries `level`, `recommended` or `all`, and a check with no level fails to load.
 - A check takes `waits_for`, the setting it needs. With the setting unset the check prints
   `skipped` and names it.
+- A check takes `needs`, the configuration whose generated files it reads. Where the scope does
+  not select it, the check is skipped with that note.
 - A check takes `cached = false` when its verdict depends on more than its files.
 - A check takes `env`, a table of environment values for its tool. Values expand scalar command
   placeholders such as `{config:name}` before execution.

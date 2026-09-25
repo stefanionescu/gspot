@@ -79,7 +79,7 @@ describe('component type checking', () => {
                 expect.objectContaining({
                     check: 'vue/typecheck',
                     status: 'skipped',
-                    note: expect.stringContaining('typescript'),
+                    note: 'needs the typescript configuration, which this scope does not select',
                 }),
             );
             expect(report.checks.find((entry) => entry.check === 'svelte/check')?.findings).toContainEqual(

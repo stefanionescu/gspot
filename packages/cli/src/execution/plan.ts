@@ -183,6 +183,8 @@ function skipFor(check: PlannedCheck, options: PlanOptions, platform: string): P
     const waiting = waitingFor(check);
     if (waiting) return waiting;
     if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
+    if (spec.needs !== undefined && !check.scope.view.configurations.includes(spec.needs))
+        return { source: 'rules', note: `needs the ${spec.needs} configuration, which this scope does not select` };
     const platformSkip = platformSkipFor(spec, tool, platform);
     if (platformSkip !== undefined) return platformSkip;
     if (options.skips.includes(spec.name)) return { source: 'flag', note: 'skipped by --skip' };

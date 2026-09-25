@@ -80,6 +80,7 @@ cwd = "scope"
 tool = "vue-tsc"
 analysis = "typescript"
 takes_over = "typescript/tsc"
+needs = "typescript"
 claims = {extensions = [".vue"]}
 coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}

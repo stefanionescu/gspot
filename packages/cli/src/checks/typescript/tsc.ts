@@ -41,17 +41,6 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
  * @returns compiler findings and the shared tool execution status
  */
 export async function checkTypescript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    // A component type checker reads the compiler options of the typescript configuration, which a JavaScript scope lacks.
-    if (!planned.scope.view.configurations.includes('typescript'))
-        return {
-            check: planned.check,
-            scope: planned.scope.scope.path,
-            status: 'skipped',
-            files: planned.files.length,
-            duration: 0,
-            findings: [],
-            note: 'this scope selects no typescript configuration, whose compiler options the type check reads',
-        };
     const config = getTsconfig(session.root, join(session.root, planned.scope.scope.path, 'tsconfig.json'));
     const references = (config?.projectReferences?.length ?? 0) > 0;
     const command = references
