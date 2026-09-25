@@ -5,7 +5,7 @@ import { testdir } from 'testdirs';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installComponents } from '#tests/support/cli/components.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 
 const SHAPES = [
@@ -36,10 +36,14 @@ describe('component accessibility', () => {
         '$check reports $rule and accepts a text alternative',
         async ({ framework, check, rule, dependencies, path, planted, line }) => {
             await using sandbox = await testdir();
-            const environment = await installComponents(sandbox.path, ['typescript', framework], dependencies, {
-                'tsconfig.json': COMPONENT_TSCONFIG,
-                'src/answer.ts': COMPONENT_SOURCE,
-                ...(framework === 'vue' ? { 'src/env.d.ts': "import 'vue';\n" } : {}),
+            const environment = await installSandbox(sandbox.path, {
+                configurations: ['typescript', framework],
+                dependencies,
+                files: {
+                    'tsconfig.json': COMPONENT_TSCONFIG,
+                    'src/answer.ts': COMPONENT_SOURCE,
+                    ...(framework === 'vue' ? { 'src/env.d.ts': "import 'vue';\n" } : {}),
+                },
             });
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);

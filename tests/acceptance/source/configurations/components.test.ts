@@ -1,46 +1,22 @@
-import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
-// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework.
+import { testdir } from 'testdirs';
+// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
 import { reportSchema, type RunReport } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 /** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
 type ComponentShape = {
     check: string;
     configurations: string[];
+    dependencies: Record<string, string>;
     files: Record<string, string>;
     planted: string;
     cases: [string, string][];
 };
-
-const MODULES = join(import.meta.dir, '../../../../node_modules');
-const init = (configurations: string[]): string[] => [
-    'init',
-    '--yes',
-    '--configurations',
-    ...configurations,
-    '--without',
-    'naming',
-    'spelling',
-    'css',
-    'vitest',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const manifest = (name: string, version: string): string =>
-    `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "${name}": "${version}"\n    }\n}\n`;
-const TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n';
-const SOURCE = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 
 const VUE_CLEAN =
     '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
@@ -72,18 +48,16 @@ const SHAPES: ComponentShape[] = [
     {
         check: 'vue/eslint',
         configurations: ['typescript', 'vue'],
-        files: {
-            'package.json': manifest('vue', vueManifest.version),
-            'src/UserGreeting.vue': VUE_CLEAN,
-            'src/env.d.ts': "import 'vue';\n",
-        },
+        dependencies: { vue: vueManifest.version },
+        files: { 'src/UserGreeting.vue': VUE_CLEAN, 'src/env.d.ts': "import 'vue';\n" },
         planted: 'src/PlantedExample.vue',
         cases: VUE_CASES,
     },
     {
         check: 'svelte/eslint',
         configurations: ['typescript', 'svelte'],
-        files: { 'package.json': manifest('svelte', '5.57.0'), 'src/Greeting.svelte': SVELTE_CLEAN },
+        dependencies: { svelte: '5.57.0' },
+        files: { 'src/Greeting.svelte': SVELTE_CLEAN },
         planted: 'src/Planted.svelte',
         cases: SVELTE_CASES,
     },
@@ -95,20 +69,11 @@ describe('the vue and svelte configurations', () => {
             `${shape.check} reports %s and accepts a corrected component`,
             async (rule, text) => {
                 await using sandbox = await testdir();
-                await createFileTree(sandbox.path, {
-                    '.gitignore': 'node_modules\n',
-                    'tsconfig.json': TSCONFIG,
-                    'src/answer.ts': SOURCE,
-                    ...shape.files,
+                const environment = await installSandbox(sandbox.path, {
+                    configurations: shape.configurations,
+                    dependencies: shape.dependencies,
+                    files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, ...shape.files },
                 });
-                symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-                commitAll(sandbox.path);
-                const environment = {
-                    PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
-                };
-                await install(sandbox.path, init(shape.configurations), environment);
-                const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-                expect(selected.code, selected.stdout + selected.stderr).toBe(0);
                 const clean = await run(
                     sandbox.path,
                     ['check', '--only', shape.check, '--no-cache', '--json'],
@@ -184,19 +149,22 @@ test.each([
                 ? '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n'
                 : '<script>\nfunction forward(value) { return build(value); }\n</script>\n';
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${framework}", "${language}"]\n`,
-            'package.json': '{"name":"component-policy","private":true,"type":"module"}',
-            'tsconfig.json': '{ "compilerOptions": { "strict": true }, "include": ["src"] }\n',
-            'src/build.ts': 'export const build = (value: number): number => value + 1;',
-            [filename]: before,
+        const environment = await installSandbox(sandbox.path, {
+            configurations: [framework, language],
+            dependencies: framework === 'vue' ? { vue: vueManifest.version } : { svelte: '5.57.0' },
+            files: {
+                // A module in the language under test; a TypeScript file would select the typescript configuration.
+                ...(language === 'typescript'
+                    ? {
+                          'tsconfig.json': COMPONENT_TSCONFIG,
+                          'src/build.ts': 'export const build = (value: number): number => value + 1;',
+                      }
+                    : { 'src/build.js': 'export const build = (value) => value + 1;' }),
+                [filename]: before,
+            },
         });
-        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-        const applied = await run(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
         const args = ['check', '--only', `${framework}/eslint`, '--no-cache', '--json'];
-        const broken = await run(sandbox.path, args);
+        const broken = await run(sandbox.path, args, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = JSON.parse(broken.stdout) as RunReport;
         expect(
@@ -219,11 +187,11 @@ test.each([
             `<script${framework === 'vue' ? ' setup' : ''}${language === 'typescript' ? ' lang="ts"' : ''}>\nconst answer = 42;\n</script>\n` +
                 (framework === 'vue' ? '<template><p>{{ answer }}</p></template>\n' : '<p>{answer}</p>\n'),
         );
-        const corrected = await run(sandbox.path, args);
+        const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
             { check: `${framework}/eslint`, status: 'ok', findings: [] },
         ]);
     },
-    PLANTED_TIMEOUT_MS,
+    PLANTED_TIMEOUT_MS * 2,
 );

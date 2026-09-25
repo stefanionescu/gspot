@@ -1,35 +1,14 @@
 import { reportSchema } from '#cli/execution/report.ts';
-import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { testdir } from 'testdirs';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
-const MODULES = join(import.meta.dir, '../../../../../node_modules');
 const REPORT = '.gspot/reports/report.json';
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'react',
-    '--without',
-    'naming',
-    'spelling',
-    'css',
-    'vitest',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PACKAGE =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n';
+const DEPENDENCIES = { react: '19.1.1', 'react-dom': '19.1.1' };
 const TSCONFIG =
     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "ES2022"]\n    },\n    "include": ["src"]\n}\n';
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;
@@ -108,33 +87,20 @@ const LINT: LintCase[] = [
     },
 ];
 
-/**
- * Plants the React repository, installs its tools, and returns the command environment.
- * @param root the empty sandbox
- * @returns the PATH every gspot command of the test runs with
- */
-async function installReact(root: string): Promise<Record<string, string>> {
-    await createFileTree(root, {
-        '.gitignore': 'node_modules\n',
-        'package.json': PACKAGE,
-        'tsconfig.json': TSCONFIG,
-        'src/Greeting.tsx': CLEAN,
+const installReact = (root: string, level: 'recommended' | 'all'): Promise<Record<string, string>> =>
+    installSandbox(root, {
+        configurations: ['typescript', 'react'],
+        dependencies: DEPENDENCIES,
+        files: { 'tsconfig.json': TSCONFIG, 'src/Greeting.tsx': CLEAN },
+        level,
     });
-    symlinkSync(MODULES, join(root, 'node_modules'));
-    commitAll(root);
-    const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
-    await install(root, INIT, environment);
-    return environment;
-}
 
 describe('the react configuration', () => {
     test.each(LINT)(
         '$rule in $path fails and corrected source passes',
         async ({ check, rule, path, text, line, corrected }) => {
             await using sandbox = await testdir();
-            const environment = await installReact(sandbox.path);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const environment = await installReact(sandbox.path, 'all');
             const clean = await run(sandbox.path, ['check', '--only', check, '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: text } }, environment);
@@ -162,7 +128,7 @@ describe('the react configuration', () => {
         'react/self-closing-comp waits for the all level, and the Testing Library rules stay in test files',
         async () => {
             await using sandbox = await testdir();
-            const environment = await installReact(sandbox.path);
+            const environment = await installReact(sandbox.path, 'recommended');
             await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
             const recommended = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(recommended.checks.flatMap(({ findings }) => findings).map(({ rule }) => rule)).not.toContain(

@@ -5,7 +5,7 @@ import { testdir } from 'testdirs';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { installComponents } from '#tests/support/cli/components.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 
 const STYLES = [
@@ -30,12 +30,11 @@ describe('component style blocks', () => {
         'css/stylelint reads the style block of $path',
         async ({ framework, dependencies, path, text, line }) => {
             await using sandbox = await testdir();
-            const environment = await installComponents(
-                sandbox.path,
-                ['javascript', framework, 'css'],
+            const environment = await installSandbox(sandbox.path, {
+                configurations: ['javascript', framework, 'css'],
                 dependencies,
-                {},
-            );
+                files: {},
+            });
             const outcome = await runPlanted(
                 sandbox.path,
                 { check: 'css/stylelint', files: { [path]: text } },

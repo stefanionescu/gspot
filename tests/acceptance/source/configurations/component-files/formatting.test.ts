@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installComponents } from '#tests/support/cli/components.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 
 const FORMATTED =
     '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p class="greeting">{name}</p>\n';
@@ -14,12 +14,15 @@ test(
     'formatting/prettier reports and corrects a Svelte component through the Svelte plugin',
     async () => {
         await using sandbox = await testdir();
-        const environment = await installComponents(
-            sandbox.path,
-            ['typescript', 'svelte', 'formatting'],
-            { svelte: '5.57.0' },
-            { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, 'src/Greeting.svelte': LOOSE },
-        );
+        const environment = await installSandbox(sandbox.path, {
+            configurations: ['typescript', 'svelte', 'formatting'],
+            dependencies: { svelte: '5.57.0' },
+            files: {
+                'tsconfig.json': COMPONENT_TSCONFIG,
+                'src/answer.ts': COMPONENT_SOURCE,
+                'src/Greeting.svelte': LOOSE,
+            },
+        });
         const loose = await run(
             sandbox.path,
             ['check', '--only', 'formatting/prettier', '--no-cache', '--json'],

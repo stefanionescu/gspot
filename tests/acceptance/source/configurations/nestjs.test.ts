@@ -1,36 +1,19 @@
 import { reportSchema } from '#cli/execution/report.ts';
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { symlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
+import { testdir } from 'testdirs';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-// Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
+// Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
-const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'nestjs',
-    '--without',
-    'naming',
-    'spelling',
-    'vitest',
-    'security',
-    'dependencies',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PACKAGE =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "@nestjs/common": "11.2.3",\n        "@nestjs/core": "11.2.3",\n        "reflect-metadata": "0.2.2",\n        "rxjs": "7.8.2"\n    }\n}\n';
+const DEPENDENCIES = {
+    '@nestjs/common': '11.2.3',
+    '@nestjs/core': '11.2.3',
+    'reflect-metadata': '0.2.2',
+    rxjs: '7.8.2',
+};
 const TSCONFIG =
     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "experimentalDecorators": true,\n        "emitDecoratorMetadata": true\n    },\n    "include": ["src"]\n}\n';
 const GREETER =
@@ -69,9 +52,7 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'integrity/tsconfig-options',
-        files: {
-            'tsconfig.json': TSCONFIG.replace('"strict": true', '"strict": false'),
-        },
+        files: { 'tsconfig.json': TSCONFIG.replace('"strict": true', '"strict": false') },
         expected: { file: 'tsconfig.json', rule: 'strict' },
     },
     {
@@ -90,27 +71,25 @@ const CASES: FindingCase[] = [
     },
 ];
 
+const installNest = (root: string): Promise<Record<string, string>> =>
+    installSandbox(root, {
+        configurations: ['typescript', 'nestjs'],
+        dependencies: DEPENDENCIES,
+        files: {
+            'tsconfig.json': TSCONFIG,
+            'src/greeting.service.ts': GREETER,
+            'src/greeting.controller.ts': CONTROLLER,
+            'src/greeting.module.ts': MODULE,
+        },
+        without: ['security', 'dependencies'],
+    });
+
 describe('the nestjs configuration', () => {
     test.each(CASES)(
         '$check reports $expected.rule in $expected.file and accepts the corrected Nest module',
         async (planted) => {
             await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                '.gitignore': 'node_modules\n',
-                'package.json': PACKAGE,
-                'tsconfig.json': TSCONFIG,
-                'src/greeting.service.ts': GREETER,
-                'src/greeting.controller.ts': CONTROLLER,
-                'src/greeting.module.ts': MODULE,
-            });
-            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-            commitAll(sandbox.path);
-            const environment = {
-                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
-            };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const environment = await installNest(sandbox.path);
             for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
@@ -132,42 +111,31 @@ describe('the nestjs configuration', () => {
         },
         PLANTED_TIMEOUT_MS * 8,
     );
-});
 
-test(
-    'tools.nestjs.swagger turns the Swagger rules of the NestJS plugin on and off',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            '.gitignore': 'node_modules\n',
-            'package.json': PACKAGE,
-            'tsconfig.json': TSCONFIG,
-            'src/greeting.service.ts': GREETER,
-            'src/greeting.controller.ts': CONTROLLER,
-            'src/greeting.module.ts': MODULE,
-        });
-        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-        commitAll(sandbox.path);
-        const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
-        await install(sandbox.path, INIT, environment);
-        const documented = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'true'], environment);
-        expect(documented.code, documented.stdout + documented.stderr).toBe(0);
-        const swagger = await run(
-            sandbox.path,
-            ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-            environment,
-        );
-        expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(swagger.stdout)).checks[0]!.findings).toContainEqual(
-            expect.objectContaining({
-                rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
-                file: 'src/greeting.controller.ts',
-            }),
-        );
-        const plain = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'false'], environment);
-        expect(plain.code, plain.stdout + plain.stderr).toBe(0);
-        const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
-        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-    },
-    PLANTED_TIMEOUT_MS * 6,
-);
+    test(
+        'tools.nestjs.swagger turns the Swagger rules of the NestJS plugin on and off',
+        async () => {
+            await using sandbox = await testdir();
+            const environment = await installNest(sandbox.path);
+            const documented = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'true'], environment);
+            expect(documented.code, documented.stdout + documented.stderr).toBe(0);
+            const swagger = await run(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
+                environment,
+            );
+            expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
+            expect(reportSchema.parse(JSON.parse(swagger.stdout)).checks[0]!.findings).toContainEqual(
+                expect.objectContaining({
+                    rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
+                    file: 'src/greeting.controller.ts',
+                }),
+            );
+            const plain = await run(sandbox.path, ['set', 'tools.nestjs.swagger', 'false'], environment);
+            expect(plain.code, plain.stdout + plain.stderr).toBe(0);
+            const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS * 6,
+    );
+});

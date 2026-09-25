@@ -5,7 +5,7 @@ import { testdir } from 'testdirs';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installComponents } from '#tests/support/cli/components.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 
 const SHAPES = [
@@ -31,10 +31,14 @@ describe('component type checking', () => {
         '$check reports a type error in $path and takes over typescript/tsc',
         async ({ framework, check, dependencies, path, planted }) => {
             await using sandbox = await testdir();
-            const environment = await installComponents(sandbox.path, ['typescript', framework], dependencies, {
-                'tsconfig.json': COMPONENT_TSCONFIG,
-                'src/answer.ts': COMPONENT_SOURCE,
-                ...(framework === 'vue' ? { 'src/env.d.ts': "import 'vue';\n" } : {}),
+            const environment = await installSandbox(sandbox.path, {
+                configurations: ['typescript', framework],
+                dependencies,
+                files: {
+                    'tsconfig.json': COMPONENT_TSCONFIG,
+                    'src/answer.ts': COMPONENT_SOURCE,
+                    ...(framework === 'vue' ? { 'src/env.d.ts': "import 'vue';\n" } : {}),
+                },
             });
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
@@ -63,10 +67,15 @@ describe('component type checking', () => {
         async () => {
             await using sandbox = await testdir();
             const dependencies = { vue: vueManifest.version, svelte: '5.57.0' };
-            const environment = await installComponents(sandbox.path, ['javascript', 'vue', 'svelte'], dependencies, {
-                'src/Greeting.vue':
-                    '<script setup>\ndefineProps({ name: { type: String, required: true } });\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n',
-                'src/Product.svelte': '<script>\n    let { source } = $props();\n</script>\n\n<img src={source} />\n',
+            const environment = await installSandbox(sandbox.path, {
+                configurations: ['javascript', 'vue', 'svelte'],
+                dependencies,
+                files: {
+                    'src/Greeting.vue':
+                        '<script setup>\ndefineProps({ name: { type: String, required: true } });\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n',
+                    'src/Product.svelte':
+                        '<script>\n    let { source } = $props();\n</script>\n\n<img src={source} />\n',
+                },
             });
             const result = await run(
                 sandbox.path,
