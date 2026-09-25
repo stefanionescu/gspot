@@ -33,6 +33,11 @@ kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
+[[tools]]
+name = "svelte-check"
+version = "4.7.6"
+npm = "svelte-check"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
@@ -58,6 +63,22 @@ tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_
 summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+name = "svelte/check"
+title = "Check Svelte components"
+example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "svelte-check"
+takes_over = "typescript/tsc"
+claims = {extensions = [".svelte"]}
+coverage = ["types", "syntax"]
+summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
+why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
+help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
 [coverage]
 ".svelte" = ["format", "syntax", "style", "structure", "spelling"]

@@ -53,6 +53,7 @@ import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-c
 import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
 import { trpcBoundaries } from '#cli/checks/trpc.ts';
 import { expoDoctor } from '#cli/checks/react-native.ts';
+import { svelteCheck } from '#cli/checks/svelte.ts';
 import { drizzleMigrations, drizzleRelations } from '#cli/checks/drizzle.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
@@ -103,6 +104,7 @@ const checks: Record<string, Engine> = {
     'next-types': nextjsTypes,
     'next-build': nextjsBuild,
     'expo-doctor': expoDoctor,
+    'svelte-check': svelteCheck,
     'required-rules': requiredRules,
     'dependency-alignment': dependencyAlignment,
     'locale-files': localeFiles,
