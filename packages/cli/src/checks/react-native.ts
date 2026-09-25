@@ -8,6 +8,8 @@ import { readPackageManifest } from '#cli/repository/manifests.ts';
 // Expo Doctor prints each failed check on a line of its own, then the issues it found, then its advice.
 const FAILED_CHECK = /^✖ (?<description>.+)$/u;
 const BLOCK_END = /^(?:Advice:|✖ .*)?$/u;
+// Doctor ends a run that read the project with this count; it exits 0 without it when it cannot read the project.
+const SUMMARY = /^\d+\/\d+ checks passed\./u;
 
 /**
  * Runs Expo Doctor in a scope that depends on expo.
@@ -40,7 +42,7 @@ export async function expoDoctor(input: EngineInput): Promise<Finding[]> {
             },
         ];
     });
-    if (result.code !== 0 && findings.length === 0)
+    if (findings.length === 0 && (result.code !== 0 || !lines.some((line) => SUMMARY.test(line))))
         throw new Error(
             `expo-doctor exited ${String(result.code)}: ${stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim()}`,
         );
