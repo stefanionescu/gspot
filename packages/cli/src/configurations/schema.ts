@@ -65,6 +65,14 @@ const toolSchema = z.strictObject({
         .optional(),
     env: z.record(z.string(), z.string()).optional(),
     query_packs: z.record(z.string().regex(/^[a-z][a-z0-9-]*$/u), z.string().regex(/^\d+\.\d+\.\d+$/u)).optional(),
+    prettier: z
+        .strictObject({
+            entry: z.string().min(1),
+            overrides: z
+                .array(z.strictObject({ files: z.string().min(1), options: z.record(z.string(), z.unknown()) }))
+                .default([]),
+        })
+        .optional(),
     takeover: z
         .array(
             z

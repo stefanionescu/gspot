@@ -43,6 +43,7 @@ name = "prettier-plugin-svelte"
 kind = "library"
 version = "4.1.1"
 npm = "prettier-plugin-svelte"
+prettier = {entry = "plugin.js", overrides = [{files = "*.svelte", options = {embeddedLanguageFormatting = "auto"}}]}
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"

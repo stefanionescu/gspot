@@ -2,7 +2,7 @@ import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
 import type { EslintRuleBlock } from '#cli/generation/eslint.ts';
 import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
-import type { EditorconfigOverride } from '#cli/generation/format.ts';
+import type { EditorconfigOverride, PrettierPlugin } from '#cli/generation/format.ts';
 import { editorconfigOverrides, prettierConfig } from '#cli/generation/format.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
@@ -12,6 +12,7 @@ import { markdownlintRules } from '#cli/generation/markdownlint.ts';
 import { styleNames } from '#cli/generation/vale-styles.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
@@ -47,6 +48,18 @@ function toolPackages(scopes: ScopeSelection[]): string[] {
         ),
     );
     return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
+}
+
+// The Prettier plugins the selected manifests ship, for the formatting generator.
+function prettierPlugins(selected: Manifest[]): PrettierPlugin[] {
+    return selected.flatMap((manifest) =>
+        manifest.tools.flatMap((tool) => {
+            const name = tool.installers['npm']?.name;
+            return tool.prettier === undefined || name === undefined
+                ? []
+                : [{ name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }];
+        }),
+    );
 }
 
 function knipEntries(policy: Policy, scope: string): string[] {
@@ -92,7 +105,8 @@ export function templateInputs(
             .map((file) => file.path);
     return {
         javascriptConfig: (targetPath) => javascriptConfig(root, policy, targetPath, selection.scope.path),
-        prettierConfig: (targetPath) => prettierConfig(policy, targetPath, view.extra('prettier')),
+        prettierConfig: (targetPath) =>
+            prettierConfig(policy, targetPath, view.extra('prettier'), prettierPlugins(selection.selected)),
         markdownlintRules: markdownlintRules(view),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),

@@ -40,6 +40,7 @@ function toTool(raw: RawTool): ToolPin {
     if (raw.env !== undefined) tool.env = raw.env;
     if (raw.takeover !== undefined) tool.takeover = raw.takeover;
     if (raw.query_packs !== undefined) tool.query_packs = raw.query_packs;
+    if (raw.prettier !== undefined) tool.prettier = raw.prettier;
     return tool;
 }
 
@@ -299,6 +300,7 @@ export type ToolPin = {
     suppression?: NonNullable<RawTool['suppression']>;
     takeover?: NonNullable<RawTool['takeover']>;
     query_packs?: NonNullable<RawTool['query_packs']>;
+    prettier?: NonNullable<RawTool['prettier']>;
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };

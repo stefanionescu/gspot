@@ -1,6 +1,7 @@
 import { shippedFormat } from '#cli/configurations/listing.ts';
 import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
 import { compact } from '#cli/policy/normalize.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
 import { dirname, relative } from 'node:path';
 
@@ -140,9 +141,15 @@ export function prettierConfig(
     policy: Policy,
     targetPath: string,
     extra: Record<string, unknown> | undefined,
+    plugins: PrettierPlugin[],
 ): Record<string, unknown> {
     const prefix = relative(dirname(targetPath), '.').replaceAll('\\', '/');
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
+    // Prettier loads a plugin path that starts with a dot relative to the configuration file.
+    const pluginPaths = plugins.map(
+        (plugin) => `${prefix === '' ? '.' : prefix}/${NODE_MODULES_DIRECTORY}/${plugin.name}/${plugin.entry}`,
+    );
+    const pluginOverrides = plugins.flatMap((plugin) => plugin.overrides);
     const overrides = formatEntries(policy).map(({ scope, paths, format }) => {
         const expanded = expandedPaths(paths);
         const files = expanded.filter((path) => !path.startsWith('!')).map(fromConfig);
@@ -175,9 +182,21 @@ export function prettierConfig(
         ...prettierOptions(format),
         ...(nativeDefaults ? {} : { arrowParens: 'always', embeddedLanguageFormatting: 'off' }),
         ...extras,
-        ...(overrides.length === 0 ? {} : { overrides }),
+        ...(pluginPaths.length === 0
+            ? {}
+            : { plugins: [...((extras['plugins'] as string[] | undefined) ?? []), ...pluginPaths] }),
+        ...(pluginOverrides.length === 0 && overrides.length === 0
+            ? {}
+            : { overrides: [...pluginOverrides, ...overrides] }),
     };
 }
+
+/** A Prettier plugin a selected manifest ships: its npm name, its entry file, and the overrides its files need. */
+export type PrettierPlugin = {
+    name: string;
+    entry: string;
+    overrides: { files: string; options: Record<string, unknown> }[];
+};
 
 /**
  * Emit representable EditorConfig selectors without expanding the current file inventory.
