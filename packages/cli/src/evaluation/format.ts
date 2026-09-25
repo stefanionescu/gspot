@@ -12,6 +12,17 @@ import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/generation/format.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
 
+// Git precedence: a nested ignore line is relative to its folder and follows the lines of every ancestor file.
+function rebasedIgnoreLine(line: string, folder: string): string {
+    if (line.trim() === '' || line.startsWith('#')) return line;
+    const isNegated = line.startsWith('!');
+    const pattern = isNegated ? line.slice(1) : line;
+    const body = pattern.startsWith('/') ? pattern.slice(1) : pattern;
+    const isAnchored = pattern.startsWith('/') || body.replace(/\/$/u, '').includes('/');
+    const directory = folder.replaceAll(/[\\*?[\]]/gu, String.raw`\$&`);
+    return `${isNegated ? '!' : ''}/${directory}/${isAnchored ? '' : '**/'}${body}`;
+}
+
 function supportedOptions(value: unknown) {
     const parsed = prettierSettings.safeParse(value);
     if (!parsed.success)
@@ -43,11 +54,17 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
  * @param request
  */
 export async function evaluateFormat(request: z.infer<typeof formatRequest>): Promise<CarriedFormatter> {
-    const { root, from, ignorePath } = request;
+    const { root, from, ignorePaths = [] } = request;
     const files = openConfinedRoot(root);
-    const ignore = ignorePath === undefined ? undefined : files.read(ignorePath);
-    if (ignorePath !== undefined && ignore === undefined)
-        throw new Error(`The observed formatter ignore file is missing: ${ignorePath}. Retry adoption.`);
+    const ignoreLines = ignorePaths.flatMap((path) => {
+        const observed = files.read(path);
+        if (observed === undefined)
+            throw new Error(`The observed formatter ignore file is missing: ${path}. Retry adoption.`);
+        const folder = dirname(path).replaceAll('\\', '/');
+        const lines = observed.bytes.toString('utf8').split(/\r?\n/u);
+        return folder === '.' ? lines : lines.map((line) => rebasedIgnoreLine(line, folder));
+    });
+    const ignored = ignorePaths.length === 0 ? {} : { ignorePatterns: ignoreLines };
     let source = request.source;
     const prettier = await projectPrettier(root);
     if (source === undefined) {
@@ -143,14 +160,14 @@ export async function evaluateFormat(request: z.infer<typeof formatRequest>): Pr
         }
         return {
             format: {},
-            ...(ignore === undefined ? {} : { ignorePatterns: ignore.bytes.toString('utf8').split(/\r?\n/u) }),
+            ...ignored,
             extra: { reason: CARRIED_REASON.replaceAll('{{file}}', () => from), overrides: ordered },
         };
     }
     if (ordered.length > 0) extra.overrides = ordered;
     return {
         format,
-        ...(ignore === undefined ? {} : { ignorePatterns: ignore.bytes.toString('utf8').split(/\r?\n/u) }),
+        ...ignored,
         ...(Object.keys(extra).length === 0
             ? {}
             : { extra: { reason: CARRIED_REASON.replaceAll('{{file}}', () => from), ...extra } }),

@@ -87,7 +87,7 @@ export const prettierSource = prettierSettings.extend({
 export const formatRequest = z.strictObject({
     root: z.string().min(1),
     from: z.string().min(1),
-    ignorePath: z.string().min(1).optional(),
+    ignorePaths: z.array(z.string().min(1)).optional(),
     source: prettierSource.optional(),
     nativeDefaults: z.boolean().optional(),
     nested: z.array(z.strictObject({ from: z.string().min(1), source: prettierSource.optional() })).optional(),

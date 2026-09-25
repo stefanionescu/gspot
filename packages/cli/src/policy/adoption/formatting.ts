@@ -23,11 +23,6 @@ export async function collectFormatting(
     const [first] = configs;
     if (first === undefined) return;
     try {
-        const unsupported = configs.find(({ carries, path }) => carries === 'ignore-paths' && path.includes('/'));
-        if (unsupported !== undefined)
-            throw new Error(
-                `Formatting conversion does not support ${unsupported.path}. Its configuration remains intact.`,
-            );
         const format = configs.filter(({ tool, carries }) => tool === 'prettier' && carries !== 'ignore-paths');
         const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
         const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
@@ -70,7 +65,13 @@ export async function collectFormatting(
         lists.formatter = await carryFormat(
             root,
             sources,
-            configs.find(({ carries }) => carries === 'ignore-paths')?.path,
+            configs
+                .filter(({ carries }) => carries === 'ignore-paths')
+                .map(({ path }) => path)
+                .toSorted(
+                    (first, second) =>
+                        first.split('/').length - second.split('/').length || first.localeCompare(second),
+                ),
             adopted !== undefined,
         );
         if (adopted !== undefined) {
@@ -96,7 +97,7 @@ export async function collectFormatting(
 async function carryFormat(
     root: string,
     configurations: { from: string; source?: CarrySource }[],
-    ignorePath?: string,
+    ignorePaths: string[],
     nativeDefaults = false,
 ): Promise<CarriedFormatter> {
     const base = configurations.find((entry) => !entry.from.includes('/'));
@@ -106,7 +107,7 @@ async function carryFormat(
         root,
         from,
         nativeDefaults,
-        ...(ignorePath === undefined ? {} : { ignorePath }),
+        ...(ignorePaths.length === 0 ? {} : { ignorePaths }),
         ...(source === undefined ? {} : { source: source.parsed }),
         nested: configurations
             .filter((entry) => entry.from.includes('/'))
