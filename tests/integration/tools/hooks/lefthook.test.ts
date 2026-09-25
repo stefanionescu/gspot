@@ -121,7 +121,7 @@ test.each(['custom', 'native'])(
             [
                 process.execPath,
                 '-e',
-                `import { installHookManager } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/lifecycle/hooks/managers.ts'))}; import { openSession } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/execution/session.ts'))}; await installHookManager(await openSession(${JSON.stringify(root)}));`,
+                `import { installHookManager } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/lifecycle/hooks/managers.ts'))}; import { openSession } from ${JSON.stringify(join(import.meta.dir, '../../../../packages/cli/src/execution/session.ts'))}; const session = await openSession(${JSON.stringify(root)}); await installHookManager({ policy: session.policyFiles.policy, repository: session.repository, tools: session });`,
             ],
             {
                 cwd: root,
