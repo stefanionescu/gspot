@@ -393,7 +393,11 @@ Use Prettier's native loader for executable root configurations and format parse
 configuration. Shared base options belong in `[format]`; ordered native overrides belong in
 `tools.prettier.extra.overrides`, including `files`, `excludeFiles`, and options. Preserve native
 ignore lines, including negations, in `tools.prettier.ignore_patterns`. These selectors apply to
-future files without consulting the current filename inventory. Shared format overrides emit
+future files without consulting the current filename inventory. A nested `.prettierignore`
+converts with Git precedence: each line is rebased onto its folder and follows the lines of every
+ancestor file. A negated override selector keeps its negation when it moves. Below the root, a
+negated `files` selector becomes an entry of its own for the folder less that selector, because
+Prettier applies an entry when any one of its selectors matches. Shared format overrides emit
 EditorConfig sections only when that syntax can represent their selectors; otherwise fail with
 the exact selector and direct the user to native tool configuration. Unsupported EditorConfig,
 nested formatter configuration, and JSON5 inputs currently fail conversion before replacement.

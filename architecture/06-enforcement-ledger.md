@@ -1297,9 +1297,13 @@ Turned off:
 
 Checks:
 
-| Id             | Stage  | Command                                                                                                                                 |
-| -------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `svelte/check` | commit | `svelte-check --fail-on-warnings`; takes over `typescript/tsc` in the scope, and reports the accessibility warnings of the compiler too |
+| Id             | Stage | Command                                                                                                                                 |
+| -------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `svelte/check` | push  | `svelte-check --fail-on-warnings`; takes over `typescript/tsc` in the scope, and reports the accessibility warnings of the compiler too |
+
+Where the scope selects typescript, `svelte-check` reads the generated
+`.gspot/config/tsconfig.check.json` through `--tsconfig`, so the strict compiler options hold for
+components and TypeScript files alike.
 
 The ESLint rules run in the one ESLint check. `javascript/required-rules` holds
 `svelte/no-at-html-tags`, `svelte/require-each-key`, and `svelte/no-target-blank`.
@@ -1352,14 +1356,18 @@ Detects and claims:
 
 Tools:
 
-stylelint, stylelint-config-standard, prettier, purgecss (through static-site), postcss and
-postcss-modules (inside gspot, for CSS module usage).
+stylelint, stylelint-config-standard, postcss-html, prettier, purgecss (through static-site),
+postcss and postcss-modules (inside gspot, for CSS module usage).
 
 Generated configuration:
 
 | Target                         | Stub                               | Holds                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `.gspot/config/stylelint.json` | `.stylelintrc.json` with `extends` | `stylelint-config-standard`, `no-descending-specificity`, `at-rule-no-unknown`, `function-no-unknown`, `import-notation: string`, `at-rule-prelude-no-invalid`, `property-no-vendor-prefix` with the two ignored properties; the reference repositories' disabled rules stay disabled with their reasons in the template |
+
+`css/stylelint` also reads the `<style>` blocks of `.vue` and `.svelte` files through
+`postcss-html`. Over those files, `:deep`, `:global`, and `:slotted` are known pseudo-classes, and
+`v-bind()` is a known function.
 
 Checks:
 
@@ -1677,9 +1685,12 @@ Nothing.
 
 Checks:
 
-| Id              | Stage  | Command                                                                     |
-| --------------- | ------ | --------------------------------------------------------------------------- |
-| `vue/typecheck` | commit | `vue-tsc --noEmit`; takes over `typescript/tsc` in the scope (`takes_over`) |
+| Id              | Stage | Command                                                                     |
+| --------------- | ----- | --------------------------------------------------------------------------- |
+| `vue/typecheck` | push  | `vue-tsc --noEmit`; takes over `typescript/tsc` in the scope (`takes_over`) |
+
+`vue/typecheck` runs `vue-tsc` with the compiler options of the TypeScript check, and is skipped in
+a scope that selects no typescript.
 
 The ESLint rules run in the one ESLint check. `javascript/required-rules` holds
 `vue/no-v-html`, `vue/require-v-for-key`, `vue/no-mutating-props`, and
@@ -2686,11 +2697,10 @@ Detects and claims:
 What the framework needs from the other configurations:
 
 NestJS injects by the types of constructor parameters. That takes decorators with emitted
-metadata and parameter properties, and the strict base of the typescript configuration refuses both.
-A scope that selects nestjs gets a `tsconfig` file of this configuration, which extends the shared base
-and sets `experimentalDecorators` and `emitDecoratorMetadata`. The shared base names no
-framework.
-`typescript/tsconfig-options` requires the first pair and drops the second pair in that scope.
+metadata, which the repository's own `tsconfig.json` turns on with `experimentalDecorators` and
+`emitDecoratorMetadata`. gspot writes no compiler option that changes emit
+([K-201](04-configurations.md#acceptance-k-201)), so `typescript/tsconfig-options` requires both
+options in a scope that selects nestjs.
 `@typescript-eslint/consistent-type-imports` stays on: it leaves a file with decorators alone when
 both decorator options are on.
 
@@ -2719,6 +2729,9 @@ reason, and the page lists each one.
   repository, a data source, an entity manager, or a Prisma client, and no `@InjectRepository`,
   `@InjectModel`, or `@InjectDataSource`.
 
+The provider rule of the plugin searches the TypeScript files of each NestJS scope, because ESLint
+runs from the root.
+
 Turned off:
 
 | Rule                                                                   | Why                                           |
@@ -2733,8 +2746,8 @@ options. No separate check.
 
 Settings:
 
-`tools.nestjs.swagger`, a boolean that `init` proposes from the `@nestjs/swagger` dependency.
-Where it is false, the config adds the `flatNoSwagger` set of the plugin, which turns the
+`tools.nestjs.swagger`, a boolean with the default `false`, which `init` proposes from the
+`@nestjs/swagger` dependency. Where it is false, the config adds the `flatNoSwagger` set of the plugin, which turns the
 Swagger rules off.
 
 Rule files:

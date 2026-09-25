@@ -15,12 +15,14 @@ Preserve public commands, configuration semantics, findings, exit codes, package
 all seven targets, the direct npm launcher, the independent plugin, and existing dependencies.
 Keep strict coverage and both structural rules at every level. Do not add compatibility
 aliases, forwarding modules, private packages, or a test framework. Work alone.
-No commit, push, public publication, deployment, DNS change, or external repository mutation
-is authorized by this cleanup. Generate managed outputs through policy and `gspot apply`.
+No push, public publication, deployment, DNS change, or external repository mutation is
+authorized. Generate managed outputs through policy and `gspot apply`.
 
-The current task authorizes architecture edits and read-only inspection only. Do not implement
-features or fixes, change policy, or run lint, tests, builds, or apply during this task.
-The tasks and candidate gate below describe future work, not authorization to execute it.
+On 2026-09-25 the owner authorized phase 4 with the NestJS integration, the step 5.1
+conversions, the package additions of step 1.1, new acceptance cases, every test lane, and one
+commit per step with `[skip ci]`. Lint remediation and the other phases remain unauthorized.
+Repository-wide findings block the pre-commit hook, so the owner authorized `--no-verify` for
+these commits alone.
 
 When implementation resumes, follow phases 1 through 10 and their substeps in the printed
 order. Complete each phase's exit condition before proceeding to dependent work. A verification
@@ -62,11 +64,30 @@ Enumerate the missing React, React Native, Vue, and Svelte integrations in phase
 Resolve their pin compatibility and dependency scope before changing manifests or lockfiles.
 Preserve the existing-dependencies constraint until that feature work is authorized.
 
+Decision, 2026-09-25. The manifests pin these packages, and each ESLint plugin accepts ESLint 9:
+
+- React: eslint-plugin-react-hooks 7.1.1, eslint-plugin-jsx-a11y 6.10.2,
+  eslint-plugin-react-refresh 0.5.7, and eslint-plugin-testing-library 7.16.2.
+- React Native: @react-native/eslint-plugin 0.87.1, eslint-plugin-react-native 5.0.0, and
+  expo-doctor 1.20.4.
+- Vue: eslint-plugin-vuejs-accessibility 2.6.0, eslint-plugin-testing-library 7.16.2, and
+  vue-tsc 3.3.11.
+- Svelte: svelte-check 4.7.6, prettier-plugin-svelte 4.1.1, and eslint-plugin-testing-library
+  7.16.2. The css configuration pins postcss-html 2.0.0.
+- NestJS: @darraghor/eslint-plugin-nestjs-typed 7.5.5, published on 2026-09-19. The seven-day
+  release age admits it from 2026-09-26.
+
+The root development dependencies move eslint-plugin-react-hooks to 7.1.1.
+
 ### Step 1.2
 
 Decide which nested ignore and relocated selector forms must be supported under
 [configuration carryover](03-configuration.md). Keep safe refusal and preservation for other
 forms. Record that decision in the owning contract before conversion changes in phase 5.
+
+Decision, 2026-09-25: nested `.prettierignore` files and negated override selectors become
+supported conversions. [Carrying configuration](03-configuration.md#carrying-configuration)
+records their meaning. Other refused forms keep their originals active.
 
 Exit: the dependency scope and conversion boundary are explicit. Acceptance: K-193, K-211,
 K-248, K-251, K-269, K-270. No implementation is authorized by this documentation task.
@@ -252,6 +273,21 @@ Execute the pinned tools with generated configurations and parse actual results.
 Owner: `configurations/ and tools/`. Dependencies: normal pinned acquisition. Completion evidence: Pinned executables consume generated configuration and emit actual parsed results; installer versions remain distinct.
 
 Acceptance: K-251, K-207, K-249, K-206, K-250, K-213.
+
+### NestJS integration
+
+Step 4.5. Missing implementation.
+
+The [NestJS contract](06-enforcement-ledger.md#configuration-nestjs) requires the recommended
+set of `@darraghor/eslint-plugin-nestjs-typed`, the `tools.nestjs.swagger` setting, and both
+decorator options in a NestJS scope. The current
+[manifest](../packages/cli/configurations/framework/nestjs/manifest.toml) supplies the selectors
+and two turned-off rules alone.
+
+Owner: NestJS configuration, ESLint generation, and `typescript/tsconfig-options`.
+Dependencies: the pin decision of step 1.1. Completion evidence: planted route, Swagger, and
+decorator defects with their corrections. Setting detection at `init` stays with K-93.
+Acceptance: K-211, K-248.
 
 Within 4.3, complete Vue first, then Svelte. For each, order the changes as tool definitions
 and pins, parser/check selection and type-check takeover, ESLint accessibility/test rules,
@@ -549,23 +585,28 @@ evidence in step 9.8.
 ### Step 8.1
 
 Repair TypeScript and ESLint findings, including authored build code.
+
 ### Step 8.2
 
 Repair naming, placement, structure, and trivial-function/file findings in their behavior owners.
+
 ### Step 8.3
 
 Remove confirmed duplication without introducing forwarding or configurable generic services.
+
 ### Step 8.4
 
 Repair prose, Markdown, documentation paths, and executable example findings.
+
 ### Step 8.5
 
 Reconcile unused dependencies, including the retained documentation YAML dependency, in the
 authorized dependency scope from phase 1. Preserve dependencies outside that scope.
+
 ### Step 8.6
 
 Resolve external-tool failures separately from source findings, including Pinact GitHub quotas
-  and native installation failures. Re-run the affected check after the cause is resolved.
+and native installation failures. Re-run the affected check after the cause is resolved.
 
 Do not disable rules, lower strictness, pad code, introduce blanket exceptions, skip required
 checks, or replace native findings with mocked success. Acceptance: S-1, S-2, S-3, S-7, S-8,
@@ -589,7 +630,6 @@ This gate is deferred during the architecture-only task.
 Owner: repository verification and release tooling. Record the base revision, source digest,
 version, artifact hashes, commands, exit statuses, and active CI bypass. A source change requires
 rebuilding affected artifacts and repeating affected acceptance. Required evidence:
-
 
 #### Step 9.1
 
@@ -622,7 +662,6 @@ build, links, and fragments. Keep screen-reader acceptance outside the agreed sc
 
 Measure the cold/warm performance cases below after normal acquisition and source/installed
 acceptance succeed. Record actual conditions and results without relaxing bounds.
-
 
 #### Step 9.7
 
