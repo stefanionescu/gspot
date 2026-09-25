@@ -75,10 +75,14 @@ export async function evaluateEslintPreview(
     work: string,
 ): Promise<z.infer<typeof eslintPreviewResponse>> {
     const path = resolve(request.root, ...mutationPath(request.path));
-    const results: z.infer<typeof eslintPreviewResponse> = [];
-    for (const [index, source] of request.sources.entries()) {
+    // Every module is on disk before the first import: the runtime reads the directory once and keeps that listing.
+    const modules = request.sources.map((source, index) => {
         const module = join(work, `eslint-preview-${index}.mjs`);
         writeFileSync(module, moduleSource(path, source), { mode: 0o600 });
+        return module;
+    });
+    const results: z.infer<typeof eslintPreviewResponse> = [];
+    for (const module of modules) {
         const loaded = (await import(pathToFileURL(module).href)) as { default: unknown };
         results.push(ruleData(loaded.default));
     }
