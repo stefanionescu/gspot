@@ -19,7 +19,7 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
         'rules.mjs':
             'export default { rules: { required: { meta: { schema: [{type:"string"}] }, create(context) { return { Identifier(node) { if(node.name === context.options[0]) context.report({node,message:"custom finding"}); } }; } } } };',
         'eslint.config.mjs':
-            'import custom from "../../adoption/rules.mjs"; export default [{ ignores: ["ignored/**"] }, { files: ["src/**/*.js"], plugins: { custom }, rules: { "custom/required": ["error", "bad"], eqeqeq: ["error", "always"] }, languageOptions: { globals: { allowed: "readonly" } } }];',
+            'import custom from "./rules.mjs"; export default [{ ignores: ["ignored/**"] }, { files: ["src/**/*.js"], plugins: { custom }, rules: { "custom/required": ["error", "bad"], eqeqeq: ["error", "always"] }, languageOptions: { globals: { allowed: "readonly" } } }];',
         'src/current.js': 'export const bad = 1;',
     });
     symlinkSync(modules, join(directory.path, 'node_modules'));
@@ -126,7 +126,7 @@ test.each(['object', 'named'])(
                     } }; }
                 } }
             };`,
-            'eslint.config.mjs': `import custom from '../../adoption/processing.mjs';
+            'eslint.config.mjs': `import custom from './processing.mjs';
                 export default [{
                     basePath: 'src', files: ['**/*.js'], ignores: ['ignored/**'], plugins: { custom },
                     processor: ${representation === 'object' ? `custom.processors[${JSON.stringify(processorName)}]` : JSON.stringify(`custom/${processorName}`)},
@@ -172,7 +172,7 @@ test.each(['object', 'named'])(
 );
 
 test.each([
-    ['esm', 'eslint.config.mjs', 'import inherited from "../../adoption/shared.cjs"; export default inherited;'],
+    ['esm', 'eslint.config.mjs', 'import inherited from "./shared.cjs"; export default inherited;'],
     ['commonjs', 'eslint.config.cjs', 'const inherited = require("./shared.cjs"); module.exports = inherited;'],
     [
         'dynamic import',
@@ -255,7 +255,7 @@ test.each(['namespace', 'named export with dots'])(
             'plugin.mjs': `const plugin = {rules:{sentinel:{meta:{schema:[]},create(context){
                 return {Identifier(node){if(node.name==='forbidden')context.report({node,message:'registered finding'});}};
             }}}}; export const rules = plugin.rules; export {plugin as 'custom.plugin'};`,
-            'eslint.config.mjs': `${kind === 'namespace' ? 'import * as custom' : 'import { "custom.plugin" as custom }'} from '../../adoption/plugin.mjs';
+            'eslint.config.mjs': `${kind === 'namespace' ? 'import * as custom' : 'import { "custom.plugin" as custom }'} from './plugin.mjs';
                 export default [{files:['**/*.js'],plugins:{custom},rules:{'custom/sentinel':'error'}}];`,
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));

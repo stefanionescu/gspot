@@ -9,7 +9,7 @@ const modules = join(import.meta.dir, '../../../../../node_modules');
 test.each([
     [
         'eslint.config.mjs',
-        'import plugin from "../../adoption/plugin.cjs"; export default [{plugins: {custom: plugin}}];',
+        'import plugin from "./plugin.cjs"; export default [{plugins: {custom: plugin}}];',
     ],
     ['eslint.config.cjs', 'const plugin = require("./plugin.cjs"); module.exports = [{plugins: {custom: plugin}}];'],
     [

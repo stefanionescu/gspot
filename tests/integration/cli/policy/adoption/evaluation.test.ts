@@ -12,7 +12,7 @@ test.each(['eslint', 'prettier'] as const)(
     async (tool) => {
         await using directory = await testdir();
         const filename = tool === 'eslint' ? 'eslint.config.mjs' : 'prettier.config.mjs';
-        const content = `import {writeFileSync} from 'node:fs'; writeFileSync(new URL('../../adoption/executed', import.meta.url), 'escaped'); export default ${tool === 'eslint' ? '[]' : '{}'};`;
+        const content = `import {writeFileSync} from 'node:fs'; writeFileSync(new URL('./executed', import.meta.url), 'escaped'); export default ${tool === 'eslint' ? '[]' : '{}'};`;
         await createFileTree(directory.path, {
             'project/package.json': '{"type":"module"}',
             [`outside/${filename}`]: content,
