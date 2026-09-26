@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES, STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('Stylelint package lookups do not adopt a same-named local file', async () => {
     await using sandbox = await testdir();
@@ -14,9 +15,13 @@ test('Stylelint package lookups do not adopt a same-named local file', async () 
         'package.json': '{"private":true}\n',
     });
     symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
-    await expect(
-        stylelint.lint({ code: 'a { color: red; }', configFile: join(sandbox.path, '.stylelintrc.json') }),
-    ).rejects.toThrow('Could not find "config/base.json"');
+    expect(
+        (
+            await rejection(
+                stylelint.lint({ code: 'a { color: red; }', configFile: join(sandbox.path, '.stylelintrc.json') }),
+            )
+        ).message,
+    ).toContain('Could not find "config/base.json"');
     const refused = await collectCarried(sandbox.path, STYLELINT_TOOLING, new Set(['css']), []);
     expect(refused.removed).toStrictEqual([]);
     expect(refused.unread.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);

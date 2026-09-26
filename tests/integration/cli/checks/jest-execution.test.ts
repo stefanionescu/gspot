@@ -6,6 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const failures = [
     'missing tests',
@@ -98,7 +99,7 @@ test.each(failures)(
             };
         });
         try {
-            await expect(jestCoverage(input)).rejects.toThrow();
+            await rejection(jestCoverage(input));
             expect(artifacts).toHaveLength(2);
             expect(artifacts.every((path) => !existsSync(path))).toBe(true);
             expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');

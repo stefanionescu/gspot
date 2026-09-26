@@ -6,6 +6,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 const POLICY =
     'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\\"\\\" \\\"two words\\\""\n';
@@ -43,7 +44,7 @@ for (const isFailure of [false, true]) {
             spec: spec,
             files: session.repository.files,
         });
-        if (isFailure) await expect(openapiFresh(input)).rejects.toThrow('Generation failed');
+        if (isFailure) expect((await rejection(openapiFresh(input))).message).toContain('Generation failed');
         else {
             expect(await openapiFresh(input)).toStrictEqual([
                 {

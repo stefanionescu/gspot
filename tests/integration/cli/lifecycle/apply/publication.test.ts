@@ -6,6 +6,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import packageManifest from '../../../../../packages/cli/package.json' with { type: 'json' };
+import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -25,7 +26,9 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
     chmodSync(join(sandbox.path, output), 0o644);
     writeFileSync(join(sandbox.path, output), 'authored edit');
     writeFileSync(join(sandbox.path, '.gspot/version'), '0.0.1\n');
-    await expect(applyCommand({ cwd: sandbox.path, isDryRun: false })).rejects.toThrow('version pin was not changed');
+    expect((await rejection(applyCommand({ cwd: sandbox.path, isDryRun: false }))).message).toContain(
+        'version pin was not changed',
+    );
     expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe('authored edit');
 });
@@ -42,7 +45,9 @@ test('a failed pin publication leaves the old version and succeeds after the wri
         rename(source, target);
     });
     try {
-        await expect(applyCommand({ cwd: repository.path, isDryRun: false })).rejects.toThrow('Pin write denied');
+        expect((await rejection(applyCommand({ cwd: repository.path, isDryRun: false }))).message).toContain(
+            'Pin write denied',
+        );
         expect(readFileSync(join(repository.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     } finally {
         failed.mockRestore();
@@ -60,7 +65,7 @@ test('apply preview rejects a generated destination linked outside the repositor
     });
     const project = join(sandbox.path, 'project');
     fs.symlinkSync(join(sandbox.path, 'outside'), join(project, '.gspot/config/typos.toml'));
-    await expect(applyCommand({ cwd: project, isDryRun: true })).rejects.toThrow('private regular file');
+    expect((await rejection(applyCommand({ cwd: project, isDryRun: true }))).message).toContain('private regular file');
     expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe('authored external configuration\n');
     expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
     expect(fs.existsSync(join(project, '.gspot/version'))).toBe(false);
@@ -80,7 +85,9 @@ test.each(['gspot.toml', '.gspot/version'])(
         const project = join(sandbox.path, 'project');
         if (path === 'gspot.toml') fs.unlinkSync(join(project, path));
         fs.symlinkSync(join(sandbox.path, 'outside'), join(project, path));
-        await expect(applyCommand({ cwd: project, isDryRun: true })).rejects.toThrow('private regular file');
+        expect((await rejection(applyCommand({ cwd: project, isDryRun: true }))).message).toContain(
+            'private regular file',
+        );
         expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe(original);
         expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
     },
@@ -101,7 +108,9 @@ test('apply validates obsolete output parents before publishing new configuratio
     }
     fs.rmSync(join(root, '.gspot/obsolete'), { recursive: true });
     fs.symlinkSync('../../outside', join(root, '.gspot/obsolete'));
-    await expect(applyCommand({ cwd: root, isDryRun: false })).rejects.toThrow('Unsafe lifecycle parent');
+    expect((await rejection(applyCommand({ cwd: root, isDryRun: false }))).message).toContain(
+        'Unsafe lifecycle parent',
+    );
     expect(fs.existsSync(join(root, '.gitattributes'))).toBe(false);
     expect(fs.existsSync(join(root, '.gspot/version'))).toBe(false);
     expect(readFileSync(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');

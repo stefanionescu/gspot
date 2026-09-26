@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, readFileSync, statSync } from 'node:fs';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const generated = 'export type Database = { public: { Tables: {} } };\n';
 
@@ -88,7 +89,7 @@ test.each(['', 'apps/api'])(
             )!;
             const input = engineInput(session, planned);
             input.cancelSignal = AbortSignal.abort();
-            await expect(typesFresh(input)).rejects.toThrow('The command was canceled.');
+            expect((await rejection(typesFresh(input))).message).toContain('The command was canceled.');
             expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(generated);
             expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(0o640);
         } finally {

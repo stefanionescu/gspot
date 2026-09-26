@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const SOURCE = `-- Accounts.
 CREATE SCHEMA app;
@@ -37,7 +38,7 @@ describe('sqlIdentifiers', () => {
     });
 
     test('invalid SQL fails analysis and corrected SQL yields identifiers', async () => {
-        await expect(sqlIdentifiers('broken.sql', 'CREATE TABLE ;')).rejects.toThrow('SQL parse failed');
+        expect((await rejection(sqlIdentifiers('broken.sql', 'CREATE TABLE ;'))).message).toContain('SQL parse failed');
         expect(
             (await sqlIdentifiers('broken.sql', 'CREATE TABLE accounts (id int);')).map((entry) => entry.name),
         ).toStrictEqual(['accounts', 'id']);

@@ -9,6 +9,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
 const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
@@ -100,7 +101,7 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
 test('migration analysis rejects unreadable SQL and accepts its correction in a new run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POLICY, [PATH]: 'CREATE TABLE ;' });
-    await expect(migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen'))).rejects.toThrow(
+    expect((await rejection(migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen')))).message).toContain(
         'SQL parse failed',
     );
     writeFileSync(join(sandbox.path, PATH), ORIGINAL);

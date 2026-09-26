@@ -3,14 +3,12 @@ import { expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 
 test.each([
-    [
-        'eslint.config.mjs',
-        'import plugin from "./plugin.cjs"; export default [{plugins: {custom: plugin}}];',
-    ],
+    ['eslint.config.mjs', 'import plugin from "./plugin.cjs"; export default [{plugins: {custom: plugin}}];'],
     ['eslint.config.cjs', 'const plugin = require("./plugin.cjs"); module.exports = [{plugins: {custom: plugin}}];'],
     [
         'eslint.config.mjs',
@@ -26,8 +24,8 @@ test.each([
     });
     symlinkSync(modules, join(directory.path, 'project/node_modules'));
     symlinkSync('../outside/plugin.cjs', join(directory.path, 'project/plugin.cjs'));
-    await expect(evaluateEslint({ root: join(directory.path, 'project'), paths: [], flat: true })).rejects.toThrow(
-        'outside the repository',
-    );
+    expect(
+        (await rejection(evaluateEslint({ root: join(directory.path, 'project'), paths: [], flat: true }))).message,
+    ).toContain('outside the repository');
     expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);
 });

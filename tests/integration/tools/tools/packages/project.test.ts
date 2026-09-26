@@ -14,6 +14,7 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -157,7 +158,7 @@ test.each([
             });
             expect(refused.code, refused.stdout + refused.stderr).toBe(2);
             expect(JSON.parse(refused.stdout).error).toContain('Run: gspot apply, then gspot install');
-            await expect(installPackageProject(repository.path, tools)).rejects.toThrow(
+            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
                 'Run: gspot apply, then gspot install',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(stale);
@@ -188,7 +189,7 @@ ${lock.toString('utf8')}
                 join(repository.path, projectPath),
                 JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${manager}@99.0.0` }),
             );
-            await expect(applyAll(await openSession(repository.path))).rejects.toThrow(
+            expect((await rejection(applyAll(await openSession(repository.path)))).message).toContain(
                 'Install that package manager version first',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(conflict);
@@ -212,7 +213,7 @@ ${lock.toString('utf8')}
             });
             writeFileSync(manifestPath, withScript);
             const requestsBefore = requests;
-            await expect(installPackageProject(repository.path, tools)).rejects.toThrow('scripts');
+            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain('scripts');
             expect(requests).toBe(requestsBefore);
             expect(readFileSync(manifestPath, 'utf8')).toBe(withScript);
             writeFileSync(manifestPath, manifest);
@@ -233,7 +234,7 @@ ${lock.toString('utf8')}
                     return original(argv, options);
                 });
                 try {
-                    await expect(installPackageProject(repository.path, tools)).rejects.toThrow(
+                    expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
                         'Native wrapper download failed',
                     );
                     expect(existsSync(join(repository.path, '.gspot/node_modules/prettier'))).toBe(false);
@@ -306,7 +307,9 @@ ${lock.toString('utf8')}
             const readmePath = join(repository.path, '.gspot/node_modules/prettier/README.md');
             const readme = readFileSync(readmePath);
             writeFileSync(readmePath, 'authored later');
-            await expect(installPackageProject(repository.path, tools)).rejects.toThrow('Preserved edited');
+            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
+                'Preserved edited',
+            );
             expect(readFileSync(join(repository.path, '.gspot/node_modules/prettier/README.md'), 'utf8')).toBe(
                 'authored later',
             );

@@ -10,6 +10,7 @@ import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('legacy adoption proposes retirement only after native configuration validation', async () => {
     await using directory = await testdir();
@@ -89,21 +90,25 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
         'source.js': 'var value = 1;\n',
     });
     symlinkSync(INSTALLED_MODULES, join(directory.path, 'node_modules'));
-    await expect(
-        initCommand({
-            cwd: directory.path,
-            yes: true,
-            isDryRun: false,
-            json: true,
-            configurations: ['javascript'],
-            hooks: 'none',
-            runner: 'none',
-            ci: 'none',
-            rules: 'no',
-            install: false,
-            allowDirty: true,
-        }),
-    ).rejects.toThrow('Configuration changed after takeover was planned: .eslintignore');
+    expect(
+        (
+            await rejection(
+                initCommand({
+                    cwd: directory.path,
+                    yes: true,
+                    isDryRun: false,
+                    json: true,
+                    configurations: ['javascript'],
+                    hooks: 'none',
+                    runner: 'none',
+                    ci: 'none',
+                    rules: 'no',
+                    install: false,
+                    allowDirty: true,
+                }),
+            )
+        ).message,
+    ).toContain('Configuration changed after takeover was planned: .eslintignore');
     expect(readFileSync(join(directory.path, '.eslintignore'), 'utf8')).toBe('changed/**\n');
     expect(existsSync(join(directory.path, '.eslintrc.cjs'))).toBe(true);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);

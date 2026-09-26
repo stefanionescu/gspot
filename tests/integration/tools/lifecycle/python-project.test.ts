@@ -18,6 +18,7 @@ import {
     pythonInstallSteps,
     pythonLockDrift,
 } from '#cli/tools/python-project.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 test.each([
     ['uv.toml', 'none'],
@@ -235,7 +236,9 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
-            await expect(installPythonProject(repository.path)).rejects.toThrow('Run: gspot apply, then gspot install');
+            expect((await rejection(installPythonProject(repository.path))).message).toContain(
+                'Run: gspot apply, then gspot install',
+            );
             const repaired = toolEnvironment(everyManifest(selected.scopes));
             await withLifecycleOwner(repository.path, async (owner) => {
                 await resolvePythonProject(repository.path, repaired, owner);

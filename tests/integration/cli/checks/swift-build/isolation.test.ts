@@ -5,6 +5,7 @@ import { afterEach, expect, spyOn, test } from 'bun:test';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
 import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 afterEach(() => {
     removeBuildFolders();
@@ -123,7 +124,7 @@ test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj
             duration: 1,
         });
         try {
-            await expect(swiftBuild(input)).rejects.toThrow('Unsafe lifecycle path');
+            expect((await rejection(swiftBuild(input))).message).toContain('Unsafe lifecycle path');
             expect(run).not.toHaveBeenCalled();
             expect(await swiftBuild(corrected)).toStrictEqual([]);
         } finally {

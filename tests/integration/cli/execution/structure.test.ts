@@ -10,6 +10,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();
@@ -100,11 +101,11 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
             isCanceled: failure === 'cancellation',
         });
         try {
-            await expect(
+            await rejection(
                 astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [
                     'source.sh',
                 ]),
-            ).rejects.toThrow();
+            );
             processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
             expect(
                 await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [

@@ -10,6 +10,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -97,21 +98,25 @@ test('failed initialization retains the previous pin until generated publication
         rename(source, target);
     });
     try {
-        await expect(
-            initCommand({
-                cwd: directory.path,
-                yes: true,
-                isDryRun: false,
-                json: true,
-                configurations: ['none'],
-                hooks: 'none',
-                runner: 'none',
-                ci: 'none',
-                rules: 'no',
-                install: false,
-                allowDirty: false,
-            }),
-        ).rejects.toThrow('Generated write denied');
+        expect(
+            (
+                await rejection(
+                    initCommand({
+                        cwd: directory.path,
+                        yes: true,
+                        isDryRun: false,
+                        json: true,
+                        configurations: ['none'],
+                        hooks: 'none',
+                        runner: 'none',
+                        ci: 'none',
+                        rules: 'no',
+                        install: false,
+                        allowDirty: false,
+                    }),
+                )
+            ).message,
+        ).toContain('Generated write denied');
         expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     } finally {
         failed.mockRestore();

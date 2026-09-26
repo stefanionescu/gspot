@@ -3,6 +3,7 @@ import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { codeLines, withoutComment } from '#cli/checks/structure/code-lines.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('shared parse handles retain grammar, source, and independent disposal boundaries', async () => {
     const observations = { root: '/repository', sources: new Map<string, Buffer>() };
@@ -63,8 +64,10 @@ test('Bash and naming analysis reject missing trees and accept corrected parsing
     const parser = await parserFor('bash');
     const parse = spyOn(parser, 'parse').mockReturnValue(null);
     try {
-        await expect(scriptFunctions('run() { echo ready; }', context)).rejects.toThrow('no tree');
-        await expect(identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context)).rejects.toThrow('no tree');
+        expect((await rejection(scriptFunctions('run() { echo ready; }', context))).message).toContain('no tree');
+        expect((await rejection(identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context))).message).toContain(
+            'no tree',
+        );
     } finally {
         parse.mockRestore();
     }

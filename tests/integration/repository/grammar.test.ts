@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, spyOn, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { prepareInput, SWIFT_GRAMMAR } from '../../../packages/cli/scripts/inputs.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));
 
@@ -22,7 +23,7 @@ test('a corrupted download never becomes a cached parser', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'build/swift.wasm');
     using download = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('corrupted grammar'));
-    await expect(prepareInput(path, SWIFT_GRAMMAR)).rejects.toThrow('checksum mismatch');
+    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('checksum mismatch');
     expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);
@@ -34,7 +35,7 @@ test('a corrupt cache is refused without replacing it or making a network reques
     const path = join(sandbox.path, 'swift.wasm');
     await Bun.write(path, 'corrupted cache');
     using download = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download.'));
-    await expect(prepareInput(path, SWIFT_GRAMMAR)).rejects.toThrow('checksum mismatch');
+    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('checksum mismatch');
     expect(readFileSync(path, 'utf8')).toBe('corrupted cache');
     expect(download).not.toHaveBeenCalled();
 });
@@ -43,7 +44,7 @@ test('an upstream HTTP failure leaves no parser and a corrected response prepare
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'swift.wasm');
     using download = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('unavailable', { status: 503 }));
-    await expect(prepareInput(path, SWIFT_GRAMMAR)).rejects.toThrow('HTTP 503');
+    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('HTTP 503');
     expect(existsSync(path)).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);

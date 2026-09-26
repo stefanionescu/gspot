@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 
@@ -20,11 +21,15 @@ test.each(['eslint', 'prettier'] as const)(
         const root = join(directory.path, 'project');
         symlinkSync(modules, join(root, 'node_modules'));
         symlinkSync(`../outside/${filename}`, join(root, filename));
-        await expect(
-            tool === 'eslint'
-                ? evaluateEslint({ root, paths: [], flat: true })
-                : evaluateFormat({ root, from: filename }),
-        ).rejects.toThrow('private regular file');
+        expect(
+            (
+                await rejection(
+                    tool === 'eslint'
+                        ? evaluateEslint({ root, paths: [], flat: true })
+                        : evaluateFormat({ root, from: filename }),
+                )
+            ).message,
+        ).toContain('private regular file');
         expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);
         expect(readFileSync(join(directory.path, 'outside', filename), 'utf8')).toBe(content);
     },

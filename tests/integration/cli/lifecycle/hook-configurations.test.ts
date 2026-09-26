@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const PRE_COMMIT_POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 
@@ -61,7 +62,7 @@ test('an overriding simple-git-hooks file remains intact and refuses package int
         'package.json': '{"private":true}\n',
         '.simple-git-hooks.cjs': original,
     });
-    await expect(applyCommand({ cwd: sandbox.path, isDryRun: false })).rejects.toThrow(
+    expect((await rejection(applyCommand({ cwd: sandbox.path, isDryRun: false }))).message).toContain(
         'Retained .simple-git-hooks.cjs',
     );
     expect(readFileSync(join(sandbox.path, '.simple-git-hooks.cjs'), 'utf8')).toBe(original);

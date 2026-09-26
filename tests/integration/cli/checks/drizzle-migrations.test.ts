@@ -10,6 +10,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 const GENERATOR = String.raw`import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const schema = readFileSync('schema.txt', 'utf8');
@@ -65,7 +66,9 @@ for (const scope of ['', 'packages/db']) {
             const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
             try {
                 if (isFailure) {
-                    await expect(drizzleMigrations(input)).rejects.toThrow('Migration generation failed');
+                    expect((await rejection(drizzleMigrations(input))).message).toContain(
+                        'Migration generation failed',
+                    );
                     writeFileSync(join(directory.path, path('schema.txt')), 'current');
                     expect(await drizzleMigrations(input)).toStrictEqual([]);
                 } else {
@@ -178,12 +181,16 @@ test.each(['cancellation', 'deadline'])(
         });
         const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
         try {
-            await expect(
-                drizzleMigrations({
-                    ...input,
-                    ...(failure === 'cancellation' ? { cancelSignal: AbortSignal.timeout(100) } : {}),
-                }),
-            ).rejects.toThrow(failure === 'cancellation' ? 'canceled' : 'was stopped');
+            expect(
+                (
+                    await rejection(
+                        drizzleMigrations({
+                            ...input,
+                            ...(failure === 'cancellation' ? { cancelSignal: AbortSignal.timeout(100) } : {}),
+                        }),
+                    )
+                ).message,
+            ).toContain(failure === 'cancellation' ? 'canceled' : 'was stopped');
             expect(copies).toHaveLength(1);
             expect(copies.every((path) => !existsSync(path))).toBe(true);
             expect(readFileSync(join(directory.path, 'generate'), 'utf8')).toBe('setInterval(() => {}, 1000);\n');

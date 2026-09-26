@@ -10,6 +10,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
@@ -52,7 +53,9 @@ test.each(['jest', 'vitest'])(
                 tools: { [configuration]: { harness_directory: 'tests/fixtures' } },
             }),
         });
-        await expect(readProfile('invalid.profile.toml', directory.path)).rejects.toThrow('a profile carries no path');
+        expect((await rejection(readProfile('invalid.profile.toml', directory.path))).message).toContain(
+            'a profile carries no path',
+        );
     },
 );
 
@@ -89,7 +92,9 @@ test('profile export omits local ESLint registrations and selector bases while p
             tools: { eslint: { adopted: [{ processor: { module: './processing.mjs', export: 'default' } }] } },
         }),
     });
-    await expect(readProfile('invalid.profile.toml', directory.path)).rejects.toThrow('a profile carries no path');
+    expect((await rejection(readProfile('invalid.profile.toml', directory.path))).message).toContain(
+        'a profile carries no path',
+    );
 });
 
 test('profile export omits complete EditorConfig documents and preserves reusable formatting options', async () => {
@@ -132,7 +137,9 @@ test('profile publication is idempotent, preserves edits, and survives apply and
     applyUninstall(directory.path, planUninstall(directory.path));
     expect(readFileSync(path)).toStrictEqual(first);
     await Bun.write(path, `${first.toString('utf8')}\n# Authored note.\n`);
-    await expect(exportCommand(directory.path, 'shared.profile.toml')).rejects.toThrow('Preserved edited or unowned');
+    expect((await rejection(exportCommand(directory.path, 'shared.profile.toml'))).message).toContain(
+        'Preserved edited or unowned',
+    );
     expect(readFileSync(path, 'utf8')).toContain('# Authored note.');
 });
 
@@ -153,7 +160,7 @@ test.each([
     const outside = join(directory.path, 'outside/profile.toml');
     symlinkSync('../outside', join(root, 'linked'), 'dir');
     symlinkSync(outside, join(root, 'linked.toml'));
-    await expect(exportCommand(root, file)).rejects.toThrow();
+    await rejection(exportCommand(root, file));
     expect(readFileSync(outside, 'utf8')).toBe('original');
 });
 
@@ -165,11 +172,13 @@ test('profile export preserves an unowned destination and refuses the managed re
     });
     const occupied = join(directory.path, 'occupied.toml');
     chmodSync(occupied, 0o444);
-    await expect(exportCommand(directory.path, 'occupied.toml')).rejects.toThrow('Preserved edited or unowned');
+    expect((await rejection(exportCommand(directory.path, 'occupied.toml'))).message).toContain(
+        'Preserved edited or unowned',
+    );
     expect(readFileSync(occupied, 'utf8')).toBe('original bytes');
     expect(statSync(occupied).mode & 0o200).toBe(0);
     const original = readFileSync(join(directory.path, 'gspot.toml'));
-    await expect(exportCommand(directory.path, 'gspot.toml')).rejects.toThrow();
+    await rejection(exportCommand(directory.path, 'gspot.toml'));
     expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 
@@ -183,7 +192,7 @@ test('profile publication recovers an interrupted write through the lifecycle jo
         rename(source, target);
     });
     try {
-        await expect(exportCommand(directory.path, 'shared.profile.toml')).rejects.toThrow(
+        expect((await rejection(exportCommand(directory.path, 'shared.profile.toml'))).message).toContain(
             'Profile publication interrupted',
         );
         expect(await Bun.file(path).exists()).toBe(false);

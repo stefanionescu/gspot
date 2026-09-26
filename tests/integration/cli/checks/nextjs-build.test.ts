@@ -8,6 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 for (const scope of ['', 'apps/web']) {
     describe(`Next.js output preservation in ${scope || 'root'}`, () => {
@@ -136,7 +137,7 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
             return { code: 1, missing: false, duration: 1, stdout: '', stderr: `Error: ${diagnostic}` };
         });
         try {
-            await expect(nextjsTypes(input)).rejects.toThrow(diagnostic);
+            expect((await rejection(nextjsTypes(input))).message).toContain(diagnostic);
             expect(scratch).not.toBe('');
             expect(existsSync(scratch)).toBe(false);
             expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

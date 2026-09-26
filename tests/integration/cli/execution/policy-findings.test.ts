@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['swift/trivial-function'], fix: false, isDryRun: false };
 const BROKEN =
@@ -37,5 +38,5 @@ test('apply refuses a policy with a wrong line, because it writes from the polic
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': BROKEN, '.gitignore': '.gspot/\n' });
     const session = await openSession(sandbox.path);
-    await expect(applyAll(session)).rejects.toThrow('gspot.toml:5:1');
+    expect((await rejection(applyAll(session))).message).toContain('gspot.toml:5:1');
 });

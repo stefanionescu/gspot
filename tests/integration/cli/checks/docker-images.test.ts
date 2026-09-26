@@ -6,6 +6,7 @@ import * as tools from '#cli/execution/tool-runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const sources = [
     'services:\n  app:\n    image: "nginx:1.27.2"\n',
@@ -66,7 +67,7 @@ test('Compose images follow service mappings and reject unreadable input', async
             { code: 10, stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{}]}', stderr: '' },
         ]) {
             run.mockResolvedValue({ ...failure, missing: false, duration: 1 });
-            await expect(trivyImage(input)).rejects.toThrow();
+            await rejection(trivyImage(input));
             expect(await Bun.file(join(directory.path, 'compose.yaml')).text()).toBe(sources.at(-1)!);
         }
         run.mockResolvedValue({
@@ -81,7 +82,9 @@ test('Compose images follow service mappings and reject unreadable input', async
             writeFileSync(join(directory.path, 'compose.yaml'), invalid);
             input.observations = { root: directory.path, sources: new Map() };
             run.mockClear();
-            await expect(trivyImage(input)).rejects.toThrow('Cannot read Compose service images in compose.yaml.');
+            expect((await rejection(trivyImage(input))).message).toContain(
+                'Cannot read Compose service images in compose.yaml.',
+            );
             expect(run).not.toHaveBeenCalled();
         }
         writeFileSync(join(directory.path, 'compose.yaml'), 'services: {app: {build: .}}\n');

@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { readdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
@@ -69,12 +70,16 @@ test.each([
         const external = join(outside.path, 'private.txt');
         const link = join(root, '.venv/lib/escaped');
         symlinkSync(external, link);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow('external link');
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
+            'external link',
+        );
         unlinkSync(link);
         const interpreter = readlinkSync(python);
         unlinkSync(python);
         symlinkSync(external, python);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow('external link');
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
+            'external link',
+        );
         unlinkSync(python);
         symlinkSync(interpreter, python);
         const configuration = join(root, '.venv/pyvenv.cfg');
@@ -85,11 +90,13 @@ test.each([
                 .toString('utf8')
                 .replace('include-system-site-packages = false', 'include-system-site-packages = true'),
         );
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow('system packages');
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
+            'system packages',
+        );
         writeFileSync(configuration, configured);
         unlinkSync(configuration);
         symlinkSync(external, configuration);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow(
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
             'not a private regular file: .venv/pyvenv.cfg',
         );
         unlinkSync(configuration);
@@ -98,7 +105,9 @@ test.each([
         writeFileSync(configuration, configured.toString('utf8').replace(/^home = .+$/mu, `home = ${outside.path}`));
         unlinkSync(python);
         symlinkSync(join(outside.path, 'python'), python);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow('external link');
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
+            'external link',
+        );
         unlinkSync(python);
         symlinkSync(interpreter, python);
         writeFileSync(configuration, configured);
@@ -210,7 +219,7 @@ test.each([
                 originalLoader.toString('utf8') +
                     (backend === 'setuptools' ? '\nMAPPING = dict()\n' : '\nF.map_module("bad", str())\n'),
             );
-            await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow(
+            expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
                 'Cannot parse installed editable Python loader metadata',
             );
             writeFileSync(loader, originalLoader);
@@ -218,11 +227,11 @@ test.each([
         const metadata = join(sites.stdout.trim(), 'fixture-path.pth');
         await using external = await testdir();
         writeFileSync(metadata, `${external.path}\n`);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow(
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
             'path metadata references an external directory',
         );
         writeFileSync(metadata, `${join(root, 'unselected-source')}\n`);
-        await expect(withRevisionSnapshot(root, source, async () => undefined)).rejects.toThrow(
+        expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
             'source missing from the selected revision',
         );
         writeFileSync(metadata, `# Preserved comment\n\n${root}\n`);

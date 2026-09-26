@@ -7,6 +7,7 @@ import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'CodeQL refuses output language %s before spawning and accepts a corrected language',
@@ -46,7 +47,7 @@ test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
             return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
         });
         try {
-            await expect(codeql(input)).rejects.toThrow();
+            await rejection(codeql(input));
             expect(run).not.toHaveBeenCalled();
             await Bun.write(join(directory.path, 'gspot.toml'), policy('python'));
             const corrected = await openSession(directory.path);

@@ -22,6 +22,7 @@ import {
     symlinkSync,
     unlinkSync,
 } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 describe('site build reproducibility', () => {
     test('the second build preserves the output shared with other checks', async () => {
@@ -69,7 +70,7 @@ test('a failed reproducibility build retains the first isolated output', async (
     const first = await siteBuild(request);
     expect(first.isBuilt).toBe(true);
     writeFileSync(join(sandbox.path, 'build.js'), 'throw new Error("Planted build failure");');
-    await expect(buildReproducible(request)).rejects.toThrow('The second site build failed');
+    expect((await rejection(buildReproducible(request))).message).toContain('The second site build failed');
     expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe('first');
     expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
 });
@@ -143,11 +144,11 @@ test.each([
             duration: 1,
         }));
         try {
-            await expect(analyze(request)).rejects.toThrow();
+            await rejection(analyze(request));
             code = 0;
             for (const invalid of ['', '{ broken', '{}']) {
                 stdout = invalid;
-                await expect(analyze(request)).rejects.toThrow();
+                await rejection(analyze(request));
             }
             stdout = JSON.stringify(
                 name === 'links'

@@ -9,6 +9,7 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -84,22 +85,26 @@ test('init does not report success when required Python lock resolution cannot r
             : run(command, options),
     );
     try {
-        await expect(
-            initCommand({
-                cwd: sandbox.path,
-                yes: true,
-                isDryRun: false,
-                json: true,
-                configurations: ['python'],
-                isListExact: true,
-                hooks: 'none',
-                ci: 'none',
-                runner: 'mise',
-                rules: 'no',
-                install: true,
-                allowDirty: true,
-            }),
-        ).rejects.toThrow('Install uv');
+        expect(
+            (
+                await rejection(
+                    initCommand({
+                        cwd: sandbox.path,
+                        yes: true,
+                        isDryRun: false,
+                        json: true,
+                        configurations: ['python'],
+                        isListExact: true,
+                        hooks: 'none',
+                        ci: 'none',
+                        runner: 'mise',
+                        rules: 'no',
+                        install: true,
+                        allowDirty: true,
+                    }),
+                )
+            ).message,
+        ).toContain('Install uv');
         expect(readFileSync(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');
         expect(existsSync(join(sandbox.path, '.gspot/uv.lock'))).toBe(false);
         expect(readFileSync(join(sandbox.path, 'pyrightconfig.json'), 'utf8')).toBe('{"exclude":["legacy"]}\n');

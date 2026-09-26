@@ -3,6 +3,7 @@ import { parseSql } from '#cli/parsers/sql/parser.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
@@ -31,7 +32,9 @@ test('SQL analyses share concurrent parses and refresh after source corrections'
         line: 2,
         column: 1,
     });
-    await expect(sqlIdentifiers('broken.sql', broken, observations)).rejects.toThrow('SQL parse failed at 2:1');
+    expect((await rejection(sqlIdentifiers('broken.sql', broken, observations))).message).toContain(
+        'SQL parse failed at 2:1',
+    );
     expect((await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), observations)).error).toBeUndefined();
     const refreshed = sqlFile(source, { root: observations.root, sources: new Map() });
     expect(refreshed).not.toBe(first);

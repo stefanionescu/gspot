@@ -9,6 +9,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
@@ -68,7 +69,7 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
             };
         });
         try {
-            await expect(licensesPackages(selected)).rejects.toThrow();
+            await rejection(licensesPackages(selected));
             expect(directories.every((directory) => !existsSync(directory))).toBe(true);
             broken = false;
             expect(await licensesPackages(selected)).toStrictEqual([]);
@@ -108,7 +109,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
             stdout: '[{"Name":"example","Version":"1.0.0","License":"MIT"}]',
         });
         try {
-            await expect(licensesPackages(selected)).rejects.toThrow();
+            await rejection(licensesPackages(selected));
             expect(spawn).not.toHaveBeenCalled();
             if (failure === 'external link') {
                 expect(readFileSync(join(outside.path, 'configuration.json'))).toStrictEqual(original);

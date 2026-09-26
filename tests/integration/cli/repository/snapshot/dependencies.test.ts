@@ -6,6 +6,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();
@@ -30,9 +31,9 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     );
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
     symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
-    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'external link',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('external link');
 });
 
 test('revision dependencies reject external manifest and installation links before copying', async () => {
@@ -49,15 +50,15 @@ test('revision dependencies reject external manifest and installation links befo
     gitOutput(sandbox.path, ['add', '.']);
     unlinkSync(join(sandbox.path, 'package.json'));
     symlinkSync(join(external.path, 'package.json'), join(sandbox.path, 'package.json'));
-    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'Source link leaves',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('Source link leaves');
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
-    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'external link',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('external link');
     unlinkSync(join(sandbox.path, 'node_modules/external'));
     await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
@@ -79,9 +80,9 @@ test('a nested revision refuses its incomplete managed dependency installation',
     withLifecycleOwner(project, (owner) => {
         owner.beginInstallation('npm');
     });
-    await expect(withRevisionSnapshot(project, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'Tool installation is incomplete',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(project, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('Tool installation is incomplete');
     withLifecycleOwner(project, (owner) => {
         owner.finishInstallation('npm');
     });
@@ -111,14 +112,14 @@ test.each(['', 'nested/'])('revision prose checks reuse verified installed packa
     });
     expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
-    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'do not match the revision configuration',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('do not match the revision configuration');
     await Bun.write(join(sandbox.path, config), 'StylesPath = vale/styles\nPackages = Example\n');
     await Bun.write(join(project, packagePath), 'edited package');
-    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
-        'missing or edited',
-    );
+    expect(
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+    ).toContain('missing or edited');
 });
 
 test.each([false, true])(
@@ -188,16 +189,20 @@ test('cancellation drains dependency copies before removing the snapshot and pre
         }
     });
     try {
-        await expect(
-            withRevisionSnapshot(
-                sandbox.path,
-                { kind: 'index' },
-                async () => {
-                    entered = true;
-                },
-                controller.signal,
-            ),
-        ).rejects.toThrow('Canceled dependency copy');
+        expect(
+            (
+                await rejection(
+                    withRevisionSnapshot(
+                        sandbox.path,
+                        { kind: 'index' },
+                        async () => {
+                            entered = true;
+                        },
+                        controller.signal,
+                    ),
+                )
+            ).message,
+        ).toContain('Canceled dependency copy');
         expect(pending).toBe(0);
         expect(entered).toBe(false);
         expect(destination).toBeDefined();

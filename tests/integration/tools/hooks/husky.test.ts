@@ -8,6 +8,7 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 test.each(['default', 'native', 'nested'])(
     'Husky preserves authored hooks and exact Git input in a %s installation',
@@ -158,29 +159,37 @@ test.each(['default', 'native', 'nested'])(
                 })),
             ).ready,
         ).toBe(false);
-        await expect(
-            installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            ),
-        ).rejects.toThrow('integration is missing or edited');
+        expect(
+            (
+                await rejection(
+                    installHookManager(
+                        await openSession(root).then((session) => ({
+                            policy: session.policyFiles.policy,
+                            repository: session.repository,
+                            tools: session,
+                        })),
+                    ),
+                )
+            ).message,
+        ).toContain('integration is missing or edited');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         writeFileSync(
             join(root, '.husky/pre-push'),
             managed + '\n# >>> gspot managed >>>\nexit 0\n# <<< gspot managed <<<\n',
         );
-        await expect(
-            installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            ),
-        ).rejects.toThrow('markers');
+        expect(
+            (
+                await rejection(
+                    installHookManager(
+                        await openSession(root).then((session) => ({
+                            policy: session.policyFiles.policy,
+                            repository: session.repository,
+                            tools: session,
+                        })),
+                    ),
+                )
+            ).message,
+        ).toContain('markers');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         const init = join(root, 'config/husky/init.sh');
         for (const [body, status, calls] of [

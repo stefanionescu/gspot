@@ -18,6 +18,7 @@ import {
     utimesSync,
     writeFileSync,
 } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 test.each(['custom', 'native'])(
     'native Lefthook preserves a %s hook and delivers exact Git input',
@@ -106,15 +107,19 @@ test.each(['custom', 'native'])(
         const helperPath = join(location.absolute, 'prepare-commit-msg');
         const originalHelper = existsSync(helperPath) ? readFileSync(helperPath) : undefined;
         writeFileSync(join(root, 'hook-settings.yml'), 'pre-commit: [invalid yaml\n');
-        await expect(
-            installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            ),
-        ).rejects.toThrow('Cannot load Lefthook configuration');
+        expect(
+            (
+                await rejection(
+                    installHookManager(
+                        await openSession(root).then((session) => ({
+                            policy: session.policyFiles.policy,
+                            repository: session.repository,
+                            tools: session,
+                        })),
+                    ),
+                )
+            ).message,
+        ).toContain('Cannot load Lefthook configuration');
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init.sh\n');
         const offline = await run(
@@ -161,15 +166,19 @@ test.each(['custom', 'native'])(
                     })),
                 ).ready,
             ).toBe(false);
-            await expect(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            ).rejects.toThrow('Retained edited hook');
+            expect(
+                (
+                    await rejection(
+                        installHookManager(
+                            await openSession(root).then((session) => ({
+                                policy: session.policyFiles.policy,
+                                repository: session.repository,
+                                tools: session,
+                            })),
+                        ),
+                    )
+                ).message,
+            ).toContain('Retained edited hook');
             expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
             writeFileSync(helperPath, repaired);
             unlinkSync(helperPath);
@@ -377,15 +386,19 @@ test('Lefthook versions without the supported installation controls retain exist
     const original = '#!/bin/sh\necho authored\n';
     writeFileSync(join(location.absolute, 'pre-commit'), original, { mode: 0o755 });
     expect((await applyCommand({ cwd: repository.path, isDryRun: false })).exitCode).toBe(0);
-    await expect(
-        installHookManager(
-            await openSession(repository.path).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-                tools: session,
-            })),
-        ),
-    ).rejects.toThrow('Install Lefthook 2.0.13 or newer');
+    expect(
+        (
+            await rejection(
+                installHookManager(
+                    await openSession(repository.path).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            )
+        ).message,
+    ).toContain('Install Lefthook 2.0.13 or newer');
     expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
     expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);
 }, 60_000);

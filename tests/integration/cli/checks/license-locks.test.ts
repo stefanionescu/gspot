@@ -7,6 +7,7 @@ import { run as runCli } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { rejection } from '#tests/support/rejection.ts';
 
 const LOCKS: [string, string][] = [
     [
@@ -85,7 +86,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
             }),
         );
     };
-    await expect(check()).rejects.toThrow('require a dependency lockfile');
+    expect((await rejection(check())).message).toContain('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);
     expect(await check()).toStrictEqual([]);
 });

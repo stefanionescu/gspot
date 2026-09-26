@@ -7,6 +7,7 @@ import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ preview, isolated }))))(
     'corrections reject a replaced external source before execution (preview $preview, isolated $isolated)',
@@ -20,7 +21,9 @@ test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ 
         planned.spec.isolated_files = isolated;
         rmSync(join(sandbox.path, 'source.txt'));
         symlinkSync(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
-        await expect(applyFixers(session, [planned], preview)).rejects.toThrow('Source link leaves the repository');
+        expect((await rejection(applyFixers(session, [planned], preview))).message).toContain(
+            'Source link leaves the repository',
+        );
         expect(readFileSync(join(external.path, 'source.txt'), 'utf8')).toBe('external original');
         rmSync(join(sandbox.path, 'source.txt'));
         writeFileSync(join(sandbox.path, 'source.txt'), 'original');
@@ -74,7 +77,9 @@ test('isolated correction refuses to overwrite source changed during execution a
         `,
     );
     planned.spec.isolated_files = true;
-    await expect(runFixer(session, planned, sandbox.path)).rejects.toThrow('changed while its correction was running');
+    expect((await rejection(runFixer(session, planned, sandbox.path))).message).toContain(
+        'changed while its correction was running',
+    );
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('new working content');
     expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
     const corrected = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");

@@ -6,6 +6,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -16,7 +17,7 @@ test('apply refuses a proposal whose policy changed after the session was read',
     const session = await openSession(sandbox.path);
     const edited = initial.replace('version = 1', 'version = 1\nlevel = "all"');
     await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
-    await expect(applyAll(session)).rejects.toThrow('changed after generation was planned');
+    expect((await rejection(applyAll(session))).message).toContain('changed after generation was planned');
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(edited);
     expect(existsSync(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
@@ -42,7 +43,7 @@ test('init refuses an unsafe output ancestor before attempting installation', as
     await createFileTree(outside.path, { 'authored.toml': 'untouched = true\n' });
     await createFileTree(sandbox.path, { 'typos.toml': '[default.extend-words]\nAuthored = "Authored"\n' });
     symlinkSync(outside.path, join(sandbox.path, '.mise'));
-    await expect(
+    await rejection(
         initCommand({
             cwd: sandbox.path,
             yes: true,
@@ -57,7 +58,7 @@ test('init refuses an unsafe output ancestor before attempting installation', as
             install: true,
             allowDirty: true,
         }),
-    ).rejects.toThrow();
+    );
     expect(readFileSync(join(outside.path, 'authored.toml'), 'utf8')).toBe('untouched = true\n');
     expect(existsSync(join(outside.path, 'conf.d/gspot-tools.toml'))).toBe(false);
     expect(readFileSync(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(
@@ -70,22 +71,26 @@ test('init retains old configuration when a conflicting replacement cannot be pu
     const authored = '[default.extend-words]\nAuthored = "Authored"\n';
     const conflict = '# Maintained independently.\n';
     await createFileTree(sandbox.path, { 'typos.toml': authored, '.gspot/config/typos.toml': conflict });
-    await expect(
-        initCommand({
-            cwd: sandbox.path,
-            yes: true,
-            isDryRun: false,
-            json: true,
-            configurations: ['spelling'],
-            isListExact: true,
-            hooks: 'none',
-            ci: 'none',
-            runner: 'none',
-            rules: 'no',
-            install: false,
-            allowDirty: true,
-        }),
-    ).rejects.toThrow('Setup preserved conflicting outputs');
+    expect(
+        (
+            await rejection(
+                initCommand({
+                    cwd: sandbox.path,
+                    yes: true,
+                    isDryRun: false,
+                    json: true,
+                    configurations: ['spelling'],
+                    isListExact: true,
+                    hooks: 'none',
+                    ci: 'none',
+                    runner: 'none',
+                    rules: 'no',
+                    install: false,
+                    allowDirty: true,
+                }),
+            )
+        ).message,
+    ).toContain('Setup preserved conflicting outputs');
     expect(readFileSync(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
     expect(readFileSync(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toBe(conflict);
 });

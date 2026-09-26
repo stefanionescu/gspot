@@ -6,6 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { pythonModules } from '#cli/checks/python/modules.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {
@@ -114,7 +115,7 @@ test.each([
     const deleted = spyOn(first, 'delete');
     const parse = spyOn(parser, 'parse').mockReturnValueOnce(first).mockReturnValueOnce(null);
     try {
-        await expect(read(request)).rejects.toThrow('parser returned no tree');
+        expect((await rejection(read(request))).message).toContain('parser returned no tree');
         expect(deleted).toHaveBeenCalledTimes(1);
     } finally {
         parse.mockRestore();

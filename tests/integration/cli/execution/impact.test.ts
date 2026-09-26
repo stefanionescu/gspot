@@ -10,6 +10,7 @@ import type { Session } from '#cli/execution/session.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
@@ -183,9 +184,13 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
             analysis: 'unknown-analysis',
         };
         session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
-        await expect(
-            executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
-        ).rejects.toThrow(`No ${engine} analysis is called unknown-analysis.`);
+        expect(
+            (
+                await rejection(
+                    executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
+                )
+            ).message,
+        ).toContain(`No ${engine} analysis is called unknown-analysis.`);
         expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
         expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
     },

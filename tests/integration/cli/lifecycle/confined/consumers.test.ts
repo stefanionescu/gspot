@@ -8,6 +8,7 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { rejection } from '#tests/support/rejection.ts';
 
 describe.skipIf(process.platform === 'win32')('confined discovery', () => {
     test.each(['project', 'configuration', 'schemes'] as const)(
@@ -49,7 +50,7 @@ test('structural rule caching confines writes and preserves later rule edits', a
     symlinkSync('../../outside', cache);
     const run = () =>
         astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', ['example.sh']);
-    await expect(run()).rejects.toThrow('Unsafe lifecycle parent');
+    expect((await rejection(run())).message).toContain('Unsafe lifecycle parent');
     expect(readFileSync(join(directory.path, 'outside/ast-grep/bash-branches.yml'), 'utf8')).toBe('external rule\n');
     unlinkSync(cache);
     expect(await run()).toHaveLength(1);
@@ -58,7 +59,7 @@ test('structural rule caching confines writes and preserves later rule edits', a
     expect(readOwnership(root).files.find((entry) => entry.path === rule)?.kind).toBe('runtime');
     chmodSync(join(root, rule), 0o644);
     writeFileSync(join(root, rule), 'edited rule\n');
-    await expect(run()).rejects.toThrow(`Retained edited or unowned structural rule: ${rule}`);
+    expect((await rejection(run())).message).toContain(`Retained edited or unowned structural rule: ${rule}`);
     expect(readFileSync(join(root, rule), 'utf8')).toBe('edited rule\n');
 });
 

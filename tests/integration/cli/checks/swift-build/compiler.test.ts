@@ -9,6 +9,7 @@ import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 afterEach(() => {
     removeBuildFolders();
@@ -22,7 +23,7 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
     try {
         if (code === 0) expect(await swiftBuild(input)).toStrictEqual([]);
         else
-            await expect(swiftBuild(input)).rejects.toThrow(
+            expect((await rejection(swiftBuild(input))).message).toContain(
                 `The Swift build exited ${String(code)} without source diagnostics.`,
             );
     } finally {
@@ -159,7 +160,7 @@ test('Swift response files stay inside the compiler cache before log publication
         duration: 1,
     });
     try {
-        await expect(swiftBuild(input)).rejects.toThrow();
+        await rejection(swiftBuild(input));
         expect(existsSync(plan.log)).toBe(false);
         const response = join(plan.folder, 'sources');
         writeFileSync(response, 'Sources/Main.swift\nSources/Owner.swift\n');
