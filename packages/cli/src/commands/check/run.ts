@@ -8,10 +8,10 @@ import { openSession } from '#cli/execution/session.ts';
 // check: open the session, honor the pin, run, render, decide the exit code.
 import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import type { FixReport } from '#cli/execution/fixers.ts';
 import type { StageFilter } from '#cli/execution/plan.ts';
 import type { RunOptions } from '#cli/execution/execute.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';

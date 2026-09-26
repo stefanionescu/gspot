@@ -8,7 +8,7 @@ test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'proje
     'hook destination %s restores current ownership under the shared writer boundary',
     async (destination) => {
         const { runBlocking } = await import('#cli/platform/spawn.ts');
-        const { hookLocation } = await import('#cli/lifecycle/hooks/git.ts');
+        const { hookLocation } = await import('#cli/lifecycle/hooks/location.ts');
         await using repository = await testdir();
         await using external = await testdir();
         expect(runBlocking(['git', 'init'], { cwd: repository.path }).code).toBe(0);

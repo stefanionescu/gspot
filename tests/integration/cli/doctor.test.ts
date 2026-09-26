@@ -5,10 +5,11 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {

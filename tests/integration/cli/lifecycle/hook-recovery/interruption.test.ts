@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 test.each(['before', 'after'] as const)(

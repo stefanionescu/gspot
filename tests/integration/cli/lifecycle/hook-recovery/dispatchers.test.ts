@@ -5,10 +5,11 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external', 'worktree'] as const)(

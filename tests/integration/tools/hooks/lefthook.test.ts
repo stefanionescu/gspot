@@ -9,7 +9,8 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 
 import {
     chmodSync,

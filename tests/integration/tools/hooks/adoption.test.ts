@@ -3,7 +3,7 @@ import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';

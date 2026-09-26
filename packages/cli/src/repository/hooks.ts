@@ -2,6 +2,13 @@ import { z } from 'zod';
 
 export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 
+/** The files gspot owns in the hooks directory for its stages: each hook, its original sibling, and its manager copy. */
+export const HOOK_ARTIFACTS: readonly string[] = HOOK_FILES.flatMap((hook) => [
+    hook,
+    `${hook}.gspot-original`,
+    `${hook}.gspot-manager`,
+]);
+
 export const LEFTHOOK_MIN_VERSION = '2.0.13';
 
 export const NATIVE_HOOK_MARKERS: Record<string, string> = {

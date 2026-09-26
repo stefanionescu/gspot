@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';

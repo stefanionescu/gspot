@@ -6,10 +6,12 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { containingAll } from '#tests/support/expectations.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external'] as const)(

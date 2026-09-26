@@ -2,23 +2,30 @@ import { isDeepStrictEqual } from 'node:util';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { Repository } from '#cli/repository/tree.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { basename, posix, relative, resolve } from 'node:path';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { hookBody, hookCommand } from '#cli/generation/hooks.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
-import type { PreparedHook } from '#cli/lifecycle/hooks/managers.ts';
-import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
-import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import type { PreparedHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/platform/file-modes.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
-import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { basename, dirname, isAbsolute, posix, relative, resolve } from 'node:path';
-import { hookBody, hookCommand, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
+import { HOOK_ARTIFACTS, HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import { type HookLocation, hookLocation, relativeInside } from '#cli/lifecycle/hooks/location.ts';
+
+type HookName = (typeof HOOK_FILES)[number];
+type Installation = {
+    owner: LifecycleOwner;
+    location: HookLocation;
+    policy: Policy;
+    manager: ReadonlyMap<string, PreparedHook> | undefined;
+    recorded: Set<string>;
+    nativeMarker: string | undefined;
+    directory: string;
+};
+type Restorations = { proposals: FileProposal[]; preserved: string[] };
 
 function rejectDifferingNativeHook(
     path: string,
@@ -38,49 +45,185 @@ function rejectDifferingNativeHook(
         );
 }
 
-/**
- * Ask Git for the actual clone-local destination, including worktrees and core.hooksPath.
- * @param root the repository root
- * @returns the hooks directory with the roots that confine and record it
- */
-export function hookLocation(root: string): HookLocation {
-    const repository = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: root });
-    if (repository.code !== 0) throw new Error(`Cannot resolve Git root: ${repository.stderr.trim()}`);
-    const top = resolve(root, repository.stdout.replace(/\n$/u, ''));
-    // An explicit path format canonicalizes symlinks before confinement can inspect them.
-    const result = runBlocking(['git', 'rev-parse', '--git-path', 'hooks'], { cwd: top });
-    if (result.code !== 0) throw new Error(`Cannot resolve Git hooks: ${result.stderr.trim()}`);
-    const absolute = resolve(top, result.stdout.replace(/\n$/u, ''));
-    const location = {
-        root: dirname(absolute),
-        directory: basename(absolute),
-        absolute,
-        gitRoot: top,
-        stateDirectory: STATE_DIRECTORY,
+// Refuses a hook that Git tracks, which the repository owns and gspot may not replace.
+function assertUntracked(location: HookLocation, path: string, advice: string): void {
+    const tracked = relativeInside(location.gitRoot, resolve(location.root, path));
+    if (tracked === undefined) return;
+    const result = runBlocking(['git', 'ls-files', '--error-unmatch', '--', tracked], { cwd: location.gitRoot });
+    if (result.code === 0) throw new Error(`Retained tracked hook ${tracked}. ${advice}`);
+}
+
+// Refuses an original sibling the journal does not agree about.
+function assertSiblingRecorded(
+    recorded: Set<string>,
+    location: HookLocation,
+    sibling: string,
+    original: FileSnapshot | undefined,
+): void {
+    if (recorded.has(sibling) && original === undefined)
+        throw new Error(`Original hook sibling is missing: ${sibling}. Restore it from recovery before reinstalling.`);
+    if (original !== undefined && !recorded.has(sibling))
+        throw new Error(
+            `Hook sibling already exists: ${location.absolute}/${basename(sibling)}. No hooks were changed.`,
+        );
+}
+
+// Refuses a stage hook that Git tracks or that an interrupted installation left inconsistent.
+function assertStageConsistent(
+    installation: Installation,
+    path: string,
+    current: FileSnapshot | undefined,
+    original: FileSnapshot | undefined,
+): void {
+    const { recorded, location } = installation;
+    if (recorded.has(path)) return;
+    if (current !== undefined)
+        assertUntracked(location, path, 'Add the gspot invocation through its hook manager before installing.');
+    if (original !== undefined && !isDeepStrictEqual(current, original))
+        throw new Error(
+            `Interrupted hook installation conflicts with ${path}; retain the original sibling and recovery data.`,
+        );
+}
+
+// Whether the installed hook must run a predecessor: an authored hook that differs from the manager's own.
+function isChained(
+    installation: Installation,
+    name: string,
+    path: string,
+    current: FileSnapshot | undefined,
+    original: FileSnapshot | undefined,
+): boolean {
+    const predecessor = original ?? (installation.recorded.has(path) ? undefined : current);
+    const generated = installation.manager?.get(name)?.generated;
+    rejectDifferingNativeHook(path, predecessor, generated, installation.nativeMarker);
+    return predecessor !== undefined && predecessor.bytes.toString('utf8') !== generated;
+}
+
+// The proposal that keeps an authored hook as the original sibling, when a chained hook has none yet.
+function siblingProposals(
+    installation: Installation,
+    path: string,
+    current: FileSnapshot | undefined,
+    original: FileSnapshot | undefined,
+    chain: boolean,
+): FileProposal[] {
+    if (!chain || original !== undefined || current === undefined) return [];
+    if (process.platform !== 'win32' && (current.mode & EXECUTE_BITS) === 0)
+        throw new Error(`Existing hook is not executable: ${path}. Retained without changing its behavior.`);
+    return [installation.owner.proposeReplacement(`${path}.gspot-original`, current, 'hook')];
+}
+
+// The proposal for the manager's copy of a hook: installed with a manager, restored without one.
+function managerCopyProposals(installation: Installation, name: string, path: string): FileProposal[] {
+    const { owner, manager, recorded } = installation;
+    const managerPath = `${path}.gspot-manager`;
+    if (manager === undefined) return recorded.has(managerPath) ? [owner.proposeRestoration(managerPath)] : [];
+    const content = manager.get(name);
+    if (content === undefined) throw new Error(`The hook manager did not generate ${name}.`);
+    const next = { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE };
+    return [owner.proposeReplacement(managerPath, next, 'hook')];
+}
+
+// The commands a stage hook runs: gspot itself, or the manager's copy and, for pre-commit's other stages, gspot too.
+function hookCommands(installation: Installation, name: HookName): string[] {
+    const { policy, manager, directory } = installation;
+    const own = hookCommand(name, policy.runner?.tool, binaryPath(), directory);
+    if (manager === undefined) return [own];
+    const isPreCommit = policy.hooks?.tool === 'pre-commit';
+    const managed = isPreCommit
+        ? 'SKIP= PRE_COMMIT_ALLOW_NO_CONFIG= bash "$0.gspot-manager" "$@"'
+        : 'SKIP_SIMPLE_GIT_HOOKS=0 bash "$0.gspot-manager" "$@"';
+    return isPreCommit && name !== 'pre-commit' ? [managed, own] : [managed];
+}
+
+// The proposals for one of gspot's stage hooks: its original sibling, the manager's copy, and the hook itself.
+function stageProposals(installation: Installation, name: HookName): FileProposal[] {
+    const { owner, location, policy, recorded } = installation;
+    const path = posix.join(location.directory, name);
+    const current = owner.read(path);
+    const original = owner.read(`${path}.gspot-original`);
+    assertSiblingRecorded(recorded, location, `${path}.gspot-original`, original);
+    assertStageConsistent(installation, path, current, original);
+    const chain = isChained(installation, name, path, current, original);
+    const body = hookBody(name, policy.runner?.tool, binaryPath(), chain, hookCommands(installation, name));
+    const next = { bytes: Buffer.from(body), mode: EXECUTABLE_FILE };
+    return [
+        ...siblingProposals(installation, path, current, original, chain),
+        ...managerCopyProposals(installation, name, path),
+        owner.proposeReplacement(path, next, 'hook', current !== undefined && !recorded.has(path), current),
+    ];
+}
+
+// The .gitignore block, proposed when the hooks live inside the checkout and outside .git.
+function gitignoreProposals(installation: Installation): FileProposal[] {
+    const { owner, location } = installation;
+    const boundary = relativeInside(location.gitRoot, location.root);
+    if (boundary === undefined || boundary === '.git' || boundary.startsWith('.git/')) return [];
+    return [owner.proposeBlock('.gitignore', gitignoreBlock(), 'hash')];
+}
+
+// Restorations of recorded hooks outside the stages that the manager no longer generates.
+function retiredProposals(installation: Installation): FileProposal[] {
+    const { owner, location, manager } = installation;
+    const entries = readOwnership(location.root, location.stateDirectory).files.filter(
+        (entry) => entry.kind === 'hook',
+    );
+    return entries.flatMap((entry) => {
+        const name = basename(entry.path);
+        if (HOOK_ARTIFACTS.includes(name) || manager?.has(name) === true) return [];
+        return [owner.proposeRestoration(entry.path)];
+    });
+}
+
+// The proposal for a manager hook outside the stages, or undefined when an authored hook is kept.
+function extraHookProposal(installation: Installation, name: string, content: PreparedHook): FileProposal | undefined {
+    const { owner, location, recorded } = installation;
+    if ((HOOK_FILES as readonly string[]).includes(name)) return undefined;
+    const path = posix.join(location.directory, name);
+    const current = owner.read(path);
+    const next = { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE };
+    if (recorded.has(path)) return owner.proposeReplacement(path, next, 'hook', false, current);
+    if (current === undefined) return undefined;
+    // Preserve authored hooks outside the three gspot stages.
+    if (current.bytes.toString('utf8') !== content.generated) {
+        rejectDifferingNativeHook(path, current, content.generated, installation.nativeMarker);
+        return undefined;
+    }
+    assertUntracked(location, path, 'No hooks were changed.');
+    return owner.proposeReplacement(path, next, 'hook', true, current);
+}
+
+// The proposals for every hook the manager generates outside the stages.
+function extraHookProposals(installation: Installation): FileProposal[] {
+    return [...(installation.manager ?? [])].flatMap(([name, content]) => {
+        const proposal = extraHookProposal(installation, name, content);
+        return proposal === undefined ? [] : [proposal];
+    });
+}
+
+// The restorations of one stage hook, its sibling, and its manager copy, and the edited files that are kept.
+function stageRestorations(
+    owner: LifecycleOwner,
+    location: HookLocation,
+    paths: Set<string>,
+    name: string,
+): Restorations {
+    const path = posix.join(location.directory, name);
+    const sibling = `${path}.gspot-original`;
+    const original = paths.has(sibling) ? owner.read(sibling) : undefined;
+    if (!paths.has(path)) {
+        if (original === undefined) return { proposals: [], preserved: [] };
+        if (isDeepStrictEqual(owner.read(path), original))
+            return { proposals: [owner.proposeRestoration(sibling)], preserved: [] };
+        return { proposals: [], preserved: [resolve(location.root, sibling)] };
+    }
+    const restoration = owner.proposeRestoration(path, original);
+    if (restoration.status === 'preserved') return { proposals: [], preserved: [resolve(location.root, path)] };
+    const companions = [sibling, `${path}.gspot-manager`].filter((companion) => paths.has(companion));
+    return {
+        proposals: [restoration, ...companions.map((companion) => owner.proposeRestoration(companion))],
+        preserved: [],
     };
-    const local = relative(top, absolute).replaceAll('\\', '/');
-    const inside = local !== '..' && !local.startsWith('../') && !isAbsolute(local);
-    const files = openConfinedRoot(inside ? top : location.root);
-    try {
-        const directory = inside && local === '' ? undefined : files.stat(inside ? local : location.directory);
-        if (directory !== undefined && !directory.isDirectory())
-            throw new Error(`Git hooks destination is not a directory: ${absolute}`);
-    } finally {
-        files.close();
-    }
-    if (inside && local !== '.git' && !local.startsWith('.git/')) {
-        const configured = relative(root, absolute).replaceAll('\\', '/');
-        const configuredInside = configured !== '..' && !configured.startsWith('../') && !isAbsolute(configured);
-        const ownerRoot = configuredInside ? root : top;
-        return { ...location, root: ownerRoot, directory: relative(ownerRoot, absolute).replaceAll('\\', '/') };
-    }
-    const git = runBlocking(['git', 'rev-parse', '--git-common-dir'], { cwd: top });
-    if (git.code !== 0) throw new Error(`Cannot resolve Git state: ${git.stderr.trim()}`);
-    const gitDirectory = resolve(top, git.stdout.trimEnd());
-    const internal = relative(gitDirectory, absolute).replaceAll('\\', '/');
-    if (internal !== '..' && !internal.startsWith('../') && !isAbsolute(internal))
-        return { ...location, root: gitDirectory, directory: internal };
-    return { ...location, stateDirectory: `${location.directory}/.gspot/state` };
 }
 
 /**
@@ -96,138 +239,25 @@ export function installHooks(
     manager?: ReadonlyMap<string, PreparedHook>,
 ): string {
     if (!repository.hasGit || (policy.hooks?.tool !== 'gspot' && manager === undefined)) return '';
-    const nativeMarker = manager === undefined ? undefined : NATIVE_HOOK_MARKERS[policy.hooks?.tool ?? ''];
     const location = hookLocation(repository.root);
-    const directory = relative(location.gitRoot, repository.root).replaceAll('\\', '/');
     return withLifecycleOwner(
         location.root,
         (owner) => {
-            const recorded = new Set(owner.paths());
-            const proposals: FileProposal[] = [];
-            const boundary = relative(location.gitRoot, location.root).replaceAll('\\', '/');
-            if (
-                boundary !== '..' &&
-                !boundary.startsWith('../') &&
-                !isAbsolute(boundary) &&
-                boundary !== '.git' &&
-                !boundary.startsWith('.git/')
-            )
-                proposals.push(owner.proposeBlock('.gitignore', gitignoreBlock(), 'hash'));
-            for (const name of HOOK_FILES) {
-                const path = posix.join(location.directory, name);
-                const sibling = `${path}.gspot-original`;
-                const current = owner.read(path);
-                const original = owner.read(sibling);
-                if (recorded.has(sibling) && original === undefined)
-                    throw new Error(
-                        `Original hook sibling is missing: ${sibling}. Restore it from recovery before reinstalling.`,
-                    );
-                if (original !== undefined && !recorded.has(sibling))
-                    throw new Error(
-                        `Hook sibling already exists: ${location.absolute}/${name}.gspot-original. No hooks were changed.`,
-                    );
-                const tracked = relative(location.gitRoot, resolve(location.root, path));
-                if (
-                    current !== undefined &&
-                    !recorded.has(path) &&
-                    !tracked.startsWith('../') &&
-                    !isAbsolute(tracked)
-                ) {
-                    const result = runBlocking(['git', 'ls-files', '--error-unmatch', '--', tracked], {
-                        cwd: location.gitRoot,
-                    });
-                    if (result.code === 0)
-                        throw new Error(
-                            `Retained tracked hook ${tracked}. Add the gspot invocation through its hook manager before installing.`,
-                        );
-                }
-                if (!recorded.has(path) && original !== undefined && !isDeepStrictEqual(current, original))
-                    throw new Error(
-                        `Interrupted hook installation conflicts with ${path}; retain the original sibling and recovery data.`,
-                    );
-                const predecessor = original ?? (recorded.has(path) ? undefined : current);
-                const chain =
-                    predecessor !== undefined && predecessor.bytes.toString('utf8') !== manager?.get(name)?.generated;
-                rejectDifferingNativeHook(path, predecessor, manager?.get(name)?.generated, nativeMarker);
-                if (chain && original === undefined && current !== undefined) {
-                    if (process.platform !== 'win32' && (current.mode & EXECUTE_BITS) === 0)
-                        throw new Error(
-                            `Existing hook is not executable: ${path}. Retained without changing its behavior.`,
-                        );
-                    proposals.push(owner.proposeReplacement(sibling, current, 'hook'));
-                }
-                const managerPath = `${path}.gspot-manager`;
-                if (manager !== undefined) {
-                    const content = manager.get(name);
-                    if (content === undefined) throw new Error(`The hook manager did not generate ${name}.`);
-                    proposals.push(
-                        owner.proposeReplacement(
-                            managerPath,
-                            { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE },
-                            'hook',
-                        ),
-                    );
-                } else if (recorded.has(managerPath)) proposals.push(owner.proposeRestoration(managerPath));
-                const native = policy.hooks?.tool === 'pre-commit';
-                const commands =
-                    manager === undefined
-                        ? [hookCommand(name, policy.runner?.tool, binaryPath(), directory)]
-                        : [
-                              native
-                                  ? 'SKIP= PRE_COMMIT_ALLOW_NO_CONFIG= bash "$0.gspot-manager" "$@"'
-                                  : 'SKIP_SIMPLE_GIT_HOOKS=0 bash "$0.gspot-manager" "$@"',
-                              ...(native && name !== 'pre-commit'
-                                  ? [hookCommand(name, policy.runner?.tool, binaryPath(), directory)]
-                                  : []),
-                          ];
-                proposals.push(
-                    owner.proposeReplacement(
-                        path,
-                        {
-                            bytes: Buffer.from(hookBody(name, policy.runner?.tool, binaryPath(), chain, commands)),
-                            mode: EXECUTABLE_FILE,
-                        },
-                        'hook',
-                        current !== undefined && !recorded.has(path),
-                        current,
-                    ),
-                );
-            }
-            for (const entry of readOwnership(location.root, location.stateDirectory).files.filter(
-                (entry) => entry.kind === 'hook',
-            )) {
-                const name = basename(entry.path);
-                if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
-                    continue;
-                if (manager?.has(name) !== true) proposals.push(owner.proposeRestoration(entry.path));
-            }
-            for (const [name, content] of manager ?? []) {
-                if ((HOOK_FILES as readonly string[]).includes(name)) continue;
-                const path = posix.join(location.directory, name);
-                const current = owner.read(path);
-                if (current === undefined && !recorded.has(path)) continue;
-                // Preserve authored hooks outside the three gspot stages.
-                if (!recorded.has(path) && current?.bytes.toString('utf8') !== content.generated) {
-                    rejectDifferingNativeHook(path, current, content.generated, nativeMarker);
-                    continue;
-                }
-                const tracked = relative(location.gitRoot, resolve(location.root, path));
-                if (!recorded.has(path) && !tracked.startsWith('../') && !isAbsolute(tracked)) {
-                    const result = runBlocking(['git', 'ls-files', '--error-unmatch', '--', tracked], {
-                        cwd: location.gitRoot,
-                    });
-                    if (result.code === 0) throw new Error(`Retained tracked hook ${tracked}. No hooks were changed.`);
-                }
-                proposals.push(
-                    owner.proposeReplacement(
-                        path,
-                        { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE },
-                        'hook',
-                        !recorded.has(path),
-                        current,
-                    ),
-                );
-            }
+            const installation: Installation = {
+                owner,
+                location,
+                policy,
+                manager,
+                recorded: new Set(owner.paths()),
+                nativeMarker: manager === undefined ? undefined : NATIVE_HOOK_MARKERS[policy.hooks?.tool ?? ''],
+                directory: relative(location.gitRoot, repository.root).replaceAll('\\', '/'),
+            };
+            const proposals = [
+                ...gitignoreProposals(installation),
+                ...HOOK_FILES.flatMap((name) => stageProposals(installation, name)),
+                ...retiredProposals(installation),
+                ...extraHookProposals(installation),
+            ];
             const conflict = proposals.find((proposal) => proposal.status === 'preserved');
             if (conflict !== undefined)
                 throw new Error(`Retained edited hook ${conflict.path}. Review it before running gspot install.`);
@@ -244,162 +274,21 @@ export function installHooks(
  * @param location the hooks directory with its roots
  * @returns the restorations to apply and the edited hooks that are kept
  */
-export function proposeHookRestorations(
-    owner: LifecycleOwner,
-    location: HookLocation,
-): {
-    proposals: FileProposal[];
-    preserved: string[];
-} {
+export function proposeHookRestorations(owner: LifecycleOwner, location: HookLocation): Restorations {
     const entries = readOwnership(location.root, location.stateDirectory).files.filter(
         (entry) => entry.kind === 'hook',
     );
-    const preserved: string[] = [];
-    const proposals: FileProposal[] = [];
-    for (const name of HOOK_FILES) {
-        const path = posix.join(location.directory, name);
-        const sibling = `${path}.gspot-original`;
-        const original = entries.some((entry) => entry.path === sibling) ? owner.read(sibling) : undefined;
-        if (!entries.some((entry) => entry.path === path)) {
-            if (original !== undefined && isDeepStrictEqual(owner.read(path), original)) {
-                proposals.push(owner.proposeRestoration(sibling));
-            } else if (original !== undefined) preserved.push(resolve(location.root, sibling));
-            continue;
-        }
-        const restoration = owner.proposeRestoration(path, original);
-        if (restoration.status === 'preserved') {
-            preserved.push(resolve(location.root, path));
-            continue;
-        }
-        proposals.push(restoration);
-        if (entries.some((entry) => entry.path === sibling)) proposals.push(owner.proposeRestoration(sibling));
-        const manager = `${path}.gspot-manager`;
-        if (entries.some((entry) => entry.path === manager)) proposals.push(owner.proposeRestoration(manager));
-    }
-    for (const entry of entries) {
-        const name = basename(entry.path);
-        if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
-            continue;
-        proposals.push(owner.proposeRestoration(entry.path));
-    }
-    preserved.push(
+    const paths = new Set(entries.map((entry) => entry.path));
+    const stages = HOOK_FILES.map((name) => stageRestorations(owner, location, paths, name));
+    const extras = entries.flatMap((entry) =>
+        HOOK_ARTIFACTS.includes(basename(entry.path)) ? [] : [owner.proposeRestoration(entry.path)],
+    );
+    const proposals = [...stages.flatMap((stage) => stage.proposals), ...extras];
+    const preserved = [
+        ...stages.flatMap((stage) => stage.preserved),
         ...proposals
             .filter((proposal) => proposal.status === 'preserved')
             .map((proposal) => resolve(location.root, proposal.path)),
-    );
+    ];
     return { proposals: proposals.filter((proposal) => proposal.status !== 'preserved'), preserved };
 }
-
-/**
- * Compare Git's executable hook files with their recorded installed identities.
- * @param options the policy and the repository the hooks belong to
- * @param options.policy the repository policy
- * @param options.repository the repository root and whether Git is present
- * @returns whether the hooks are ready, with the line that says so
- */
-export function hookStatus({
-    policy,
-    repository,
-}: {
-    policy: Policy;
-    repository: Pick<Repository, 'root' | 'hasGit'>;
-}): { ready: boolean; text: string } {
-    if (policy.hooks === undefined) return { ready: true, text: 'none' };
-    if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
-    const manager = ['simple-git-hooks', 'pre-commit', 'lefthook', 'husky'].includes(policy.hooks.tool);
-    if (
-        policy.hooks.tool === 'pre-commit' &&
-        !hasConfiguration(repository.root, preCommitConfiguration(repository.root, policy.runner?.tool, binaryPath()))
-    )
-        return { ready: false, text: 'pre-commit integration is missing or edited; run gspot apply' };
-    if (
-        policy.hooks.tool === 'simple-git-hooks' &&
-        !simpleGitHooksReady(repository.root, policy.runner?.tool, binaryPath())
-    )
-        return { ready: false, text: 'simple-git-hooks integration is missing or edited; run gspot apply' };
-    if (
-        policy.hooks.tool === 'lefthook' &&
-        !hasConfiguration(repository.root, lefthookConfiguration(repository.root, policy.runner?.tool, binaryPath()))
-    )
-        return { ready: false, text: 'lefthook integration is missing or edited; run gspot apply' };
-    if (policy.hooks.tool !== 'gspot' && !manager)
-        return {
-            ready: false,
-            text: `${policy.hooks.tool}: run gspot install to verify integration`,
-        };
-    if (policy.hooks.tool === 'husky' && !huskyReady(repository.root, policy.runner?.tool, binaryPath()))
-        return { ready: false, text: 'husky integration is missing or edited; run gspot apply' };
-    const location = hookLocation(repository.root);
-    const entries = readOwnership(location.root, location.stateDirectory).files;
-    const husky =
-        policy.hooks.tool === 'husky'
-            ? new Map(
-                  huskyLines(repository.root, policy.runner?.tool, binaryPath()).map(({ path, line }) => [
-                      basename(path),
-                      line,
-                  ]),
-              )
-            : undefined;
-    const files = openConfinedRoot(location.root);
-    try {
-        for (const name of HOOK_FILES) {
-            const path = posix.join(location.directory, name);
-            const sibling = `${path}.gspot-original`;
-            if (entries.some((entry) => entry.path === sibling)) {
-                const original = files.read(sibling);
-                if (original === undefined || (process.platform !== 'win32' && (original.mode & EXECUTE_BITS) === 0))
-                    return {
-                        ready: false,
-                        text: `${location.absolute}: original ${name} is missing or not executable; restore it from recovery and run gspot install`,
-                    };
-            }
-            for (const required of manager ? [path, `${path}.gspot-manager`] : [path]) {
-                const current = files.read(required);
-                const installed = entries.find((entry) => entry.path === required)?.installed;
-                const command =
-                    husky?.get(name) ??
-                    (policy.hooks.tool === 'simple-git-hooks'
-                        ? simpleGitHookFallback(repository.root, name, policy.runner?.tool, binaryPath()).replaceAll(
-                              "'",
-                              "'\"'\"'",
-                          )
-                        : undefined);
-                if (
-                    current === undefined ||
-                    current.mode !== installed?.mode ||
-                    (command !== undefined &&
-                        required === `${path}.gspot-manager` &&
-                        !current.bytes.toString('utf8').includes(command)) ||
-                    new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') !== installed.hash
-                )
-                    return {
-                        ready: false,
-                        text: `${location.absolute}: missing or edited ${basename(required)}; run gspot install`,
-                    };
-            }
-        }
-        for (const entry of entries.filter((entry) => entry.kind === 'hook')) {
-            const name = basename(entry.path);
-            if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
-                continue;
-            const current = files.read(entry.path);
-            if (
-                current === undefined ||
-                current.mode !== entry.installed?.mode ||
-                new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') !== entry.installed.hash
-            )
-                return { ready: false, text: `${location.absolute}: missing or edited ${name}; run gspot install` };
-        }
-        return { ready: true, text: `${location.absolute}: installed` };
-    } finally {
-        files.close();
-    }
-}
-
-export type HookLocation = {
-    root: string;
-    directory: string;
-    absolute: string;
-    gitRoot: string;
-    stateDirectory: string;
-};
