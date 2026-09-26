@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
@@ -11,6 +12,48 @@ const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
 });
 const PERCENT = 100;
+
+// Removes one entry of the previous result bundle, queueing a folder for the walk.
+function removeBundleEntry(files: ConfinedRoot, path: string, directories: string[]): void {
+    if (files.stat(path)?.isDirectory() === true) {
+        directories.push(path);
+        return;
+    }
+    const previous = files.read(path);
+    if (previous !== undefined) files.remove(path, previous);
+}
+
+// Removes the result bundle of the previous run, file by file and then folder by folder.
+function removePreviousBundle(files: ConfinedRoot): void {
+    if (files.stat('coverage.xcresult') === undefined) return;
+    const directories = ['coverage.xcresult'];
+    for (const directory of directories)
+        for (const name of files.list(directory)) removeBundleEntry(files, `${directory}/${name}`, directories);
+    for (const directory of directories.toReversed()) files.rmdir(directory);
+}
+
+// Runs the tests with coverage on, then prints the coverage report of the result bundle.
+async function measureCoverage(
+    input: EngineInput,
+    buildArgv: string[],
+    bundle: string,
+    cwd: string,
+): Promise<{ stdout: string }> {
+    const argv = buildArgv
+        .map((part) => (part === 'build-for-testing' ? 'test' : part))
+        .filter((part) => part !== 'clean');
+    const tested = await runCheckCommand(input, [...argv, '-enableCodeCoverage', 'YES', '-resultBundlePath', bundle], {
+        cwd,
+    });
+    if (tested.code !== 0)
+        throw new Error(
+            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${tested.stderr.trim()}`,
+        );
+    const viewed = await runCheckCommand(input, ['xcrun', 'xccov', 'view', '--report', '--json', bundle], { cwd });
+    if (viewed.code !== 0)
+        throw new Error(`The test run wrote no coverage report: ${viewed.stderr.trim().split('\n').at(-1) ?? ''}`);
+    return viewed;
+}
 
 /**
  * The targets under their floor.
@@ -52,39 +95,8 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
             files,
         );
         const cwd = join(source, input.scope);
-        if (files.stat('coverage.xcresult') !== undefined) {
-            const directories = ['coverage.xcresult'];
-            for (const directory of directories) {
-                for (const name of files.list(directory)) {
-                    const path = `${directory}/${name}`;
-                    if (files.stat(path)?.isDirectory() === true) directories.push(path);
-                    else {
-                        const previous = files.read(path);
-                        if (previous !== undefined) files.remove(path, previous);
-                    }
-                }
-            }
-            for (const directory of directories.toReversed()) files.rmdir(directory);
-        }
-        const argv = plan.argv
-            .map((part) => (part === 'build-for-testing' ? 'test' : part))
-            .filter((part) => part !== 'clean');
-        const tested = await runCheckCommand(
-            input,
-            [...argv, '-enableCodeCoverage', 'YES', '-resultBundlePath', bundle],
-            {
-                cwd,
-            },
-        );
-        if (tested.code !== 0)
-            throw new Error(
-                `Cannot measure coverage because the test run exited ${String(tested.code)}: ${tested.stderr.trim()}`,
-            );
-        const viewed = await runCheckCommand(input, ['xcrun', 'xccov', 'view', '--report', '--json', bundle], {
-            cwd,
-        });
-        if (viewed.code !== 0)
-            throw new Error(`The test run wrote no coverage report: ${viewed.stderr.trim().split('\n').at(-1) ?? ''}`);
+        removePreviousBundle(files);
+        const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
         const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
         return underFloor(report, floors).map((text) => ({
             check: input.spec.name,
