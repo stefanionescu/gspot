@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { parseSql } from '#cli/parsers/sql/parser.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {

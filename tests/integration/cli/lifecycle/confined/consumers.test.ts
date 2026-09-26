@@ -4,11 +4,11 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 if (process.platform !== 'win32')
     describe('confined discovery', () => {

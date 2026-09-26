@@ -7,6 +7,7 @@ import type { RunReport } from '#cli/execution/report.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
 
@@ -79,7 +80,7 @@ test.each(['diff', 'clone', 'cat-file'])(
         );
         const child = Bun.spawn([process.execPath, CLI, 'check', '--staged', '--only', 'bash/syntax', '--json'], {
             cwd: sandbox.path,
-            env: { ...process.env, PATH: `${shim}:${process.env['PATH'] ?? ''}` },
+            env: { ...environmentVariables(), PATH: `${shim}:${environmentVariables()['PATH'] ?? ''}` },
             stdout: 'pipe',
             stderr: 'pipe',
             timeout: 12_000,
@@ -142,7 +143,7 @@ test('push cancellation retains completed reports and names references not check
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(40)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(40)}\n`;
     const child = Bun.spawn([process.execPath, CLI, 'check', '--push', '--only', 'bash/syntax', '--json'], {
         cwd: sandbox.path,
-        env: { ...process.env, PATH: `${shim}:${process.env['PATH'] ?? ''}` },
+        env: { ...environmentVariables(), PATH: `${shim}:${environmentVariables()['PATH'] ?? ''}` },
         stdin: Buffer.from(protocol),
         stdout: 'pipe',
         stderr: 'pipe',

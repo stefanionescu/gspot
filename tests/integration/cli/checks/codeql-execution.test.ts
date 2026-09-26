@@ -6,8 +6,8 @@ import * as processes from '#cli/platform/spawn.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { rejection } from '#tests/support/rejection.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'CodeQL refuses output language %s before spawning and accepts a corrected language',

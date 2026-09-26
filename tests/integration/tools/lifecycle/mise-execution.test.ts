@@ -6,9 +6,10 @@ import { delimiter, dirname, join } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -44,7 +45,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
         owner.close();
     }
     const env = {
-        PATH: `${join(state.path, 'bin')}${delimiter}${process.env['PATH'] ?? ''}`,
+        PATH: `${join(state.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
         GSPOT_TEST_BUN: process.execPath,
         GSPOT_TEST_CLI: CLI,
         MISE_CONFIG_DIR: join(state.path, 'config'),

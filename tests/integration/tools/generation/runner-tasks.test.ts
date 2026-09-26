@@ -10,9 +10,9 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

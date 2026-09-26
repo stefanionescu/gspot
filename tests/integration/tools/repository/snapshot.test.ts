@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { rejection } from '#tests/support/rejection.ts';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { readdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

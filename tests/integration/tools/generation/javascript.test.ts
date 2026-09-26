@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { existsSync, chmodSync, statSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { existsSync, chmodSync, statSync } from 'node:fs';
 
 test.each([false, true])(
     'JavaScript checking preserves repository resolution and excludes private ambient types (authored: %s)',

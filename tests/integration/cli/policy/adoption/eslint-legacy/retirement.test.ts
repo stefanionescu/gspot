@@ -5,12 +5,12 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 test('legacy adoption proposes retirement only after native configuration validation', async () => {
     await using directory = await testdir();

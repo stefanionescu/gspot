@@ -1,8 +1,9 @@
-import { GRAMMAR_NAMES, grammarPath } from '#cli/platform/assets.ts';
 import { globbySync } from 'globby';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { join, relative } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { GRAMMAR_NAMES, grammarPath } from '#cli/platform/assets.ts';
+
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const ASSET_FOLDERS = ['packages/cli/configurations', 'packages/cli/rules'];

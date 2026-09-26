@@ -5,6 +5,7 @@ import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 type Step = { run?: string; uses?: string; if?: string; with?: Record<string, string> };
 type Generated = {
@@ -129,7 +130,7 @@ process.exit(child.exitCode);
                 runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
                     cwd: repository.path,
                     env: {
-                        PATH: `${executables.path}${delimiter}${process.env['PATH']}`,
+                        PATH: `${executables.path}${delimiter}${environmentVariables()['PATH']}`,
                         CI_COMMIT_BEFORE_SHA: comparison,
                         CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
                         GSPOT_CI_BASE: comparison,

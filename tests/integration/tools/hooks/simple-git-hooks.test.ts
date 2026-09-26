@@ -8,6 +8,7 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
@@ -125,7 +126,7 @@ test.each(['', "apps/worker's tools"])(
             'origin',
             'remote with spaces',
         ];
-        const env = { PATH: `${join(root, 'bin')}:${process.env['PATH'] ?? ''}` };
+        const env = { PATH: `${join(root, 'bin')}:${environmentVariables()['PATH'] ?? ''}` };
         const checked = await run(args, { cwd: root, env });
         expect(checked.code, checked.stderr).toBe(0);
         for (const path of ['local-input', 'package-input', 'gspot-input'])

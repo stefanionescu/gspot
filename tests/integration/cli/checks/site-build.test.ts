@@ -6,6 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as toolRunner from '#cli/execution/tool-runner.ts';
 import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
@@ -22,7 +23,6 @@ import {
     symlinkSync,
     unlinkSync,
 } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 describe('site build reproducibility', () => {
     test('the second build preserves the output shared with other checks', async () => {

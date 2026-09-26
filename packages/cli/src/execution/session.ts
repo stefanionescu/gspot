@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { npmPins } from '#cli/tools/pins.ts';
 import type { PolicyFiles } from '#cli/policy/read.ts';
 import type { ToolContext } from '#cli/tools/probe.ts';
@@ -11,9 +12,8 @@ import { toolPackageManager } from '#cli/tools/packages/manager.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
-import type { z } from 'zod';
 import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
+import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

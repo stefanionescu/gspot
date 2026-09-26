@@ -4,11 +4,11 @@ import { toPosix } from '#cli/platform/paths.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { codePoints } from '#cli/platform/code-points.ts';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { OutputFormat } from '#cli/configurations/output-format.ts';
-import { codePoints } from '#cli/platform/code-points.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };

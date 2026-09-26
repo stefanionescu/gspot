@@ -4,9 +4,9 @@ import plugin from '#plugin/plugin.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import * as programDefinition from '#cli/commands/program.ts';
-import * as manifestDefinitions from '#cli/configurations/manifests.ts';
-import { referencePages } from '#docs/src/content/reference/loader.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { referencePages } from '#docs/src/content/reference/loader.ts';
+import * as manifestDefinitions from '#cli/configurations/manifests.ts';
 
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {
     const program = programDefinition.buildProgram();

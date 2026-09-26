@@ -12,6 +12,7 @@ import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
+
 type InstallOptions = { cwd: string; isDryRun: boolean };
 
 /**

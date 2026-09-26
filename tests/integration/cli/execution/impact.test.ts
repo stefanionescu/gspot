@@ -6,11 +6,11 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1

@@ -3,6 +3,7 @@ import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
@@ -19,7 +20,7 @@ import {
     utimesSync,
     writeFileSync,
 } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 // Lefthook's own helper is repaired on install, an edit to it is refused, and a missing one is not ready.
 async function expectHelperRepairs(
@@ -128,7 +129,7 @@ test.each(['custom', 'native'])(
             timeoutMs: 5000,
             env: {
                 TMPDIR: join(root, 'scratch'),
-                PATH: `${join(root, 'bin')}${delimiter}${process.env['PATH'] ?? ''}`,
+                PATH: `${join(root, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
                 GSPOT_LEFTHOOK_REMOTE_NAME: 'origin',
                 GSPOT_LEFTHOOK_REMOTE_LOCATION: 'remote',
             },

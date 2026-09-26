@@ -4,8 +4,8 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/rejection.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['swift/trivial-function'], fix: false, isDryRun: false };
 const BROKEN =

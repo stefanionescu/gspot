@@ -5,8 +5,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

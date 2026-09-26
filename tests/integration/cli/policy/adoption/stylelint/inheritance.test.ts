@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import stylelint from 'stylelint';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { rejection } from '#tests/support/rejection.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES, STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 test('Stylelint package lookups do not adopt a same-named local file', async () => {
     await using sandbox = await testdir();

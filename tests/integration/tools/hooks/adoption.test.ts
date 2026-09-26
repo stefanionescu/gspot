@@ -3,11 +3,12 @@ import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 
@@ -86,7 +87,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
             cwd: root,
             timeoutMs: 60_000,
             env: {
-                PATH: `${join(root, 'bin')}${delimiter}${process.env['PATH'] ?? ''}`,
+                PATH: `${join(root, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
                 XDG_CONFIG_HOME: join(root, 'fixture-config'),
                 PRE_COMMIT_HOME: join(root, 'pre-commit-cache'),
             },

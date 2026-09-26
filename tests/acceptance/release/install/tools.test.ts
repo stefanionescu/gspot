@@ -6,8 +6,8 @@ import { delimiter, dirname, join, relative } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { PublishedRelease } from '#tests/support/release/published.ts';
 import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { installedConsumer, publishRelease } from '#tests/support/release/published.ts';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 let release: PublishedRelease;
 beforeAll(async () => {

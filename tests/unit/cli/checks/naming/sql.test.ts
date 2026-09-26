@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import { rejection } from '#tests/support/rejection.ts';
+import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 
 const SOURCE = `-- Accounts.
 CREATE SCHEMA app;

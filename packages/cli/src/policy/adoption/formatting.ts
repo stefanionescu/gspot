@@ -8,6 +8,7 @@ import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
 import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
+
 async function carryFormat(
     root: string,
     configurations: { from: string; source?: CarrySource }[],

@@ -1,3 +1,4 @@
+import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
@@ -20,7 +21,6 @@ import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers
 import type { EditorconfigOverride, PrettierPlugin } from '#cli/generation/format.ts';
 import { BLOCK_IGNORES, PROSE_FORMATS, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
 import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
-import { eta } from '#cli/generation/registry.ts';
 
 const JSON_INDENT = 4;
 

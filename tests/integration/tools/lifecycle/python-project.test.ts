@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -18,7 +19,7 @@ import {
     pythonInstallSteps,
     pythonLockDrift,
 } from '#cli/tools/python-project.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
 // A fresh clone installs the locked Python tools twice without tracked changes and runs the checker.
 async function expectFreshCloneInstalls(
@@ -161,14 +162,16 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 });
             },
         });
-        const previous = process.env['UV_DEFAULT_INDEX'];
+        const previous = environmentVariables()['UV_DEFAULT_INDEX'];
         const redirected = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'];
-        const previousProjects = redirected.map((name) => [name, process.env[name]] as const);
+        const previousProjects = redirected.map((name) => [name, environmentVariables()[name]] as const);
         try {
             for (const name of redirected)
-                process.env[name] =
-                    name === 'UV_PROJECT_ENVIRONMENT' ? join(repository.path, '.venv') : repository.path;
-            delete process.env['UV_DEFAULT_INDEX'];
+                setEnvironmentVariable(
+                    name,
+                    name === 'UV_PROJECT_ENVIRONMENT' ? join(repository.path, '.venv') : repository.path,
+                );
+            setEnvironmentVariable('UV_DEFAULT_INDEX', undefined);
             const index = `[[${configuration === 'pyproject.toml' ? 'tool.uv.' : ''}index]]\nname = "gspot-test"\nurl = "http://gspot:synthetic-uv-password@127.0.0.1:${server.port}/simple"\ndefault = true\n`;
             const authored =
                 configuration === 'pyproject.toml' ? readFileSync(join(repository.path, configuration), 'utf8') : '';
@@ -204,7 +207,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                     cwd: repository.path,
                     env: {
                         ...(runner === 'mise'
-                            ? { PATH: `${join(artifacts.path, 'bin')}:${process.env['PATH'] ?? ''}` }
+                            ? { PATH: `${join(artifacts.path, 'bin')}:${environmentVariables()['PATH'] ?? ''}` }
                             : {}),
                         MISE_TRUSTED_CONFIG_PATHS: repository.path,
                         MISE_STATE_DIR: join(artifacts.path, 'mise-state'),
@@ -273,11 +276,9 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
             expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
         } finally {
-            if (previous === undefined) delete process.env['UV_DEFAULT_INDEX'];
-            else process.env['UV_DEFAULT_INDEX'] = previous;
+            setEnvironmentVariable('UV_DEFAULT_INDEX', previous);
             for (const [name, value] of previousProjects) {
-                if (value === undefined) Reflect.deleteProperty(process.env, name);
-                else process.env[name] = value;
+                setEnvironmentVariable(name, value);
             }
             server.stop(true);
         }

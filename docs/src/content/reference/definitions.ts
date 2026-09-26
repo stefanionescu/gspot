@@ -1,7 +1,7 @@
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from './page.ts';
-import { bullets, cell, referencePage, section, table } from './page.ts';
 import type { CheckSpec } from '@gspot/cli/src/configurations/schema.ts';
+import { bullets, cell, referencePage, section, table } from './page.ts';
 import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
 
 /**

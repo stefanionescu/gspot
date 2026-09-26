@@ -7,6 +7,7 @@ import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 // Switching the runner in a clone refuses an edited original, reinstalls the dispatcher, and leaves the tree clean.
 async function expectRunnerSwitchInClone(
@@ -240,7 +241,7 @@ format = "lines"
             cwd: clone.path,
             timeoutMs: 30_000,
             env: {
-                PATH: `${join(clone.path, 'bin')}${delimiter}${process.env['PATH'] ?? ''}`,
+                PATH: `${join(clone.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
                 XDG_CONFIG_HOME: join(clone.path, 'fixture-config'),
                 PRE_COMMIT_HOME: join(clone.path, 'pre-commit-cache'),
             },

@@ -6,6 +6,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { fileMode, mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { OwnershipEntry, OwnershipState, identitySchema, originalSchema } from '#cli/lifecycle/journal.ts';
@@ -15,7 +16,6 @@ import {
     planConfiguration,
     pruneConfigurationParents,
 } from '#cli/lifecycle/configuration-document.ts';
-import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
 
 function identity(file: FileSnapshot): z.infer<typeof identitySchema> {
     return {

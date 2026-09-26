@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -27,7 +28,7 @@ export async function run(
 ): Promise<SpawnOutcome> {
     return await runProcess([process.execPath, gspot, ...argv], {
         cwd,
-        env: { ...process.env, NO_COLOR: '1', CI: '1', ...environment },
+        env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
         timeoutMs: PLANTED_TIMEOUT_MS * 2,
     });
 }
@@ -41,7 +42,7 @@ export async function runProcess(
     return await new Promise<SpawnOutcome>((resolve, reject) => {
         const child = spawn(executable!, arguments_, {
             cwd: options.cwd,
-            env: { ...process.env, ...options.env },
+            env: { ...environmentVariables(), ...options.env },
             detached: process.platform !== 'win32',
             stdio: ['pipe', 'pipe', 'pipe'],
         });
@@ -59,7 +60,9 @@ export async function runProcess(
             }
         };
         const deadline = setTimeout(
-            () => { terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`); },
+            () => {
+                terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`);
+            },
             options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2,
         );
         for (const [name, stream] of [

@@ -1,5 +1,5 @@
-import { commandPages } from './commands.ts';
 import type { Loader } from 'astro/loaders';
+import { commandPages } from './commands.ts';
 import type { ReferencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { bullets, referencePage, section } from './page.ts';

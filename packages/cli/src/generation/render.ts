@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { eta } from '#cli/generation/registry.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
@@ -30,10 +31,9 @@ import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import { emitTarget, templateInputs } from '#cli/generation/templates.ts';
 import { simpleGitHookOutputs } from '#cli/generation/simple-git-hooks.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-import { emitTarget, templateInputs } from '#cli/generation/templates.ts';
-import { eta } from '#cli/generation/registry.ts';
 import { retainedConfigurationPaths } from '#cli/lifecycle/retained-config.ts';
 import type { GeneratedFile, GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import type { ResolvedSelector, SelectorGroup } from '#cli/generation/eslint.ts';

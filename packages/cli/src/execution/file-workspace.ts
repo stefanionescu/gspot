@@ -16,6 +16,7 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
+
 const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
 const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 

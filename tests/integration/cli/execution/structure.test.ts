@@ -9,8 +9,8 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { rejection } from '#tests/support/rejection.ts';
+import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();

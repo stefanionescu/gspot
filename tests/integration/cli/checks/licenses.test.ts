@@ -6,9 +6,9 @@ import { emitAll } from '#cli/generation/render.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

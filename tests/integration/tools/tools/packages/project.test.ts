@@ -9,12 +9,13 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
+import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
 const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -163,10 +164,10 @@ test.each([
         }
         const token = 'synthetic-package-install-token';
         let requests = 0;
-        const previousCache = process.env['YARN_CACHE_FOLDER'];
-        const previousGlobal = process.env['YARN_GLOBAL_FOLDER'];
-        if (manager === 'yarn') process.env['YARN_GLOBAL_FOLDER'] = join(artifacts.path, 'resolution-global');
-        if (manager === 'yarn') process.env['YARN_CACHE_FOLDER'] = join(artifacts.path, 'resolution-cache');
+        const previousCache = environmentVariables()['YARN_CACHE_FOLDER'];
+        const previousGlobal = environmentVariables()['YARN_GLOBAL_FOLDER'];
+        if (manager === 'yarn') setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts.path, 'resolution-global'));
+        if (manager === 'yarn') setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts.path, 'resolution-cache'));
         const server = Bun.serve({
             hostname: '127.0.0.1',
             port: 0,
@@ -304,8 +305,10 @@ ${lock.toString('utf8')}
             expect(readFileSync(manifestPath, 'utf8')).toBe(withScript);
             writeFileSync(manifestPath, manifest);
             chmodSync(manifestPath, 0o444);
-            if (manager === 'yarn') process.env['YARN_CACHE_FOLDER'] = join(artifacts.path, 'installation-cache');
-            if (manager === 'yarn') process.env['YARN_GLOBAL_FOLDER'] = join(artifacts.path, 'installation-global');
+            if (manager === 'yarn')
+                setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts.path, 'installation-cache'));
+            if (manager === 'yarn')
+                setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts.path, 'installation-global'));
             if (runner === 'none') await expectWrapperDownloadRefused(repository.path, tools, lockPath, lock);
             const beforeInstall = requests;
             // Without a runner the CLI installs; with one the library installs the same project.
@@ -399,10 +402,8 @@ ${lock.toString('utf8')}
             if (projectPath === 'package.json' && runner === 'mise')
                 await expectFreshCloneInstalls(repository.path, artifacts.path, tools, manager, lock, manifest);
         } finally {
-            if (previousCache === undefined) delete process.env['YARN_CACHE_FOLDER'];
-            else process.env['YARN_CACHE_FOLDER'] = previousCache;
-            if (previousGlobal === undefined) delete process.env['YARN_GLOBAL_FOLDER'];
-            else process.env['YARN_GLOBAL_FOLDER'] = previousGlobal;
+            setEnvironmentVariable('YARN_CACHE_FOLDER', previousCache);
+            setEnvironmentVariable('YARN_GLOBAL_FOLDER', previousGlobal);
             server.stop(true);
         }
     },

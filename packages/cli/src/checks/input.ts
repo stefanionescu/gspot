@@ -2,6 +2,7 @@ import type { Finding } from '#cli/checks/result.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { PolicyFiles } from '#cli/policy/read.ts';
 import type { ToolContext } from '#cli/tools/probe.ts';
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
@@ -9,7 +10,6 @@ import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 
 export type EngineInput = {
     policyFiles: PolicyFiles;

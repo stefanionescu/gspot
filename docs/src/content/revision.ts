@@ -1,4 +1,6 @@
-const revision = process.env['GSPOT_DOCS_REVISION'];
+import { environmentVariables } from '@gspot/cli/src/platform/environment.ts';
+
+const revision = environmentVariables()['GSPOT_DOCS_REVISION'];
 if (revision !== undefined && !/^[a-f\d]{40}$/u.test(revision)) {
     throw new Error('GSPOT_DOCS_REVISION must be a full source commit ID.');
 }

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
+import pluginPackage from '#plugin-package' with { type: 'json' };
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import pluginPackage from '#plugin-package' with { type: 'json' };
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const RELEASE_TIMEOUT_MS = 180_000;

@@ -1,9 +1,9 @@
+import { rejection } from '#tests/support/rejection.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { codeLines, withoutComment } from '#cli/checks/structure/code-lines.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 test('shared parse handles retain grammar, source, and independent disposal boundaries', async () => {
     const observations = { root: '/repository', sources: new Map<string, Buffer>() };

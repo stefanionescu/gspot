@@ -3,8 +3,8 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { changedFiles, pushBase, stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { rejection } from '#tests/support/rejection.ts';
+import { changedFiles, pushBase, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });

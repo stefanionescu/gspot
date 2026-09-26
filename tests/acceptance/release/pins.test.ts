@@ -2,6 +2,7 @@
 import { expect, test } from 'bun:test';
 import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const REGISTRY_TIMEOUT_MS = 30_000;
 
@@ -24,7 +25,7 @@ const pins = tools
 const eslintPin = tools.find((tool) => tool.name === 'eslint')?.version;
 
 async function registryJson(url: string): Promise<Record<string, unknown> | undefined> {
-    const token = process.env['GITHUB_TOKEN'];
+    const token = environmentVariables()['GITHUB_TOKEN'];
     const headers: Record<string, string> = { accept: 'application/json' };
     if (url.startsWith('https://api.github.com/') && token !== undefined && token !== '')
         headers['authorization'] = `Bearer ${token}`;

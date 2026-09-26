@@ -1,6 +1,6 @@
-import type { ReferencePage } from './page.ts';
 import type { JSONSchema } from 'zod/v4/core';
 import { isDeepStrictEqual } from 'node:util';
+import type { ReferencePage } from './page.ts';
 import { cell, referencePage, table } from './page.ts';
 import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';

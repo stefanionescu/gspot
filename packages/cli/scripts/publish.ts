@@ -1,12 +1,12 @@
 // Stamps the platform packages from the template, copies the binaries in, writes checksums, publishes everything at one version.
 
+import { valid } from 'semver';
+import { execaSync } from 'execa';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { releaseTargets } from './targets.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { execaSync } from 'execa';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { valid } from 'semver';
-import { releaseTargets } from './targets.ts';
 // Usage: bun packages/cli/scripts/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

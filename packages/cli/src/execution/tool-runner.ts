@@ -186,6 +186,7 @@ async function runCommands(
     }
     return finished(base, spec, state, argv, started);
 }
+
 function adapterTool(
     input: EngineInput,
     name: string,

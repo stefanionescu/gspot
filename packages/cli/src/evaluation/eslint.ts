@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import ts from 'typescript';
+import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
 import { createRequire, isBuiltin } from 'node:module';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
@@ -7,7 +8,6 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
-import type * as Eslint from 'eslint';
 
 async function registerEslintModule(
     root: string,

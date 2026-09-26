@@ -4,9 +4,9 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { pythonModules } from '#cli/checks/python/modules.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {

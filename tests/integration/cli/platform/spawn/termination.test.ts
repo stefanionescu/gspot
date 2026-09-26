@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { testdir } from 'testdirs';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 

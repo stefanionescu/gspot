@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ preview, isolated }))))(
     'corrections reject a replaced external source before execution (preview $preview, isolated $isolated)',

@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
+import type { PolicyFiles } from '#cli/policy/read.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { installHint } from '#cli/tools/install-hints.ts';
@@ -14,7 +15,6 @@ import { readFileSync, realpathSync, statSync } from 'node:fs';
 import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
-import type { PolicyFiles } from '#cli/policy/read.ts';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };

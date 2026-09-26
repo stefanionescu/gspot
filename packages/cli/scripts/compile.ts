@@ -1,12 +1,13 @@
 import { execaSync } from 'execa';
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { grammarAssets, writeEntry } from './assets.ts';
 import { prepareInput } from './inputs.ts';
-import { grammarPath, SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
-import { binaryNotices, dependencyNotices } from './notices.ts';
 import { releaseTargets } from './targets.ts';
+import { dirname, join, relative } from 'node:path';
+import { grammarAssets, writeEntry } from './assets.ts';
+import { binaryNotices, dependencyNotices } from './notices.ts';
+import { grammarPath, SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));

@@ -2,11 +2,11 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { rejection } from '#tests/support/rejection.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

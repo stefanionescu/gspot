@@ -5,8 +5,8 @@ import { createFileTree, testdir } from 'testdirs';
 import * as tools from '#cli/execution/tool-runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { rejection } from '#tests/support/rejection.ts';
+import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 
 const sources = [
     'services:\n  app:\n    image: "nginx:1.27.2"\n',

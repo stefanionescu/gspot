@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { rejection } from '#tests/support/rejection.ts';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

@@ -7,9 +7,9 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { rejection } from '#tests/support/rejection.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-import { rejection } from '#tests/support/rejection.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
 const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';

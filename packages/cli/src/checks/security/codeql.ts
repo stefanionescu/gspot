@@ -7,11 +7,11 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
+import { codePoints } from '#cli/platform/code-points.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { mutationTarget } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { codePoints } from '#cli/platform/code-points.ts';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };
 

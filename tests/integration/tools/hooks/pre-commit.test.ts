@@ -8,6 +8,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { chmodSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 
@@ -76,7 +77,7 @@ test.each(['', "apps/worker's tools"])(
             ).ready,
         ).toBe(true);
         const env = {
-            PATH: `${join(root, 'bin')}:${process.env['PATH'] ?? ''}`,
+            PATH: `${join(root, 'bin')}:${environmentVariables()['PATH'] ?? ''}`,
             PRE_COMMIT_HOME: join(root, 'pre-commit-cache'),
         };
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });

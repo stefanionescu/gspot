@@ -1,10 +1,11 @@
+import { join } from 'node:path';
+import { build } from './compile.ts';
+import { familySync } from 'detect-libc';
+import { fileURLToPath } from 'node:url';
+import { releaseTargets } from './targets.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { familySync } from 'detect-libc';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { build } from './compile.ts';
-import { releaseTargets } from './targets.ts';
+
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));

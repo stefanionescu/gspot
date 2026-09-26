@@ -5,8 +5,8 @@ import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readRepository } from '#cli/repository/tree.ts';
-import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
 import { failure, rejection } from '#tests/support/rejection.ts';
+import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
 
 describe('repository file discovery', () => {
     test('excluded links are omitted before resolving external targets', async () => {
