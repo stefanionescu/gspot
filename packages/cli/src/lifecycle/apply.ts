@@ -2,6 +2,7 @@ import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
+import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
@@ -149,7 +150,7 @@ export type BlockOutput = { path: string; block: string; style: 'markdown' | 'ha
 
 export type ConfigurationOutput = {
     path: string;
-    format: 'json' | 'yaml' | 'toml';
+    format: ConfigurationFormat;
     changes: { path: (string | number)[]; value: unknown }[];
 };
 

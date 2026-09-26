@@ -29,10 +29,8 @@ async function tested(input: EngineInput, path: string, work: string, image: str
             if (name !== 'include' || value === undefined || value.includes('$')) continue;
             const target = posix.resolve('/etc/nginx', value);
             const pattern = new Bun.Glob(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
-            for (const file of input.files) {
-                if (!pattern.match(file.path)) continue;
+            for (const file of input.files.filter((candidate) => pattern.match(candidate.path)))
                 pending.push({ path: file.path, target: posix.resolve('/etc/nginx', posix.relative(base, file.path)) });
-            }
         }
     }
     const mounts = {

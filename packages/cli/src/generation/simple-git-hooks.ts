@@ -69,12 +69,14 @@ export function simpleGitHookOutputs(
             if (original === simpleGitHookCommand(prefix, name)) {
                 const retained = files.read(`${path}.gspot-original`);
                 const installed = entries.find((entry) => entry.path === `${path}.gspot-original`)?.installed;
+                const retainedHash =
+                    retained === undefined
+                        ? undefined
+                        : new Bun.CryptoHasher('sha256').update(retained.bytes).digest('hex');
                 const unchanged =
                     installed === undefined
                         ? retained === undefined
-                        : retained !== undefined &&
-                          installed.mode === retained.mode &&
-                          installed.hash === new Bun.CryptoHasher('sha256').update(retained.bytes).digest('hex');
+                        : installed.mode === retained?.mode && installed.hash === retainedHash;
                 if (owned === undefined ? !simpleGitHooksReady(root, runner, binary) : !unchanged)
                     throw new Error(
                         'Retained missing or edited simple-git-hooks programs. Restore them before running gspot apply.',

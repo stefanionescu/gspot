@@ -29,7 +29,7 @@ export function hasConfiguration(
     root: string,
     output: {
         path: string;
-        format: 'json' | 'yaml' | 'toml';
+        format: ConfigurationFormat;
         changes: { path: (string | number)[]; value: unknown }[];
     },
 ): boolean {
@@ -51,7 +51,11 @@ export function hasConfiguration(
  * @param created whether the file is new, so an empty document gets no leading blank line
  * @returns a document that reads, sets, and prints values by key path
  */
-export function configurationDocument(source: string, format: 'json' | 'yaml' | 'toml', created = false) {
+export function configurationDocument(
+    source: string,
+    format: ConfigurationFormat,
+    created = false,
+): ConfigurationDocument {
     if (format === 'toml') {
         const document: Record<string, unknown> = parseToml(source);
         return {
@@ -144,7 +148,7 @@ export function configurationDocument(source: string, format: 'json' | 'yaml' | 
  * @returns the created containers that still exist
  */
 export function pruneConfigurationParents(
-    document: ReturnType<typeof configurationDocument>,
+    document: ConfigurationDocument,
     parents: (string | number)[][],
     protectedFields: (string | number)[][] = [],
 ): (string | number)[][] {
@@ -181,7 +185,7 @@ export function pruneConfigurationParents(
  */
 export function planConfiguration(
     path: string,
-    format: 'json' | 'yaml' | 'toml',
+    format: ConfigurationFormat,
     changes: { path: (string | number)[]; value: unknown }[],
     current: FileSnapshot | undefined,
     existing: OwnershipEntry | undefined,
@@ -264,3 +268,12 @@ export function planConfiguration(
         },
     };
 }
+
+export type ConfigurationFormat = 'json' | 'yaml' | 'toml';
+
+/** A configuration file read and edited by key path, keeping its comments and layout. */
+export type ConfigurationDocument = {
+    value(path: (string | number)[]): unknown;
+    set(path: (string | number)[], value: unknown): void;
+    text(): string;
+};

@@ -12,6 +12,7 @@ import { fileMode, mutationTarget, openConfinedRoot } from '#cli/platform/filesy
 import type { OwnershipEntry, OwnershipState, identitySchema, originalSchema } from '#cli/lifecycle/journal.ts';
 
 import {
+    type ConfigurationFormat,
     configurationDocument,
     planConfiguration,
     pruneConfigurationParents,
@@ -539,7 +540,7 @@ export type LifecycleOwner = {
     finishInstallation(kind: 'npm' | 'python'): void;
     proposeConfiguration(
         path: string,
-        format: 'json' | 'yaml' | 'toml',
+        format: ConfigurationFormat,
         changes: { path: (string | number)[]; value: unknown }[],
         takeover?: boolean,
     ): FileProposal;

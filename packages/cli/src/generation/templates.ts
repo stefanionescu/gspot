@@ -110,11 +110,7 @@ function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
  * @param scopes every resolved scope
  * @param selection the scope being rendered
  * @param version the gspot version the header names
- * @param fragments the fragment text other configurations contribute
- * @param fragmentImports the import lines those fragments declare
- * @param fragmentFiles the code file globs those fragments add
- * @param fragmentSelectors the syntax selectors those fragments add, grouped by file set
- * @returns the template inputs
+ * @returns the template inputs, with empty fragment parts the generator fills per target
  */
 export function templateInputs(
     root: string,
@@ -123,10 +119,6 @@ export function templateInputs(
     scopes: ScopeSelection[],
     selection: ScopeSelection,
     version: string,
-    fragments = '',
-    fragmentImports = '',
-    fragmentFiles: string[] = [],
-    fragmentSelectors: SelectorGroup[] = [],
 ): TemplateInputs {
     const { view } = selection;
     const files = (extension: string): string[] =>
@@ -175,10 +167,10 @@ export function templateInputs(
         view,
         format: view.format,
         settings: view.settings,
-        fragments,
-        fragmentImports,
-        fragmentFiles,
-        fragmentSelectors,
+        fragments: '',
+        fragmentImports: '',
+        fragmentFiles: [],
+        fragmentSelectors: [],
         tool: view.tool,
         entryFiles: (scope) => entryFiles(policy, scopes, scope),
         limit: view.limit,

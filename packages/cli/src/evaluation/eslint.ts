@@ -9,6 +9,9 @@ import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
 
+// The ESLint severities that switch a rule on.
+const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
+
 async function registerEslintModule(
     root: string,
     configPath: string,
@@ -89,7 +92,7 @@ async function legacyEntries(
     } finally {
         files.close();
     }
-    const directories = [...new Set(['.', ...configPaths.map((path) => dirname(path))])].sort(
+    const directories = [...new Set(['.', ...configPaths.map((path) => dirname(path))])].toSorted(
         (left, right) => left.length - right.length,
     );
     const literalDirectory = (directory: string): string =>
@@ -372,7 +375,7 @@ export async function evaluateRuleCoverage(
         if (config === undefined) throw new Error(`ESLint did not resolve a configuration for ${path}.`);
         result[path] = Object.entries(config.rules ?? {}).flatMap(([name, entry]) => {
             const level = Array.isArray(entry) ? (entry[0] as unknown) : entry;
-            return level === 1 || level === 2 || level === 'warn' || level === 'error' ? [name] : [];
+            return ACTIVE_LEVELS.has(level) ? [name] : [];
         });
     }
     return result;

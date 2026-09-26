@@ -7,7 +7,8 @@ import { emitAll } from '#cli/generation/render.ts';
 import { readFileSync, symlinkSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { INSTALLED_MODULES, STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 test.each([false, true])(
     'Stylelint adoption preserves enabled options, zero limits, and disabled rules for future files (inherited: %s)',

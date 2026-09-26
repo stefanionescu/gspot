@@ -8,7 +8,6 @@ import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { copyFileSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 import {
-    BINARY,
     RELEASE_TIMEOUT_MS,
     environment,
     host,
@@ -33,7 +32,7 @@ export type InstalledConsumer = Awaited<ReturnType<typeof createConsumer>>;
  */
 export async function publishRelease(): Promise<PublishedRelease> {
     const registry = await startRegistry();
-    const built = await run([join(root, 'dist', BINARY), '--version'], {
+    const built = await run([join(root, 'dist', host.binary), '--version'], {
         cwd: registry.work,
         env: environment,
         timeoutMs: RELEASE_TIMEOUT_MS,

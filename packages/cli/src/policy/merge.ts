@@ -56,8 +56,12 @@ function settingSlots(settings: Record<string, unknown>, name: string): Record<s
         const segments = key.slice(prefix.length).split('.');
         let table = merged;
         for (const [index, segment] of segments.entries()) {
-            if (index === segments.length - 1) table[segment] = value;
-            else table = (table[segment] ??= {}) as Record<string, unknown>;
+            if (index === segments.length - 1) {
+                table[segment] = value;
+                continue;
+            }
+            table[segment] ??= {};
+            table = table[segment] as Record<string, unknown>;
         }
     }
     return merged;

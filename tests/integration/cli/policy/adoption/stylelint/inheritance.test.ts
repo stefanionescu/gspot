@@ -5,7 +5,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { rejection } from '#tests/support/rejection.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { INSTALLED_MODULES, STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 test('Stylelint package lookups do not adopt a same-named local file', async () => {
     await using sandbox = await testdir();

@@ -150,7 +150,7 @@ function placeOf(
         if (file === '') throw new Error('CodeQL reported a character offset without a source file.');
         const index = location?.artifactLocation?.index;
         const encoding =
-            (index === undefined ? undefined : run.artifacts?.[index]?.encoding) ?? run.defaultEncoding ?? 'utf-8';
+            (index === undefined ? undefined : run.artifacts?.[index]?.encoding) ?? run.defaultEncoding ?? 'utf8';
         const text = new TextDecoder(encoding, { fatal: true }).decode(readSource(source, file));
         const characters = codePoints(text);
         if (region.charOffset > characters.length)

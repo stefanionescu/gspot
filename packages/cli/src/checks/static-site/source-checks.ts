@@ -98,10 +98,8 @@ export function webManifest(input: EngineInput): Finding[] {
             .filter(
                 (src) =>
                     !src.startsWith('http') &&
-                    !(
-                        statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) !==
-                        undefined
-                    ),
+                    statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) ===
+                        undefined,
             )
             .map((src) => finding(input, file.path, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];

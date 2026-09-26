@@ -9,7 +9,8 @@ const TOKEN =
  */
 export function sqlSource(text: string): { text: string; variables: { start: number; end: number }[] } {
     const variables: { start: number; end: number }[] = [];
-    const tokens = new RegExp(TOKEN);
+    // A fresh copy keeps the module-level pattern's lastIndex untouched while this call moves its own.
+    const tokens = new RegExp(TOKEN.source, TOKEN.flags);
     const pieces: string[] = [];
     let offset = 0;
     for (let match = tokens.exec(text); match !== null; match = tokens.exec(text)) {
