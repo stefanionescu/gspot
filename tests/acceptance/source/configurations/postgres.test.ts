@@ -6,9 +6,9 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the postgres configuration: a locking migration, a repeated version, an edited migration, and a schema with holes.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [
     'init',
@@ -146,9 +146,7 @@ describe('the postgres configuration', () => {
             await createFileTree(sandbox.path, { [FIRST]: TEAMS });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['squawk', 'sqlfluff', 'typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             commitAll(sandbox.path);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);

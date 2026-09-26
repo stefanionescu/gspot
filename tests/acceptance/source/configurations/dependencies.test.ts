@@ -3,9 +3,9 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import type { PlantedCase, FindingCase } from '#tests/support/cli/planted.ts';
 // Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
@@ -111,21 +111,11 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
             expect(outcome.stdout + outcome.stderr).toContain(planted.expected);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
         },
         PLANTED_TIMEOUT_MS * 2,
     );
@@ -137,9 +127,7 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
@@ -162,9 +150,7 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             await createFileTree(sandbox.path, {
                 'package.json': JSON.stringify({
                     ...JSON.parse(CLEAN),

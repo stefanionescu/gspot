@@ -4,12 +4,12 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
-import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { install, installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const INIT = [
@@ -201,9 +201,7 @@ describe('the css configuration', () => {
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             {
                 const clean = await run(
                     sandbox.path,
@@ -220,15 +218,7 @@ describe('the css configuration', () => {
                 expect(failedReport.checks[0]?.findings).toContainEqual(
                     containing({ check: planted.check, ...planted.expected }),
                 );
-                const corrected = await run(
-                    sandbox.path,
-                    ['check', '--only', planted.check, '--no-cache', '--json'],
-                    environment,
-                );
-                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                    { check: planted.check, status: 'ok', findings: [] },
-                ]);
+                await expectCorrected(sandbox.path, planted.check, environment);
             }
             const selectors = await runPlanted(
                 sandbox.path,

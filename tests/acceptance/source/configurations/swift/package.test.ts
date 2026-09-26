@@ -7,9 +7,9 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const PACKAGE =
@@ -52,9 +52,7 @@ describe('the swift configuration over a package', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
-            await install(sandbox.path, SWIFT_INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, SWIFT_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // The Swift toolchain checks run on macOS alone; elsewhere they are skipped and the run passes.

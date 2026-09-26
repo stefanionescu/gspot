@@ -3,12 +3,12 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repositories for the pytest and fastapi configurations: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
 const PROJECT = (dependency: string): string =>
@@ -132,15 +132,7 @@ describe('the fastapi configuration', () => {
                     findings: [{ file: 'planted/health.py', line: 9, rule: 'blocking-call' }],
                 },
             ]);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'fastapi/no-blocking-io-in-async', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'fastapi/no-blocking-io-in-async', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'fastapi/no-blocking-io-in-async', environment);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

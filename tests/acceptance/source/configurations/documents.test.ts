@@ -6,11 +6,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Copy the installed Vale packages so the fixture has private offline styles.
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -173,15 +173,7 @@ describe('the markdown, docs and prose configurations', () => {
             };
             for (const path of Object.keys(planted.files))
                 await Bun.write(join(sandbox.path, path), corrections[planted.check] ?? GUIDE);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
         },
         PLANTED_TIMEOUT_MS * 4,
     );
@@ -215,15 +207,7 @@ describe('the markdown, docs and prose configurations', () => {
                 reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
             ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
             copyValePackages(sandbox.path);
-            const restored = await run(
-                sandbox.path,
-                ['check', '--only', 'prose/vale', '--no-cache', '--json'],
-                environment,
-            );
-            expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(restored.stdout)).checks).toMatchObject([
-                { check: 'prose/vale', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'prose/vale', environment);
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];

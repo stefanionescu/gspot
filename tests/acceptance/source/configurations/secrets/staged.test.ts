@@ -5,11 +5,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
+import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
 
 const INIT = initArgs(['secrets']);
 const BASELINE = JSON.stringify([
@@ -25,9 +25,7 @@ describe('the secrets configuration', () => {
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gitleaks']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const clean = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
             expect(clean.code).toBe(0);
 
@@ -53,15 +51,7 @@ describe('the secrets configuration', () => {
                 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
             );
             expect(git(sandbox.path, ['add', 'settings.py']).code).toBe(0);
-            const correctedSecret = await run(
-                sandbox.path,
-                ['check', '--only', 'secrets/gitleaks-staged', '--no-cache', '--json'],
-                environment,
-            );
-            expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedSecret.stdout)).checks).toMatchObject([
-                { check: 'secrets/gitleaks-staged', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'secrets/gitleaks-staged', environment);
 
             await Bun.write(join(sandbox.path, '.env'), 'TOKEN=value\n');
             git(sandbox.path, ['add', '-f', '.env']);
@@ -79,15 +69,7 @@ describe('the secrets configuration', () => {
                 },
             ]);
             expect(git(sandbox.path, ['rm', '--cached', '.env']).code).toBe(0);
-            const untracked = await run(
-                sandbox.path,
-                ['check', '--only', 'integrity/env-files', '--no-cache', '--json'],
-                environment,
-            );
-            expect(untracked.code, untracked.stdout + untracked.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(untracked.stdout)).checks).toMatchObject([
-                { check: 'integrity/env-files', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'integrity/env-files', environment);
             expect(await Bun.file(join(sandbox.path, '.env')).text()).toBe('TOKEN=value\n');
 
             const baseline = await runPlanted(

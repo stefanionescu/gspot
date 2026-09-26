@@ -5,10 +5,10 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 // Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
 import { reportSchema, type RunReport } from '#cli/execution/report.ts';
+import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [
     'init',
@@ -97,9 +97,7 @@ describe('the python configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());

@@ -4,6 +4,7 @@ import { chmodSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { expectCorrected } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { installedNextProject, NEXT_LAYOUT } from '#tests/support/cli/nextjs.ts';
@@ -55,15 +56,7 @@ describe('the nextjs and i18n configurations', () => {
                 }),
             );
             await Bun.write(join(sandbox.path, '.gspot/config/eslint.config.mjs'), written);
-            const restored = await run(
-                sandbox.path,
-                ['check', '--only', 'integrity/required-rules', '--no-cache', '--json'],
-                environment,
-            );
-            expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(restored.stdout)).checks).toMatchObject([
-                { check: 'integrity/required-rules', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'integrity/required-rules', environment);
             const direct = await run(
                 sandbox.path,
                 ['check', '--only', 'typescript/tsc', '--no-cache', '--json'],

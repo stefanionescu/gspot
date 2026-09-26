@@ -8,9 +8,9 @@ import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InitJson } from '#cli/commands/init/types.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const SOURCE =
@@ -53,9 +53,7 @@ describe('typescript in a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(sandbox.path, argv, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, argv, environment);
             const lint = await run(
                 sandbox.path,
                 ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
@@ -113,9 +111,7 @@ describe('typescript in a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(sandbox.path, argv, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, argv, environment);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('db/**/templates/**');
             expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');

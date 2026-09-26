@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 const REPORT = '.gspot/reports/report.json';
 const DEPENDENCIES = { expo: '54.0.0', react: '19.1.1', 'react-native': '0.81.4' };
@@ -88,15 +88,7 @@ describe('the react-native configuration', () => {
             expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             await Bun.write(join(sandbox.path, path), CLEAN);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'typescript/eslint', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'typescript/eslint', environment);
             const required = await run(
                 sandbox.path,
                 ['check', '--only', 'integrity/required-rules', '--no-cache'],

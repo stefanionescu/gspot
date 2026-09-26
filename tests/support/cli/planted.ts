@@ -1,4 +1,6 @@
+import { expect } from 'bun:test';
 import type { Finding } from '#cli/checks/result.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { run, type SpawnOutcome } from '#tests/support/cli/command.ts';
 import { plant, type PlantedInput } from '#tests/support/cli/preservation.ts';
 
@@ -32,4 +34,18 @@ export async function runPlanted(
     } finally {
         restore();
     }
+}
+
+/**
+ * Runs one check over a corrected repository and fails unless it passes with no findings.
+ * @param cwd the installed repository
+ * @param check the check
+ * @param environment extra variables, such as the PATH of the tools
+ */
+export async function expectCorrected(cwd: string, check: string, environment: Record<string, string>): Promise<void> {
+    const corrected = await run(cwd, ['check', '--only', check, '--no-cache', '--json'], environment);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        { check, status: 'ok', findings: [] },
+    ]);
 }

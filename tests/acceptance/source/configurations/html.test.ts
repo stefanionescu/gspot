@@ -7,9 +7,9 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the html configuration: an image with no text alternative, an inline handler, and copy written into a template.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const INIT = [
@@ -69,9 +69,7 @@ describe('the html configuration', () => {
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(

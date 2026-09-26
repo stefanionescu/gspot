@@ -7,8 +7,8 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'bash', '--runner', 'npm', '--no-ci', '--no-rules', '--no-install'];
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
@@ -96,15 +96,7 @@ describe('the structure configuration', () => {
                     (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
                 );
                 expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
-                const corrected = await run(
-                    sandbox.path,
-                    ['check', '--only', planted.check, '--no-cache', '--json'],
-                    environment,
-                );
-                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                    { check: planted.check, status: 'ok', findings: [] },
-                ]);
+                await expectCorrected(sandbox.path, planted.check, environment);
             }
         },
         PLANTED_TIMEOUT_MS * 2,
@@ -140,15 +132,7 @@ describe('the structure configuration', () => {
                 },
             ]);
             expect(git(sandbox.path, ['rm', '--cached', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'integrity/tracked-dependencies', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'integrity/tracked-dependencies', environment);
         },
         PLANTED_TIMEOUT_MS,
     );

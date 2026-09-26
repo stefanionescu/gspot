@@ -2,15 +2,13 @@ import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { hookReadiness, installManager } from '#tests/support/cli/hooks.ts';
 
 import {
     chmodSync,
@@ -33,45 +31,14 @@ async function expectHelperRepairs(
     const repaired = readFileSync(helperPath);
     expect(repaired).not.toStrictEqual(originalHelper);
     writeFileSync(helperPath, '#!/bin/sh\nexit 0\n');
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(false);
-    expect(
-        await rejection(
-            installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            ),
-        ),
-    ).toContain('Retained edited hook');
+    expect(await hookReadiness(root)).toBe(false);
+    expect(await rejection(installManager(root))).toContain('Retained edited hook');
     expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
     writeFileSync(helperPath, repaired);
     unlinkSync(helperPath);
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(false);
+    expect(await hookReadiness(root)).toBe(false);
     writeFileSync(helperPath, repaired, { mode: 0o755 });
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(true);
+    expect(await hookReadiness(root)).toBe(true);
 }
 
 test.each(['custom', 'native'])(
@@ -164,17 +131,7 @@ test.each(['custom', 'native'])(
         const helperPath = join(location.absolute, 'prepare-commit-msg');
         const originalHelper = existsSync(helperPath) ? readFileSync(helperPath) : undefined;
         writeFileSync(join(root, 'hook-settings.yml'), 'pre-commit: [invalid yaml\n');
-        expect(
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            ),
-        ).toContain('Cannot load Lefthook configuration');
+        expect(await rejection(installManager(root))).toContain('Cannot load Lefthook configuration');
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init.sh\n');
         const offline = await run(
@@ -193,22 +150,9 @@ test.each(['custom', 'native'])(
         const dispatcher = readFileSync(join(location.absolute, 'pre-commit'));
         writeFileSync(join(root, 'hook-init-updated.sh'), 'printf updated > rc-ran\n');
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init-updated.sh\n');
-        await installHookManager(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-                tools: session,
-            })),
-        );
+        await installManager(root);
         expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(true);
+        expect(await hookReadiness(root)).toBe(true);
         if (existing === 'native' && originalHelper !== undefined)
             await expectHelperRepairs(root, helperPath, originalHelper);
         const staged = await run(['git', 'add', 'gspot.toml'], { cwd: root });
@@ -413,17 +357,7 @@ test('Lefthook versions without the supported installation controls retain exist
     writeFileSync(join(location.absolute, 'pre-commit'), original, { mode: 0o755 });
     const applied = await applyCommand({ cwd: repository.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(
-        await rejection(
-            installHookManager(
-                await openSession(repository.path).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            ),
-        ),
-    ).toContain('Install Lefthook 2.0.13 or newer');
+    expect(await rejection(installManager(repository.path))).toContain('Install Lefthook 2.0.13 or newer');
     expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
     expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);
 }, 60_000);

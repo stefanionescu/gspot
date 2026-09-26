@@ -4,10 +4,11 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { expectCorrected } from '#tests/support/cli/planted.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
-import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 const INIT = [
@@ -41,18 +42,8 @@ describe('the licenses configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const clean = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([
-                { check: 'licenses/packages', status: 'ok', findings: [] },
-            ]);
+            await installAtLevel(sandbox.path, INIT, environment);
+            await expectCorrected(sandbox.path, 'licenses/packages', environment);
             await Bun.write(
                 join(sandbox.path, 'node_modules/strict/package.json'),
                 installed('strict', 'GPL-3.0-only'),
@@ -112,15 +103,7 @@ describe('the licenses configuration', () => {
             await Bun.write(policy, exception('GPL-3.0-only'));
             const appliedGPL30only = await run(sandbox.path, ['apply'], environment);
             expect(appliedGPL30only.code).toBe(0);
-            const accepted = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks).toMatchObject([
-                { check: 'licenses/packages', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'licenses/packages', environment);
             await Bun.write(policy, exception('LGPL-3.0-only'));
             const appliedLGPL30only = await run(sandbox.path, ['apply'], environment);
             expect(appliedLGPL30only.code).toBe(0);
@@ -168,15 +151,7 @@ describe('the licenses configuration', () => {
             await Bun.write(policy, exception('MIT'));
             const appliedMIT = await run(sandbox.path, ['apply'], environment);
             expect(appliedMIT.code).toBe(0);
-            const correctedException = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(correctedException.code, correctedException.stdout + correctedException.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedException.stdout)).checks).toMatchObject([
-                { check: 'licenses/packages', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'licenses/packages', environment);
         },
         PLANTED_TIMEOUT_MS * 2,
     );

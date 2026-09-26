@@ -4,6 +4,7 @@ import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { expectCorrected } from '#tests/support/cli/planted.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
@@ -60,15 +61,7 @@ process.exit(2);
             join(sandbox.path, 'bin/taplo'),
             '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
         );
-        const corrected = await run(
-            sandbox.path,
-            ['check', '--only', 'configs/toml-format', '--no-cache', '--json'],
-            environment,
-        );
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-            { check: 'configs/toml-format', status: 'ok', findings: [] },
-        ]);
+        await expectCorrected(sandbox.path, 'configs/toml-format', environment);
     },
     PLANTED_TIMEOUT_MS,
 );

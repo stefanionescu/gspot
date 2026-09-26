@@ -3,9 +3,8 @@ import { afterEach, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { swiftBuild } from '#cli/checks/swift/build.ts';
+import { sessionInput } from '#tests/support/cli/input.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { rmSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
@@ -15,16 +14,10 @@ afterEach(() => {
     caches.clear();
 });
 
+// The check input of a sandbox whose build folder the run afterwards removes.
 async function inputFor(root: string, check: string): Promise<EngineInput> {
     caches.add(buildFolder(root));
-    const session = await openSession(root);
-    const selection = session.scopes[0]!;
-    const spec = selection.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === check)!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return sessionInput(root, check);
 }
 
 test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {

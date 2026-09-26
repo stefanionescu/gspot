@@ -54,3 +54,22 @@ export async function installPrivateTools(cwd: string): Promise<void> {
             `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
         );
 }
+
+/**
+ * Installs the sandbox with the init arguments, then selects the level every planted check runs at.
+ * @param cwd the sandbox
+ * @param argv the init arguments
+ * @param environment the PATH the commands run with
+ * @param level the level to select
+ */
+export async function installAtLevel(
+    cwd: string,
+    argv: string[],
+    environment: Record<string, string>,
+    level: 'recommended' | 'all' = 'all',
+): Promise<void> {
+    await install(cwd, argv, environment);
+    const selected = await run(cwd, ['set', 'level', level], environment);
+    if (selected.code !== 0)
+        throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
+}

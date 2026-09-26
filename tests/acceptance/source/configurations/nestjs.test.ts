@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 // Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 const DEPENDENCIES = {
     '@nestjs/common': '11.2.3',
@@ -100,15 +100,7 @@ describe('the nestjs configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
         },
         PLANTED_TIMEOUT_MS * 8,
     );

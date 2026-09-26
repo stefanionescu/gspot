@@ -6,8 +6,8 @@ import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/support/cli/swift-fixtures.ts';
 
@@ -38,9 +38,7 @@ describe('the swift configuration inside a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(sandbox.path, argv, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, argv, environment);
             for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);

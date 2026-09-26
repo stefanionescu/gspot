@@ -4,12 +4,12 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const INIT = [
@@ -111,9 +111,7 @@ describe('the library configurations', () => {
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
@@ -134,15 +132,7 @@ describe('the library configurations', () => {
             } else {
                 await createFileTree(sandbox.path, { [planted.expected.file]: CLEAN });
             }
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
         },
         PLANTED_TIMEOUT_MS * 8,
     );

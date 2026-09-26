@@ -3,9 +3,10 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { expectCorrected } from '#tests/support/cli/planted.ts';
 // Planted repository for the duplication configuration: one block copied into a second file.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
@@ -38,9 +39,7 @@ describe('the duplication configuration', () => {
             await createFileTree(sandbox.path, { 'scripts/first.sh': copied('count_first') });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const clean = await run(
                 sandbox.path,
                 ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
@@ -70,15 +69,7 @@ describe('the duplication configuration', () => {
                 join(sandbox.path, 'scripts/second.sh'),
                 '#!/usr/bin/env bash\nprintf "Independent task\\n"\n',
             );
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'duplication/jscpd', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'duplication/jscpd', environment);
         },
         PLANTED_TIMEOUT_MS * 2,
     );

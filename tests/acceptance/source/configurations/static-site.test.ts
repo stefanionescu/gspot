@@ -6,9 +6,9 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [
     'init',
@@ -123,9 +123,7 @@ describe('the static-site configuration', () => {
             const environment = {
                 PATH: toolsPath(['typos', 'ec', 'ast-grep']),
             };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
@@ -171,9 +169,7 @@ test(
         await createFileTree(sandbox.path, FILES);
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
-        await install(sandbox.path, INIT, environment);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        await installAtLevel(sandbox.path, INIT, environment);
         const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(checked.stdout));

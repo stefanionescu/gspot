@@ -2,15 +2,13 @@ import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { hookReadiness, installManager } from '#tests/support/cli/hooks.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 
 // Switching the runner leaves the hooks not ready until they are installed again, both ways.
@@ -19,47 +17,14 @@ async function expectRunnerSwitch(root: string): Promise<void> {
     writeFileSync(join(root, 'gspot.toml'), policy + '\n[runner]\ntool = "mise"\n');
     const applied = await applyCommand({ cwd: root, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(false);
-    await installHookManager(
-        await openSession(root).then((session) => ({
-            policy: session.policyFiles.policy,
-            repository: session.repository,
-            tools: session,
-        })),
-    );
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(true);
+    expect(await hookReadiness(root)).toBe(false);
+    await installManager(root);
+    expect(await hookReadiness(root)).toBe(true);
     writeFileSync(join(root, 'gspot.toml'), policy);
     const reapplied = await applyCommand({ cwd: root, isDryRun: false });
     expect(reapplied.exitCode).toBe(0);
-    await installHookManager(
-        await openSession(root).then((session) => ({
-            policy: session.policyFiles.policy,
-            repository: session.repository,
-            tools: session,
-        })),
-    );
-    expect(
-        hookStatus(
-            await openSession(root).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        ).ready,
-    ).toBe(true);
+    await installManager(root);
+    expect(await hookReadiness(root)).toBe(true);
 }
 
 test.each(['default', 'native', 'nested'])(
@@ -109,30 +74,9 @@ test.each(['default', 'native', 'nested'])(
         const config = readFileSync(join(top, '.git/config'));
         const applied = await applyCommand({ cwd: root, isDryRun: false });
         expect(applied.exitCode).toBe(0);
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(false);
-        for (let attempt = 0; attempt < 2; attempt++)
-            await installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            );
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(true);
+        expect(await hookReadiness(root)).toBe(false);
+        for (let attempt = 0; attempt < 2; attempt++) await installManager(root);
+        expect(await hookReadiness(root)).toBe(true);
         expect(readFileSync(join(top, '.git/config'))).toStrictEqual(config);
         const input = 'refs/heads/main a refs/heads/main b\nrefs/tags/v1 c refs/tags/v1 d\n';
         const remote = 'remote with spaces "quotes" $dollar `literal`';
@@ -192,14 +136,7 @@ test.each(['default', 'native', 'nested'])(
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         unlinkSync(join(root, '.husky/pre-push'));
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(false);
+        expect(await hookReadiness(root)).toBe(false);
         const missing = await run(
             ['git', 'hook', 'run', '--to-stdin', 'push-input', 'pre-push', '--', 'origin', remote],
             options,
@@ -208,41 +145,14 @@ test.each(['default', 'native', 'nested'])(
         expect(missing.stderr).toContain('gspot apply');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         writeFileSync(join(root, '.husky/pre-push'), managed.replace('gspot_status=0', 'gspot_status=7'));
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(false);
-        expect(
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            ),
-        ).toContain('integration is missing or edited');
+        expect(await hookReadiness(root)).toBe(false);
+        expect(await rejection(installManager(root))).toContain('integration is missing or edited');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         writeFileSync(
             join(root, '.husky/pre-push'),
             managed + '\n# >>> gspot managed >>>\nexit 0\n# <<< gspot managed <<<\n',
         );
-        expect(
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            ),
-        ).toContain('markers');
+        expect(await rejection(installManager(root))).toContain('markers');
         writeFileSync(join(root, '.husky/pre-push'), managed);
         const init = join(root, 'config/husky/init.sh');
         for (const [body, status, calls] of [

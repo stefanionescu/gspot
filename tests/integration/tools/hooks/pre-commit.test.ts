@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
+import { hookReadiness } from '#tests/support/cli/hooks.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
@@ -54,14 +54,7 @@ test.each(['', "apps/worker's tools"])(
             repository: session.repository,
             tools: session,
         });
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).ready,
-        ).toBe(true);
+        expect(await hookReadiness(root)).toBe(true);
         const env = {
             PATH: `${join(root, 'bin')}:${environmentVariables()['PATH'] ?? ''}`,
             PRE_COMMIT_HOME: join(root, 'pre-commit-cache'),

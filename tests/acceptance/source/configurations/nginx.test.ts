@@ -5,8 +5,8 @@ import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the nginx configuration: a proxy target the request chooses.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const INIT = [
@@ -117,9 +117,7 @@ describe('the nginx configuration', () => {
             await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const clean = await run(sandbox.path, ['check', '--only', 'nginx/gixy', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const outcome = await runPlanted(

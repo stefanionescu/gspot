@@ -5,9 +5,10 @@ import { readdirSync, symlinkSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { expectCorrected } from '#tests/support/cli/planted.ts';
 // Adding a configuration changes the next explicit check through its ESLint fragment.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const INIT = [
@@ -48,9 +49,7 @@ describe('gspot add', () => {
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const before = await run(
                 sandbox.path,
                 ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
@@ -76,15 +75,7 @@ describe('gspot add', () => {
                 }),
             );
             await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'typescript/eslint', status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, 'typescript/eslint', environment);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

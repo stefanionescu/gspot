@@ -30,3 +30,18 @@ export async function checkInput(
         repositoryFiles: session.repository.files,
     };
 }
+
+/**
+ * The input of a check the sandbox's own policy selects, over every tracked file of the root scope.
+ * @param root the sandbox, already holding its gspot.toml
+ * @param check the check name
+ * @returns the engine input
+ */
+export async function sessionInput(root: string, check: string): Promise<EngineInput> {
+    const session = await openSession(root);
+    const scope = session.scopes.find((entry) => entry.scope.path === '');
+    if (scope === undefined) throw new Error('The sandbox has no root scope.');
+    const spec = scope.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === check);
+    if (spec === undefined) throw new Error(`The sandbox selects no check called ${check}.`);
+    return engineInput(session, { scope, spec, files: session.repository.files });
+}

@@ -5,10 +5,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
+import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
+import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
@@ -98,15 +98,7 @@ describe('the configs configuration', () => {
                 containing({ check: planted.check, ...planted.expected }),
             );
             await createFileTree(sandbox.path, planted.corrected);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
             const jsonCheck = await run(sandbox.path, ['check', '--only', 'configs/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
@@ -146,15 +138,7 @@ describe('the configs configuration', () => {
                     join(sandbox.path, 'app/Info.plist'),
                     '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
                 );
-                const corrected = await run(
-                    sandbox.path,
-                    ['check', '--only', 'configs/plist', '--no-cache', '--json'],
-                    environment,
-                );
-                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                    { check: 'configs/plist', status: 'ok', findings: [] },
-                ]);
+                await expectCorrected(sandbox.path, 'configs/plist', environment);
             },
             PLANTED_TIMEOUT_MS,
         );
@@ -192,9 +176,7 @@ describe('the configs configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             await createFileTree(sandbox.path, {
                 [scenario.path]: scenario.broken,
                 'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',

@@ -5,7 +5,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
+import { hookStatusText } from '#tests/support/cli/hooks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
@@ -90,14 +90,7 @@ test.each(['default', 'external', 'worktree'] as const)(
         expect(existsSync(join(root, 'gspot.json'))).toBe(false);
         const editedDispatcher = readFileSync(join(directory, 'pre-commit'), 'utf8') + '# authored addition\n';
         writeFileSync(join(directory, 'pre-commit'), editedDispatcher);
-        expect(
-            hookStatus(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            ).text,
-        ).toContain('missing or edited pre-commit');
+        expect(await hookStatusText(root)).toContain('missing or edited pre-commit');
         const removed = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
         expect(readFileSync(join(directory, 'pre-commit'), 'utf8')).toBe(editedDispatcher);
         expect(removed.exitCode, removed.text).toBe(0);

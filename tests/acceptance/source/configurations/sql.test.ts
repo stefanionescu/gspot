@@ -3,12 +3,12 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the sql configuration: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',
@@ -71,9 +71,7 @@ describe('the sql configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installAtLevel(sandbox.path, INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(
@@ -87,15 +85,7 @@ describe('the sql configuration', () => {
                 sandbox.path,
                 Object.fromEntries(Object.keys(planted.files).map((file) => [file, CLEAN])),
             );
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
+            await expectCorrected(sandbox.path, planted.check, environment);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

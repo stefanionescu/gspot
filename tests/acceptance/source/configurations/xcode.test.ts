@@ -7,10 +7,10 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [
     'init',
@@ -134,9 +134,7 @@ async function installedXcodeProject() {
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'taplo', 'yamllint']) };
-        await install(sandbox.path, INIT, environment);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        await installAtLevel(sandbox.path, INIT, environment);
         commitAll(sandbox.path);
         return { sandbox, environment };
     } catch (error) {
