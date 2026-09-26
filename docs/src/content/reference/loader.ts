@@ -1,8 +1,8 @@
 import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands.ts';
-import type { ReferencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { bullets, referencePage, section } from './page.ts';
+import type { ReferencePage } from '../../types/reference.ts';
 import { configurationReference, settingsPage } from './policy.ts';
 import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
 import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';

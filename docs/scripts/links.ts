@@ -4,9 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { globSync, statSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
+import type { PageLinks } from '#docs/src/types/links.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
-
-type PageLinks = { path: string; ids: Set<string>; links: string[] };
 
 function inspectPage(path: string, content: string): PageLinks {
     const ids = new Set<string>();

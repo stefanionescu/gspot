@@ -54,3 +54,5 @@ export type ConfinedRoot = {
     lock(path: string): void;
     close(): void;
 };
+/** A third-party license text the release notices embed, pinned by its digest. */
+export type UpstreamNotice = { source: string; sha256: string; attribution?: string; omitTemplateCopyright?: boolean };

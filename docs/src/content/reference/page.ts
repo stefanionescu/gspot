@@ -1,10 +1,6 @@
 import { sourceRevision } from '../revision.ts';
+import type { ReferencePage } from '../../types/reference.ts';
 import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
-
-export type ReferencePage = {
-    data: { title: string; description: string; editUrl: string };
-    body: string;
-};
 
 /**
  * Preserve definition attribution and build provenance without serializing metadata into Markdown.

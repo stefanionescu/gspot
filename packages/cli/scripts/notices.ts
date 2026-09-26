@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { prepareInput } from './inputs.ts';
 import { SWIFT_GRAMMAR } from '#cli/types/platform.ts';
 import { dirname, join, resolve, sep } from 'node:path';
+import type { UpstreamNotice } from '#cli/types/platform.ts';
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 
 const packageSchema = z.object({
@@ -10,8 +11,6 @@ const packageSchema = z.object({
     version: z.string(),
     license: z.union([z.string(), z.object({ type: z.string() }).transform((license) => license.type)]),
 });
-type UpstreamNotice = { source: string; sha256: string; attribution?: string; omitTemplateCopyright?: boolean };
-
 const UPSTREAM_NOTICES: Record<string, UpstreamNotice> = {
     '@bomb.sh/tab@0.0.22': {
         source: 'https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/MIT.txt',

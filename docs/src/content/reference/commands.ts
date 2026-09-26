@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import type { ReferencePage } from './page.ts';
+import type { ReferencePage } from '../../types/reference.ts';
 import { referencePage, section, table, cell } from './page.ts';
 import { buildProgram } from '@gspot/cli/src/commands/program.ts';
 
