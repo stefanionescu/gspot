@@ -4,7 +4,9 @@ import { posix } from 'node:path';
 type Plist = string | Plist[] | { [key: string]: Plist };
 type Token = { text: string; quoted: boolean; at: number };
 
-const TOKEN = /\s+|\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|[{}()=;,]|[A-Za-z0-9_.$/+-]+/uy;
+const PUNCTUATION = new Set(['{', '}', '(', ')', '=', ';', ',']);
+const WORD_CHARACTER = /[A-Za-z0-9_.$/+-]/u;
+const ESCAPES: Record<string, string> = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' };
 const objectSchema = z.object({
     isa: z.string(),
     name: z.string().optional(),
@@ -25,29 +27,66 @@ const objectSchema = z.object({
 });
 const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), objectSchema) });
 
+// The index past the quoted text that opens before from, where a backslash escapes the next character, or -1.
+function quotedEnd(text: string, from: number): number {
+    for (let at = from; at < text.length; at += 1) {
+        if (text[at] === '\\') at += 1;
+        else if (text[at] === '"') return at + 1;
+    }
+    return -1;
+}
+
+// The text a quoted token stands for, with its escapes resolved.
+function unescaped(body: string): string {
+    return body.replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
+        if (escaped.startsWith('U')) return String.fromCodePoint(Number.parseInt(escaped.slice(1), 16));
+        if (/^[0-7]/u.test(escaped)) return String.fromCodePoint(Number.parseInt(escaped, 8));
+        return ESCAPES[escaped] ?? escaped;
+    });
+}
+
+// The index past the whitespace or comment at at, or at when a token starts there.
+function skippedEnd(text: string, at: number): number {
+    const char = text[at] ?? '';
+    if (/\s/u.test(char)) return at + 1;
+    if (char !== '/') return at;
+    if (text[at + 1] === '/') {
+        const end = text.indexOf('\n', at);
+        return end === -1 ? text.length : end + 1;
+    }
+    if (text[at + 1] !== '*') return at;
+    const end = text.indexOf('*/', at + 2);
+    if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
+    return end + 2;
+}
+
+// The quoted text, punctuation, or word at at, with the index past it.
+function tokenAt(text: string, at: number): { token: Token; end: number } {
+    const char = text[at] ?? '';
+    if (char === '"') {
+        const end = quotedEnd(text, at + 1);
+        if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
+        return { token: { text: unescaped(text.slice(at + 1, end - 1)), quoted: true, at }, end };
+    }
+    if (PUNCTUATION.has(char)) return { token: { text: char, quoted: false, at }, end: at + 1 };
+    let end = at;
+    while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
+    if (end === at) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
+    return { token: { text: text.slice(at, end), quoted: false, at }, end };
+}
+
 function tokens(text: string): Token[] {
     const result: Token[] = [];
     let at = 0;
     while (at < text.length) {
-        TOKEN.lastIndex = at;
-        const match = TOKEN.exec(text);
-        if (!match) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
-        const raw = match[0];
-        if (!/^\s|^\/\//u.test(raw) && !raw.startsWith('/*')) {
-            const quoted = raw.startsWith('"');
-            const value = quoted
-                ? raw.slice(1, -1).replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
-                      if (escaped.startsWith('U')) return String.fromCodePoint(Number.parseInt(escaped.slice(1), 16));
-                      if (/^[0-7]/u.test(escaped)) return String.fromCodePoint(Number.parseInt(escaped, 8));
-                      return (
-                          ({ n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' } as Record<string, string>)[escaped] ??
-                          escaped
-                      );
-                  })
-                : raw;
-            result.push({ text: value, quoted, at });
+        const skipped = skippedEnd(text, at);
+        if (skipped > at) {
+            at = skipped;
+            continue;
         }
-        at = TOKEN.lastIndex;
+        const scanned = tokenAt(text, at);
+        result.push(scanned.token);
+        at = scanned.end;
     }
     return result;
 }
