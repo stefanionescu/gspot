@@ -816,18 +816,35 @@ Record 2026-09-26. The ESLint count fell from 9,314 to 6,002 in eighteen commits
 conditions, template expressions, magic numbers, callback references, nested templates, import layout, floating
 promises, non-null assertions, unsafe regular expressions, and trivial files. Commands export the types of their
 JSON output, and tests parse reports through the report schema. Bun types every asymmetric matcher as any, so
-typed matcher wrappers in `tests/support/expectations.ts` stand in for them. Nine trivial modules folded into their
-owners. The nginx, SQL, and Xcode tokenizers read one lexeme kind per function.
+typed matcher wrappers in `tests/support/expectations.ts` stand in for them.
+
+Nine trivial modules folded into their owners. The nginx, SQL, and Xcode tokenizers read one lexeme kind per function.
 
 Remaining: 4,791 `gspot/no-trivial-functions`, of which about 3,800 are inline callbacks of one or two statements.
 The owner decides whether the rule keeps counting anonymous callbacks passed as call arguments before those
 repairs start. The complexity family stands at 277 `no-await-expression-member`, 254 `complexity`, 198
 `cognitive-complexity`, 185 `max-lines-per-function`, and 104 `max-depth`. It also holds 90
 `no-nested-conditional`, 84 `max-statements`, and 19 `max-lines`. The densest files are
-`revisions/dependencies.ts`, `lifecycle/ownership.ts`, and `evaluation/eslint.ts`. Open: `gspot install` cannot
+`revisions/dependencies.ts`, `lifecycle/ownership.ts`, and `evaluation/eslint.ts`.
+
+Open: `gspot install` cannot
 fetch the unpublished plugin, so the private plugin copy is refreshed by hand after plugin changes (D-158). The
 `@npmcli/config` definitions import keeps its index path with a reason, because the package defines the values
 there.
+
+Record 2026-09-26, later. The ESLint count fell to 5,570 by `b84bd00c`. Every rule outside the trivial-function rule
+and the complexity family is clear, including `no-await-expression-member`. The trivial-function rule reports 734
+named functions of two statements or fewer and 4,292 inline callbacks. The owner has ruled that one-statement helper
+functions are not acceptable; whether the rule keeps counting inline callbacks is still open. The complexity family
+stands at 544 findings, most of them test callbacks over 60 lines.
+
+A sweep of the tests and the CLI source ran the same day, in six commits from `6f518800` to `39caa4c5`. It found no
+import cycle, no dead source, no duplicated source, and no unreasoned suppression. Three test files that exercised
+only the test harness are gone, with one assertion that a retired page is absent and one redundant case. Five
+manifest invariants are part of manifest validation instead of tests, so a tool without a pin or a check that
+reads an empty setting fails to load. The duplication check passes on the tests again through shared install, corrected-run,
+engine-input, and hook-status helpers. The hooks directory, the proposal types, the retained paths, and the runner
+task plan moved to their owners, and the `cached` field the contract names now exists in the schema.
 
 ### Step 8.2
 
