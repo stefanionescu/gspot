@@ -1238,7 +1238,7 @@ Every `[limits]` key in the ledger, at the root or under a language table (`limi
 `structure.single_file_folder_allowed`
 (paths, reason); `structure.prefix_collision_allowed` (paths, reason); `structure.call_through_allowed`
 (file, name, reason); `structure.folder_name_allowed` (paths, reason); `architecture.types_directory`;
-`architecture.roles`. Allowance validation follows `require_reasons`; verbose output includes supplied reasons.
+`architecture.constants_directory`; `architecture.roles`. Allowance validation follows `require_reasons`; verbose output includes supplied reasons.
 
 Rule files:
 
@@ -1332,7 +1332,8 @@ exported as a hook; no store creation inside a component; selectors passed to th
 Checks:
 
 `typescript/eslint` with the selectors; `gspot/registry-instance-only` treats store files as
-registries when `[tools.zustand] store_files` names them.
+registries when `[tools.zustand] store_files` names them, and the files under
+`[architecture] constants_directory` when the policy names that folder.
 
 Settings:
 
@@ -2949,6 +2950,7 @@ Settings:
 | `tools.typescript.paths`                              | neutral                                                                | from the existing tsconfig at init                                                                                                                                    |
 | `tools.knip.entry`                                    | neutral                                                                | from the framework configuration                                                                                                                                      |
 | `architecture.types_directory`                        | neutral                                                                | `types`                                                                                                                                                               |
+| `architecture.constants_directory`                    | neutral                                                                | `constants`                                                                                                                                                           |
 | `architecture.elements`, `architecture.edges_allowed` | tightening                                                             | one element; the default roles                                                                                                                                        |
 | `structure.reexports`                                 | tightening                                                             | `none`                                                                                                                                                                |
 | `structure.call_through_allowed` (file, name, reason) | loosening                                                              | none                                                                                                                                                                  |

@@ -118,6 +118,7 @@ export type ArchitectureElement = { name: string; paths: string[] };
 export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 export type ArchitectureSettings = {
     types_directory?: string;
+    constants_directory?: string;
     elements: ArchitectureElement[];
     edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;

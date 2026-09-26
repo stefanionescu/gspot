@@ -45,9 +45,12 @@ abstraction. Repairs belong directly in the surviving owner. Report what was act
 and which behavior remains verified; architecture edits alone do not satisfy code cleanup.
 
 Group source by behavior and ownership. Extract a shared module only when it owns shared behavior
-or a shared contract. Keep local types, schemas, constants, and functions beside their consumers.
-Do not require a file per type, constant, forwarding function, or check. Test locations follow
-the behavior they exercise; source/test directory symmetry is not required.
+or a shared contract. Every type alias lives under the `types/` folder of its package, and every
+literal constant under its `constants/` folder. Each holds one file per source folder and one per
+subfolder; a folder with both gets a folder-level file named after it. Schemas, function tables,
+and values computed at load stay beside the logic that owns them. Do not require a file per
+type, constant, forwarding function, or check. Test locations follow the behavior they exercise;
+source/test directory symmetry is not required.
 
 Use the configuration kind `policy` for cross-language checks. It groups configuration
 selection and planning; it does not prescribe the taxonomy of commands, tests, docs,
@@ -66,8 +69,9 @@ Infrastructure must not import all check definitions for a basic operation. Chan
 with its callers, assets, and build inputs in the same implementation batch. Update all consumers directly when moving or deleting implementations.
 
 Use `testdirs` directly for temporary test directories. Register disposal before creating files
-so setup failures are cleaned up. Keep test-only types with tests and exercise harness behavior
-through real product journeys.
+so setup failures are cleaned up. Test-only types live under `tests/types/` and test constants
+under `tests/constants/`, mirroring the test tree; a table of cases stays with its test. Exercise
+harness behavior through real product journeys.
 
 ## CLI ownership boundaries
 
@@ -81,7 +85,7 @@ Next.js source checks and execution live in `checks/nextjs/source.ts` and `check
 Jest execution and its shared validation schema live in `checks/jest/run.ts` and
 `checks/jest/schema.ts`. Hook names and hook metadata belong to `repository/hooks.ts`;
 dependency directory names belong to repository file classification. Dependency checks share
-lockfile formats. Other check constants stay with their consumers.
+lockfile formats. Check constants live under `constants/checks/`, one file per check folder.
 
 Agent metadata and generated instructions belong to `agents/metadata.ts` and
 `agents/instructions.ts`. Shipped assets remain under `packages/cli/configurations/`; source definitions and selection belong
@@ -101,7 +105,7 @@ assembly and validation are distinct from executable checks. Their internal owne
 change the public rules configuration or the embedded rules asset paths. Repository discovery
 owns file classification. The suppression check owns its directive constant.
 
-Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
+Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool inspections own shared tool observations; doctor consumes those observations in its report.
 
 The CLI build command is `bun packages/cli/scripts/command.ts`. Authored build modules live in
 `packages/cli/scripts/`: command parsing and orchestration, compilation, embedded assets, shared
@@ -157,7 +161,7 @@ ESLint adoption, preservation, and native selection suites separate their distin
 The CLI and independently usable ESLint plugin remain separate workspace packages.
 The plugin exports `configs.recommended`, `configs.all`, and its existing rules through
 [ESLint's conventional plugin shape](https://eslint.org/docs/latest/extend/plugins).
-Local constants and types stay with consumers unless a shared contract justifies extraction.
+Its types live under `src/types/` and its literal constants under `src/constants/`; rule logic stays with the rule.
 
 Keep all authored repository tasks, including source-checkout overrides and CI orchestration, in `.mise/conf.d/repo.toml` and generated integration in
 `.mise/conf.d/gspot-tools.toml`, using the
@@ -175,7 +179,7 @@ Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain e
 The root TypeScript project includes every test under its strict workspace settings.
 All tests belong under the root `tests/`: unit CLI and plugin suites, integration CLI, docs,
 and repository suites, tool integration under `integration/tools`, source journeys under
-`acceptance/source`, and release consumers under `acceptance/release`. Support owns process, registry, and fixture lifetime; types stay with those owners.
+`acceptance/source`, and release consumers under `acceptance/release`. Support owns process, registry, and fixture lifetime; its types live under `tests/types/support/`.
 `mise run test` targets deterministic unit and integration execution using documented development
 prerequisites and installed workspace dependencies. Native tools, downloads, source acceptance,
 and installed release consumers require separate explicit tasks. The release task runs directly
@@ -399,7 +403,8 @@ follows the task; no page quota, separate fixture system, or universal prose par
 
 Documentation content loading belongs in `docs/src/content/reference/loader.ts`. The executable checks
 for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
-and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers.
+and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers,
+with their literal constants under `packages/eslint-plugin/src/constants/`.
 
 ## Contribution rule
 
@@ -422,7 +427,7 @@ Each contract has one architecture owner and each unfinished behavior has one st
 
 ### Acceptance K-55
 
-Use one platform definition for build targets, launcher selection, package names, and release assets. Preserve genuinely shared policy contracts; keep algorithm constants with their consumers. Verify installed artifacts against the same target definition.
+Use one platform definition for build targets, launcher selection, package names, and release assets. Preserve genuinely shared policy contracts. Verify installed artifacts against the same target definition.
 
 ### Acceptance K-24
 
@@ -430,12 +435,14 @@ Share proven parsing, line counting, and extraction operations without forcing l
 
 ### Acceptance G-13
 
-Colocate constants with the behavior that uses them. Share a literal contract only
-when multiple consumers need it. Configurations own shipped tool pins and policy. The package layout
-need not match between CLI and plugin.
+Every literal constant of a package lives under its `constants/` folder and every type under its
+`types/` folder, in the file named for the source folder that reads it. Two constants with one
+value are one constant. Two with one name and different values carry names that say what each
+one is. Configurations own shipped tool pins and policy.
 
-Remove unrelated central tables and forwarding accessors. Keep algorithm constants
-with their algorithm and preserve legitimate shared contracts.
+No forwarding accessor wraps a constant. Schemas, function tables, and values computed at load
+stay with their logic. `[architecture] types_directory` and `constants_directory` name the two
+folders, so the types placement rule and the registry rule enforce them.
 
 Exercise the behavior that consumes a shared contract. Moving a local constant alone
 does not justify a new test.

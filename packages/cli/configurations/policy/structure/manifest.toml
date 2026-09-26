@@ -476,6 +476,13 @@ summary = "The directory every type alias lives under; turns on the types placem
 detect = {folders = ["types", "src/types"]}
 
 [[settings]]
+name = "architecture.constants_directory"
+kind = "string"
+direction = "neutral"
+summary = "The directory every literal constant lives under; its files are the registries the instance rule accepts."
+detect = {folders = ["constants", "src/constants"]}
+
+[[settings]]
 name = "architecture.roles"
 kind = "table"
 direction = "tightening"

@@ -88,6 +88,7 @@ const roleGlobs = z.union([text, textList]);
 
 const architectureSchema = z.strictObject({
     types_directory: text.optional(),
+    constants_directory: text.optional(),
     elements: z.array(element).optional(),
     edges_allowed: z.array(allowedEdge).optional(),
     roles: z.record(text, roleGlobs).optional(),

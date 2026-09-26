@@ -119,6 +119,8 @@ exclude = true
 reason = "Xcode writes this key in a string file, and the type spells it as the file does."
 
 [architecture]
+types_directory = "types"
+constants_directory = "constants"
 roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.eslint]

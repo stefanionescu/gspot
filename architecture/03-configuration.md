@@ -113,6 +113,7 @@ structural_prefix = "^\\d{2}-"
 # Architecture. Elements and the imports allowed between them.
 [architecture]
 types_directory = "types"
+constants_directory = "constants"
 elements = [
   { name = "app",      paths = ["src/app"] },
   { name = "modules",  paths = ["src/modules"] },
@@ -236,13 +237,16 @@ tool. [public vocabulary](README.md#glossary) holds the table, and a test over t
 ### Architecture
 
 `[architecture]` is read by the boundaries rules and the types rules, at the level `all`. It has
-five keys: `types_directory`, `elements`, `edges_allowed`, `roles`, and `contracts`. `roles`
+six keys: `types_directory`, `constants_directory`, `elements`, `edges_allowed`, `roles`, and
+`contracts`. `constants_directory` names the folder of literal constants; its files are the
+registries that may export instances built with `new`. `roles`
 names the files that own the config, the environment, and the test support. `contracts` holds
-the import contracts of a Python project. An element imports only itself
-unless a row of `edges_allowed` adds a target. No default names a folder: a rule with nothing
-configured reports nothing.
+the import contracts of a Python project.
 
-`init` proposes `types_directory` from what exists.
+An element imports only itself unless a row of `edges_allowed` adds a target. No default names a
+folder: a rule with nothing configured reports nothing.
+
+`init` proposes `types_directory` and `constants_directory` from what exists.
 
 ### Options of a tool
 
@@ -461,7 +465,7 @@ config, and its plugins stay, and takeover lists them for removal by hand.
 with its pinned version, and writes `.gspot/package.json` with the mark `_gspot`. `install-tools.ts`
 runs the install of the package manager the repository uses, with `.gspot/` as its folder,
 through `nypm`. The lockfile under `.gspot/` is tracked, and `.gspot/node_modules/` is in the
-managed `.gitignore` block. `tool-probe.ts` looks under `.gspot/node_modules/.bin` first and never
+managed `.gitignore` block. `tools/inspect.ts` looks under `.gspot/node_modules/.bin` first and never
 under the `node_modules` of the root.
 
 The generated ESLint config sits in `.gspot/`, so its

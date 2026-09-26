@@ -45,7 +45,11 @@ const SCRIPTS = [
 const ALIASES = {
     "#cli/": "packages/cli/src/",
     "#plugin/": "packages/eslint-plugin/src/",
-    "#tests/": "tests/"
+    "#tests/": "tests/",
+    "#docs/": "docs/",
+    "#scripts/": "packages/cli/scripts/",
+    "#cli-package": "packages/cli/package.json",
+    "#plugin-package": "packages/eslint-plugin/package.json"
 };
 
 const limits = {
@@ -120,6 +124,7 @@ const coreRules = {
 
 const gspotRules = {
     ...gspot.configs.recommended.rules,
+    'gspot/types-placement': ['error', { typesDirectory: "types" }],
 
     'gspot/no-trivial-functions': ['error', { maxStatements: 2 }],
     'gspot/no-trivial-files': ['error', { maxStatements: 2 }],
@@ -135,7 +140,7 @@ const gspotRules = {
     "packages/eslint-plugin",
     "docs"
 ] }],
-    'gspot/registry-instance-only': 'error',
+    'gspot/registry-instance-only': ['error', { registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js', "constants/**", "**/constants/**"] }],
     'gspot/private-before-public': 'error',
     'gspot/import-direction': ['error', { roles: {
     "types": [
@@ -360,7 +365,11 @@ const importStyleOverrides = [
                         "../",
                         "#cli/",
                         "#plugin/",
-                        "#tests/"
+                        "#tests/",
+                        "#docs/",
+                        "#scripts/",
+                        "#cli-package",
+                        "#plugin-package"
                     ]
                 }
             ]
@@ -388,7 +397,11 @@ const scopeRules = [
                         "#cli/": "packages/cli/src/",
                         "#package": "packages/cli/package.json",
                         "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/"
+                        "#tests/": "tests/",
+                        "#docs/": "docs/",
+                        "#scripts/": "packages/cli/scripts/",
+                        "#cli-package": "packages/cli/package.json",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     }
                 }
             ],
@@ -423,7 +436,11 @@ const scopeRules = [
                         "#cli/": "packages/cli/src/",
                         "#package": "packages/cli/package.json",
                         "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/"
+                        "#tests/": "tests/",
+                        "#docs/": "docs/",
+                        "#scripts/": "packages/cli/scripts/",
+                        "#cli-package": "packages/cli/package.json",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     },
                     "scope": "packages/cli"
                 }
@@ -491,7 +508,11 @@ const scopeRules = [
                     "aliases": {
                         "#cli/": "packages/cli/src/",
                         "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/"
+                        "#tests/": "tests/",
+                        "#docs/": "docs/",
+                        "#scripts/": "packages/cli/scripts/",
+                        "#cli-package": "packages/cli/package.json",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     }
                 }
             ],
@@ -525,7 +546,11 @@ const scopeRules = [
                     "aliases": {
                         "#cli/": "packages/cli/src/",
                         "#plugin/": "packages/eslint-plugin/src/",
-                        "#tests/": "tests/"
+                        "#tests/": "tests/",
+                        "#docs/": "docs/",
+                        "#scripts/": "packages/cli/scripts/",
+                        "#cli-package": "packages/cli/package.json",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     },
                     "scope": "docs"
                 }
@@ -954,6 +979,7 @@ export default [
         },
         rules: {
             'jsdoc/no-types': 'error',
+            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
             '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],

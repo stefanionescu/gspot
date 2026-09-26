@@ -153,7 +153,7 @@ listed owner to avoid duplicate findings; standalone plugin coverage remains req
 | `gspot/no-cross-project-imports`       | A relative import that escapes the scope                                                                                                                          |
 | `gspot/tests-directory-contents`       | A file that is not a test beside test files                                                                                                                       |
 | `gspot/no-harness-barrel-imports`      | An import from a test-harness barrel                                                                                                                              |
-| `gspot/registry-instance-only`         | An exported `new` instance outside a `registry.ts`                                                                                                                |
+| `gspot/registry-instance-only`         | An exported `new` instance outside a `registry.ts` or the `[architecture] constants_directory`                                                                    |
 | `gspot/require-server-only`            | A server module without `import 'server-only'` (Next.js)                                                                                                          |
 | `gspot/no-client-environment`          | `process.env` in a client module beyond `NEXT_PUBLIC_*` and `NODE_ENV` (Next.js)                                                                                  |
 | `gspot/private-before-public`          | An exported declaration above a non-exported one                                                                                                                  |
