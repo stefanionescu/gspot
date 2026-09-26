@@ -1,3 +1,4 @@
+import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
 import { isInScope } from '#cli/repository/paths.ts';
@@ -27,47 +28,57 @@ function modulePath(path: string, directory: string): string | undefined {
     }
 }
 
-async function importedEdges(input: EngineInput, path: string, owned: Set<string>): Promise<ImportIndex['edges']> {
+type Edge = ImportIndex['edges'][number];
+type EdgeSource = { input: EngineInput; path: string; owned: Set<string>; scanner: Bun.Transpiler };
+
+// Refuses a file tree-sitter could not parse in full, naming the first place it lost the thread.
+function assertParsed(tree: NonNullable<Awaited<ReturnType<typeof parseSource>>>, path: string): void {
+    if (!tree.rootNode.hasError) return;
+    const location = (tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode).startPosition;
+    throw new Error(`Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`);
+}
+
+// Whether a node imports something: an import or export with a source, or a call to import or require.
+function isImporting(node: Node): boolean {
+    if (node.childForFieldName('source') !== null) return true;
+    if (node.type !== 'call_expression') return false;
+    const callee = node.childForFieldName('function')?.text ?? '';
+    return callee === 'import' || callee === 'require';
+}
+
+// The edges one importing node adds: each import specifier that resolves to a tracked file of the scope.
+function nodeEdges(source: EdgeSource, node: Node): Edge[] {
+    const { input, path, owned, scanner } = source;
+    return scanner.scanImports(node.text).flatMap((entry) => {
+        if (!IMPORT_KINDS.has(entry.kind)) return [];
+        const resolved = modulePath(entry.path, dirname(join(input.root, path)));
+        if (resolved === undefined) return [];
+        const target = toPosix(relative(input.root, resolved));
+        if (!owned.has(target)) return [];
+        return [
+            {
+                from: path,
+                to: target,
+                source: entry.path,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+            },
+        ];
+    });
+}
+
+async function importedEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
     const text = readSource(input.root, path, input.observations).toString('utf8');
     const tree = await parseSource(path.endsWith('x') ? 'tsx' : 'typescript', text, input);
     if (tree === null) throw new Error(`Cannot parse imports in ${path}.`);
     try {
-        if (tree.rootNode.hasError) {
-            const location = (tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode).startPosition;
-            throw new Error(
-                `Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`,
-            );
-        }
+        assertParsed(tree, path);
         const scanner = new Bun.Transpiler({ loader: path.endsWith('x') ? 'tsx' : 'ts' });
-        const edges: ImportIndex['edges'] = [];
-        for (const node of tree.rootNode.descendantsOfType([
-            'import_statement',
-            'export_statement',
-            'call_expression',
-        ])) {
-            const source = node.childForFieldName('source');
-            const callee = node.childForFieldName('function');
-            if (
-                source === null &&
-                (node.type !== 'call_expression' || !['import', 'require'].includes(callee?.text ?? ''))
-            )
-                continue;
-            for (const entry of scanner.scanImports(node.text)) {
-                if (!IMPORT_KINDS.has(entry.kind)) continue;
-                const resolved = modulePath(entry.path, dirname(join(input.root, path)));
-                if (resolved === undefined) continue;
-                const target = toPosix(relative(input.root, resolved));
-                if (!owned.has(target)) continue;
-                edges.push({
-                    from: path,
-                    to: target,
-                    source: entry.path,
-                    line: node.startPosition.row + 1,
-                    column: node.startPosition.column + 1,
-                });
-            }
-        }
-        return edges;
+        const source: EdgeSource = { input, path, owned, scanner };
+        return tree.rootNode
+            .descendantsOfType(['import_statement', 'export_statement', 'call_expression'])
+            .filter((node) => isImporting(node))
+            .flatMap((node) => nodeEdges(source, node));
     } finally {
         tree.delete();
     }
