@@ -8,6 +8,7 @@ import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repositories for the pytest and fastapi configurations: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
 const PROJECT = (dependency: string): string =>
@@ -70,8 +71,8 @@ describe('the pytest configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
-                    message: expect.stringContaining('Required test coverage of 95%'),
+                containing({
+                    message: textContaining('Required test coverage of 95%'),
                 }),
             );
             const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);

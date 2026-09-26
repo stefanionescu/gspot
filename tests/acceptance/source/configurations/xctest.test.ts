@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
@@ -76,7 +77,7 @@ describe('the xctest configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             await createFileTree(sandbox.path, planted.correction);
             const corrected = await run(
                 sandbox.path,

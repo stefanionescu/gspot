@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const policy = (value: string) =>

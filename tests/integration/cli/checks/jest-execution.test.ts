@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 
 const failures = [
     'missing tests',

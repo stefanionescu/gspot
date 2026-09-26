@@ -1,6 +1,9 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import type { Finding } from '#cli/checks/result.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 
 const HEADERS =
     '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n';
@@ -23,33 +26,33 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
         'apps/backend/supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'apps/backend/client.ts': 'const credentialName = "SUPABASE_SERVICE_ROLE_KEY";\n',
     });
-    const expected = [
+    const expected: { check: string; root: Finding[]; nested: Finding[] }[] = [
         {
             check: 'supabase/config',
             root: [],
-            nested: [expect.objectContaining({ file: 'apps/backend/supabase/config.toml', rule: 'function' })],
+            nested: [containing({ file: 'apps/backend/supabase/config.toml', rule: 'function' })],
         },
         {
             check: 'supabase/admin-key-containment',
             root: [],
-            nested: [expect.objectContaining({ file: 'apps/backend/client.ts', rule: 'admin-key' })],
+            nested: [containing({ file: 'apps/backend/client.ts', rule: 'admin-key' })],
         },
         {
             check: 'i18n/locales',
             root: [],
-            nested: [expect.objectContaining({ file: 'apps/backend/messages/de.json' })],
+            nested: [containing({ file: 'apps/backend/messages/de.json' })],
         },
         {
             check: 'integrity/security-headers',
             root: [],
             nested: [
-                expect.objectContaining({ file: 'apps/backend/_headers', rule: 'missing-header' }),
-                expect.objectContaining({ file: 'apps/backend/_headers', rule: 'missing-header' }),
+                containing({ file: 'apps/backend/_headers', rule: 'missing-header' }),
+                containing({ file: 'apps/backend/_headers', rule: 'missing-header' }),
             ],
         },
         {
             check: 'static-site/dead-assets',
-            root: [expect.objectContaining({ file: 'assets/unused.png', rule: 'dead-asset' })],
+            root: [containing({ file: 'assets/unused.png', rule: 'dead-asset' })],
             nested: [],
         },
     ];
@@ -57,7 +60,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
         const result = await run(sandbox.path, ['check', '--only', entry.check, '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(
-            JSON.parse(result.stdout).checks.map((check: { scope: string; findings: unknown[] }) => ({
+            reportSchema.parse(JSON.parse(result.stdout)).checks.map((check) => ({
                 scope: check.scope,
                 findings: check.findings,
             })),
@@ -96,9 +99,9 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
     const command = ['check', '--only', 'structure/bash-safety', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(JSON.parse(broken.stdout).checks.flatMap((check: { findings: unknown[] }) => check.findings)).toStrictEqual([
-        expect.objectContaining({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
-        expect.objectContaining({ file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' }),
+    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
+        containing({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
+        containing({ file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' }),
     ]);
     for (const path of ['app/child/cleanup.sh', 'sibling/cleanup.sh'])
         await Bun.write(`${sandbox.path}/${path}`, '#!/usr/bin/env bash\nprintf "%s\\n" "$target"\n');
@@ -139,9 +142,9 @@ test.each([
         const command = ['check', '--only', check, '--no-cache', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(
-            JSON.parse(failed.stdout).checks.flatMap((entry: { findings: unknown[] }) => entry.findings),
-        ).toMatchObject([{ file: untrusted, line: 1, rule }]);
+        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((entry) => entry.findings)).toMatchObject([
+            { file: untrusted, line: 1, rule },
+        ]);
         await Bun.write(`${sandbox.path}/${untrusted}`, correction);
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

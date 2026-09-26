@@ -4,6 +4,7 @@ import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
@@ -31,7 +32,7 @@ test.each(['recommended', 'all'])(
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toContainEqual(
-            expect.objectContaining({ rule: 'jest/no-focused-tests', file: 'sample.test.js', line: 3 }),
+            containing({ rule: 'jest/no-focused-tests', file: 'sample.test.js', line: 3 }),
         );
         await Bun.write(join(sandbox.path, 'sample.test.js'), focused.replace('test.only(', 'test('));
         const passing = await run(sandbox.path, command);
@@ -63,7 +64,7 @@ test.each(['recommended', 'all'])(
         const report = reportSchema.parse(JSON.parse(uncovered.stdout));
         expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'fail' }]);
         expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
-            expect.objectContaining({ rule: 'coverage-functions', message: expect.stringContaining('100% floor') }),
+            containing({ rule: 'coverage-functions', message: textContaining('100% floor') }),
         );
         await Bun.write(join(sandbox.path, 'app/math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
@@ -98,11 +99,11 @@ test.each(['recommended', 'all'])(
         expect(
             reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings),
         ).toStrictEqual([
-            expect.objectContaining({ rule: 'coverage-lines' }),
-            expect.objectContaining({
+            containing({ rule: 'coverage-lines' }),
+            containing({
                 check: 'jest/coverage',
                 rule: 'coverage-functions',
-                message: expect.stringContaining('50%'),
+                message: textContaining('50%'),
             }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
@@ -118,13 +119,13 @@ test.each(['recommended', 'all'])(
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
-            expect.objectContaining({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
+            containing({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), 'require("./missing-test-dependency.cjs");\n');
         const unavailable = await run(sandbox.path, command, environment);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         expect(reportSchema.parse(JSON.parse(unavailable.stdout)).checks).toStrictEqual([
-            expect.objectContaining({ check: 'jest/coverage', status: 'error' }),
+            containing({ check: 'jest/coverage', status: 'error' }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
         const recovered = await run(sandbox.path, command, environment);

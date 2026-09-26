@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { expect, test } from 'bun:test';
 import { existsSync, readdirSync } from 'node:fs';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 
 test('registry setup releases storage after bind failure, timeout, and interruption', async () => {

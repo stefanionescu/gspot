@@ -6,8 +6,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 

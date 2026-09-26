@@ -7,7 +7,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 

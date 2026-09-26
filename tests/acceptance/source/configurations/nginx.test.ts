@@ -7,6 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const INIT = [
     'init',
@@ -43,7 +44,7 @@ test(
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toMatchObject([
-            { file: 'proxy/conf.d/server.conf', line: 2, message: expect.stringContaining('invalid_directive') },
+            { file: 'proxy/conf.d/server.conf', line: 2, message: textContaining('invalid_directive') },
         ]);
         await Bun.write(join(sandbox.path, 'proxy/conf.d/server.conf'), server);
         const corrected = await run(sandbox.path, command);
@@ -82,7 +83,7 @@ test.each(['recommended', 'all'])(
                 file: 'proxy/nginx.conf',
                 line: 7,
                 rule: 'nginx-t',
-                message: expect.stringContaining('invalid_directive'),
+                message: textContaining('invalid_directive'),
             },
         ]);
         await Bun.write(join(sandbox.path, 'proxy/nginx.conf'), configuration);
@@ -129,7 +130,7 @@ describe('the nginx configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // Gixy has no Windows build, so the check is skipped there and the run passes.
             const isWindows = process.platform === 'win32';
-            const forged = expect.objectContaining({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
+            const forged = containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
             expect(failed.checks).toMatchObject([
                 isWindows

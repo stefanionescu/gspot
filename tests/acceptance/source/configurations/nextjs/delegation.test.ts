@@ -5,6 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import { installedNextProject, NEXT_LAYOUT } from '#tests/support/cli/nextjs.ts';
 
 const OWNER_WRITES = 0o644;
@@ -23,7 +24,7 @@ describe('the nextjs and i18n configurations', () => {
             );
             expect(disabled.code, disabled.stdout + disabled.stderr).toBe(0);
             expect(reportSchema.parse(JSON.parse(disabled.stdout)).checks).toMatchObject([
-                { check: 'nextjs/build', status: 'skipped', note: expect.stringContaining('tools.next.build_in_gate') },
+                { check: 'nextjs/build', status: 'skipped', note: textContaining('tools.next.build_in_gate') },
             ]);
             const written = await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).text();
             // A later block that turns a required rule off is what integrity/required-rules exists to see.
@@ -45,7 +46,7 @@ describe('the nextjs and i18n configurations', () => {
             const integrity = reportSchema.parse(JSON.parse(seen.stdout));
             expect(integrity.checks).toMatchObject([{ check: 'integrity/required-rules', status: 'fail' }]);
             expect(integrity.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     file: '.gspot/config/eslint.config.mjs',
                     rule: 'rule-off',
                     line: 1,
@@ -95,7 +96,7 @@ describe('the nextjs and i18n configurations', () => {
             expect(lint.code, lint.stdout + lint.stderr).toBe(1);
             const findings = reportSchema.parse(JSON.parse(lint.stdout)).checks[0]!.findings;
             expect(findings).toContainEqual(
-                expect.objectContaining({ rule: 'i18next/no-literal-string', file: 'app/layout.tsx', line: 13 }),
+                containing({ rule: 'i18next/no-literal-string', file: 'app/layout.tsx', line: 13 }),
             );
             await Bun.write(join(sandbox.path, 'app/layout.tsx'), NEXT_LAYOUT);
             const corrected = await run(
@@ -107,7 +108,7 @@ describe('the nextjs and i18n configurations', () => {
             const remaining = reportSchema.parse(JSON.parse(corrected.stdout));
             expect(remaining.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
             expect(remaining.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({ rule: 'gspot/no-trivial-functions', file: 'app/page.tsx', line: 7 }),
+                containing({ rule: 'gspot/no-trivial-functions', file: 'app/page.tsx', line: 7 }),
             );
             expect(
                 remaining.checks[0]!.findings.filter(({ rule }) => rule === 'i18next/no-literal-string'),

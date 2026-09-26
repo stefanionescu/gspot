@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { ToolOutputError } from '#cli/execution/output/parse.ts';
 
@@ -36,7 +37,7 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
             { ...result, code: defect.exitCode, stdout: defect.stdout.toString(), stderr: defect.stderr.toString() },
             roots,
         ),
-    ).toContainEqual(expect.objectContaining({ file: 'sample.sh', line: 2, rule: 'SC2086' }));
+    ).toContainEqual(containing({ file: 'sample.sh', line: 2, rule: 'SC2086' }));
     expect(await Bun.file(join(sandbox.path, 'sample.sh')).text()).toBe(source);
     await Bun.write(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
     const corrected = Bun.spawnSync(command, { cwd: sandbox.path });
@@ -95,9 +96,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
                 },
                 roots,
             ),
-        ).toContainEqual(
-            expect.objectContaining({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }),
-        );
+        ).toContainEqual(containing({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }));
         expect(await Bun.file(join(sandbox.path, 'sample.py')).text()).toBe(source);
         await Bun.write(join(sandbox.path, 'sample.py'), 'print("Ready")\n');
         const corrected = Bun.spawnSync(command, { cwd: sandbox.path });

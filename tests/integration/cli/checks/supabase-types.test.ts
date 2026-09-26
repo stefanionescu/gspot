@@ -4,10 +4,10 @@ import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { chmodSync, readFileSync, statSync } from 'node:fs';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import { rejection, textContaining } from '#tests/support/expectations.ts';
 
 const generated = 'export type Database = { public: { Tables: {} } };\n';
 
@@ -81,7 +81,7 @@ test.each(['', 'apps/api'])(
             expect(await execute()).toMatchObject({
                 status: 'error',
                 findings: [],
-                note: expect.stringContaining('Database is unavailable'),
+                note: textContaining('Database is unavailable'),
             });
             const session = await openSession(sandbox.path);
             const planned = (await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] })).find(

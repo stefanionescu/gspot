@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { delimiter, dirname, join } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import type { InstallJson } from '#cli/commands/install.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -61,7 +62,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
         env: { ...env, PATH: `${join(state.path, 'old')}${delimiter}${env.PATH}` },
     });
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout).error).toContain(MISE_MIN_VERSION);
+    expect((JSON.parse(refused.stdout) as InstallJson).error).toContain(MISE_MIN_VERSION);
     expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
     const linked = await run(['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, state.path], {
         cwd: repository.path,
@@ -70,7 +71,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
     expect(linked.code, linked.stdout + linked.stderr).toBe(0);
     const installed = await run([process.execPath, CLI, 'install', '--json'], { cwd: repository.path, env });
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(JSON.parse(installed.stdout).installed).toBe(true);
+    expect((JSON.parse(installed.stdout) as InstallJson).installed).toBe(true);
     expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
     expect(readFileSync(join(repository.path, 'gspot.toml'), 'utf8')).toBe(policy);
     const invalid = await run(['mise', 'run', '--quiet', 'gspot:apply', '--', '--invalid'], {

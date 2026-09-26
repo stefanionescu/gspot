@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -100,7 +101,7 @@ test.each([
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(1);
         expect(correctedReport.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
         expect(correctedReport.checks[0]!.findings).toContainEqual(
-            expect.objectContaining({ rule: 'gspot/no-trivial-files', file: 'src/index.ts', line: 1 }),
+            containing({ rule: 'gspot/no-trivial-files', file: 'src/index.ts', line: 1 }),
         );
         expect(
             correctedReport.checks

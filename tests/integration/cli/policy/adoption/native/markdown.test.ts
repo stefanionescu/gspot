@@ -6,6 +6,7 @@ import { readRepository } from '#cli/repository/tree.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test('overlapping Markdown sources remain intact before any policy is carried', async () => {
     await using sandbox = await testdir();
@@ -14,7 +15,7 @@ test('overlapping Markdown sources remain intact before any policy is carried', 
     const discovered = existingTooling(sandbox.path, (await readRepository(sandbox.path, [], [], [])).files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
     expect(carried.unread).toContainEqual(
-        expect.objectContaining({ path: '.markdownlint.jsonc', note: expect.stringContaining('Overlapping') }),
+        containing({ path: '.markdownlint.jsonc', note: textContaining('Overlapping') }),
     );
     expect(carried.removed).toStrictEqual([]);
     expect(carried.scopes.size).toBe(0);

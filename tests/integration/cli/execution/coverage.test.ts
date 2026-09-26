@@ -10,6 +10,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
 
@@ -60,7 +61,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     const options = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true } as const;
     const session = await openSession(sandbox.path);
     expect(settingRows(session.policyFiles.policy, session.scopes).rows).toContainEqual(
-        expect.objectContaining({ key: 'coverage.strict', value: true }),
+        containing({ key: 'coverage.strict', value: true }),
     );
     expect(explain(session, 'coverage.strict')).toMatchObject({ kind: 'setting' });
     const failed = await executeRun(session, { ...options, skips: [] });

@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
@@ -208,7 +209,7 @@ describe('the typescript configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             const value =
                 '// A value owned by this module.\n\n/** The number of orders. */\nexport const orderCount = 1;\n';
             const files: Record<string, string> = {};

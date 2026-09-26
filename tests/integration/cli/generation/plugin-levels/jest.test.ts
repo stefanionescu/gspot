@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
 
 test.each([
@@ -137,7 +138,7 @@ test.each(['js', 'jsx'])(
             misplaced
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId }) => ruleId === 'gspot/tests-directory-contents'),
-        ).toMatchObject([{ message: expect.stringContaining('app/tests/fixtures') }]);
+        ).toMatchObject([{ message: textContaining('app/tests/fixtures') }]);
         const support = await eslint.lintFiles(['app/tests/fixtures/helpers.js']);
         expect(
             support
@@ -147,7 +148,7 @@ test.each(['js', 'jsx'])(
         const runtime = await eslint.lintFiles(['app/src/runtime.js']);
         expect(
             runtime.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-direction'),
-        ).toMatchObject([{ message: expect.stringContaining('Runtime code imports test code') }]);
+        ).toMatchObject([{ message: textContaining('Runtime code imports test code') }]);
         const correctedRuntime = await eslint.lintText('export const result = 2;\n', {
             filePath: 'app/src/runtime.js',
         });

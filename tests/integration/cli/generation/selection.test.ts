@@ -7,6 +7,8 @@ import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
+type LicensesConfiguration = { licenses_allowed: string[]; packages_allowed: unknown[] };
+
 test.each([
     ['bash', 'bash'],
     ['swift', 'ios'],
@@ -86,7 +88,7 @@ test('license configuration retains scoped exceptions and inherited license allo
         version: renderSession4.version,
         packageManager: renderSession4.packageManager,
     }).files.filter(({ path }) => path.endsWith('/licenses.json'));
-    const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content)]));
+    const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content) as LicensesConfiguration]));
     expect(parsed.size).toBe(4);
     for (const path of [
         '.gspot/config/licenses.json',
@@ -94,11 +96,11 @@ test('license configuration retains scoped exceptions and inherited license allo
         '.gspot/config/app/child/licenses.json',
         '.gspot/config/sibling/licenses.json',
     ])
-        expect(parsed.get(path).licenses_allowed).toContain('MPL-2.0');
+        expect(parsed.get(path)!.licenses_allowed).toContain('MPL-2.0');
     for (const path of ['.gspot/config/app/licenses.json', '.gspot/config/app/child/licenses.json'])
-        expect(parsed.get(path).packages_allowed).toStrictEqual([
+        expect(parsed.get(path)!.packages_allowed).toStrictEqual([
             { package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed installed metadata.' },
         ]);
     for (const path of ['.gspot/config/licenses.json', '.gspot/config/sibling/licenses.json'])
-        expect(parsed.get(path).packages_allowed).toStrictEqual([]);
+        expect(parsed.get(path)!.packages_allowed).toStrictEqual([]);
 });

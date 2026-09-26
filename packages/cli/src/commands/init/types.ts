@@ -33,7 +33,18 @@ export type InitOptions = {
     allowDirty: boolean;
 };
 
-export type InitResult = { text: string; json: Record<string, unknown>; exitCode: number };
+/** The JSON the init command prints: the plan, the policy it wrote or previewed, and what stopped it. */
+export type InitJson = {
+    root?: string;
+    plan?: TakeoverPlan;
+    policy?: string;
+    isDryRun?: boolean;
+    written?: boolean;
+    error?: string;
+    install?: string;
+};
+
+export type InitResult = { text: string; json: InitJson; exitCode: number };
 
 /** The configurations init selects: at the root, per scope, and the closure of both. */
 export type InitSelection = {

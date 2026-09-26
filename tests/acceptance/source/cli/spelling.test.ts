@@ -5,6 +5,7 @@ import { toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 
 test(
@@ -26,7 +27,7 @@ test(
             expect(readFileSync(join(sandbox.path, 'sample.txt'), 'utf8')).toBe('the wether\n');
             const report = JSON.parse(checked.stdout) as RunReport;
             expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
-                expect.objectContaining({ file: 'sample.txt', fixable: false }),
+                containing({ file: 'sample.txt', fixable: false }),
             );
         }
         await Bun.write(join(sandbox.path, 'sample.txt'), 'the whether\n');
@@ -60,9 +61,9 @@ test(
         const report = JSON.parse(checked.stdout) as RunReport;
         const findings = report.checks.flatMap((check) => check.findings);
         for (const path of paths)
-            expect(findings).toContainEqual(expect.objectContaining({ file: path, line: 1, column: 6, fixable: true }));
+            expect(findings).toContainEqual(containing({ file: path, line: 1, column: 6, fixable: true }));
         expect(findings).toContainEqual(
-            expect.objectContaining({ file: 'teh.txt', message: 'Filename: `teh` should be `the`', fixable: false }),
+            containing({ file: 'teh.txt', message: 'Filename: `teh` should be `the`', fixable: false }),
         );
         await Bun.write(join(sandbox.path, 'space name.txt'), 'café teh teh\n');
         expect(git(sandbox.path, ['add', '--', 'space name.txt']).code).toBe(0);
@@ -71,7 +72,7 @@ test(
         expect(staged.code, staged.stdout + staged.stderr).toBe(1);
         const stagedReport = JSON.parse(staged.stdout) as RunReport;
         expect(stagedReport.checks.flatMap((check) => check.findings)).toContainEqual(
-            expect.objectContaining({ file: 'space name.txt', line: 1, column: 6 }),
+            containing({ file: 'space name.txt', line: 1, column: 6 }),
         );
         expect(readFileSync(join(sandbox.path, 'space name.txt'), 'utf8')).toBe('the\n');
         await Bun.write(join(sandbox.path, 'space name.txt'), 'café teh\n');
@@ -140,14 +141,14 @@ test(
         const report = JSON.parse(checked.stdout) as RunReport;
         const findings = report.checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ file: 'sample.txt' }),
-                expect.objectContaining({ file: 'nested/keep.skip' }),
-                expect.objectContaining({ file: 'nested/rogue/sample.txt' }),
+            containingAll([
+                containing({ file: 'sample.txt' }),
+                containing({ file: 'nested/keep.skip' }),
+                containing({ file: 'nested/rogue/sample.txt' }),
             ]),
         );
         expect(findings, JSON.stringify(report.checks)).not.toStrictEqual(
-            expect.arrayContaining([expect.objectContaining({ file: 'nested/src/ignored.txt' })]),
+            containingAll([containing({ file: 'nested/src/ignored.txt' })]),
         );
         const fixed = await run(sandbox.path, [...args, '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -164,9 +165,7 @@ test(
         expect(broken.code, broken.stdout + broken.stderr).toBe(2);
         const brokenReport = JSON.parse(broken.stdout) as RunReport;
         expect(brokenReport.checks).toStrictEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ check: 'spelling/typos', scope: 'nested', status: 'error', findings: [] }),
-            ]),
+            containingAll([containing({ check: 'spelling/typos', scope: 'nested', status: 'error', findings: [] })]),
         );
         const preserved = await run(sandbox.path, ['apply'], environment);
         expect(preserved.code, preserved.stdout + preserved.stderr).toBe(2);

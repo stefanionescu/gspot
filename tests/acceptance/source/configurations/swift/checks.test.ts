@@ -3,12 +3,14 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
@@ -136,7 +138,7 @@ describe('the swift configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // SwiftLint has no Windows build, so that check is skipped there and the run passes.
             const isSkipped = process.platform === 'win32' && planted.check === 'swift/swiftlint';
-            const withExpected = expect.arrayContaining([expect.objectContaining(planted.expected)]);
+            const withExpected: Finding[] = containingAll([containing(planted.expected)]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
             expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
             expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);

@@ -64,8 +64,7 @@ function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] 
     const files = openConfinedRoot(root);
     const manifest = files.read('package.json');
     files.close();
-    const simple =
-        manifest !== undefined && Object.hasOwn(JSON.parse(manifest.bytes.toString('utf8')), 'simple-git-hooks');
+    const simple = manifest !== undefined && declaresSimpleGitHooks(JSON.parse(manifest.bytes.toString('utf8')));
     return [
         ...(location === undefined
             ? []
@@ -85,6 +84,11 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
     if (lock === undefined) return { runner: 'none' };
     return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
+}
+
+// Whether a parsed package manifest carries a simple-git-hooks table.
+function declaresSimpleGitHooks(manifest: unknown): boolean {
+    return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
 }
 
 // The tool configurations one takeover row finds among the tracked files.

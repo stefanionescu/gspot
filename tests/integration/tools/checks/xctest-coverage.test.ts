@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 
 const PROJECT = `// !$*UTF8*$!
 {
@@ -58,9 +59,7 @@ if (process.platform === 'darwin')
                 {
                     check: 'xctest/coverage',
                     status: 'fail',
-                    findings: [
-                        { rule: 'coverage', line: 1, message: expect.stringContaining('under the floor of 100') },
-                    ],
+                    findings: [{ rule: 'coverage', line: 1, message: textContaining('under the floor of 100') }],
                 },
             ]);
             await Bun.write(

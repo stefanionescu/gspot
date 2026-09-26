@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 
 const POLICY = `version = 1
 configurations = []
@@ -134,8 +135,8 @@ stage = "manual"
             path: 'api/build.sh',
             scope: 'api',
             nature: 'source',
-            configurations: expect.arrayContaining(['bash']),
-            checks: expect.arrayContaining([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
+            configurations: containingAll(['bash']),
+            checks: containingAll([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
             ignores: [
                 {
                     check: 'bash/shellcheck',

@@ -7,6 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 // Copy the installed Vale packages so the fixture has private offline styles.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -162,7 +163,7 @@ describe('the markdown, docs and prose configurations', () => {
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({ check: planted.check, ...planted.expected }),
+                containing({ check: planted.check, ...planted.expected }),
             );
             const corrections: Record<string, string> = {
                 'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',

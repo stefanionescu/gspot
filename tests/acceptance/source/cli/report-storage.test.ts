@@ -4,6 +4,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import type { SarifReport } from '#tests/support/cli/reports.ts';
 
 import {
     chmodSync,
@@ -185,9 +187,11 @@ await import(${JSON.stringify(cli)});
     // Stopped before the write, the previous report stands; stopped after it, the new passing report is on disk.
     const state = published === previous ? 'previous report' : (JSON.parse(published) as RunReport).exitCode;
     expect(state).toBe(point === 'before' ? 'previous report' : 0);
-    const pending = JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8'));
-    expect(pending.pending[0].path).toBe('.gspot/reports/report.json');
-    expect(pending.pending.map((entry: { path: string }) => entry.path)).toStrictEqual([
+    const pending = ownershipSchema.parse(
+        JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')),
+    );
+    expect(pending.pending?.[0]?.path).toBe('.gspot/reports/report.json');
+    expect(pending.pending?.map((entry) => entry.path)).toStrictEqual([
         '.gspot/reports/report.json',
         '.gspot/reports/report.sarif',
     ]);
@@ -196,7 +200,10 @@ await import(${JSON.stringify(cli)});
     expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
         JSON.parse(retry.stdout),
     );
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')).pending).toBeUndefined();
+    expect(
+        ownershipSchema.parse(JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')))
+            .pending,
+    ).toBeUndefined();
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected\n');
 });
 
@@ -224,8 +231,8 @@ test('GitLab reports retain located findings, stable fingerprints, and correctio
     }[];
     expect(quality).toHaveLength(2);
     expect(
-        JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0].invocations[0]
-            .executionSuccessful,
+        (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport).runs[0]!
+            .invocations[0]!.executionSuccessful,
     ).toBe(true);
     expect(quality.map(({ fingerprint, ...entry }) => entry)).toStrictEqual(
         findings
@@ -261,8 +268,8 @@ test('SARIF identifies missing execution separately from a completed scan with n
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.status).toBe('missing');
-    const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
-    expect(sarif.runs[0].results).toStrictEqual([]);
-    expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(false);
-    expect(sarif.runs[0].invocations[0].toolExecutionNotifications[0].message.text).toContain('project/missing');
+    const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport;
+    expect(sarif.runs[0]!.results).toStrictEqual([]);
+    expect(sarif.runs[0]!.invocations[0]!.executionSuccessful).toBe(false);
+    expect(sarif.runs[0]!.invocations[0]!.toolExecutionNotifications?.[0]?.message.text).toContain('project/missing');
 });

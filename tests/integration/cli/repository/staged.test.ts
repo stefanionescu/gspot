@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { changedFiles, pushBase, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 function git(root: string, ...argv: string[]): void {

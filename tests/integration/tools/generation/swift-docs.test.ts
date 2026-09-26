@@ -7,6 +7,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { containing } from '#tests/support/expectations.ts';
 
 const SOURCE =
     '/** Parses a fixture value. */\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n\n/// The literal /** example */ is documentation syntax.\npublic let example = "/** not documentation */"\n\n/* Ordinary comment with a nested /** comment */ inside. */\n';
@@ -35,11 +36,11 @@ test.each(['recommended', 'all'])('Swift documentation comment style has native 
     const broken = await native();
     expect(broken.code, broken.stdout + broken.stderr).toBe(2);
     expect(JSON.parse(broken.stdout)).toStrictEqual([
-        expect.objectContaining({ rule_id: 'doc_comment_style', line: 1, character: 1 }),
+        containing({ rule_id: 'doc_comment_style', line: 1, character: 1 }),
     ]);
     // The documentation style rule is on at the all level alone, so the CLI reports it there and passes otherwise.
     const cli = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
-    const docComment = expect.objectContaining({ rule: 'doc_comment_style', file: 'Value.swift', line: 1, column: 1 });
+    const docComment = containing({ rule: 'doc_comment_style', file: 'Value.swift', line: 1, column: 1 });
     expect(cli.code, cli.stdout + cli.stderr).toBe(level === 'all' ? 1 : 0);
     const findings = (JSON.parse(cli.stdout) as { checks: { findings: unknown[] }[] }).checks.flatMap(
         (check) => check.findings,

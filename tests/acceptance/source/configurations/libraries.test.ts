@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
@@ -117,7 +118,7 @@ describe('the library configurations', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             if (planted.check === 'trpc/router-boundaries') {
                 await createFileTree(sandbox.path, {
                     ...planted.files,

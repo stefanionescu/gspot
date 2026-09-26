@@ -2,6 +2,7 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
@@ -27,7 +28,7 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
         chmodSync(join(repository.path, path), 0o640);
         const preview = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect(JSON.parse(preview.stdout).notes.join('\n')).toContain(
+        expect((JSON.parse(preview.stdout) as ApplyPreviewJson).notes.join('\n')).toContain(
             `retained ${path}: authored ESLint configuration remains active`,
         );
         const applied = await run(repository.path, ['apply']);
@@ -51,7 +52,7 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
         expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -72,7 +73,7 @@ test(
         expect(readFileSync(join(repository.path, 'eslint.config.cjs'), 'utf8')).toBe(original);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );

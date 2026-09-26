@@ -5,8 +5,8 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
+import { rejection } from '#tests/support/expectations.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

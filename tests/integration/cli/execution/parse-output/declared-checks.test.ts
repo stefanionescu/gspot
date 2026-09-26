@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { ToolOutputError } from '#cli/execution/output/parse.ts';
 
@@ -34,7 +35,7 @@ test.each([
             sandbox.path,
         ]),
     ).toStrictEqual([
-        expect.objectContaining({
+        containing({
             check: 'configs/actions-pins',
             message: 'invalid action pin: .github/workflows/check.yml:4',
         }),

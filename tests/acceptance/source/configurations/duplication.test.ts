@@ -6,6 +6,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the duplication configuration: one block copied into a second file.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 const INIT = [
@@ -57,12 +58,12 @@ describe('the duplication configuration', () => {
             const report = reportSchema.parse(JSON.parse(found.stdout));
             expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'fail' }]);
             expect(report.checks[0]!.findings, found.stdout).toStrictEqual([
-                expect.objectContaining({
+                containing({
                     check: 'duplication/jscpd',
                     file: 'scripts/second.sh',
                     line: 4,
                     rule: 'copied-block',
-                    message: expect.stringContaining('lines repeat scripts/first.sh:4.'),
+                    message: textContaining('lines repeat scripts/first.sh:4.'),
                 }),
             ]);
             await Bun.write(

@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import type { CommandFailureJson } from '#cli/commands/print-result.ts';
 import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -113,7 +114,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const refused = await run(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout).error).toBe('VersionPinError');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('VersionPinError');
     expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
     const accepted = await run(directory.path, args);
@@ -205,7 +206,9 @@ stage = "commit"
     writeFileSync(join(directory.path, 'package-lock.json'), lock + '\n');
     const refused = await run(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout).message).toContain('do not match the revision manifests and locks');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
+        'do not match the revision manifests and locks',
+    );
     writeFileSync(join(directory.path, 'package-lock.json'), lock);
     const corrected = await run(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

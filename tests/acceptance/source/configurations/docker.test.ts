@@ -8,6 +8,7 @@ import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const INIT = [
     'init',
@@ -29,7 +30,7 @@ const CASES: FindingCase[] = [
     {
         check: 'docker/compose-config',
         files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
-        expected: { file: 'api/compose.yml', message: expect.stringContaining('bogus') },
+        expected: { file: 'api/compose.yml', message: textContaining('bogus') },
     },
     {
         check: 'docker/hadolint',
@@ -73,7 +74,7 @@ describe('the docker configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             if (planted.expected.file === 'worker/Dockerfile')
                 await createFileTree(sandbox.path, { 'worker/Dockerfile': CLEAN, 'worker/.dockerignore': IGNORES });
             const corrected = await run(

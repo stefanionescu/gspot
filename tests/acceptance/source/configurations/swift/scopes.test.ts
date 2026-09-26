@@ -2,11 +2,13 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/support/cli/swift-fixtures.ts';
 
 describe('the swift configuration inside a scope', () => {
@@ -56,8 +58,8 @@ describe('the swift configuration inside a scope', () => {
             expect(failed.checks).toMatchObject([
                 { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'fail' },
             ]);
-            const cast = expect.objectContaining({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 });
-            const withCast = expect.arrayContaining([cast]);
+            const cast: Finding = containing({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 });
+            const withCast: Finding[] = containingAll([cast]);
             expect(failed.checks[0]!.findings).toStrictEqual(isWindows ? [] : withCast);
             await Bun.write(
                 join(sandbox.path, 'ios/Sources/App/Cast.swift'),

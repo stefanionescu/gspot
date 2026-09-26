@@ -5,11 +5,11 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
+import { containing, containingAll, rejection } from '#tests/support/expectations.ts';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('legacy adoption proposes retirement only after native configuration validation', async () => {
@@ -39,9 +39,7 @@ test('legacy adoption proposes retirement only after native configuration valida
     expect(accepted.unread).toStrictEqual([]);
     expect(accepted.removed.map((entry) => entry.path)).toStrictEqual(['.eslintrc.yaml']);
     expect(accepted.tools.get('eslint')?.settings['adopted']).toStrictEqual(
-        expect.arrayContaining([
-            expect.objectContaining({ rules: expect.objectContaining({ eqeqeq: expect.anything() }) }),
-        ]),
+        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() }) })]),
     );
     expect(existsSync(join(directory.path, '.eslintrc.yaml'))).toBe(true);
 });
@@ -74,9 +72,7 @@ test('legacy package ESLint adoption preserves shared manifest bytes', async () 
     expect(carried.removed).toStrictEqual([]);
     expect(carried.retained.map((entry) => entry.path)).toStrictEqual(['package.json']);
     expect(carried.tools.get('eslint')?.settings['adopted']).toStrictEqual(
-        expect.arrayContaining([
-            expect.objectContaining({ rules: expect.objectContaining({ eqeqeq: expect.anything() }) }),
-        ]),
+        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() }) })]),
     );
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
 });

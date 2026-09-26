@@ -4,6 +4,8 @@ import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { textContaining } from '#tests/support/expectations.ts';
+import type { CommandFailureJson } from '#cli/commands/print-result.ts';
 
 test.each([
     { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },
@@ -19,7 +21,7 @@ test.each([
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
         const invalid = await run(sandbox.path, ['list', '--json']);
         expect(invalid.code).toBe(2);
-        const diagnostic = JSON.parse(invalid.stdout);
+        const diagnostic = JSON.parse(invalid.stdout) as CommandFailureJson;
         expect(diagnostic.message).toContain(`gspot.toml:${String(line)}:`);
         expect(diagnostic.message).toContain('bash');
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"bas"', '"bash"'));
@@ -55,7 +57,7 @@ test('a loosening without a reason is a finding of integrity/policy, and the res
         {
             check: 'integrity/policy',
             status: 'fail',
-            findings: [{ file: 'gspot.toml', line: 7, message: expect.stringContaining('limits.file_lines') }],
+            findings: [{ file: 'gspot.toml', line: 7, message: textContaining('limits.file_lines') }],
         },
     ]);
     const listed = await run(sandbox.path, ['list', '--json']);
@@ -84,7 +86,7 @@ test.each(['\n', '\r\n'])(
         expect(json.code).toBe(2);
         expect(JSON.parse(json.stdout)).toMatchObject({
             error: 'PolicyError',
-            message: expect.stringContaining('gspot.toml:3:19:'),
+            message: textContaining('gspot.toml:3:19:'),
         });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));
         const corrected = await run(sandbox.path, ['check', '--json']);

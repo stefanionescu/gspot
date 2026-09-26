@@ -6,6 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -72,8 +73,8 @@ test.each(['default', 'external', 'worktree'] as const)(
             stdin: input,
         });
         expect(chained.code, chained.stderr).toBe(0);
-        const first = JSON.parse(readFileSync(join(root, 'original.json'), 'utf8'));
-        const second = JSON.parse(readFileSync(join(root, 'gspot.json'), 'utf8'));
+        const first = JSON.parse(readFileSync(join(root, 'original.json'), 'utf8')) as HookCapture;
+        const second = JSON.parse(readFileSync(join(root, 'gspot.json'), 'utf8')) as HookCapture;
         expect(first.args).toStrictEqual(['remote name', 'ssh://example.com/a b']);
         expect(second.args).toStrictEqual(['check', '--push', '--', 'remote name', 'ssh://example.com/a b']);
         expect(first.input).toBe(input);

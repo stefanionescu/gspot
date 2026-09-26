@@ -4,6 +4,8 @@ import { expect, test } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
+import type { SarifReport } from '#tests/support/cli/reports.ts';
+import type { CommandFailureJson } from '#cli/commands/print-result.ts';
 import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
@@ -51,9 +53,9 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/reviewed ${base}\n`,
         });
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        const first = JSON.parse(passing.stdout).revisions;
+        const first = pushReportSchema.parse(JSON.parse(passing.stdout)).revisions;
         expect(first).toHaveLength(1);
-        const firstReport = reportSchema.parse(first[0].report);
+        const firstReport = first[0]!.report;
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
         expect(firstReport.checks[0]?.status).toBe('ok');
         expect(firstReport.checks[0]?.files).toBe(1);
@@ -63,9 +65,9 @@ test(
         });
         expect(failing.code, failing.stdout + failing.stderr).toBe(1);
         expect(
-            reportSchema
-                .parse(JSON.parse(failing.stdout).revisions[0].report)
-                .checks[0]?.findings.map((finding) => finding.file),
+            pushReportSchema
+                .parse(JSON.parse(failing.stdout))
+                .revisions[0]!.report.checks[0]?.findings.map((finding) => finding.file),
         ).toStrictEqual(['changed.sh', 'changed.sh']);
         const pushText = await runProcess(
             command.filter((argument) => argument !== '--json'),
@@ -78,7 +80,7 @@ test(
         expect(pushText.code, pushText.stdout + pushText.stderr).toBe(1);
         expect(pushText.stdout).toContain('reproduce: printf');
         expect(pushText.stdout).toContain('Bypass this hook once: git push --no-verify');
-        const failedReport = reportSchema.parse(JSON.parse(failing.stdout).revisions[0].report);
+        const failedReport = pushReportSchema.parse(JSON.parse(failing.stdout)).revisions[0]!.report;
         const reproduction = failedReport.checks[0]?.reproduce;
         expect(reproduction).toBeDefined();
         const repeated = await runProcess(
@@ -107,28 +109,27 @@ test(
         );
         expect(saved).toStrictEqual(JSON.parse(multiple.stdout));
         expect(saved.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
-        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
+        const sarif = JSON.parse(
+            readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'),
+        ) as SarifReport;
         expect(sarif.runs).toHaveLength(2);
-        expect(
-            sarif.runs.map(
-                (entry: { properties: { comparison: { reference: string } } }) => entry.properties.comparison.reference,
-            ),
-        ).toStrictEqual([broken, reviewed]);
-        expect(sarif.runs[0].results).toHaveLength(2);
-        expect(sarif.runs[1].results).toHaveLength(0);
+        expect(sarif.runs.map((entry) => entry.properties?.comparison?.reference)).toStrictEqual([broken, reviewed]);
+        expect(sarif.runs[0]!.results).toHaveLength(2);
+        expect(sarif.runs[1]!.results).toHaveLength(0);
         const duplicated = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/one ${base}\nrefs/heads/also-reviewed ${reviewed} refs/heads/two ${base}\n`,
         });
         expect(duplicated.code, duplicated.stdout + duplicated.stderr).toBe(0);
-        expect(JSON.parse(duplicated.stdout).revisions).toHaveLength(1);
-        expect(JSON.parse(duplicated.stdout).revisions[0].refs).toHaveLength(2);
+        const merged = pushReportSchema.parse(JSON.parse(duplicated.stdout));
+        expect(merged.revisions).toHaveLength(1);
+        expect(merged.revisions[0]!.refs).toHaveLength(2);
         const forced = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n`,
         });
         expect(forced.code, forced.stdout + forced.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(forced.stdout).revisions[0].report).checks[0]?.files).toBe(1);
+        expect(pushReportSchema.parse(JSON.parse(forced.stdout)).revisions[0]!.report.checks[0]?.files).toBe(1);
         expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
         expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
         const zero = '0'.repeat(base.length);
@@ -137,7 +138,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(newRef.code, newRef.stdout + newRef.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(newRef.stdout).revisions[0].report).checks[0]?.files).toBe(1);
+        expect(pushReportSchema.parse(JSON.parse(newRef.stdout)).revisions[0]!.report.checks[0]?.files).toBe(1);
         expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(
             0,
         );
@@ -176,9 +177,9 @@ test(
         });
         expect(noFetched.code, noFetched.stdout + noFetched.stderr).toBe(1);
         expect(
-            reportSchema
-                .parse(JSON.parse(noFetched.stdout).revisions[0].report)
-                .checks[0]?.findings.map((finding) => finding.file),
+            pushReportSchema
+                .parse(JSON.parse(noFetched.stdout))
+                .revisions[0]!.report.checks[0]?.findings.map((finding) => finding.file),
         ).toStrictEqual(['legacy.sh', 'legacy.sh']);
         expect(git(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]).code).toBe(0);
         const tag = git(sandbox.path, ['rev-parse', 'reviewed-tag']).stdout.trim();
@@ -187,27 +188,28 @@ test(
             stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\n`,
         });
         expect(tagged.code, tagged.stdout + tagged.stderr).toBe(0);
-        expect(JSON.parse(tagged.stdout).revisions[0].object).toBe(reviewed);
+        expect(pushReportSchema.parse(JSON.parse(tagged.stdout)).revisions[0]!.object).toBe(reviewed);
         const deleted = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `(delete) ${zero} refs/heads/main ${broken}\n`,
         });
         expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
-        expect(JSON.parse(deleted.stdout).revisions).toStrictEqual([]);
-        expect(JSON.parse(deleted.stdout).notApplicable[0].reason).toBe('deleted ref');
+        const skipped = pushReportSchema.parse(JSON.parse(deleted.stdout));
+        expect(skipped.revisions).toStrictEqual([]);
+        expect(skipped.notApplicable[0]!.reason).toBe('deleted ref');
         const missing = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/main ${'f'.repeat(base.length)}\n`,
         });
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-        expect(JSON.parse(missing.stdout).error).toBe('SelectionError');
+        expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('SelectionError');
         const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
         const nonCommit = await runProcess(command, {
             cwd: sandbox.path,
             stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n`,
         });
         expect(nonCommit.code, nonCommit.stdout + nonCommit.stderr).toBe(0);
-        expect(JSON.parse(nonCommit.stdout).notApplicable[0].reason).toBe('non-commit object');
+        expect(pushReportSchema.parse(JSON.parse(nonCommit.stdout)).notApplicable[0]!.reason).toBe('non-commit object');
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(broken);
         expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
         expect(readFileSync(join(sandbox.path, 'changed.sh'), 'utf8')).toBe('echo repaired only in the working tree\n');

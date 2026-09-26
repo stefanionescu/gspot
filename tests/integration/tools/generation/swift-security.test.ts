@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
@@ -85,7 +86,10 @@ test.each(['recommended', 'all'])(
             );
         const broken = await native();
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        const report = JSON.parse(broken.stdout) as { errors: unknown[]; results: { check_id: string }[] };
+        const report = JSON.parse(broken.stdout) as {
+            errors: unknown[];
+            results: { check_id: string; path: string; start: { line: number } }[];
+        };
         expect(report.errors).toStrictEqual([]);
         expect(
             report.results.map((entry) => entry.check_id).toSorted((left, right) => left.localeCompare(right)),
@@ -93,9 +97,7 @@ test.each(['recommended', 'all'])(
         for (const [index, rule] of IDS.entries()) {
             const path = index < 11 ? 'Value.swift' : index === 11 ? 'Info.plist' : 'scripts/build.js';
             const line = index < 11 ? index + 1 : index === 11 ? 1 : index - 11;
-            expect(report.results).toContainEqual(
-                expect.objectContaining({ check_id: rule, path, start: expect.objectContaining({ line }) }),
-            );
+            expect(report.results).toContainEqual(containing({ check_id: rule, path, start: containing({ line }) }));
         }
         const cli = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
         expect(cli.code, cli.stdout + cli.stderr).toBe(1);
@@ -117,7 +119,7 @@ test.each(['recommended', 'all'])(
         );
         const corrected = await native();
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).results).toStrictEqual([]);
+        expect((JSON.parse(corrected.stdout) as { results: unknown[] }).results).toStrictEqual([]);
         const clean = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     },

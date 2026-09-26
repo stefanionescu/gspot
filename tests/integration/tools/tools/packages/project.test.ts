@@ -9,8 +9,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { rejection } from '#tests/support/expectations.ts';
+import type { InstallJson } from '#cli/commands/install.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -130,7 +131,9 @@ test.each([
             { cwd: artifacts.path, timeoutMs: 30_000 },
         );
         expect(packed.code, packed.stdout + packed.stderr).toBe(0);
-        const archive = readFileSync(join(artifacts.path, JSON.parse(packed.stdout)[0].filename));
+        const archive = readFileSync(
+            join(artifacts.path, (JSON.parse(packed.stdout) as { filename: string }[])[0]!.filename),
+        );
         const integrity = `sha512-${createHash('sha512').update(archive).digest('base64')}`;
         const packages = new Map<
             string,
@@ -154,7 +157,9 @@ test.each([
                 : undefined;
         expect(checker?.code ?? 0, (checker?.stdout ?? '') + (checker?.stderr ?? '')).toBe(0);
         if (checker !== undefined) {
-            const checkerArchive = readFileSync(join(artifacts.path, JSON.parse(checker.stdout)[0].filename));
+            const checkerArchive = readFileSync(
+                join(artifacts.path, (JSON.parse(checker.stdout) as { filename: string }[])[0]!.filename),
+            );
             packages.set('editorconfig-checker', {
                 version: '7.0.0',
                 bin: { ec: 'dist/index.js', 'editorconfig-checker': 'dist/index.js' },
@@ -231,7 +236,7 @@ test.each([
                 cwd: repository.path,
             });
             expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-            expect(JSON.parse(preview.stdout).isDryRun).toBe(true);
+            expect((JSON.parse(preview.stdout) as InstallJson).isDryRun).toBe(true);
             expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
             expect(lock.toString('utf8')).not.toContain(token);
             // Yarn 1 writes resolved URLs into its lock; the private registry must not be among them.
@@ -244,7 +249,7 @@ test.each([
                 cwd: repository.path,
             });
             expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-            expect(JSON.parse(refused.stdout).error).toContain('Run: gspot apply, then gspot install');
+            expect((JSON.parse(refused.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
             expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
                 'Run: gspot apply, then gspot install',
             );

@@ -6,6 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { containing } from '#tests/support/expectations.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 
 test.each([
@@ -56,7 +57,7 @@ test.each([
         only: ['integrity/lockfile-fresh'],
     });
     const input = engineInput(session, planned!);
-    expect(await lockfileFresh(input)).toContainEqual(expect.objectContaining({ rule: 'stale-lockfile' }));
+    expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale-lockfile' }));
     expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
     await Bun.write(join(directory.path, 'package.json'), manifest);

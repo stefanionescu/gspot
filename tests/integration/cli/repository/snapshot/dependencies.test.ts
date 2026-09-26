@@ -3,7 +3,7 @@ import * as promises from 'node:fs/promises';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 
@@ -115,7 +116,7 @@ test.each([
         expect(readFileSync(filepath, 'utf8')).toBe(source);
         const reapplied = await run(sandbox.path, ['apply', '--dry-run', '--json']);
         expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
-        expect(JSON.parse(reapplied.stdout).drift).toStrictEqual([]);
+        expect((JSON.parse(reapplied.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );

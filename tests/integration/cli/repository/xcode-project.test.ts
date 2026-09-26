@@ -1,9 +1,11 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
 import { symlink, readlink, unlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project-reader.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 const PROJECT = `// !$*UTF8*$!
 {
@@ -41,9 +43,9 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     const command = ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
-        expect.objectContaining({ file: 'Second/Shared.swift', rule: 'no-target' }),
-        expect.objectContaining({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
+    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toStrictEqual([
+        containing({ file: 'Second/Shared.swift', rule: 'no-target' }),
+        containing({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
     ]);
     const included = PROJECT.replace('files = (B1, B2,);', 'files = (B1, B2, B3,);')
         .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
@@ -54,8 +56,8 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
     const missing = await run(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect(JSON.parse(missing.stdout).checks[0].findings).toStrictEqual([
-        expect.objectContaining({
+    expect(reportSchema.parse(JSON.parse(missing.stdout)).checks[0]!.findings).toStrictEqual([
+        containing({
             rule: 'missing-file',
             message: 'The project names Second/Shared.swift, and the tree holds no such file.',
         }),
@@ -125,13 +127,13 @@ test('membership combines projects in a scope and checks nested scopes independe
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        JSON.parse(broken.stdout).checks.map((check: { scope: string; findings: unknown[] }) => ({
+        reportSchema.parse(JSON.parse(broken.stdout)).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
     ).toStrictEqual([
         { scope: '', findings: [] },
-        { scope: 'nested', findings: [expect.objectContaining({ file: 'nested/Extra.swift', rule: 'no-target' })] },
+        { scope: 'nested', findings: [containing({ file: 'nested/Extra.swift', rule: 'no-target' })] },
     ]);
     await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
     const corrected = await run(sandbox.path, command);
@@ -159,17 +161,17 @@ test('Xcode symlinks use the deepest scope and the immutable staged target', asy
     const command = ['check', '--staged', '--only', 'xcode/symlinks', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = JSON.parse(broken.stdout).checks.flatMap((check: { scope: string; findings: unknown[] }) =>
-        check.findings.map((finding) => ({ scope: check.scope, finding })),
-    );
+    const findings = reportSchema
+        .parse(JSON.parse(broken.stdout))
+        .checks.flatMap((check) => check.findings.map((finding) => ({ scope: check.scope, finding })));
     expect(findings).toStrictEqual([
         {
             scope: 'app/child',
-            finding: expect.objectContaining({
+            finding: containing({
                 file: 'app/child/Linked.swift',
                 line: 1,
                 rule: 'symlink',
-                message: expect.stringContaining('A symlink to Source.swift'),
+                message: textContaining('A symlink to Source.swift'),
             }),
         },
     ]);

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import stylelint from 'stylelint';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';

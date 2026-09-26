@@ -2,6 +2,7 @@
 import { fileURLToPath } from 'node:url';
 import { afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { InstallJson } from '#cli/commands/install.ts';
 import { delimiter, dirname, join, relative } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
@@ -93,11 +94,11 @@ test(
         expect(toolLock.toString('utf8')).not.toContain(release.registry.work);
         const previewInstall = await run([...command, 'install', '--dry-run', '--json'], toolOptions);
         expect(previewInstall.code, previewInstall.stdout + previewInstall.stderr).toBe(0);
-        expect(JSON.parse(previewInstall.stdout).isDryRun).toBe(true);
+        expect((JSON.parse(previewInstall.stdout) as InstallJson).isDryRun).toBe(true);
         const toolInstall = await run([...command, 'install', '--json'], toolOptions);
         expect(toolInstall.code, toolInstall.stdout + toolInstall.stderr).toBe(2);
-        expect(JSON.parse(toolInstall.stdout).error).toContain('Install mise 2026.8.8 or newer');
-        expect(JSON.parse(toolInstall.stdout).error).toContain('installed locked npm tools');
+        expect((JSON.parse(toolInstall.stdout) as InstallJson).error).toContain('Install mise 2026.8.8 or newer');
+        expect((JSON.parse(toolInstall.stdout) as InstallJson).error).toContain('installed locked npm tools');
         expect(readFileSync(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
         expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
         expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);

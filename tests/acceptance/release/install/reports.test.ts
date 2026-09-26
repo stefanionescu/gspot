@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
+import type { CodeQualityReport, SarifReport } from '#tests/support/cli/reports.ts';
 import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 
 // The release publishes once for this file, and its registry stops when the file's tests end.
@@ -24,9 +25,11 @@ test(
         const report = reportSchema.parse(JSON.parse(checked.stdout));
         expect(report.exitCode).toBe(1);
         expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
-        const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8'));
-        expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
-        const quality = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'));
+        const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport;
+        expect(sarif.runs[0]!.invocations[0]!.executionSuccessful).toBe(true);
+        const quality = JSON.parse(
+            readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'),
+        ) as CodeQualityReport;
         expect(quality).toHaveLength(report.checks[0]?.findings.length ?? 0);
         expect(quality[0]).toMatchObject({
             check_name: 'bash/syntax',

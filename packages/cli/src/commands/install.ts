@@ -81,7 +81,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
             ];
             return {
                 text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
-                json: { isDryRun: true, steps, ...(hooks === undefined ? {} : { hooks }) },
+                json: { isDryRun: true, steps, ...(hooks === undefined ? {} : { hooks }) } satisfies InstallJson,
                 exitCode: 0,
             };
         }
@@ -94,11 +94,14 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         if (failures.length > 0) throw new Error([note, ...new Set(failures)].filter(Boolean).join('\n'));
         return {
             text: `${note === '' ? 'No managed tools to install.' : note}\n`,
-            json: { installed: true, steps },
+            json: { installed: true, steps } satisfies InstallJson,
             exitCode: 0,
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Tool installation failed.';
-        return { text: `${message}\n`, json: { installed: false, error: message }, exitCode: 2 };
+        return { text: `${message}\n`, json: { installed: false, error: message } satisfies InstallJson, exitCode: 2 };
     }
 }
+
+/** The JSON the install command prints: the planned steps of a dry run, or whether the installation completed. */
+export type InstallJson = { isDryRun?: true; installed?: boolean; steps?: string[][]; hooks?: string; error?: string };

@@ -11,6 +11,8 @@ import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
+type PackageScripts = { scripts: Record<string, string> };
+
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 
 test('task mappings validate before mutation, round-trip profiles, and explain the effective names', async () => {
@@ -37,7 +39,9 @@ test('task mappings validate before mutation, round-trip profiles, and explain t
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout).toContain('lint');
     await applyAll(await openSession(directory.path));
-    expect(JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts).toStrictEqual({
+    expect(
+        (JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')) as PackageScripts).scripts,
+    ).toStrictEqual({
         lint: 'gspot check',
         format: 'gspot check --fix',
         'gspot:apply': 'gspot apply',
@@ -48,10 +52,10 @@ test('task mappings validate before mutation, round-trip profiles, and explain t
     });
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     await applyAll(await openSession(directory.path));
-    const scripts = JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts;
-    expect(scripts.lint).toBeUndefined();
-    expect(scripts.format).toBeUndefined();
-    expect(scripts.verify).toBe('gspot check');
+    const { scripts } = JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')) as PackageScripts;
+    expect(scripts['lint']).toBeUndefined();
+    expect(scripts['format']).toBeUndefined();
+    expect(scripts['verify']).toBe('gspot check');
 });
 
 test('duplicate pins include only parsed tool keys', async () => {

@@ -3,6 +3,7 @@ import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 
 test('SQL migration names retain their timestamp while enforcing snake case', async () => {
@@ -24,7 +25,9 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
     renameSync(join(sandbox.path, invalid), join(sandbox.path, valid));
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(JSON.parse(accepted.stdout).checks).toMatchObject([{ check: 'naming/paths', status: 'ok', findings: [] }]);
+    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks).toMatchObject([
+        { check: 'naming/paths', status: 'ok', findings: [] },
+    ]);
 });
 
 test('naming policy validates inherited and scoped declarations against the complete source inventory', async () => {
@@ -98,7 +101,7 @@ allowed = [{name = "remote_record", reason = "The external Python interface fixe
     renameSync(join(sandbox.path, 'web/renamed.js'), join(sandbox.path, 'web/source.js'));
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
         { check: 'naming/policy-schema', status: 'ok', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'worker/source.py')).text()).toBe('remote_record = 1\n');

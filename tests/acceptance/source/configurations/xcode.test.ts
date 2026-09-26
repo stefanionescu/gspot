@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, unlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
@@ -9,6 +10,7 @@ import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const INIT = [
     'init',
@@ -154,7 +156,7 @@ describe('the xcode configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // The plist check needs the macOS plutil, so it is skipped elsewhere and the run passes.
             const isSkipped = planted.check === 'xcode/plist' && process.platform !== 'darwin';
-            const withExpected = expect.arrayContaining([expect.objectContaining(planted.expected)]);
+            const withExpected: Finding[] = containingAll([containing(planted.expected)]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
             expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
             expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);

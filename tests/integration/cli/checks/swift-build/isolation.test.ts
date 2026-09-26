@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
 import { afterEach, expect, spyOn, test } from 'bun:test';
+import { rejection } from '#tests/support/expectations.ts';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
 import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';

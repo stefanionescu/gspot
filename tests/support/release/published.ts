@@ -90,10 +90,10 @@ export async function installedConsumer(release: PublishedRelease): Promise<Inst
         const platformDirectory = join(consumer, 'node_modules', platformName);
         expect(lstatSync(launcherDirectory).isSymbolicLink()).toBe(false);
         expect(lstatSync(platformDirectory).isSymbolicLink()).toBe(false);
-        const launcher = await Bun.file(join(launcherDirectory, 'package.json')).json();
-        const platform = await Bun.file(join(platformDirectory, 'package.json')).json();
+        const launcher = (await Bun.file(join(launcherDirectory, 'package.json')).json()) as PublishedManifest;
+        const platform = (await Bun.file(join(platformDirectory, 'package.json')).json()) as PublishedManifest;
         expect(launcher.version).toBe(version);
-        expect(launcher.optionalDependencies[platformName]).toBe(version);
+        expect(launcher.optionalDependencies?.[platformName]).toBe(version);
         expect(platform.version).toBe(version);
         for (const directory of [launcherDirectory, platformDirectory]) {
             expect(readFileSync(join(directory, 'LICENSE.md'), 'utf8')).toBe(
@@ -172,3 +172,5 @@ export async function initializeConsumer(release: PublishedRelease, fixture: Ins
     expect(futureJson?.tabWidth).toBe(4);
     expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
 }
+
+type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };

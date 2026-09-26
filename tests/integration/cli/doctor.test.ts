@@ -9,6 +9,7 @@ import { coverageReport } from '#cli/execution/coverage.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();
@@ -104,7 +105,7 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
     await applyAll(await openSession(sandbox.path));
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.json).toMatchObject({
-        changes: { configurationNotOwned: [expect.objectContaining({ path: '.gspot/authored.json' })] },
+        changes: { configurationNotOwned: [containing({ path: '.gspot/authored.json' })] },
     });
     expect(result.text).toContain('not recorded as owned');
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
@@ -148,9 +149,7 @@ test('doctor excludes private tool manifests from language detection and detects
     const authored = await doctorCommand({ cwd: sandbox.path });
     expect(authored.json).toMatchObject({
         changes: {
-            detectedNotSelected: expect.arrayContaining([
-                expect.objectContaining({ configuration: 'python', evidence: 'pyproject.toml' }),
-            ]),
+            detectedNotSelected: containingAll([containing({ configuration: 'python', evidence: 'pyproject.toml' })]),
         },
     });
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);

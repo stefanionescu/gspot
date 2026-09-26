@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { containing } from '#tests/support/expectations.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -21,9 +22,7 @@ for (const extension of ['md', 'sh']) {
         const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
         const defect = await runEngineCheck(session, valeFindings, planned!);
         expect(defect.status, defect.note).toBe('fail');
-        expect(defect.findings).toStrictEqual([
-            expect.objectContaining({ file: path, line: 1, rule: 'Example.Concrete' }),
-        ]);
+        expect(defect.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
         const corrected = await runEngineCheck(session, valeFindings, planned!);
         expect(corrected.status, corrected.note).toBe('ok');

@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { pushReportSchema } from '#cli/execution/report.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
@@ -146,11 +147,11 @@ process.exit(child.exitCode);
             const invalid = await execute(base);
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
             const reportPath = join(repository.path, '.gspot/reports/report.json');
-            const failed = JSON.parse(readFileSync(reportPath, 'utf8'));
-            expect(failed.revisions[0].object).toBe(target);
-            expect(failed.revisions[0].report.checks[0].status).toBe('fail');
+            const failed = pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
+            expect(failed.revisions[0]!.object).toBe(target);
+            expect(failed.revisions[0]!.report.checks[0]!.status).toBe('fail');
             expect(invalid.stdout).toContain('changed.sh');
-            expect(JSON.stringify(failed.revisions[0].report.checks[0].findings)).not.toContain('legacy.sh');
+            expect(JSON.stringify(failed.revisions[0]!.report.checks[0]!.findings)).not.toContain('legacy.sh');
             for (const path of [
                 '.gspot/reports/report.json',
                 '.gspot/reports/report.sarif',

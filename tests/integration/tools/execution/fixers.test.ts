@@ -7,6 +7,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { RunOptions } from '#cli/execution/execute.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -46,7 +47,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
             const failed = await executeRun(await openSession(sandbox.path), options);
             expect(failed.report.exitCode).toBe(2);
             expect(failed.fixes?.results).toMatchObject([
-                { status: 'failed', changed: [], note: expect.stringContaining('PermissionError') },
+                { status: 'failed', changed: [], note: textContaining('PermissionError') },
             ]);
             expect(readFileSync(join(sandbox.path, 'source/sample.sql'), 'utf8')).toBe('select  * from foo;\n');
         } finally {

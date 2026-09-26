@@ -5,6 +5,7 @@ import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
@@ -30,8 +31,8 @@ test.each(['recommended', 'all'])(
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual([
-            expect.objectContaining({ file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' }),
-            expect.objectContaining({ file: 'script.sh', line: 3, rule: 'gspot.bash.eval' }),
+            containing({ file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' }),
+            containing({ file: 'script.sh', line: 3, rule: 'gspot.bash.eval' }),
         ]);
         expect(await Bun.file(join(sandbox.path, 'script.sh')).text()).toBe(source);
         const corrected = '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n';

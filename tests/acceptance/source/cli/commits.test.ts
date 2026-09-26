@@ -6,6 +6,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
+import type { CommandFailureJson } from '#cli/commands/print-result.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
@@ -157,8 +158,10 @@ test(
         expect(contentReport.revisions[0]?.report.checks[0]?.status).toBe('ok');
         const refused = await runProcess([...command, 'commits/range'], options);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(JSON.parse(refused.stdout).message).toContain('Pushed history is incomplete for commits/range');
-        expect(JSON.parse(refused.stdout).message).toContain('git fetch --unshallow');
+        expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
+            'Pushed history is incomplete for commits/range',
+        );
+        expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
         expect(git(checkout, ['fetch', '--unshallow']).code).toBe(0);
         const completed = await runProcess([...command, 'commits/range'], options);
         expect(completed.code, completed.stdout + completed.stderr).toBe(0);

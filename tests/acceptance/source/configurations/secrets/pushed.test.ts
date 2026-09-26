@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
@@ -44,7 +45,7 @@ test(
         expect(report.revisions[0]?.commits).toContain(leaked);
         expect(report.revisions[0]?.report.checks).toMatchObject([{ check: 'secrets/gitleaks', status: 'fail' }]);
         expect(report.revisions[0]?.report.checks[0]?.findings).toContainEqual(
-            expect.objectContaining({ rule: 'aws-access-token', file: 'settings.py', line: 1 }),
+            containing({ rule: 'aws-access-token', file: 'settings.py', line: 1 }),
         );
         expect(rejected.stdout).not.toContain(PLANTED_KEY_ID);
         await Bun.write(join(sandbox.path, 'settings.py'), PLANTED_SETTINGS);
@@ -135,8 +136,8 @@ test(
                 findings.map((finding) => finding.file).toSorted((left, right) => left.localeCompare(right)),
             ).toStrictEqual(['first.txt', 'second.txt']);
             expect(findings.every((finding) => finding.message.includes(leaked))).toBe(true);
-            expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([firstToken]) } });
-            expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([secondToken]) } });
+            expect(requests).toContainEqual({ GspotAcceptance: { token: containingAll([firstToken]) } });
+            expect(requests).toContainEqual({ GspotAcceptance: { token: containingAll([secondToken]) } });
             const saved =
                 readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8') +
                 readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8') +

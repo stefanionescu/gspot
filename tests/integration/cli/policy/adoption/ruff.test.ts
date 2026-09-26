@@ -4,6 +4,7 @@ import { symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
@@ -48,7 +49,7 @@ test('Ruff adoption reads its declared pyproject table without retiring project 
     expect(carried.tools.get('ruff')?.ignores).toStrictEqual([
         { check: 'python/ruff', rule: 'F401', paths: ['backend/**'], reason: expect.any(String) },
     ]);
-    expect(carried.retained).toStrictEqual([{ path, note: expect.stringContaining('tool.ruff') }]);
+    expect(carried.retained).toStrictEqual([{ path, note: textContaining('tool.ruff') }]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     await Bun.write(join(sandbox.path, path), '[project]\nname = "example"\nversion = "0.1.0"\n');
     expect(existingTooling(sandbox.path, repository.files, []).configs).toStrictEqual([]);

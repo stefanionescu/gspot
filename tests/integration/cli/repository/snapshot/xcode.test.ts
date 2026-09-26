@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
 import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
@@ -57,7 +58,7 @@ test('Xcode reports exact staged symlink targets before the first commit and cle
     writeFileSync(join(sandbox.path, path), 'let value = 1\n');
     gitOutput(sandbox.path, ['add', '.']);
     expect(await projectSymlinks(input)).toStrictEqual([
-        expect.objectContaining({
+        containing({
             file: path,
             message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
         }),

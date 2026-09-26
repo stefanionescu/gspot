@@ -17,7 +17,7 @@ function printResult(result: CommandResult, isJson: boolean): void {
 }
 
 function printError(error: Error, isJson: boolean): void {
-    if (isJson) printJson({ error: error.name, message: error.message });
+    if (isJson) printJson({ error: error.name, message: error.message } satisfies CommandFailureJson);
     else fail(error.message);
     process.exitCode = 2;
 }
@@ -41,3 +41,6 @@ export async function printCommand(
 }
 
 export type CommandResult = { text: string; json: unknown; exitCode: number };
+
+/** The JSON a failed command prints: the error's name and message. */
+export type CommandFailureJson = { error: string; message: string };

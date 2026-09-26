@@ -8,7 +8,7 @@ import { readProfile } from '#cli/policy/profiles/read.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { failure, rejection } from '#tests/support/rejection.ts';
+import { failure, rejection } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
 

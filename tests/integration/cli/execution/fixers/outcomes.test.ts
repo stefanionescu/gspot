@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 
@@ -21,7 +22,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
-        note: expect.stringContaining('Fatal: cannot write'),
+        note: textContaining('Fatal: cannot write'),
     });
     const corrected = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     corrected.spec.tool_errors = planned.spec.tool_errors;

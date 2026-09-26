@@ -4,6 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/execution/report.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
@@ -172,7 +173,7 @@ test.each([
         expect(authoredState(original, text)).toMatchObject(AUTHORED[outcome]);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );

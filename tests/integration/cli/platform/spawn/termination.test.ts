@@ -203,7 +203,7 @@ if (process.platform !== 'win32')
                     observed = error;
                 }
                 expect(observed).toBeInstanceOf(AggregateError);
-                expect((observed as AggregateError).errors[0].message).toContain('exit code 7');
+                expect(String((observed as AggregateError).errors[0])).toContain('exit code 7');
                 expect((observed as AggregateError).errors[1]).toBe(denied);
             }
         } finally {

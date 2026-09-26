@@ -4,6 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
@@ -27,7 +28,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const root = parse(configs.find(({ path }) => path === '.gspot/config/ruff.toml')!.content);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
-    expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: expect.arrayContaining(['PT']) } });
+    expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT']) } });
     const run = (config: string, path: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,

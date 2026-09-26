@@ -108,7 +108,10 @@ test.each(['', "apps/worker's tools"])(
         const skipped = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(skipped.code, skipped.stdout + skipped.stderr).toBe(2);
         expect(skipped.stderr).toContain('gspot apply');
-        const authored = parseYaml(configuration.toString('utf8'));
+        const authored = parseYaml(configuration.toString('utf8')) as {
+            repos: Record<string, unknown>[];
+            fail_fast?: boolean;
+        };
         authored.repos.unshift({
             repo: 'local',
             hooks: [

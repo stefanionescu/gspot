@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/execution/report.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { chmodSync, cpSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -33,15 +34,18 @@ test(
         const args = ['check', '--only', 'formatting/prettier', '--no-cache', '--json'];
         const finding = await run(repository.path, [...args, '--', 'source.js']);
         expect(finding.code, finding.stdout + finding.stderr).toBe(1);
-        expect(JSON.parse(finding.stdout).checks[0]).toMatchObject({
+        expect(reportSchema.parse(JSON.parse(finding.stdout)).checks[0]).toMatchObject({
             check: 'formatting/prettier',
             status: 'fail',
             files: 1,
         });
-        expect(JSON.parse(finding.stdout).checks[0].findings).toHaveLength(1);
+        expect(reportSchema.parse(JSON.parse(finding.stdout)).checks[0]!.findings).toHaveLength(1);
         const corrected = await run(repository.path, [...args, '--fix', '--', 'source.js']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).checks[0]).toMatchObject({ status: 'ok', findings: [] });
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({
+            status: 'ok',
+            findings: [],
+        });
         expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe("export const greeting = 'hello';\n");
         expect(readFileSync(join(repository.path, 'node_modules/prettier/cli'), 'utf8')).toBe(projectTool);
     },

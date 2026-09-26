@@ -3,8 +3,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { InitJson } from '#cli/commands/init/types.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const SOURCE = 'export const greeting="hello";\n';
@@ -36,7 +39,7 @@ test(
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(
-            JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === '.prettierignore'),
+            (JSON.parse(result.stdout) as InitJson).plan!.remove.some((entry) => entry.path === '.prettierignore'),
         ).toBe(true);
         await installPrivateTools(repository.path);
         const level = await run(repository.path, ['set', 'level', 'all']);
@@ -87,7 +90,9 @@ test(
         expect(readFileSync(join(repository.path, '.prettierignore'), 'utf8')).toBe(changed);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toContainEqual(expect.objectContaining({ path: '.prettierignore' }));
+        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toContainEqual(
+            containing({ path: '.prettierignore' }),
+        );
     },
     PLANTED_TIMEOUT_MS,
 );

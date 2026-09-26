@@ -4,6 +4,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
@@ -43,9 +44,7 @@ describe('component type checking', () => {
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(report.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({ rule: 'TS2322', file: path, line: 2 }),
-            );
+            expect(report.checks[0]!.findings).toContainEqual(containing({ rule: 'TS2322', file: path, line: 2 }));
             await Bun.write(join(sandbox.path, path), planted.replace("'one'", '1'));
             const both = await run(
                 sandbox.path,
@@ -54,9 +53,9 @@ describe('component type checking', () => {
             );
             expect(both.code, both.stdout + both.stderr).toBe(0);
             const corrected = reportSchema.parse(JSON.parse(both.stdout));
-            expect(corrected.checks).toContainEqual(expect.objectContaining({ check, status: 'ok', findings: [] }));
+            expect(corrected.checks).toContainEqual(containing({ check, status: 'ok', findings: [] }));
             expect(corrected.checks).toContainEqual(
-                expect.objectContaining({ check: 'typescript/tsc', status: 'skipped', note: `${check} runs it here` }),
+                containing({ check: 'typescript/tsc', status: 'skipped', note: `${check} runs it here` }),
             );
         },
         PLANTED_TIMEOUT_MS * 6,
@@ -85,14 +84,14 @@ describe('component type checking', () => {
             expect(result.code, result.stdout + result.stderr).toBe(1);
             const report = reportSchema.parse(JSON.parse(result.stdout));
             expect(report.checks).toContainEqual(
-                expect.objectContaining({
+                containing({
                     check: 'vue/typecheck',
                     status: 'skipped',
                     note: 'needs the typescript configuration, which this scope does not select',
                 }),
             );
             expect(report.checks.find((entry) => entry.check === 'svelte/check')?.findings).toContainEqual(
-                expect.objectContaining({ rule: 'a11y_missing_attribute', file: 'src/Product.svelte', line: 5 }),
+                containing({ rule: 'a11y_missing_attribute', file: 'src/Product.svelte', line: 5 }),
             );
         },
         PLANTED_TIMEOUT_MS * 6,

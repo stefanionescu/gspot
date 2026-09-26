@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { readdirSync, symlinkSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Adding a configuration changes the next explicit check through its ESLint fragment.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -67,7 +68,7 @@ describe('gspot add', () => {
             const report = reportSchema.parse(JSON.parse(after.stdout));
             expect(report.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
             expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     check: 'typescript/eslint',
                     file: 'schema.ts',
                     line: 6,

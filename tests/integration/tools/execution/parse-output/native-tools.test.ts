@@ -10,6 +10,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import { checkedFindings, isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput, ToolOutputError } from '#cli/execution/output/parse.ts';
 
@@ -41,7 +42,7 @@ test('native image reports distinguish a generated test key, invalid configurati
         const findings = await trivyImage(input);
         expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
         expect(findings).toMatchObject([
-            { file: 'compose.yaml', line: 1, rule: 'image', message: expect.stringContaining('private-key') },
+            { file: 'compose.yaml', line: 1, rule: 'image', message: textContaining('private-key') },
         ]);
         await Bun.write(join(sandbox.path, '.gspot/config/trivy.yaml'), 'severity: [');
         await rejects(trivyImage(input), /Trivy could not scan/u);
@@ -91,11 +92,9 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     expect(failed.exitCode, failed.stderr.toString()).toBe(1);
     const findings = parseOutput(planned.spec, failed.stdout.toString(), failed.stderr.toString(), sandbox.path);
     for (const file of paths) {
-        expect(findings).toContainEqual(
-            expect.objectContaining({ file, line: 1, column: 6, rule: 'MD033', fixable: false }),
-        );
-        expect(findings).toContainEqual(expect.objectContaining({ file, line: 1, rule: 'MD009', fixable: true }));
-        expect(findings).toContainEqual(expect.objectContaining({ file, line: 1, rule: 'MD041', fixable: false }));
+        expect(findings).toContainEqual(containing({ file, line: 1, column: 6, rule: 'MD033', fixable: false }));
+        expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD009', fixable: true }));
+        expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD041', fixable: false }));
     }
     const declared = { ...planned };
     delete declared.manifest;
@@ -156,11 +155,9 @@ test('native spelling JSON retains filename delimiters and Unicode character col
     expect(native.exitCode, native.stderr.toString()).toBe(2);
     const findings = parseOutput(spec, native.stdout.toString(), native.stderr.toString(), sandbox.path, cwd);
     for (const path of paths)
-        expect(findings).toContainEqual(
-            expect.objectContaining({ file: `nested/${path}`, line: 1, column: 6, fixable: true }),
-        );
+        expect(findings).toContainEqual(containing({ file: `nested/${path}`, line: 1, column: 6, fixable: true }));
     expect(findings).toContainEqual(
-        expect.objectContaining({
+        containing({
             file: 'nested/teh.txt',
             message: 'Filename: `teh` should be `the`',
             fixable: false,

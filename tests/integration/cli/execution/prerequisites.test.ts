@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 
 const POLICY =
     'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
@@ -102,7 +103,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     }
     expect(outcomes.toSorted(byCheck)).toMatchObject(
         [
-            { check: 'static-site/build', status: 'fail', message: expect.stringContaining('Planted build failure') },
+            { check: 'static-site/build', status: 'fail', message: textContaining('Planted build failure') },
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
         ].toSorted(byCheck),
     );

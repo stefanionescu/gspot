@@ -1,8 +1,8 @@
-import prettier from 'prettier';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { planRun } from '#cli/execution/plan.ts';
+import prettier, { type Options } from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { emitAll } from '#cli/generation/render.ts';
@@ -36,10 +36,16 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     expect(editor?.tabWidth).toBe(width);
-    const native = JSON.parse(generated.get('.gspot/config/prettier.json')!);
+    const native = JSON.parse(generated.get('.gspot/config/prettier.json')!) as Options;
     expect(native.tabWidth).toBe(width);
-    expect(parseJsonc(generated.get('.gspot/config/markdownlint.jsonc')!).MD007.indent).toBe(width);
-    expect(parseYaml(generated.get('.gspot/config/yamllint.yml')!).rules.indentation.spaces).toBe(width);
+    const markdownlint = parseJsonc(generated.get('.gspot/config/markdownlint.jsonc')!) as {
+        MD007: { indent: number };
+    };
+    expect(markdownlint.MD007.indent).toBe(width);
+    const yamllint = parseYaml(generated.get('.gspot/config/yamllint.yml')!) as {
+        rules: { indentation: { spaces: number } };
+    };
+    expect(yamllint.rules.indentation.spaces).toBe(width);
     expect(parseToml(generated.get('.gspot/config/ruff.toml')!)['indent-width']).toBe(width);
     expect(parseToml(generated.get('.gspot/config/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },

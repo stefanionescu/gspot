@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { validateSiteLinks } from '#docs/scripts/links.ts';
 
 test('built-site validation covers landing fragments, relative manual links, encoded paths, and assets', async () => {

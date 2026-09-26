@@ -1,8 +1,8 @@
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { failure } from '#tests/support/rejection.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
+import { failure, textContaining } from '#tests/support/expectations.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 test.each([
@@ -76,7 +76,7 @@ test.each([
                 const refused = failure(() => {
                     assertPolicyComplete({ text, path, policy });
                 });
-                const namesPrevious = expect.stringContaining(previous);
+                const namesPrevious = textContaining(previous);
                 expect(refused?.message).toStrictEqual(key === previous ? namesPrevious : undefined);
                 expect(validate(input)).toBe(key === current);
             }

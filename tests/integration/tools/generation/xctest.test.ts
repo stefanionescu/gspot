@@ -6,7 +6,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 
 const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
@@ -36,29 +38,29 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
     const broken = await run(root, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = JSON.parse(broken.stdout).checks.flatMap((check: { findings: unknown[] }) => check.findings);
+    const findings = reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings);
     expect(findings).toStrictEqual(
-        expect.arrayContaining([
-            expect.objectContaining({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
-            expect.objectContaining({ file: `${prefix}Sources/Value.swift`, rule: 'missing_docs' }),
-            expect.objectContaining({ file: `${prefix}Sources/Value.swift`, rule: 'no_magic_numbers' }),
+        containingAll([
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'missing_docs' }),
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'no_magic_numbers' }),
         ]),
     );
-    expect(findings.every((finding: { file: string }) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
+    expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
     await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT);
     const corrected = await run(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const cachedCommand = command.filter((part) => part !== '--no-cache');
     expect((await run(root, cachedCommand)).code).toBe(0);
     const cached = await run(root, cachedCommand);
-    expect(JSON.parse(cached.stdout).checks[0].status).toBe('cache');
+    expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
     const nested = await Bun.file(nestedPath).text();
     await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
     const changedConfiguration = await run(root, cachedCommand);
     expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
-    expect(JSON.parse(changedConfiguration.stdout).checks[0].findings).toContainEqual(
-        expect.objectContaining({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
+    expect(reportSchema.parse(JSON.parse(changedConfiguration.stdout)).checks[0]!.findings).toContainEqual(
+        containing({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
     );
     await Bun.write(nestedPath, nested);
     await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT.replace('value: String', 'value:String'));

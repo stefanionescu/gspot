@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 // Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
@@ -98,7 +99,7 @@ describe('the nestjs configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             const corrected = await run(
                 sandbox.path,
                 ['check', '--only', planted.check, '--no-cache', '--json'],
@@ -126,7 +127,7 @@ describe('the nestjs configuration', () => {
             );
             expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
             expect(reportSchema.parse(JSON.parse(swagger.stdout)).checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
                     file: 'src/greeting.controller.ts',
                 }),

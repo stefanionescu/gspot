@@ -7,6 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
@@ -53,10 +54,10 @@ test(
             { check: 'css/stylelint', scope: 'app', status: 'fail' },
         ]);
         expect(failedReport.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ file: 'site.css', rule: 'color-named', line: 2 }),
-                expect.objectContaining({ file: 'app/site.css', rule: 'color-named', line: 2 }),
-                expect.objectContaining({ file: 'app/site.css', rule: 'selector-max-id', line: 1 }),
+            containingAll([
+                containing({ file: 'site.css', rule: 'color-named', line: 2 }),
+                containing({ file: 'app/site.css', rule: 'color-named', line: 2 }),
+                containing({ file: 'app/site.css', rule: 'selector-max-id', line: 1 }),
             ]),
         );
         await Bun.write(join(sandbox.path, 'site.css'), 'a {\n    color: #f00;\n}\n');
@@ -64,7 +65,7 @@ test(
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toContainEqual(
-            expect.objectContaining({ check: 'css/stylelint', status: 'ok', findings: [] }),
+            containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
         );
         for (const folder of ['', 'app']) {
             const native = await runProcess([join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'site.css'], {
@@ -119,13 +120,11 @@ test.each([
         );
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
-        expect(failedReport.checks).toContainEqual(
-            expect.objectContaining({ check: 'css/stylelint', scope, status: 'fail' }),
-        );
+        expect(failedReport.checks).toContainEqual(containing({ check: 'css/stylelint', scope, status: 'fail' }));
         expect(failedReport.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ rule: 'color-named', file: `${prefix}future.css`, line: 2 }),
-                expect.objectContaining({ rule: 'selector-max-id', file: `${prefix}future.css`, line: 1 }),
+            containingAll([
+                containing({ rule: 'color-named', file: `${prefix}future.css`, line: 2 }),
+                containing({ rule: 'selector-max-id', file: `${prefix}future.css`, line: 1 }),
             ]),
         );
         await Bun.write(join(sandbox.path, prefix, 'future.css'), 'a {\n    color: #abc;\n}\n');
@@ -136,7 +135,7 @@ test.each([
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toContainEqual(
-            expect.objectContaining({ check: 'css/stylelint', status: 'ok', findings: [] }),
+            containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
         );
         const native = await runProcess(
             [join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'empty.css', 'future.css'],
@@ -219,7 +218,7 @@ describe('the css configuration', () => {
                 );
                 expect(failedReport.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
                 expect(failedReport.checks[0]?.findings).toContainEqual(
-                    expect.objectContaining({ check: planted.check, ...planted.expected }),
+                    containing({ check: planted.check, ...planted.expected }),
                 );
                 const corrected = await run(
                     sandbox.path,

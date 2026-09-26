@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -85,7 +86,7 @@ describe('the react-native configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ rule, file: path, line }));
+            expect(failed.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             await Bun.write(join(sandbox.path, path), CLEAN);
             const corrected = await run(
                 sandbox.path,

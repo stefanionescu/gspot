@@ -7,6 +7,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { containing } from '#tests/support/expectations.ts';
 
 for (const extension of ['md', 'sh']) {
     test.each(['outdated', 'deadline', 'cancellation'])(
@@ -68,7 +69,7 @@ for (const extension of ['md', 'sh']) {
                 const corrected = await runEngineCheck(session, valeFindings, planned!);
                 expect(corrected.status).toBe('fail');
                 expect(corrected.findings).toStrictEqual([
-                    expect.objectContaining({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
+                    containing({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
                 ]);
                 spawn.mockResolvedValue({ code: 0, stdout: '{}', stderr: '', missing: false, duration: 1 });
                 expect((await runEngineCheck(session, valeFindings, planned!)).status).toBe('ok');

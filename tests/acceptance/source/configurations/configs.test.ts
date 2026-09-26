@@ -7,6 +7,7 @@ import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
@@ -94,7 +95,7 @@ describe('the configs configuration', () => {
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({ check: planted.check, ...planted.expected }),
+                containing({ check: planted.check, ...planted.expected }),
             );
             await createFileTree(sandbox.path, planted.corrected);
             const corrected = await run(
@@ -140,7 +141,7 @@ describe('the configs configuration', () => {
                     await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
                 );
                 expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
-                expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ file: 'app/Info.plist' }));
+                expect(failed.checks[0]!.findings).toContainEqual(containing({ file: 'app/Info.plist' }));
                 await Bun.write(
                     join(sandbox.path, 'app/Info.plist'),
                     '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
@@ -203,7 +204,7 @@ describe('the configs configuration', () => {
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             const report = reportSchema.parse(JSON.parse(failed.stdout));
             expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
-            expect(report.checks[0]!.findings).toContainEqual(expect.objectContaining(scenario.expected));
+            expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
             await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
             const corrected = await run(sandbox.path, command, environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -250,9 +251,9 @@ test(
                 check: 'configs/schema',
                 status: 'fail',
                 findings: [
-                    expect.objectContaining({
+                    containing({
                         file: 'settings/café.json',
-                        message: expect.stringContaining('must be integer'),
+                        message: textContaining('must be integer'),
                     }),
                 ],
             },

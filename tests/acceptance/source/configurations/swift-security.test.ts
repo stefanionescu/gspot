@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools } from '#tests/support/cli/tools.ts';
 
@@ -42,14 +44,16 @@ test(
         const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(JSON.parse(broken.stdout).checks).toMatchObject([{ check: 'security/semgrep', status: 'fail' }]);
-        expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
-            expect.objectContaining({ rule: 'ios-weak-hash-algorithm', file: 'Value.swift', line: 2 }),
+        expect(reportSchema.parse(JSON.parse(broken.stdout)).checks).toMatchObject([
+            { check: 'security/semgrep', status: 'fail' },
+        ]);
+        expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toStrictEqual([
+            containing({ rule: 'ios-weak-hash-algorithm', file: 'Value.swift', line: 2 }),
         ]);
         await Bun.write(join(root, 'Value.swift'), 'import CryptoKit\nlet digest = SHA256.hash(data: data)\n');
         const corrected = await run(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
             { check: 'security/semgrep', status: 'ok', findings: [] },
         ]);
     },

@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['integrity/generated-drift'], fix: false, isDryRun: false };
@@ -26,7 +27,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     const edited = await executeRun(await openSession(sandbox.path), OPTIONS);
     expect(edited.report.exitCode).toBe(1);
     expect(edited.report.checks[0]?.findings).toMatchObject([
-        { file: GENERATED, rule: 'changed', help: expect.stringContaining('gspot apply') },
+        { file: GENERATED, rule: 'changed', help: textContaining('gspot apply') },
     ]);
     writeFileSync(
         join(sandbox.path, GENERATED),
@@ -37,7 +38,7 @@ test('an edited generated file and one holding merge markers are drift findings,
         {
             file: GENERATED,
             rule: 'conflict',
-            message: expect.stringContaining('merge conflict markers'),
+            message: textContaining('merge conflict markers'),
             help: 'Run gspot apply to write the file again, then gspot install to install what it records.',
         },
     ]);

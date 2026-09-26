@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
+import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -60,7 +60,7 @@ test.each([false, true])(
         expect(readFileSync(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
         // A preview shows the correction as a diff instead of writing it.
-        const withCorrected = expect.stringContaining('+corrected');
+        const withCorrected = textContaining('+corrected');
         expect(result.diffs).toStrictEqual(preview ? [withCorrected] : []);
     },
 );

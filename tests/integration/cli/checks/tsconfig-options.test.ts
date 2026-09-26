@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
@@ -110,7 +111,7 @@ test('a scope without tsconfig.json reports the missing configuration', async ()
         {
             check: 'integrity/tsconfig-options',
             file: 'tsconfig.json',
-            message: expect.stringContaining('no tsconfig.json'),
+            message: textContaining('no tsconfig.json'),
         },
     ]);
     fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);

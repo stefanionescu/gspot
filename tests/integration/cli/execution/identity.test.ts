@@ -100,6 +100,6 @@ test.each(['{ broken', '{}', ''])(
             { cwd: sandbox.path },
         );
         expect(cli.exitCode, cli.stdout.toString() + cli.stderr.toString()).toBe(2);
-        expect(JSON.parse(cli.stdout.toString()).checks[0].status).toBe('error');
+        expect(reportSchema.parse(JSON.parse(cli.stdout.toString())).checks[0]!.status).toBe('error');
     },
 );

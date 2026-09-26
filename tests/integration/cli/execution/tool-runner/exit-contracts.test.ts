@@ -5,6 +5,7 @@ import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 
@@ -38,7 +39,7 @@ test.each(['{file}', '{files}'])(
         const finding = await runToolCheck(session, planned);
         expect(finding.status).toBe('fail');
         expect(finding.findings).toStrictEqual([
-            expect.objectContaining({ file: source, line: 1, message: 'Located defect before exit' }),
+            containing({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
         writeFileSync(join(sandbox.path, source), '7');
         const fatal = await runToolCheck(session, planned);

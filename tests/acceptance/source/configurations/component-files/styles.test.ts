@@ -4,6 +4,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -45,7 +46,7 @@ describe('component style blocks', () => {
                 .parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json())
                 .checks.flatMap((check) => check.findings);
             expect(findings).toContainEqual(
-                expect.objectContaining({ rule: 'declaration-property-value-no-unknown', file: path, line }),
+                containing({ rule: 'declaration-property-value-no-unknown', file: path, line }),
             );
             expect(findings.map(({ rule }) => rule)).not.toContain('selector-pseudo-class-no-unknown');
             await Bun.write(join(sandbox.path, path), text.replace('#ggg', '#abc'));

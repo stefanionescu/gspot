@@ -4,9 +4,10 @@ import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { RunReport } from '#cli/execution/report.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
+import type { SarifReport } from '#tests/support/cli/reports.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
@@ -42,8 +43,8 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
             expect(report.checks[0]!.note).toContain('canceled');
             expect(report.coverage.checked).toBe(0);
             expect(
-                JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')).runs[0]
-                    .invocations[0].executionSuccessful,
+                (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport)
+                    .runs[0]!.invocations[0]!.executionSuccessful,
             ).toBe(false);
             await waitForExit(toolPid);
         } finally {
@@ -103,7 +104,7 @@ test.each(['diff', 'clone', 'cat-file'])(
             expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect(JSON.parse(retry.stdout).checks[0].status).toBe('ok');
+            expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
         } finally {
             if (child.exitCode === null) child.kill('SIGKILL');
             await child.exited;
@@ -164,10 +165,12 @@ test('push cancellation retains completed reports and names references not check
         expect(report.revisions[0]?.object).toBe(first);
         expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(report.canceled?.pendingRefs).toStrictEqual(['refs/heads/second']);
-        const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'));
-        expect(sarif.runs[0].invocations[0].executionSuccessful).toBe(true);
-        expect(sarif.runs[1].invocations[0].executionSuccessful).toBe(false);
-        expect(sarif.runs[1].properties.canceled.pendingRefs).toStrictEqual(['refs/heads/second']);
+        const sarif = JSON.parse(
+            readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'),
+        ) as SarifReport;
+        expect(sarif.runs[0]!.invocations[0]!.executionSuccessful).toBe(true);
+        expect(sarif.runs[1]!.invocations[0]!.executionSuccessful).toBe(false);
+        expect(sarif.runs[1]!.properties?.canceled?.pendingRefs).toStrictEqual(['refs/heads/second']);
         expect(report.exitCode).toBe(2);
         expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
             report,
@@ -223,7 +226,7 @@ await import(${JSON.stringify(CLI)});
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect(JSON.parse(retry.stdout).checks[0].status).toBe('ok');
+            expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
         } finally {
             await child.stdin.end();
             if (child.exitCode === null) child.kill('SIGKILL');
@@ -287,7 +290,7 @@ await import(${JSON.stringify(CLI)});
         expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
         const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect(JSON.parse(retry.stdout).checks[0].status).toBe('ok');
+        expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
     } finally {
         if (child.exitCode === null) child.kill('SIGKILL');
         await child.exited;

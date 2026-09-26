@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the supabase configuration: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
@@ -98,7 +99,7 @@ describe('the supabase configuration', () => {
             );
             expect(failedReport.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failedReport.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({ check: planted.check, ...planted.expected }),
+                containing({ check: planted.check, ...planted.expected }),
             );
             const corrected = await run(
                 sandbox.path,

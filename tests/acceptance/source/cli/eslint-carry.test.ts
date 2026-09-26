@@ -2,6 +2,8 @@ import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
+import type { InitJson } from '#cli/commands/init/types.ts';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -67,7 +69,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(
+        expect((JSON.parse(result.stdout) as InitJson).plan!.remove.some((entry) => entry.path === path)).toBe(
             path !== 'package.json',
         );
         const eslint = new ESLint({
@@ -106,7 +108,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         expect(existsSync(join(repository.path, '.gspot/reports/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
         const removed = await run(repository.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
@@ -135,7 +137,9 @@ test(
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         // The runtime words the missing dependency its own way; the note names the package either way.
-        expect(JSON.parse(result.stdout).plan.unread[0].note).toMatch(/Cannot find (?:package|module) 'eslint'/u);
+        expect((JSON.parse(result.stdout) as InitJson).plan!.unread[0]!.note).toMatch(
+            /Cannot find (?:package|module) 'eslint'/u,
+        );
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
         expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe(SOURCE);
@@ -239,7 +243,9 @@ test(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain('processor has no imported module owner');
+        expect((JSON.parse(result.stdout) as InitJson).plan!.unread[0]!.note).toContain(
+            'processor has no imported module owner',
+        );
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         const eslint = new ESLint({ cwd: repository.path });
         const [defective] = await eslint.lintFiles(['source.js']);

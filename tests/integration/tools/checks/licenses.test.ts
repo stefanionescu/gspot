@@ -7,6 +7,7 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
@@ -56,10 +57,10 @@ test('native Python license scanning ignores project scanner exclusions and veri
     };
     await writeLicense('GPL-3.0-only');
     expect(await licensesPackages(await input(root))).toStrictEqual([
-        expect.objectContaining({
+        containing({
             file: 'pyproject.toml',
             rule: 'license',
-            message: expect.stringContaining('licensed-example@1.0.0 reports GPL-3.0-only'),
+            message: textContaining('licensed-example@1.0.0 reports GPL-3.0-only'),
         }),
     ]);
     await Bun.write(
@@ -69,13 +70,13 @@ test('native Python license scanning ignores project scanner exclusions and veri
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT');
     expect(await licensesPackages(await input(root))).toStrictEqual([
-        expect.objectContaining({ rule: 'license', message: expect.stringContaining('exception no longer holds') }),
+        containing({ rule: 'license', message: textContaining('exception no longer holds') }),
     ]);
     await Bun.write(join(root, 'gspot.toml'), 'version = 1\nconfigurations = ["licenses"]\n');
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT-0');
     expect(await licensesPackages(await input(root))).toStrictEqual([
-        expect.objectContaining({ message: expect.stringContaining('reports MIT-0, which is not an allowed license') }),
+        containing({ message: textContaining('reports MIT-0, which is not an allowed license') }),
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),

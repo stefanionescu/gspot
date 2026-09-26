@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -57,7 +58,7 @@ test(
         const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
         expect(failed.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
         expect(failed.checks[0]!.findings).toContainEqual(
-            expect.objectContaining({ rule: 'no-debugger', file: 'src/paused.js', line: 9 }),
+            containing({ rule: 'no-debugger', file: 'src/paused.js', line: 9 }),
         );
         await Bun.write(
             join(sandbox.path, 'src/paused.js'),

@@ -8,6 +8,7 @@ import { commitAll, git } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
 
 const INIT = initArgs(['secrets']);
@@ -42,7 +43,7 @@ describe('the secrets configuration', () => {
                 {
                     check: 'secrets/gitleaks-staged',
                     status: 'fail',
-                    findings: [expect.objectContaining({ file: 'settings.py', rule: 'aws-access-token', line: 1 })],
+                    findings: [containing({ file: 'settings.py', rule: 'aws-access-token', line: 1 })],
                 },
             ]);
             expect(staged.stdout).not.toContain(PLANTED_KEY_ID);
@@ -110,19 +111,19 @@ describe('the secrets configuration', () => {
                             file: '.gspot/gitleaks-baseline.json',
                             rule: 'no-reason',
                             line: 1,
-                            message: expect.stringContaining('old.py:aws-access-token:1'),
+                            message: textContaining('old.py:aws-access-token:1'),
                         },
                         {
                             file: '.gspot/gitleaks-baseline.json',
                             rule: 'stale-entry',
                             line: 1,
-                            message: expect.stringContaining('names old.py'),
+                            message: textContaining('names old.py'),
                         },
                         {
                             file: '.gspot/gitleaks-baseline.json',
                             rule: 'no-reason',
                             line: 1,
-                            message: expect.stringContaining('abc123:gone.md:generic-api-key:4'),
+                            message: textContaining('abc123:gone.md:generic-api-key:4'),
                         },
                     ],
                 },

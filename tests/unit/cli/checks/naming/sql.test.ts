@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 
 const SOURCE = `-- Accounts.

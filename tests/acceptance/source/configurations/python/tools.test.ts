@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -103,7 +104,7 @@ describe('the python configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             const files: Record<string, string> = { [MODULE]: CLEAN };
             if (planted.check === 'python/vulture') files['planted/unused.py'] = '"""No unused imports."""\n';
             if (planted.check === 'integrity/dependency-ownership') {
@@ -159,7 +160,7 @@ describe('the python configuration', () => {
                 ['python/basedpyright', 'fail'],
             ]);
             expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     file: MODULE,
                     rule: 'reportAssignmentType',
                 }),

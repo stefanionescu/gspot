@@ -4,6 +4,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { containingAll, textContaining } from '#tests/support/expectations.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
@@ -71,7 +72,7 @@ describe('the licenses configuration', () => {
                             file: 'package.json',
                             rule: 'license',
                             line: 1,
-                            message: expect.stringContaining('strict@1.0.0 reports GPL-3.0-only'),
+                            message: textContaining('strict@1.0.0 reports GPL-3.0-only'),
                         },
                     ],
                 },
@@ -95,9 +96,7 @@ describe('the licenses configuration', () => {
                             file: 'package.json',
                             rule: 'license',
                             line: 1,
-                            message: expect.stringContaining(
-                                'strict@1.0.0 reports (MIT OR Apache-2.0) AND GPL-3.0-only',
-                            ),
+                            message: textContaining('strict@1.0.0 reports (MIT OR Apache-2.0) AND GPL-3.0-only'),
                         },
                     ],
                 },
@@ -140,7 +139,7 @@ describe('the licenses configuration', () => {
                             file: 'package.json',
                             rule: 'license',
                             line: 1,
-                            message: expect.stringContaining('the exception no longer holds'),
+                            message: textContaining('the exception no longer holds'),
                         },
                     ],
                 },
@@ -161,7 +160,7 @@ describe('the licenses configuration', () => {
                             file: 'package.json',
                             rule: 'license',
                             line: 1,
-                            message: expect.stringContaining('strict@1.0.0 reports MIT'),
+                            message: textContaining('strict@1.0.0 reports MIT'),
                         },
                     ],
                 },
@@ -199,7 +198,7 @@ test.each(['recommended', 'all'])(
         const generatedPath = join(root, '.gspot/config/app/licenses.json');
         const generated = readFileSync(generatedPath);
         expect(JSON.parse(generated.toString('utf8'))).toMatchObject({
-            licenses_allowed: expect.arrayContaining(['MIT']),
+            licenses_allowed: containingAll(['MIT']),
             packages_allowed: [],
         });
         const reapplied = await run(root, ['apply']);

@@ -6,6 +6,8 @@ import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { InitJson } from '#cli/commands/init/types.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/contents.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -63,7 +65,7 @@ describe('typescript in a scope', () => {
             const report = reportSchema.parse(JSON.parse(lint.stdout));
             expect(report.checks).toMatchObject([{ check: 'typescript/eslint', scope: 'api', status: 'fail' }]);
             expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     check: 'typescript/eslint',
                     file: 'api/src/port.ts',
                     rule: '@typescript-eslint/no-unnecessary-type-assertion',
@@ -146,6 +148,8 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     const corrected = await run(sandbox.path, [...command, '--dry-run', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
-        parsePolicyText(JSON.parse(corrected.stdout).policy, 'gspot.toml').scopes.map((scope) => scope.path),
+        parsePolicyText((JSON.parse(corrected.stdout) as InitJson).policy!, 'gspot.toml').scopes.map(
+            (scope) => scope.path,
+        ),
     ).toStrictEqual(['packages/api']);
 });

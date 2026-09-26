@@ -6,6 +6,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import type { RunOptions } from '#cli/execution/execute.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 /** A planted token with the shape gitleaks looks for; it belongs to nothing. */
 // eslint-disable-next-line sonarjs/no-hardcoded-secrets -- the planted token is the defect the secrets check must find
@@ -27,10 +28,10 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     await applyAll(await openSession(sandbox.path));
     const withoutGit = await secretChecks(sandbox.path);
     expect(withoutGit).toContainEqual(
-        expect.objectContaining({
+        containing({
             check: 'secrets/gitleaks-files',
             status: 'fail',
-            findings: [expect.objectContaining({ file: 'src/config.js' })],
+            findings: [containing({ file: 'src/config.js' })],
         }),
     );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
@@ -38,7 +39,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     const { planned } = await executeRun(await openSession(sandbox.path), options);
     expect(planned.find((check) => check.check === 'secrets/gitleaks-staged')?.skip).toMatchObject({
         source: 'rules',
-        note: expect.stringContaining('no git repository'),
+        note: textContaining('no git repository'),
     });
     commitAll(sandbox.path);
     const withGit = await secretChecks(sandbox.path);

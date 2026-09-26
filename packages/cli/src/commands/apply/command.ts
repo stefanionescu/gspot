@@ -64,11 +64,8 @@ async function previewApply(session: Session): Promise<CommandResult> {
     const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
     const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
-    return {
-        text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`,
-        json: { isDryRun: true, pin, drift, notes: proposal.notes },
-        exitCode: 0,
-    };
+    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: proposal.notes };
+    return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }
 
 function reportText(report: ApplyReport): string {
@@ -127,3 +124,11 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const report = await applyAll(session);
     return { text: reportText(report), json: report, exitCode: 0 };
 }
+
+/** The JSON a dry-run apply prints: the version pin, the drifted files, and the notes of the proposal. */
+export type ApplyPreviewJson = {
+    isDryRun: true;
+    pin: { from: string | undefined; to: string };
+    drift: DriftEntry[];
+    notes: string[];
+};

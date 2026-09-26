@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 
@@ -31,7 +32,7 @@ test(
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
         const [check] = reportSchema.parse(JSON.parse(loose.stdout)).checks;
         expect(check).toMatchObject({ check: 'formatting/prettier', status: 'fail' });
-        expect(check!.findings).toContainEqual(expect.objectContaining({ file: 'src/Greeting.svelte' }));
+        expect(check!.findings).toContainEqual(containing({ file: 'src/Greeting.svelte' }));
         const fixed = await run(
             sandbox.path,
             ['check', '--fix', '--only', 'formatting/prettier', '--no-cache'],

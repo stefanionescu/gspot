@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
@@ -135,7 +136,7 @@ describe('the static-site configuration', () => {
                 );
                 expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
                 expect(report.checks[0]?.findings).toContainEqual(
-                    expect.objectContaining({ check: planted.check, ...planted.expected }),
+                    containing({ check: planted.check, ...planted.expected }),
                 );
                 const corrected =
                     planted.check === 'static-site/size'
@@ -177,7 +178,7 @@ test(
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(checked.stdout));
         expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
-        expect(report.checks).toContainEqual(expect.objectContaining({ check: 'static-site/build', status: 'ok' }));
+        expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
     },
     PLANTED_TIMEOUT_MS * 3,
 );

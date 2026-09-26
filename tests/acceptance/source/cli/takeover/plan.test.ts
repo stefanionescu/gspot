@@ -7,7 +7,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import type { InitJson } from '#cli/commands/init/types.ts';
 import { treeContents } from '#tests/support/cli/contents.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 
@@ -154,12 +156,12 @@ test.each(['setup.cfg', 'tox.ini'])(
         expect(
             policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule),
         ).toStrictEqual(['LT01', 'RF01']);
-        expect(JSON.parse(initialized.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(
+        expect((JSON.parse(initialized.stdout) as InitJson).plan!.remove.some((entry) => entry.path === path)).toBe(
             false,
         );
-        expect(JSON.parse(initialized.stdout).plan.retained).toContainEqual({
+        expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
             path,
-            note: expect.stringContaining('remove that section manually'),
+            note: textContaining('remove that section manually'),
         });
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
         expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(0o640);

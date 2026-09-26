@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
 import { afterEach, expect, spyOn, test } from 'bun:test';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
+import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
 
@@ -37,7 +37,7 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
         // A clean analysis reports nothing; a failed one is an error that names the exit code.
         const findings = code === 0 ? await swiftAnalyze(input) : undefined;
         const refusal = code === 0 ? undefined : (await rejection(swiftAnalyze(input))).message;
-        const exited = expect.stringContaining(`analyzer exited ${String(code)}`);
+        const exited = textContaining(`analyzer exited ${String(code)}`);
         expect(findings).toStrictEqual(code === 0 ? [] : undefined);
         expect(refusal).toStrictEqual(code === 0 ? undefined : exited);
     } finally {

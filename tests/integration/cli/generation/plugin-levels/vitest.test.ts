@@ -1,6 +1,7 @@
 import type { ESLint } from 'eslint';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
 
 const FILES = {
@@ -29,11 +30,11 @@ test('the Vitest harness folder places test support and closes it to runtime cod
     });
     const eslint = await generatedEslint(sandbox.path);
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toMatchObject([
-        { message: expect.stringContaining('tests/fixtures') },
+        { message: textContaining('tests/fixtures') },
     ]);
     expect(await ruleReports(eslint, 'tests/fixtures/helpers.js', 'gspot/tests-directory-contents')).toStrictEqual([]);
     expect(await ruleReports(eslint, 'src/runtime.js', 'gspot/import-direction')).toMatchObject([
-        { message: expect.stringContaining('Runtime code imports test code') },
+        { message: textContaining('Runtime code imports test code') },
     ]);
 });
 

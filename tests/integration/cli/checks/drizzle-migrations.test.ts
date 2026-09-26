@@ -6,9 +6,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 

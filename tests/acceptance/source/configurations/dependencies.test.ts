@@ -5,6 +5,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 import type { PlantedCase, FindingCase } from '#tests/support/cli/planted.ts';
 // Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
@@ -143,7 +144,7 @@ describe('the dependencies configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             const corrected = await runPlanted(sandbox.path, { ...planted, files: planted.corrected }, environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const accepted = reportSchema.parse(
@@ -184,11 +185,11 @@ describe('the dependencies configuration', () => {
                     check: 'integrity/lockfile-fresh',
                     status: 'fail',
                     findings: [
-                        expect.objectContaining({
+                        containing({
                             file: 'bun.lock',
                             rule: 'stale-lockfile',
                             line: 1,
-                            message: expect.stringContaining('refuses this lockfile'),
+                            message: textContaining('refuses this lockfile'),
                         }),
                     ],
                 },

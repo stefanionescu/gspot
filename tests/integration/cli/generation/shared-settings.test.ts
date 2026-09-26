@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { containingAll } from '#tests/support/expectations.ts';
 import { generatedFile } from '#tests/support/cli/generated-files.ts';
 
 const TAILWIND_AT_RULES = [
@@ -44,12 +45,12 @@ test('knip starts from the policy entries and the entry files the selected confi
     const policy =
         'version = 1\nconfigurations = ["javascript"]\n[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nconfigurations = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n';
     const knip = await knipConfiguration(policy);
-    expect(knip.entry).toStrictEqual(expect.arrayContaining(['cli.js', 'src/main.{ts,js}', 'build.ts']));
+    expect(knip.entry).toStrictEqual(containingAll(['cli.js', 'src/main.{ts,js}', 'build.ts']));
     expect(knip.entry).not.toContain('api/serve.js');
-    expect(knip.workspaces['api']?.entry).toStrictEqual(expect.arrayContaining(['serve.js', 'src/main.{ts,js}']));
+    expect(knip.workspaces['api']?.entry).toStrictEqual(containingAll(['serve.js', 'src/main.{ts,js}']));
     expect(knip.workspaces['api']?.entry).not.toContain('cli.js');
     const withoutEntries = await knipConfiguration('version = 1\nconfigurations = ["javascript"]\n');
-    expect(withoutEntries.entry).toStrictEqual(expect.arrayContaining(['src/main.{ts,js}']));
+    expect(withoutEntries.entry).toStrictEqual(containingAll(['src/main.{ts,js}']));
     expect(withoutEntries.entry).not.toContain('cli.js');
 });
 

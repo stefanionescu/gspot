@@ -8,6 +8,9 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
+
+type ResolvedRules = { rules: Record<string, [number, ...unknown[]]> };
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();
@@ -39,11 +42,11 @@ test('apply preview names a generated ESLint rule change using installed depende
         packageManager: renderSession1.packageManager,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(directory.path, original.path), original.content);
-    const nativeBefore = await new ESLint({
+    const nativeBefore = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js');
-    expect(nativeBefore.rules['no-console'][0]).toBe(0);
+    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    expect(nativeBefore.rules['no-console']?.[0]).toBe(0);
     writeFileSync(join(directory.path, 'gspot.toml'), `${policy}${ignored}paths = ["tests/**"]\n`);
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
     expect(preview.text).toContain('rules: changed no-console');
@@ -55,16 +58,16 @@ test('apply preview names a generated ESLint rule change using installed depende
         packageManager: renderSession2.packageManager,
     }).files.find((file) => file.path === original.path)!;
     writeFileSync(join(directory.path, original.path), corrected.content);
-    const nativeAfter = await new ESLint({
+    const nativeAfter = (await new ESLint({
         cwd: directory.path,
         overrideConfigFile: join(directory.path, original.path),
-    }).calculateConfigForFile('entry.js');
-    expect(nativeAfter.rules['no-console'][0]).toBe(2);
+    }).calculateConfigForFile('entry.js')) as ResolvedRules;
+    expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });
     expect(allowed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
     const [defect] = await eslint.lintText('console.log("message");\n', { filePath: 'src/line\nbreak.js' });
-    expect(defect!.messages).toStrictEqual(expect.arrayContaining([expect.objectContaining({ ruleId: 'no-console' })]));
+    expect(defect!.messages).toStrictEqual(containingAll([containing({ ruleId: 'no-console' })]));
     const [fixed] = await eslint.lintText('export const greeting = "message";\n', { filePath: 'src/line\nbreak.js' });
     expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
     expect((await applyCommand({ cwd: directory.path, isDryRun: true })).text).not.toContain(
@@ -81,6 +84,7 @@ test('isolated ESLint preview resolves imports and file scopes without replacing
     });
     const before = `import rules from './rules.mjs';
 import { fileURLToPath } from 'node:url';
+
 const root = fileURLToPath(new URL('../..', import.meta.url));
 console.log('Configuration log stays outside the structured result.');
 export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 'example/root': ['error', { root }] } }];`;

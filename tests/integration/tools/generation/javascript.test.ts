@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import { existsSync, chmodSync, statSync } from 'node:fs';
+import { containing } from '#tests/support/expectations.ts';
 
 test.each([false, true])(
     'JavaScript checking preserves repository resolution and excludes private ambient types (authored: %s)',
@@ -120,7 +121,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     ).toStrictEqual([
         {
             scope: 'app/child',
-            finding: expect.objectContaining({ file: 'app/child/source.js', line: 2, column: 14, rule: 'TS2322' }),
+            finding: containing({ file: 'app/child/source.js', line: 2, column: 14, rule: 'TS2322' }),
         },
     ]);
     await Bun.write(join(sandbox.path, 'app/child/source.js'), corrected);

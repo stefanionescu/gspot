@@ -6,6 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const policy = (dialect: string) =>
     `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
@@ -44,10 +45,10 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.text).toContain('opt_in_rules: added empty_count');
     expect(preview.json).toMatchObject({
-        drift: expect.arrayContaining([
-            expect.objectContaining({
+        drift: containingAll([
+            containing({
                 path: original.path,
-                rules: expect.arrayContaining([
+                rules: containingAll([
                     { path: 'opt_in_rules', added: ['empty_count'], removed: [], changed: [] },
                     { path: 'disabled_rules', added: [], removed: ['empty_count'], changed: [] },
                 ]),
@@ -133,13 +134,13 @@ test('apply preview names added Vale styles when prose moves from recommended to
     writeFileSync(join(sandbox.path, 'gspot.toml'), `level = "all"\n${policy}`);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.json).toMatchObject({
-        drift: expect.arrayContaining([
-            expect.objectContaining({
+        drift: containingAll([
+            containing({
                 path: original.path,
-                rules: expect.arrayContaining([
-                    expect.objectContaining({
+                rules: containingAll([
+                    containing({
                         path: '*.BasedOnStyles',
-                        added: expect.arrayContaining(['Google', 'Microsoft']),
+                        added: containingAll(['Google', 'Microsoft']),
                     }),
                 ]),
             }),

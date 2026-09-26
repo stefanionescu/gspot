@@ -6,6 +6,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([
     { check: 'bash/syntax', path: 'script.sh', files: 2, broken: 'if then\n' },
@@ -49,10 +50,10 @@ test.each([
             const failed = reportSchema.parse(JSON.parse(broken.stdout));
             expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     file: entry.path,
                     line: entry.check === 'bash/syntax' ? 1 : 2,
-                    message: expect.stringContaining(entry.check === 'bash/zsh-syntax' ? 'parse error' : 'syntax'),
+                    message: textContaining(entry.check === 'bash/zsh-syntax' ? 'parse error' : 'syntax'),
                 }),
             );
         } finally {

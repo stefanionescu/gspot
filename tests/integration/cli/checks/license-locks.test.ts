@@ -1,13 +1,13 @@
-import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
-import { lockedPackages } from '#cli/repository/locked-packages.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { run as runCli } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
-import { reportSchema } from '#cli/execution/report.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { run as runCli } from '#tests/support/cli/command.ts';
+import { lockedPackages } from '#cli/repository/locked-packages.ts';
+import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
+import { containing, rejection, textContaining } from '#tests/support/expectations.ts';
 
 const LOCKS: [string, string][] = [
     [
@@ -36,7 +36,7 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return await allowlistsMatch(
+        return allowlistsMatch(
             engineInput(session, {
                 scope: session.scopes.find((entry) => entry.scope.path === '')!,
                 spec: spec,
@@ -45,12 +45,12 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         );
     };
     expect(await check()).toStrictEqual([
-        expect.objectContaining({
+        containing({
             check: 'integrity/allowlists-match',
             file: 'gspot.toml',
             line: 1,
             rule: 'unlocked-package',
-            message: expect.stringContaining('example@2.0.0'),
+            message: textContaining('example@2.0.0'),
         }),
     ]);
     await Bun.write(`${repository.path}/gspot.toml`, policy('1.2.3'));
@@ -78,7 +78,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return await allowlistsMatch(
+        return allowlistsMatch(
             engineInput(session, {
                 scope: session.scopes.find((entry) => entry.scope.path === '')!,
                 spec: spec,

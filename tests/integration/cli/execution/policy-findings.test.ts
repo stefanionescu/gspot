@@ -4,8 +4,8 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { rejection, textContaining } from '#tests/support/expectations.ts';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['swift/trivial-function'], fix: false, isDryRun: false };
 const BROKEN =
@@ -26,7 +26,7 @@ test('a wrong line in gspot.toml is a finding of integrity/policy, and the other
         ['integrity/policy', 'fail'],
     ]);
     expect(broken.report.checks[1]!.findings).toMatchObject([
-        { file: 'gspot.toml', line: 5, column: 1, message: expect.stringContaining('needs a reason') },
+        { file: 'gspot.toml', line: 5, column: 1, message: textContaining('needs a reason') },
     ]);
     expect(broken.report.failed).toContain('integrity/policy');
     writeFileSync(join(sandbox.path, 'gspot.toml'), CORRECTED);

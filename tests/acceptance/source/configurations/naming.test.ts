@@ -3,7 +3,9 @@ import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();
@@ -21,17 +23,15 @@ test('the selected naming configuration rejects banned terms in declarations and
         ['naming/paths', 'fail'],
     ]);
     expect(report.checks[0]!.findings).toContainEqual(
-        expect.objectContaining({ rule: 'banned-term', file: 'shell.js', line: 1, column: 14 }),
+        containing({ rule: 'banned-term', file: 'shell.js', line: 1, column: 14 }),
     );
-    expect(report.checks[1]!.findings).toContainEqual(
-        expect.objectContaining({ rule: 'banned-term', file: 'shell.js', line: 1 }),
-    );
+    expect(report.checks[1]!.findings).toContainEqual(containing({ rule: 'banned-term', file: 'shell.js', line: 1 }));
     renameSync(join(sandbox.path, 'shell.js'), join(sandbox.path, 'entry.js'));
     renameSync(join(sandbox.path, 'shell'), join(sandbox.path, 'app'));
     await Bun.write(join(sandbox.path, 'entry.js'), 'export const command = 1;\n');
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(JSON.parse(accepted.stdout).checks).toMatchObject([
+    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks).toMatchObject([
         { check: 'naming/identifiers', status: 'ok', findings: [] },
         { check: 'naming/paths', status: 'ok', findings: [] },
     ]);

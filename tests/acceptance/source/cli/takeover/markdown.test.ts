@@ -4,6 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
@@ -71,7 +72,7 @@ test.each(['', 'guide[1]', 'native-defaults'])(
         const findings = reportSchema.parse(JSON.parse(structured.stdout)).checks.flatMap((check) => check.findings);
         for (const name of literalFiles) {
             expect(findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     file: `${prefix}nested/${name}`,
                     rule: 'MD033',
                     line: 3,
@@ -80,7 +81,7 @@ test.each(['', 'guide[1]', 'native-defaults'])(
                 }),
             );
             expect(findings).toContainEqual(
-                expect.objectContaining({ file: `${prefix}nested/${name}`, rule: 'MD009', line: 1, fixable: true }),
+                containing({ file: `${prefix}nested/${name}`, rule: 'MD009', line: 1, fixable: true }),
             );
         }
         const failed = await run(sandbox.path, [...command, '--fix']);

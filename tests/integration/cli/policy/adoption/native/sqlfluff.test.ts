@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
@@ -24,9 +25,7 @@ test.each(['setup.cfg', 'tox.ini'])(
                 { check: 'sql/sqlfluff', rule: 'LT01' },
                 { check: 'sql/sqlfluff', rule: 'RF01' },
             ]);
-            expect(carried.retained).toStrictEqual([
-                { path, note: expect.stringContaining('remove that section manually') },
-            ]);
+            expect(carried.retained).toStrictEqual([{ path, note: textContaining('remove that section manually') }]);
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         }
         await Bun.write(join(sandbox.path, path), '[flake8]\nignore = E501\n');
@@ -69,7 +68,7 @@ test.each(['.sqlfluff', 'setup.cfg'])(
         const invalid = `${prefix}[sqlfluff]\nexclude_rules = LT01\nexclude_rules = RF01\n`;
         await Bun.write(join(sandbox.path, path), invalid);
         const refused = await collectCarried(sandbox.path, detected, new Set(['sql']), []);
-        expect(refused.unread).toMatchObject([{ path, note: expect.stringContaining('Duplicate SQLFluff option') }]);
+        expect(refused.unread).toMatchObject([{ path, note: textContaining('Duplicate SQLFluff option') }]);
         expect(refused.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(invalid);
     },

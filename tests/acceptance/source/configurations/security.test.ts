@@ -1,11 +1,13 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const INIT = [
     'init',
@@ -54,7 +56,7 @@ describe('the security configuration', () => {
             );
             // Semgrep ships no Windows build, so the check is skipped there and the run passes.
             const isWindows = process.platform === 'win32';
-            const evaluated = expect.objectContaining({ rule: 'node-no-eval', file: 'src/run.ts', line: 3 });
+            const evaluated: Finding = containing({ rule: 'node-no-eval', file: 'src/run.ts', line: 3 });
             expect(found.code, found.stdout + found.stderr).toBe(isWindows ? 0 : 1);
             expect(reportSchema.parse(JSON.parse(found.stdout)).checks).toMatchObject([
                 isWindows
@@ -82,8 +84,8 @@ describe('the security configuration', () => {
             expect(report.checks).toMatchObject([
                 { check: 'security/semgrep', status: isWindows ? 'skipped' : 'fail' },
             ]);
-            const planted = expect.objectContaining({ rule: 'planted-no-double', file: 'src/use.ts', line: 3 });
-            const withPlanted = expect.arrayContaining([planted]);
+            const planted: Finding = containing({ rule: 'planted-no-double', file: 'src/use.ts', line: 3 });
+            const withPlanted: Finding[] = containingAll([planted]);
             expect(report.checks[0]!.findings).toStrictEqual(isWindows ? [] : withPlanted);
             await Bun.write(join(sandbox.path, 'src/run.ts'), CLEAN);
             await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');

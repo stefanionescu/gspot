@@ -5,6 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 
 test('initialization and cold and warm staged checks stay within the 5000-file performance limits', async () => {
@@ -33,18 +34,16 @@ test('initialization and cold and warm staged checks stay within the 5000-file p
         const elapsed = performance.now() - start;
         measurements.push(elapsed);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const report = JSON.parse(checked.stdout);
+        const report = reportSchema.parse(JSON.parse(checked.stdout));
         // The first run executes the check; the second run answers from the cache.
-        expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe(
+        expect(report.checks.find((check) => check.check === 'bash/syntax')?.status).toBe(
             measurements.length === 2 ? 'cache' : 'ok',
         );
         console.log(
             `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${String(ceiling)} ms`,
         );
         expect(elapsed).toBeLessThan(ceiling);
-        expect(report.checks.some((check: { status: string }) => ['error', 'missing'].includes(check.status))).toBe(
-            false,
-        );
+        expect(report.checks.some((check) => ['error', 'missing'].includes(check.status))).toBe(false);
     }
     console.log(
         `5000 files: init ${initMs.toFixed(0)} ms; staged cold ${measurements[0]!.toFixed(0)} ms; warm ${measurements[1]!.toFixed(0)} ms`,

@@ -58,9 +58,13 @@ test.each([undefined, 'yarn'])(
         });
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
         expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b', 'café%']);
-        expect(JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')).scripts.prepare).toBe(
-            'authored setup',
-        );
+        expect(
+            (
+                JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')) as {
+                    scripts: Record<string, string>;
+                }
+            ).scripts['prepare'],
+        ).toBe('authored setup');
         expect((await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
     },

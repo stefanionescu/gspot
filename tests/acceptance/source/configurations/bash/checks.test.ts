@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { BASH_CASES, MAIN } from '#tests/support/cli/bash-cases.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -31,7 +32,7 @@ describe('the bash configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             const files = Object.fromEntries(
                 Object.keys(planted.files).map((path) => [
                     path,
@@ -86,7 +87,7 @@ test.each([
         { check: 'structure/bash-interpreter', status: 'fail' },
     ]);
     expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toContainEqual(
-        expect.objectContaining({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
+        containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
     writeFileSync(path, source(isInherited));
     const corrected = await run(sandbox.path, command);

@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { claimedInputs, planRun } from '#cli/execution/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
@@ -57,7 +58,7 @@ test.each([
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
         for (const check of failed.report.checks)
-            expect(check.findings).toContainEqual(expect.objectContaining({ file: path, line: 1 }));
+            expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
         await Bun.write(join(sandbox.path, path), corrected);
         const accepted = await executeRun(session, options);
@@ -203,7 +204,7 @@ test('engines share source bytes within a run and refresh reused sessions after 
         const defect = await executeRun(session, options);
         expect(defect.report.exitCode).toBe(1);
         expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
-            expect.objectContaining({ file: path, line: 1 }),
+            containing({ file: path, line: 1 }),
         );
         expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         read.mockClear();
@@ -265,7 +266,7 @@ format = "none"
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
-        expect.objectContaining({ file: 'query.sql', line: 1 }),
+        containing({ file: 'query.sql', line: 1 }),
     );
     const corrected = await executeRun(session, { ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);

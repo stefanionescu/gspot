@@ -5,6 +5,7 @@ import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
@@ -45,11 +46,11 @@ test('framework security packs stay within inherited scopes and preserve sibling
     ).toStrictEqual([
         {
             scope: 'app',
-            finding: expect.objectContaining({ file: 'app/source.js', line: 1, rule: 'express-res-send-raw-input' }),
+            finding: containing({ file: 'app/source.js', line: 1, rule: 'express-res-send-raw-input' }),
         },
         {
             scope: 'app/child',
-            finding: expect.objectContaining({
+            finding: containing({
                 file: 'app/child/source.js',
                 line: 1,
                 rule: 'express-res-send-raw-input',
@@ -57,7 +58,7 @@ test('framework security packs stay within inherited scopes and preserve sibling
         },
         {
             scope: 'sibling',
-            finding: expect.objectContaining({ file: 'sibling/ignored.js', line: 1, rule: 'node-no-eval' }),
+            finding: containing({ file: 'sibling/ignored.js', line: 1, rule: 'node-no-eval' }),
         },
     ]);
     for (const path of ['app/source.js', 'app/child/source.js'])

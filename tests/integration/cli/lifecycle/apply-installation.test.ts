@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 

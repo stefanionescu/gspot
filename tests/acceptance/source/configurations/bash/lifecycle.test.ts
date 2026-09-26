@@ -4,6 +4,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -34,8 +35,8 @@ test(
         expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
         const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(check.code).toBe(0);
-        expect(JSON.parse(check.stdout).checks).toStrictEqual([
-            expect.objectContaining({ check: 'bash/shellcheck', status: 'ok' }),
+        expect(reportSchema.parse(JSON.parse(check.stdout)).checks).toStrictEqual([
+            containing({ check: 'bash/shellcheck', status: 'ok' }),
         ]);
         const selected = await run(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);

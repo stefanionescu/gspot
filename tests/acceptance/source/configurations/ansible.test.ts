@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const INIT = [
     'init',
@@ -54,13 +56,13 @@ describe('the ansible configuration', () => {
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // ansible-lint has no Windows build, so the check is skipped there for the platform and the run passes.
             const isWindows = process.platform === 'win32';
-            const commandInsteadOfModule = expect.objectContaining({
+            const commandInsteadOfModule: Finding = containing({
                 check: 'ansible/lint',
                 file: 'deploy/site.yml',
                 rule: 'command-instead-of-module',
                 line: 5,
             });
-            const withCommand = expect.arrayContaining([commandInsteadOfModule]);
+            const withCommand: Finding[] = containingAll([commandInsteadOfModule]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
             expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'fail' }]);
             expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.source === 'platform')).toBe(

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 import type { CoverageReport } from '#cli/execution/coverage.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -18,8 +19,8 @@ test('doctor and list name unsupported endings and retain different coverage wit
     expect(listed.code, listed.stderr).toBe(0);
     const coverage = (JSON.parse(listed.stdout) as { coverage: CoverageReport }).coverage;
     const doctor = await run(directory.path, ['doctor', '--json']);
-    expect(JSON.parse(doctor.stdout).coverage).toStrictEqual(coverage);
-    const shells = coverage.endings.filter((entry: { ending: string }) => entry.ending === '.sh');
+    expect((JSON.parse(doctor.stdout) as { coverage: CoverageReport }).coverage).toStrictEqual(coverage);
+    const shells = coverage.endings.filter((entry) => entry.ending === '.sh');
     expect(shells).toHaveLength(2);
     expect(shells.filter((entry: { kinds: string[] }) => entry.kinds.includes('syntax'))).toHaveLength(1);
     expect(coverage.endings).toContainEqual({ ending: '.kt', scope: '', files: 1, kinds: [] });
@@ -30,8 +31,10 @@ test('doctor and list name unsupported endings and retain different coverage wit
     writeFileSync(join(directory.path, 'gspot.toml'), policy);
     const corrected = await run(directory.path, ['list', '--json']);
     expect(
-        JSON.parse(corrected.stdout).coverage.endings.filter((entry: { ending: string }) => entry.ending === '.sh'),
-    ).toStrictEqual([{ ending: '.sh', scope: '', files: 2, kinds: expect.arrayContaining(['syntax']) }]);
+        (JSON.parse(corrected.stdout) as { coverage: CoverageReport }).coverage.endings.filter(
+            (entry) => entry.ending === '.sh',
+        ),
+    ).toStrictEqual([{ ending: '.sh', scope: '', files: 2, kinds: containingAll(['syntax']) }]);
 });
 
 test('list shows selected policy states, detected configurations, and setting values without writing', async () => {

@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
+import type { InstallJson } from '#cli/commands/install.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -69,7 +70,7 @@ async function expectFreshCloneInstalls(
     writeFileSync(join(clone, 'source.py'), 'import os\n');
     const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
     expect(defect.code, defect.stderr).toBe(1);
-    expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
+    expect((JSON.parse(defect.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual(['F401']);
     const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
     expect(fixed.code, fixed.stderr).toBe(0);
     const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
@@ -218,8 +219,8 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 },
             );
             expect(command.code, command.stdout + command.stderr).toBe(2);
-            expect(JSON.parse(command.stdout).error).toContain('Run: gspot apply, then gspot install');
-            expect(JSON.parse(command.stdout).error).toContain('installed locked Python tools');
+            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
+            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('installed locked Python tools');
             expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
             expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
                 'keep the project environment',
@@ -242,7 +243,9 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 cwd: repository.path,
             });
             expect(invalid.code, invalid.stderr).toBe(1);
-            expect(JSON.parse(invalid.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
+            expect((JSON.parse(invalid.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
+                'F401',
+            ]);
             const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
             expect(corrected.code, corrected.stderr).toBe(0);
             expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);

@@ -11,6 +11,7 @@ import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([
     { paths: ['app/**'], disabled: true },
@@ -134,7 +135,7 @@ test('overlapping Stylelint sources preserve every original before adoption', as
         [],
     );
     expect(carried.unread).toContainEqual(
-        expect.objectContaining({ path: '.stylelintrc.json', note: expect.stringContaining('Overlapping') }),
+        containing({ path: '.stylelintrc.json', note: textContaining('Overlapping') }),
     );
     expect(carried.removed).toStrictEqual([]);
     expect(carried.scopes.size).toBe(0);

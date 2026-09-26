@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installedNextProject, nextManifest, NEXT_PAGE, NEXT_TRANSLATIONS } from '#tests/support/cli/nextjs.ts';
@@ -68,7 +69,7 @@ test.each(CASES)(
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
         expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
         const files: Record<string, string> = {};
         if (planted.check === 'integrity/route-segments') files['app/api/route.ts'] = planted.files['app/route.ts']!;
         if (planted.check === 'nextjs/typecheck')

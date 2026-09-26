@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the vitest configuration: a function no test calls, and a focused test.
@@ -70,7 +71,7 @@ describe('the vitest configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(
-                expect.objectContaining(
+                containing(
                     planted.check === 'vitest/coverage'
                         ? { message: planted.expected }
                         : { file: 'src/math.test.ts', rule: 'vitest/no-focused-tests', line: 4 },

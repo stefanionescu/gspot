@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -61,7 +62,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         const checked = await run(command, { cwd: directory.path });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(parseAlerts(checked.stdout)).toStrictEqual([
-            expect.objectContaining({
+            containing({
                 file: 'guide.md',
                 line: 1,
                 check: 'LocalStyle.terms',

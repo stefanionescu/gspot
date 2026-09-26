@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -48,8 +49,8 @@ test.each(['default', 'external'] as const)(
         writeFileSync(hook, '#!/bin/sh\nprintf later-edit\n');
         const conflict = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
         expect(conflict.json).toMatchObject({
-            preserved: expect.arrayContaining([relative(root, hook)]),
-            originals: expect.arrayContaining([{ path: hook, backup }]),
+            preserved: containingAll([relative(root, hook)]),
+            originals: containingAll([{ path: hook, backup }]),
         });
         expect(conflict.text).toContain(hook);
         expect(conflict.text).toContain(backup);

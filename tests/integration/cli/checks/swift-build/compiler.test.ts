@@ -3,12 +3,12 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
 import { afterEach, expect, spyOn, test } from 'bun:test';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
+import { containing, rejection, textContaining } from '#tests/support/expectations.ts';
 
 afterEach(() => {
     removeBuildFolders();
@@ -23,7 +23,7 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
         // A clean build reports nothing; a failed build without diagnostics is an error that names the exit code.
         const findings = code === 0 ? await swiftBuild(input) : undefined;
         const refusal = code === 0 ? undefined : (await rejection(swiftBuild(input))).message;
-        const exited = expect.stringContaining(`The Swift build exited ${String(code)} without source diagnostics.`);
+        const exited = textContaining(`The Swift build exited ${String(code)} without source diagnostics.`);
         expect(findings).toStrictEqual(code === 0 ? [] : undefined);
         expect(refusal).toStrictEqual(code === 0 ? undefined : exited);
     } finally {
@@ -61,11 +61,11 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
         const failed = await executeRun(initial, options);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks).toContainEqual(
-            expect.objectContaining({
+            containing({
                 check: 'swift/build',
                 status: 'error',
                 findings: [],
-                note: expect.stringContaining('Permission denied'),
+                note: textContaining('Permission denied'),
             }),
         );
         run.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });

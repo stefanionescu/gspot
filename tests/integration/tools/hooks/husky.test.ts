@@ -3,9 +3,10 @@ import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
@@ -267,7 +268,7 @@ test.each(['default', 'native', 'nested'])(
         const checked = await run(['git', 'hook', 'run', 'commit-msg', '--', message], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual([
+        expect((JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')) as HookCapture).args).toStrictEqual([
             'check',
             '--stage',
             'message',

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 // Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
@@ -94,7 +95,7 @@ describe('the vue and svelte configurations', () => {
                 );
                 expect(report.checks).toMatchObject([{ check: shape.check, status: 'fail' }]);
                 expect(report.checks[0]!.findings).toContainEqual(
-                    expect.objectContaining({
+                    containing({
                         rule,
                         file: shape.planted,
                         line: {

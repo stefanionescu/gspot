@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
@@ -59,9 +60,7 @@ test('apply previews missing outputs without writing and rejects obsolete mutati
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as { isDryRun: boolean; drift: { path: string; kind: string }[] };
     expect(result.isDryRun).toBe(true);
-    expect(result.drift).toContainEqual(
-        expect.objectContaining({ path: '.gspot/config/shellcheckrc', kind: 'missing' }),
-    );
+    expect(result.drift).toContainEqual(containing({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(existsSync(join(directory.path, '.gspot'))).toBe(false);
 });

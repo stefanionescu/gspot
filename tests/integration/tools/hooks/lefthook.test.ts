@@ -3,9 +3,10 @@ import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
@@ -224,7 +225,10 @@ test.each(['custom', 'native'])(
             existing === 'custom' ? 'retained' : undefined,
         );
         expect(readFileSync(join(root, 'rc-ran'), 'utf8')).toBe('updated');
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual(['check', '--staged']);
+        expect((JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')) as HookCapture).args).toStrictEqual([
+            'check',
+            '--staged',
+        ]);
         const changedAt = new Date(Date.now() + 2000);
         utimesSync(join(root, 'lefthook.yml'), changedAt, changedAt);
         const committed = await run(
@@ -255,7 +259,7 @@ test.each(['custom', 'native'])(
         writeFileSync(join(root, messagePath), 'test: fixture\n');
         const message = await run(['git', 'hook', 'run', 'commit-msg', '--', messagePath], { ...options, stdin: '' });
         expect(message.code, message.stdout + message.stderr).toBe(1);
-        expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual([
+        expect((JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')) as HookCapture).args).toStrictEqual([
             'check',
             '--stage',
             'message',

@@ -63,6 +63,11 @@ export function aliasesFor(root: string, scope: string): Record<string, string> 
 
 // Inherit authored resolution and file selection. A default input glob belongs to the repository,
 // not the generated configuration directory.
+// Whether an authored jsconfig names its own files or include globs.
+function listsSources(raw: unknown): boolean {
+    return typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);
+}
+
 /**
  * The generated jsconfig: type-checks JavaScript with the scope's own resolution when it has one.
  * @param root the repository root
@@ -87,7 +92,7 @@ export function javascriptConfig(root: string, policy: Policy, target: string, s
     return {
         ...(config === undefined ? {} : { extends: `${prefix}jsconfig.json` }),
         compilerOptions: { ...defaults, checkJs: true, allowJs: true, strict: true, noEmit: true },
-        ...(config?.raw.files !== undefined || config?.raw.include !== undefined
+        ...(listsSources(config?.raw)
             ? {}
             : {
                   include: ['js', 'mjs', 'cjs', 'jsx'].map((extension) => `${prefix}**/*.${extension}`),

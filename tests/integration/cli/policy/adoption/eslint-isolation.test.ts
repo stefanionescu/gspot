@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { rejection } from '#tests/support/rejection.ts';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { rejection } from '#tests/support/expectations.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

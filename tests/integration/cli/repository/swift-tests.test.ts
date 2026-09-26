@@ -3,7 +3,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -55,8 +57,8 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     const command = ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(JSON.parse(broken.stdout).checks[0].findings).toStrictEqual([
-        expect.objectContaining({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
+    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toStrictEqual([
+        containing({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
     ]);
     await Bun.write(
         `${sandbox.path}/Examples/Checks.swift`,
@@ -64,7 +66,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     );
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
         { check: 'xctest/no-sleep', status: 'ok', findings: [] },
     ]);
 });
@@ -119,12 +121,12 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     const result = await run(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
-        JSON.parse(result.stdout).checks.map((check: { scope: string; findings: unknown[] }) => ({
+        reportSchema.parse(JSON.parse(result.stdout)).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
     ).toStrictEqual([
-        { scope: '', findings: [expect.objectContaining({ file: 'Examples/Checks.swift', rule: 'sleep' })] },
+        { scope: '', findings: [containing({ file: 'Examples/Checks.swift', rule: 'sleep' })] },
         { scope: 'integration', findings: [] },
     ]);
 });
@@ -185,13 +187,13 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        JSON.parse(broken.stdout).checks.map((check: { scope: string; findings: unknown[] }) => ({
+        reportSchema.parse(JSON.parse(broken.stdout)).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
     ).toStrictEqual([
-        { scope: '', findings: [expect.objectContaining({ file: 'second/__Snapshots__/Checks/title.1.png' })] },
-        { scope: 'custom', findings: [expect.objectContaining({ file: 'custom/References/Missing-title.png' })] },
+        { scope: '', findings: [containing({ file: 'second/__Snapshots__/Checks/title.1.png' })] },
+        { scope: 'custom', findings: [containing({ file: 'custom/References/Missing-title.png' })] },
     ]);
     await Bun.write(`${sandbox.path}/second/Checks.swift`, 'import Testing\n@Test func title() {}\n');
     await Bun.write(`${sandbox.path}/custom/Missing.swift`, 'import XCTest\n');
@@ -218,7 +220,7 @@ test.each([
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
     const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--no-cache', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
         { check: 'xctest/reference-images', status: 'ok', findings: [] },
     ]);
 });

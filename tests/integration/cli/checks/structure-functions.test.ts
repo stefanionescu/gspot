@@ -4,7 +4,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { pythonModules } from '#cli/checks/python/modules.ts';
 

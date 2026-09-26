@@ -4,6 +4,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -33,7 +34,7 @@ describe('the Testing Library rules of component frameworks', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(report.checks[0]!.findings).toContainEqual(
-                expect.objectContaining({
+                containing({
                     rule: 'testing-library/no-debugging-utils',
                     file: 'src/greeting.test.js',
                     line: 5,

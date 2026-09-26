@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';
@@ -31,7 +32,7 @@ test.each([
     expect(await prettier.format(SOURCE, { ...before, filepath })).toBe(EXPECTED);
     const preview = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(JSON.parse(preview.stdout).notes.join('\n')).toContain(
+    expect((JSON.parse(preview.stdout) as ApplyPreviewJson).notes.join('\n')).toContain(
         `retained ${path}: editor configuration remains active`,
     );
     const applied = await run(repository.path, ['apply']);
@@ -48,7 +49,7 @@ test.each([
     }
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+    expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
 });
 
 test('apply removes its owned pointers when an authored formatter configuration is introduced', async () => {
@@ -68,5 +69,5 @@ test('apply removes its owned pointers when an authored formatter configuration 
     expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(text);
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout).drift).toStrictEqual([]);
+    expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
 });

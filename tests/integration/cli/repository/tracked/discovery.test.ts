@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readRepository } from '#cli/repository/tree.ts';
-import { failure, rejection } from '#tests/support/rejection.ts';
+import { failure, rejection } from '#tests/support/expectations.ts';
 import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
 
 describe('repository file discovery', () => {

@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
@@ -107,7 +108,7 @@ describe('the react configuration', () => {
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(failed.checks).toMatchObject([{ check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ rule, file: path, line }));
+            expect(failed.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             await Bun.write(join(sandbox.path, path), corrected);
             const fixed = await run(sandbox.path, ['check', '--only', check, '--no-cache', '--json'], environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -139,7 +140,7 @@ describe('the react configuration', () => {
             await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
             const all = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(all.checks.flatMap(({ findings }) => findings)).toContainEqual(
-                expect.objectContaining({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 }),
+                containing({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 }),
             );
             await runPlanted(
                 sandbox.path,

@@ -5,6 +5,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
@@ -48,9 +49,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'guide.md', rule: 'gspot.dates' },
     ]);
-    expect(report.ignores).toContainEqual(
-        expect.objectContaining({ check: 'prose/vale', rule: 'gspot.dates', matched: 1 }),
-    );
+    expect(report.ignores).toContainEqual(containing({ check: 'prose/vale', rule: 'gspot.dates', matched: 1 }));
     writeFileSync(join(directory.path, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
     const corrected = await run(directory.path, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -61,7 +60,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     const obsoleteChecks = reportSchema.parse(JSON.parse(obsolete.stdout)).checks;
     expect(obsoleteChecks.map((check) => check.check)).toStrictEqual(['prose/vale', 'integrity/policy']);
     expect(obsoleteChecks[1]?.findings).toMatchObject([
-        { file: 'gspot.toml', line: 7, message: expect.stringContaining('tools.vale.enabled') },
+        { file: 'gspot.toml', line: 7, message: textContaining('tools.vale.enabled') },
     ]);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(obsoletePolicy);
 });

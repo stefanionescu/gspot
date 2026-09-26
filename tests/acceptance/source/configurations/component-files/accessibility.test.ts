@@ -4,6 +4,7 @@ import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { containing } from '#tests/support/expectations.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
@@ -48,7 +49,7 @@ describe('component accessibility', () => {
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(report.checks[0]!.findings).toContainEqual(expect.objectContaining({ rule, file: path, line }));
+            expect(report.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             const corrected = planted.replace(
                 framework === 'vue' ? ':src="source"' : 'src={source}',
                 framework === 'vue' ? ':src="source" alt="The product"' : 'src={source} alt="The product"',

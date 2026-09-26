@@ -48,7 +48,7 @@ function constraint(
         facts.indexes.push({ table: at.table, name, column: first, constraint: name });
     }
     if (kind !== 'CONSTR_FOREIGN') return;
-    const constraints = facts.constraints.get(at.table) ?? new Map();
+    const constraints = facts.constraints.get(at.table) ?? new Map<string, SchemaFacts['foreignKeys']>();
     constraints.set(
         name,
         columns.map((name) => ({

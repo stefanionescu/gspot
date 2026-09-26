@@ -2,7 +2,9 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
 
 test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
@@ -62,7 +64,7 @@ test.each([false, true])(
                 checks: { findings: { file: string; line: number; rule: string }[] }[];
             };
             expect(report.checks[0]?.findings).toStrictEqual([
-                expect.objectContaining({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
+                containing({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
             ]);
         }
     },
@@ -81,13 +83,13 @@ test.each([false, true])(
         const missing = await run(directory.path, command);
         expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
         const report = JSON.parse(missing.stdout);
-        const unexplained = expect.objectContaining({
+        const unexplained = containing({
             check: 'integrity/suppressions',
             file: 'entry.sh',
             line: 1,
             rule: 'shellcheck-no-reason',
         });
-        expect(report.checks[0].findings).toStrictEqual(required ? [unexplained] : []);
+        expect(report.checks[0]!.findings).toStrictEqual(required ? [unexplained] : []);
         expect(report.suppressions['shellcheck']).toBe(1);
         await Bun.write(join(directory.path, 'entry.sh'), '# shellcheck disable=SC2086 # reason: N/A\necho $name\n');
         const empty = await run(directory.path, command);
@@ -98,8 +100,8 @@ test.each([false, true])(
         );
         const explained = await run(directory.path, command);
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout).checks[0].findings).toStrictEqual([]);
-        expect(JSON.parse(explained.stdout).suppressions['shellcheck']).toBe(1);
+        expect(reportSchema.parse(JSON.parse(explained.stdout)).checks[0]!.findings).toStrictEqual([]);
+        expect(reportSchema.parse(JSON.parse(explained.stdout)).suppressions['shellcheck']).toBe(1);
     },
 );
 
@@ -137,9 +139,9 @@ test.each([
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
         const failed = await run(directory.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout);
-        expect(report.checks[0].findings).toStrictEqual([
-            expect.objectContaining({
+        const report = reportSchema.parse(JSON.parse(failed.stdout));
+        expect(report.checks[0]!.findings).toStrictEqual([
+            containing({
                 check: 'integrity/suppressions',
                 file: path,
                 line: 1,
@@ -150,8 +152,8 @@ test.each([
         await Bun.write(join(directory.path, path), `${clean}\n`);
         const corrected = await run(directory.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).checks[0].findings).toStrictEqual([]);
-        expect(JSON.parse(corrected.stdout).suppressions).toStrictEqual({});
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]!.findings).toStrictEqual([]);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).suppressions).toStrictEqual({});
     },
 );
 
@@ -165,14 +167,14 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     });
     const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout);
-    expect(report.checks[0].findings).toStrictEqual(
-        expect.arrayContaining([
-            expect.objectContaining({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),
-            expect.objectContaining({ file: 'entry.py', rule: 'ruff-no-reason' }),
+    const report = reportSchema.parse(JSON.parse(result.stdout));
+    expect(report.checks[0]!.findings).toStrictEqual(
+        containingAll([
+            containing({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),
+            containing({ file: 'entry.py', rule: 'ruff-no-reason' }),
         ]),
     );
-    expect(report.checks[0].findings).toHaveLength(2);
+    expect(report.checks[0]!.findings).toHaveLength(2);
     expect(report.suppressions).toStrictEqual({ sqlfluff: 1, ruff: 1 });
 });
 
@@ -198,7 +200,7 @@ test.each([false, true])(
         ).checks
             .filter((check) => check.check === 'integrity/policy')
             .flatMap((check) => check.findings);
-        const aboutExtra = { file: 'gspot.toml', message: expect.stringContaining('extra') };
+        const aboutExtra = { file: 'gspot.toml', message: textContaining('extra') };
         expect(findings).toMatchObject(required ? [aboutExtra] : []);
         expect(readFileSync(policyPath, 'utf8')).toBe(
             written + '\n[tools.shellcheck.extra]\nexternal_sources = true\n',

@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -110,7 +111,7 @@ test('uninstall reports both restoration-conflict paths and restores the origina
     expect(conflict.text).not.toContain('private original bytes');
     expect(conflict.json).toMatchObject({
         preserved: ['authored.txt'],
-        originals: [{ backup: expect.stringContaining(backup) }],
+        originals: [{ backup: textContaining(backup) }],
     });
     expect(readFileSync(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('later authored bytes');
     expect(readFileSync(join(sandbox.path, backup), 'utf8')).toBe('private original bytes');

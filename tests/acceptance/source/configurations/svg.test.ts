@@ -2,7 +2,9 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { install } from '#tests/support/cli/tools.ts';
-import { runProcess, PLANTED_TIMEOUT_MS, run  } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { containing } from '#tests/support/expectations.ts';
+import { runProcess, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test(
     'native SVG byte savings use the selected level and exact file inputs',
@@ -38,8 +40,8 @@ test(
         await Bun.write(join(root, 'icon.svg'), native.stdout + ' '.repeat(Buffer.byteLength(native.stdout)));
         const large = await run(root, command);
         expect(large.code, large.stdout + large.stderr).toBe(1);
-        expect(JSON.parse(large.stdout).checks[0].findings).toStrictEqual([
-            expect.objectContaining({ file: 'icon.svg', rule: 'svg' }),
+        expect(reportSchema.parse(JSON.parse(large.stdout)).checks[0]!.findings).toStrictEqual([
+            containing({ file: 'icon.svg', rule: 'svg' }),
         ]);
         await Bun.write(join(root, 'icon.svg'), `${native.stdout} `);
         const configured = await run(root, ['set', 'level', 'all']);
@@ -49,7 +51,7 @@ test(
         await Bun.write(join(root, 'icon.svg'), native.stdout);
         const corrected = await run(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout).checks).toMatchObject([
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
             { check: 'static-site/svg-optimized', status: 'ok', files: 1, findings: [] },
         ]);
         await Bun.write(join(root, 'other.svg'), '<svg><broken>');
@@ -57,11 +59,11 @@ test(
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const malformed = await run(root, command);
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(JSON.parse(malformed.stdout).checks[0].status).toBe('error');
+        expect(reportSchema.parse(JSON.parse(malformed.stdout)).checks[0]!.status).toBe('error');
         await Bun.write(join(root, 'other.svg'), native.stdout);
         const repaired = await run(root, command);
         expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-        expect(JSON.parse(repaired.stdout).checks).toMatchObject([
+        expect(reportSchema.parse(JSON.parse(repaired.stdout)).checks).toMatchObject([
             { check: 'static-site/svg-optimized', status: 'ok', files: 2, findings: [] },
         ]);
     },

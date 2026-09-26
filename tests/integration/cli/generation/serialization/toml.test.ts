@@ -6,6 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
@@ -39,8 +40,8 @@ test('typos output preserves quoted keys and paths without creating settings', a
         },
     });
     expect(parsed['default']).toMatchObject({ 'extend-words': Object.fromEntries(words.map((word) => [word, word])) });
-    expect(parsed['files']).toMatchObject({ 'extend-exclude': expect.arrayContaining(paths) });
-    expect(parsed['files']).not.toMatchObject({ 'extend-exclude': expect.arrayContaining(['**']) });
+    expect(parsed['files']).toMatchObject({ 'extend-exclude': containingAll(paths) });
+    expect(parsed['files']).not.toMatchObject({ 'extend-exclude': containingAll(['**']) });
 });
 
 test('profile spelling values use the same TOML emission path', async () => {
