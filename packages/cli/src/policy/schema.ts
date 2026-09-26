@@ -209,7 +209,7 @@ const toolsSchema = z
                     .array(
                         z.strictObject({
                             package: text.regex(
-                                /^(?:@[^/@\s]+\/)?[^/@\s]+@\d[^\s@<>=~^*|,]*$/u,
+                                /^(?:@[^/@\s]+\/[^/@\s]+|[^/@\s]+)@\d[^\s@<>=~^*|,]*$/u,
                                 'Name a package and its exact version.',
                             ),
                             license: text.min(1),
@@ -236,7 +236,11 @@ const toolsSchema = z
             .extend({
                 reference_layout: text
                     .regex(
-                        /^(?=[^\r\n]*\{file\})(?=[^\r\n]*\{test\})(?!.*\{file\}.*\{file\})(?!.*\{test\}.*\{test\})(?!\/)(?!.*(?:^|\/)\.\.?(?:\/|$))(?:(?:[^{}\\\r\n]|\{file\}|\{test\}))+(?![\s\S])/u,
+                        /^(?!\/|\.\.?(?:\/|$))(?!.*\/\.\.?(?:\/|$))/u,
+                        'Use a relative snapshot layout without . or .. segments.',
+                    )
+                    .regex(
+                        /^[^{}\\\r\n]*(?:\{file\}[^{}\\\r\n]*\{test\}|\{test\}[^{}\\\r\n]*\{file\})[^{}\\\r\n]*$/u,
                         'Use a relative snapshot layout containing {file} and {test} exactly once each.',
                     )
                     .optional(),

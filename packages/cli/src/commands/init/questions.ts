@@ -53,8 +53,9 @@ function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
     }
     if (tooling.ci.length > 0) return 'none';
     const remote = readGitSetting(root, 'remote.origin.url') ?? '';
-    if (/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)github\.com[:/]/u.test(remote)) return 'github';
-    return /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)gitlab\.com[:/]/u.test(remote) ? 'gitlab' : 'none';
+    const host = remote.replace(/^(?:https?|ssh):\/\//u, '').replace(/^[^@/]+@/u, '');
+    if (host.startsWith('github.com:') || host.startsWith('github.com/')) return 'github';
+    return host.startsWith('gitlab.com:') || host.startsWith('gitlab.com/') ? 'gitlab' : 'none';
 }
 
 async function askHooks(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['hooks']> {

@@ -105,6 +105,18 @@ function assertDependencyReady(snapshot: string, folder: string, dependency: str
         ]);
 }
 
+// The value of one key in a pyvenv.cfg text, or undefined when the key is absent or empty.
+function pyvenvSetting(config: string, key: string): string | undefined {
+    for (const line of config.split('\n')) {
+        if (!line.startsWith(key)) continue;
+        const rest = line.slice(key.length).trimStart();
+        if (!rest.startsWith('=')) continue;
+        const value = rest.slice(1).trim();
+        return value === '' ? undefined : value;
+    }
+    return undefined;
+}
+
 /**
  * Copy verified journal-owned Vale packages matching the selected configuration.
  * @param root the repository root
@@ -230,7 +242,7 @@ export async function copyDependencies(
                     throw new SelectionError([
                         'The installed Python environment exposes system packages. Prepare an isolated virtual environment for this revision.',
                     ]);
-                const home = /^home\s*=\s*(.+)$/mu.exec(config)?.[1]?.trim();
+                const home = pyvenvSetting(config, 'home');
                 const version = /^(?:version_info|version)\s*=\s*(3\.\d+)/mu.exec(config)?.[1];
                 if (
                     home !== undefined &&

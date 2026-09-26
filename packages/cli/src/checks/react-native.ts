@@ -10,7 +10,6 @@ import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 // Expo Doctor prints each failed check on a line of its own, then the issues it found, then its advice.
 const FAILED_CHECK = /^✖ (?<description>.+)$/u;
-const BLOCK_END = /^(?:Advice:|✔ .*|✖ .*|\d+\/\d+ checks passed\..*)?$/u;
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {
@@ -20,6 +19,13 @@ function hasInstalledExpo(scopeRoot: string): boolean {
         if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') return false;
         throw error;
     }
+}
+
+// Whether a Doctor line ends the issues of a failed check: a blank, advice, another check, or the summary.
+function isBlockEnd(line: string): boolean {
+    if (line === '' || line.startsWith('Advice:')) return true;
+    if (line.startsWith('✔ ') || line.startsWith('✖ ')) return true;
+    return /^\d+\/\d+ checks passed\./u.test(line);
 }
 
 /**
@@ -37,7 +43,7 @@ export function doctorFindings(check: string, file: string, stdout: string): Fin
         const description = FAILED_CHECK.exec(line)?.groups?.['description'];
         if (description === undefined) return [];
         const rest = lines.slice(index + 1);
-        const end = rest.findIndex((next) => BLOCK_END.test(next));
+        const end = rest.findIndex((next) => isBlockEnd(next));
         const issues = end === -1 ? rest : rest.slice(0, end);
         return [
             { check, file, line: 1, rule: 'expo-doctor', message: [description, ...issues].join(' '), fixable: false },

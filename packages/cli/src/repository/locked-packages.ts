@@ -12,6 +12,20 @@ const LOCKFILE_VERSIONS = [LOCKFILE_V2, LOCKFILE_V3];
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });
 
+// The name@version a pnpm lock key names: an optional scope, the name, @ or /, then the version up to ( or _.
+function pnpmIdentity(key: string): string | undefined {
+    const identity = key.startsWith('/') ? key.slice(1) : key;
+    const scopeEnd = identity.startsWith('@') ? identity.indexOf('/') : -1;
+    if (identity.startsWith('@') && scopeEnd < 2) return undefined;
+    const separator = identity.slice(scopeEnd + 1).search(/[@/]/u);
+    if (separator < 1) return undefined;
+    const nameEnd = scopeEnd + 1 + separator;
+    const rest = identity.slice(nameEnd + 1);
+    const versionEnd = rest.search(/[(_]/u);
+    const version = versionEnd === -1 ? rest : rest.slice(0, versionEnd);
+    return version === '' ? undefined : `${identity.slice(0, nameEnd)}@${version}`;
+}
+
 /**
  * Read resolved package identities from supported textual dependency lockfiles.
  * @param filename the lockfile name, which names its format
@@ -69,10 +83,10 @@ export function lockedPackages(filename: string, text: string): Set<string> {
         const lock = z.object({ packages: z.record(z.string(), z.unknown()) }).parse(parseYaml(text));
         return new Set(
             Object.keys(lock.packages).map((key) => {
-                const match = /^\/?(?<name>@[^/]+\/[^/@]+|[^/@]+)[@/](?<version>[^(_]+)(?:[(_].*)?$/u.exec(key)?.groups;
-                if (match?.['name'] === undefined || match['version'] === undefined)
+                const identity = pnpmIdentity(key);
+                if (identity === undefined)
                     throw new Error('Cannot read a resolved package identity from the pnpm lockfile.');
-                return `${match['name']}@${match['version']}`;
+                return identity;
             }),
         );
     }

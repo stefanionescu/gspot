@@ -13,15 +13,18 @@ export function gixyRules(text: string): Record<string, string[]> {
             section = `${line.slice(1, -1).replaceAll('_', '-')}-`;
             continue;
         }
-        const flag = /^([^:=;#\s]+)\s*(?:\s[;#].*)?$/u.exec(line);
-        const option = /^([^:=;#\s]+)(?:\s*[:=]\s*|\s+)(.+?)\s*(?:\s[;#].*)?$/u.exec(line);
-        if (flag === null && option === null) throw new Error('Gixy rule configuration contains an invalid option.');
-        const key = flag?.[1] ?? `${section}${option?.[1] ?? ''}`;
+        const comment = line.search(/\s[;#]/u);
+        const statement = comment === -1 ? line : line.slice(0, comment).trimEnd();
+        const nameEnd = statement.search(/[:=;#\s]/u);
+        const name = nameEnd === -1 ? statement : statement.slice(0, nameEnd);
+        const rest = statement.slice(name.length).trim();
+        const isFlag = rest === '';
+        const value = isFlag ? 'true' : rest.replace(/^[:=]\s*/u, '');
+        if (name === '' || value === '') throw new Error('Gixy rule configuration contains an invalid option.');
+        const key = isFlag ? name : `${section}${name}`;
         const canonical = key.replace(/^--/u, '');
         if (!['checks', 'tests', 'skips'].includes(canonical)) continue;
-        const value = flag === null ? option?.[2] : 'true';
-        if (value === undefined || value.startsWith('['))
-            throw new Error('Gixy check selectors must be comma-separated strings.');
+        if (value.startsWith('[')) throw new Error('Gixy check selectors must be comma-separated strings.');
         result[canonical === 'tests' ? 'checks' : canonical] = value
             .split(',')
             .map((rule) => rule.trim())

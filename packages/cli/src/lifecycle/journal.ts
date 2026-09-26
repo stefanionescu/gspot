@@ -18,6 +18,25 @@ const configurationFieldSchema = z.strictObject({
     installed: z.json(),
     original: z.json().optional(),
 });
+// A recovery backup lives under these folders, then an operation folder, then the backed-up file.
+const RECOVERY_OWNER = ['.gspot', 'state', 'recovery'];
+
+// Whether a path names a recovery backup: any folders, then .gspot/state/recovery/<operation>/<file>.original.
+function isRecoveryBackupPath(path: string): boolean {
+    const parts = path.split('/');
+    const [file, operation, ...folders] = parts.toReversed();
+    const owner = folders.slice(0, RECOVERY_OWNER.length).toReversed();
+    const identity = /^[a-f0-9-]{36}$/u;
+    return (
+        parts.every((part) => part !== '') &&
+        owner.join('/') === RECOVERY_OWNER.join('/') &&
+        operation !== undefined &&
+        identity.test(operation) &&
+        file !== undefined &&
+        /^[a-f0-9-]{36}\.original$/u.test(file)
+    );
+}
+
 export const identitySchema = z.strictObject({
     hash: hashSchema,
     mode: modeSchema,
@@ -33,7 +52,7 @@ export const originalSchema = identitySchema.extend({
                 context.addIssue({ code: 'custom', message: String(error) });
             }
         })
-        .regex(/^(?:[^/]+\/)*\.gspot\/state\/recovery\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.original$/u),
+        .refine((path) => isRecoveryBackupPath(path), 'A backup lives under .gspot/state/recovery.'),
 });
 export const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
     for (const [index, field] of fields.entries()) {

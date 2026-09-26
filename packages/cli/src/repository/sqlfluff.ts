@@ -1,5 +1,17 @@
+// A decimal numeral with an optional sign, fraction, and exponent, and nothing else.
+function isNumeral(text: string): boolean {
+    const [mantissa = '', exponent, ...more] = text.toLowerCase().split('e');
+    return (
+        more.length === 0 &&
+        /^[+-]?[\d.]+$/u.test(mantissa) &&
+        /\d/u.test(mantissa) &&
+        (exponent === undefined || /^[+-]?\d+$/u.test(exponent)) &&
+        Number.isFinite(Number(text))
+    );
+}
+
 function value(text: string): unknown {
-    if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/iu.test(text)) return Number(text);
+    if (isNumeral(text)) return Number(text);
     if (text.toLowerCase() === 'true') return true;
     if (text.toLowerCase() === 'false') return false;
     if (text.toLowerCase() === 'none') return null;

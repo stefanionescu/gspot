@@ -287,19 +287,21 @@ const settingSchema = z.strictObject({
 
 // The shape of a configuration manifest.toml after validation.
 
+// An untracked path: .gspot, then one or more names, and at most a trailing slash; no . or .. segment.
+function isUntrackedPath(path: string): boolean {
+    const [root, ...names] = (path.endsWith('/') ? path.slice(0, -1) : path).split('/');
+    return (
+        root === '.gspot' &&
+        names.length > 0 &&
+        names.every((name) => /^[A-Za-z0-9._-]+$/u.test(name) && name !== '.' && name !== '..')
+    );
+}
+
 type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 
 export const manifestSchema = z.strictObject({
     untracked: z
-        .array(
-            z
-                .string()
-                .regex(/^\.gspot\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\/?$/u)
-                .refine(
-                    (path) => !path.split('/').some((part) => part === '.' || part === '..'),
-                    'Untracked paths must stay inside .gspot.',
-                ),
-        )
+        .array(z.string().refine((path) => isUntrackedPath(path), 'Untracked paths must stay inside .gspot.'))
         .default([]),
     configuration: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),

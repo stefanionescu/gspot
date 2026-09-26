@@ -1,3 +1,14 @@
+// The key and the value text of one Vale option line: the key plain or quoted, then = or :, then the rest.
+function valeEntry(line: string): [string | undefined, string] {
+    const quote = line.startsWith('"') ? '"' : line.startsWith('`') ? '`' : undefined;
+    const keyEnd = quote === undefined ? line.search(/[=:]/u) : line.indexOf(quote, 1);
+    if (keyEnd === -1) return [undefined, ''];
+    const key = quote === undefined ? line.slice(0, keyEnd).trim() : line.slice(1, keyEnd);
+    const rest = line.slice(keyEnd + (quote === undefined ? 0 : 1)).trimStart();
+    if (!rest.startsWith('=') && !rest.startsWith(':')) return [undefined, ''];
+    return [key, rest.slice(1).trimStart()];
+}
+
 /**
  * Read Vale rule overrides and selected styles separately for each file-pattern section.
  * @param text the vale.ini text
@@ -19,10 +30,9 @@ export function valeRules(text: string): Record<string, unknown> {
             sections.set(name, section);
             continue;
         }
-        const entry = /^(?:"([^"]+)"|`([^`]+)`|([^=:]+))\s*[=:]\s*(.*)$/u.exec(line);
-        const key = (entry?.[1] ?? entry?.[2] ?? entry?.[3])?.trim();
+        const [key, rest] = valeEntry(line);
         if (key === undefined || key === '') throw new Error(`Invalid Vale option on line ${String(index + 1)}.`);
-        let value = entry?.[4] ?? '';
+        let value = rest;
         const quote = value.startsWith('"""') ? '"""' : value.startsWith('`') ? '`' : undefined;
         if (quote === undefined) {
             while (value.endsWith('\\')) {

@@ -7,7 +7,16 @@ import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project.ts';
 
 const COMMENT = /^\s*\/\/\s*\S{3,}/u;
-const SLEEP = /^(?:(?:Darwin\.|Glibc\.)?(?:sleep|usleep)|Thread\.sleep|Task(?:<[^>]+>)?\.sleep)$/u;
+const SLEEP_CALLS = new Set([
+    'sleep',
+    'usleep',
+    'Darwin.sleep',
+    'Darwin.usleep',
+    'Glibc.sleep',
+    'Glibc.usleep',
+    'Thread.sleep',
+    'Task.sleep',
+]);
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;
@@ -38,6 +47,12 @@ async function testFindings(
         }
     }
     return findings;
+}
+
+// Whether a callee is one of the sleeps, with a generic Task specialization read as Task.
+function isSleepCall(callee: string): boolean {
+    const plain = callee.replace(/^Task<[^>]+>\./u, 'Task.');
+    return SLEEP_CALLS.has(plain);
 }
 
 /**
@@ -107,7 +122,7 @@ export async function noSleep(input: EngineInput): Promise<Finding[]> {
     const found = await testFindings(input, 'sleep', said, (root) =>
         root
             .descendantsOfType('call_expression')
-            .filter((node) => SLEEP.test(node.firstNamedChild?.text.replaceAll(/\s/gu, '') ?? '')),
+            .filter((node) => isSleepCall(node.firstNamedChild?.text.replaceAll(/\s/gu, '') ?? '')),
     );
     return found.filter((finding) => !isAllowed(finding.file));
 }

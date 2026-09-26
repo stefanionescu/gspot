@@ -30,12 +30,14 @@ export function swiftformatRules(text: string): Record<string, string[]> {
         if (line === '') continue;
         if (line.startsWith('[') || /^--filter(?:\s|$)/iu.test(line))
             throw new Error('SwiftFormat rule comparison does not support configuration sections or filters.');
-        const option = /^--([a-z-]+)(?:\s+(.*))?$/iu.exec(line);
-        const key = option?.[1]?.toLowerCase();
-        if (key === undefined) throw new Error(`Invalid SwiftFormat option on line ${String(index + 1)}.`);
+        const gap = line.search(/\s/u);
+        const key = (gap === -1 ? line.slice(2) : line.slice(2, gap)).toLowerCase();
+        if (!line.startsWith('--') || !/^[a-z-]+$/u.test(key))
+            throw new Error(`Invalid SwiftFormat option on line ${String(index + 1)}.`);
         if (!Object.hasOwn(rules, key)) continue;
-        const value = option?.[2] ?? '';
-        if (!/^(?:[a-zA-Z\d,\s]|"[a-zA-Z\d,\s]*")*$/u.test(value))
+        const value = gap === -1 ? '' : line.slice(gap).trim();
+        const unquoted = value.replaceAll(/"[a-zA-Z\d,\s]*"/gu, '');
+        if (unquoted.includes('"') || !/^[a-zA-Z\d,\s]*$/u.test(unquoted))
             throw new Error(`Invalid SwiftFormat ${key} list on line ${String(index + 1)}.`);
         const entries = value
             .replaceAll('"', '')

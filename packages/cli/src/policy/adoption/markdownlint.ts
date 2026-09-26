@@ -11,10 +11,7 @@ const MARKDOWN_SOURCE = z
     .object({ extends: z.string().min(1).optional() })
     .catchall(z.union([z.boolean(), z.record(z.string(), z.json())]))
     .refine(
-        (source) =>
-            Object.keys(source).every(
-                (key) => key === 'extends' || /^(?:default|MD\d{3}|[a-z]+(?:-[a-z]+)+)$/u.test(key),
-            ),
+        (source) => Object.keys(source).every((key) => key === 'extends' || isMarkdownlintKey(key)),
         'Use Markdown rule names or a static inheritance path.',
     );
 
@@ -57,6 +54,13 @@ function carryMarkdownlint(source: CarrySource, path: string, lists: CarriedConf
             path: parent,
             note: 'Inherited Markdown configuration retained; effective rules are represented in gspot configuration',
         });
+}
+
+// A markdownlint key: default, a rule identity such as MD013, or a hyphenated alias such as line-length.
+function isMarkdownlintKey(key: string): boolean {
+    if (key === 'default' || /^MD\d{3}$/u.test(key)) return true;
+    const words = key.split('-');
+    return words.length > 1 && words.every((word) => /^[a-z]+$/u.test(word));
 }
 
 export const markdownImporter = {

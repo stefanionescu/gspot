@@ -9,7 +9,12 @@ export function iniSection(text: string, section: string): string | undefined {
     const seen = new Set<string>();
     let included = false;
     for (const line of text.split('\n')) {
-        const header = /^\s*\[([^\]]+)\]\s*(?:[#;].*)?$/u.exec(line)?.[1];
+        const trimmed = line.trim();
+        const close = trimmed.indexOf(']');
+        const tail = close === -1 ? '' : trimmed.slice(close + 1).trim();
+        const isHeader =
+            trimmed.startsWith('[') && close > 1 && (tail === '' || tail.startsWith('#') || tail.startsWith(';'));
+        const header = isHeader ? trimmed.slice(1, close) : undefined;
         if (header !== undefined) {
             included = header === section || header.startsWith(`${section}:`);
             if (included) {

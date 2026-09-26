@@ -24,8 +24,13 @@ export function shellcheckRules(text: string): { enable: string[]; disable: stri
             remaining = end < 0 ? '' : remaining.slice(end + (quoted ? 1 : 0)).trimStart();
             if (key === 'enable' || key === 'disable') {
                 const entries = value === '' ? [] : value.split(',');
-                const pattern = key === 'enable' ? /^[a-zA-Z-]+$/u : /^(?:all|(?:SC)?\d+(?:-(?:SC)?\d+)?)$/u;
-                if (entries.some((entry) => !pattern.test(entry)))
+                const isValid = (entry: string): boolean =>
+                    key === 'enable'
+                        ? /^[a-zA-Z-]+$/u.test(entry)
+                        : entry === 'all' ||
+                          (entry.split('-').length <= 2 &&
+                              entry.split('-').every((code) => /^(?:SC)?\d+$/u.test(code)));
+                if (!entries.every((entry) => isValid(entry)))
                     throw new Error(`Invalid ShellCheck ${key} list on line ${String(index + 1)}.`);
                 rules[key].push(
                     ...entries.map((entry) =>

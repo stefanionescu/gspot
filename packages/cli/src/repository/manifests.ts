@@ -4,7 +4,6 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
-const NAMED_REQUIREMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(?=$|[\s<>=!~;[@])/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
 
 function manifestText(root: string, path: string): string {
@@ -41,6 +40,13 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
     if (typeof installer === 'string') facts.installer = installer;
     if (typeof parsed['type'] === 'string') facts.type = parsed['type'];
     return facts;
+}
+
+// A requirement that names a package: letters or digits at both ends, dots, dashes, and underscores between.
+function isNamedRequirement(spec: string): boolean {
+    const end = spec.search(REQUIREMENT_NAME_END);
+    const name = end === -1 ? spec : spec.slice(0, end);
+    return /^[A-Za-z0-9]/u.test(name) && /[A-Za-z0-9]$/u.test(name) && /^[A-Za-z0-9._-]*$/u.test(name);
 }
 
 function requirementName(spec: string): string {
@@ -86,8 +92,9 @@ function requirementsFacts(root: string, path: string): ManifestFacts {
     const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
-        const spec = line.trim().replace(/\s+#.*$/u, '');
-        if (!NAMED_REQUIREMENT.test(spec)) continue;
+        const comment = line.search(/\s#/u);
+        const spec = (comment === -1 ? line : line.slice(0, comment)).trim();
+        if (!isNamedRequirement(spec)) continue;
         dependencies[requirementName(spec)] = spec;
     }
     return {

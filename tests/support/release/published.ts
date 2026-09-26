@@ -41,7 +41,9 @@ export async function publishRelease(): Promise<PublishedRelease> {
     });
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const version = built.stdout.trim();
-    expect(version).toMatch(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u);
+    const [core = '', ...labels] = version.split(/[-+]/u);
+    expect(core).toMatch(/^\d+\.\d+\.\d+$/u);
+    expect(labels.every((label) => /^[0-9A-Za-z.-]+$/u.test(label))).toBe(true);
     const checkout = preparePackages(registry.work);
     const missing = join(checkout, 'dist', 'gspot-linux-arm64-musl');
     rmSync(missing);

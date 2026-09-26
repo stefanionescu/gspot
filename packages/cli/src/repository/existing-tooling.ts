@@ -20,6 +20,25 @@ import {
     RULES_DIRECTORY_NAMES,
 } from '#cli/repository/patterns.ts';
 
+// The words in a CI job name that say it lints.
+const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
+// Two-word lint commands, and the package managers whose lint or gspot:check task counts.
+const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
+const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
+
+// Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
+function runsLint(command: string): boolean {
+    const words = command.split(/[\s;&|]+/u).filter((word) => word !== '');
+    return words.some((word, index) => {
+        if (word === 'eslint') return true;
+        const next = words[index + 1];
+        if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
+        if (!TASK_RUNNERS.has(word)) return false;
+        const task = next === 'run' ? words[index + 2] : next;
+        return task === 'lint' || task === 'gspot:check';
+    });
+}
+
 const OTHER_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',
@@ -239,12 +258,10 @@ export function ciLintJobs(root: string, paths: string[]): string[] {
                         (command): command is string => typeof command === 'string',
                     );
                     const lint =
-                        /(?:^|[-_: ])(?:lint|quality|gspot)(?:$|[-_: ])/iu.test(name) ||
-                        texts.some((command) =>
-                            /(?:^|[\s;&|])(?:gspot\s+check|eslint|biome\s+check|ruff\s+check|(?:npm|pnpm|yarn|bun|mise)\s+(?:run\s+)?(?:lint|gspot:check))(?:$|[\s;&|])/u.test(
-                                command,
-                            ),
-                        );
+                        name
+                            .toLowerCase()
+                            .split(/[-_: ]/u)
+                            .some((word) => LINT_WORDS.has(word)) || texts.some((command) => runsLint(command));
                     return lint ? [`${path}: ${name}`] : [];
                 });
             });
