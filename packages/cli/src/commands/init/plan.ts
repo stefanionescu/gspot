@@ -16,15 +16,39 @@ import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/generation/bun.ts';
 import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
 
+// How many values a carried setting holds: the entries of a list or table, or one scalar.
+function carriedCount(value: unknown): number {
+    if (Array.isArray(value)) return value.length;
+    if (typeof value === 'object' && value !== null) return Object.keys(value).length;
+    return 1;
+}
+
+type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
+
+const CURSOR_RULE = '.cursor/rules/gspot.mdc';
+const HOOKS_ROW = {
+    path: 'Git-resolved hooks directory',
+    note: 'gspot install creates dispatchers; existing executables are retained as .gspot-original siblings; tracked hooks require hook-manager integration',
+};
+
+// The settings each scope carries from its own tool configuration files.
+function scopeCarriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
+    return [...carried.scopes].flatMap(([scope, entry]) =>
+        Object.entries(entry.tools).flatMap(([tool, settings]) =>
+            Object.entries(settings).map(([key, value]) => ({
+                from: `${scope}: ${tool} ${key}`,
+                count: Array.isArray(value) ? value.length : 1,
+                into: `[[scope]] ${scope}: tools.${tool}.${key}`,
+            })),
+        ),
+    );
+}
+
 function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
     const rows = [...carried.tools].flatMap(([tool, entries]) => {
         const settings = Object.entries(entries.settings).map(([key, value]) => ({
             from: `${tool} ${key}`,
-            count: Array.isArray(value)
-                ? value.length
-                : typeof value === 'object' && value !== null
-                  ? Object.keys(value).length
-                  : 1,
+            count: carriedCount(value),
             into: `tools.${tool}.${key}`,
         }));
         if (entries.ignores.length > 0)
@@ -35,15 +59,7 @@ function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
             });
         return settings.filter((row) => row.count > 0);
     });
-    for (const [scope, entry] of carried.scopes)
-        for (const [tool, settings] of Object.entries(entry.tools))
-            for (const [key, value] of Object.entries(settings))
-                rows.push({
-                    from: `${scope}: ${tool} ${key}`,
-                    count: Array.isArray(value) ? value.length : 1,
-                    into: `[[scope]] ${scope}: tools.${tool}.${key}`,
-                });
-    return rows;
+    return [...rows, ...scopeCarriedRows(carried)];
 }
 
 function pointerRows(everySelected: Manifest[]): TakeoverPlan['write'] {
@@ -89,6 +105,95 @@ function runnerRows(
     return rows;
 }
 
+// The install settings a bunfig.toml carries into the policy: the release age floor and the security scanner.
+function bunfigSettings(text: string): InstallSettings {
+    const document = Bun.TOML.parse(text) as Record<string, unknown>;
+    const install = document['install'] as Record<string, unknown> | undefined;
+    const age = install?.['minimumReleaseAge'];
+    const scanner = (install?.['security'] as Record<string, unknown> | undefined)?.['scanner'];
+    return {
+        ...(typeof age === 'number'
+            ? { min_release_age_days: Math.max(DEFAULT_RELEASE_AGE_DAYS, age / SECONDS_PER_DAY) }
+            : {}),
+        ...(typeof scanner === 'string' ? { security_scanner: scanner } : {}),
+    };
+}
+
+// Records the install settings of one scope, merged over what the scope already carries.
+function carryInstallSettings(carried: CarriedConfiguration, path: string, settings: InstallSettings): void {
+    if (path === '') {
+        const existing = carried.tools.get('install');
+        carried.tools.set('install', {
+            settings: { ...existing?.settings, ...settings },
+            ignores: existing?.ignores ?? [],
+        });
+        return;
+    }
+    const scope = carried.scopes.get(path) ?? { configurations: [], tools: {} };
+    scope.tools['install'] = { ...scope.tools['install'], ...settings };
+    carried.scopes.set(path, scope);
+}
+
+// Carries the install settings of every scope's bunfig.toml into the proposal.
+function carryBunfigSettings(root: string, selection: InitSelection, carried: CarriedConfiguration): void {
+    const files = openConfinedRoot(root);
+    try {
+        for (const path of new Set(['', ...selection.scopes.map((scope) => scope.path)])) {
+            const source = files.read(path === '' ? 'bunfig.toml' : `${path}/bunfig.toml`);
+            if (source === undefined) continue;
+            const settings = bunfigSettings(source.bytes.toString('utf8'));
+            if (Object.keys(settings).length > 0) carryInstallSettings(carried, path, settings);
+        }
+    } finally {
+        files.close();
+    }
+}
+
+// The commit scopes a scoped repository with the commits configuration accepts, or undefined for none.
+function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): string[] | undefined {
+    if (scopes.length === 0 || !selection.selectedIds.has('commits')) return undefined;
+    return [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'];
+}
+
+// The Xcode project proposal, when the selection includes Xcode.
+function xcodeRow(root: string, selection: InitSelection): ReturnType<typeof xcodeProposal> | undefined {
+    if (!selection.selectedIds.has('xcode')) return undefined;
+    return xcodeProposal(
+        root,
+        selection.scopes.map((scope) => scope.path),
+    );
+}
+
+// The agent instruction files init writes, when any agent is configured.
+function agentRows(agents: string[]): TakeoverPlan['write'] {
+    if (agents.length === 0) return [];
+    const files = agents.map((path) => ({
+        path,
+        note: path === CURSOR_RULE ? 'owned Cursor rule; authored files preserved' : 'managed instruction block',
+    }));
+    return [...files, { path: '.gspot/rules/', note: 'agent rule files' }];
+}
+
+// The CI workflow init writes for the chosen host.
+function ciRows(ci: InitAnswers['ci']): TakeoverPlan['write'] {
+    if (ci === 'none') return [];
+    if (ci === 'github') return [{ path: '.github/workflows/gspot.yml', note: 'check workflow' }];
+    return [{ path: '.gitlab/ci/gspot.yml', note: 'add include: [{ local: .gitlab/ci/gspot.yml }] to .gitlab-ci.yml' }];
+}
+
+// The CI files init leaves alone: every one when no workflow is written, and every existing lint job.
+function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): TakeoverPlan['retained'] {
+    const untouched =
+        ci === 'none' && lintJobs.length === 0
+            ? ciFiles.map((path) => ({
+                  path,
+                  note: 'CI retained; add commands to install the pinned gspot version, gspot install, and gspot check',
+              }))
+            : [];
+    const jobs = lintJobs.map((path) => ({ path, note: 'existing lint job retained; no duplicate CI job proposed' }));
+    return [...untouched, ...jobs];
+}
+
 /**
  * Builds the proposal gspot.toml is rendered from.
  * @param root the repository root
@@ -105,49 +210,10 @@ export function buildProposal(
     carried: CarriedConfiguration,
     detected: DetectedSetting[] = [],
 ): Proposal {
-    if (selection.selectedIds.has('dependencies')) {
-        const files = openConfinedRoot(root);
-        try {
-            for (const path of new Set(['', ...selection.scopes.map((scope) => scope.path)])) {
-                const source = files.read(path === '' ? 'bunfig.toml' : `${path}/bunfig.toml`);
-                if (source === undefined) continue;
-                const document = Bun.TOML.parse(source.bytes.toString('utf8')) as Record<string, unknown>;
-                const install = document['install'] as Record<string, unknown> | undefined;
-                const age = install?.['minimumReleaseAge'];
-                const security = install?.['security'] as Record<string, unknown> | undefined;
-                const scanner = security?.['scanner'];
-                const settings = {
-                    ...(typeof age === 'number'
-                        ? { min_release_age_days: Math.max(DEFAULT_RELEASE_AGE_DAYS, age / SECONDS_PER_DAY) }
-                        : {}),
-                    ...(typeof scanner === 'string' ? { security_scanner: scanner } : {}),
-                };
-                if (Object.keys(settings).length === 0) continue;
-                if (path === '') {
-                    const existing = carried.tools.get('install');
-                    carried.tools.set('install', {
-                        settings: { ...existing?.settings, ...settings },
-                        ignores: existing?.ignores ?? [],
-                    });
-                } else {
-                    const scope = carried.scopes.get(path) ?? { configurations: [], tools: {} };
-                    scope.tools['install'] = { ...scope.tools['install'], ...settings };
-                    carried.scopes.set(path, scope);
-                }
-            }
-        } finally {
-            files.close();
-        }
-    }
+    if (selection.selectedIds.has('dependencies')) carryBunfigSettings(root, selection, carried);
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
-    const hasCommitScopes = scopes.length > 0 && selection.selectedIds.has('commits');
-    const commitScopes = hasCommitScopes ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'] : undefined;
-    const xcode = selection.selectedIds.has('xcode')
-        ? xcodeProposal(
-              root,
-              selection.scopes.map((scope) => scope.path),
-          )
-        : undefined;
+    const commitScopes = commitScopeNames(scopes, selection);
+    const xcode = xcodeRow(root, selection);
     return {
         configurations: selection.rootIds,
         scopes: scopes.map((scope) => ({
@@ -174,19 +240,6 @@ export function buildProposal(
 export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
     const { root, tooling, everySelected, how, answers, carried, policyLines, profile } = inputs;
     const lintJobs = ciLintJobs(root, tooling.ci);
-    const agentRows =
-        inputs.agents.length > 0
-            ? [
-                  ...inputs.agents.map((path) => ({
-                      path,
-                      note:
-                          path === '.cursor/rules/gspot.mdc'
-                              ? 'owned Cursor rule; authored files preserved'
-                              : 'managed instruction block',
-                  })),
-                  { path: '.gspot/rules/', note: 'agent rule files' },
-              ]
-            : [];
     return {
         ...(profile ? { profile } : {}),
         configurations: everySelected.map((manifest) => ({
@@ -198,48 +251,22 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
             { path: 'gspot.toml', note: `your policy, ${String(policyLines)} lines` },
             { path: '.gspot/', note: 'generated configuration and version pin' },
             ...pointerRows(everySelected),
-            ...agentRows,
-            ...(answers.ci === 'none'
-                ? []
-                : [
-                      {
-                          path: answers.ci === 'github' ? '.github/workflows/gspot.yml' : '.gitlab/ci/gspot.yml',
-                          note:
-                              answers.ci === 'github'
-                                  ? 'check workflow'
-                                  : 'add include: [{ local: .gitlab/ci/gspot.yml }] to .gitlab-ci.yml',
-                      },
-                  ]),
+            ...agentRows(inputs.agents),
+            ...ciRows(answers.ci),
         ],
         remove: carried.removed,
         unread: carried.unread,
         retained: [
             ...carried.retained,
             ...submodulePaths(root).map((path) => ({ path, note: 'submodule; contents are not read' })),
-            ...(answers.ci === 'none' && tooling.ci.length > 0 && lintJobs.length === 0
-                ? tooling.ci.map((path) => ({
-                      path,
-                      note: 'CI retained; add commands to install the pinned gspot version, gspot install, and gspot check',
-                  }))
-                : []),
-            ...lintJobs.map((path) => ({
-                path,
-                note: 'existing lint job retained; no duplicate CI job proposed',
-            })),
+            ...retainedCiRows(answers.ci, tooling.ci, lintJobs),
         ],
         carried: carriedRows(carried),
         change: [
             { path: '.gitignore', note: 'one managed block' },
             { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
             ...runnerRows(root, answers, everySelected, inputs.runnerTasks),
-            ...(answers.hooks === 'gspot'
-                ? [
-                      {
-                          path: 'Git-resolved hooks directory',
-                          note: 'gspot install creates dispatchers; existing executables are retained as .gspot-original siblings; tracked hooks require hook-manager integration',
-                      },
-                  ]
-                : []),
+            ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),
         ignores: [...carried.tools.values()].flatMap((tool) => tool.ignores),
