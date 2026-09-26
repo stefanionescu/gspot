@@ -2,8 +2,6 @@ import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Policy, Reasoned, ToolTable } from '#cli/policy/normalize.ts';
-import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { EditorconfigAdoption, EslintAdoption } from '#cli/policy/schema.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -68,44 +66,32 @@ function limitProblems(policy: Policy): PolicyProblem[] {
     return problems;
 }
 
+// The command that records a reason for one naming entry.
+function namingCommand(table: string, entry: Record<string, string>): string {
+    return `gspot set naming.${table} ${quoteArgument(JSON.stringify(entry))} --reason "..."`;
+}
+
 function namingProblems(policy: Policy): PolicyProblem[] {
-    const explanation = (where: string, reason: string | undefined, command: string): string | undefined =>
-        policy.requireReasons ? needReason(where, reason, command) : undefined;
-    const problems = policy.naming.allowed.flatMap((entry, index) =>
-        located(
-            ['naming', 'allowed', index, 'reason'],
-            explanation(
-                `naming.allowed ${entry.name}`,
-                entry.reason,
-                `gspot set naming.allowed ${quoteArgument(JSON.stringify({ name: entry.name }))} --reason "..."`,
-            ),
-        ),
-    );
-    for (const [index, entry] of policy.naming.remove_groups.entries())
-        problems.push(
-            ...located(
-                ['naming', 'remove_groups', index, 'reason'],
-                explanation(
-                    `naming.remove_groups ${entry.group}`,
-                    entry.reason,
-                    `gspot set naming.remove_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
-                ),
-            ),
+    if (!policy.requireReasons) return [];
+    const allowed = policy.naming.allowed.flatMap((entry, index) => {
+        const message = needReason(
+            `naming.allowed ${entry.name}`,
+            entry.reason,
+            namingCommand('allowed', { name: entry.name }),
         );
-    for (const [index, rule] of policy.naming.rules.entries()) {
-        if (rule.exclude === true)
-            problems.push(
-                ...located(
-                    ['naming', 'rules', index, 'reason'],
-                    explanation(
-                        `[[naming.rules]] excluding ${(rule.names ?? []).join(', ')}`,
-                        rule.reason,
-                        'add reason = "..."',
-                    ),
-                ),
-            );
-    }
-    return problems;
+        return located(['naming', 'allowed', index, 'reason'], message);
+    });
+    const removed = policy.naming.remove_groups.flatMap((entry, index) => {
+        const where = `naming.remove_groups ${entry.group}`;
+        const message = needReason(where, entry.reason, namingCommand('remove_groups', { group: entry.group }));
+        return located(['naming', 'remove_groups', index, 'reason'], message);
+    });
+    const excluded = policy.naming.rules.flatMap((rule, index) => {
+        if (rule.exclude !== true) return [];
+        const where = `[[naming.rules]] excluding ${(rule.names ?? []).join(', ')}`;
+        return located(['naming', 'rules', index, 'reason'], needReason(where, rule.reason, 'add reason = "..."'));
+    });
+    return [...allowed, ...removed, ...excluded];
 }
 
 function isOff(option: unknown): boolean {
@@ -135,19 +121,20 @@ function toolProblems(tool: string, table: ToolTable, requireReasons: boolean, p
     ];
 }
 
+// The problem of a check entry that selects no paths.
 function checkProblems(policy: Policy): PolicyProblem[] {
-    const problems: PolicyProblem[] = [];
-    for (const [index, entry] of policy.checks.entries()) {
-        if (entry.paths.length === 0)
-            problems.push({
-                path: ['check', index, 'paths'],
-                message: messages.checkEntryIncomplete(entry.name, 'paths'),
-            });
-    }
-    return problems;
+    return policy.checks.flatMap((entry, index) => {
+        if (entry.paths.length > 0) return [];
+        return [{ path: ['check', index, 'paths'], message: messages.checkEntryIncomplete(entry.name, 'paths') }];
+    });
 }
 
-function policyLayers(policy: Policy): { scope: Partial<Policy>; path: PathSegment[] }[] {
+/**
+ * The root policy and each scope table, with where each one sits in the document.
+ * @param policy the normalized policy
+ * @returns the layers, root first
+ */
+export function policyLayers(policy: Policy): { scope: Partial<Policy>; path: PathSegment[] }[] {
     return [
         { scope: policy, path: [] },
         ...policy.scopes.flatMap((scope, index) => {
@@ -176,114 +163,6 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
         ...tools,
         ...checkProblems(policy),
     ];
-}
-
-/**
- * Validate scope directories and repository-owned ESLint selector and executable paths.
- * @param root the repository root
- * @param policy the normalized policy
- * @returns the problems in plain English
- */
-export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
-    const paths = policy.scopes.map((scope) => scope.path);
-    const files = openConfinedRoot(root);
-    const missing: PolicyProblem[] = [];
-    for (const [index, path] of paths.entries()) {
-        const location: PathSegment[] = ['scope', index, 'path'];
-        try {
-            if (files.stat(path)?.isDirectory() !== true)
-                missing.push({ path: location, message: messages.scopeMissing(path) });
-        } catch (error) {
-            missing.push({ path: location, message: String(error) });
-        }
-    }
-    const seen = new Set<string>();
-    const duplicates: PolicyProblem[] = [];
-    for (const [index, path] of paths.entries()) {
-        const key = path.normalize('NFC').toLowerCase();
-        if (seen.has(key))
-            duplicates.push({
-                path: ['scope', index, 'path'],
-                message: `Scope path is declared more than once: ${path}.`,
-            });
-        seen.add(key);
-    }
-    const configuration: PolicyProblem[] = [];
-    for (const { scope, path } of policyLayers(policy)) {
-        const editorconfig = scope.tools?.['editorconfig']?.['adopted'] as EditorconfigAdoption | undefined;
-        for (const [index, directory] of (editorconfig?.directories ?? []).entries()) {
-            const location = [...path, 'tools', 'editorconfig', 'adopted', 'directories', index, 'basePath'];
-            try {
-                mutationPath(directory.basePath);
-                const observed = files.stat(directory.basePath);
-                if (observed !== undefined && !observed.isDirectory())
-                    configuration.push({
-                        path: location,
-                        message: `EditorConfig basePath is not a directory: ${directory.basePath}`,
-                    });
-            } catch (error) {
-                configuration.push({ path: location, message: String(error) });
-            }
-        }
-        const adopted = (scope.tools?.['eslint']?.['adopted'] ?? []) as EslintAdoption[];
-        for (const [index, entry] of adopted.entries()) {
-            const location = [...path, 'tools', 'eslint', 'adopted', index];
-            let sourcePath = location;
-            try {
-                const bases = [
-                    { value: entry.basePath, path: ['basePath'] },
-                    { value: entry.legacyCriteria?.basePath, path: ['legacyCriteria', 'basePath'] },
-                    { value: entry.legacyScope?.basePath, path: ['legacyScope', 'basePath'] },
-                    ...(entry.legacyIgnores ?? []).flatMap((ignore, index) => [
-                        { value: ignore.basePath, path: ['legacyIgnores', index, 'basePath'] },
-                        { value: ignore.criteria?.basePath, path: ['legacyIgnores', index, 'criteria', 'basePath'] },
-                    ]),
-                ];
-                for (const { value: base, path: relativePath } of bases) {
-                    if (base === undefined || base === '.') continue;
-                    sourcePath = [...location, ...relativePath];
-                    mutationPath(base);
-                    const directory = files.stat(base);
-                    if (directory !== undefined && !directory.isDirectory())
-                        configuration.push({
-                            path: sourcePath,
-                            message: `ESLint basePath is not a directory: ${base}`,
-                        });
-                }
-                const references = [
-                    ...Object.entries(entry.plugins ?? {}).map(([name, reference]) => ({
-                        reference,
-                        path: ['plugins', name, 'module'],
-                    })),
-                    ...(entry.languageOptions?.parser === undefined
-                        ? []
-                        : [{ reference: entry.languageOptions.parser, path: ['languageOptions', 'parser', 'module'] }]),
-                    ...(typeof entry.processor === 'object'
-                        ? [{ reference: entry.processor, path: ['processor', 'module'] }]
-                        : []),
-                ];
-                for (const { reference, path: relativePath } of references) {
-                    sourcePath = [...location, ...relativePath];
-                    if (reference.module.startsWith('./')) {
-                        if (files.read(reference.module.slice(2)) === undefined)
-                            configuration.push({
-                                path: sourcePath,
-                                message: `ESLint executable module is missing: ${reference.module}`,
-                            });
-                    } else if (/^(?:\.|\/|\\|[A-Za-z]:)/u.test(reference.module)) {
-                        configuration.push({
-                            path: sourcePath,
-                            message: `ESLint executable module must belong to the repository: ${reference.module}`,
-                        });
-                    }
-                }
-            } catch (error) {
-                configuration.push({ path: sourcePath, message: String(error) });
-            }
-        }
-    }
-    files.close();
-    return [...missing, ...duplicates, ...configuration];
 }
 
 /** An authored policy value and the semantic problem it caused. */

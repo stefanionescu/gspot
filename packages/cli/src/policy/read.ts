@@ -6,9 +6,10 @@ import { policySchema } from '#cli/policy/schema.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
+import { reasonProblems } from '#cli/policy/problems.ts';
 import { parse as parseToml, TomlError } from 'smol-toml';
+import { pathProblems } from '#cli/policy/path-problems.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { pathProblems, reasonProblems } from '#cli/policy/problems.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
@@ -87,16 +88,26 @@ function byRemovalOrder(left: PathSegment[], right: PathSegment[]): number {
     return typeof last === 'number' && typeof other === 'number' ? other - last : 0;
 }
 
-function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
+// The table or array that holds the value at a path, or undefined when the path leaves the document.
+function containerOf(raw: RawPolicy, path: PathSegment[]): object | undefined {
     let container: unknown = raw;
-    for (const segment of owner.slice(0, -1)) {
-        if (typeof container !== 'object' || container === null) return;
+    for (const segment of path) {
+        if (typeof container !== 'object' || container === null) return undefined;
         container = (container as Record<PathSegment, unknown>)[segment];
     }
+    return typeof container === 'object' && container !== null ? container : undefined;
+}
+
+// Removes the value an owner path names: an array entry by index, or a table field by key.
+function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
+    const container = containerOf(raw, owner.slice(0, -1));
     const last = owner.at(-1);
-    if (Array.isArray(container) && typeof last === 'number') container.splice(last, 1);
-    else if (typeof container === 'object' && container !== null && typeof last === 'string')
-        Reflect.deleteProperty(container, last);
+    if (container === undefined || last === undefined) return;
+    if (Array.isArray(container)) {
+        if (typeof last === 'number') container.splice(last, 1);
+        return;
+    }
+    if (typeof last === 'string') Reflect.deleteProperty(container, last);
 }
 
 /**
