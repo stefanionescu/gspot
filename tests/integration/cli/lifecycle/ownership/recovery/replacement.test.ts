@@ -28,12 +28,13 @@ const point = ${JSON.stringify(point)};
 let failed = false;
 mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
     if (String(to).endsWith('config.txt')) {
+        if (point === 'restoration error' && failed) throw new Error('Restoration failed');
         if (exists(to) && (stat(to).mode & 0o200) === 0)
             throw Object.assign(new Error('Read-only destination'), {code: 'EPERM'});
         if (read(from).equals(Buffer.from('installed\n'))) {
             if (point === 'interruption' || point === 'damaged backup') process.exit(73);
             if (point === 'edited') { write(to, 'developer edit\n'); process.exit(73); }
-            if (point === 'error' && !failed) { failed = true; throw new Error('Publication failed'); }
+            if ((point === 'error' || point === 'restoration error') && !failed) { failed = true; throw new Error('Publication failed'); }
         }
     }
     rename(from, to);
@@ -45,7 +46,9 @@ try {
     owner.replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 0o444}, 'config', true);
     if (point !== 'success') throw new Error('Expected publication failure');
 } catch (error) {
-    if (point !== 'error' || error.message !== 'Publication failed') throw error;
+    if (point === 'restoration error') {
+        if (!(error instanceof AggregateError) || error.errors.map(entry => entry.message).join(',') !== 'Publication failed,Restoration failed') throw error;
+    } else if (point !== 'error' || error.message !== 'Publication failed') throw error;
 } finally { owner.close(); }
 `;
     const child = Bun.spawnSync([process.execPath, '-e', program], {
@@ -54,8 +57,12 @@ try {
         stderr: 'pipe',
     });
     expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
-        point === 'success' || point === 'error' ? 0 : 73,
+        point === 'success' || point === 'error' || point === 'restoration error' ? 0 : 73,
     );
+    if (point === 'error') {
+        expect(readFileSync(destination)).toStrictEqual(original);
+        expect(statSync(destination).mode & 0o777).toBe(0o444);
+    }
     const state = ownershipSchema.parse(
         JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
     );
@@ -100,6 +107,18 @@ test.each(['error', 'interruption'] as const)(
         }
     },
 );
+
+test('failed immediate restoration preserves both errors and leaves journal recovery available', async () => {
+    const published = await publish('restoration error');
+    await using directory = published.directory;
+    expect(() => readFileSync(published.destination)).toThrow();
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
+    } finally {
+        owner.close();
+    }
+});
 
 test('a damaged backup refuses recovery until the backup is put back', async () => {
     const published = await publish('damaged backup');

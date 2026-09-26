@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { CODE_FILE, DEFAULT_TEST } from '#plugin/constants/rules.ts';
+import { CODE_EXTENSION, DEFAULT_TEST } from '#plugin/constants/rules.ts';
 import type { TestsDirectoryContentsOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
@@ -43,7 +43,7 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         const harness = options.harnessDirectory ?? 'tests/support';
         if (
             relative.startsWith(`${harness}/`) ||
-            !(!test.test(name) && !name.endsWith('.d.ts') && CODE_FILE.test(name)) ||
+            !(!test.test(name) && !name.endsWith('.d.ts') && CODE_EXTENSION.test(name)) ||
             !(
                 isAnyGlobMatch(relative, options.testDirectories ?? []) &&
                 !isAnyGlobMatch(relative, options.excluded ?? [])

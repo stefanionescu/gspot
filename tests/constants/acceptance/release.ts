@@ -3,10 +3,12 @@
 export const CONSUMER = String.raw`
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import { writeFileSync } from 'node:fs';
 import { ESLint } from 'eslint';
 import plugin from '@gspot/eslint-plugin';
 const require = createRequire(import.meta.url);
 const commonjs = require('@gspot/eslint-plugin');
+writeFileSync('exports.ts', 'export const first = 1, second = 2; export const {nested: [deep]} = value;');
 for (const published of [plugin, commonjs.default ?? commonjs]) {
     for (const level of ['recommended', 'all']) {
         const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: [published.configs[level]] });
@@ -28,6 +30,13 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
         assert.deepEqual(forwarding[0].messages.map(({ ruleId }) => ruleId).sort(), ['gspot/no-trivial-files', 'gspot/no-trivial-functions']);
         assert.equal(forwarding[0].messages.find(({ ruleId }) => ruleId === 'gspot/no-trivial-functions').message, 'This function has 1 executable statements, at most 2. Inline it or explain its required API with a narrow suppression.');
     }
+    const barrel = new ESLint({ overrideConfigFile: true, overrideConfig: [{
+        plugins: { gspot: published }, rules: { 'gspot/no-duplicate-barrel-exports': 'error' },
+    }] });
+    const duplicate = await barrel.lintText("export * from './exports'; export { second, deep } from './exports';", { filePath: 'index.js' });
+    assert.deepEqual(duplicate[0].messages.map(({messageId}) => messageId), ['duplicate', 'duplicate']);
+    const distinct = await barrel.lintText("export * from './exports'; export const other = 3;", { filePath: 'index.js' });
+    assert.deepEqual(distinct[0].messages, []);
     const server = new ESLint({ overrideConfigFile: true, overrideConfig: [{
         files: ['**/server.js'], plugins: { gspot: published }, rules: { 'gspot/require-server-only': 'error' },
     }] });

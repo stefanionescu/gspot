@@ -57,14 +57,21 @@ function mustUnlinkFirst(expected: FileSnapshot | undefined): boolean {
 }
 
 // Moves the staged entry over the destination, after checking that the destination is still as expected.
-function commitStaged(staging: Staging, expected: FileSnapshot | undefined): boolean {
+function commitStaged(staging: Staging, expected: FileSnapshot | undefined): void {
     const { confinement, path, target, temporary } = staging;
     if (!sameSnapshot(readEntry(confinement, path, expected?.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during the operation: ${path}`);
-    const removed = mustUnlinkFirst(expected);
-    if (removed) unlinkSync(target);
-    renameSync(temporary, target);
-    return removed;
+    let removed = false;
+    try {
+        if (mustUnlinkFirst(expected)) {
+            unlinkSync(target);
+            removed = true;
+        }
+        renameSync(temporary, target);
+    } catch (error) {
+        if (removed && expected !== undefined) restoreRemoved(confinement, path, expected, error);
+        throw error;
+    }
 }
 
 // Puts the expected file back after a replacement that removed it failed.
@@ -139,15 +146,11 @@ export function writeSnapshot(
         temporary: join(dirname(target), `.gspot-${randomUUID()}.tmp`),
     };
     let staged = false;
-    let removed = false;
     try {
         stage(staging, value, link);
         staged = true;
-        removed = commitStaged(staging, expected);
+        commitStaged(staging, expected);
         staged = false;
-    } catch (error) {
-        if (removed && expected !== undefined) restoreRemoved(confinement, path, expected, error);
-        throw error;
     } finally {
         if (staged) unlinkSync(staging.temporary);
     }

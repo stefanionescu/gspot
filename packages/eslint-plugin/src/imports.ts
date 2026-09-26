@@ -6,7 +6,8 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 function aliasTarget(source: string, prefix: string, target: string): string | undefined {
     const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
     const bare = clean.endsWith('/') ? clean.slice(0, -1) : clean;
-    if (source !== bare && !source.startsWith(clean)) return undefined;
+    const matches = prefix.endsWith('*') ? source.startsWith(clean) : source === bare || source.startsWith(`${bare}/`);
+    if (!matches) return undefined;
     const rest = source.slice(clean.length);
     const base = target.endsWith('*') ? target.slice(0, -1) : target;
     return posix.join(base, rest);
@@ -39,7 +40,12 @@ export function importFile(
         const joined = posix.join(posix.dirname(importer), source);
         return normalizePath(posix.normalize(joined));
     }
-    for (const [prefix, target] of Object.entries(aliases)) {
+    const candidates = Object.entries(aliases).toSorted(
+        ([left], [right]) =>
+            right.replace(/\*$/u, '').length - left.replace(/\*$/u, '').length ||
+            Number(left.endsWith('*')) - Number(right.endsWith('*')),
+    );
+    for (const [prefix, target] of candidates) {
         const aliased = aliasTarget(source, prefix, target);
         if (aliased !== undefined) return normalizePath(posix.normalize(posix.join(root, aliased)));
     }

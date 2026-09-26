@@ -13,37 +13,28 @@ import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
 
-import {
-    CHANGE_SECTIONS,
-    DOCTOR_LABEL_WIDTH,
-    NAME_WIDTH,
-    NOTE_WIDTH,
-    PARTIAL_SHOWN,
-    PATHS_SHOWN,
-    PATH_WIDTH,
-    VERSION_GAP,
-} from '#cli/constants/commands/doctor.ts';
+import { CHANGE_SECTIONS, COLUMN_WIDTHS, DISPLAY_LIMITS, VERSION_GAP } from '#cli/constants/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;
     switch (tool.state) {
         case 'ok': {
-            return green('ok');
+            return green('ok'.padEnd(COLUMN_WIDTHS.label));
         }
         case 'error': {
-            return red('error');
+            return red('error'.padEnd(COLUMN_WIDTHS.label));
         }
         case 'missing': {
-            return red('missing');
+            return red('missing'.padEnd(COLUMN_WIDTHS.label));
         }
         case 'outdated': {
-            return red('outdated');
+            return red('outdated'.padEnd(COLUMN_WIDTHS.label));
         }
         case 'newer': {
-            return red('newer');
+            return red('newer'.padEnd(COLUMN_WIDTHS.label));
         }
         case 'host': {
-            return dim('host');
+            return dim('host'.padEnd(COLUMN_WIDTHS.label));
         }
     }
 }
@@ -57,13 +48,13 @@ function versionText(tool: ToolInspection): string {
 }
 
 function toolLines(tools: ToolInspection[], colors: Colors): string[] {
-    const width = Math.max(...tools.map((tool) => `${tool.name} ${tool.want ?? ''}`.length)) + VERSION_GAP;
+    const width = Math.max(...tools.map((tool) => versionText(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = tool.state !== 'ok' && tool.state !== 'host';
         const tail = isBroken
             ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ')
             : (tool.path ?? '');
-        const label = stateLabel(tool, colors).padEnd(DOCTOR_LABEL_WIDTH);
+        const label = stateLabel(tool, colors);
         return `  ${label} ${versionText(tool).padEnd(width)} ${tail}`.trimEnd();
     });
 }
@@ -75,11 +66,11 @@ function uncheckedLines(report: DoctorReport): string[] {
     for (const entry of unchecked) byReason.set(entry.reason, [...(byReason.get(entry.reason) ?? []), entry.path]);
     const lines = [`unchecked files          ${String(unchecked.length)}`];
     for (const [reason, paths] of byReason) {
-        const more = paths.length > PATHS_SHOWN ? ' ...' : '';
-        const shown = paths.slice(0, PATHS_SHOWN).join(' ') + more;
+        const more = paths.length > DISPLAY_LIMITS.paths ? ' ...' : '';
+        const shown = paths.slice(0, DISPLAY_LIMITS.paths).join(' ') + more;
         const remedy = unchecked.find((entry) => entry.reason === reason)?.remedy;
         const hint = remedy === undefined ? '' : ` (${remedy})`;
-        lines.push(`  ${shown.padEnd(PATH_WIDTH)} ${reason}${hint}`);
+        lines.push(`  ${shown.padEnd(COLUMN_WIDTHS.path)} ${reason}${hint}`);
     }
     return [...lines, ''];
 }
@@ -88,13 +79,13 @@ function partialLines(report: DoctorReport): string[] {
     const { partial } = report.coverage;
     if (partial.length === 0) return [];
     const lines = partial
-        .slice(0, PARTIAL_SHOWN)
-        .map((entry) => `  ${entry.path.padEnd(PATH_WIDTH)} no check for: ${entry.missing.join(', ')}`);
+        .slice(0, DISPLAY_LIMITS.partial)
+        .map((entry) => `  ${entry.path.padEnd(COLUMN_WIDTHS.path)} no check for: ${entry.missing.join(', ')}`);
     return [`partly checked files     ${String(partial.length)}`, ...lines, ''];
 }
 
 function changeRow(first: string, second: string, command: string): string {
-    return `  ${first.padEnd(NAME_WIDTH)} ${second.padEnd(NOTE_WIDTH)} ${command}`;
+    return `  ${first.padEnd(COLUMN_WIDTHS.name)} ${second.padEnd(COLUMN_WIDTHS.note)} ${command}`;
 }
 
 function sectionLines(title: string, rows: string[]): string[] {
@@ -115,8 +106,8 @@ function changeLines(changes: ChangeReport): string[] {
         ),
     );
     const pinned = changes.pinnedTwice.map((entry) => {
-        const name = `${entry.tool} ${entry.version}`.padEnd(NAME_WIDTH);
-        return `  ${name} ${entry.places.join(' and ').padEnd(PATH_WIDTH)} ${entry.command}`;
+        const name = `${entry.tool} ${entry.version}`.padEnd(COLUMN_WIDTHS.name);
+        return `  ${name} ${entry.places.join(' and ').padEnd(COLUMN_WIDTHS.path)} ${entry.command}`;
     });
     return [...sections.flat(), ...sectionLines('pinned twice', pinned)];
 }

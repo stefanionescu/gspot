@@ -1,17 +1,18 @@
 import { posix } from 'node:path';
 import { importFile } from '#plugin/imports.ts';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
+import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 
+import { CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import {
-    CODE_EXTENSION,
     CONFIG_ROLES,
     DEFAULT_CONTRACTS,
     DEFAULT_ROLES,
     ROLE_ORDER,
     TEST_ROLES,
-} from '#plugin/constants/rules.ts';
+} from '#plugin/constants/import-direction.ts';
 import type {
     ImportDirectionMessages,
     ImportDirectionOptions,
@@ -113,23 +114,41 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         if (role === 'other') return {};
         const contracts = options.contracts ?? DEFAULT_CONTRACTS;
         const rootOfScope = scope === '' ? root : `${root}/${scope}`;
-        const check = (node: ImportNode): void => {
-            const source = staticString(node.source);
+        const check = (node: TSESTree.Node, sourceNode: TSESTree.Node | null | undefined, typeOnly = false): void => {
+            const source = sourceNode === null || sourceNode === undefined ? undefined : staticString(sourceNode);
             const resolved =
                 source === undefined ? undefined : importFile(file, source, rootOfScope, options.aliases ?? {});
             if (source === undefined || resolved === undefined) return;
             const target = relativeOf(resolved);
             const found = verdict(
-                { role, targetRole: roleOf(target, roles), source, target, isTypeOnly: isTypeOnly(node) },
+                { role, targetRole: roleOf(target, roles), source, target, isTypeOnly: typeOnly },
                 contracts,
             );
             if (found) context.report({ node, messageId: found.messageId, data: found.data });
         };
         return {
-            ImportDeclaration: check,
-            ExportAllDeclaration: check,
+            ImportDeclaration(node) {
+                check(node, node.source, isTypeOnly(node));
+            },
+            ExportAllDeclaration(node) {
+                check(node, node.source, isTypeOnly(node));
+            },
+            ImportExpression(node) {
+                check(node, node.source);
+            },
+            CallExpression(node) {
+                if (
+                    node.callee.type !== AST_NODE_TYPES.Identifier ||
+                    node.callee.name !== 'require' ||
+                    node.arguments.length !== 1
+                )
+                    return;
+                const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), 'require');
+                if (variable !== null && variable.defs.length > 0) return;
+                check(node, node.arguments[0]);
+            },
             ExportNamedDeclaration(node) {
-                if (node.source) check(node);
+                if (node.source) check(node, node.source, isTypeOnly(node));
             },
         };
     },

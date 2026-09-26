@@ -5,6 +5,24 @@ const aliases = { '@/': 'src/', '@tests/': 'tests/', '@config/': 'config/', '@ap
 
 tester().run('import-direction', importDirection, {
     valid: [
+        {
+            code: "import '#lib'; import '#lib/a';",
+            filename: '/repo/config/a.ts',
+            options: [{ aliases: { '#lib*': 'src/', '#lib': 'types/' } }],
+        },
+        {
+            code: "function load(require) { return require('@/app/create'); }",
+            filename: '/repo/config/a.ts',
+            options: [{ aliases }],
+        },
+        { code: "import('#library/a');", filename: '/repo/config/a.ts', options: [{ aliases: { '#lib': 'src' } }] },
+        { code: 'require(name); import(name);', filename: '/repo/config/a.ts', options: [{ aliases }] },
+        {
+            code: "import '#lib/types/a';",
+            filename: '/repo/config/a.ts',
+            options: [{ aliases: { '#lib': 'src', '#lib/types': 'types' } }],
+        },
+        { code: "import '#library/a';", filename: '/repo/config/a.ts', options: [{ aliases: { '#lib/*': 'src/*' } }] },
         { code: "import type { A } from './a';", filename: '/repo/types/b.ts', options: [{ aliases }] },
         { code: "import { type A } from '@/turn/build';", filename: '/repo/types/b.ts', options: [{ aliases }] },
         { code: "import { a } from '@/turn/build';", filename: '/repo/src/other.ts', options: [{ aliases }] },
@@ -24,6 +42,30 @@ tester().run('import-direction', importDirection, {
         },
     ],
     invalid: [
+        ...["import('@/app/create');", "require('@/app/create');"].map((code) => ({
+            code,
+            filename: '/repo/config/a.ts',
+            options: [{ aliases }] as const,
+            errors: [{ messageId: 'configToRuntime' as const }],
+        })),
+        ...['#lib/a', '#lib', '#library/a'].map((source) => ({
+            code: `import '${source}';`,
+            filename: '/repo/config/a.ts',
+            options: [{ aliases: { '#lib*': 'src/*' } }] as const,
+            errors: [{ messageId: 'configToRuntime' as const }],
+        })),
+        {
+            code: "import('#lib/a');",
+            filename: '/repo/config/a.ts',
+            options: [{ aliases: { '#lib': 'src' } }],
+            errors: [{ messageId: 'configToRuntime' }],
+        },
+        {
+            code: "require('@tests/harness/helper');",
+            filename: '/repo/src/a.ts',
+            options: [{ aliases }] as const,
+            errors: [{ messageId: 'runtimeToTests' }],
+        },
         {
             code: "import { a } from '@/turn/build';",
             filename: '/repo/types/b.ts',

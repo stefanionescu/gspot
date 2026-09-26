@@ -53,7 +53,6 @@ describe('the installed ESLint plugin', () => {
                         'install',
                         `@gspot/eslint-plugin@${pluginPackage.version}`,
                         `eslint@${pluginPackage.devDependencies.eslint}`,
-                        `typescript@${pluginPackage.devDependencies.typescript}`,
                         '--ignore-scripts',
                         '--no-audit',
                         '--no-fund',

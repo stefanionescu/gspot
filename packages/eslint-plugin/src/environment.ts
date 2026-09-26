@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ENVIRONMENT_HOSTS } from '#plugin/constants/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
@@ -23,11 +23,6 @@ export function isGlobalEnvironmentHost(
     node: TSESTree.Node,
 ): boolean {
     if (node.type !== AST_NODE_TYPES.Identifier || !ENVIRONMENT_HOSTS.has(node.name)) return false;
-    let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
-    while (scope !== null) {
-        const variable = scope.set.get(node.name);
-        if (variable !== undefined) return variable.defs.length === 0;
-        scope = scope.upper;
-    }
-    return true;
+    const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), node.name);
+    return variable === null || variable.defs.length === 0;
 }
