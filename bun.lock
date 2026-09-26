@@ -91,7 +91,6 @@
         "execa": "9.6.1",
         "htmlparser2": "10.1.0",
         "starlight-llms-txt": "0.11.0",
-        "yaml": "2.9.0",
         "zod": "4.6.2",
       },
     },
