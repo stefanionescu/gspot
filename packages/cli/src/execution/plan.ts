@@ -1,17 +1,17 @@
+// The check graph for a run: stage, scope, file sets, requirements, skips.
 import { toolPin } from '#cli/tools/probe.ts';
 import type { Session } from '#cli/execution/session.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-// The check graph for a run: stage, scope, file sets, requirements, skips.
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
-import { configurationName } from '#cli/configurations/targets.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
 import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { checkState, repositoryCheckSpec, waitingSetting } from '#cli/policy/check-state.ts';
+import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
+import { restrictIgnoredPaths, skipFor } from '#cli/execution/plan-skips.ts';
+import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/plan-files.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 
@@ -22,36 +22,12 @@ function isStageWanted(filter: StageFilter, stage: Stage): boolean {
     return filter === stage;
 }
 
-function childScopes(session: Session, scope: ScopeSelection): string[] {
-    const own = scope.scope.path;
-    return session.scopes
-        .map((entry) => entry.scope.path)
-        .filter((path) => path !== '' && path !== own && (own === '' || path.startsWith(`${own}/`)));
-}
-
-function isOutsideChildren(file: TrackedFile, children: string[]): boolean {
-    return children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`));
-}
-
 function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Session): ToolPin | undefined {
     const name = spec.tool ?? spec.command?.[0];
     if (name === undefined) return undefined;
     const own = manifest?.tools.find((tool) => tool.name === name);
     if (own) return own;
     return toolPin(session.manifests.values(), name);
-}
-
-// A policy check that reads a scoped configuration must run against that scope's file partition.
-function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope')
-        return false;
-    const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
-    return !manifest.configs.some(
-        (config) =>
-            config.per_scope &&
-            !config.fragment &&
-            command.some((part) => part.includes(`{config:${configurationName(config.target)}}`)),
-    );
 }
 
 function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanEntry[] {
@@ -62,6 +38,27 @@ function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanE
     return fresh.map((spec) => ({ spec, manifest }));
 }
 
+// The checks a manifest references from another configuration.
+function referencedChecks(manifest: Manifest): PlanEntry[] {
+    const references = manifest.configuration.check_references ?? [];
+    return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
+}
+
+// The checks any scope references from another configuration, once each, unless the root already plans them.
+function referencedEntries(session: Session, planned: PlanEntry[]): PlanEntry[] {
+    const seen = new Set(planned.map((entry) => entry.spec.name));
+    const referenced: PlanEntry[] = [];
+    const candidates = session.scopes.flatMap((selected) =>
+        selected.selected.flatMap((manifest) => referencedChecks(manifest)),
+    );
+    for (const entry of candidates) {
+        if (seen.has(entry.spec.name)) continue;
+        seen.add(entry.spec.name);
+        referenced.push(entry);
+    }
+    return referenced;
+}
+
 function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set<string>): PlanEntry[] {
     const isRoot = scope.scope.path === '';
     const entries = scope.selected.flatMap((manifest) =>
@@ -69,17 +66,10 @@ function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set
             (entry) => isRoot || !isRepositoryPolicy(manifest, entry.spec),
         ),
     );
-    if (isRoot)
-        for (const selected of session.scopes)
-            for (const manifest of selected.selected)
-                for (const spec of manifest.checks)
-                    if (
-                        manifest.configuration.check_references?.includes(spec.name) === true &&
-                        !entries.some((entry) => entry.spec.name === spec.name)
-                    )
-                        entries.push({ spec, manifest });
-    const own = isRoot ? session.policyFiles.policy.checks.map((entry) => ({ spec: repositoryCheckSpec(entry) })) : [];
-    return [...entries, ...own];
+    if (!isRoot) return entries;
+    const referenced = referencedEntries(session, entries);
+    const own = session.policyFiles.policy.checks.map((entry) => ({ spec: repositoryCheckSpec(entry) }));
+    return [...entries, ...referenced, ...own];
 }
 
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
@@ -88,158 +78,31 @@ function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, spec.stage);
 }
 
-function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
-    const prefix = scopeForFiles === '' ? '' : `${scopeForFiles}/`;
-    return context.session.repository.files.filter((file) => file.path.startsWith(prefix));
-}
-
-function claimedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
-    const { session, scope } = context;
-    const { spec, manifest } = entry;
-    if (spec.runs !== 'per-file-list') {
-        const claims = spec.claims;
-        const claimed =
-            claims === undefined
-                ? undefined
-                : claimedByClaims(claims, scope.selected, session.repository.files, scopeForFiles);
-        const owned =
-            spec.runs === 'per-scope' ? claimed?.filter((file) => isOutsideChildren(file, context.children)) : claimed;
-        const hasNothingClaimed = owned?.length === 0;
-        if (hasNothingClaimed) return [];
-        const files = projectFiles(context, scopeForFiles);
-        return spec.runs === 'per-scope'
-            ? files.filter((file) => isOutsideChildren(file, context.children))
-            : files.filter((file) => file.nature !== 'binary');
-    }
-    if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.claims?.paths ?? [])(file.path));
-    if (spec.claims) return claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
-    return claimedByClaims(manifest.claims, scope.selected, session.repository.files, scopeForFiles);
-}
-
-function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSelection): TrackedFile[] {
-    if (spec.exclude_setting === undefined) return files;
-    const excluded = (scope.view.settings[spec.exclude_setting] as { paths: string[] }[] | undefined) ?? [];
-    const patterns = excluded.flatMap((entry) => entry.paths);
-    if (patterns.length === 0) return files;
-    const isExcluded = pathMatcher(patterns);
-    return files.filter((file) => !isExcluded(file.path));
-}
-
-function isPolicyTouched(narrow: Set<string>): boolean {
-    return narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
-}
-
-// The policy changed, so the check runs over everything it claims, with the check's own claims kept.
-function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
-    const { scope, children } = context;
-    const files = claimedFor(context, entry, scope.scope.path);
-    return entry.manifest === undefined ? files : files.filter((file) => isOutsideChildren(file, children));
-}
-
-function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
-    const { narrow } = context;
-    if (!narrow) return files;
-    const inNarrowed = files.filter((file) => narrow.has(file.path));
-    const isTouched = isPolicyTouched(narrow);
-    if (entry.spec.runs !== 'per-file-list') return !isTouched && inNarrowed.length === 0 ? [] : files;
-    if (!isTouched || !entry.manifest || inNarrowed.length > 0) return inNarrowed;
-    return reclaimed(context, entry);
-}
-
-function filesFor(
-    context: PlanContext,
-    entry: PlanEntry,
-    isWholeCheck: boolean,
-): Pick<PlannedCheck, 'files' | 'triggerPaths'> {
-    const { scope, children } = context;
-    const { spec, manifest } = entry;
-    const scopePath = isWholeCheck ? '' : scope.scope.path;
-    const triggerPaths = missingTriggers(context, spec, scopePath);
-    const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
-    let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
-    if (!isWhole && manifest !== undefined) files = files.filter((file) => isOutsideChildren(file, children));
-    const selected = withoutExcluded(files, spec, scope);
-    return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
-}
-
-function platformSkipFor(spec: CheckSpec, tool: ToolPin | undefined, platform: string): PlannedCheck['skip'] {
-    if (spec.platform && !(spec.platform as readonly string[]).includes(platform))
-        return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${platform}` };
-    if (platform === 'windows' && tool && !tool.windows)
-        return { source: 'platform', note: `${tool.name} has no Windows build` };
-    return undefined;
-}
-
-function skipFor(check: PlannedCheck, options: PlanOptions, platform: string, hasGit: boolean): PlannedCheck['skip'] {
-    const { spec, tool } = check;
-    const ignored = check.scope.view
-        .ignoresFor(spec.name)
-        .find((entry) => entry.rule === undefined && (entry.paths === undefined || entry.paths.length === 0));
-    if (ignored !== undefined) {
-        const reason = ignored.reason === undefined ? '' : `: ${ignored.reason}`;
-        return { source: 'ignore', note: `disabled by gspot.toml${reason}` };
-    }
-    const waiting = waitingFor(check);
-    if (waiting) return waiting;
-    if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
-    if (spec.needs !== undefined && !check.scope.view.configurations.includes(spec.needs))
-        return { source: 'rules', note: `needs the ${spec.needs} configuration, which this scope does not select` };
-    if (spec.needs_git === true && !hasGit)
-        return { source: 'rules', note: 'this folder is no git repository, so the check has nothing to read' };
-    if (spec.needs_git === false && hasGit)
-        return { source: 'rules', note: 'this folder is a git repository, so the git check covers it' };
-    const platformSkip = platformSkipFor(spec, tool, platform);
-    if (platformSkip !== undefined) return platformSkip;
-    if (options.skips.includes(spec.name)) return { source: 'flag', note: 'skipped by --skip' };
-    return undefined;
-}
-
-function waitingFor(check: PlannedCheck): PlannedCheck['skip'] {
-    const setting = waitingSetting(check.scope, check.spec);
-    return setting === undefined ? undefined : { source: 'rules', note: `set ${setting} to turn this on` };
-}
-
-function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
-    if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
-    const readable = new Set(context.session.repository.files.map((file) => file.path));
-    return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
-}
-
-function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.spec.runs !== 'per-file-list' || check.files.length === 0) return check;
-    const ignored = check.scope.view
-        .ignoresFor(check.check)
-        .flatMap((entry) =>
-            entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0
-                ? [pathMatcher(entry.paths)]
-                : [],
-        );
-    if (ignored.length === 0) return check;
-    const files = check.files.filter((file) => !ignored.some((matches) => matches(file.path)));
-    return files.length === 0
-        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
-        : { ...check, files };
+// The commit range and message file the run supplies, when it has them.
+function runInputs(options: PlanOptions): Pick<PlannedCheck, 'commits' | 'messageFile'> {
+    return {
+        ...(options.commits === undefined ? {} : { commits: options.commits }),
+        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
+    };
 }
 
 function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
     const { session, scope, options, platform } = context;
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
+    const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
     const check: PlannedCheck = {
         check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
         spec,
         ...filesFor(context, entry, isWholeCheck),
         projectWide: spec.runs !== 'per-file-list',
+        ...(manifest === undefined ? {} : { manifest }),
+        ...(tool === undefined ? {} : { tool }),
+        ...runInputs(options),
     };
-    if (manifest) check.manifest = manifest;
-    const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
-    if (tool) check.tool = tool;
-    if (options.commits !== undefined) check.commits = options.commits;
-    if (options.messageFile !== undefined) check.messageFile = options.messageFile;
     const skip = skipFor(check, options, platform, session.repository.hasGit);
-    if (skip) check.skip = skip;
-    return restrictIgnoredPaths(check);
+    return restrictIgnoredPaths(skip === undefined ? check : { ...check, skip });
 }
 
 function narrowSet(options: PlanOptions): Set<string> | undefined {
