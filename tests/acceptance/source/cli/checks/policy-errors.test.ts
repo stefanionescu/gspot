@@ -28,30 +28,47 @@ test.each([
     },
 );
 
-test.each([
-    {
-        name: 'a root loosening',
-        policy: 'version = 1\nconfigurations = ["bash"]\nrequire_reasons = true\n[limits]\nfile_lines = 1000\n',
-        line: 5,
-        before: '1000',
-        after: '200',
-    },
-    {
-        name: 'a nested unknown setting',
-        policy: 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
-        line: 6,
-        before: 'file_linse',
-        after: 'file_lines',
-    },
-])('effective-setting errors locate $name and accept a correction', async ({ policy, line, before, after }) => {
+test('a nested unknown setting is a finding at its line, and its correction clears it', async () => {
+    const policy =
+        'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
-    const invalid = await run(sandbox.path, ['list', '--json']);
-    expect(invalid.code).toBe(2);
-    expect(JSON.parse(invalid.stdout).message).toContain(`gspot.toml:${String(line)}:`);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace(before, after));
-    const corrected = await run(sandbox.path, ['list', '--json']);
+    const invalid = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+    const report = JSON.parse(invalid.stdout) as { checks: { check: string; findings: { line?: number }[] }[] };
+    expect(report.checks.find((check) => check.check === 'integrity/policy')?.findings).toMatchObject([{ line: 8 }]);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('file_linse', 'file_lines'));
+    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+test('a loosening without a reason is a finding of integrity/policy, and the rest of the policy runs', async () => {
+    const policy =
+        'version = 1\nconfigurations = ["bash"]\nrequire_reasons = true\n[rules]\ninstall = false\n[limits]\nfile_lines = 1000\n';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
+    const checked = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = JSON.parse(checked.stdout) as { checks: { check: string; status: string; findings: unknown[] }[] };
+    expect(report.checks).toMatchObject([
+        { check: 'bash/syntax', status: 'ok' },
+        {
+            check: 'integrity/policy',
+            status: 'fail',
+            findings: [{ file: 'gspot.toml', line: 7, message: expect.stringContaining('limits.file_lines') }],
+        },
+    ]);
+    const listed = await run(sandbox.path, ['list', '--json']);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    const applied = await run(sandbox.path, ['apply']);
+    expect(applied.code).toBe(2);
+    expect(applied.stdout + applied.stderr).toContain('gspot.toml:7:');
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('1000', '200'));
+    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as { checks: { check: string }[] }).checks).toMatchObject([
+        { check: 'bash/syntax' },
+    ]);
 });
 
 test.each(['\n', '\r\n'])(

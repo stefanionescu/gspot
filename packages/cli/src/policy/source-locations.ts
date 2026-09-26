@@ -74,10 +74,24 @@ export function sourceLocations(text: string): Map<string, Position> {
  * @param path
  */
 export function policyLocation(locations: Map<string, Position>, path: PathSegment[]): string {
+    const { line, column } = policyPosition(locations, path);
+    return `${String(line)}:${String(column)}`;
+}
+
+/**
+ * The line and one-based column of a value or, for an absent required value, of its nearest authored container.
+ * @param locations the authored locations of a policy text
+ * @param path the policy path
+ * @returns the position
+ */
+export function policyPosition(
+    locations: Map<string, Position>,
+    path: PathSegment[],
+): { line: number; column: number } {
     const remaining = [...path];
     while (true) {
         const position = locations.get(JSON.stringify(remaining));
-        if (position !== undefined) return `${String(position.line)}:${String(position.column + 1)}`;
+        if (position !== undefined) return { line: position.line, column: position.column + 1 };
         remaining.pop();
     }
 }

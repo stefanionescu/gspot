@@ -29,7 +29,7 @@ import { readProfile } from '#cli/policy/profiles/read.ts';
 import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { ciSchema } from '#cli/policy/schema.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
+import { assertPolicyComplete } from '#cli/policy/read.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';

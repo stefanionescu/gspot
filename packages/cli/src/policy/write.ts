@@ -1,7 +1,7 @@
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
+import { assertPolicyComplete } from '#cli/policy/read.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { patch } from '@decimalturn/toml-patch';
 import { stringify as stringifyToml } from 'smol-toml';

@@ -1,3 +1,4 @@
+import { assertNoProblems } from '#cli/policy/read.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { emitAll } from '#cli/generation/render.ts';
 import type { ApplyReport } from '#cli/lifecycle/apply.ts';
@@ -26,6 +27,8 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
  * @returns generated changes and preserved files
  */
 export async function applyAll(session: Session, takeover?: ReadonlyMap<string, FileSnapshot>): Promise<ApplyReport> {
+    // Generation writes from the policy, so a policy with a wrong line is refused here, where check would report it.
+    assertNoProblems(session.policyFiles);
     return withLifecycleOwner(session.root, async (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed after generation was planned. Retry the command.');

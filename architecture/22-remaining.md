@@ -207,6 +207,11 @@ Owner: `policy/`. Dependencies: step 2.2 schemas and existing generation; repeat
 
 Acceptance: K-147, K-238, K-51, K-88, K-215, K-224, K-48, K-222, K-228, K-116.
 
+Done 2026-09-26, K-147: `readPolicy` returns the policy and its problems. A wrong entry or key is
+dropped with its line recorded, and `check` reports each one as a finding of `integrity/policy`
+while the other checks run. `apply` and the edit commands still refuse such a policy. A syntax
+error, an unknown key, or a wrong shape still stops every command.
+
 ### CSS claims contradict the contract
 
 Step 2.4. Confirmed defect.

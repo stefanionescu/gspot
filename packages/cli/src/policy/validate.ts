@@ -5,17 +5,15 @@ import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
-import type { PolicyFiles } from '#cli/policy/read.ts';
-import { PolicyError } from '#cli/policy/read.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
-import { policyLocation, sourceLocations } from '#cli/policy/source-locations.ts';
 
 /**
- * Every problem the selection and the surface find in a parsed policy. Throws PolicyError when there are any.
- * @param source the parsed policy and its authored text
+ * The configuration names a policy selects that no manifest defines, each at its declaration.
+ * @param policy the parsed policy
+ * @returns one problem per unknown name
  */
-export function assertPolicyComplete(source: PolicyFiles): void {
-    const { policy } = source;
+export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
     const manifests = configurationManifests();
     const declarations: { name: string; path: PathSegment[] }[] = [
         ...policy.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
@@ -23,16 +21,21 @@ export function assertPolicyComplete(source: PolicyFiles): void {
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
-    const unknown = declarations.filter(({ name }) => !manifests.has(name));
-    if (unknown.length > 0) {
-        const locations = sourceLocations(source.text);
-        throw new PolicyError(
-            unknown.map(
-                ({ name, path }) =>
-                    `${source.path}:${policyLocation(locations, path)}: ${unknownConfiguration(name, nearMatches(name, [...manifests.keys()]))}`,
-            ),
-        );
-    }
+    return declarations
+        .filter(({ name }) => !manifests.has(name))
+        .map(({ name, path }) => ({
+            path,
+            message: unknownConfiguration(name, nearMatches(name, [...manifests.keys()])),
+        }));
+}
+
+/**
+ * Every problem the selection and the surface find in a policy whose configuration names all exist.
+ * @param policy the parsed policy
+ * @returns the problems, each at the value that raised it
+ */
+export function completenessProblems(policy: Policy): PolicyProblem[] {
+    const manifests = configurationManifests();
     const problems: PolicyProblem[] = [];
     const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
@@ -56,14 +59,5 @@ export function assertPolicyComplete(source: PolicyFiles): void {
         ),
         ...validateAgainstSurface(exposedSettings(rootSelected), policy, scopeSurfaces),
     );
-    if (problems.length > 0) {
-        const locations = sourceLocations(source.text);
-        throw new PolicyError([
-            ...new Set(
-                problems.map(
-                    (problem) => `${source.path}:${policyLocation(locations, problem.path)}: ${problem.message}`,
-                ),
-            ),
-        ]);
-    }
+    return problems;
 }

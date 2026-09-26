@@ -45,6 +45,7 @@ type RunHashes = {
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
+const POLICY_CHECK = 'integrity/policy';
 const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
 
 function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
@@ -229,6 +230,28 @@ function skipRows(planned: PlannedCheck[]): RunReport['skips'] {
     return planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : []));
 }
 
+// The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
+function policyProblemsResult(session: Session): CheckResult | undefined {
+    const { problems } = session.policyFiles;
+    if (problems.length === 0) return undefined;
+    return {
+        check: POLICY_CHECK,
+        scope: '',
+        status: 'fail',
+        files: 1,
+        duration: 0,
+        findings: problems.map((problem) => ({
+            check: POLICY_CHECK,
+            engine: 'integrity',
+            file: 'gspot.toml',
+            line: problem.line,
+            column: problem.column,
+            message: problem.message,
+            fixable: false,
+        })),
+    };
+}
+
 function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
     const corrections = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
@@ -281,10 +304,13 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
                 }),
             ),
     );
-    const results = settled.map((result) => {
+    const ran = settled.map((result) => {
         if (result.status === 'rejected') throw result.reason;
         return result.value;
     });
+    const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
+    if (policyResult !== undefined) options.onResult?.(policyResult);
+    const results = policyResult === undefined ? ran : [...ran, policyResult];
     const failed = failedChecks(results, fixes);
     const unable =
         session.cancelSignal?.aborted === true ||
@@ -292,8 +318,8 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         fixes?.results.some((result) => result.status === 'failed') === true;
     const claimed = new Set(
         active.flatMap((check, index) => {
-            if (!RAN_STATUSES.has(results[index]!.status)) return [];
-            if (results[index]!.checkedFiles !== undefined) return results[index]!.checkedFiles;
+            if (!RAN_STATUSES.has(ran[index]!.status)) return [];
+            if (ran[index]!.checkedFiles !== undefined) return ran[index]!.checkedFiles;
             return claimedInputs(session, check).map((file) => file.path);
         }),
     );

@@ -200,7 +200,15 @@ test.each([false, true])(
         const written = readFileSync(policyPath, 'utf8');
         await Bun.write(policyPath, written + '\n[tools.shellcheck.extra]\nexternal_sources = true\n');
         const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(required ? 2 : 0);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(required ? 1 : 0);
+        const findings = (
+            JSON.parse(checked.stdout) as { checks: { check: string; findings: { file: string }[] }[] }
+        ).checks
+            .filter((check) => check.check === 'integrity/policy')
+            .flatMap((check) => check.findings);
+        expect(findings).toMatchObject(
+            required ? [{ file: 'gspot.toml', message: expect.stringContaining('extra') }] : [],
+        );
         expect(readFileSync(policyPath, 'utf8')).toBe(
             written + '\n[tools.shellcheck.extra]\nexternal_sources = true\n',
         );

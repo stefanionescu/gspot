@@ -37,6 +37,7 @@ export async function commitPolicy(
             policy: result.policy,
             text: result.text,
             path: join(root, 'gspot.toml'),
+            problems: [],
         });
         const applied = await applyAll(session);
         const notes = applied.notes.map((note) => `note     ${note}\n`).join('');

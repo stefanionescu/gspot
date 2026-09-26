@@ -6,7 +6,7 @@ import type { Manifest } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { PolicyFiles } from '#cli/policy/read.ts';
 import { readPolicy } from '#cli/policy/read.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
+import { assertPolicyComplete } from '#cli/policy/read.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import { readRepository } from '#cli/repository/tree.ts';

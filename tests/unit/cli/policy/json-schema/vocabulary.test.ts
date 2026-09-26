@@ -1,6 +1,6 @@
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
+import { assertPolicyComplete } from '#cli/policy/read.ts';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { expect, test } from 'bun:test';
 import { stringify } from 'smol-toml';
