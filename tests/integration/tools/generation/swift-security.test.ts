@@ -15,8 +15,8 @@ const SWIFT =
         'let secret = Bundle.main.object(forInfoDictionaryKey: "PrivateKey")',
         'let key = "sk-' + 'a'.repeat(22) + '"',
         'let credentials = "https://alice:example@example.com"',
-         
-        'let address = "https://localhost.example.com"',
+        // eslint-disable-next-line unicorn/prefer-https -- the planted defect is an insecure URL the rule must find
+        'let address = "http://localhost.example.com"',
         'let pointer = UnsafeRawPointer(value)',
         'let hash = Insecure.MD5.hash(data: data)',
         'let web = UIWebView()',
