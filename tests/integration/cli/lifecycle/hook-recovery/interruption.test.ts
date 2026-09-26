@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 test.each(['before', 'after'] as const)(

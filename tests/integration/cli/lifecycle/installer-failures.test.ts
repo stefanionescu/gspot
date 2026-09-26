@@ -8,7 +8,7 @@ import { installCommand } from '#cli/commands/install.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 

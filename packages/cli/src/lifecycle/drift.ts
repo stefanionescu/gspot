@@ -6,9 +6,9 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
-import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
+// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 

@@ -3,8 +3,8 @@ import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
+import type { ConfigurationOutput } from '#cli/generation/proposal.ts';
 
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({

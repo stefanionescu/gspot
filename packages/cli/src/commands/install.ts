@@ -6,7 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';

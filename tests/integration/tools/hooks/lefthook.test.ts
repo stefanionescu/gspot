@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { hookReadiness, installManager } from '#tests/support/cli/hooks.ts';

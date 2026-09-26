@@ -2,6 +2,7 @@ import { emitAll } from '#cli/generation/render.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
+import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { publishGenerated } from '#cli/lifecycle/apply.ts';
 import { hasConflictMarkers } from '#cli/lifecycle/drift.ts';
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
@@ -9,8 +10,8 @@ import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { resolvePythonProject } from '#cli/tools/python-project.ts';
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import { resolvePackageProject } from '#cli/tools/packages/project.ts';
-import type { ApplyReport, GeneratedProposal } from '#cli/lifecycle/apply.ts';
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>

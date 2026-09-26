@@ -4,7 +4,7 @@ import { parse as parseToml } from 'smol-toml';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import type { ConfigurationOutput } from '#cli/generation/proposal.ts';
 import { PACKAGE_LIFECYCLE, RUNNER_TASKS } from '#cli/policy/runner.ts';
 import type { RunnerTask, RunnerTaskNames } from '#cli/policy/runner.ts';
 

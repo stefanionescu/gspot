@@ -13,7 +13,7 @@ import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { type HookLocation, hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { type HookLocation, hookLocation } from '#cli/repository/hook-location.ts';
 import { type HookName, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
 
 type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;

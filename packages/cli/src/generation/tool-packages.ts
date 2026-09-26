@@ -1,6 +1,6 @@
 import semver from 'semver';
 import { npmPins } from '#cli/tools/pins.ts';
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import type { GeneratedFile } from '#cli/generation/proposal.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 

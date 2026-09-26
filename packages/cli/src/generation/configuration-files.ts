@@ -13,7 +13,7 @@ import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { GeneratedFile, GeneratedProposal } from '#cli/lifecycle/apply.ts';
+import type { GeneratedFile, GeneratedProposal } from '#cli/generation/proposal.ts';
 
 type Pointer = NonNullable<ConfigurationTarget['pointer']>;
 

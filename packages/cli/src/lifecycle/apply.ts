@@ -1,5 +1,6 @@
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
@@ -140,31 +141,4 @@ export type ApplyReport = {
     blocks: string[];
     packages: string[];
     notes: string[];
-};
-
-export type GeneratedFile = {
-    rulesPath?: string[];
-    path: string;
-    content: string;
-    readOnly: boolean;
-    executable?: boolean;
-    observed?: FileSnapshot;
-    kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
-    configuration?: string;
-};
-
-export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
-
-export type ConfigurationOutput = {
-    path: string;
-    format: ConfigurationFormat;
-    changes: { path: (string | number)[]; value: unknown }[];
-};
-
-export type GeneratedProposal = {
-    notes: string[];
-    files: GeneratedFile[];
-    blocks: BlockOutput[];
-    merges: ConfigurationOutput[];
-    configurations: ConfigurationOutput[];
 };

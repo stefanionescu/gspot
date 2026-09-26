@@ -4,7 +4,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { hookReadiness, hookStatusText, installManager } from '#tests/support/cli/hooks.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';

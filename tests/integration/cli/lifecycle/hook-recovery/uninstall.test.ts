@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

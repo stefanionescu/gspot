@@ -13,7 +13,7 @@ import type { PreparedHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { HOOK_ARTIFACTS, HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
-import { type HookLocation, hookLocation, relativeInside } from '#cli/lifecycle/hooks/location.ts';
+import { type HookLocation, hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
 
 type HookName = (typeof HOOK_FILES)[number];
 type Installation = {

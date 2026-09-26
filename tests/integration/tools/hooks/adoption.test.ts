@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { installManager } from '#tests/support/cli/hooks.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 

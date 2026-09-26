@@ -1,6 +1,5 @@
 import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
 // The one place gspot reads the environment: every variable it honors has a function here.
 
 function isSet(name: string): boolean {
@@ -53,14 +52,6 @@ export function environmentVariables(): Record<string, string> {
         if (value !== undefined) variables[name] = value;
     }
     return variables;
-}
-
-/**
- * The supported Git hook that invoked this process.
- * @returns the hook name, or undefined outside a hook
- */
-export function invokingHook(): (typeof HOOK_FILES)[number] | undefined {
-    return HOOK_FILES.find((name) => name === process.env['GSPOT_HOOK']);
 }
 
 /**

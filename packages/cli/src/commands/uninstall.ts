@@ -4,7 +4,7 @@ import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { OwnershipState } from '#cli/lifecycle/journal.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';

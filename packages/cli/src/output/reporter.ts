@@ -1,9 +1,10 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import type { RunReport } from '#cli/execution/report.ts';
-import { invokingHook } from '#cli/platform/environment.ts';
 import type { CheckResult, Finding } from '#cli/checks/result.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;
@@ -167,7 +168,7 @@ export function runText(report: RunReport, options: ReportOptions): string {
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
     lines.push(summaryLine(report, colors));
-    const hook = invokingHook();
+    const hook = HOOK_FILES.find((name) => name === environmentVariables()['GSPOT_HOOK']);
     if (hook !== undefined && report.exitCode !== 0) {
         const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
         if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);

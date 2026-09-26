@@ -13,9 +13,9 @@ import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
 import { toolPackages } from '#cli/generation/tool-packages.ts';
-import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
+import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
@@ -33,7 +33,9 @@ const HOOK_OUTPUTS: Record<
     (root: string, runner: string | undefined, out: GeneratedProposal, binary: string | undefined) => void
 > = {
     'pre-commit': (root, runner, out, binary) => out.configurations.push(preCommitConfiguration(root, runner, binary)),
-    'simple-git-hooks': (root, runner, out, binary) => { simpleGitHookOutputs(root, runner, out, binary); },
+    'simple-git-hooks': (root, runner, out, binary) => {
+        simpleGitHookOutputs(root, runner, out, binary);
+    },
     husky: (root, runner, out, binary) => {
         for (const line of huskyLines(root, runner, binary))
             out.blocks.push({ path: line.path, block: line.line, style: 'hash' });

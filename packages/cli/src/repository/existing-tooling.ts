@@ -6,7 +6,7 @@ import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import type { ToolPin } from '#cli/configurations/manifests.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

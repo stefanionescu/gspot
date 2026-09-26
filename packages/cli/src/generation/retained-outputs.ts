@@ -2,10 +2,10 @@
 import { posix } from 'node:path';
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { retainedConfigurationPaths } from '#cli/lifecycle/retained-config.ts';
+import { retainedConfigurationPaths } from '#cli/generation/retained-config.ts';
 
 type Retention = {
     root: string;

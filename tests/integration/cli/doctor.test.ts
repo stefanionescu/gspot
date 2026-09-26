@@ -9,7 +9,7 @@ import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {

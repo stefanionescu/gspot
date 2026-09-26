@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { HookName } from '#cli/generation/hooks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
+import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
 import { requirePackageConfiguration, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { hookBody, hookCommand, hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks.ts';

@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/checks/result.ts';
 import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
+import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
 /**

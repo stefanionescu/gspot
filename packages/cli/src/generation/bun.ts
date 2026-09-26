@@ -1,6 +1,6 @@
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import type { ConfigurationOutput } from '#cli/generation/proposal.ts';
 
 /** The days a release must be public before Bun installs it when the policy names no age. */
 export const DEFAULT_RELEASE_AGE_DAYS = 7;
