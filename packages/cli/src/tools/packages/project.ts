@@ -149,8 +149,8 @@ function relativeYarnLock(content: string, registry: string): string {
         const url = new URL(entry.resolved);
         if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) continue;
         const relative = `${url.pathname.slice(base.pathname.length)}${url.search}${url.hash}`;
-        entry.resolved = relative;
         edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
+        entry.resolved = relative;
     }
     if (!isDeepStrictEqual(schema.parse(parseSyml(edited)), expected))
         throw new Error(
