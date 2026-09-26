@@ -130,7 +130,7 @@ test('revision snapshots relocate uv PE resources and retain the working launche
         const result = await run(command, { cwd: root });
         expect(result.code, result.stderr).toBe(0);
     }
-    await withRevisionSnapshot(root, { kind: 'index' }, async (snapshot) => {
+    await withRevisionSnapshot(root, { kind: 'index' }, (snapshot) => {
         const bytes = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
         const section = 152 + 240 + 40;
         const offset = bytes.readUInt32LE(section + 20);
@@ -141,6 +141,7 @@ test('revision snapshots relocate uv PE resources and retain the working launche
         const hostOffset = python.readUInt32LE(section + 20);
         const hostSize = python.readUInt32LE(section + 8);
         expect(python.subarray(hostOffset, hostOffset + hostSize).toString('utf8')).toBe(hostPath);
+        return Promise.resolve();
     });
     expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toStrictEqual(original);
     expect(readFileSync(join(root, '.venv/Scripts/python.exe'))).toStrictEqual(interpreter);

@@ -26,7 +26,9 @@ const PARSERS: Record<string, Parser> = {
     '.json': parseJson,
     '.jsonc': parseJson,
     '.webmanifest': parseJson,
-    '.toml': (text) => void parseToml(text),
+    '.toml': (text) => {
+        parseToml(text);
+    },
     '.yml': (text) => void parseYaml(text),
     '.yaml': (text) => void parseYaml(text),
     '.mjs': parseModule,

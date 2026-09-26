@@ -209,7 +209,7 @@ const toolsSchema = z
                     .array(
                         z.strictObject({
                             package: text.regex(
-                                /^(?:@[^/@\s]+\/)?[^/@\s]+@[0-9][^\s@<>=~^*|,]*$/u,
+                                /^(?:@[^/@\s]+\/)?[^/@\s]+@\d[^\s@<>=~^*|,]*$/u,
                                 'Name a package and its exact version.',
                             ),
                             license: text.min(1),
@@ -382,7 +382,7 @@ export const ciSchema = z.strictObject({
 export const integrationSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema, ci: ciSchema, runner: runnerSchema, rules: rulesSchema }).flatMap(
         ([section, schema]) =>
-            Object.entries(schema.shape).map(
+            Object.entries(schema.shape as Record<string, z.ZodType>).map(
                 ([key, field]) =>
                     [
                         `${section}.${key}`,

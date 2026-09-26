@@ -35,8 +35,7 @@ test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
                     stderr: '',
                     duration: 1,
                 };
-            const cwd = options?.cwd;
-            if (cwd === undefined) throw new Error('CodeQL requires a working directory.');
+            const { cwd } = options;
             copies.push(cwd);
             if (argv.includes('create')) {
                 sources.push(readFileSync(join(cwd, 'source.py'), 'utf8'));
@@ -85,16 +84,16 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
     const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript'];
     // Every database creation and analysis the check ran, with the copy it ran in.
     const invoked: { argv: string[]; cwd: string }[] = [];
-    const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+    const run = spyOn(processes, 'run').mockImplementation((argv, options) => {
         const base = { code: 0, missing: false, stderr: '', duration: 1 };
         if (argv.includes('resolve'))
-            return {
+            return Promise.resolve({
                 ...base,
                 stdout: JSON.stringify({
                     aliases: { 'javascript-typescript': 'javascript' },
                     extractors: { javascript: [{}] },
                 }),
-            };
+            });
         const cwd = options.cwd;
         invoked.push({ argv, cwd });
         if (argv.includes('analyze')) {
@@ -126,7 +125,7 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
                 }),
             );
         } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
-        return { ...base, stdout: '' };
+        return Promise.resolve({ ...base, stdout: '' });
     });
     try {
         const findings = await codeql(

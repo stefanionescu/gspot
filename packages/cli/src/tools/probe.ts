@@ -14,6 +14,7 @@ import { readFileSync, realpathSync, statSync } from 'node:fs';
 import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
+import type { PolicyFiles } from '#cli/policy/read.ts';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };
@@ -317,5 +318,5 @@ export type ToolContext = {
     root: string;
     cwd?: string;
     probes: Map<string, ToolProbe>;
-    policyFiles?: import('#cli/policy/read.ts').PolicyFiles;
+    policyFiles?: PolicyFiles;
 };

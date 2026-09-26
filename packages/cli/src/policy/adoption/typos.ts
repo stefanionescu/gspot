@@ -56,7 +56,7 @@ function carryTypos(source: CarrySource, path: string, lists: CarriedConfigurati
             const directory = bare.endsWith('/');
             const selector = directory ? bare.slice(0, -1) : bare;
             const rooted = selector.startsWith('/') || selector.includes('/');
-            const prefix = base.replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`);
+            const prefix = base.replaceAll(/[?*[\]{}]/gu, String.raw`\$&`);
             return `${negated ? '!' : ''}${prefix}/${rooted ? '' : '**/'}${selector.replace(/^\//u, '')}${directory ? '/' : ''}`;
         });
     if (paths.length > 0) settings['exclude'] = [{ paths, reason: reasonFor(path) }];

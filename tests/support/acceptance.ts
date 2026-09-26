@@ -81,19 +81,18 @@ async function main(): Promise<void> {
             process.exitCode ||= tested.code;
         } catch (error) {
             executionError = error;
-            throw error;
-        } finally {
-            try {
-                await registry.stop();
-            } catch (cleanupError) {
-                if (executionError !== undefined)
-                    throw new AggregateError(
-                        [executionError, cleanupError],
-                        'Acceptance execution and cleanup failed.',
-                    );
-                throw cleanupError;
-            }
         }
+        // The registry stops whatever happened; both failures are reported together when both occurred.
+        let cleanupError: unknown;
+        try {
+            await registry.stop();
+        } catch (error) {
+            cleanupError = error;
+        }
+        if (executionError !== undefined && cleanupError !== undefined)
+            throw new AggregateError([executionError, cleanupError], 'Acceptance execution and cleanup failed.');
+        const failure = executionError ?? cleanupError;
+        if (failure !== undefined) throw failure instanceof Error ? failure : new Error(String(failure));
     } finally {
         process.removeListener('SIGINT', interrupt);
         process.removeListener('SIGTERM', terminate);

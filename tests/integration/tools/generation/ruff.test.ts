@@ -19,7 +19,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         version: renderSession3.version,
         packageManager: renderSession3.packageManager,
     }).files.filter(({ path }) => path.endsWith('/ruff.toml'));
-    expect(configs.map(({ path }) => path).sort()).toStrictEqual([
+    expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
     ]);

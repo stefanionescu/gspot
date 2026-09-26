@@ -67,8 +67,13 @@ function stampPackages(version: string, distribution: string): string[] {
     }
     const launcher = join(distribution, 'npm', 'gspot');
     mkdirSync(launcher, { recursive: true });
-    for (const file of ['gspot.js', 'README.md', 'targets.json'])
+    for (const file of ['gspot.js', 'README.md'])
         copyFileSync(join(root, 'packages', 'npm', file), join(launcher, file));
+    // The launcher reads the same release targets the CLI is built from.
+    copyFileSync(
+        join(root, 'packages', 'cli', 'src', 'platform', 'release-targets.json'),
+        join(launcher, 'targets.json'),
+    );
     copyFileSync(join(distribution, 'LICENSE.md'), join(launcher, 'LICENSE.md'));
     const launcherManifest = JSON.parse(readFileSync(join(root, 'packages', 'npm', 'package.json'), 'utf8')) as Record<
         string,

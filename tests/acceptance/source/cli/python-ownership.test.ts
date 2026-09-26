@@ -4,7 +4,7 @@ import { rmSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

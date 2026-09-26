@@ -11,6 +11,7 @@ import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
+import type { RunnerTaskNames } from '#cli/policy/runner.ts';
 
 export type InitOptions = {
     cwd: string;
@@ -70,7 +71,7 @@ export type InitPlanInputs = {
     everySelected: Manifest[];
     how: Map<string, ConfigurationReason>;
     answers: InitAnswers;
-    runnerTasks?: import('#cli/policy/runner.ts').RunnerTaskNames;
+    runnerTasks?: RunnerTaskNames;
     carried: CarriedConfiguration;
     policyLines: number;
     /** Instruction destinations resolved from the final proposed policy. */

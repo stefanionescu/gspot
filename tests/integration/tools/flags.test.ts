@@ -56,6 +56,7 @@ function executableOf(tool: ToolPin): string | undefined {
 
 // A manual page bolds a word by overstriking it; the plain word is what the flag has to match.
 function plain(text: string): string {
+    // eslint-disable-next-line no-control-regex, sonarjs/no-control-regex -- a man page overstrike is a character, a backspace, and the character again
     return text.replaceAll(/.\u0008/gu, '');
 }
 
@@ -108,7 +109,7 @@ for (const command of distinct) {
         test(
             `the help of ${title} names ${command.flags.join(' ')}`,
             async () => {
-                const text = await helpText(executable!, command.subcommands, command.flags);
+                const text = await helpText(executable, command.subcommands, command.flags);
                 const missing = command.flags.filter((flag) => !text.includes(flag));
                 expect(missing, `${title}: ${text.slice(0, 400)}`).toStrictEqual([]);
             },

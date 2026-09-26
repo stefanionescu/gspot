@@ -9,14 +9,14 @@ const ASSET_FOLDERS = ['packages/cli/configurations', 'packages/cli/rules'];
 
 function assetKey(file: string): string {
     const key =
-        grammarAssets.get(file) ??
+        grammarAssets[file] ??
         (file === join(here, '.build/configuration-process.js')
             ? 'packages/cli/scripts/configuration-process.js'
             : relative(root, file));
     return key.replaceAll('\\', '/');
 }
 
-export const grammarAssets = new Map(
+export const grammarAssets: Record<string, string> = Object.fromEntries(
     GRAMMAR_NAMES.map((name) => [
         name === 'swift.wasm' ? join(here, '.build', name) : grammarPath(name),
         `grammars/${name}`,
@@ -33,7 +33,7 @@ export function writeEntry(): string {
             ASSET_FOLDERS.map((folder) => `${folder}/**/*`),
             { cwd: root, absolute: true, dot: true },
         ).toSorted((left, right) => left.localeCompare(right)),
-        ...grammarAssets.keys(),
+        ...Object.keys(grammarAssets),
         join(here, '.build/configuration-process.js'),
     ];
     const buildDir = join(here, '.build');

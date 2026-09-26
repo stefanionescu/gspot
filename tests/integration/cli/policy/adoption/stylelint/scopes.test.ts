@@ -108,7 +108,7 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
         const relevant = result.results
             .flatMap((result) => result.warnings.map((warning) => warning.rule))
             .filter((rule) => ['color-named', 'selector-max-id', 'block-no-empty'].includes(rule))
-            .sort();
+            .toSorted((left, right) => left.localeCompare(right));
         expect(relevant, path).toStrictEqual(expected);
     }
     expect(readFileSync(join(sandbox.path, 'theme[1]/base.json'), 'utf8')).toBe(

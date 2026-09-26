@@ -47,7 +47,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
             (match) => match.groups!['path']!,
         );
         if (!parsed.includes('/etc/nginx/nginx.conf'))
-            throw new Error('nginx produced no configuration dump confirming the tested source.');
+            throw new Error('The nginx run produced no configuration dump confirming the tested source.');
         return {
             findings: [],
             checkedFiles: parsed.flatMap((target) => {
@@ -58,7 +58,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     }
     const said = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
     if (result.code !== 1 || said === undefined)
-        throw new Error(`nginx could not run (exit ${String(result.code)}): ${result.stderr.trim()}`);
+        throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
     const location = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups;
     const file = configurations.get(location?.['file'] ?? '')?.path ?? path;
     const line = location?.['line'];

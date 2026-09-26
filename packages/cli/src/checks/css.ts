@@ -40,7 +40,7 @@ function moduleImporters(code: { path: string; text: string }[], sheets: Set<str
             const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
             if (!sheets.has(sheet)) continue;
             const clause = statement.importClause;
-            if (clause === undefined || clause.isTypeOnly) continue;
+            if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
             const binding =
                 clause.name ??
                 (clause.namedBindings !== undefined && ts.isNamespaceImport(clause.namedBindings)

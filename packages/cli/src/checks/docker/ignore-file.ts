@@ -33,7 +33,7 @@ export function dockerignore(input: EngineInput): Finding[] {
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
         const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
         const base = { check: input.spec.name, line: 1, fixable: false };
-        if (!(statSync(join(input.root, path), { throwIfNoEntry: false }) !== undefined))
+        if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
         const missing = missingEntries(readSource(input.root, path, input.observations).toString('utf8'));
         if (missing.length === 0) return [];

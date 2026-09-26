@@ -46,8 +46,7 @@ try {
     } finally {
         files.close();
     }
-    process.exit(0);
 } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
 }

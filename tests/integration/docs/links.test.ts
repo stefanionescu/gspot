@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import { validateSiteLinks } from '../../../docs/scripts/links';
+import { validateSiteLinks } from '#docs/scripts/links.ts';
 import { rejection } from '#tests/support/rejection.ts';
 
 test('built-site validation covers landing fragments, relative manual links, encoded paths, and assets', async () => {

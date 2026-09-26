@@ -93,7 +93,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
         if (result.code !== 0)
             throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const path = join(work, 'jscpd-report.json');
-        if (!(statSync(path, { throwIfNoEntry: false }) !== undefined))
+        if (statSync(path, { throwIfNoEntry: false }) === undefined)
             throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const named = input.view.settings['limits.duplication.threshold_percent'];
         return cloneFindings(

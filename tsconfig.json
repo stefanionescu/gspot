@@ -22,7 +22,11 @@
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
             "#plugin/*": ["./packages/eslint-plugin/src/*"],
-            "#tests/*": ["./tests/*"]
+            "#tests/*": ["./tests/*"],
+            "#docs/*": ["./docs/*"],
+            "#scripts/*": ["./packages/cli/scripts/*"],
+            "#cli-package": ["./packages/cli/package.json"],
+            "#plugin-package": ["./packages/eslint-plugin/package.json"]
         }
     },
     "include": ["packages/**/*.ts", "tests/**/*.ts"],

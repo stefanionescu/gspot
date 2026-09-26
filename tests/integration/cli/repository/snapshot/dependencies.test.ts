@@ -32,7 +32,8 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
     symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
+            .message,
     ).toContain('external link');
 });
 
@@ -51,13 +52,15 @@ test('revision dependencies reject external manifest and installation links befo
     unlinkSync(join(sandbox.path, 'package.json'));
     symlinkSync(join(external.path, 'package.json'), join(sandbox.path, 'package.json'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
+            .message,
     ).toContain('Source link leaves');
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
+            .message,
     ).toContain('external link');
     unlinkSync(join(sandbox.path, 'node_modules/external'));
     await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
@@ -81,7 +84,7 @@ test('a nested revision refuses its incomplete managed dependency installation',
         owner.beginInstallation('npm');
     });
     expect(
-        (await rejection(withRevisionSnapshot(project, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(project, { kind: 'index' }, () => Promise.resolve(undefined)))).message,
     ).toContain('Tool installation is incomplete');
     withLifecycleOwner(project, (owner) => {
         owner.finishInstallation('npm');
@@ -113,12 +116,14 @@ test.each(['', 'nested/'])('revision prose checks reuse verified installed packa
     expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
+            .message,
     ).toContain('do not match the revision configuration');
     await Bun.write(join(sandbox.path, config), 'StylesPath = vale/styles\nPackages = Example\n');
     await Bun.write(join(project, packagePath), 'edited package');
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined))).message,
+        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
+            .message,
     ).toContain('missing or edited');
 });
 
@@ -144,13 +149,14 @@ test.each([false, true])(
         });
         gitOutput(root, ['init', '-q']);
         gitOutput(root, ['add', '.']);
-        await withRevisionSnapshot(root, { kind: 'index' }, async (snapshot) => {
+        await withRevisionSnapshot(root, { kind: 'index' }, (snapshot) => {
             const relocated = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
             expect(relocated).toStrictEqual(
                 Buffer.concat([prefix, Buffer.from(`#!"${join(snapshot, '.venv/Scripts/python.exe')}"\n`), payload]),
             );
             expect(readFileSync(join(snapshot, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${snapshot}\n`);
             expect(readFileSync(join(snapshot, '.venv/Scripts/python.exe'), 'utf8')).toBe('MZinterpreter');
+            return Promise.resolve();
         });
         expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toStrictEqual(launcher);
         expect(readFileSync(join(root, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${root}\n`);
@@ -195,8 +201,9 @@ test('cancellation drains dependency copies before removing the snapshot and pre
                     withRevisionSnapshot(
                         sandbox.path,
                         { kind: 'index' },
-                        async () => {
+                        () => {
                             entered = true;
+                            return Promise.resolve();
                         },
                         controller.signal,
                     ),

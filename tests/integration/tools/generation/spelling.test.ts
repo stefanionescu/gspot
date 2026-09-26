@@ -18,7 +18,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
         packageManager: renderSession2.packageManager,
     });
     const configs = output.files.filter(({ path }) => path.endsWith('typos.toml'));
-    expect(configs.map(({ path }) => path).sort()).toStrictEqual([
+    expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/british/child/typos.toml',
         '.gspot/config/british/typos.toml',
         '.gspot/config/typos.toml',

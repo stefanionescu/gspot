@@ -18,7 +18,7 @@ function sampleText(name: string, message: Message): string | undefined {
         known === undefined ? shapes.map((shape) => Array.from({ length: message.length }, () => shape())) : [known];
     for (const attempt of attempts) {
         try {
-            const text = message(...attempt);
+            const text: unknown = Reflect.apply(message, undefined, attempt);
             if (typeof text === 'string') return text;
         } catch {
             continue;
@@ -27,11 +27,14 @@ function sampleText(name: string, message: Message): string | undefined {
     return undefined;
 }
 
-type Message = (...arguments_: unknown[]) => unknown;
+// Every message function accepts a `never` parameter list, so the sample call goes through Reflect.apply.
+type Message = (...arguments_: never[]) => unknown;
 
-const functions = Object.entries(messages)
-    .filter(([, value]) => typeof value === 'function')
-    .map(([name, value]) => [name, value as unknown as Message] as const);
+type Exported = (typeof messages)[keyof typeof messages];
+
+const functions = Object.entries(messages).filter(
+    (entry): entry is [string, Exported & Message] => typeof entry[1] === 'function',
+);
 
 test('every message function speaks in the words of the config, never in the names of the code', () => {
     const offending = functions.flatMap(([name, message]) => {

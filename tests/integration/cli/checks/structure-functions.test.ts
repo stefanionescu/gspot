@@ -88,8 +88,8 @@ test('SQL atomic bodies count each statement and reject files containing only tr
     expect(
         findings
             .filter(({ file }) => file === 'wrapper.sql')
-            .map(({ rule }) => rule)
-            .sort(),
+            .flatMap(({ rule }) => (rule === undefined ? [] : [rule]))
+            .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['trivial-file', 'trivial-function']);
 });
 

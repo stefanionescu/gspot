@@ -9,7 +9,7 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

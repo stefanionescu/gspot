@@ -85,11 +85,17 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
     });
     const session = await openSession(sandbox.path);
     let cwd = '';
-    const run = spyOn(processes, 'run').mockImplementation(async (_argv, options) => {
+    const run = spyOn(processes, 'run').mockImplementation((_argv, options) => {
         cwd = options.cwd!;
         mkdirSync(join(cwd, 'dist'), { recursive: true });
         writeFileSync(join(cwd, 'dist/index.html'), 'isolated output');
-        return { code, stdout: '', stderr: code === 0 ? '' : 'Planted build failure', missing: false, duration: 1 };
+        return Promise.resolve({
+            code,
+            stdout: '',
+            stderr: code === 0 ? '' : 'Planted build failure',
+            missing: false,
+            duration: 1,
+        });
     });
     try {
         const outcome = await executeRun(session, {
@@ -136,13 +142,15 @@ test.each([
         writeFileSync(join(build.output, 'style.css'), 'body { color: red; }');
         let code = 2;
         let stdout = '';
-        const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async () => ({
-            code,
-            stdout,
-            stderr: 'Planted tool diagnostic',
-            missing: false,
-            duration: 1,
-        }));
+        const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(() =>
+            Promise.resolve({
+                code,
+                stdout,
+                stderr: 'Planted tool diagnostic',
+                missing: false,
+                duration: 1,
+            }),
+        );
         try {
             await rejection(analyze(request));
             code = 0;

@@ -10,6 +10,15 @@ import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
+// Runs the pinned markdownlint over the planted sample with one configuration file.
+function native(root: string, config: string): Bun.SyncSubprocess<'pipe', 'pipe'> {
+    return Bun.spawnSync(['markdownlint-cli2', '--no-globs', '--config', config, 'sample.md'], {
+        cwd: root,
+        stdout: 'pipe',
+        stderr: 'pipe',
+    });
+}
+
 test('directory-local Markdown adoption preserves sibling rules and descendant editor configurations', async () => {
     await using sandbox = await testdir();
     const original = '{"default":false,"MD033":true}\n';
@@ -23,7 +32,7 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     const discovered = existingTooling(sandbox.path, (await readRepository(sandbox.path, [], [], [])).files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
     expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path).sort()).toStrictEqual([
+    expect(carried.removed.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'guide/.markdownlint.jsonc',
         'reference/.markdownlint.jsonc',
     ]);
@@ -81,13 +90,7 @@ test.each([false, true])(
             'config/base.jsonc': '{// Base rules\n"default":false,"MD033":true,"MD009":false}\n',
             'sample.md': 'A paragraph.\n\n<span>Content</span>\n',
         });
-        const native = (config: string) =>
-            Bun.spawnSync(['markdownlint-cli2', '--no-globs', '--config', config, 'sample.md'], {
-                cwd: sandbox.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            });
-        const before = native('.markdownlint.jsonc');
+        const before = native(sandbox.path, '.markdownlint.jsonc');
         expect(before.exitCode).toBe(1);
         expect(before.stderr.toString()).toContain('MD033');
         const carried = await collectCarried(
@@ -103,7 +106,7 @@ test.each([false, true])(
         // An inherited configuration keeps its parents in place and reads their settings; a flat one has no parents.
         expect({
             removed: carried.removed.map(({ path }) => path),
-            retained: carried.retained.map(({ path }) => path).toSorted(),
+            retained: carried.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right)),
             base: carried.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
             parent: carried.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
         }).toStrictEqual(
@@ -143,11 +146,11 @@ test.each([false, true])(
         await Bun.write(join(sandbox.path, 'generated.jsonc'), configuration.content);
         // Remove discovery input so the generated file alone determines the native result.
         unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
-        const after = native('generated.jsonc');
+        const after = native(sandbox.path, 'generated.jsonc');
         expect(after.exitCode).toBe(1);
         expect(after.stderr.toString()).toBe(before.stderr.toString());
         await Bun.write(join(sandbox.path, 'sample.md'), 'A paragraph.\n\nContent\n');
-        const corrected = native('generated.jsonc');
+        const corrected = native(sandbox.path, 'generated.jsonc');
         expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
         await Bun.write(join(sandbox.path, 'sample.md'), 'A paragraph.   \n');
         const fixed = Bun.spawnSync(
@@ -170,13 +173,7 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
         '.markdownlint.jsonc': original,
         'sample.md': `# Title\n\n<span>${'Long paragraph '.repeat(12)}</span>\n`,
     });
-    const native = (config: string) =>
-        Bun.spawnSync(['markdownlint-cli2', '--no-globs', '--config', config, 'sample.md'], {
-            cwd: sandbox.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-    const before = native('.markdownlint.jsonc');
+    const before = native(sandbox.path, '.markdownlint.jsonc');
     expect(before.exitCode).toBe(1);
     expect(before.stderr.toString()).toContain('MD013');
     expect(before.stderr.toString()).toContain('MD033');
@@ -209,10 +206,10 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
     }).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
     await Bun.write(join(sandbox.path, 'generated.jsonc'), generated.content);
     unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
-    const after = native('generated.jsonc');
+    const after = native(sandbox.path, 'generated.jsonc');
     expect(after.exitCode).toBe(1);
     expect(after.stderr.toString()).toBe(before.stderr.toString());
     await Bun.write(join(sandbox.path, 'sample.md'), '# Title\n\nContent\n');
-    const corrected = native('generated.jsonc');
+    const corrected = native(sandbox.path, 'generated.jsonc');
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
 });

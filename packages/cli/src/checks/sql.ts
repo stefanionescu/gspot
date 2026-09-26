@@ -156,7 +156,10 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
                 .sval;
             let statements: number;
             if (language === 'plpgsql') {
-                const definition = parsed.source.slice(statement.start, parsed.statements[index + 1]?.start);
+                const definition = parsed.source.slice(
+                    statement.start,
+                    parsed.statements[index + 1]?.start ?? parsed.source.length,
+                );
                 statements = proceduralStatements(await parsePlpgsql(definition));
             } else if (language === 'sql') {
                 if (body === undefined) {

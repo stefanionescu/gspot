@@ -8,7 +8,7 @@ import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 import { rejection } from '#tests/support/rejection.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

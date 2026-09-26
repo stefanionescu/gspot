@@ -88,7 +88,7 @@ async function askFormat(
         .map(([key, value]) =>
             key === 'overrides' && Array.isArray(value)
                 ? `${String(value.length)} current path overrides`
-                : `${key} ${String(value)}`,
+                : `${key} ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`,
         )
         .join(', ');
     const keep =

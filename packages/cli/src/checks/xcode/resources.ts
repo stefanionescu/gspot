@@ -60,7 +60,7 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
     if (names.length === 0) return [xcodeFinding(input, at, 'empty-set', 'This image set names no image file.')];
     const folder = path.slice(0, path.lastIndexOf('/'));
     return names
-        .filter((name) => !(statSync(join(input.root, folder, name), { throwIfNoEntry: false }) !== undefined))
+        .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
         .map((name) => xcodeFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
 }
 

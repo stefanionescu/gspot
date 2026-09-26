@@ -12,7 +12,7 @@ import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

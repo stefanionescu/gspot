@@ -54,8 +54,7 @@ export function hasPackages(root: string, requireOwnership = false): boolean {
                 const identity = recorded.get(path);
                 return (
                     content !== undefined &&
-                    identity !== undefined &&
-                    content.mode === identity.mode &&
+                    content.mode === identity?.mode &&
                     createHash('sha256').update(content.bytes).digest('hex') === identity.hash
                 );
             })

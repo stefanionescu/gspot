@@ -7,6 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
+import type * as Eslint from 'eslint';
 
 async function registerEslintModule(
     root: string,
@@ -70,9 +71,11 @@ async function legacyEntries(
 ): Promise<Record<string, unknown>[]> {
     const require = createRequire(createRequire(configPath).resolve('eslint'));
     const api = (await import(pathToFileURL(require.resolve('@eslint/eslintrc')).href)) as LegacyEslintApi;
-    const js = (await import(pathToFileURL(require.resolve('@eslint/js')).href)).default as {
-        configs: { recommended: Record<string, unknown>; all: Record<string, unknown> };
-    };
+    const js = (
+        (await import(pathToFileURL(require.resolve('@eslint/js')).href)) as {
+            default: { configs: { recommended: Record<string, unknown>; all: Record<string, unknown> } };
+        }
+    ).default;
     const factory = new api.Legacy.ConfigArrayFactory({
         cwd: root,
         resolvePluginsRelativeTo: root,
@@ -154,7 +157,7 @@ async function legacyEntries(
             ])
                 if (entry[key] !== undefined) config[key] = entry[key];
             if (entry.parser !== undefined) {
-                if (entry.parser.error != null) throw entry.parser.error;
+                if (entry.parser.error) throw entry.parser.error;
                 config['parser'] = entry.parser.filePath;
                 await registerEslintModule(
                     root,
@@ -167,7 +170,7 @@ async function legacyEntries(
             if (activePlugins !== undefined) {
                 config['plugins'] = Object.keys(activePlugins);
                 for (const dependency of Object.values(activePlugins)) {
-                    if (dependency.error != null) throw dependency.error;
+                    if (dependency.error) throw dependency.error;
                     await registerEslintModule(
                         root,
                         configPath,
@@ -194,7 +197,7 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
     if (!request.flat && request.from === undefined)
         throw new Error('Legacy ESLint adoption requires a configuration path.');
     const require = createRequire(join(request.root, 'package.json'));
-    const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof import('eslint');
+    const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
     const Constructor = await module.loadESLint({ useFlatConfig: request.flat });
     const eslint = new Constructor({
         cwd: request.root,
@@ -204,7 +207,7 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
     });
     const configPath =
         request.from === undefined
-            ? await (eslint as import('eslint').ESLint).findConfigFile()
+            ? await (eslint as Eslint.ESLint).findConfigFile()
             : join(request.root, request.from);
     if (configPath === undefined) throw new Error('ESLint conversion could not find the active configuration.');
     const files = openConfinedRoot(request.root);
@@ -357,7 +360,7 @@ export async function evaluateRuleCoverage(
     if (openConfinedRoot(request.root).read('.gspot/config/eslint.config.mjs') === undefined)
         throw new Error('The generated ESLint configuration is missing. Run: gspot apply');
     const require = createRequire(join(request.root, '.gspot/package.json'));
-    const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof import('eslint');
+    const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
     const Constructor = await module.loadESLint({ useFlatConfig: true });
     const eslint = new Constructor({
         cwd: request.root,

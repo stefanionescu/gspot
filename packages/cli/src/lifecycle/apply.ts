@@ -40,7 +40,7 @@ function pruningProposals(
 ): FileProposal[] {
     const recorded = new Set(
         readOwnership(root)
-            .files.filter((entry) => entry.kind === 'hook' || entry.kind === 'runtime' || entry.kind === 'export')
+            .files.filter((entry) => ['hook', 'runtime', 'export'].includes(entry.kind))
             .map((entry) => entry.path),
     );
     return owner

@@ -128,7 +128,7 @@ export function listAssets(prefix: string): string[] {
             .filter((key) => key.startsWith(prefix))
             .toSorted((a, b) => a.localeCompare(b));
     const dir = join(developmentRoot(), prefix);
-    if (!(statSync(dir, { throwIfNoEntry: false }) !== undefined)) return [];
+    if (statSync(dir, { throwIfNoEntry: false }) === undefined) return [];
     return globbySync('**/*', { cwd: dir, dot: true })
         .map((path) => toPosix(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));

@@ -50,7 +50,7 @@ for (const scope of ['', 'apps/web']) {
                     probes.push(command.slice(1));
                     return { code: 0, missing: false, duration: 1, stdout: 'Version 5.9.3', stderr: '' };
                 });
-                const run = spyOn(processes, 'run').mockImplementation(async (command, options) => {
+                const run = spyOn(processes, 'run').mockImplementation((command, options) => {
                     const cwd = options.cwd;
                     directories.push(cwd);
                     const isBad = readFileSync(join(cwd, 'src/page.ts'), 'utf8').includes('bad');
@@ -61,7 +61,7 @@ for (const scope of ['', 'apps/web']) {
                         writeFileSync(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
                     } else routesSeen.push(readFileSync(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
                     const failed = isBad && command[1] !== 'typegen';
-                    return {
+                    return Promise.resolve({
                         code: failed ? 1 : 0,
                         missing: false,
                         duration: 1,
@@ -70,7 +70,7 @@ for (const scope of ['', 'apps/web']) {
                                 ? 'src/page.ts(1,1): error TS2322: Type mismatch\n'
                                 : '',
                         stderr: failed && check === 'nextjs/build' ? 'Error: Page is invalid\n' : '',
-                    };
+                    });
                 });
                 try {
                     const execute = check === 'nextjs/typecheck' ? nextjsTypes : nextjsBuild;
@@ -131,11 +131,17 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
         });
         let scratch = '';
         const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-        const run = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
+        const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
             scratch = options.cwd;
             writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');
             writeFileSync(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
-            return { code: 1, missing: false, duration: 1, stdout: '', stderr: `Error: ${diagnostic}` };
+            return Promise.resolve({
+                code: 1,
+                missing: false,
+                duration: 1,
+                stdout: '',
+                stderr: `Error: ${diagnostic}`,
+            });
         });
         try {
             expect((await rejection(nextjsTypes(input))).message).toContain(diagnostic);

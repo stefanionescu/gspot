@@ -66,7 +66,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
             { cwd: directory.path },
         );
         expect(lint.code, lint.stdout + lint.stderr).toBe(ignored ? 0 : 1);
-        const findings = JSON.parse(lint.stdout.toString()) as {
+        const findings = JSON.parse(lint.stdout) as {
             messages: { ruleId: string; line: number; column: number }[];
         }[];
         expect(
@@ -143,7 +143,7 @@ rules = {eqeqeq = ["error", "always"]}
             { cwd: directory.path },
         );
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
-        const findings = JSON.parse(lint.stdout.toString()) as {
+        const findings = JSON.parse(lint.stdout) as {
             filePath: string;
             messages: { ruleId: string; severity: number; line: number; column: number }[];
         }[];
@@ -206,10 +206,11 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const report = reportSchema.parse(JSON.parse(corrected.stdout));
     expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
     for (const log of ['checked.txt', 'fixed.txt'])
-        expect(JSON.parse(readFileSync(join(directory.path, log), 'utf8').trim()).sort()).toStrictEqual([
-            'inputs/regular.txt',
-            'inputs/skip-keep.txt',
-        ]);
+        expect(
+            (JSON.parse(readFileSync(join(directory.path, log), 'utf8').trim()) as string[]).toSorted((left, right) =>
+                left.localeCompare(right),
+            ),
+        ).toStrictEqual(['inputs/regular.txt', 'inputs/skip-keep.txt']);
     expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
     const checked = readFileSync(join(directory.path, 'checked.txt'), 'utf8');
     const fixed = readFileSync(join(directory.path, 'fixed.txt'), 'utf8');

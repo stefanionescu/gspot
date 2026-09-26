@@ -31,7 +31,7 @@ async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith('https://')) return fetched(source);
     if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
     const path = resolve(cwd, source);
-    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined))
+    if (statSync(path, { throwIfNoEntry: false }) === undefined)
         throw new ProfileError([`There is no profile at ${source}.`]);
     return readFileSync(path, 'utf8');
 }

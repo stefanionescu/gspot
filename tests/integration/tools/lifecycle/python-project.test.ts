@@ -276,7 +276,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             if (previous === undefined) delete process.env['UV_DEFAULT_INDEX'];
             else process.env['UV_DEFAULT_INDEX'] = previous;
             for (const [name, value] of previousProjects) {
-                if (value === undefined) delete process.env[name];
+                if (value === undefined) Reflect.deleteProperty(process.env, name);
                 else process.env[name] = value;
             }
             server.stop(true);

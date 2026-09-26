@@ -131,7 +131,9 @@ test(
             expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
             const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
             const findings = report.revisions[0]?.report.checks[0]?.findings ?? [];
-            expect(findings.map((finding) => finding.file).sort()).toStrictEqual(['first.txt', 'second.txt']);
+            expect(
+                findings.map((finding) => finding.file).toSorted((left, right) => left.localeCompare(right)),
+            ).toStrictEqual(['first.txt', 'second.txt']);
             expect(findings.every((finding) => finding.message.includes(leaked))).toBe(true);
             expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([firstToken]) } });
             expect(requests).toContainEqual({ GspotAcceptance: { token: expect.arrayContaining([secondToken]) } });

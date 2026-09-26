@@ -1,4 +1,4 @@
-import { sourceRevision } from '../revision';
+import { sourceRevision } from '../revision.ts';
 import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
 
 export type ReferencePage = {

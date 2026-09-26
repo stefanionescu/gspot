@@ -53,7 +53,7 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
         const normalized = patterns.map((pattern) => {
             const negate = pattern.startsWith('!') ? '!' : '';
             const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
-            mutationPath(path.replaceAll(/[!*?\[\]{}()|+@]/gu, 'x'));
+            mutationPath(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
             return `${negate}${path}`;
         });
         const ancestors = normalized.flatMap((pattern) => {

@@ -172,7 +172,7 @@ export async function copyDependencies(
         if (
             inputs.some(
                 (path) =>
-                    !(statSync(join(root, path), { throwIfNoEntry: false }) !== undefined) ||
+                    statSync(join(root, path), { throwIfNoEntry: false }) === undefined ||
                     !readFileSync(installed.source(path)).equals(readFileSync(selected.source(path))),
             )
         )

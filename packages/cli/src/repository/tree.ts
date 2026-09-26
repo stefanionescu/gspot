@@ -26,7 +26,7 @@ export async function readRepository(
     exclude: string[],
     runtimeFiles: ReadonlySet<string> = new Set(),
 ): Promise<Repository> {
-    const entries = await trackedEntries(root, exclude);
+    const entries = trackedEntries(root, exclude);
     const files: TrackedFile[] = [];
     const attributes = readAttributes(root);
     for (const entry of entries) {

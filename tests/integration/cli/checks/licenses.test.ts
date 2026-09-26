@@ -53,19 +53,19 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
         const selected = await input(sandbox.path);
         let broken = true;
         const directories: string[] = [];
-        const spawn = spyOn(processes, 'run').mockImplementation(async (_argv, options) => {
+        const spawn = spyOn(processes, 'run').mockImplementation((_argv, options) => {
             directories.push(options.cwd);
             const report = { Name: 'example', Version: '1.0.0', License: 'MIT' };
             const values = broken && failure === 'empty report' ? [] : [report];
             if (broken && failure === 'missing version') Reflect.deleteProperty(report, 'Version');
             if (broken && failure === 'missing license') Reflect.deleteProperty(report, 'License');
-            return {
+            return Promise.resolve({
                 code: broken && failure === 'scanner failure' ? 1 : 0,
                 missing: false,
                 stderr: 'fixture diagnostic',
                 duration: 1,
                 stdout: broken && failure === 'malformed JSON' ? '{' : JSON.stringify(values),
-            };
+            });
         });
         try {
             await rejection(licensesPackages(selected));

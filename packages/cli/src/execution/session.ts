@@ -12,6 +12,8 @@ import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
+import type { z } from 'zod';
+import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -68,7 +70,7 @@ export type Session = ToolContext & {
     /** Persistent result storage for a disposable revision snapshot. */
     cacheRoot?: string;
     resources?: DisposableStack;
-    packageManager?: import('zod').infer<typeof import('#cli/tools/packages/manager.ts').packageManagerSchema>;
+    packageManager?: z.infer<typeof packageManagerSchema>;
     cancelSignal?: AbortSignal;
     version: string;
     policyFiles: PolicyFiles;

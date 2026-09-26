@@ -9,7 +9,7 @@ if (config === undefined || config === '' || port === undefined || !process.send
 const server = (await runServer(config)) as Server;
 process.once('disconnect', () => {
     server.closeAllConnections();
-    server.close(() => process.exit(0));
+    server.close();
 });
 server.listen(Number(port), '127.0.0.1', () => {
     const address = server.address();

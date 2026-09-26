@@ -10,8 +10,8 @@ import { toolsPath } from '#tests/support/cli/tools.ts';
 // The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { PLANTED_TIMEOUT_MS, runProcess } from '#tests/support/cli/command.ts';
-import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
-import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
+import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -143,6 +143,8 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const report = JSON.parse(checked.stdout) as { checks: { status: string; findings: { file: string }[] }[] };
     expect(report.checks.map((check) => check.status)).toStrictEqual(['fail']);
     expect(
-        [...new Set(report.checks.flatMap((check) => check.findings.map((finding) => finding.file)))].sort(),
-    ).toStrictEqual(Object.keys(sources).sort());
+        [...new Set(report.checks.flatMap((check) => check.findings.map((finding) => finding.file)))].toSorted(
+            (left, right) => left.localeCompare(right),
+        ),
+    ).toStrictEqual(Object.keys(sources).toSorted((left, right) => left.localeCompare(right)));
 }, 360_000);

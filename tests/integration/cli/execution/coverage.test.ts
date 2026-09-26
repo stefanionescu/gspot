@@ -135,14 +135,14 @@ test('engine coverage rejects an unobserved path and accepts confirmed repositor
     const [planned] = await planRun(session, { stage: 'all', only: ['bash/syntax'], skips: [] });
     const failed = await runEngineCheck(
         session,
-        async () => ({ findings: [], checkedFiles: ['../outside.sh'] }),
+        () => Promise.resolve({ findings: [], checkedFiles: ['../outside.sh'] }),
         planned!,
     );
     expect(failed.status).toBe('error');
     expect(failed.checkedFiles).toBeUndefined();
     const corrected = await runEngineCheck(
         session,
-        async () => ({ findings: [], checkedFiles: ['source.sh', 'source.sh'] }),
+        () => Promise.resolve({ findings: [], checkedFiles: ['source.sh', 'source.sh'] }),
         planned!,
     );
     expect(corrected).toMatchObject({ status: 'ok', files: 1, checkedFiles: ['source.sh'] });

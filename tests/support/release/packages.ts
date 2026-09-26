@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
+import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 
 // The C library of a Linux host, which selects its release target; other platforms have none.
 function hostLibc(): string | null {

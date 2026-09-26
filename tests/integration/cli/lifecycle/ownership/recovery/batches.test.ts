@@ -46,7 +46,7 @@ owner.close();
         expect(readFileSync(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
         const owner = openLifecycleOwner(directory.path);
         try {
-            expect(owner.installedPaths().sort()).toStrictEqual(
+            expect(owner.installedPaths().toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
                 point === 'before' ? ['first.txt'] : ['first.txt', 'middle.txt'],
             );
             owner.applyProposals(
@@ -113,7 +113,7 @@ owner.close();
         const owner = openLifecycleOwner(directory.path);
         try {
             expect(owner.read('first.txt')).toBeUndefined();
-            expect(owner.installedPaths().sort()).toStrictEqual(
+            expect(owner.installedPaths().toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
                 point === 'before' ? ['last.txt', 'middle.txt'] : ['last.txt'],
             );
             expect(owner.read('last.txt')?.bytes.toString()).toBe('last.txt');

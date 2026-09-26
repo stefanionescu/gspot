@@ -9,11 +9,7 @@ import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({
     repos: z
-        .array(
-            z
-                .object({ repo: z.string(), hooks: z.array(z.object({ id: z.string() }).passthrough()).optional() })
-                .passthrough(),
-        )
+        .array(z.looseObject({ repo: z.string(), hooks: z.array(z.looseObject({ id: z.string() })).optional() }))
         .default([]),
 });
 

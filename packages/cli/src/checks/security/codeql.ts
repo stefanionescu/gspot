@@ -11,6 +11,7 @@ import { isAbsolute, join, relative, sep } from 'node:path';
 import { mutationTarget } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { codePoints } from '#cli/platform/code-points.ts';
 
 type AcceptedResult = { rule: string; paths: string[]; reason: string };
 
@@ -151,7 +152,7 @@ function placeOf(
         const encoding =
             (index === undefined ? undefined : run.artifacts?.[index]?.encoding) ?? run.defaultEncoding ?? 'utf-8';
         const text = new TextDecoder(encoding, { fatal: true }).decode(readSource(source, file));
-        const characters = [...text];
+        const characters = codePoints(text);
         if (region.charOffset > characters.length)
             throw new Error('CodeQL reported a character offset beyond the source file.');
         const prefix = characters.slice(0, region.charOffset).join('');
@@ -168,7 +169,11 @@ function placeOf(
             }
         }
         const tail = prefix.slice(start);
-        return { file, line, column: (run.columnKind === 'unicodeCodePoints' ? [...tail].length : tail.length) + 1 };
+        return {
+            file,
+            line,
+            column: (run.columnKind === 'unicodeCodePoints' ? codePoints(tail).length : tail.length) + 1,
+        };
     }
     return {
         file,

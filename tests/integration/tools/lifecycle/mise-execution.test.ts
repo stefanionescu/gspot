@@ -8,7 +8,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

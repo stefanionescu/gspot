@@ -103,7 +103,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         version: renderSession8.version,
         packageManager: renderSession8.packageManager,
     }).files.filter(({ path }) => path.endsWith('/jsconfig.json'));
-    expect(outputs.map(({ path }) => path).sort()).toStrictEqual([
+    expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/child/jsconfig.json',
         '.gspot/config/app/jsconfig.json',
         '.gspot/config/jsconfig.json',

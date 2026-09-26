@@ -17,7 +17,8 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     const original = openConfinedRoot(root).read('gspot.toml');
     if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
     const text = original.bytes.toString('utf8');
-    if (!Buffer.from(text).equals(original.bytes)) throw new Error('gspot.toml must contain valid UTF-8 text.');
+    if (!Buffer.from(text).equals(original.bytes))
+        throw new Error('The policy file gspot.toml must contain valid UTF-8 text.');
     return { ...proposePolicy(root, text, mutate), original };
 }
 
@@ -32,7 +33,7 @@ export function writePolicy(root: string, proposal: PreparedPolicy): WriteResult
         withLifecycleOwner(root, (owner) => {
             const previous = owner.read('gspot.toml');
             if (!isDeepStrictEqual(previous, proposal.original))
-                throw new Error('gspot.toml changed while the edit was prepared. Retry the command.');
+                throw new Error('The policy file gspot.toml changed while the edit was prepared. Retry the command.');
             const status = owner.replace(
                 'gspot.toml',
                 { bytes: Buffer.from(proposal.text), mode: proposal.original.mode },

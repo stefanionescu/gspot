@@ -297,7 +297,10 @@ export async function pushedRevisions(
             .split('\n')
             .filter(Boolean);
         const historyComplete = !history.some((commit) => boundaries.has(commit));
-        const selected = changed === undefined ? undefined : [...new Set(changed)].sort();
+        const selected =
+            changed === undefined
+                ? undefined
+                : [...new Set(changed)].toSorted((left, right) => left.localeCompare(right));
         const tree = (await observed(root, ['rev-parse', '--verify', `${object}^{tree}`], cancelSignal)).trim();
         const duplicate = result.revisions.find(
             (entry) => entry.tree === tree && JSON.stringify(entry.paths) === JSON.stringify(selected),

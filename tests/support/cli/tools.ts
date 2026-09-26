@@ -19,7 +19,6 @@ export function toolsPath(names: string[]): string {
     const context = { root, probes: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (tool === undefined) throw new Error(`Required tool ${name} has no configuration-owned definition.`);
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
         const found = probeTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))

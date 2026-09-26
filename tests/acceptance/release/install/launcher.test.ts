@@ -17,6 +17,15 @@ afterAll(async () => {
     await release?.registry.stop();
 });
 
+// Kills a process that may already have exited; every other failure to kill it is reported.
+function killIfRunning(pid: number): void {
+    try {
+        process.kill(pid, 'SIGKILL');
+    } catch (error) {
+        if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
+    }
+}
+
 test(
     'launcher cancellation terminates its ready owned process',
     async () => {
@@ -61,13 +70,7 @@ test(
                 await waitForExit(toolPid);
             } finally {
                 if (child.exitCode === null) child.kill('SIGKILL');
-                if (toolPid !== undefined) {
-                    try {
-                        process.kill(toolPid, 'SIGKILL');
-                    } catch (error) {
-                        if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
-                    }
-                }
+                if (toolPid !== undefined) killIfRunning(toolPid);
                 await child.exited;
                 await output;
                 await errors;

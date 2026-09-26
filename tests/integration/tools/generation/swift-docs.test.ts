@@ -134,7 +134,7 @@ test('Swift inline documentation retains native exceptions and original source p
     expect(await check(0)).toStrictEqual([]);
     expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(policyExceptionText);
     await Bun.write(join(root, 'gspot.toml'), policy);
-    await Bun.write(join(root, 'Value.swift'), '/// A literal.\npublic let value = \"safe\"\n');
+    await Bun.write(join(root, 'Value.swift'), '/// A literal.\npublic let value = "safe"\n');
     await createFileTree(root, {
         'nested/Value.swift': policyExceptionText,
         'nested/.swiftlint.yml': 'parent_config: ../.swiftlint.yml\ndisabled_rules: [doc_comment_style]\n',

@@ -1,5 +1,6 @@
 import { statementCount } from '#plugin/statements.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({
@@ -26,77 +27,78 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
         const max = options.maxStatements ?? 2;
         const substantial = (node: TSESTree.Node): boolean => {
             switch (node.type) {
-                case 'ImportDeclaration':
-                case 'ExportAllDeclaration':
-                case 'EmptyStatement': {
+                case AST_NODE_TYPES.ImportDeclaration:
+                case AST_NODE_TYPES.ExportAllDeclaration:
+                case AST_NODE_TYPES.EmptyStatement: {
                     return false;
                 }
-                case 'ExportNamedDeclaration': {
+                case AST_NODE_TYPES.ExportNamedDeclaration: {
                     return node.declaration !== null && substantial(node.declaration);
                 }
-                case 'ExportDefaultDeclaration': {
+                case AST_NODE_TYPES.ExportDefaultDeclaration: {
                     return substantial(node.declaration);
                 }
-                case 'FunctionDeclaration':
-                case 'FunctionExpression':
-                case 'ArrowFunctionExpression': {
+                case AST_NODE_TYPES.FunctionDeclaration:
+                case AST_NODE_TYPES.FunctionExpression:
+                case AST_NODE_TYPES.ArrowFunctionExpression: {
                     return (
-                        node.body?.type === 'BlockStatement' &&
+                        node.body?.type === AST_NODE_TYPES.BlockStatement &&
                         statementCount(node.body, context.sourceCode.visitorKeys) > max
                     );
                 }
-                case 'ClassDeclaration':
-                case 'ClassExpression': {
+                case AST_NODE_TYPES.ClassDeclaration:
+                case AST_NODE_TYPES.ClassExpression: {
                     return node.body.body.some(substantial);
                 }
-                case 'MethodDefinition':
-                case 'PropertyDefinition': {
+                case AST_NODE_TYPES.MethodDefinition:
+                case AST_NODE_TYPES.PropertyDefinition: {
                     return node.value !== null && substantial(node.value);
                 }
-                case 'VariableDeclaration': {
+                case AST_NODE_TYPES.VariableDeclaration: {
                     return node.declarations.some(
                         (declaration) => declaration.init !== null && substantial(declaration.init),
                     );
                 }
-                case 'Identifier':
-                case 'MemberExpression': {
+                case AST_NODE_TYPES.Identifier:
+                case AST_NODE_TYPES.MemberExpression: {
                     return false;
                 }
-                case 'TSAsExpression':
-                case 'TSSatisfiesExpression':
-                case 'TSNonNullExpression': {
+                case AST_NODE_TYPES.TSAsExpression:
+                case AST_NODE_TYPES.TSSatisfiesExpression:
+                case AST_NODE_TYPES.TSNonNullExpression: {
                     return substantial(node.expression);
                 }
-                case 'ExpressionStatement': {
+                case AST_NODE_TYPES.ExpressionStatement: {
                     return substantial(node.expression);
                 }
-                case 'AwaitExpression': {
+                case AST_NODE_TYPES.AwaitExpression: {
                     return substantial(node.argument);
                 }
-                case 'CallExpression':
-                case 'NewExpression': {
+                case AST_NODE_TYPES.CallExpression:
+                case AST_NODE_TYPES.NewExpression: {
                     return (
                         node.typeArguments?.params.some(
-                            (parameter) => parameter.type === 'TSTypeLiteral' && parameter.members.length > 0,
+                            (parameter) =>
+                                parameter.type === AST_NODE_TYPES.TSTypeLiteral && parameter.members.length > 0,
                         ) === true ||
                         node.arguments.some(
                             (argument) =>
-                                argument.type !== 'Identifier' &&
-                                argument.type !== 'SpreadElement' &&
+                                argument.type !== AST_NODE_TYPES.Identifier &&
+                                argument.type !== AST_NODE_TYPES.SpreadElement &&
                                 substantial(argument),
                         ) ||
-                        (node.callee.type === 'MemberExpression' &&
-                            node.callee.object.type === 'CallExpression' &&
+                        (node.callee.type === AST_NODE_TYPES.MemberExpression &&
+                            node.callee.object.type === AST_NODE_TYPES.CallExpression &&
                             substantial(node.callee.object))
                     );
                 }
-                case 'TSInterfaceDeclaration': {
+                case AST_NODE_TYPES.TSInterfaceDeclaration: {
                     return node.body.body.length > 0;
                 }
-                case 'TSTypeAliasDeclaration': {
-                    return node.typeAnnotation.type !== 'TSTypeReference';
+                case AST_NODE_TYPES.TSTypeAliasDeclaration: {
+                    return node.typeAnnotation.type !== AST_NODE_TYPES.TSTypeReference;
                 }
-                case 'TSDeclareFunction': {
+                case AST_NODE_TYPES.TSDeclareFunction: {
                     return false;
                 }
                 default: {

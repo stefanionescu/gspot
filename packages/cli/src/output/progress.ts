@@ -13,7 +13,7 @@ export function progress(
     quiet: boolean,
 ): (result: CheckResult) => void {
     return (result) => {
-        const failed = result.status === 'fail' || result.status === 'missing' || result.status === 'error';
+        const failed = ['fail', 'missing', 'error'].includes(result.status);
         if (!failed && (quiet || stream.isTTY !== true)) return;
         const status = result.status === 'cache' ? 'unchanged' : result.status;
         stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${status}\n`);

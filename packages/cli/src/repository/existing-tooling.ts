@@ -209,7 +209,7 @@ export function ciLintJobs(root: string, paths: string[]): string[] {
                 if (typeof document !== 'object' || document === null) return [];
                 const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
                 if (typeof jobs !== 'object' || jobs === null) return [];
-                return Object.entries(jobs).flatMap(([name, job]) => {
+                return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
                     if (name.startsWith('.')) return [];
                     if (typeof job !== 'object' || job === null || Array.isArray(job)) return [];
                     if (!('steps' in job) && !('script' in job) && !('extends' in job)) return [];

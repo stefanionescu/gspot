@@ -1,12 +1,12 @@
-import { commandPages } from './commands';
+import { commandPages } from './commands.ts';
 import type { Loader } from 'astro/loaders';
-import type { ReferencePage } from './page';
+import type { ReferencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { bullets, referencePage, section } from './page';
-import { configurationReference, settingsPage } from './policy';
+import { bullets, referencePage, section } from './page.ts';
+import { configurationReference, settingsPage } from './policy.ts';
 import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
 import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
-import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions';
+import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions.ts';
 
 /**
  * Every generated reference page, keyed by its Markdown path: commands, configurations, rules, settings, and engines.

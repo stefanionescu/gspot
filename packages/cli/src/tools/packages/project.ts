@@ -110,7 +110,7 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
             }
             default: {
                 const entries = z
-                    .record(z.string(), z.object({ version: z.string().optional() }).passthrough())
+                    .record(z.string(), z.looseObject({ version: z.string().optional() }))
                     .parse(parseSyml(content));
                 return Object.entries(dependencies).every(([dependency, version]) =>
                     Object.entries(entries).some(
@@ -139,7 +139,7 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
  * @returns the lock text with registry-relative references
  */
 function relativeYarnLock(content: string, registry: string): string {
-    const schema = z.record(z.string(), z.object({ resolved: z.string().optional() }).passthrough());
+    const schema = z.record(z.string(), z.looseObject({ resolved: z.string().optional() }));
     const entries = schema.parse(parseSyml(content));
     const expected = structuredClone(entries);
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
@@ -166,7 +166,7 @@ function relativeYarnLock(content: string, registry: string): string {
  * @returns the lock text without the registry's tarball URLs
  */
 function portableBunLock(content: string, env: Record<string, string>): string {
-    const schema = z.object({ packages: z.record(z.string(), z.array(z.unknown())) }).passthrough();
+    const schema = z.looseObject({ packages: z.record(z.string(), z.array(z.unknown())) });
     const parsed = schema.parse(parseJsonc(content));
     const expected = structuredClone(parsed);
     let edited = content;

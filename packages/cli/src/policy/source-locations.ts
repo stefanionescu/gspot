@@ -12,8 +12,10 @@ function isValue(node: { type: string; loc: Value['loc'] }): node is Value {
 
 function valueLocations(value: Value, path: PathSegment[], locations: Map<string, Position>): void {
     locations.set(JSON.stringify(path), value.loc.start);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
     if (value.type === 'InlineTable') {
         for (const entry of value.items) keyLocations(entry.item, path, locations);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
     } else if (value.type === 'InlineArray') {
         let index = 0;
         for (const entry of value.items) {
@@ -48,13 +50,16 @@ export function sourceLocations(text: string): Map<string, Position> {
     const locations = new Map<string, Position>([['[]', { line: 1, column: 0 }]]);
     const arrays = new Map<string, number>();
     for (const block of parseDocument(text).cst) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'Comment') continue;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'KeyValue') {
             keyLocations(block, [], locations);
             continue;
         }
         const parts = block.key.item.value;
         let path: PathSegment[];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'TableArray') {
             const parent = expandedTable(parts.slice(0, -1), arrays);
             const target = [...parent, ...parts.slice(-1)];
@@ -64,6 +69,7 @@ export function sourceLocations(text: string): Map<string, Position> {
             path = [...target, index];
         } else path = expandedTable(parts, arrays);
         locations.set(JSON.stringify(path), block.key.loc.start);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         for (const entry of block.items) if (entry.type === 'KeyValue') keyLocations(entry, path, locations);
     }
     return locations;

@@ -15,6 +15,7 @@ import {
     planConfiguration,
     pruneConfigurationParents,
 } from '#cli/lifecycle/configuration-document.ts';
+import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
 
 function identity(file: FileSnapshot): z.infer<typeof identitySchema> {
     return {
@@ -462,7 +463,9 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
                 applyProposals([proposal]);
                 return 'changed';
             },
-            close: confined.close,
+            close: () => {
+                confined.close();
+            },
         };
     } catch (error) {
         confined.close();
@@ -548,18 +551,10 @@ export type LifecycleOwner = {
         expected?: FileSnapshot,
         proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
     ): FileProposal;
-    proposeBlock(
-        path: string,
-        body: string,
-        style: import('#cli/lifecycle/managed-blocks.ts').BlockStyle,
-    ): FileProposal;
+    proposeBlock(path: string, body: string, style: BlockStyle): FileProposal;
     applyProposal(proposal: FileProposal): 'changed' | 'unchanged' | 'preserved';
     applyProposals(proposals: FileProposal[]): ('changed' | 'unchanged' | 'preserved')[];
-    replaceBlock(
-        path: string,
-        body: string,
-        style: import('#cli/lifecycle/managed-blocks.ts').BlockStyle,
-    ): 'changed' | 'unchanged' | 'preserved';
+    replaceBlock(path: string, body: string, style: BlockStyle): 'changed' | 'unchanged' | 'preserved';
     read(path: string): FileSnapshot | undefined;
     paths(): string[];
     installedPaths(): string[];

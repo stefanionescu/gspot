@@ -195,12 +195,7 @@ export function installHooks(
                 (entry) => entry.kind === 'hook',
             )) {
                 const name = basename(entry.path);
-                if (
-                    HOOK_FILES.some(
-                        (hook) =>
-                            name === hook || name === `${hook}.gspot-original` || name === `${hook}.gspot-manager`,
-                    )
-                )
+                if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
                     continue;
                 if (!manager?.has(name)) proposals.push(owner.proposeRestoration(entry.path));
             }
@@ -281,11 +276,7 @@ export function proposeHookRestorations(
     }
     for (const entry of entries) {
         const name = basename(entry.path);
-        if (
-            HOOK_FILES.some(
-                (hook) => name === hook || name === `${hook}.gspot-original` || name === `${hook}.gspot-manager`,
-            )
-        )
+        if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
             continue;
         proposals.push(owner.proposeRestoration(entry.path));
     }
@@ -373,8 +364,7 @@ export function hookStatus({
                         : undefined);
                 if (
                     current === undefined ||
-                    installed === undefined ||
-                    current.mode !== installed.mode ||
+                    current.mode !== installed?.mode ||
                     (command !== undefined &&
                         required === `${path}.gspot-manager` &&
                         !current.bytes.toString('utf8').includes(command)) ||
@@ -388,17 +378,12 @@ export function hookStatus({
         }
         for (const entry of entries.filter((entry) => entry.kind === 'hook')) {
             const name = basename(entry.path);
-            if (
-                HOOK_FILES.some(
-                    (hook) => name === hook || name === `${hook}.gspot-original` || name === `${hook}.gspot-manager`,
-                )
-            )
+            if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
                 continue;
             const current = files.read(entry.path);
             if (
                 current === undefined ||
-                entry.installed === undefined ||
-                current.mode !== entry.installed.mode ||
+                current.mode !== entry.installed?.mode ||
                 new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') !== entry.installed.hash
             )
                 return { ready: false, text: `${location.absolute}: missing or edited ${name}; run gspot install` };

@@ -3,7 +3,7 @@ import type { Policy } from '#cli/policy/normalize.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
-import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
+import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
 const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';

@@ -5,7 +5,7 @@ const taskName = z
     .regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]*$/u)
     .describe('The accepted runner task name.');
 
-export const PACKAGE_LIFECYCLE = new Set([
+export const PACKAGE_LIFECYCLE: readonly string[] = [
     'preinstall',
     'install',
     'postinstall',
@@ -21,7 +21,7 @@ export const PACKAGE_LIFECYCLE = new Set([
     'preversion',
     'version',
     'postversion',
-]);
+];
 
 export const runnerTasksSchema = z
     .strictObject({
@@ -48,7 +48,7 @@ export const runnerSchema = z
     .superRefine((runner, context) => {
         if (runner.tool !== 'mise')
             for (const [task, name] of Object.entries(runner.tasks ?? {}))
-                if (name !== undefined && PACKAGE_LIFECYCLE.has(name))
+                if (name !== undefined && PACKAGE_LIFECYCLE.includes(name))
                     context.addIssue({
                         code: 'custom',
                         path: ['tasks', task],

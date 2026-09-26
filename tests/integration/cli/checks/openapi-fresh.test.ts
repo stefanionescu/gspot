@@ -9,7 +9,7 @@ import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'no
 import { rejection } from '#tests/support/rejection.ts';
 
 const POLICY =
-    'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\\"\\\" \\\"two words\\\""\n';
+    'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n';
 const GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
 if (process.argv[2] !== '' || process.argv[3] !== 'two words') throw new Error('Lost command arguments');
 writeFileSync('openapi.json', readFileSync('schema.json'));

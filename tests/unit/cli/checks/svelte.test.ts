@@ -36,6 +36,6 @@ describe('svelteFindings', () => {
     test('a failure line is an error, not a clean result', () => {
         expect(() =>
             svelteFindings('svelte/check', '', '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"'),
-        ).toThrow('svelte-check failed: Failed to locate tsconfig or jsconfig');
+        ).toThrow('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
     });
 });

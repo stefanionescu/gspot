@@ -129,7 +129,9 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
         ['source.js'],
     );
     expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map((entry) => entry.path).toSorted()).toStrictEqual(['.eslintignore', '.eslintrc.cjs']);
+    expect(
+        carried.removed.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['.eslintignore', '.eslintrc.cjs']);
     expect(carried.observed.get('.eslintignore')?.bytes.toString()).toBe('changed/**\n');
     writeFileSync(
         join(directory.path, 'gspot.toml'),

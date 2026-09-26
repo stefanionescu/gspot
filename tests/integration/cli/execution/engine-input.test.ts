@@ -90,20 +90,20 @@ test('engine inputs expose selected files and reserve the repository inventory f
     const scoped = engineInput(session, project);
     expect(claimedInputs(session, project).map((file) => file.path)).toStrictEqual(['apps/web/value.test.js']);
     expect(scoped.scopeRoot).toBe(join(sandbox.path, 'apps/web'));
-    expect(scoped.files.map((file) => file.path).toSorted()).toStrictEqual([
+    expect(scoped.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'apps/web/fixture.bin',
         'apps/web/jest.config.json',
         'apps/web/value.test.js',
     ]);
     const leaked = await runEngineCheck(
         session,
-        async () => ({ findings: [], checkedFiles: ['unrelated/private.txt'] }),
+        () => Promise.resolve({ findings: [], checkedFiles: ['unrelated/private.txt'] }),
         project,
     );
     expect(leaked.status).toBe('error');
     const owned = await runEngineCheck(
         session,
-        async () => ({ findings: [], checkedFiles: ['apps/web/value.test.js'] }),
+        () => Promise.resolve({ findings: [], checkedFiles: ['apps/web/value.test.js'] }),
         project,
     );
     expect(owned).toMatchObject({ status: 'ok', checkedFiles: ['apps/web/value.test.js'] });
@@ -193,7 +193,7 @@ test('engines share source bytes within a run and refresh reused sessions after 
             clean.report.checks
                 .filter((check) => check.scope === 'app')
                 .map((check) => check.check)
-                .sort(),
+                .toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
         expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         read.mockClear();
@@ -249,8 +249,7 @@ format = "none"
         'gspot.toml': policy,
         'query.sql': 'select from;\n',
         'notes.txt': 'Authored notes.\n',
-        'correct.cjs':
-            String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
+        'correct.cjs': String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
     });
     const session = await openSession(sandbox.path);
     const options = {

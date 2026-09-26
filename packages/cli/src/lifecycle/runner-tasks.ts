@@ -91,7 +91,7 @@ export function runnerTaskPlan(
         const name = accepted ?? task.name;
         if (
             !isMise &&
-            (PACKAGE_LIFECYCLE.has(name) ||
+            (PACKAGE_LIFECYCLE.includes(name) ||
                 Object.keys(authored).some((script) => name === `pre${script}` || name === `post${script}`))
         )
             throw new Error(`Runner task ${name} is a package lifecycle script and cannot be replaced.`);

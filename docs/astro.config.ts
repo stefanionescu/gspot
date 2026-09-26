@@ -2,7 +2,7 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { copyFileSync, mkdirSync } from 'node:fs';
-import { sourceRevision } from './src/content/revision';
+import { sourceRevision } from './src/content/revision.ts';
 
 export default defineConfig({
     site: 'https://gspot.dev',

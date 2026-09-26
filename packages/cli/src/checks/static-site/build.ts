@@ -69,7 +69,7 @@ export type SiteBuild = {
  * @returns the relative paths
  */
 export function filesUnder(folder: string): string[] {
-    if (!(statSync(folder, { throwIfNoEntry: false }) !== undefined)) return [];
+    if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
     const files = openConfinedRoot(folder, 'native');
     const found: string[] = [];
     const directories = [''];

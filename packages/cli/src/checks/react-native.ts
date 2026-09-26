@@ -57,12 +57,12 @@ export async function expoDoctor(input: EngineInput): Promise<Finding[]> {
         throw new SkippedCheckError('This scope does not depend on expo, and Expo Doctor reads an Expo project.');
     // Doctor exits 0 without reading a project whose expo package is absent, so the project is checked first.
     if (!hasInstalledExpo(input.scopeRoot))
-        throw new MissingToolError('expo is not installed in this scope; Expo Doctor reads an installed Expo project.');
+        throw new MissingToolError('Expo is not installed in this scope; Expo Doctor reads an installed Expo project.');
     const result = await runCheckCommand(input, ['expo-doctor'], { cwd: input.scopeRoot });
     const findings = doctorFindings(input.spec.name, path, result.stdout);
     if (result.code !== 0 && findings.length === 0)
         throw new Error(
-            `expo-doctor exited ${String(result.code)}: ${stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim()}`,
+            `Expo Doctor exited ${String(result.code)}: ${stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim()}`,
         );
     return findings;
 }

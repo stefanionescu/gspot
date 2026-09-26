@@ -12,7 +12,7 @@ const DEFAULT_AGE_DAYS = 7;
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
-    if (!(statSync(path, { throwIfNoEntry: false }) !== undefined)) return undefined;
+    if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
     const parsed = Bun.TOML.parse(readSource(root, BUNFIG).toString('utf8')) as { install?: Record<string, unknown> };
     return parsed.install ?? {};
 }

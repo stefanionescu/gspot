@@ -41,7 +41,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
  */
 export function gitOutput(cwd: string, argv: string[]): string {
     const result = git(cwd, argv);
-    if (result.code !== 0) throw new Error(`git ${argv.join(' ')} failed: ${result.stderr}${result.stdout}`);
+    if (result.code !== 0) throw new Error(`Git ${argv.join(' ')} failed: ${result.stderr}${result.stdout}`);
     return result.stdout.trim();
 }
 

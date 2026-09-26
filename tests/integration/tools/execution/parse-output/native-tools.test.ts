@@ -97,7 +97,8 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         expect(findings).toContainEqual(expect.objectContaining({ file, line: 1, rule: 'MD009', fixable: true }));
         expect(findings).toContainEqual(expect.objectContaining({ file, line: 1, rule: 'MD041', fixable: false }));
     }
-    const { manifest: _manifest, ...declared } = planned;
+    const declared = { ...planned };
+    delete declared.manifest;
     const result = { stdout: failed.stdout.toString(), stderr: '', code: 1, missing: false, duration: 1 };
     for (const check of [planned, declared]) {
         expect(checkedFindings(check, result, [sandbox.path, sandbox.path])).toStrictEqual(findings);

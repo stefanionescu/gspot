@@ -29,7 +29,7 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
     const failure = lines
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])
         .find((text) => text !== undefined);
-    if (failure !== undefined) throw new Error(`svelte-check failed: ${z.string().parse(JSON.parse(failure))}`);
+    if (failure !== undefined) throw new Error(`The svelte-check run failed: ${z.string().parse(JSON.parse(failure))}`);
     return lines.flatMap((line): Finding[] => {
         const text = DIAGNOSTIC_LINE.exec(line)?.groups?.['diagnostic'];
         if (text === undefined) return [];
@@ -69,6 +69,8 @@ export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
     const result = await runCheckCommand(input, command, { cwd: input.scopeRoot });
     const findings = svelteFindings(input.spec.name, input.scope, result.stdout);
     if (result.code !== 0 && findings.length === 0)
-        throw new Error(`svelte-check exited ${String(result.code)}: ${`${result.stdout}\n${result.stderr}`.trim()}`);
+        throw new Error(
+            `The svelte-check run exited ${String(result.code)}: ${`${result.stdout}\n${result.stderr}`.trim()}`,
+        );
     return findings;
 }

@@ -1,5 +1,6 @@
 import { statementCount } from '#plugin/statements.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial'>({
@@ -28,9 +29,10 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
             ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)'(
                 node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
             ) {
-                if (node.body === undefined) return;
                 const count =
-                    node.body.type === 'BlockStatement' ? statementCount(node.body, context.sourceCode.visitorKeys) : 1;
+                    node.body.type === AST_NODE_TYPES.BlockStatement
+                        ? statementCount(node.body, context.sourceCode.visitorKeys)
+                        : 1;
                 if (count <= max) context.report({ node, messageId: 'trivial', data: { count, max } });
             },
         };

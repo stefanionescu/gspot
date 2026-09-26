@@ -96,7 +96,7 @@ function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
     const last = owner.at(-1);
     if (Array.isArray(container) && typeof last === 'number') container.splice(last, 1);
     else if (typeof container === 'object' && container !== null && typeof last === 'string')
-        delete (container as Record<string, unknown>)[last];
+        Reflect.deleteProperty(container, last);
 }
 
 /**

@@ -83,7 +83,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         );
         for (const path of copied) {
             const source = join(root, path);
-            if (!(statSync(source, { throwIfNoEntry: false }) !== undefined)) continue;
+            if (statSync(source, { throwIfNoEntry: false }) === undefined) continue;
             const resolved = files.source(path);
             mkdirSync(dirname(join(scratch, path)), { recursive: true });
             cpSync(resolved, join(scratch, path), { dereference: true });
@@ -92,7 +92,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         const pending: { source: string; target: string }[] = [];
         const fileLinks: { source: string; target: string }[] = [];
         for (const dir of dependencies) {
-            if (!(statSync(join(root, dir), { throwIfNoEntry: false }) !== undefined)) continue;
+            if (statSync(join(root, dir), { throwIfNoEntry: false }) === undefined) continue;
             const source = realpathSync(join(root, dir));
             const target = join(scratch, dir);
             copies.set(source, target);
@@ -100,7 +100,7 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
             pending.push({ source, target });
         }
         const relocated = (source: string): string | undefined => {
-            for (const [original, copied] of [...copies].sort(([left], [right]) => right.length - left.length)) {
+            for (const [original, copied] of [...copies].toSorted(([left], [right]) => right.length - left.length)) {
                 const local = relative(original, source);
                 if (!isAbsolute(local) && local !== '..' && !local.startsWith(`..${sep}`)) return join(copied, local);
             }

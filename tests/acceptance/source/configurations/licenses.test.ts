@@ -5,8 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
-import { runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');

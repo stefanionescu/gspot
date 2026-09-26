@@ -8,6 +8,7 @@ import { isAbsolute, relative, resolve } from 'node:path';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { OutputFormat } from '#cli/configurations/output-format.ts';
+import { codePoints } from '#cli/platform/code-points.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
@@ -132,12 +133,12 @@ function typosFindings(check: string, stdout: string, help: string, root: string
                     if (sourceLine === undefined || entry.byte_offset > sourceLine.length)
                         throw new Error(`The reported position is outside the source: ${path}`);
                     finding.line = entry.line_num;
-                    finding.column = [...sourceLine.subarray(0, entry.byte_offset).toString('utf8')].length + 1;
+                    finding.column = codePoints(sourceLine.subarray(0, entry.byte_offset).toString('utf8')).length + 1;
                 }
                 return finding;
             });
     } catch (error) {
-        throw new ToolOutputError('typos returned invalid structured findings or unavailable source.', {
+        throw new ToolOutputError('The typos output holds invalid structured findings or an unavailable source.', {
             cause: error,
         });
     }

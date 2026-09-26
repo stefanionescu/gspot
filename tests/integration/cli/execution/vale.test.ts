@@ -43,12 +43,12 @@ for (const extension of ['md', 'sh']) {
                 expect(failed.status).toBe(failure === 'outdated' ? 'missing' : 'error');
                 expect(failed.findings).toStrictEqual([]);
                 probe.mockReturnValue({ name: 'vale', state: 'ok', path: process.execPath });
-                spawn.mockImplementation(async (command, options) => {
+                spawn.mockImplementation((command, options) => {
                     expect(options.timeoutMs).toBe(1000);
                     // A shell script goes by path like Markdown: vale.ini maps sh to the Python format (K-176).
                     expect(command).toContain(path);
                     expect(options.stdin).toBeUndefined();
-                    return {
+                    return Promise.resolve({
                         code: 0,
                         stdout: JSON.stringify({
                             [join(directory.path, path)]: [
@@ -63,7 +63,7 @@ for (const extension of ['md', 'sh']) {
                         stderr: '',
                         missing: false,
                         duration: 1,
-                    };
+                    });
                 });
                 const corrected = await runEngineCheck(session, valeFindings, planned!);
                 expect(corrected.status).toBe('fail');

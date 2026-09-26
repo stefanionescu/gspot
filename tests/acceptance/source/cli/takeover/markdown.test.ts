@@ -108,7 +108,7 @@ test.each(['', 'guide[1]', 'native-defaults'])(
                 cwd: join(sandbox.path, scope),
             },
         );
-        expect(native.code, native.stderr.toString()).toBe(0);
+        expect(native.code, native.stderr).toBe(0);
         commitAll(sandbox.path);
         await Bun.write(join(sandbox.path, scope, 'nested/sample.md'), '<span>Staged content</span>\n');
         expect(git(sandbox.path, ['add', '--', `${prefix}nested/sample.md`]).code).toBe(0);

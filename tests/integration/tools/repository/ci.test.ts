@@ -7,7 +7,7 @@ import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

@@ -28,10 +28,10 @@ export async function evaluateStylelint(request: z.infer<typeof stylelintRequest
         throw new Error(
             `Stylelint adoption requires the configuration version ${request.version}; the installed version is ${installed.version}.`,
         );
-    const loaded = await import(pathToFileURL(require.resolve('stylelint')).href);
-    const stylelint = loaded.default as {
-        lint: (options: { code: string; config: { rules: Record<string, unknown> } }) => Promise<unknown>;
+    const loaded = (await import(pathToFileURL(require.resolve('stylelint')).href)) as {
+        default: { lint: (options: { code: string; config: { rules: Record<string, unknown> } }) => Promise<unknown> };
     };
+    const stylelint = loaded.default;
     const report = reportSchema.parse(
         await stylelint.lint({
             code: 'a { color: red; }',

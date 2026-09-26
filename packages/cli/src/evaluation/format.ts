@@ -139,7 +139,8 @@ export async function evaluateFormat(request: z.infer<typeof formatRequest>): Pr
                     (child) => child !== folder && child !== '.' && (folder === '.' || child.startsWith(`${folder}/`)),
                 );
             const exclusions = children.map((child) => `${literalGlob(child)}/**/*`);
-            const { overrides: childOverrides = [], reason: _reason, ...options } = input.settings.extra ?? {};
+            const { overrides: childOverrides = [], ...carried } = input.settings.extra ?? {};
+            const options = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
             ordered.push({
                 files: folder === '.' ? '**/*' : `${literalGlob(folder)}/**/*`,
                 excludeFiles: exclusions,

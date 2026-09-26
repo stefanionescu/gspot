@@ -5,6 +5,7 @@ import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 import {
     chmodSync,
+    // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- lchmod is the one call that sets a link's own mode on macOS
     lchmodSync,
     lstatSync,
     readFileSync,
@@ -55,6 +56,7 @@ if (process.platform !== 'win32')
             chmodSync(join(directory.path, '.gspot/node_modules/tool/bin.sh'), 0o755);
             chmodSync(join(directory.path, '.gspot/node_modules/tool/original.sh'), 0o755);
             symlinkSync('../tool/original.sh', absolute);
+            // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- lchmod is the one call that sets a link's own mode on macOS
             if (process.platform === 'darwin') lchmodSync(absolute, 0o700);
             const originalMode = lstatSync(absolute).mode & 0o7777;
             const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };

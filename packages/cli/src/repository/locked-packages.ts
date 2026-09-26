@@ -56,7 +56,7 @@ export function lockedPackages(filename: string, text: string): Set<string> {
         return new Set(
             Object.values(lock.packages)
                 .map(([identity]) => identity)
-                .filter((identity) => /@[0-9]/u.test(identity)),
+                .filter((identity) => /@\d/u.test(identity)),
         );
     }
     if (filename === 'pnpm-lock.yaml') {

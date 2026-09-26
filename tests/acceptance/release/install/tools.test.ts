@@ -5,9 +5,9 @@ import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { delimiter, dirname, join, relative } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { PublishedRelease } from '#tests/support/release/published.ts';
-import { environment, RELEASE_TIMEOUT_MS  } from '#tests/support/release/packages.ts';
+import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
+import { installedConsumer, publishRelease } from '#tests/support/release/published.ts';
 
 let release: PublishedRelease;
 beforeAll(async () => {

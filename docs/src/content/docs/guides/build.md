@@ -110,7 +110,7 @@ mise run build -- --target \
     bun-windows-x64-baseline
 ```
 
-The target definitions in `packages/npm/targets.json` own the compiler targets, binary
+The target definitions in `packages/cli/src/platform/release-targets.json` own the compiler targets, binary
 names, npm identities, and libc selection. macOS builds run `codesign` when built on macOS.
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 

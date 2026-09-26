@@ -38,7 +38,7 @@ export async function toolPackageManager(
         if (detected === undefined) {
             const first = projectPaths
                 .filter((path) => path.endsWith('/package.json') && !path.startsWith('.gspot/'))
-                .sort()[0];
+                .toSorted((left, right) => left.localeCompare(right))[0];
             if (first !== undefined) detected = await detect(first);
         }
         const name = detected?.name ?? (Bun.which('bun') === null ? 'npm' : 'bun');

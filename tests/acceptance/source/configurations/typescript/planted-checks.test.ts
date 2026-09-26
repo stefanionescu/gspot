@@ -143,7 +143,8 @@ const CASES: FindingCase[] = [
             'config/logic.ts':
                 '// Logic where literals belong.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    return value * 2;\n}\n',
         },
-        policy: '[architecture]\nroles = { config = "config" }\n',
+        // init already wrote the architecture table, so the role joins it as a subtable.
+        policy: '[architecture.roles]\nconfig = "config"\n',
         expected: { file: 'config/logic.ts', rule: 'logic-in-config', line: 8 },
     },
     {

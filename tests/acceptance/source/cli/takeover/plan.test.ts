@@ -40,7 +40,9 @@ test.each(['', 'hooks', '.husky'])(
         expect(result.code).toBe(0);
         const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
         // No configured hooks reads "none"; a configured folder is named with its one hand-written hook.
-        expect(hooks).toMatch(hooksPath === '' ? /^hooks\s+none$/ : new RegExp(`^hooks\\s.*${hooksPath}/.*pre-commit`));
+        expect(hooks).toMatch(
+            hooksPath === '' ? /^hooks\s+none$/ : new RegExp(String.raw`^hooks\s.*${hooksPath}/.*pre-commit`),
+        );
         expect(hooks.split('(hand-written)')).toHaveLength(hooksPath === '' ? 1 : 2);
         expect(readFileSync(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);

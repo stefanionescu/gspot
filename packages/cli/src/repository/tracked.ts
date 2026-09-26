@@ -180,7 +180,7 @@ export function submodulePaths(root: string): string[] {
                     .filter((entry) => entry.startsWith('160000 '))
                     .map((entry) => entry.slice(entry.indexOf('\t') + 1)),
             ),
-        ].sort();
+        ].toSorted((left, right) => left.localeCompare(right));
     if (isOutsideGit(root)) return [];
     throw new Error(`Git submodule listing failed in ${root}: ${listed.stderr.trim()}`);
 }
@@ -191,7 +191,7 @@ export function submodulePaths(root: string): string[] {
  * @param exclude the paths to leave out
  * @returns the entries with size, executable bit and symlink flag
  */
-export async function trackedEntries(root: string, exclude: string[] = []): Promise<RawEntry[]> {
+export function trackedEntries(root: string, exclude: string[] = []): RawEntry[] {
     const paths = listedPaths(root);
     const submodules = submodulePaths(root);
     const isExcluded = pathMatcher(exclude);

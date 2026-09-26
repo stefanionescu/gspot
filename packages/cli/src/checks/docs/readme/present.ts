@@ -14,7 +14,7 @@ export function readmePresent(input: EngineInput): Finding[] {
     const isLicenseRequired = input.view.tool('docs')['require_license'] !== false;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
-    if (!(statSync(join(input.root, readme), { throwIfNoEntry: false }) !== undefined))
+    if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
         findings.push({
             check: input.spec.name,
             file: readme,
@@ -24,7 +24,7 @@ export function readmePresent(input: EngineInput): Finding[] {
     if (
         isLicenseRequired &&
         input.scope === '' &&
-        LICENSE_NAMES.every((name) => !(statSync(join(input.root, name), { throwIfNoEntry: false }) !== undefined))
+        LICENSE_NAMES.every((name) => statSync(join(input.root, name), { throwIfNoEntry: false }) === undefined)
     )
         findings.push({
             check: input.spec.name,

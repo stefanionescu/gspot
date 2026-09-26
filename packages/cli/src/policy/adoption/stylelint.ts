@@ -86,7 +86,7 @@ async function carryStylelint(
         scope.tools['stylelint'] = { rules: enabled };
         lists.scopes.set(base, scope);
     }
-    const paths = base === '.' ? undefined : [`${base.replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`)}/**`];
+    const paths = base === '.' ? undefined : [`${base.replaceAll(/[?*[\]{}]/gu, String.raw`\$&`)}/**`];
     for (const rule of disabled)
         carried.ignores.push({ check, rule, reason: reasonFor(path), ...(paths === undefined ? {} : { paths }) });
 }

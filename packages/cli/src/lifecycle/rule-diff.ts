@@ -19,7 +19,7 @@ function document(path: string, text: string): unknown {
     if (baseName(path) === 'shellcheckrc' || baseName(path) === '.shellcheckrc') return shellcheckRules(text);
     if (baseName(path) === 'swiftformat' || baseName(path) === '.swiftformat') return swiftformatRules(text);
     const extension = extensionOf(path);
-    if (extension === '.js' || extension === '.mjs' || extension === '.cjs') return javascriptRules(path, text);
+    if (['.js', '.mjs', '.cjs'].includes(extension)) return javascriptRules(path, text);
     if (extension === '.toml') return parseToml(text);
     if (extension === '.yaml' || extension === '.yml') return Bun.YAML.parse(text);
     if (extension === '.json' || extension === '.jsonc') {
@@ -67,11 +67,15 @@ export function compareRules(paths: string[], previous: unknown, proposed: unkno
     return paths.flatMap((path) => {
         const old = rulesAt(previous, path);
         const next = rulesAt(proposed, path);
-        const added = [...next.keys()].filter((rule) => !old.has(rule)).toSorted();
-        const removed = [...old.keys()].filter((rule) => !next.has(rule)).toSorted();
+        const added = [...next.keys()]
+            .filter((rule) => !old.has(rule))
+            .toSorted((left, right) => left.localeCompare(right));
+        const removed = [...old.keys()]
+            .filter((rule) => !next.has(rule))
+            .toSorted((left, right) => left.localeCompare(right));
         const changed = [...next.keys()]
             .filter((rule) => old.has(rule) && !isDeepStrictEqual(old.get(rule), next.get(rule)))
-            .toSorted();
+            .toSorted((left, right) => left.localeCompare(right));
         return added.length + removed.length + changed.length === 0 ? [] : [{ path, added, removed, changed }];
     });
 }

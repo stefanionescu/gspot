@@ -53,7 +53,8 @@ test('spelling distinguishes native findings from fatal exits for configuration 
     });
     const session = await openSession(sandbox.path);
     const planned = (await planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] }))[0]!;
-    const { manifest: _manifest, ...declared } = planned;
+    const declared = { ...planned };
+    delete declared.manifest;
     const stdout = JSON.stringify({
         type: 'typo',
         path: 'sample.txt',

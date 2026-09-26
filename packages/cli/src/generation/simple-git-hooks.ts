@@ -53,7 +53,8 @@ export function simpleGitHookOutputs(
     try {
         requirePackageConfiguration(files);
         const source = files.read('package.json');
-        if (source === undefined) throw new Error('simple-git-hooks requires a repository package.json.');
+        if (source === undefined)
+            throw new Error('The simple-git-hooks integration requires a repository package.json.');
         const config = manifestSchema.parse(JSON.parse(source.bytes.toString('utf8')))['simple-git-hooks'];
         const entries = readOwnership(root).files;
         const recorded = entries.find((entry) => entry.path === 'package.json');
@@ -62,7 +63,7 @@ export function simpleGitHookOutputs(
             const owned = recorded?.configuration?.fields.find((entry) => isDeepStrictEqual(entry.path, field));
             const original = owned === undefined ? config?.[name] : owned.original;
             if (original !== undefined && typeof original !== 'string')
-                throw new Error(`simple-git-hooks ${name} must be a shell command.`);
+                throw new Error(`The simple-git-hooks ${name} entry must be a shell command.`);
             const path = `${DIRECTORY}/${name}`;
             let content: string | undefined;
             if (original === simpleGitHookCommand(prefix, name)) {

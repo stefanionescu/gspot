@@ -77,9 +77,11 @@ test('formatter overrides agree between direct tool configuration, editor discov
     const before = await run(directory.path, [...args, '--', ...files]);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     const report = JSON.parse(before.stdout) as RunReport;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted()).toStrictEqual(
-        files.toSorted(),
-    );
+    expect(
+        report.checks
+            .flatMap(({ findings }) => findings.map(({ file }) => file))
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
     const corrected = await run(directory.path, [...args, '--fix', '--', ...files]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const { file, tabWidth, singleQuote, semi, endOfLine } of CASES) {

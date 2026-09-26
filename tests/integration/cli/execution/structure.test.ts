@@ -27,10 +27,10 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
     const input = engineInput(session, planned!);
     const probe = spyOn(probes, 'probeTool').mockReturnValue({ name: 'ast-grep', state: 'ok', path: process.execPath });
-    const processRun = spyOn(processes, 'run').mockImplementation(async (command) => {
+    const processRun = spyOn(processes, 'run').mockImplementation((command) => {
         const batch = command.slice(5);
         received.push(...batch);
-        return {
+        return Promise.resolve({
             code: 1,
             missing: false,
             duration: 1,
@@ -42,7 +42,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
                     range: { start: { line: 0 }, end: { line: 1 } },
                 })),
             ),
-        };
+        });
     });
     try {
         const matches = await astGrepMatches(
@@ -263,9 +263,11 @@ if (process.platform !== 'win32')
             only: ['structure/prefix-collisions'],
         };
         const initial = await executeRun(await openSession(sandbox.path), options);
-        expect(initial.report.checks[0]!.findings.map((finding) => finding.file).sort()).toStrictEqual(
-            [paths[0]!, paths[2]!].sort(),
-        );
+        expect(
+            initial.report.checks[0]!.findings.map((finding) => finding.file).toSorted((left, right) =>
+                left.localeCompare(right),
+            ),
+        ).toStrictEqual([paths[0]!, paths[2]!].toSorted((left, right) => left.localeCompare(right)));
         renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
         renameSync(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
         commitAll(sandbox.path);

@@ -133,7 +133,7 @@ test('a non-Git walk preserves newline directories, nested negations, pruning, a
     });
     fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
     fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
-    const entries = await trackedEntries(root);
+    const entries = trackedEntries(root);
     expect(entries.map((entry) => entry.path).sort()).toStrictEqual([
         '.gitignore',
         'source\nfiles/.gitignore',
@@ -141,9 +141,9 @@ test('a non-Git walk preserves newline directories, nested negations, pruning, a
         'source\nfiles/keep.log',
     ]);
     fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
-    expect((await trackedEntries(root)).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     fs.unlinkSync(join(root, 'external.ts'));
-    expect((await trackedEntries(root)).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
 });
 
 if (process.platform !== 'win32')
@@ -151,7 +151,7 @@ if (process.platform !== 'win32')
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-        expect((await trackedEntries(sandbox.path)).map((entry) => entry.path)).toStrictEqual(['source.ts']);
+        expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['source.ts']);
     });
 
 if (process.platform !== 'win32')

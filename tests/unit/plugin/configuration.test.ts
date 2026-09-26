@@ -5,7 +5,7 @@ import plugin from '#plugin/plugin.ts';
 import parser from '@typescript-eslint/parser';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import clientExample from '../../../docs/src/components/home/client-environment.json';
+import clientExample from '#docs/src/components/home/client-environment.json';
 
 describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {

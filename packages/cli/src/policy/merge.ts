@@ -17,7 +17,7 @@ function coversScope(paths: string[], scope: string): boolean {
             `${segments
                 .slice(0, index + 1)
                 .join('/')
-                .replaceAll(/[?*\[\]{}]/gu, String.raw`\$&`)}/**`,
+                .replaceAll(/[?*[\]{}]/gu, String.raw`\$&`)}/**`,
         ),
     );
 }

@@ -9,10 +9,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks/git.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-
-const { version: GSPOT_VERSION } = packageManifest;
 
 test.each(['default', 'external'] as const)(
     'nested uninstall reports the retained hook and original backup in the %s Git boundary',

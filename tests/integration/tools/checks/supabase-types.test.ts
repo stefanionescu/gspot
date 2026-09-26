@@ -31,10 +31,15 @@ test('Supabase CLI 2.72.7 generates local database types and production freshnes
     const address = listener.address();
     if (address === null || typeof address === 'string') throw new Error('No isolated database port was allocated.');
     const db = config['db'];
-    if (typeof db !== 'object' || db === null || Array.isArray(db) || db instanceof Date)
+    if (typeof db !== 'object' || Array.isArray(db) || db instanceof Date)
         throw new Error('Supabase init did not declare database settings.');
     db['port'] = address.port;
-    await new Promise<void>((resolve, reject) => listener.close((error) => { error ? reject(error) : resolve(); }));
+    await new Promise<void>((resolve, reject) =>
+        listener.close((error) => {
+            if (error) reject(error);
+            else resolve();
+        }),
+    );
     await Bun.write(configPath, stringify(config));
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["supabase"]\n[tools.supabase]\ntypes_file = "database.ts"\n',

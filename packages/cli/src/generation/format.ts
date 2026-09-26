@@ -162,7 +162,9 @@ export function prettierConfig(
         if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
         return { files, excludeFiles, options: prettierOptions(format) };
     });
-    const { overrides: nativeOverrides = [], reason: _reason, ...extras } = extra ?? {};
+    const { overrides: nativeOverrides = [], ...carried } = extra ?? {};
+    // The reason explains the override to a reader of the policy; Prettier does not read it.
+    const extras = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
     for (const entry of relocatedOverrides(
         nativeOverrides as {
             files: string | string[];

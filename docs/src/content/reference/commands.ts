@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
-import type { ReferencePage } from './page';
-import { referencePage, section, table, cell } from './page';
+import type { ReferencePage } from './page.ts';
+import { referencePage, section, table, cell } from './page.ts';
 import { buildProgram } from '@gspot/cli/src/commands/program.ts';
 
 function commandPage(command: Command, name: string): ReferencePage {
@@ -49,7 +49,7 @@ function commandPage(command: Command, name: string): ReferencePage {
         .replace('\n\nExit codes:\n', '\n\n## Exit codes\n\n')
         .replace(
             '\n\nExample:\n',
-            '\n\n## Example\n\nRun from the repository root, or select it with \`-C <dir>\`.\n\n\`\`\`shell\n',
+            '\n\n## Example\n\nRun from the repository root, or select it with `-C <dir>`.\n\n```shell\n',
         )
         .trim()}\n\`\`\`\n`;
     const sections = [

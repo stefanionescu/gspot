@@ -1,7 +1,7 @@
-import type { ReferencePage } from './page';
+import type { ReferencePage } from './page.ts';
 import type { JSONSchema } from 'zod/v4/core';
 import { isDeepStrictEqual } from 'node:util';
-import { cell, referencePage, table } from './page';
+import { cell, referencePage, table } from './page.ts';
 import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
 import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
@@ -47,9 +47,8 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
     ];
 }
 
-function comparable(setting: SettingSpec): Omit<SettingSpec, 'default' | 'detect'> {
-    const { default: _default, detect: _detect, ...rest } = setting;
-    return rest;
+function comparable(setting: SettingSpec): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'detect'));
 }
 
 /**

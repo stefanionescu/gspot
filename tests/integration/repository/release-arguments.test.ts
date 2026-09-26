@@ -14,7 +14,10 @@ describe('build script arguments', () => {
             'packages/cli/scripts/command.ts': readFileSync(join(ROOT, 'packages/cli/scripts/command.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
             'packages/cli/scripts/publish.ts': readFileSync(join(ROOT, 'packages/cli/scripts/publish.ts'), 'utf8'),
-            'packages/npm/targets.json': readFileSync(join(ROOT, 'packages/npm/targets.json'), 'utf8'),
+            'packages/cli/src/platform/release-targets.json': readFileSync(
+                join(ROOT, 'packages/cli/src/platform/release-targets.json'),
+                'utf8',
+            ),
             ...Object.fromEntries(
                 [
                     'LICENSE.md',
@@ -83,7 +86,7 @@ describe('publish script arguments', () => {
                         'packages/npm/README.md',
                         'packages/npm/package.json',
                         'packages/npm/gspot.js',
-                        'packages/npm/targets.json',
+                        'packages/cli/src/platform/release-targets.json',
                         'packages/cli/scripts/publish.ts',
                         'packages/cli/scripts/targets.ts',
                     ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),

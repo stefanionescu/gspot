@@ -25,12 +25,12 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
             only: ['integrity/lockfile-fresh'],
         });
         const copies: string[] = [];
-        const spawn = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
+        const spawn = spyOn(processes, 'run').mockImplementation((_command, options) => {
             copies.push(options.cwd);
             writeFileSync(join(options.cwd, 'bun.lock'), 'partial installation\n');
             mkdirSync(join(options.cwd, 'node_modules'), { recursive: true });
             writeFileSync(join(options.cwd, 'node_modules/protected.txt'), 'replacement dependency\n');
-            return {
+            return Promise.resolve({
                 code: 1,
                 stdout: '',
                 stderr:
@@ -43,7 +43,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
                 missing: failure === 'missing',
                 isTimedOut: failure === 'deadline',
                 isCanceled: failure === 'cancellation',
-            };
+            });
         });
         try {
             const result = await runEngineCheck(session, lockfileFresh, planned!);

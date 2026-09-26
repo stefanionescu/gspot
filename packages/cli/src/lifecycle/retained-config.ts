@@ -31,8 +31,7 @@ export function retainedConfigurationPaths(
             if (current === undefined) return [];
             if (takeover?.has(path) && isDeepStrictEqual(current, takeover.get(path))) return [];
             const installed = ownership.get(path)?.installed;
-            return installed !== undefined &&
-                current.mode === installed.mode &&
+            return current.mode === installed?.mode &&
                 createHash('sha256').update(current.bytes).digest('hex') === installed.hash
                 ? []
                 : [path];

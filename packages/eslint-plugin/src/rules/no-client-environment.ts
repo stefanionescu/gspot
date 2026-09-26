@@ -51,8 +51,7 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
             VariableDeclarator(node) {
                 if (
                     !isClient ||
-                    !node.init ||
-                    node.init.type !== AST_NODE_TYPES.Identifier ||
+                    node.init?.type !== AST_NODE_TYPES.Identifier ||
                     node.init.name !== 'process' ||
                     !isGlobalEnvironmentHost(context, node.init) ||
                     node.id.type !== AST_NODE_TYPES.ObjectPattern

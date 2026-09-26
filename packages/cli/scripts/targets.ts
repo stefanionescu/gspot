@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import definitions from '../../npm/targets.json' with { type: 'json' };
+import definitions from '#cli/platform/release-targets.json' with { type: 'json' };
 
 const targetSchema = z.object({
     os: z.enum(['darwin', 'linux', 'win32']),

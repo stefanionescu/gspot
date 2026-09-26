@@ -51,7 +51,11 @@ export async function packageEnvironment(root: string): Promise<Record<string, s
         )
             continue;
         if (value === undefined || value === null) continue;
-        let text = Array.isArray(value) ? value.join('\n\n') : String(value);
+        let text = Array.isArray(value)
+            ? value.join('\n\n')
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value);
         if (key.endsWith(':certfile') || key.endsWith(':keyfile')) text = resolve(root, text);
         env[`npm_config_${key}`] = text;
     }

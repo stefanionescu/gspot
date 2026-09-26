@@ -11,9 +11,7 @@ const FAILED_CODE = 1;
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };
     if (isAbsolute(executable) && env['PATH'] !== undefined)
-        env['PATH'] = [dirname(executable), env['PATH']]
-            .filter((value) => value !== undefined && value !== '')
-            .join(delimiter);
+        env['PATH'] = [dirname(executable), env['PATH']].filter((value) => value !== '').join(delimiter);
     return {
         cwd: options.cwd,
         env,
@@ -25,7 +23,6 @@ function commandOptions(options: SpawnOptions, executable: string) {
         reject: false,
         maxBuffer: Infinity,
         killSignal: 'SIGKILL' as const,
-        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
     };
 }
 
@@ -141,7 +138,7 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    const { timeout: _timeout, ...base } = commandOptions(options, executable);
+    const base = commandOptions(options, executable);
     const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32' });
     const supervision = supervise(child, options);
     if (options.onStdout !== undefined) child.stdout?.on('data', options.onStdout);
@@ -169,7 +166,8 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    return completed(execaSync(executable, argv, commandOptions(options, executable)), started);
+    const deadline = options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs };
+    return completed(execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline }), started);
 }
 
 /**
@@ -182,7 +180,7 @@ export async function runBinary(command: string[], options: AsyncSpawnOptions): 
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    const { timeout: _timeout, ...base } = commandOptions(options, executable);
+    const base = commandOptions(options, executable);
     const child = execa(executable, argv, {
         ...base,
         detached: process.platform !== 'win32',

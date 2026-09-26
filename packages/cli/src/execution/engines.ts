@@ -160,14 +160,15 @@ export function resolveCheck(
     if (spec.analysis === 'swiftlint') return checkSwiftlint;
     if (spec.analysis === 'actions') return checkActions;
     if (spec.reported_by !== undefined)
-        return async (_session, planned) => ({
-            check: spec.name,
-            scope: planned.scope.scope.path,
-            status: 'skipped',
-            note: `its findings come from ${spec.reported_by}`,
-            files: 0,
-            duration: 0,
-            findings: [],
-        });
+        return (_session, planned) =>
+            Promise.resolve({
+                check: spec.name,
+                scope: planned.scope.scope.path,
+                status: 'skipped',
+                note: `its findings come from ${spec.reported_by}`,
+                files: 0,
+                duration: 0,
+                findings: [],
+            });
     return (session, planned) => runToolCheck(session, planned);
 }

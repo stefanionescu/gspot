@@ -27,7 +27,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
             state: 'ok',
             path: process.execPath,
         });
-        const spawn = spyOn(processes, 'run').mockImplementation(async (command) => {
+        const spawn = spyOn(processes, 'run').mockImplementation((command) => {
             const output = command[command.indexOf('--output') + 1]!;
             directories.push(output);
             const report = {
@@ -41,7 +41,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
                 duplicates: failure === 'invalid clone' && !corrected ? [{ lines: 20 }] : [],
             };
             writeFileSync(join(output, 'jscpd-report.json'), JSON.stringify(report));
-            return {
+            return Promise.resolve({
                 code: failure === 'fatal exit' && !corrected ? 1 : 0,
                 stdout: '',
                 stderr: 'Native scan failed.',
@@ -49,7 +49,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
                 duration: 1,
                 isTimedOut: failure === 'deadline' && !corrected,
                 isCanceled: failure === 'cancellation' && !corrected,
-            };
+            });
         });
         try {
             const failed = await runEngineCheck(session, copiedBlocks, planned!);

@@ -84,7 +84,9 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
         takeover: carried.observed,
     });
     const editors = generated.files.filter((file) => file.path.endsWith('.editorconfig'));
-    expect(editors.map((file) => file.path).sort()).toStrictEqual(Object.keys(configs).sort());
+    expect(editors.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        Object.keys(configs).toSorted((left, right) => left.localeCompare(right)),
+    );
     for (const file of editors) writeFileSync(join(directory.path, file.path), file.content);
     const after = await Promise.all(
         paths.map((path) =>

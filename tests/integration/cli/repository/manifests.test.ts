@@ -73,7 +73,7 @@ test.each([
     ['pyproject.toml', '[project]\ndependencies = ["FastAPI>=1", "Friendly_Bard>=2"]\n'],
     [
         'pyproject.toml',
-        '[tool.poetry.dependencies]\nFaStApI = "^1"\n\"Friendly.Bard\" = {version = "^2"}\npython = "^3.12"\n',
+        '[tool.poetry.dependencies]\nFaStApI = "^1"\n"Friendly.Bard" = {version = "^2"}\npython = "^3.12"\n',
     ],
     [
         'pyproject.toml',
@@ -90,7 +90,10 @@ test.each([
     await createFileTree(sandbox.path, { [`api/${path}`]: source, 'other/readme.txt': 'No Python dependencies.\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
     const facts = readManifests(sandbox.path, repository.files);
-    expect(Object.keys(facts[0]!.dependencies).sort()).toStrictEqual(['fastapi', 'friendly-bard']);
+    expect(Object.keys(facts[0]!.dependencies).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'fastapi',
+        'friendly-bard',
+    ]);
     const manifests = configurationManifests();
     const proposed = detectConfigurations(repository.files, manifests, facts, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);

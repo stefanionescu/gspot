@@ -127,7 +127,7 @@ describe('the library configurations', () => {
             } else if (planted.check === 'drizzle/relations-complete') {
                 await createFileTree(sandbox.path, {
                     'src/tables.ts':
-                        planted.files['src/tables.ts'] +
+                        (planted.files['src/tables.ts'] ?? '') +
                         '\nimport { relations } from "drizzle-orm";\nexport const memberRelations = relations(members, ({one}) => ({ team: one(teams, {fields: [members.teamId], references: [teams.id]}) }));\n',
                 });
             } else {

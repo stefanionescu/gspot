@@ -12,7 +12,7 @@ export function nginxDirectives(text: string): string[][] {
     let directive: string[] = [];
     for (const [token] of text.matchAll(TOKENS)) {
         if (token.startsWith('#')) continue;
-        if (token === ';' || token === '{' || token === '}') {
+        if ([';', '{', '}'].includes(token)) {
             if (token !== '}' && directive.length > 0) directives.push(directive);
             directive = [];
             continue;

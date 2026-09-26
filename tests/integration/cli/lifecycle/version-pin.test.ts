@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 import { assertPinMatches, pinnedVersion, writePin } from '#cli/lifecycle/version-pin.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

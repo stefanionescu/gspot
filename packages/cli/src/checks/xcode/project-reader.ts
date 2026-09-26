@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 type Plist = string | Plist[] | { [key: string]: Plist };
 type Token = { text: string; quoted: boolean; at: number };
 
-const TOKEN = /\s+|\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|[{}()=;,]|[A-Za-z0-9_.$/+\-]+/uy;
+const TOKEN = /\s+|\/\/[^\n]*(?:\n|$)|\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|[{}()=;,]|[A-Za-z0-9_.$/+-]+/uy;
 const objectSchema = z.object({
     isa: z.string(),
     name: z.string().optional(),
@@ -37,8 +37,8 @@ function tokens(text: string): Token[] {
             const quoted = raw.startsWith('"');
             const value = quoted
                 ? raw.slice(1, -1).replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
-                      if (escaped.startsWith('U')) return String.fromCharCode(Number.parseInt(escaped.slice(1), 16));
-                      if (/^[0-7]/u.test(escaped)) return String.fromCharCode(Number.parseInt(escaped, 8));
+                      if (escaped.startsWith('U')) return String.fromCodePoint(Number.parseInt(escaped.slice(1), 16));
+                      if (/^[0-7]/u.test(escaped)) return String.fromCodePoint(Number.parseInt(escaped, 8));
                       return (
                           ({ n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' } as Record<string, string>)[escaped] ??
                           escaped

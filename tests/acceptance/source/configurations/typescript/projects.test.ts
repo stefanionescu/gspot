@@ -181,7 +181,9 @@ test.each(['absolute', 'symlink'])(
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
-        expect(readdirSync(join(sandbox.path, 'app')).sort()).toStrictEqual(['tsconfig.json', 'value.ts']);
+        expect(
+            readdirSync(join(sandbox.path, 'app')).toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['tsconfig.json', 'value.ts']);
     },
     PLANTED_TIMEOUT_MS,
 );

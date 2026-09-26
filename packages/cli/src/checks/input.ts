@@ -9,6 +9,7 @@ import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 
 export type EngineInput = {
     policyFiles: PolicyFiles;
@@ -23,7 +24,7 @@ export type EngineInput = {
     cancelSignal?: AbortSignal;
     scopeRoot: string;
     repositoryFiles?: TrackedFile[];
-    generatedDrift?: () => import('#cli/lifecycle/drift.ts').DriftEntry[];
+    generatedDrift?: () => DriftEntry[];
     suppressions?: SuppressionComment[];
     root: string;
     scope: string;

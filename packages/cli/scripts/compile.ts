@@ -18,7 +18,7 @@ const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target
  */
 export async function build(targets: string[], out: string): Promise<void> {
     await prepareInput(join(here, '.build/swift.wasm'), SWIFT_GRAMMAR);
-    const grammarSources = [...grammarAssets.keys()].filter((path) => path !== grammarPath('swift.wasm'));
+    const grammarSources = Object.keys(grammarAssets).filter((path) => path !== grammarPath('swift.wasm'));
     await binaryNotices('');
     mkdirSync(join(here, '.build'), { recursive: true });
     const evaluator = await Bun.build({

@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readRepository } from '#cli/repository/tree.ts';
 import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
-import { rejection } from '#tests/support/rejection.ts';
+import { failure, rejection } from '#tests/support/rejection.ts';
 
 describe('repository file discovery', () => {
     test('excluded links are omitted before resolving external targets', async () => {
@@ -32,7 +32,7 @@ describe('repository file discovery', () => {
         expect(processes.runBlocking(['git', 'init'], { cwd: sandbox.path }).code).toBe(0);
         expect(processes.runBlocking(['git', 'add', 'source.ts'], { cwd: sandbox.path }).code).toBe(0);
         fs.rmSync(join(sandbox.path, 'source.ts'));
-        expect(await trackedEntries(sandbox.path)).toStrictEqual([]);
+        expect(trackedEntries(sandbox.path)).toStrictEqual([]);
     });
 
     test.each(['lstatSync', 'statSync'] as const)(
@@ -53,7 +53,7 @@ describe('repository file discovery', () => {
                 throw denied;
             });
             try {
-                expect(await rejection(trackedEntries(sandbox.path))).toBe(denied);
+                expect(failure(() => trackedEntries(sandbox.path))).toBe(denied);
             } finally {
                 metadata.mockRestore();
                 listed.mockRestore();
@@ -128,7 +128,7 @@ describe('repository file discovery', () => {
             'source.ts': 'export {};\n',
             'ignored.ts': 'export {};\n',
         });
-        const entries = await trackedEntries(sandbox.path);
+        const entries = trackedEntries(sandbox.path);
         expect(entries.map((entry) => entry.path)).toStrictEqual(['.gitignore', 'source.ts']);
     });
 
@@ -144,10 +144,10 @@ describe('repository file discovery', () => {
         expect(expectedRoot.ino).toBeGreaterThan(0n);
         expect(actualRoot.dev).toBe(expectedRoot.dev);
         expect(actualRoot.ino).toBe(expectedRoot.ino);
-        const entries = await trackedEntries(cwd);
+        const entries = trackedEntries(cwd);
         expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
         writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
-        expect((await rejection(trackedEntries(cwd))).message).toMatch(/Git ls-files failed/u);
+        expect(failure(() => trackedEntries(cwd))?.message).toMatch(/Git ls-files failed/u);
     });
 
     test('reports invalid Git metadata instead of treating the directory as non-Git', async () => {
@@ -156,7 +156,7 @@ describe('repository file discovery', () => {
             '.git/sentinel': 'incomplete metadata',
             'source.ts': 'export {};\n',
         });
-        expect((await rejection(trackedEntries(sandbox.path))).message).toMatch(/Git ls-files failed/u);
+        expect(failure(() => trackedEntries(sandbox.path))?.message).toMatch(/Git ls-files failed/u);
         expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
         expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
     });
@@ -172,7 +172,7 @@ describe('repository file discovery', () => {
             duration: 0,
         });
         try {
-            expect((await rejection(trackedEntries(sandbox.path))).message).toMatch(/git executable not found/u);
+            expect(failure(() => trackedEntries(sandbox.path))?.message).toMatch(/git executable not found/u);
             expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
             expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
         } finally {

@@ -229,7 +229,7 @@ function configurationExplanation(configurationName: string): Explanation | { er
 }
 
 function changeLine(spec: SettingSpec, key: string, scope: string): string {
-    const isReasoned = spec.direction === 'ceiling' || spec.direction === 'floor' || spec.direction === 'loosening';
+    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
     return `Change it: gspot set ${quoteArgument(key)} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
 }
 

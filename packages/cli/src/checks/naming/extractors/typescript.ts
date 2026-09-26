@@ -91,7 +91,7 @@ function isImportBinding(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;
     const awaited = value.type === 'await_expression' ? value.namedChildren[0] : value;
-    if (awaited === undefined || awaited === null || awaited.type !== 'call_expression') return false;
+    if (awaited?.type !== 'call_expression') return false;
     const callee = awaited.childForFieldName('function');
     return callee?.type === 'import' || callee?.text === 'require';
 }

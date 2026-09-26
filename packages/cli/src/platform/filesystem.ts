@@ -8,6 +8,7 @@ import {
     closeSync,
     fchmodSync,
     fsyncSync,
+    // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- lchmod is the one call that sets a link's own mode on macOS
     lchmodSync,
     lstatSync,
     mkdirSync,
@@ -80,7 +81,7 @@ export function mutationPath(path: string): string[] {
                 part === '' ||
                 part === '.' ||
                 part === '..' ||
-                /[\\:<>"|?*\u0000-\u001F\u007F]/u.test(part) ||
+                /[\\:<>"|?*\p{Cc}]/u.test(part) ||
                 /[. ]$/u.test(part) ||
                 DEVICE_NAME.test(part),
         )
@@ -165,7 +166,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             !Buffer.from(target).equals(value.bytes) ||
             target === '' ||
             target.startsWith('/') ||
-            (pathFormat === 'portable' ? /[\\:\u0000-\u001F\u007F]/u.test(target) : target.includes('\0'))
+            (pathFormat === 'portable' ? /[\\:\p{Cc}]/u.test(target) : target.includes('\0'))
         )
             throw new Error(`Unsafe lifecycle link target: ${path}`);
         const destination = posix.join(posix.dirname(path), target);
@@ -198,6 +199,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             } else {
                 symlinkSync(link, temporary);
                 staged = true;
+                // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- lchmod is the one call that sets a link's own mode on macOS
                 if (process.platform === 'darwin') lchmodSync(temporary, value.mode);
             }
             if (!sameSnapshot(readEntry(path, expected?.isLink === true), expected))
@@ -312,8 +314,8 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             }
         },
         close() {
-            for (const [path, token] of locks) {
-                if (readEntry(path, false)?.bytes.toString('utf8') === token) unlinkSync(parent(path));
+            for (const [path, holder] of locks) {
+                if (readEntry(path, false)?.bytes.toString('utf8') === holder) unlinkSync(parent(path));
             }
             locks.clear();
         },
@@ -325,7 +327,7 @@ export type FileSnapshot = { bytes: Buffer; mode: number; isLink?: true };
 export type ConfinedRoot = {
     source(path: string): string;
     list(path?: string): string[];
-    stat(path: string): import('node:fs').Stats | undefined;
+    stat(path: string): Stats | undefined;
     validate(path: string, value: FileSnapshot, proposed?: ReadonlyMap<string, FileSnapshot | undefined>): void;
     readEntry(path: string): FileSnapshot | undefined;
     read(path: string): FileSnapshot | undefined;

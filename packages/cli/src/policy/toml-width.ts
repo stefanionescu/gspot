@@ -15,14 +15,18 @@ function isValue(node: { type: string }): node is Value {
 
 function keyValues(blocks: Block[]): KeyValue[] {
     return blocks.flatMap((block) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'KeyValue') return [block];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'Comment') return [];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         return block.items.filter((entry): entry is KeyValue => entry.type === 'KeyValue');
     });
 }
 
 function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, width: number): Edit | undefined {
     const { value } = pair;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
     if (value.type !== 'InlineArray' || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
     const items = value.items.map((entry) => entry.item);

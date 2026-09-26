@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

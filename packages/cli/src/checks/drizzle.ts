@@ -97,7 +97,7 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
                 const now = after.get(path);
                 return was === undefined || now === undefined || !was.equals(now);
             })
-            .toSorted();
+            .toSorted((left, right) => left.localeCompare(right));
         return changed.map((path) =>
             finding(
                 input,

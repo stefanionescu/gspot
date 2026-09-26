@@ -3,6 +3,7 @@ import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { sqlSource } from '#cli/parsers/sql/source.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/parsers/sql/types.ts';
+import { codePoints } from '#cli/platform/code-points.ts';
 
 const observations = new WeakMap<SourceObservations, Map<string, Promise<SqlFile>>>();
 
@@ -25,7 +26,7 @@ async function parseFile(text: string): Promise<SqlFile> {
     const parsed = await parseSql(source);
     const bytes = Buffer.from(source, 'utf8');
     if (parsed.error !== undefined) {
-        const offset = [...source].slice(0, parsed.error.offset).join('').length;
+        const offset = codePoints(source).slice(0, parsed.error.offset).join('').length;
         return { source, variables, statements: [], error: { text: parsed.error.text, ...positionAt(text, offset) } };
     }
     const statements = parsed.tree.stmts ?? [];

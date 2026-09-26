@@ -17,7 +17,7 @@ import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
  * @param file the file to write, relative to cwd
  * @returns the command result, with what was left out
  */
-export async function exportCommand(cwd: string, file: string): Promise<CommandResult> {
+export function exportCommand(cwd: string, file: string): CommandResult {
     const root = findRoot(cwd);
     const policy = readPolicy(root);
     const saved = exportedProfile(policy.text, file);
@@ -58,6 +58,6 @@ export function registerExport(program: Command): void {
         )
         .action(async (file: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => exportCommand(directoryOf(global), file), global);
+            await printCommand(() => Promise.resolve(exportCommand(directoryOf(global), file)), global);
         });
 }

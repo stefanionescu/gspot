@@ -178,7 +178,7 @@ if (import.meta.main) {
         .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
     const report = lintRules(files);
     for (const finding of report.findings)
-        console.log(`rules/${finding.file}:${String(finding.line)}: ${finding.message}`);
+        process.stdout.write(`rules/${finding.file}:${String(finding.line)}: ${finding.message}\n`);
     process.exitCode = report.findings.length > 0 ? 1 : 0;
 }
 

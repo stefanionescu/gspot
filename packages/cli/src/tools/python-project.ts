@@ -43,7 +43,7 @@ const lockSchema = z.object({
         z.object({
             name: z.string(),
             version: z.string(),
-            source: z.object({ virtual: z.string().optional() }).passthrough(),
+            source: z.looseObject({ virtual: z.string().optional() }),
             metadata: z
                 .object({ 'requires-dist': z.array(z.object({ name: z.string(), specifier: z.string() })).optional() })
                 .optional(),
@@ -62,10 +62,10 @@ function matches(project: string, lock: string): boolean {
                 const [name, version] = value.split('==');
                 return `${normalizedPythonPackage(name!)}==${version}`;
             })
-            .toSorted();
+            .toSorted((left, right) => left.localeCompare(right));
         const actual = (root.metadata?.['requires-dist'] ?? [])
             .map((entry) => `${normalizedPythonPackage(entry.name)}${entry.specifier}`)
-            .toSorted();
+            .toSorted((left, right) => left.localeCompare(right));
         return isDeepStrictEqual(actual, expected);
     } catch {
         return false;
@@ -109,7 +109,7 @@ function pythonSettings(root: string, owner: LifecycleOwner, work: string): stri
         selected['find-links'] = z.array(z.string()).parse(selected['find-links']).map(location);
     if (selected['index'] !== undefined)
         selected['index'] = z
-            .array(z.object({ url: z.string() }).passthrough())
+            .array(z.looseObject({ url: z.string() }))
             .parse(selected['index'])
             .map((index) => ({ ...index, url: location(index.url) }));
     if (Object.keys(selected).length > 0) writeFileSync(join(work, 'uv.toml'), stringify(selected), { mode: 0o600 });
@@ -148,7 +148,7 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
     }
     const lock = readFileSync(join(work, 'uv.lock'), 'utf8');
     if (credentials.some((value) => lock.includes(value) || lock.includes(encodeURIComponent(value))))
-        throw new Error('uv included repository index credentials in its lock. Existing files were preserved.');
+        throw new Error('The uv lock includes repository index credentials. Existing files were preserved.');
 }
 
 /**
@@ -170,7 +170,7 @@ export async function resolvePythonProject(root: string, files: GeneratedFile[],
             await uv(root, owner, work, ['lock']);
             content = readFileSync(join(work, 'uv.lock'), 'utf8');
             if (!matches(project.content, content))
-                throw new Error('uv produced a mismatched tool lock. Existing files were preserved.');
+                throw new Error('The uv lock does not match the tool project. Existing files were preserved.');
         } finally {
             rmSync(work, { recursive: true, force: true });
         }
@@ -250,7 +250,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
                 !readFileSync(join(work, 'pyproject.toml')).equals(project.bytes) ||
                 !readFileSync(join(work, 'uv.lock')).equals(lock.bytes)
             )
-                throw new Error(`uv changed locked inputs. ${SETUP}`);
+                throw new Error(`The uv run changed locked inputs. ${SETUP}`);
             // uv links the host interpreter. Copy its executable so the published environment has no external link.
             const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
             const source = realpathSync(interpreter);

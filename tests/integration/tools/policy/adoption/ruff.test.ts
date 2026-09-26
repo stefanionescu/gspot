@@ -19,6 +19,17 @@ const tooling: ExistingTooling = {
     runner: 'none',
 };
 
+// The findings ruff printed as JSON, with each file relative to the sandbox.
+function diagnostics(
+    root: string,
+    result: Pick<Bun.SyncSubprocess<'pipe', 'pipe'>, 'stdout'>,
+): { path: string; code: string }[] {
+    return (JSON.parse(result.stdout.toString()) as { filename: string; code: string }[]).map(({ filename, code }) => ({
+        path: relative(realpathSync(root), filename),
+        code,
+    }));
+}
+
 test('adopted Ruff basename and directory selectors retain their scope in pinned native diagnostics', async () => {
     await using sandbox = await testdir();
     const paths = [
@@ -71,10 +82,11 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     const failed = run();
     expect(failed.exitCode, failed.stderr.toString()).toBe(1);
     const findings = JSON.parse(failed.stdout.toString()) as { filename: string }[];
-    expect(findings.map(({ filename }) => relative(realpathSync(sandbox.path), filename)).sort()).toStrictEqual([
-        'backend/kept.py',
-        'ignored.py',
-    ]);
+    expect(
+        findings
+            .map(({ filename }) => relative(realpathSync(sandbox.path), filename))
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['backend/kept.py', 'ignored.py']);
     for (const path of ['backend/kept.py', 'ignored.py']) await Bun.write(join(sandbox.path, path), 'pass\n');
     const corrected = run();
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
@@ -113,13 +125,8 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
     expect(after.exitCode, after.stderr.toString()).toBe(1);
-    const diagnostics = (result: ReturnType<typeof run>) =>
-        (JSON.parse(result.stdout.toString()) as { filename: string; code: string }[]).map(({ filename, code }) => ({
-            path: relative(realpathSync(sandbox.path), filename),
-            code,
-        }));
-    expect(diagnostics(before)).toStrictEqual([{ path: 'backend/kept.py', code: 'F401' }]);
-    expect(diagnostics(after)).toStrictEqual(diagnostics(before));
+    expect(diagnostics(sandbox.path, before)).toStrictEqual([{ path: 'backend/kept.py', code: 'F401' }]);
+    expect(diagnostics(sandbox.path, after)).toStrictEqual(diagnostics(sandbox.path, before));
     await Bun.write(join(sandbox.path, 'backend/kept.py'), 'pass\n');
     const corrected = run(config.path);
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
@@ -169,11 +176,12 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
     expect(carried.unread).toStrictEqual([]);
     expect(carried.removed.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
-    expect(carried.retained.map(({ path }) => path).sort()).toStrictEqual([
-        'config/base.toml',
-        'config/pyproject.toml',
-    ]);
-    expect([...carried.observed.keys()].sort()).toStrictEqual(Object.keys(originals).sort());
+    expect(carried.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        ['config/base.toml', 'config/pyproject.toml'],
+    );
+    expect([...carried.observed.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        Object.keys(originals).toSorted((left, right) => left.localeCompare(right)),
+    );
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
@@ -186,16 +194,11 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
     expect(after.exitCode, after.stderr.toString()).toBe(1);
-    const diagnostics = (result: ReturnType<typeof run>) =>
-        (JSON.parse(result.stdout.toString()) as { filename: string; code: string }[]).map(({ filename, code }) => ({
-            path: relative(realpathSync(sandbox.path), filename),
-            code,
-        }));
-    expect(diagnostics(before)).toStrictEqual([
+    expect(diagnostics(sandbox.path, before)).toStrictEqual([
         { path: 'backend/elsewhere/kept.py', code: 'F401' },
         { path: 'backend/parent.py', code: 'F401' },
     ]);
-    expect(diagnostics(after)).toStrictEqual(diagnostics(before));
+    expect(diagnostics(sandbox.path, after)).toStrictEqual(diagnostics(sandbox.path, before));
     await Bun.write(join(sandbox.path, 'backend/parent.py'), 'pass\n');
     await Bun.write(join(sandbox.path, 'backend/elsewhere/kept.py'), 'pass\n');
     const corrected = run(config.path);

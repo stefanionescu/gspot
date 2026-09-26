@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 
@@ -124,7 +124,7 @@ test('live output arrives before completion while capture retains output and fai
     await using sandbox = await testdir();
     const stdout: string[] = [];
     const stderr: string[] = [];
-    const ready = Promise.withResolvers<void>();
+    const ready = Promise.withResolvers<undefined>();
     const release = join(sandbox.path, 'release');
     const child = `console.log('ready'); console.error('diagnostic'); while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(10); process.exitCode = 7;`;
     let completed = false;
@@ -186,7 +186,7 @@ test.each(['text', 'binary'] as const)(
 if (process.platform !== 'win32')
     test('preserves execution and process-group permission errors', async () => {
         await using sandbox = await testdir();
-        const original = process.kill;
+        const original = process.kill.bind(process);
         const denied = Object.assign(new Error('Group permission denied.'), { code: 'EPERM' });
         const signaling = spyOn(process, 'kill').mockImplementation((pid, signal) => {
             if (pid < 0) throw denied;

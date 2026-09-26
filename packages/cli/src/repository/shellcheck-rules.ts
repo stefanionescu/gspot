@@ -20,7 +20,7 @@ export function shellcheckRules(text: string): { enable: string[]; disable: stri
                 : remaining.search(key === 'enable' || key === 'disable' ? /[\s#]/u : /\s/u);
             if (quoted && end < 0) throw new Error(`Unterminated ShellCheck quote on line ${index + 1}.`);
             if (quoted && end === 1) throw new Error(`Empty ShellCheck quote on line ${index + 1}.`);
-            const value = remaining.slice(quoted ? 1 : 0, end < 0 ? undefined : end);
+            const value = remaining.slice(quoted ? 1 : 0, end < 0 ? remaining.length : end);
             remaining = end < 0 ? '' : remaining.slice(end + (quoted ? 1 : 0)).trimStart();
             if (key === 'enable' || key === 'disable') {
                 const entries = value === '' ? [] : value.split(',');

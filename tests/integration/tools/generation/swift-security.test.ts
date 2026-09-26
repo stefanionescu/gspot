@@ -85,11 +85,11 @@ test.each(['recommended', 'all'])(
             );
         const broken = await native();
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        const report = JSON.parse(broken.stdout);
+        const report = JSON.parse(broken.stdout) as { errors: unknown[]; results: { check_id: string }[] };
         expect(report.errors).toStrictEqual([]);
-        expect(report.results.map((entry: { check_id: string }) => entry.check_id).sort()).toStrictEqual(
-            [...IDS].sort(),
-        );
+        expect(
+            report.results.map((entry) => entry.check_id).toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual([...IDS].toSorted((left, right) => left.localeCompare(right)));
         for (const [index, rule] of IDS.entries()) {
             const path = index < 11 ? 'Value.swift' : index === 11 ? 'Info.plist' : 'scripts/build.js';
             const line = index < 11 ? index + 1 : index === 11 ? 1 : index - 11;
@@ -100,12 +100,12 @@ test.each(['recommended', 'all'])(
         const cli = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
         expect(cli.code, cli.stdout + cli.stderr).toBe(1);
         expect(
-            JSON.parse(cli.stdout)
-                .checks.flatMap((check: { findings: { rule: string }[] }) => check.findings)
-                .map((finding: { rule: string }) => finding.rule)
-                .filter((id: string) => id.startsWith('ios-'))
-                .sort(),
-        ).toStrictEqual([...IDS].sort());
+            (JSON.parse(cli.stdout) as { checks: { findings: { rule: string }[] }[] }).checks
+                .flatMap((check) => check.findings)
+                .map((finding) => finding.rule)
+                .filter((id) => id.startsWith('ios-'))
+                .toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual([...IDS].toSorted((left, right) => left.localeCompare(right)));
         await Bun.write(
             join(root, 'Value.swift'),
             'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\nUserDefaults.standard.set(value, forKey: "theme")\nlet name = Bundle.main.object(forInfoDictionaryKey: "DisplayName")\nlet address = "https://example.com"\nlet local = "http://localhost:8080"\nlet hash = SHA256.hash(data: data)\nlet web = WKWebView()\nconfiguration.preferences.javaScriptEnabled = false\nprint("Operation completed")\n',
