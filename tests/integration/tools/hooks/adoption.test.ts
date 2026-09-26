@@ -23,17 +23,15 @@ async function expectLefthookRefusesEditedHelper(
     const editedHelper = native.toString('utf8') + '\n# Authored helper edit\n';
     writeFileSync(helper, editedHelper);
     expect(
-        (
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            )
-        ).message,
+        await rejection(
+            installHookManager(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            ),
+        ),
     ).toContain('Retained differing native hook');
     expect(readFileSync(helper, 'utf8')).toBe(editedHelper);
     for (const name of names) expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
@@ -52,17 +50,15 @@ async function expectLefthookRefusesNativeInit(
     const config = join(root, 'lefthook.yml');
     writeFileSync(config, readFileSync(config, 'utf8') + '\nrc: ./native-init.sh\n');
     expect(
-        (
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            )
-        ).message,
+        await rejection(
+            installHookManager(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            ),
+        ),
     ).toContain('Retained differing native hook');
     expect(readFileSync(join(location.absolute, 'commit-msg'))).toStrictEqual(message);
 }
@@ -106,7 +102,8 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
             const result = await run(command, options);
             expect(result.code, result.stdout + result.stderr).toBe(0);
         }
-        expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+        const applied = await applyCommand({ cwd: root, isDryRun: false });
+        expect(applied.exitCode).toBe(0);
         const prepare =
             manager === 'pre-commit'
                 ? [
@@ -129,17 +126,15 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         writeFileSync(join(location.absolute, 'commit-msg'), edited);
         const gitConfig = readFileSync(join(root, '.git/config'));
         expect(
-            (
-                await rejection(
-                    installHookManager(
-                        await openSession(root).then((session) => ({
-                            policy: session.policyFiles.policy,
-                            repository: session.repository,
-                            tools: session,
-                        })),
-                    ),
-                )
-            ).message,
+            await rejection(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            ),
         ).toContain('Retained differing native hook');
         expect(readFileSync(join(location.absolute, 'commit-msg'), 'utf8')).toBe(edited);
         for (const [index, name] of names.entries()) {

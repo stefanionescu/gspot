@@ -38,5 +38,5 @@ test('apply refuses a policy with a wrong line, because it writes from the polic
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': BROKEN, '.gitignore': '.gspot/\n' });
     const session = await openSession(sandbox.path);
-    expect((await rejection(applyAll(session))).message).toContain('gspot.toml:5:1');
+    expect(await rejection(applyAll(session))).toContain('gspot.toml:5:1');
 });

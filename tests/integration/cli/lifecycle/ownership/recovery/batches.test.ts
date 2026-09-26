@@ -37,8 +37,8 @@ owner.close();
             stdout: 'pipe',
             stderr: 'pipe',
         });
-        const streams = Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
-        expect(await child.exited, (await streams).join('\n')).toBe(73);
+        const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
+        expect(await child.exited, streams.join('\n')).toBe(73);
         expect(readFileSync(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(readFileSync(join(directory.path, 'middle.txt'), 'utf8')).toBe(
             `${point === 'before' ? 'authored' : 'installed'} middle.txt\n`,
@@ -108,8 +108,8 @@ owner.close();
             stdout: 'pipe',
             stderr: 'pipe',
         });
-        const streams = Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
-        expect(await child.exited, (await streams).join('\n')).toBe(73);
+        const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
+        expect(await child.exited, streams.join('\n')).toBe(73);
         const owner = openLifecycleOwner(directory.path);
         try {
             expect(owner.read('first.txt')).toBeUndefined();

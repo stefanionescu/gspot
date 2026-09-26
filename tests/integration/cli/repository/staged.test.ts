@@ -33,8 +33,10 @@ describe('Git change observation', () => {
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         commit(sandbox.path);
         git(sandbox.path, 'rm', 'source.ts');
-        expect((await stagedFiles(sandbox.path)).staged).toStrictEqual(['source.ts']);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual(['source.ts']);
+        const removed = await stagedFiles(sandbox.path);
+        expect(removed.staged).toStrictEqual(['source.ts']);
+        const changed = await changedFiles(sandbox.path, 'HEAD');
+        expect(changed.paths).toStrictEqual(['source.ts']);
     });
 
     test('keeps both paths of a rename across directories', async () => {
@@ -42,29 +44,28 @@ describe('Git change observation', () => {
         await createFileTree(sandbox.path, { 'api/source.ts': 'export {};\n', 'web/kept.ts': 'export {};\n' });
         commit(sandbox.path);
         git(sandbox.path, 'mv', 'api/source.ts', 'web/source.ts');
-        expect((await stagedFiles(sandbox.path)).staged).toStrictEqual(['api/source.ts', 'web/source.ts']);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
+        const moved = await stagedFiles(sandbox.path);
+        expect(moved.staged).toStrictEqual(['api/source.ts', 'web/source.ts']);
+        const changed = await changedFiles(sandbox.path, 'HEAD');
+        expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
     });
 
     test('reports corrupt or absent Git state instead of an empty staged set', async () => {
         await using sandbox = await testdir();
-        expect((await rejection(stagedFiles(sandbox.path))).message).toContain('Git diff failed');
+        expect(await rejection(stagedFiles(sandbox.path))).toContain('Git diff failed');
         git(sandbox.path, 'init');
         writeFileSync(join(sandbox.path, '.git/index'), 'corrupt index');
-        expect((await rejection(stagedFiles(sandbox.path))).message).toContain('Git diff failed');
+        expect(await rejection(stagedFiles(sandbox.path))).toContain('Git diff failed');
     });
 
     test('rejects invalid reference observations without interpreting options', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         commit(sandbox.path);
-        expect((await changedFiles(sandbox.path, 'HEAD')).paths).toStrictEqual([]);
-        expect((await rejection(changedFiles(sandbox.path, 'missing-reference'))).message).toContain(
-            'Git merge-base failed',
-        );
-        expect((await rejection(changedFiles(sandbox.path, '--output=outside.txt'))).message).toContain(
-            'Git merge-base failed',
-        );
+        const changed = await changedFiles(sandbox.path, 'HEAD');
+        expect(changed.paths).toStrictEqual([]);
+        expect(await rejection(changedFiles(sandbox.path, 'missing-reference'))).toContain('Git merge-base failed');
+        expect(await rejection(changedFiles(sandbox.path, '--output=outside.txt'))).toContain('Git merge-base failed');
         expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
     });
     test('push comparison distinguishes an absent upstream from a missing upstream object', async () => {
@@ -79,16 +80,16 @@ describe('Git change observation', () => {
         git(sandbox.path, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Second');
         expect(await pushBase(sandbox.path)).toBe(first);
         git(sandbox.path, 'update-ref', '-d', 'refs/heads/upstream');
-        expect((await rejection(pushBase(sandbox.path))).message).toContain('Git merge-base failed');
+        expect(await rejection(pushBase(sandbox.path))).toContain('Git merge-base failed');
     });
 
     test('push comparison reports an unborn or corrupt HEAD instead of inventing a base', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         git(sandbox.path, 'init');
-        expect((await rejection(pushBase(sandbox.path))).message).toContain('Git rev-parse failed');
+        expect(await rejection(pushBase(sandbox.path))).toContain('Git rev-parse failed');
         commit(sandbox.path);
         writeFileSync(join(sandbox.path, '.git/HEAD'), 'broken head');
-        expect((await rejection(pushBase(sandbox.path))).message).toContain('Git rev-parse failed');
+        expect(await rejection(pushBase(sandbox.path))).toContain('Git rev-parse failed');
     });
 });

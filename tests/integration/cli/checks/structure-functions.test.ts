@@ -115,7 +115,7 @@ test.each([
     const deleted = spyOn(first, 'delete');
     const parse = spyOn(parser, 'parse').mockReturnValueOnce(first).mockReturnValueOnce(null);
     try {
-        expect((await rejection(read(request))).message).toContain('parser returned no tree');
+        expect(await rejection(read(request))).toContain('parser returned no tree');
         expect(deleted).toHaveBeenCalledTimes(1);
     } finally {
         parse.mockRestore();

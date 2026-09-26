@@ -122,7 +122,7 @@ test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj
             duration: 1,
         });
         try {
-            expect((await rejection(swiftBuild(input))).message).toContain('Unsafe lifecycle path');
+            expect(await rejection(swiftBuild(input))).toContain('Unsafe lifecycle path');
             expect(run).not.toHaveBeenCalled();
             expect(await swiftBuild(corrected)).toStrictEqual([]);
         } finally {

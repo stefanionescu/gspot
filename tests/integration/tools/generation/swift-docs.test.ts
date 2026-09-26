@@ -141,7 +141,8 @@ test('Swift inline documentation retains native exceptions and original source p
     await generate();
     expect(await check(0)).toStrictEqual([]);
     await Bun.write(join(root, 'nested/.swiftlint.yml'), 'parent_config: ../.swiftlint.yml\n');
-    expect((await check(1)).map(({ file }: { file: string }) => file)).toStrictEqual([
+    const nested = await check(1);
+    expect(nested.map(({ file }: { file: string }) => file)).toStrictEqual([
         'nested/Value.swift',
         'nested/Value.swift',
         'nested/Value.swift',

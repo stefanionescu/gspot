@@ -36,9 +36,11 @@ test('profile tool settings survive adoption of another setting for the same too
         install: false,
         allowDirty: false,
     } as const;
-    expect((await initCommand({ ...options, isDryRun: true })).exitCode).toBe(0);
+    const initialized = await initCommand({ ...options, isDryRun: true });
+    expect(initialized.exitCode).toBe(0);
     expect(readFileSync(join(directory.path, 'typos.toml'), 'utf8')).toBe(original);
-    expect((await initCommand({ ...options, isDryRun: false })).exitCode).toBe(0);
+    const applied = await initCommand({ ...options, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     const check = () =>
         runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
             cwd: directory.path,

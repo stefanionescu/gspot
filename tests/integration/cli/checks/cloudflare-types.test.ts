@@ -64,7 +64,7 @@ test.each(SCOPES)('Cloudflare types in %s report a failed generation and preserv
     const planted = await plant(scope, 'failure');
     await using directory = planted.directory;
     try {
-        expect((await rejection(envTypesFresh(planted.input))).message).toContain('Types generation failed');
+        expect(await rejection(envTypesFresh(planted.input))).toContain('Types generation failed');
         expectPreserved(planted);
         expect(directory.path).toBe(planted.directory.path);
     } finally {

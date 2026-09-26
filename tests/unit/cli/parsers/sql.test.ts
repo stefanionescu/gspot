@@ -27,15 +27,15 @@ test('SQL analyses share concurrent parses and refresh after source corrections'
         { name: 'display_name', line: 1, column: 29 },
     ]);
     const broken = 'SELECT 1;\nSELEC 2;';
-    expect((await sqlFile(broken, observations)).error).toStrictEqual({
+    const failed = await sqlFile(broken, observations);
+    expect(failed.error).toStrictEqual({
         text: 'syntax error at or near "SELEC"',
         line: 2,
         column: 1,
     });
-    expect((await rejection(sqlIdentifiers('broken.sql', broken, observations))).message).toContain(
-        'SQL parse failed at 2:1',
-    );
-    expect((await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), observations)).error).toBeUndefined();
+    expect(await rejection(sqlIdentifiers('broken.sql', broken, observations))).toContain('SQL parse failed at 2:1');
+    const corrected = await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), observations);
+    expect(corrected.error).toBeUndefined();
     const refreshed = sqlFile(source, { root: observations.root, sources: new Map() });
     expect(refreshed).not.toBe(first);
     expect(await refreshed).toStrictEqual(parsed);
@@ -105,16 +105,20 @@ test('psql tokens inside quoted SQL and nested comments retain their literal con
     expect(parsed.error).toBeUndefined();
     expect(parsed.source).toBe(text);
     expect(parsed.variables).toStrictEqual([]);
-    expect((await sqlFile("SELECT ':unterminated;")).error?.text).toContain('unterminated');
-    expect((await sqlFile('SELECT 1; /* :unclosed')).error?.text).toContain('unterminated');
+    const unterminatedString = await sqlFile("SELECT ':unterminated;");
+    expect(unterminatedString.error?.text).toContain('unterminated');
+    const unclosedComment = await sqlFile('SELECT 1; /* :unclosed');
+    expect(unclosedComment.error?.text).toContain('unterminated');
 });
 
 test('SQL errors after Unicode point at the original token', async () => {
     const text = "SELECT '前言😀', :value; SELEC 2;";
-    expect((await sqlFile(text)).error).toStrictEqual({
+    const parsed = await sqlFile(text);
+    expect(parsed.error).toStrictEqual({
         text: 'syntax error at or near "SELEC"',
         line: 1,
         column: text.lastIndexOf('SELEC') + 1,
     });
-    expect((await sqlFile(text.replace('SELEC 2', 'SELECT 2'))).error).toBeUndefined();
+    const corrected = await sqlFile(text.replace('SELEC 2', 'SELECT 2'));
+    expect(corrected.error).toBeUndefined();
 });

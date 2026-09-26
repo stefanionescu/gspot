@@ -87,23 +87,21 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
     });
     symlinkSync(INSTALLED_MODULES, join(directory.path, 'node_modules'));
     expect(
-        (
-            await rejection(
-                initCommand({
-                    cwd: directory.path,
-                    yes: true,
-                    isDryRun: false,
-                    json: true,
-                    configurations: ['javascript'],
-                    hooks: 'none',
-                    runner: 'none',
-                    ci: 'none',
-                    rules: 'no',
-                    install: false,
-                    allowDirty: true,
-                }),
-            )
-        ).message,
+        await rejection(
+            initCommand({
+                cwd: directory.path,
+                yes: true,
+                isDryRun: false,
+                json: true,
+                configurations: ['javascript'],
+                hooks: 'none',
+                runner: 'none',
+                ci: 'none',
+                rules: 'no',
+                install: false,
+                allowDirty: true,
+            }),
+        ),
     ).toContain('Configuration changed after takeover was planned: .eslintignore');
     expect(readFileSync(join(directory.path, '.eslintignore'), 'utf8')).toBe('changed/**\n');
     expect(existsSync(join(directory.path, '.eslintrc.cjs'))).toBe(true);

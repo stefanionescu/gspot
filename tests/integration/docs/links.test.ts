@@ -17,15 +17,13 @@ test('built-site validation covers landing fragments, relative manual links, enc
     const directory = pathToFileURL(`${sandbox.path}/`);
     await validateSiteLinks(directory, 'https://gspot.dev');
     writeFileSync(join(sandbox.path, 'index.html'), '<a href="/guide/#missing">Missing section</a>');
-    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
+    expect(await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).toMatch(
         /fragment #missing does not exist/u,
     );
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><a href="/absent/">Missing page</a>');
-    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
-        /destination does not exist/u,
-    );
+    expect(await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).toMatch(/destination does not exist/u);
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><img src="/assets/missing.png">');
-    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
+    expect(await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).toMatch(
         /missing.png: destination does not exist/u,
     );
     writeFileSync(

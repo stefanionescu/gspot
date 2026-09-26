@@ -58,7 +58,8 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
             expect(directories).toHaveLength(1);
             expect(directories.every((path) => !existsSync(path))).toBe(true);
             corrected = true;
-            expect((await runEngineCheck(session, copiedBlocks, planned!)).status).toBe('ok');
+            const result = await runEngineCheck(session, copiedBlocks, planned!);
+            expect(result.status).toBe('ok');
             expect(directories.every((path) => !existsSync(path))).toBe(true);
         } finally {
             spawn.mockRestore();

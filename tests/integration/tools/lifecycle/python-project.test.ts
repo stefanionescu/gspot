@@ -248,7 +248,8 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             ]);
             const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
             expect(corrected.code, corrected.stderr).toBe(0);
-            expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
+            const ran = await run([installed, 'check', 'source.py'], { cwd: repository.path });
+            expect(ran.code).toBe(0);
             if (runner === 'none')
                 await expectFreshCloneInstalls(repository.path, artifacts.path, {
                     manifest,
@@ -259,7 +260,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
-            expect((await rejection(installPythonProject(repository.path))).message).toContain(
+            expect(await rejection(installPythonProject(repository.path))).toContain(
                 'Run: gspot apply, then gspot install',
             );
             const repaired = toolEnvironment(everyManifest(selected.scopes));
@@ -278,7 +279,8 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             await installPythonProject(repository.path);
             expect(readFileSync(lockPath)).toStrictEqual(lock);
             expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
-            expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
+            const checked = await run([installed, 'check', 'source.py'], { cwd: repository.path });
+            expect(checked.code).toBe(0);
         } finally {
             setEnvironmentVariable('UV_DEFAULT_INDEX', previous);
             for (const [name, value] of previousProjects) {

@@ -57,7 +57,8 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
         expect(remaining.report.exitCode).toBe(1);
         expect(remaining.fixes?.results).toMatchObject([{ status: 'changed', changed: ['source/sample.sql'] }]);
         await Bun.write(join(sandbox.path, 'source/sample.sql'), 'select id from foo;\n');
-        expect((await executeRun(await openSession(sandbox.path), options)).report.exitCode).toBe(0);
+        const executed = await executeRun(await openSession(sandbox.path), options);
+        expect(executed.report.exitCode).toBe(0);
     });
 
 test.each([

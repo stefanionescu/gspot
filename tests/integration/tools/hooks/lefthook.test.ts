@@ -42,17 +42,15 @@ async function expectHelperRepairs(
         ).ready,
     ).toBe(false);
     expect(
-        (
-            await rejection(
-                installHookManager(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            )
-        ).message,
+        await rejection(
+            installHookManager(
+                await openSession(root).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            ),
+        ),
     ).toContain('Retained edited hook');
     expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
     writeFileSync(helperPath, repaired);
@@ -108,7 +106,8 @@ test.each(['custom', 'native'])(
             expect(result.code, result.stderr).toBe(0);
         }
 
-        expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+        const applied = await applyCommand({ cwd: root, isDryRun: false });
+        expect(applied.exitCode).toBe(0);
         const configuration = readFileSync(join(root, 'lefthook.yml'), 'utf8');
         expect(configuration).toContain('# Authored hook');
         expect(configuration).toContain('echo retained');
@@ -166,17 +165,15 @@ test.each(['custom', 'native'])(
         const originalHelper = existsSync(helperPath) ? readFileSync(helperPath) : undefined;
         writeFileSync(join(root, 'hook-settings.yml'), 'pre-commit: [invalid yaml\n');
         expect(
-            (
-                await rejection(
-                    installHookManager(
-                        await openSession(root).then((session) => ({
-                            policy: session.policyFiles.policy,
-                            repository: session.repository,
-                            tools: session,
-                        })),
-                    ),
-                )
-            ).message,
+            await rejection(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            ),
         ).toContain('Cannot load Lefthook configuration');
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init.sh\n');
@@ -214,7 +211,8 @@ test.each(['custom', 'native'])(
         ).toBe(true);
         if (existing === 'native' && originalHelper !== undefined)
             await expectHelperRepairs(root, helperPath, originalHelper);
-        expect((await run(['git', 'add', 'gspot.toml'], { cwd: root })).code).toBe(0);
+        const staged = await run(['git', 'add', 'gspot.toml'], { cwd: root });
+        expect(staged.code).toBe(0);
         unlinkSync(join(root, 'failed'));
         writeFileSync(join(root, 'gspot-runs'), '');
         const native = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
@@ -321,15 +319,18 @@ test.each(['custom', 'native'])(
         const setupFailure = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
         expect(setupFailure.code, setupFailure.stdout + setupFailure.stderr).toBe(2);
         unlinkSync(join(root, 'setup-failed'));
-        expect((await run(['git', 'reset', '--quiet'], { cwd: root })).code).toBe(0);
+        const reset = await run(['git', 'reset', '--quiet'], { cwd: root });
+        expect(reset.code).toBe(0);
         writeFileSync(join(root, 'gspot-runs'), '');
         writeFileSync(join(root, 'failed'), 'finding');
         const emptyIndex = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
         expect(emptyIndex.code, emptyIndex.stdout + emptyIndex.stderr).toBe(1);
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
         unlinkSync(join(root, 'failed'));
-        expect((await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' })).code).toBe(0);
-        const branch = (await run(['git', 'branch', '--show-current'], { cwd: root })).stdout.trim();
+        const hooked = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
+        expect(hooked.code).toBe(0);
+        const current = await run(['git', 'branch', '--show-current'], { cwd: root });
+        const branch = current.stdout.trim();
         for (const command of [
             ['git', 'remote', 'add', 'origin', '.'],
             ['git', 'update-ref', `refs/remotes/origin/${branch}`, 'HEAD'],
@@ -382,8 +383,10 @@ test.each(['custom', 'native'])(
         expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
 
         expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
-        expect((await run(['git', 'config', '--get', 'core.hooksPath'], { cwd: root })).code).toBe(1);
-        expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
+        const hooksPath = await run(['git', 'config', '--get', 'core.hooksPath'], { cwd: root });
+        expect(hooksPath.code).toBe(1);
+        const uninstalled = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
+        expect(uninstalled.exitCode).toBe(0);
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);
         // Uninstall puts the native helper back and removes the one gspot created.
@@ -408,19 +411,18 @@ test('Lefthook versions without the supported installation controls retain exist
     const location = hookLocation(repository.path);
     const original = '#!/bin/sh\necho authored\n';
     writeFileSync(join(location.absolute, 'pre-commit'), original, { mode: 0o755 });
-    expect((await applyCommand({ cwd: repository.path, isDryRun: false })).exitCode).toBe(0);
+    const applied = await applyCommand({ cwd: repository.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     expect(
-        (
-            await rejection(
-                installHookManager(
-                    await openSession(repository.path).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                        tools: session,
-                    })),
-                ),
-            )
-        ).message,
+        await rejection(
+            installHookManager(
+                await openSession(repository.path).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                    tools: session,
+                })),
+            ),
+        ),
     ).toContain('Install Lefthook 2.0.13 or newer');
     expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
     expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);

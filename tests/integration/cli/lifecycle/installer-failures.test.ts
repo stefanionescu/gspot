@@ -54,7 +54,8 @@ test.each(['missing', 'outdated', 'download-failed'] as const)(
             expect(result.exitCode).toBe(2);
             expect(result.text).toContain('tool installation is incomplete');
             expect(result.text).toContain('Run: gspot install');
-            expect((await openSession(sandbox.path)).policyFiles.policy.configurations).toStrictEqual([]);
+            const session = await openSession(sandbox.path);
+            expect(session.policyFiles.policy.configurations).toStrictEqual([]);
             expect(readFileSync(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
             const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
             expect(retry.exitCode).toBe(2);
@@ -87,24 +88,22 @@ test('init does not report success when required Python lock resolution cannot r
     );
     try {
         expect(
-            (
-                await rejection(
-                    initCommand({
-                        cwd: sandbox.path,
-                        yes: true,
-                        isDryRun: false,
-                        json: true,
-                        configurations: ['python'],
-                        isListExact: true,
-                        hooks: 'none',
-                        ci: 'none',
-                        runner: 'mise',
-                        rules: 'no',
-                        install: true,
-                        allowDirty: true,
-                    }),
-                )
-            ).message,
+            await rejection(
+                initCommand({
+                    cwd: sandbox.path,
+                    yes: true,
+                    isDryRun: false,
+                    json: true,
+                    configurations: ['python'],
+                    isListExact: true,
+                    hooks: 'none',
+                    ci: 'none',
+                    runner: 'mise',
+                    rules: 'no',
+                    install: true,
+                    allowDirty: true,
+                }),
+            ),
         ).toContain('Install uv');
         expect(readFileSync(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');
         expect(existsSync(join(sandbox.path, '.gspot/uv.lock'))).toBe(false);
@@ -156,7 +155,8 @@ test.each(['missing', 'not executable'])(
             'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
             'bin/gspot': '#!/bin/sh\nexit 0\n',
         });
-        expect((await processes.run(['git', 'init', '-q'], { cwd: repository.path })).code).toBe(0);
+        const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
+        expect(ran.code).toBe(0);
         installHooks(
             await openSession(repository.path).then((session) => ({
                 policy: session.policyFiles.policy,

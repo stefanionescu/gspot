@@ -15,7 +15,8 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
-    const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['bash/shellcheck'] }))[0]!;
+    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['bash/shellcheck'] });
+    const planned = plans[0]!;
     const command = ['shellcheck', '--norc', '--format=gcc', 'sample.sh'];
     const roots: [string, string] = [sandbox.path, sandbox.path];
     const broken = Bun.spawnSync([...command, 'missing.sh'], { cwd: sandbox.path });
@@ -67,7 +68,8 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
             'broken.py': brokenSource,
         });
         const session = await openSession(sandbox.path);
-        const planned = (await planRun(session, { stage: 'push', skips: [], only: ['python/vulture'] }))[0]!;
+        const plans = await planRun(session, { stage: 'push', skips: [], only: ['python/vulture'] });
+        const planned = plans[0]!;
         const command = ['vulture', '--min-confidence', '80', 'sample.py', 'broken.py'];
         const roots: [string, string] = [sandbox.path, sandbox.path];
         const broken = Bun.spawnSync(command, { cwd: sandbox.path });

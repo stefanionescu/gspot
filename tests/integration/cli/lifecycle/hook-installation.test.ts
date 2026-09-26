@@ -102,7 +102,8 @@ test('a hooks integration outside Git does not create hook files', async () => {
         'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
     });
     await applyAll(await openSession(sandbox.path));
-    expect((await installCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const installed = await installCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(installed.exitCode).toBe(0);
     expect(existsSync(join(sandbox.path, '.gspot/hooks'))).toBe(false);
 });
 
@@ -132,7 +133,8 @@ test('hook sibling collisions refuse the whole installation before another hook 
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
     });
-    expect((await processes.run(['git', 'init', '-q'], { cwd: sandbox.path })).code).toBe(0);
+    const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
+    expect(ran.code).toBe(0);
     const directory = hookLocation(sandbox.path).absolute;
     writeFileSync(join(directory, 'pre-push.gspot-original'), 'authored sibling');
     const refused = await installCommand({ cwd: sandbox.path, isDryRun: false });
@@ -147,7 +149,8 @@ test('a concurrent hook writer is refused and installation succeeds after its lo
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
     });
-    expect((await processes.run(['git', 'init', '-q'], { cwd: sandbox.path })).code).toBe(0);
+    const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
+    expect(ran.code).toBe(0);
     const location = hookLocation(sandbox.path);
     const owner = openLifecycleOwner(location.root);
     try {
@@ -157,7 +160,8 @@ test('a concurrent hook writer is refused and installation succeeds after its lo
     } finally {
         owner.close();
     }
-    expect((await installCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const installed = await installCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(installed.exitCode).toBe(0);
 });
 
 test.each(['linked-hooks', 'linked-hooks/nested'])(
@@ -177,8 +181,10 @@ test.each(['linked-hooks', 'linked-hooks/nested'])(
         for (const args of [
             ['init', '-q'],
             ['config', 'core.hooksPath', hookPath],
-        ])
-            expect((await processes.run(['git', ...args], { cwd: sandbox.path })).code).toBe(0);
+        ]) {
+            const ran = await processes.run(['git', ...args], { cwd: sandbox.path });
+            expect(ran.code).toBe(0);
+        }
         const session = await openSession(sandbox.path);
         symlinkSync(outside.path, join(sandbox.path, 'linked-hooks'));
         expect(() => installHooks({ policy: session.policyFiles.policy, repository: session.repository })).toThrow(
@@ -234,7 +240,8 @@ test('a nested hook boundary keeps recovery ignored through installation and res
         .backup;
     for (const path of ['.gspot/state/ownership.json', backup])
         expect(processes.runBlocking(['git', 'check-ignore', '--', path], { cwd: sandbox.path }).code).toBe(0);
-    expect((await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false })).exitCode).toBe(0);
+    const uninstalled = await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
+    expect(uninstalled.exitCode).toBe(0);
     expect(readFileSync(join(boundary, 'custom/hooks/pre-commit'), 'utf8')).toBe(original);
     expect(readFileSync(join(boundary, backup), 'utf8')).toBe(original);
     expect(processes.runBlocking(['git', 'check-ignore', '--', backup], { cwd: sandbox.path }).code).toBe(0);

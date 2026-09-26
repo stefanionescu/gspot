@@ -21,7 +21,7 @@ test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ 
         planned.spec.isolated_files = isolated;
         rmSync(join(sandbox.path, 'source.txt'));
         symlinkSync(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
-        expect((await rejection(applyFixers(session, [planned], preview))).message).toContain(
+        expect(await rejection(applyFixers(session, [planned], preview))).toContain(
             'Source link leaves the repository',
         );
         expect(readFileSync(join(external.path, 'source.txt'), 'utf8')).toBe('external original');
@@ -79,7 +79,7 @@ test('isolated correction refuses to overwrite source changed during execution a
         `,
     );
     planned.spec.isolated_files = true;
-    expect((await rejection(runFixer(session, planned, sandbox.path))).message).toContain(
+    expect(await rejection(runFixer(session, planned, sandbox.path))).toContain(
         'changed while its correction was running',
     );
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('new working content');

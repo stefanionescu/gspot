@@ -29,7 +29,8 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
         'guide/deep/sample.md': '<span>Content</span>\n',
         'reference/sample.md': '<span>Content</span>\n',
     });
-    const discovered = existingTooling(sandbox.path, (await readRepository(sandbox.path, [], [], [])).files, []);
+    const tree = await readRepository(sandbox.path, [], [], []);
+    const discovered = existingTooling(sandbox.path, tree.files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
     expect(carried.unread).toStrictEqual([]);
     expect(carried.removed.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([

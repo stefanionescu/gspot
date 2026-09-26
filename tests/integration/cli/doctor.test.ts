@@ -129,7 +129,8 @@ test('doctor fails missing and edited hook integration and accepts installed hoo
             repository: session.repository,
         })),
     );
-    expect((await doctorCommand({ cwd: sandbox.path })).exitCode).toBe(0);
+    const diagnosed = await doctorCommand({ cwd: sandbox.path });
+    expect(diagnosed.exitCode).toBe(0);
     writeFileSync(join(hookLocation(sandbox.path).absolute, 'pre-commit'), '#!/bin/sh\nexit 0\n');
     const edited = await doctorCommand({ cwd: sandbox.path });
     expect(edited.exitCode).toBe(1);

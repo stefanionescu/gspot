@@ -34,7 +34,7 @@ test('license analysis refuses absent dependencies instead of reporting a succes
         'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
         'package.json': '{"name":"example","private":true}',
     });
-    expect((await rejection(licensesPackages(await input(sandbox.path)))).message).toBe(
+    expect(await rejection(licensesPackages(await input(sandbox.path)))).toBe(
         'Dependency licenses cannot be checked before installing the project dependencies.',
     );
 });

@@ -38,7 +38,8 @@ for (const language of ['python', 'swift', 'bash'] as const) {
 test('Python counts nested control flow and reports decorated methods and anonymous functions independently', async () => {
     const text =
         'class A:\n    @decorator\n    def method(self):\n        return 1\ndef outer():\n    def inner():\n        one()\n        two()\n        three()\n    return lambda x: x\ndef flow(x):\n    if x:\n        one()\n        two()\n';
-    const tree = (await parserFor('python')).parse(text)!;
+    const parser = await parserFor('python');
+    const tree = parser.parse(text)!;
     try {
         const functions = pythonFunctions({
             path: 'example.py',
@@ -56,7 +57,8 @@ test('Python counts nested control flow and reports decorated methods and anonym
 test('Swift reports constructors, accessors, decorated methods, nested functions, and closures', async () => {
     const text =
         'class A { init() {}; var value: Int { get { return 1 } set { save(newValue) } }; @MainActor func method() { return }; func outer() { func inner() { one(); two(); three() }; let f = { x in x + 1 } } }';
-    const tree = (await parserFor('swift')).parse(text)!;
+    const parser = await parserFor('swift');
+    const tree = parser.parse(text)!;
     try {
         const functions = swiftFunctions({ path: 'example.swift', text, lines: [text], tree });
         expect(swiftTrivial(functions, 2)).toHaveLength(6);
@@ -80,7 +82,8 @@ test.each([
     ['"""Package documentation."""\nfrom other import alias\n', true],
     ['"""Package documentation."""\ndef wrapper():\n    return original()\n', true],
 ] as const)('Python package documentation does not hide structural code: %s', async (source, expected) => {
-    const tree = (await parserFor('python')).parse(source)!;
+    const parser = await parserFor('python');
+    const tree = parser.parse(source)!;
     try {
         expect(trivialFile(tree.rootNode, 'python', 2)).toBe(expected);
     } finally {
@@ -121,7 +124,8 @@ test.each([
 test('Swift includes implicit getters, property observers, and subscript accessors', async () => {
     const text =
         'struct A { var x:Int { 1 }; var y = 0 { willSet { save(newValue) } didSet { save(oldValue) } }; subscript(i:Int)->Int { get { 1 } set { save(newValue) } } }';
-    const tree = (await parserFor('swift')).parse(text)!;
+    const parser = await parserFor('swift');
+    const tree = parser.parse(text)!;
     try {
         expect(swiftTrivial(swiftFunctions({ path: 'example.swift', text, lines: [text], tree }), 2)).toHaveLength(5);
     } finally {

@@ -26,7 +26,8 @@ test.each([true, false])(
             processes.runBlocking(['git', 'config', 'core.hooksPath', '.custom-hooks'], { cwd: directory.path }).code,
         ).toBe(0);
         const options = { cwd: directory.path, yes: true, isDryRun: true };
-        expect((await uninstallCommand(options)).text).not.toContain('dispatchers');
+        const uninstalled = await uninstallCommand(options);
+        expect(uninstalled.text).not.toContain('dispatchers');
         if (hasOriginal) chmodSync(join(directory.path, '.custom-hooks/pre-commit'), 0o751);
         installHooks(
             await openSession(directory.path).then((session) => ({
@@ -36,15 +37,18 @@ test.each([true, false])(
         );
         const hook = join(directory.path, '.custom-hooks/pre-commit');
         const installed = readFileSync(hook);
-        expect((await uninstallCommand(options)).text).toContain('restore or remove unchanged dispatchers');
+        const previewed = await uninstallCommand(options);
+        expect(previewed.text).toContain('restore or remove unchanged dispatchers');
         expect(readFileSync(hook)).toStrictEqual(installed);
-        expect((await uninstallCommand({ ...options, isDryRun: false })).exitCode).toBe(0);
+        const removed = await uninstallCommand({ ...options, isDryRun: false });
+        expect(removed.exitCode).toBe(0);
         // The authored hook comes back; a hook gspot created is removed.
         expect(existsSync(hook) ? readFileSync(hook, 'utf8') : undefined).toBe(hasOriginal ? original : undefined);
         expect(
             processes.runBlocking(['git', 'config', '--get', 'core.hooksPath'], { cwd: directory.path }).stdout.trim(),
         ).toBe('.custom-hooks');
-        expect((await uninstallCommand(options)).text).not.toContain('dispatchers');
+        const repeated = await uninstallCommand(options);
+        expect(repeated.text).not.toContain('dispatchers');
     },
 );
 
@@ -148,7 +152,8 @@ test('uninstall acquires the hook boundary before removing repository outputs', 
     } finally {
         locked.close();
     }
-    expect((await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false })).exitCode).toBe(0);
+    const uninstalled = await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
+    expect(uninstalled.exitCode).toBe(0);
     expect(existsSync(join(directory.path, 'owned.txt'))).toBe(false);
     expect(existsSync(join(location.absolute, 'pre-commit'))).toBe(false);
 });

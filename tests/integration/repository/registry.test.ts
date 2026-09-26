@@ -16,13 +16,13 @@ test('registry setup releases storage after bind failure, timeout, and interrupt
         },
     });
     try {
-        expect((await rejection(startRegistry(unrelated.port))).message).toContain('Registry startup failed');
+        expect(await rejection(startRegistry(unrelated.port))).toContain('Registry startup failed');
         expect(requests).toBe(0);
-        expect((await rejection(startRegistry(0, 1))).message).toContain('Registry startup failed');
+        expect(await rejection(startRegistry(0, 1))).toContain('Registry startup failed');
         const controller = new AbortController();
         const starting = startRegistry(0, 30_000, controller.signal);
         controller.abort(new Error('Interrupted setup'));
-        expect((await rejection(starting)).message).toContain('Interrupted setup');
+        expect(await rejection(starting)).toContain('Interrupted setup');
         expect(new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')))).toStrictEqual(
             before,
         );
@@ -35,7 +35,8 @@ test('registry shutdown removes storage after cancellation and refuses further p
     const controller = new AbortController();
     const registry = await startRegistry(0, 30_000, controller.signal);
     try {
-        expect((await fetch(`${registry.url}/-/ping`)).status).toBe(200);
+        const response = await fetch(`${registry.url}/-/ping`);
+        expect(response.status).toBe(200);
         controller.abort();
     } finally {
         await registry.stop();

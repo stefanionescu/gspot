@@ -32,8 +32,7 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
     symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
-            .message,
+        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('external link');
 });
 
@@ -52,15 +51,13 @@ test('revision dependencies reject external manifest and installation links befo
     unlinkSync(join(sandbox.path, 'package.json'));
     symlinkSync(join(external.path, 'package.json'), join(sandbox.path, 'package.json'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
-            .message,
+        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('Source link leaves');
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
-            .message,
+        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('external link');
     unlinkSync(join(sandbox.path, 'node_modules/external'));
     await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
@@ -84,7 +81,7 @@ test('a nested revision refuses its incomplete managed dependency installation',
         owner.beginInstallation('npm');
     });
     expect(
-        (await rejection(withRevisionSnapshot(project, { kind: 'index' }, () => Promise.resolve(undefined)))).message,
+        await rejection(withRevisionSnapshot(project, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('Tool installation is incomplete');
     withLifecycleOwner(project, (owner) => {
         owner.finishInstallation('npm');
@@ -116,14 +113,12 @@ test.each(['', 'nested/'])('revision prose checks reuse verified installed packa
     expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
-            .message,
+        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('do not match the revision configuration');
     await Bun.write(join(sandbox.path, config), 'StylesPath = vale/styles\nPackages = Example\n');
     await Bun.write(join(project, packagePath), 'edited package');
     expect(
-        (await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))))
-            .message,
+        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
     ).toContain('missing or edited');
 });
 
@@ -197,19 +192,17 @@ test('cancellation drains dependency copies before removing the snapshot and pre
     });
     try {
         expect(
-            (
-                await rejection(
-                    withRevisionSnapshot(
-                        sandbox.path,
-                        { kind: 'index' },
-                        () => {
-                            entered = true;
-                            return Promise.resolve();
-                        },
-                        controller.signal,
-                    ),
-                )
-            ).message,
+            await rejection(
+                withRevisionSnapshot(
+                    sandbox.path,
+                    { kind: 'index' },
+                    () => {
+                        entered = true;
+                        return Promise.resolve();
+                    },
+                    controller.signal,
+                ),
+            ),
         ).toContain('Canceled dependency copy');
         expect(pending).toBe(0);
         expect(entered).toBe(false);

@@ -24,7 +24,7 @@ test('a corrupted download never becomes a cached parser', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'build/swift.wasm');
     using download = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('corrupted grammar'));
-    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('checksum mismatch');
+    expect(await rejection(prepareInput(path, SWIFT_GRAMMAR))).toContain('checksum mismatch');
     expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);
@@ -36,7 +36,7 @@ test('a corrupt cache is refused without replacing it or making a network reques
     const path = join(sandbox.path, 'swift.wasm');
     await Bun.write(path, 'corrupted cache');
     using download = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download.'));
-    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('checksum mismatch');
+    expect(await rejection(prepareInput(path, SWIFT_GRAMMAR))).toContain('checksum mismatch');
     expect(readFileSync(path, 'utf8')).toBe('corrupted cache');
     expect(download).not.toHaveBeenCalled();
 });
@@ -45,7 +45,7 @@ test('an upstream HTTP failure leaves no parser and a corrected response prepare
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'swift.wasm');
     using download = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('unavailable', { status: 503 }));
-    expect((await rejection(prepareInput(path, SWIFT_GRAMMAR))).message).toContain('HTTP 503');
+    expect(await rejection(prepareInput(path, SWIFT_GRAMMAR))).toContain('HTTP 503');
     expect(existsSync(path)).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);

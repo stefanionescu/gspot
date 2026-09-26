@@ -66,9 +66,11 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
     });
     rmSync(join(sandbox.path, '.gitattributes'), { recursive: true });
     writeFileSync(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
-    expect(
-        (await readRepository(sandbox.path, [], [], [])).files.find((file) => file.path === 'source.ts'),
-    ).toMatchObject({ nature: 'generated', natureSource: '.gitattributes' });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    expect(repository.files.find((file) => file.path === 'source.ts')).toMatchObject({
+        nature: 'generated',
+        natureSource: '.gitattributes',
+    });
 });
 
 test('runtime identities classify only the supplied repository files as generated', async () => {

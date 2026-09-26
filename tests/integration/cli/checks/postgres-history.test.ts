@@ -101,11 +101,10 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
 test('migration analysis rejects unreadable SQL and accepts its correction in a new run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POLICY, [PATH]: 'CREATE TABLE ;' });
-    expect((await rejection(migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen')))).message).toContain(
+    expect(await rejection(migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen')))).toContain(
         'SQL parse failed',
     );
     writeFileSync(join(sandbox.path, PATH), ORIGINAL);
-    expect((await migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen')))[0]?.statements[0]?.kind).toBe(
-        'CreateStmt',
-    );
+    const restored = await migrationsOf(await input(sandbox.path, 'postgres/migrations-frozen'));
+    expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
 });

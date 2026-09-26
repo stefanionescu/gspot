@@ -93,7 +93,7 @@ async function expectWrapperDownloadRefused(
         return original(argv, options);
     });
     try {
-        expect((await rejection(installPackageProject(repositoryPath, tools))).message).toContain(
+        expect(await rejection(installPackageProject(repositoryPath, tools))).toContain(
             'Native wrapper download failed',
         );
         expect(existsSync(join(repositoryPath, '.gspot/node_modules/prettier'))).toBe(false);
@@ -250,7 +250,7 @@ test.each([
             });
             expect(refused.code, refused.stdout + refused.stderr).toBe(2);
             expect((JSON.parse(refused.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
+            expect(await rejection(installPackageProject(repository.path, tools))).toContain(
                 'Run: gspot apply, then gspot install',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(stale);
@@ -281,7 +281,7 @@ ${lock.toString('utf8')}
                 join(repository.path, projectPath),
                 JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${manager}@99.0.0` }),
             );
-            expect((await rejection(applyAll(await openSession(repository.path)))).message).toContain(
+            expect(await rejection(applyAll(await openSession(repository.path)))).toContain(
                 'Install that package manager version first',
             );
             expect(readFileSync(lockPath, 'utf8')).toBe(conflict);
@@ -305,7 +305,7 @@ ${lock.toString('utf8')}
             });
             writeFileSync(manifestPath, withScript);
             const requestsBefore = requests;
-            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain('scripts');
+            expect(await rejection(installPackageProject(repository.path, tools))).toContain('scripts');
             expect(requests).toBe(requestsBefore);
             expect(readFileSync(manifestPath, 'utf8')).toBe(withScript);
             writeFileSync(manifestPath, manifest);
@@ -384,9 +384,7 @@ ${lock.toString('utf8')}
             const readmePath = join(repository.path, '.gspot/node_modules/prettier/README.md');
             const readme = readFileSync(readmePath);
             writeFileSync(readmePath, 'authored later');
-            expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
-                'Preserved edited',
-            );
+            expect(await rejection(installPackageProject(repository.path, tools))).toContain('Preserved edited');
             expect(readFileSync(join(repository.path, '.gspot/node_modules/prettier/README.md'), 'utf8')).toBe(
                 'authored later',
             );

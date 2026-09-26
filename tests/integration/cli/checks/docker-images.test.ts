@@ -82,9 +82,7 @@ test('Compose images follow service mappings and reject unreadable input', async
             writeFileSync(join(directory.path, 'compose.yaml'), invalid);
             input.observations = { root: directory.path, sources: new Map() };
             run.mockClear();
-            expect((await rejection(trivyImage(input))).message).toContain(
-                'Cannot read Compose service images in compose.yaml.',
-            );
+            expect(await rejection(trivyImage(input))).toContain('Cannot read Compose service images in compose.yaml.');
             expect(run).not.toHaveBeenCalled();
         }
         writeFileSync(join(directory.path, 'compose.yaml'), 'services: {app: {build: .}}\n');

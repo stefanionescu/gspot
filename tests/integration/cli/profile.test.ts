@@ -53,7 +53,7 @@ test.each(['jest', 'vitest'])(
                 tools: { [configuration]: { harness_directory: 'tests/fixtures' } },
             }),
         });
-        expect((await rejection(readProfile('invalid.profile.toml', directory.path))).message).toContain(
+        expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain(
             'a profile carries no path',
         );
     },
@@ -92,9 +92,7 @@ test('profile export omits local ESLint registrations and selector bases while p
             tools: { eslint: { adopted: [{ processor: { module: './processing.mjs', export: 'default' } }] } },
         }),
     });
-    expect((await rejection(readProfile('invalid.profile.toml', directory.path))).message).toContain(
-        'a profile carries no path',
-    );
+    expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
 });
 
 test('profile export omits complete EditorConfig documents and preserves reusable formatting options', async () => {
@@ -133,7 +131,8 @@ test('profile publication is idempotent, preserves edits, and survives apply and
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readFileSync(path)).toStrictEqual(first);
     expect(readOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
-    expect((await applyCommand({ cwd: directory.path, isDryRun: false })).exitCode).toBe(0);
+    const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     applyUninstall(directory.path, planUninstall(directory.path));
     expect(readFileSync(path)).toStrictEqual(first);
     await Bun.write(path, `${first.toString('utf8')}\n# Authored note.\n`);
@@ -204,7 +203,8 @@ test('profile publication recovers an interrupted write through the lifecycle jo
     }
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readOwnership(directory.path).pending).toBeUndefined();
-    expect((await readProfile('shared.profile.toml', directory.path)).tables.configurations).toStrictEqual([]);
+    const reread = await readProfile('shared.profile.toml', directory.path);
+    expect(reread.tables.configurations).toStrictEqual([]);
 });
 
 test('profile publication preserves permissions when adopting identical existing bytes', async () => {

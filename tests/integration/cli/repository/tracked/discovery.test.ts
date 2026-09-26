@@ -20,9 +20,7 @@ describe('repository file discovery', () => {
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: root }).code).toBe(0);
         const repository = await readRepository(root, [], [], ['excluded.ts']);
         expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-        expect((await rejection(readRepository(root, [], [], []))).message).toMatch(
-            /Source link leaves the repository/u,
-        );
+        expect(await rejection(readRepository(root, [], [], []))).toMatch(/Source link leaves the repository/u);
         expect(fs.readFileSync(join(sandbox.path, 'outside.ts'), 'utf8')).toBe('private external bytes');
     });
 

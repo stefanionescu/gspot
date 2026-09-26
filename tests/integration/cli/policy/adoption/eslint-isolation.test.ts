@@ -24,8 +24,8 @@ test.each([
     });
     symlinkSync(modules, join(directory.path, 'project/node_modules'));
     symlinkSync('../outside/plugin.cjs', join(directory.path, 'project/plugin.cjs'));
-    expect(
-        (await rejection(evaluateEslint({ root: join(directory.path, 'project'), paths: [], flat: true }))).message,
-    ).toContain('outside the repository');
+    expect(await rejection(evaluateEslint({ root: join(directory.path, 'project'), paths: [], flat: true }))).toContain(
+        'outside the repository',
+    );
     expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);
 });

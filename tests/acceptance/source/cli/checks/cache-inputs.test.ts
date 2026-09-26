@@ -43,17 +43,21 @@ stage = "commit"
     expect(changed.code).toBe(1);
     expect(reportSchema.parse(JSON.parse(changed.stdout)).checks[0]!.check).toBe('project/state');
     await Bun.write(join(sandbox.path, 'state/current.txt'), 'valid');
-    expect((await run(sandbox.path, args)).code).toBe(0);
+    const ran = await run(sandbox.path, args);
+    expect(ran.code).toBe(0);
     await Bun.write(join(sandbox.path, 'state/added.txt'), 'invalid');
-    expect((await run(sandbox.path, args)).code).toBe(1);
+    const added = await run(sandbox.path, args);
+    expect(added.code).toBe(1);
     unlinkSync(join(sandbox.path, 'state/added.txt'));
-    expect((await run(sandbox.path, args)).code).toBe(0);
+    const removed = await run(sandbox.path, args);
+    expect(removed.code).toBe(0);
     renameSync(join(sandbox.path, 'state/current.txt'), join(sandbox.path, 'state/renamed.txt'));
     const renamed = await run(sandbox.path, args);
     expect(renamed.code).toBe(0);
     expect(reportSchema.parse(JSON.parse(renamed.stdout)).checks[0]!.status).toBe('ok');
     unlinkSync(join(sandbox.path, 'state/renamed.txt'));
-    expect((await run(sandbox.path, args)).code).toBe(1);
+    const deleted = await run(sandbox.path, args);
+    expect(deleted.code).toBe(1);
 });
 
 test.each([{ inputs: [] }, { inputs: ['../outside'] }, { inputs: ['/outside'] }, { inputs: [String.raw`state\file`] }])(
@@ -72,7 +76,8 @@ inputs = ${JSON.stringify(inputs)}
 stage = "commit"
 `,
         });
-        expect((await run(sandbox.path, ['check'])).code).toBe(2);
+        const ran = await run(sandbox.path, ['check']);
+        expect(ran.code).toBe(2);
         expect(await Bun.file(join(sandbox.path, 'selected.txt')).text()).toBe('authored');
     },
 );
@@ -96,13 +101,16 @@ stage = "commit"
     });
     symlinkSync('../target.txt', join(sandbox.path, 'state/input.txt'));
     const args = ['check', '--only', 'project/linked-input', '--json'];
-    expect((await run(sandbox.path, args)).code).toBe(0);
+    const ran = await run(sandbox.path, args);
+    expect(ran.code).toBe(0);
     const cached = await run(sandbox.path, args);
     expect(cached.code).toBe(0);
     expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
     await Bun.write(join(sandbox.path, 'target.txt'), 'invalid');
-    expect((await run(sandbox.path, args)).code).toBe(1);
+    const invalid = await run(sandbox.path, args);
+    expect(invalid.code).toBe(1);
     await Bun.write(join(sandbox.path, 'target.txt'), 'valid');
-    expect((await run(sandbox.path, args)).code).toBe(0);
+    const valid = await run(sandbox.path, args);
+    expect(valid.code).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'selected.txt')).text()).toBe('authored');
 });

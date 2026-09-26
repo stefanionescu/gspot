@@ -87,7 +87,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
             }),
         );
     };
-    expect((await rejection(check())).message).toContain('require a dependency lockfile');
+    expect(await rejection(check())).toContain('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);
     expect(await check()).toStrictEqual([]);
 });

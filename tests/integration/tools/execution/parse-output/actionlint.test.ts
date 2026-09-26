@@ -21,7 +21,8 @@ test.each(['$/', '"$/', String.raw`"\u0024/`, '|- # $comment\n            $/'])(
             'unrelated.yaml': '42\n',
         });
         const session = await openSession(sandbox.path);
-        const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
+        const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+        const planned = plans[0]!;
         const failed = await resolveCheck(planned.spec)(session, planned);
         expect(failed.status, JSON.stringify(failed)).toBe('fail');
         expect(failed.findings).toContainEqual(
@@ -38,8 +39,10 @@ test.each(['$/', '"$/', String.raw`"\u0024/`, '|- # $comment\n            $/'])(
             workflow.replace('${{ unknown.value }}', 'Hello'),
         );
         const corrected = await openSession(sandbox.path);
-        const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-        expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
+        const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+        const valid = correctedPlans[0]!;
+        const result = await resolveCheck(valid.spec)(corrected, valid);
+        expect(result.status).toBe('ok');
         expect(await Bun.file(join(sandbox.path, 'unrelated.yaml')).text()).toBe('42\n');
     },
 );
@@ -65,7 +68,8 @@ test.each([
         '.github/workflows/called.yml': called,
     });
     const session = await openSession(sandbox.path);
-    const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
+    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const planned = plans[0]!;
     const failed = await resolveCheck(planned.spec)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
     expect(failed.findings).toContainEqual(
@@ -83,8 +87,10 @@ test.each([
         `${workflow}    with:\n      greeting: Hello\n`,
     );
     const corrected = await openSession(sandbox.path);
-    const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-    expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
+    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const valid = correctedPlans[0]!;
+    const result = await resolveCheck(valid.spec)(corrected, valid);
+    expect(result.status).toBe('ok');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/called.yml')).text()).toBe(called);
 });
 
@@ -97,7 +103,8 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
         '.github/workflows/caller.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const planned = (await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
+    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const planned = plans[0]!;
     const failed = await resolveCheck(planned.spec)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
     expect(failed.findings).toContainEqual(
@@ -114,7 +121,9 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
         'on: workflow_call\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n',
     );
     const corrected = await openSession(sandbox.path);
-    const valid = (await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] }))[0]!;
-    expect((await resolveCheck(valid.spec)(corrected, valid)).status).toBe('ok');
+    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const valid = correctedPlans[0]!;
+    const result = await resolveCheck(valid.spec)(corrected, valid);
+    expect(result.status).toBe('ok');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
 });

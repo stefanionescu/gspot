@@ -72,7 +72,8 @@ for (const extension of ['md', 'sh']) {
                     containing({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
                 ]);
                 spawn.mockResolvedValue({ code: 0, stdout: '{}', stderr: '', missing: false, duration: 1 });
-                expect((await runEngineCheck(session, valeFindings, planned!)).status).toBe('ok');
+                const result = await runEngineCheck(session, valeFindings, planned!);
+                expect(result.status).toBe('ok');
             } finally {
                 spawn.mockRestore();
                 probe.mockRestore();

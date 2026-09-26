@@ -60,14 +60,11 @@ test(
         ]);
         const future = join(repository.path, 'generated/future.js');
         writeFileSync(future, SOURCE);
-        expect(
-            (
-                await prettier.getFileInfo(future, {
-                    ignorePath: join(repository.path, '.prettierignore'),
-                    resolveConfig: false,
-                })
-            ).ignored,
-        ).toBe(true);
+        const info = await prettier.getFileInfo(future, {
+            ignorePath: join(repository.path, '.prettierignore'),
+            resolveConfig: false,
+        });
+        expect(info.ignored).toBe(true);
         const skippedFuture = await run(repository.path, [...args, 'generated/future.js']);
         expect(skippedFuture.code, skippedFuture.stdout + skippedFuture.stderr).toBe(0);
         const futureReport = reportSchema.parse(JSON.parse(skippedFuture.stdout));

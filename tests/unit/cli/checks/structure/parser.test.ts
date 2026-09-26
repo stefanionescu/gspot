@@ -64,15 +64,12 @@ test('Bash and naming analysis reject missing trees and accept corrected parsing
     const parser = await parserFor('bash');
     const parse = spyOn(parser, 'parse').mockReturnValue(null);
     try {
-        expect((await rejection(scriptFunctions('run() { echo ready; }', context))).message).toContain('no tree');
-        expect((await rejection(identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context))).message).toContain(
-            'no tree',
-        );
+        expect(await rejection(scriptFunctions('run() { echo ready; }', context))).toContain('no tree');
+        expect(await rejection(identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context))).toContain('no tree');
     } finally {
         parse.mockRestore();
     }
     expect(await scriptFunctions('run() { echo ready; }', context)).toHaveLength(1);
-    expect(
-        (await identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context)).map((entry) => entry.name),
-    ).toContain('run');
+    const identifiers = await identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context);
+    expect(identifiers.map((entry) => entry.name)).toContain('run');
 });

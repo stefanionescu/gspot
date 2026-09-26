@@ -40,7 +40,8 @@ test.each(['', "apps/worker's tools"])(
             'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('gspot-input', await Bun.stdin.text()); await Bun.write('gspot-args', JSON.stringify(process.argv.slice(2))); process.exitCode = (await Bun.file('failed').exists()) ? 1 : 0;\n`,
         });
         chmodSync(join(root, 'bin/gspot'), 0o755);
-        expect((await run(['git', 'init', '-q', sandbox.path], { cwd: root })).code).toBe(0);
+        const ran = await run(['git', 'init', '-q', sandbox.path], { cwd: root });
+        expect(ran.code).toBe(0);
         const installed = await run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {
             cwd: root,
             timeoutMs: 60_000,
@@ -50,9 +51,11 @@ test.each(['', "apps/worker's tools"])(
         const location = hookLocation(root);
         const originalHook = '#!/bin/sh\ncat > local-input\nprintf "%s\\n" "$@" > local-args\n';
         writeFileSync(join(location.absolute, 'pre-push'), originalHook, { mode: 0o755 });
-        expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+        const applied = await applyCommand({ cwd: root, isDryRun: false });
+        expect(applied.exitCode).toBe(0);
         const manifest = readFileSync(join(root, 'package.json'), 'utf8');
-        expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+        const reapplied = await applyCommand({ cwd: root, isDryRun: false });
+        expect(reapplied.exitCode).toBe(0);
         expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(manifest);
         await installHookManager(
             await openSession(root).then((session) => ({
@@ -147,8 +150,10 @@ test.each(['', "apps/worker's tools"])(
             'remote with spaces',
         ]);
         writeFileSync(join(root, 'failed'), 'finding');
-        expect((await run(args, { cwd: root, env })).code).toBe(1);
-        expect((await run(args, { cwd: root, env: { ...env, SKIP_SIMPLE_GIT_HOOKS: '1' } })).code).toBe(1);
+        const failed = await run(args, { cwd: root, env });
+        expect(failed.code).toBe(1);
+        const skippedManager = await run(args, { cwd: root, env: { ...env, SKIP_SIMPLE_GIT_HOOKS: '1' } });
+        expect(skippedManager.code).toBe(1);
         const rc = join(root, 'hook-init.sh');
         for (const [body, status, calls] of [
             ['exit 0\n', 1, 'x'],
@@ -169,7 +174,8 @@ test.each(['', "apps/worker's tools"])(
                 calls === '' ? undefined : JSON.stringify(['check', '--push', '--', 'origin', 'remote with spaces']),
             );
         }
-        expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
+        const uninstalled = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
+        expect(uninstalled.exitCode).toBe(0);
         expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(originalManifest);
         expect(readFileSync(join(location.absolute, 'pre-push'), 'utf8')).toBe(originalHook);
         expect(existsSync(join(location.absolute, 'pre-push.gspot-manager'))).toBe(false);

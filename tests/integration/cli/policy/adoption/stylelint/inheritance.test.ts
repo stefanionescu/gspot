@@ -17,11 +17,9 @@ test('Stylelint package lookups do not adopt a same-named local file', async () 
     });
     symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
     expect(
-        (
-            await rejection(
-                stylelint.lint({ code: 'a { color: red; }', configFile: join(sandbox.path, '.stylelintrc.json') }),
-            )
-        ).message,
+        await rejection(
+            stylelint.lint({ code: 'a { color: red; }', configFile: join(sandbox.path, '.stylelintrc.json') }),
+        ),
     ).toContain('Could not find "config/base.json"');
     const refused = await collectCarried(sandbox.path, STYLELINT_TOOLING, new Set(['css']), []);
     expect(refused.removed).toStrictEqual([]);

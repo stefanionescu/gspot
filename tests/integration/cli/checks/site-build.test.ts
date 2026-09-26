@@ -70,7 +70,7 @@ test('a failed reproducibility build retains the first isolated output', async (
     const first = await siteBuild(request);
     expect(first.isBuilt).toBe(true);
     writeFileSync(join(sandbox.path, 'build.js'), 'throw new Error("Planted build failure");');
-    expect((await rejection(buildReproducible(request))).message).toContain('The second site build failed');
+    expect(await rejection(buildReproducible(request))).toContain('The second site build failed');
     expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe('first');
     expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
 });
@@ -215,5 +215,6 @@ test('site builds receive quoted script names and empty arguments', async () => 
     session.resources = resources;
     const [planned] = await planRun(session, { stage: 'push', skips: [], only: ['static-site/build'] });
     const request = engineInput(session, planned!);
-    expect((await siteBuild(request)).isBuilt).toBe(true);
+    const built = await siteBuild(request);
+    expect(built.isBuilt).toBe(true);
 });

@@ -65,7 +65,8 @@ test.each([undefined, 'yarn'])(
                 }
             ).scripts['prepare'],
         ).toBe('authored setup');
-        expect((await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false })).exitCode).toBe(0);
+        const uninstalled = await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
+        expect(uninstalled.exitCode).toBe(0);
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
     },
 );
@@ -149,7 +150,8 @@ test.each(['mise', 'npm'] as const)(
         });
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
         expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b']);
-        expect((await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false })).exitCode).toBe(0);
+        const uninstalled = await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
+        expect(uninstalled.exitCode).toBe(0);
         expect(readFileSync(join(directory.path, path), 'utf8')).toBe(original);
     },
     25_000,

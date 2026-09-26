@@ -22,13 +22,11 @@ test.each(['eslint', 'prettier'] as const)(
         symlinkSync(modules, join(root, 'node_modules'));
         symlinkSync(`../outside/${filename}`, join(root, filename));
         expect(
-            (
-                await rejection(
-                    tool === 'eslint'
-                        ? evaluateEslint({ root, paths: [], flat: true })
-                        : evaluateFormat({ root, from: filename }),
-                )
-            ).message,
+            await rejection(
+                tool === 'eslint'
+                    ? evaluateEslint({ root, paths: [], flat: true })
+                    : evaluateFormat({ root, from: filename }),
+            ),
         ).toContain('private regular file');
         expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);
         expect(readFileSync(join(directory.path, 'outside', filename), 'utf8')).toBe(content);

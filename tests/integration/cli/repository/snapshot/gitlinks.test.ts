@@ -68,8 +68,10 @@ test('nested policies retain repository context with policy-relative index and c
     await Bun.write(join(project, 'source.txt'), 'indexed');
     gitOutput(sandbox.path, ['add', '.']);
     await Bun.write(join(project, 'source.txt'), 'working');
-    expect((await committedEntries(project)).map((entry) => entry.path)).toStrictEqual(['source.txt']);
-    expect((await gitEntries(project, { kind: 'index' })).map((entry) => entry.path)).toStrictEqual(['source.txt']);
+    const afterWrite = await committedEntries(project);
+    expect(afterWrite.map((entry) => entry.path)).toStrictEqual(['source.txt']);
+    const entries = await gitEntries(project, { kind: 'index' });
+    expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', object } as const]) {
         await withRevisionSnapshot(project, source, async (snapshot, tree) => {
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe(
@@ -80,11 +82,13 @@ test('nested policies retain repository context with policy-relative index and c
         });
     }
     const protocol = `refs/heads/main ${object} refs/heads/main ${base}\n`;
-    expect((await pushedRevisions(project, protocol)).revisions[0]?.paths).toStrictEqual(['source.txt']);
+    const updated = await pushedRevisions(project, protocol);
+    expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
     gitOutput(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
     const newRef = `refs/heads/new ${object} refs/heads/new ${'0'.repeat(object.length)}\n`;
-    expect((await pushedRevisions(project, newRef, 'example')).revisions[0]?.paths).toStrictEqual(['source.txt']);
+    const created = await pushedRevisions(project, newRef, 'example');
+    expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
 

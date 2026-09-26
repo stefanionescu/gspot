@@ -51,7 +51,8 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     const corrected = await run(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const cachedCommand = command.filter((part) => part !== '--no-cache');
-    expect((await run(root, cachedCommand)).code).toBe(0);
+    const ran = await run(root, cachedCommand);
+    expect(ran.code).toBe(0);
     const cached = await run(root, cachedCommand);
     expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);

@@ -57,7 +57,7 @@ test('unsupported executable selectors fail conversion without changing original
     const original = 'export default [{ files: [(path) => path.endsWith(".js")], rules: {} }];';
     await createFileTree(directory.path, { 'package.json': '{"type":"module"}', 'eslint.config.mjs': original });
     symlinkSync(modules, join(directory.path, 'node_modules'));
-    expect((await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).message).toContain(
+    expect(await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).toContain(
         'TOML cannot represent',
     );
     expect(readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
@@ -101,7 +101,7 @@ test.each(['new Date("2026-01-01")', 'new Map([["key", "value"]])', '/pattern/u'
         const original = `export default [{ settings: { custom: ${value} } }];`;
         await createFileTree(directory.path, { 'package.json': '{"type":"module"}', 'eslint.config.mjs': original });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        expect((await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).message).toContain(
+        expect(await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).toContain(
             'TOML cannot represent',
         );
         expect(readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8')).toBe(original);

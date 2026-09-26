@@ -90,7 +90,8 @@ async function expectRunnerSwitchInClone(
     ).toBe(true);
     const roundTrip = await run(['git', 'status', '--porcelain'], options);
     expect(roundTrip.code, roundTrip.stderr).toBe(0);
-    expect(roundTrip.stdout, (await run(['git', 'diff', '--', 'package.json'], options)).stdout).toBe('');
+    const ran = await run(['git', 'diff', '--', 'package.json'], options);
+    expect(roundTrip.stdout, ran.stdout).toBe('');
 }
 
 // An edited simple-git-hooks integration refuses install and apply and stays as edited.
@@ -179,7 +180,8 @@ format = "lines"
             const result = await run(command, { cwd: repository.path, timeoutMs: 60_000 });
             expect(result.code, result.stderr).toBe(0);
         }
-        expect((await applyCommand({ cwd: repository.path, isDryRun: false })).exitCode).toBe(0);
+        const reapplied = await applyCommand({ cwd: repository.path, isDryRun: false });
+        expect(reapplied.exitCode).toBe(0);
         for (const command of [
             ['git', 'add', '--all'],
             ['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'],
@@ -257,14 +259,16 @@ format = "lines"
             'test: staged source',
         ];
         writeFileSync(join(clone.path, 'source.txt'), 'forbidden\n');
-        expect((await run(['git', 'add', 'source.txt'], options)).code).toBe(0);
+        const ran = await run(['git', 'add', 'source.txt'], options);
+        expect(ran.code).toBe(0);
         writeFileSync(join(clone.path, 'source.txt'), 'corrected in working tree\n');
         const failed = await run(commit, options);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout + failed.stderr).toContain('forbidden source token');
         expect(readFileSync(join(clone.path, 'source.txt'), 'utf8')).toBe('corrected in working tree\n');
         expect(readFileSync(join(clone.path, '.hook-observed'), 'utf8')).toBe('authored');
-        expect((await run(['git', 'add', 'source.txt'], options)).code).toBe(0);
+        const staged = await run(['git', 'add', 'source.txt'], options);
+        expect(staged.code).toBe(0);
         const corrected = await run(commit, options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(readFileSync(join(clone.path, '.hook-observed'), 'utf8')).toBe('authoredauthored');

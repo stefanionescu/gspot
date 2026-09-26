@@ -99,29 +99,28 @@ test('failed initialization retains the previous pin until generated publication
     });
     try {
         expect(
-            (
-                await rejection(
-                    initCommand({
-                        cwd: directory.path,
-                        yes: true,
-                        isDryRun: false,
-                        json: true,
-                        configurations: ['none'],
-                        hooks: 'none',
-                        runner: 'none',
-                        ci: 'none',
-                        rules: 'no',
-                        install: false,
-                        allowDirty: false,
-                    }),
-                )
-            ).message,
+            await rejection(
+                initCommand({
+                    cwd: directory.path,
+                    yes: true,
+                    isDryRun: false,
+                    json: true,
+                    configurations: ['none'],
+                    hooks: 'none',
+                    runner: 'none',
+                    ci: 'none',
+                    rules: 'no',
+                    install: false,
+                    allowDirty: false,
+                }),
+            ),
         ).toContain('Generated write denied');
         expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     } finally {
         failed.mockRestore();
     }
-    expect((await applyCommand({ cwd: directory.path, isDryRun: false })).exitCode).toBe(0);
+    const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     expect(readFileSync(join(directory.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
 });
 

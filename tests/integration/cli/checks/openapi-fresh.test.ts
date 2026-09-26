@@ -59,7 +59,7 @@ function expectPreserved({ directory, document, edited, mode }: Planted): void {
 test('OpenAPI freshness reports a failed generation and preserves dirty and untracked input', async () => {
     const planted = await plant('{"fail":true}\n');
     await using directory = planted.directory;
-    expect((await rejection(openapiFresh(planted.input))).message).toContain('Generation failed');
+    expect(await rejection(openapiFresh(planted.input))).toContain('Generation failed');
     expectPreserved(planted);
     expect(directory.path).toBe(planted.directory.path);
 });

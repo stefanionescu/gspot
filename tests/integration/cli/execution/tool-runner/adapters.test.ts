@@ -87,7 +87,8 @@ test('an adapter observes a changed executable version on the next command inste
     expect(changed.report.checks[0]!.status).toBe('missing');
     expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
     writeFileSync(executable, versionCommand('26.8.0'));
-    expect((await executeRun(await openSession(sandbox.path), options)).report.exitCode).toBe(0);
+    const executed = await executeRun(await openSession(sandbox.path), options);
+    expect(executed.report.exitCode).toBe(0);
 });
 
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
@@ -103,15 +104,19 @@ test('cached results observe executable replacement and permissions in a reused 
     chmodSync(executable, 0o755);
     const session = await openSession(sandbox.path);
     const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
-    expect((await executeRun(session, options)).report.exitCode).toBe(0);
-    expect((await executeRun(session, options)).report.checks[0]!.status).toBe('cache');
+    const executed = await executeRun(session, options);
+    expect(executed.report.exitCode).toBe(0);
+    const repeated = await executeRun(session, options);
+    expect(repeated.report.checks[0]!.status).toBe('cache');
     writeFileSync(executable, exitScript(true));
     const changed = await executeRun(session, options);
     expect(changed.report.exitCode).toBe(1);
     expect(changed.report.checks[0]!.status).toBe('fail');
     chmodSync(executable, 0o644);
-    expect((await executeRun(session, options)).report.exitCode).toBe(2);
+    const unexecutable = await executeRun(session, options);
+    expect(unexecutable.report.exitCode).toBe(2);
     chmodSync(executable, 0o755);
     writeFileSync(executable, exitScript(false));
-    expect((await executeRun(session, options)).report.exitCode).toBe(0);
+    const restored = await executeRun(session, options);
+    expect(restored.report.exitCode).toBe(0);
 });

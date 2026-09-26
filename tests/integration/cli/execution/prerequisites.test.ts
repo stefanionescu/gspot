@@ -78,17 +78,16 @@ test('a failed site build skips every output consumer and a new session rebuilds
     ]);
     const session = await openSession(sandbox.path);
     session.resources = resources;
-    const planned = (
-        await Promise.all(
-            ['push', 'manual'].map((stage) =>
-                planRun(session, {
-                    stage: stage as 'push' | 'manual',
-                    skips: [],
-                    only: ['static-site/build', ...consumers],
-                }),
-            ),
-        )
-    ).flat();
+    const stages = await Promise.all(
+        ['push', 'manual'].map((stage) =>
+            planRun(session, {
+                stage: stage as 'push' | 'manual',
+                skips: [],
+                only: ['static-site/build', ...consumers],
+            }),
+        ),
+    );
+    const planned = stages.flat();
     expect(planned).toHaveLength(consumers.size + 1);
     // The build fails with its own output, and every check that reads the built site is skipped with one note.
     const outcomes: { check: string; status: string; note: string | undefined; message: string | undefined }[] = [];

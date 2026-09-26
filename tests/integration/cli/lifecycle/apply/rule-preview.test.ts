@@ -62,9 +62,8 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
         packageManager: renderSession2.packageManager,
     }).files.find((file) => file.path === original.path)!;
     writeFileSync(join(sandbox.path, original.path), corrected.content);
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: true })).text).not.toContain(
-        'opt_in_rules: added empty_count',
-    );
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+    expect(applied.text).not.toContain('opt_in_rules: added empty_count');
 });
 
 test.each([
@@ -115,9 +114,8 @@ test.each([
             packageManager: renderSession4.packageManager,
         }).files.find((file) => file.path === original.path)!;
         writeFileSync(join(sandbox.path, original.path), corrected.content);
-        expect((await applyCommand({ cwd: sandbox.path, isDryRun: true })).text).not.toContain(
-            `${collection}: removed ${rule}`,
-        );
+        const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+        expect(applied.text).not.toContain(`${collection}: removed ${rule}`);
     },
 );
 
@@ -153,7 +151,8 @@ test('apply preview names added Vale styles when prose moves from recommended to
         packageManager: renderSession6.packageManager,
     }).files.find((file) => file.path === original.path)!;
     writeFileSync(join(sandbox.path, original.path), corrected.content);
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: true })).text).not.toContain('*.BasedOnStyles: added');
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+    expect(applied.text).not.toContain('*.BasedOnStyles: added');
 });
 
 test.each([
@@ -184,9 +183,8 @@ test.each([
             packageManager: renderSession8.packageManager,
         }).files.find((file) => file.path === original.path)!;
         writeFileSync(join(sandbox.path, original.path), corrected.content);
-        expect((await applyCommand({ cwd: sandbox.path, isDryRun: true })).text).not.toContain(
-            `rules: changed ${rule}`,
-        );
+        const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+        expect(applied.text).not.toContain(`rules: changed ${rule}`);
     },
 );
 
@@ -208,7 +206,6 @@ test('apply preview names a missing Semgrep rule by ID and clears it after corre
     expect(preview.text).toContain(`rules: added ${removed.id}`);
     expect(readFileSync(join(sandbox.path, original.path), 'utf8')).toBe(before);
     writeFileSync(join(sandbox.path, original.path), original.content);
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: true })).text).not.toContain(
-        `rules: added ${removed.id}`,
-    );
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
+    expect(applied.text).not.toContain(`rules: added ${removed.id}`);
 });

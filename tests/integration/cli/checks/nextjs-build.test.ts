@@ -145,7 +145,7 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
             });
         });
         try {
-            expect((await rejection(nextjsTypes(input))).message).toContain(diagnostic);
+            expect(await rejection(nextjsTypes(input))).toContain(diagnostic);
             expect(scratch).not.toBe('');
             expect(existsSync(scratch)).toBe(false);
             expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

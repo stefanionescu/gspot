@@ -44,7 +44,8 @@ describe('the compiled binary', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/build.sh': script, 'README.md': '# planted\n' });
             commitAll(sandbox.path);
-            expect((await binary(sandbox.path, ['--version'])).stdout.trim()).toBe(GSPOT_VERSION);
+            const ran = await binary(sandbox.path, ['--version']);
+            expect(ran.stdout.trim()).toBe(GSPOT_VERSION);
             const init = await binary(sandbox.path, [
                 'init',
                 '--yes',
@@ -56,7 +57,8 @@ describe('the compiled binary', () => {
             ]);
             expect(init.code).toBe(0);
             expect(existsSync(join(sandbox.path, '.gspot', 'rules', 'general', 'agent', 'WORKING.md'))).toBe(true);
-            expect((await binary(sandbox.path, ['check', '--only', 'bash/shellcheck'])).code).toBe(0);
+            const checked = await binary(sandbox.path, ['check', '--only', 'bash/shellcheck']);
+            expect(checked.code).toBe(0);
             const preview = await binary(sandbox.path, ['apply', '--dry-run', '--json']);
             expect(preview.code, preview.stdout).toBe(0);
             expect((JSON.parse(preview.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);

@@ -35,8 +35,8 @@ test('a missing notice for an unrecorded dependency version fails without substi
         'node_modules/fixture/index.js': 'export const fixture = 1;',
     });
     using download = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected network request.'));
-    expect(
-        (await rejection(dependencyNotices([], [join(directory.path, 'node_modules/fixture/index.js')]))).message,
-    ).toContain('No license notice is recorded for bundled @bomb.sh/tab@0.0.23.');
+    expect(await rejection(dependencyNotices([], [join(directory.path, 'node_modules/fixture/index.js')]))).toContain(
+        'No license notice is recorded for bundled @bomb.sh/tab@0.0.23.',
+    );
     expect(download).not.toHaveBeenCalled();
 });

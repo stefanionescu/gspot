@@ -63,10 +63,10 @@ test('nested Prettier ignore files convert with Git precedence for files created
     };
     const ignorePath = join(directory.path, '.prettierignore');
     const observed = await Promise.all(
-        Object.keys(expected).map(
-            async (path) =>
-                [path, (await prettier.getFileInfo(join(directory.path, path), { ignorePath })).ignored] as const,
-        ),
+        Object.keys(expected).map(async (path) => {
+            const info = await prettier.getFileInfo(join(directory.path, path), { ignorePath });
+            return [path, info.ignored] as const;
+        }),
     );
     expect(Object.fromEntries(observed)).toStrictEqual(expected);
 });

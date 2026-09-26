@@ -76,7 +76,7 @@ test.each(SCOPES)('a failed generation in %s reports the failure and preserves e
     await using directory = planted.directory;
     const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
-        expect((await rejection(drizzleMigrations(planted.input))).message).toContain('Migration generation failed');
+        expect(await rejection(drizzleMigrations(planted.input))).toContain('Migration generation failed');
         writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
         expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
         expectPreserved(planted);
@@ -183,14 +183,12 @@ test.each(['cancellation', 'deadline'])(
         const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
         try {
             expect(
-                (
-                    await rejection(
-                        drizzleMigrations({
-                            ...input,
-                            ...(failure === 'cancellation' ? { cancelSignal: AbortSignal.timeout(100) } : {}),
-                        }),
-                    )
-                ).message,
+                await rejection(
+                    drizzleMigrations({
+                        ...input,
+                        ...(failure === 'cancellation' ? { cancelSignal: AbortSignal.timeout(100) } : {}),
+                    }),
+                ),
             ).toContain(failure === 'cancellation' ? 'canceled' : 'was stopped');
             expect(copies).toHaveLength(1);
             expect(copies.every((path) => !existsSync(path))).toBe(true);

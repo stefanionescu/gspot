@@ -20,7 +20,8 @@ test.each([
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const planned = (await planRun(session, { stage: 'push', skips: [], only: ['configs/actions-pins'] }))[0]!;
+    const plans = await planRun(session, { stage: 'push', skips: [], only: ['configs/actions-pins'] });
+    const planned = plans[0]!;
     const result = {
         code: 1,
         stdout: '',
@@ -53,7 +54,8 @@ test('spelling distinguishes native findings from fatal exits for configuration 
         'sample.txt': 'teh\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = (await planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] }))[0]!;
+    const plans = await planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] });
+    const planned = plans[0]!;
     const declared = { ...planned };
     delete declared.manifest;
     const stdout = JSON.stringify({
@@ -97,7 +99,8 @@ test.each(
             [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
         });
         const session = await openSession(sandbox.path);
-        const planned = (await planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] }))[0]!;
+        const plans = await planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] });
+        const planned = plans[0]!;
         const stdout = JSON.stringify([
             {
                 filePath: join(sandbox.path, path),

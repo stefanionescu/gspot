@@ -157,7 +157,8 @@ describe('profiles', () => {
                 TOOLS,
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect((await tables(sandbox.path))['configurations']).toStrictEqual(['bash']);
+            const read = await tables(sandbox.path);
+            expect(read['configurations']).toStrictEqual(['bash']);
         },
         PLANTED_TIMEOUT_MS,
     );

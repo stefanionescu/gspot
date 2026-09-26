@@ -32,31 +32,17 @@ test.each(['', "apps/worker's tools"])(
             const result = await run(command, { cwd: root, timeoutMs: 60_000 });
             expect(result.code, result.stderr).toBe(0);
         }
-        expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
-        expect(
-            (
-                await run(['git', 'add', 'source.txt', 'gspot.toml', '.pre-commit-config.yaml', '.gitignore'], {
-                    cwd: root,
-                })
-            ).code,
-        ).toBe(0);
-        expect(
-            (
-                await run(
-                    [
-                        'git',
-                        '-c',
-                        'user.name=Fixture',
-                        '-c',
-                        'user.email=fixture@example.test',
-                        'commit',
-                        '-qm',
-                        'fixture',
-                    ],
-                    { cwd: root },
-                )
-            ).code,
-        ).toBe(0);
+        const applied = await applyCommand({ cwd: root, isDryRun: false });
+        expect(applied.exitCode).toBe(0);
+        const ran = await run(['git', 'add', 'source.txt', 'gspot.toml', '.pre-commit-config.yaml', '.gitignore'], {
+            cwd: root,
+        });
+        expect(ran.code).toBe(0);
+        const committed = await run(
+            ['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'],
+            { cwd: root },
+        );
+        expect(committed.code).toBe(0);
         const session = await openSession(root);
         await installHookManager({
             policy: session.policyFiles.policy,
@@ -87,9 +73,11 @@ test.each(['', "apps/worker's tools"])(
             input: '',
         });
         writeFileSync(join(root, 'failed'), 'finding');
-        expect(
-            (await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env: { ...env, SKIP: 'gspot' } })).code,
-        ).toBe(1);
+        const skippedGspot = await run(['git', 'hook', 'run', 'pre-commit'], {
+            cwd: root,
+            env: { ...env, SKIP: 'gspot' },
+        });
+        expect(skippedGspot.code).toBe(1);
         unlinkSync(join(root, 'failed'));
         writeFileSync(join(root, 'setup-failed'), 'missing dependency');
         const setup = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
@@ -104,7 +92,8 @@ test.each(['', "apps/worker's tools"])(
         const unstaged = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(unstaged.code, unstaged.stdout + unstaged.stderr).toBe(2);
         expect(unstaged.stderr).toContain('Stage the configuration');
-        expect((await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root })).code).toBe(0);
+        const staged = await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root });
+        expect(staged.code).toBe(0);
         const skipped = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(skipped.code, skipped.stdout + skipped.stderr).toBe(2);
         expect(skipped.stderr).toContain('gspot apply');
@@ -129,12 +118,14 @@ test.each(['', "apps/worker's tools"])(
         for (const failFast of [false, true]) {
             authored.fail_fast = failFast;
             writeFileSync(join(root, '.pre-commit-config.yaml'), stringifyYaml(authored));
-            expect((await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root })).code).toBe(0);
+            const authoredStaged = await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root });
+            expect(authoredStaged.code).toBe(0);
             const failedNative = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
             expect(failedNative.code, failedNative.stdout + failedNative.stderr).toBe(1);
         }
         writeFileSync(join(root, '.pre-commit-config.yaml'), configuration);
-        expect((await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root })).code).toBe(0);
+        const restaged = await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root });
+        expect(restaged.code).toBe(0);
         const hashed = await run(['git', 'hash-object', 'source.txt'], { cwd: root });
         expect(hashed.code, hashed.stderr).toBe(0);
         const blob = hashed.stdout.trim();
@@ -147,7 +138,8 @@ test.each(['', "apps/worker's tools"])(
         const conflict = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(conflict.code, conflict.stdout + conflict.stderr).toBe(2);
         expect(conflict.stderr).toContain('Unmerged index entries');
-        expect((await run(['git', 'reset', '--', 'source.txt'], { cwd: root })).code).toBe(0);
+        const reset = await run(['git', 'reset', '--', 'source.txt'], { cwd: root });
+        expect(reset.code).toBe(0);
         const executable = join(root, '.venv/bin/pre-commit');
         renameSync(executable, `${executable}.retained`);
         try {
@@ -165,7 +157,8 @@ test.each(['', "apps/worker's tools"])(
         expect(cache.code, cache.stdout + cache.stderr).toBe(2);
 
         writeFileSync(join(root, 'observed'), '');
-        const head = (await run(['git', 'rev-parse', 'HEAD'], { cwd: root })).stdout.trim();
+        const revision = await run(['git', 'rev-parse', 'HEAD'], { cwd: root });
+        const head = revision.stdout.trim();
         const zeros = '0'.repeat(head.length);
         const input = `refs/heads/first ${head} refs/heads/first ${zeros}\nrefs/heads/second ${head} refs/heads/second ${zeros}\n`;
         writeFileSync(join(root, 'push-input'), input);

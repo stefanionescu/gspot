@@ -21,17 +21,20 @@ test.each([
         'gspot.toml': PRE_COMMIT_POLICY,
         ...(original === '' ? {} : { '.pre-commit-config.yaml': original }),
     });
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     const path = join(sandbox.path, '.pre-commit-config.yaml');
     const initial = readFileSync(path, 'utf8');
     const config = parseYaml(initial) as PreCommitConfiguration;
     expect(Array.isArray(config.repos)).toBe(true);
     expect(config.repos?.at(-1)?.hooks[0]?.id).toBe('gspot');
     expect(initial.includes('# Authored repository comment')).toBe(original !== '');
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const reapplied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(reapplied.exitCode).toBe(0);
     expect(readFileSync(path, 'utf8')).toBe(initial);
     writeFileSync(path, initial + '\nfail_fast: true\n');
-    expect((await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false })).exitCode).toBe(0);
+    const uninstalled = await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
+    expect(uninstalled.exitCode).toBe(0);
     const restored = parseYaml(readFileSync(path, 'utf8')) as PreCommitConfiguration;
     expect(restored.fail_fast).toBe(true);
     // Uninstall removes the gspot hook alone: an authored repository stays, and an empty list is dropped.
@@ -47,7 +50,8 @@ test('simple-git-hooks configuration coexists with generated npm scripts', async
         'gspot.toml': SIMPLE_HOOKS_POLICY + '[runner]\ntool = "npm"\n',
         'package.json': '{"private":true,"scripts":{"authored":"echo keep"}}\n',
     });
-    expect((await applyCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     const manifest = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as PackageManifest;
     expect(manifest.scripts['authored']).toBe('echo keep');
     expect(manifest.scripts['gspot:check']).toBe('gspot check');
@@ -62,7 +66,7 @@ test('an overriding simple-git-hooks file remains intact and refuses package int
         'package.json': '{"private":true}\n',
         '.simple-git-hooks.cjs': original,
     });
-    expect((await rejection(applyCommand({ cwd: sandbox.path, isDryRun: false }))).message).toContain(
+    expect(await rejection(applyCommand({ cwd: sandbox.path, isDryRun: false }))).toContain(
         'Retained .simple-git-hooks.cjs',
     );
     expect(readFileSync(join(sandbox.path, '.simple-git-hooks.cjs'), 'utf8')).toBe(original);

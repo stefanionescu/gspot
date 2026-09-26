@@ -98,7 +98,8 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
         JSON.parse(passed.stdout),
     );
     unlinkSync(join(directory.path, 'script with spaces.sh'));
-    expect((await run(directory.path, args)).code).toBe(0);
+    const ran = await run(directory.path, args);
+    expect(ran.code).toBe(0);
 });
 
 test('staged checks validate the index version pin instead of the working pin', async () => {

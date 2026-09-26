@@ -108,7 +108,8 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     }, 5000);
     try {
         expect(await child.exited, await errors).toBe(19);
-        const pid = Number((await output).trim());
+        const printed = await output;
+        const pid = Number(printed.trim());
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
     } finally {

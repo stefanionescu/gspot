@@ -53,6 +53,18 @@ function git(root: string, ...argv: string[]): void {
     expect(result.code, result.stderr).toBe(0);
 }
 
+// The staged selection of the sandbox, as the commit stage receives it.
+async function stagedRevision(root: string): Promise<{ staged: string[] }> {
+    const { staged } = await stagedFiles(root);
+    return { staged };
+}
+
+// The changed selection of the sandbox against HEAD, as the pull-request form receives it.
+async function changedRevision(root: string): Promise<{ changed: string[] }> {
+    const { paths } = await changedFiles(root, 'HEAD');
+    return { changed: paths };
+}
+
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const spec: CheckSpec = {
@@ -97,10 +109,7 @@ test.each([
     mkdirSync(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const revision =
-        selection === 'staged'
-            ? { staged: (await stagedFiles(sandbox.path)).staged }
-            : { changed: (await changedFiles(sandbox.path, 'HEAD')).paths };
+    const revision = selection === 'staged' ? await stagedRevision(sandbox.path) : await changedRevision(sandbox.path);
     const planned = await planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);
@@ -185,11 +194,9 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
         };
         session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
         expect(
-            (
-                await rejection(
-                    executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
-                )
-            ).message,
+            await rejection(
+                executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
+            ),
         ).toContain(`No ${engine} analysis is called unknown-analysis.`);
         expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
         expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);

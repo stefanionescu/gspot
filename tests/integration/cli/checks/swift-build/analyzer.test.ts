@@ -20,7 +20,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        expect((await rejection(swiftAnalyze(input))).message).toMatch(/build exited 7/u);
+        expect(await rejection(swiftAnalyze(input))).toMatch(/build exited 7/u);
     } finally {
         run.mockRestore();
     }
@@ -36,7 +36,7 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
     try {
         // A clean analysis reports nothing; a failed one is an error that names the exit code.
         const findings = code === 0 ? await swiftAnalyze(input) : undefined;
-        const refusal = code === 0 ? undefined : (await rejection(swiftAnalyze(input))).message;
+        const refusal = code === 0 ? undefined : await rejection(swiftAnalyze(input));
         const exited = textContaining(`analyzer exited ${String(code)}`);
         expect(findings).toStrictEqual(code === 0 ? [] : undefined);
         expect(refusal).toStrictEqual(code === 0 ? undefined : exited);
@@ -54,7 +54,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
         run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     run.mockResolvedValue({ code: 1, stdout: '', stderr: '', missing: false, duration: 1, isTimedOut: true });
     try {
-        expect((await rejection(swiftAnalyze(input))).message).toMatch(/ran past 600 seconds and was stopped/u);
+        expect(await rejection(swiftAnalyze(input))).toMatch(/ran past 600 seconds and was stopped/u);
     } finally {
         run.mockRestore();
     }

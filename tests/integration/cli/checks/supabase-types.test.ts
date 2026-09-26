@@ -26,9 +26,8 @@ test.each(['', 'apps/api'])(
         });
         const execute = async () => {
             const session = await openSession(sandbox.path);
-            const planned = (await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] })).find(
-                (check) => check.scope.scope.path === scope,
-            )!;
+            const plans = await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+            const planned = plans.find((check) => check.scope.scope.path === scope)!;
             return await runEngineCheck(session, typesFresh, planned);
         };
         const missing = await execute();
@@ -84,12 +83,11 @@ test.each(['', 'apps/api'])(
                 note: textContaining('Database is unavailable'),
             });
             const session = await openSession(sandbox.path);
-            const planned = (await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] })).find(
-                (check) => check.scope.scope.path === scope,
-            )!;
+            const plans = await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+            const planned = plans.find((check) => check.scope.scope.path === scope)!;
             const input = engineInput(session, planned);
             input.cancelSignal = AbortSignal.abort();
-            expect((await rejection(typesFresh(input))).message).toContain('The command was canceled.');
+            expect(await rejection(typesFresh(input))).toContain('The command was canceled.');
             expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(generated);
             expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(0o640);
         } finally {

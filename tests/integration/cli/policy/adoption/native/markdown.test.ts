@@ -12,7 +12,8 @@ test('overlapping Markdown sources remain intact before any policy is carried', 
     await using sandbox = await testdir();
     const original = '{"MD033":false}\n';
     await createFileTree(sandbox.path, { '.markdownlint.jsonc': original, 'guide/.markdownlint.jsonc': original });
-    const discovered = existingTooling(sandbox.path, (await readRepository(sandbox.path, [], [], [])).files, []);
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const discovered = existingTooling(sandbox.path, repository.files, []);
     const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
     expect(carried.unread).toContainEqual(
         containing({ path: '.markdownlint.jsonc', note: textContaining('Overlapping') }),

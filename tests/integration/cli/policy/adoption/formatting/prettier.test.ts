@@ -207,18 +207,12 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         takeover: carried.observed,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
-    expect(
-        (
-            await prettier.getFileInfo(join(directory.path, 'src/future.js'), {
-                ignorePath: join(directory.path, '.prettierignore'),
-            })
-        ).ignored,
-    ).toBe(true);
-    expect(
-        (
-            await prettier.getFileInfo(join(directory.path, 'src/keep.js'), {
-                ignorePath: join(directory.path, '.prettierignore'),
-            })
-        ).ignored,
-    ).toBe(false);
+    const info = await prettier.getFileInfo(join(directory.path, 'src/future.js'), {
+        ignorePath: join(directory.path, '.prettierignore'),
+    });
+    expect(info.ignored).toBe(true);
+    const kept = await prettier.getFileInfo(join(directory.path, 'src/keep.js'), {
+        ignorePath: join(directory.path, '.prettierignore'),
+    });
+    expect(kept.ignored).toBe(false);
 });

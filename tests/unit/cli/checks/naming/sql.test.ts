@@ -38,18 +38,16 @@ describe('sqlIdentifiers', () => {
     });
 
     test('invalid SQL fails analysis and corrected SQL yields identifiers', async () => {
-        expect((await rejection(sqlIdentifiers('broken.sql', 'CREATE TABLE ;'))).message).toContain('SQL parse failed');
-        expect(
-            (await sqlIdentifiers('broken.sql', 'CREATE TABLE accounts (id int);')).map((entry) => entry.name),
-        ).toStrictEqual(['accounts', 'id']);
+        expect(await rejection(sqlIdentifiers('broken.sql', 'CREATE TABLE ;'))).toContain('SQL parse failed');
+        const identifiers = await sqlIdentifiers('broken.sql', 'CREATE TABLE accounts (id int);');
+        expect(identifiers.map((entry) => entry.name)).toStrictEqual(['accounts', 'id']);
     });
 });
 
 test('psql declaration variables are excluded while authored names retain their locations', async () => {
     const source = '\\set table accounts\nCREATE TABLE :table ("createdAt" int);\nCREATE TABLE :"id" (id int);';
-    expect(
-        (await sqlIdentifiers('schema.sql', source)).map(({ name, line, column }) => ({ name, line, column })),
-    ).toStrictEqual([
+    const identifiers = await sqlIdentifiers('schema.sql', source);
+    expect(identifiers.map(({ name, line, column }) => ({ name, line, column }))).toStrictEqual([
         { name: 'createdAt', line: 2, column: 23 },
         { name: 'id', line: 3, column: 21 },
     ]);

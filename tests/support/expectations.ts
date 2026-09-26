@@ -5,9 +5,9 @@ import { expect } from 'bun:test';
 /**
  * Awaits a promise that must reject with an error.
  * @param promise the promise expected to reject
- * @returns the error it rejected with
+ * @returns the message of the error it rejected with
  */
-export async function rejection(promise: Promise<unknown>): Promise<Error> {
+export async function rejection(promise: Promise<unknown>): Promise<string> {
     let settled: { rejected: true; error: unknown } | { rejected: false } = { rejected: false };
     try {
         await promise;
@@ -17,7 +17,7 @@ export async function rejection(promise: Promise<unknown>): Promise<Error> {
     if (!settled.rejected) throw new Error('The promise resolved, and a rejection was expected.');
     if (!(settled.error instanceof Error))
         throw new Error(`The promise rejected with a value that is not an error: ${String(settled.error)}`);
-    return settled.error;
+    return settled.error.message;
 }
 
 /**

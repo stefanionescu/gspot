@@ -70,9 +70,8 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(defect!.messages).toStrictEqual(containingAll([containing({ ruleId: 'no-console' })]));
     const [fixed] = await eslint.lintText('export const greeting = "message";\n', { filePath: 'src/line\nbreak.js' });
     expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
-    expect((await applyCommand({ cwd: directory.path, isDryRun: true })).text).not.toContain(
-        'rules: changed no-console',
-    );
+    const applied = await applyCommand({ cwd: directory.path, isDryRun: true });
+    expect(applied.text).not.toContain('rules: changed no-console');
 });
 
 test('isolated ESLint preview resolves imports and file scopes without replacing installed configuration', async () => {

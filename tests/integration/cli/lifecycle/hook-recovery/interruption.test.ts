@@ -15,7 +15,8 @@ test.each(['before', 'after'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
         });
-        expect((await processes.run(['git', 'init', '-q'], { cwd: sandbox.path })).code).toBe(0);
+        const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
+        expect(ran.code).toBe(0);
         const location = hookLocation(sandbox.path);
         const hook = join(location.absolute, 'pre-push');
         const original = '#!/bin/sh\nexit 0\n';
@@ -59,12 +60,14 @@ test('uninstall recovers after restoring an original hook and before removing it
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
     });
-    expect((await processes.run(['git', 'init', '-q'], { cwd: sandbox.path })).code).toBe(0);
+    const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
+    expect(ran.code).toBe(0);
     const location = hookLocation(sandbox.path);
     const hook = join(location.absolute, 'pre-push');
     const original = '#!/bin/sh\nexit 0\n';
     writeFileSync(hook, original, { mode: 0o751 });
-    expect((await installCommand({ cwd: sandbox.path, isDryRun: false })).exitCode).toBe(0);
+    const installed = await installCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(installed.exitCode).toBe(0);
     const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/platform/filesystem.ts', import.meta.url));
     const uninstall = fileURLToPath(new URL('../../../../../packages/cli/src/commands/uninstall.ts', import.meta.url));
     const child = `
