@@ -5,6 +5,14 @@ function file(body: string): string {
     return `${HEAD}${body}`;
 }
 
+const BRANCHES = Array.from(
+    { length: 12 },
+    (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo ${String(index)}; fi`,
+).join('\n');
+const NESTED =
+    '    if [[ -n "$1" ]]; then\n        for item in "$@"; do\n            while true; do\n                if [[ -n "${item}" ]]; then\n                    case "${item}" in\n                        a) echo a ;;\n                    esac\n                fi\n                break\n            done\n        done\n    fi';
+const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
+
 export const HEAD =
     '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
 export const MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
@@ -13,13 +21,6 @@ export const LONG_FILE = Array.from(
     { length: 320 },
     (_, index) => `readonly VALUE_${String(index)}=${String(index)}`,
 ).join('\n');
-export const BRANCHES = Array.from(
-    { length: 12 },
-    (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo ${String(index)}; fi`,
-).join('\n');
-export const NESTED =
-    '    if [[ -n "$1" ]]; then\n        for item in "$@"; do\n            while true; do\n                if [[ -n "${item}" ]]; then\n                    case "${item}" in\n                        a) echo a ;;\n                    esac\n                fi\n                break\n            done\n        done\n    fi';
-export const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
 
 export const BASH_CASES: FindingCase[] = [
     {

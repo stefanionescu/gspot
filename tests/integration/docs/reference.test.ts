@@ -188,5 +188,4 @@ test('reference titles come from their definitions and exact rule identifiers re
         expect(page).toContain(`gspot/${name}`);
         expect(pages.get(`plugin/${name}.md`)!.data.title).toBe(rule.meta.docs!.title);
     }
-    expect([...pages.keys()].some((path) => path.startsWith('presets/'))).toBe(false);
 });

@@ -11,19 +11,20 @@ import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
-export const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']);
+const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']);
 
 /**
  * The package manifest of the planted project.
  * @param reactDom the react-dom version, aligned with React or not
  * @returns the manifest text
  */
+const NEXT_CONFIG =
+    '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
+/** The home page. */
+
 export const nextManifest = (reactDom: string): string =>
     `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "${reactDom}"\n    }\n}\n`;
 /** The framework configuration with the build check on. */
-export const NEXT_CONFIG =
-    '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
-/** The home page. */
 export const NEXT_PAGE =
     '// The home page.\n\n/**\n * Renders the home page.\n * @returns the page\n */\nexport default function Page(): string {\n    return "home";\n}\n';
 /** The root layout. */

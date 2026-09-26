@@ -7,7 +7,7 @@ import { type Manifest, parseManifest } from '#cli/configurations/manifests.ts';
  * @param configs the discovered configuration files
  * @returns the tooling
  */
-export function discoveredTooling(configs: ExistingTooling['configs']): ExistingTooling {
+function discoveredTooling(configs: ExistingTooling['configs']): ExistingTooling {
     return {
         configs,
         hooks: [],

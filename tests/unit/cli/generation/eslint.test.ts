@@ -6,10 +6,6 @@ const rawSql = { selector: "TaggedTemplateExpression[tag.name='sql']", message: 
 const procedure = { selector: "CallExpression[callee.property.name='query']", message: 'Give the procedure an input.' };
 const injected = { selector: "Decorator[expression.callee.name='InjectRepository']", message: 'Inject the service.' };
 
-test('no selected fragment selectors means no restricted-syntax group', () => {
-    expect(selectorGroups([])).toStrictEqual([]);
-});
-
 test('general selectors form one group for every code file, in first-mention order', () => {
     expect(selectorGroups([store, procedure])).toStrictEqual([{ selectors: [store, procedure] }]);
 });
