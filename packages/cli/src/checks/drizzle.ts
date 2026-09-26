@@ -1,12 +1,11 @@
 import { rmSync } from 'node:fs';
 import { globbySync } from 'globby';
 import { basename, dirname, join } from 'node:path';
+import { TABLE } from '#cli/constants/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };

@@ -2,13 +2,12 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import { CORE_KINDS } from '#cli/constants/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
 // Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
 import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';
-
-const CORE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 
 function supportedSources(session: Session): Set<string> {
     const manifests = [...session.manifests.values()];

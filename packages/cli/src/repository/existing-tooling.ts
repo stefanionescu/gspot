@@ -10,20 +10,18 @@ import { readGitSetting } from '#cli/repository/git-config.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
+import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/constants/repository/patterns.ts';
 import type { ManifestFacts, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import {
-    AGENT_FILE_NAMES,
-    HOOK_DIRECTORIES,
-    LINT_FOLDER_NAMES,
-    RULES_DIRECTORY_NAMES,
-} from '#cli/repository/patterns.ts';
-
-// The words in a CI job name that say it lints.
-const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
-// Two-word lint commands, and the package managers whose lint or gspot:check task counts.
-const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
-const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
+    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
+    LINT_PAIRS,
+    LINT_WORDS,
+    MISE_FILES,
+    OTHER_CI_FILES,
+    RUNNER_LOCKS,
+    TASK_RUNNERS,
+} from '#cli/constants/repository/repository.ts';
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function runsLint(command: string): boolean {
@@ -37,26 +35,6 @@ function runsLint(command: string): boolean {
         return task === 'lint' || task === 'gspot:check';
     });
 }
-
-const OTHER_CI_FILES = new Set([
-    'Jenkinsfile',
-    'bitbucket-pipelines.yml',
-    '.circleci/config.yml',
-    'azure-pipelines.yml',
-    '.buildkite/pipeline.yml',
-]);
-
-const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
-const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
-    { file: 'bun.lock', runner: 'bun' },
-    { file: 'bun.lockb', runner: 'bun' },
-    { file: 'pnpm-lock.yaml', runner: 'pnpm' },
-    { file: 'yarn.lock', runner: 'yarn' },
-    { file: 'package-lock.json', runner: 'npm' },
-    { file: 'package.json', runner: 'npm' },
-    { file: 'uv.lock', runner: 'none' },
-    { file: 'pyproject.toml', runner: 'none' },
-];
 
 function listDir(root: string, rel: string): string[] {
     const files = openConfinedRoot(root);

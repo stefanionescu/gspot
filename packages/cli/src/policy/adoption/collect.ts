@@ -12,6 +12,7 @@ import { collectFormatting } from '#cli/policy/adoption/formatting.ts';
 import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
 import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { IGNORE_PATH_KEYS, SEPARATE_TOOLS } from '#cli/constants/policy/adoption.ts';
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
@@ -19,17 +20,12 @@ import type { Carrier, Owned, CarriedConfiguration, CarrySource } from '#cli/typ
 
 const strings = z.array(z.string());
 
-// The setting an ignore-path file of a tool fills, for the tools whose importer reads one.
-const IGNORE_PATH_KEYS: Record<string, string> = { sqlfluff: 'exclude', semgrep: 'ignore' };
 // The importer a manifest's reader kind selects, whatever tool declares it.
 const READER_CARRIERS: Record<string, Carrier | undefined> = {
     words: typosImporter.carry,
     advisories: osvImporter.carry,
     licenses: licensesImporter.carry,
 };
-// Tools whose configuration files are read one at a time, so overlapping files need explicit conversion.
-const SEPARATE_TOOLS = new Set(['ruff', 'typos', 'stylelint', 'markdownlint-cli2', 'license-checker-rseidelsohn']);
-
 // Refuses a ShellCheck configuration with any line other than a disable directive or a comment.
 function assertShellcheckSupported(source: CarrySource, path: string): void {
     const unsupported = source.text.split('\n').find((line) => {

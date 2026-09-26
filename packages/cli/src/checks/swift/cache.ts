@@ -7,7 +7,7 @@ import type { Pruning } from '#cli/types/checks/swift.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
 
 // Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.
 function inspectFolder(folder: string, files: ConfinedRoot, directory: string, pending: string[]): void {

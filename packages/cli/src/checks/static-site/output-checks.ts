@@ -8,9 +8,7 @@ import { isAbsolute, join, relative as relativePath } from 'node:path';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { SiteBuild, SizeLimit } from '#cli/types/checks/static-site.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
-
-const BYTES_PER_KB = 1024;
-const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
+import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/constants/checks/static-site.ts';
 
 function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };

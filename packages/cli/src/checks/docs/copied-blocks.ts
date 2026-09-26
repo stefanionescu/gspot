@@ -4,15 +4,12 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { CloneReport } from '#cli/types/checks/docs.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { FULL_PERCENTAGE } from '#cli/constants/checks/jest.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
-
-const FULL_PERCENTAGE = 100;
-
-const TOOL = 'jscpd';
-const DEFAULT_CEILING = 4;
+import { DEFAULT_CEILING, JSCPD_TOOL } from '#cli/constants/checks/docs.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),
@@ -87,7 +84,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
         // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
         const config = join(work, 'jscpd.json');
         writeFileSync(config, JSON.stringify({ ...shipped, path: claimed.map((path) => join(input.root, path)) }));
-        const argv = [TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
+        const argv = [JSCPD_TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
         const result = await runCheckCommand(input, argv, { cwd: input.root });
         if (result.code !== 0)
             throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);

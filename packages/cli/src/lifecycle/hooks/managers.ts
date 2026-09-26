@@ -14,19 +14,12 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
-import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
+import { CONFIG_PATHS, MANAGERS } from '#cli/constants/lifecycle/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { hookPrefix, lefthookConfiguration } from '#cli/generation/hooks.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/constants/repository/repository.ts';
 import type { HookManager, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
-
-const MANAGERS = new Set<string>(['simple-git-hooks', 'pre-commit', 'lefthook', 'husky']);
-const CONFIG_PATHS: Record<HookManager, string> = {
-    'simple-git-hooks': 'package.json',
-    'pre-commit': '.pre-commit-config.yaml',
-    lefthook: 'lefthook.yml',
-    husky: '',
-};
 
 // The native manager the policy names, when Git is present and the tool is one gspot integrates with.
 function managerOf(policy: Policy, repository: Pick<Repository, 'hasGit'>): HookManager | undefined {

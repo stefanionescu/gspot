@@ -3,7 +3,6 @@ import { delimiter, join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { chmodSync, readFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
@@ -11,6 +10,7 @@ import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 

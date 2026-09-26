@@ -1,11 +1,10 @@
 import { basename, dirname, join } from 'node:path';
-import { MODE_BITS } from '#cli/platform/file-modes.ts';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
+import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 
 /**
  * Publish an isolated native installation through the shared ownership journal.

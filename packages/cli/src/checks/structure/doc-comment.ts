@@ -1,8 +1,12 @@
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { DOC_SECTIONS, ENTRY_FUNCTIONS, VAGUE_SUMMARY_WORDS } from '#cli/checks/structure/patterns.ts';
 
-const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
-const WORD = /[A-Za-z0-9]+/gu;
+import {
+    SHELLCHECK_COMMENT,
+    WORD,
+    BASH_DOC_SECTIONS as DOC_SECTIONS,
+    ENTRY_FUNCTIONS,
+    VAGUE_SUMMARY_WORDS,
+} from '#cli/constants/checks/structure.ts';
 
 function blockAbove(lines: string[], start: number): string[] {
     const block: string[] = [];

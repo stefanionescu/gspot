@@ -1,11 +1,10 @@
 import type { SwiftReader } from '#cli/types/checks/swift.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { DEFAULT_DUPLICATE_LINES } from '#cli/constants/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
 import { duplicateFunctions, trivialFunctions } from '#cli/checks/swift/bodies.ts';
 import { environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
-
-const DEFAULT_DUPLICATE_LINES = 4;
 
 function ownerPaths(input: EngineInput): string[] {
     const env = input.policyFiles.policy.architecture.roles['env'];

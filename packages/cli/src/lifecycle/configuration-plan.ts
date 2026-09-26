@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
 

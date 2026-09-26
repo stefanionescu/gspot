@@ -1,7 +1,7 @@
 // The types of generation in this package.
 import type { FileSnapshot } from '#cli/types/platform.ts';
-import type { HOOK_FILES } from '#cli/repository/hooks.ts';
 import type { ToolPackageManager } from '#cli/types/tools/packages.ts';
+import type { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
 import type { PathExpressions, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { ConfigurationTarget, FragmentSelector, Manifest } from '#cli/types/configurations.ts';

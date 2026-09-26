@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { Language, Parser, type Tree } from 'web-tree-sitter';
+import { DECLARATION_FILE } from '#cli/constants/parsers/parsers.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';
 
-const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
 const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {

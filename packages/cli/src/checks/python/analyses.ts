@@ -3,6 +3,7 @@ import type { StructureReader } from '#cli/types/checks/python.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { importCycles, singletons } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
+import { DEFAULT_FILE_LINES, DEFAULT_FUNCTION_LINES, DEFAULT_PACKAGE_EXPORTS } from '#cli/constants/checks/python.ts';
 import { longFunctions, longModules, placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';
 
 import {
@@ -12,10 +13,6 @@ import {
     privateBeforePublic,
     privatePrefixes,
 } from '#cli/checks/python/exports.ts';
-
-const DEFAULT_FILE_LINES = 300;
-const DEFAULT_FUNCTION_LINES = 60;
-const DEFAULT_PACKAGE_EXPORTS = 20;
 
 function names(input: EngineInput, key: string): Set<string> {
     const entries = (input.view.settings[key] as { names?: string[] }[] | undefined) ?? [];

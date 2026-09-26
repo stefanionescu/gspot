@@ -1,16 +1,14 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/constants/checks/swift.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-
-const DOC_RULE = 'doc_comment_style';
-const COMMAND = ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', '{files}'];
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.
 function isSourceComment(node: Node): boolean {
@@ -44,7 +42,7 @@ function commentSource(text: string, comments: Node[]): string {
  */
 export async function checkSwiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const result = await runToolCheck(session, planned, COMMAND);
+    const result = await runToolCheck(session, planned, SWIFTLINT_COMMAND);
     if (!['ok', 'fail'].includes(result.status) || planned.scope.view.rulesOff(planned.check).includes(DOC_RULE))
         return result;
     const sources = await swiftSources({ ...session, files: planned.files });
@@ -65,14 +63,14 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
         if (candidates.length === 0) return result;
         using workspace = createFileWorkspace(session.root, [
             ...session.repository.files.map((file) => file.path),
-            ...commandConfigurations(session, planned, COMMAND),
+            ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
         ]);
         for (const { source, comments } of candidates) {
             const path = join(workspace.root, source.path);
             chmodSync(path, PRIVATE_FILE);
             writeFileSync(path, commentSource(source.text, comments));
         }
-        const checked = await runToolCheck({ ...session, root: workspace.root }, planned, COMMAND);
+        const checked = await runToolCheck({ ...session, root: workspace.root }, planned, SWIFTLINT_COMMAND);
         if (!['ok', 'fail'].includes(checked.status))
             return {
                 ...result,

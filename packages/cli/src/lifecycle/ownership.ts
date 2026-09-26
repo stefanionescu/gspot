@@ -1,15 +1,14 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { openJournal } from '#cli/lifecycle/ownership-journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership-restoration.ts';
-import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { applyProposal, applyProposals } from '#cli/lifecycle/ownership-apply.ts';
 import type { LifecycleOwner, Journal, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE, READ_ONLY_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
 
 import {
     proposeBlock,

@@ -5,14 +5,16 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/platform/safe-paths.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/constants/platform.ts';
 import type { RawEntry, SourceObservations } from '#cli/types/repository/repository.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 
-const EXECUTABLE_BITS = 0o111;
-const HEAD_BYTES = 2048;
-const NOT_REPOSITORY_CODE = 128;
+import {
+    DEPENDENCY_FOLDERS,
+    EXECUTABLE_BITS,
+    NATURE_HEAD_BYTES,
+    NOT_REPOSITORY_CODE,
+} from '#cli/constants/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
     const files = openConfinedRoot(root, 'native');
@@ -249,7 +251,7 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
  * @returns the text
  * @throws when required content cannot be read
  */
-export function head(root: string, path: string, bytes = HEAD_BYTES): string {
+export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
     return readPrefix(root, path, bytes).toString('utf8');
 }
 

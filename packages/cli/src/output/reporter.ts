@@ -1,20 +1,22 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
+import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 
-const MS_PER_SECOND = 1000;
-const SCOPE_WIDTH_MIN = 4;
-const ID_WIDTH_MIN = 8;
-const STATUS_WIDTH = 9;
-const FILES_WIDTH = 11;
-const FINDINGS_SHOWN = 200;
-const NOTE_STATUSES = new Set(['missing', 'error', 'skipped']);
-const QUIET_HIDES = new Set(['ok', 'cache']);
+import {
+    FILES_WIDTH,
+    FINDINGS_SHOWN,
+    ID_WIDTH_MIN,
+    MS_PER_SECOND,
+    NOTE_STATUSES,
+    QUIET_HIDES,
+    SCOPE_WIDTH_MIN,
+    STATUS_WIDTH,
+} from '#cli/constants/output.ts';
 
 function seconds(ms: number): string {
     return `${(ms / MS_PER_SECOND).toFixed(1)}s`;

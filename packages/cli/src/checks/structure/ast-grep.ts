@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { toPosix } from '#cli/platform/paths.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { isAbsolute, join, relative } from 'node:path';
+import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { toPosix, CACHE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { AstGrepMatch } from '#cli/types/checks/structure.ts';
 
 const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;

@@ -4,14 +4,13 @@ import { dirname, join, relative } from 'node:path';
 import { miseHome } from '#cli/platform/environment.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
+import { MANAGED_PREFIX } from '#cli/constants/tools/tools.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import type { PackageFacts, PrivateKind } from '#cli/types/tools/tools.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
-const MANAGED_PREFIX = '.gspot/';
-
 // A path relative to the repository root with forward slashes, the form the confined root reads.
 function localPath(root: string, path: string): string {
     return relative(root, path).replaceAll('\\', '/');

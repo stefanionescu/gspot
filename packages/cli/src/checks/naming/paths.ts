@@ -1,7 +1,5 @@
 import type { Identifier } from '#cli/types/checks/naming.ts';
-
-const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
-const MIGRATION_DIRECTORY = /^\d{14}_/u;
+import { DECLARATION_SUFFIXES, MIGRATION_DIRECTORY, WRAPPERS } from '#cli/constants/checks/naming.ts';
 
 function stemOf(base: string): string {
     const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));
@@ -9,13 +7,6 @@ function stemOf(base: string): string {
     const dot = base.lastIndexOf('.');
     return dot <= 0 ? base : base.slice(0, dot);
 }
-
-const WRAPPERS: { open: string; close: string; category: string }[] = [
-    { open: '[', close: ']', category: 'path_parameters' },
-    { open: '(', close: ')', category: 'directories' },
-    { open: '@', close: '', category: 'directories' },
-    { open: '_', close: '', category: 'directories' },
-];
 
 function unwrapped(segment: string): { name: string; category: string } {
     const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { join } from 'node:path';
+import { PERCENT } from '#cli/constants/checks/xctest.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
@@ -10,8 +11,6 @@ import type { CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/
 const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
 });
-const PERCENT = 100;
-
 // Removes one entry of the previous result bundle, queueing a folder for the walk.
 function removeBundleEntry(files: ConfinedRoot, path: string, directories: string[]): void {
     if (files.stat(path)?.isDirectory() === true) {

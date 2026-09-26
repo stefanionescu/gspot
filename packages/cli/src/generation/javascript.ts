@@ -1,11 +1,10 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { TRAILING_STAR } from '#cli/constants/generation.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-
-const TRAILING_STAR = /\*$/u;
 
 function importTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;

@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { REQUIREMENT_NAME_END, SWIFT_PACKAGE_URL } from '#cli/constants/repository/repository.ts';
 import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
-
-const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
-const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
 
 function manifestText(root: string, path: string): string {
     const files = openConfinedRoot(root, 'native');

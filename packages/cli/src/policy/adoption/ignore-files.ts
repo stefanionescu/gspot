@@ -1,6 +1,5 @@
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-
-const COMMENT = '#';
+import { IGNORE_FILE_COMMENT } from '#cli/constants/policy/adoption.ts';
 
 // A line of an ignore file as a glob from the repository root: a bare name matches at any depth, and a folder matches what it holds.
 function globOf(folder: string, line: string): string {
@@ -36,7 +35,7 @@ export function ignoreFileEntries(text: string, path: string): { paths: string[]
     const lines = text.split('\n');
     for (const raw of lines) {
         const line = raw.trim();
-        if (line.startsWith(COMMENT)) {
+        if (line.startsWith(IGNORE_FILE_COMMENT)) {
             flush();
             reason = reasonFrom(path, line.slice(1).trim());
         } else if (line.startsWith('!'))

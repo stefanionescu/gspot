@@ -1,3 +1,5 @@
+// What the tool prints about its version, with no color codes: their numbers read as a version.
+
 import semver from 'semver';
 import { join } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
@@ -8,17 +10,13 @@ import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
 import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/constants/tools/tools.ts';
 import { locateCandidates, miseVersion, packageVersion } from '#cli/tools/locate.ts';
 import type { PackageFacts, Probed, ToolContext, ToolProbe, VersionObservation } from '#cli/types/tools/tools.ts';
 
-const VERSION_TIMEOUT_MS = 15_000;
-// What a mise shim prints when no configuration in reach names a version of the tool.
-const NO_VERSION = 'No version is set for shim';
-
-// What the tool prints about its version, with no color codes: their numbers read as a version.
 // A mise shim answers for the folder it runs in, so the command runs in the repository.
 function printedVersion(root: string, path: string, tool: ToolPin): SpawnResult {
     const command = tool.version_command ?? ['--version'];

@@ -1,3 +1,5 @@
+import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/constants/policy/policy.ts';
+
 import type {
     Defined,
     RawPolicy,
@@ -11,18 +13,6 @@ import type {
     RawNaming,
     Reasoned,
 } from '#cli/types/policy/policy.ts';
-
-const NAMING_LIST_KEYS = new Set([
-    'banned_terms',
-    'allowed',
-    'external',
-    'reserved',
-    'remove_groups',
-    'contract_properties',
-    'rules',
-]);
-
-const CATEGORY_KEYS = new Set(['max_chars', 'max_words', 'case']);
 
 function isTable(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

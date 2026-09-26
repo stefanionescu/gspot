@@ -1,9 +1,5 @@
 import type { DirectiveScan } from '#cli/types/checks/nginx.ts';
-
-const ESCAPES: Record<string, string> = { t: '\t', r: '\r', n: '\n', '"': '"', "'": "'", '\\': '\\' };
-const WORD_START_STOPS = /[\s"'{};#\\]/u;
-const WORD_STOPS = /[\s{};\\]/u;
-const PUNCTUATION = new Set([';', '{', '}']);
+import { NGINX_ESCAPES, NGINX_PUNCTUATION, WORD_START_STOPS, WORD_STOPS } from '#cli/constants/checks/nginx.ts';
 
 // The index just past a quoted argument that opens at start, or -1 when the quote never closes.
 function quotedEnd(text: string, start: number, quote: string): number {
@@ -67,7 +63,7 @@ function scanAt(text: string, at: number): DirectiveScan {
     const char = text[at] ?? '';
     if (/\s/u.test(char)) return { token: undefined, end: at + 1 };
     if (char === '#') return commentAt(text, at);
-    if (PUNCTUATION.has(char)) return { token: char, end: at + 1 };
+    if (NGINX_PUNCTUATION.has(char)) return { token: char, end: at + 1 };
     if (char === '"' || char === "'") return quotedAt(text, at);
     return wordAt(text, at);
 }
@@ -87,7 +83,7 @@ function nginxTokens(text: string): string[] {
 // The argument a token carries: its quotes removed and its escapes resolved.
 function argumentValue(token: string): string {
     const value = token.replace(/^(["'])([\s\S]*)\1$/u, '$2');
-    return value.replaceAll(/\\([trn"'\\])/gu, (_, escaped: string) => ESCAPES[escaped] ?? escaped);
+    return value.replaceAll(/\\([trn"'\\])/gu, (_, escaped: string) => NGINX_ESCAPES[escaped] ?? escaped);
 }
 
 /**
@@ -100,7 +96,7 @@ export function nginxDirectives(text: string): string[][] {
     let directive: string[] = [];
     for (const token of nginxTokens(text)) {
         if (token.startsWith('#')) continue;
-        if (!PUNCTUATION.has(token)) {
+        if (!NGINX_PUNCTUATION.has(token)) {
             directive.push(argumentValue(token));
             continue;
         }

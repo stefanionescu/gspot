@@ -8,6 +8,7 @@ import { collect, missingNote } from '#cli/execution/tool-findings.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
+import { FILES_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
 import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
@@ -29,7 +30,6 @@ import type {
     ToolRunState,
 } from '#cli/types/execution/execution.ts';
 
-const FILES_PLACEHOLDER = '{files}';
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
     const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');

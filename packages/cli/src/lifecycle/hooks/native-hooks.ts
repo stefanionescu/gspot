@@ -1,8 +1,8 @@
 // The hook gspot installs beside a native manager's copy: it runs the manager's own hook, reads what gspot
 import { join } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
-import { HOOK_FILES } from '#cli/repository/hooks.ts';
 import type { HookName } from '#cli/types/generation.ts';
+import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 // reported through it, and runs gspot itself when the manager did not.
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import type { HookManager, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';

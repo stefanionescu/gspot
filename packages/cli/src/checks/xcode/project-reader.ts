@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import type { Folder, Plist, ProjectObject, Token, XcodeProject } from '#cli/types/checks/xcode.ts';
+import { BUILD_SETTING, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION, WORD_CHARACTER } from '#cli/constants/checks/xcode.ts';
 
-const PUNCTUATION = new Set(['{', '}', '(', ')', '=', ';', ',']);
-const WORD_CHARACTER = /[A-Za-z0-9_.$/+-]/u;
-const ESCAPES: Record<string, string> = { n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' };
 const objectSchema = z.object({
     isa: z.string(),
     name: z.string().optional(),
@@ -37,7 +35,7 @@ function unescaped(body: string): string {
     return body.replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
         if (escaped.startsWith('U')) return String.fromCodePoint(Number.parseInt(escaped.slice(1), 16));
         if (/^[0-7]/u.test(escaped)) return String.fromCodePoint(Number.parseInt(escaped, 8));
-        return ESCAPES[escaped] ?? escaped;
+        return PBXPROJ_ESCAPES[escaped] ?? escaped;
     });
 }
 
@@ -64,7 +62,7 @@ function tokenAt(text: string, at: number): { token: Token; end: number } {
         if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
         return { token: { text: unescaped(text.slice(at + 1, end - 1)), quoted: true, at }, end };
     }
-    if (PUNCTUATION.has(char)) return { token: { text: char, quoted: false, at }, end: at + 1 };
+    if (PBXPROJ_PUNCTUATION.has(char)) return { token: { text: char, quoted: false, at }, end: at + 1 };
     let end = at;
     while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
     if (end === at) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
@@ -138,8 +136,6 @@ function parse(text: string): Plist {
     if (at !== input.length) throw new Error('Unexpected content after the Xcode project dictionary.');
     return result;
 }
-
-const BUILD_SETTING = /\$[({]/u;
 
 // The object an id names, which must exist.
 function objectOf(project: Pick<XcodeProject, 'objects'>, id: string): ProjectObject {

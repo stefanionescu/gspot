@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { MODE_BITS } from '#cli/platform/file-modes.ts';
+import { MODE_BITS } from '#cli/constants/platform.ts';
+import { RECOVERY_OWNER } from '#cli/constants/lifecycle/lifecycle.ts';
 import { mutationPath, mutationTarget } from '#cli/platform/safe-paths.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
@@ -18,9 +19,6 @@ const configurationFieldSchema = z.strictObject({
     installed: z.json(),
     original: z.json().optional(),
 });
-// A recovery backup lives under these folders, then an operation folder, then the backed-up file.
-const RECOVERY_OWNER = ['.gspot', 'state', 'recovery'];
-
 // Whether a path names a recovery backup: any folders, then .gspot/state/recovery/<operation>/<file>.original.
 function isRecoveryBackupPath(path: string): boolean {
     const parts = path.split('/');

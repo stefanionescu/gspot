@@ -6,6 +6,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { ShapeProblem } from '#cli/types/checks/docs.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/constants/checks/docs.ts';
 
 function titleProblem(nodes: RootContent[]): ShapeProblem[] {
     const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
@@ -59,12 +60,6 @@ function shapeProblems(text: string, threshold: number, isScopeRoot: boolean): S
 function scopeRoots(input: EngineInput): Set<string> {
     return new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
 }
-
-const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements'];
-
-const CONTENTS_THRESHOLD = 6;
-
-const CONTENTS_HEADING = 'contents';
 
 /**
  * The shape findings for every README in the check's files.

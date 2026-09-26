@@ -14,6 +14,7 @@ import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import { DOCKER, FAILED_STATUSES, RAN_STATUSES } from '#cli/constants/execution/execution.ts';
 import { cachedResult, cacheKeyFor, runHashes, storeResult } from '#cli/execution/result-cache.ts';
 
 import type {
@@ -27,10 +28,6 @@ import type {
     RunReport,
     Session,
 } from '#cli/types/execution/execution.ts';
-
-const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
-const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
-const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
 
 // The plan and, for each planned check, the function that runs it.
 async function planExecutables(session: Session, options: RunOptions): Promise<Executable[]> {

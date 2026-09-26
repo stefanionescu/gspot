@@ -12,19 +12,17 @@ import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { AcceptedResult } from '#cli/types/checks/security.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const TOOL = 'codeql';
-const DEFAULT_SUITE = 'security-extended';
+import { CODEQL_TOOL, DEFAULT_SUITE } from '#cli/constants/checks/security.ts';
 
 function isAccepted(accepted: AcceptedResult[], rule: string, file: string): boolean {
     return accepted.some((entry) => entry.rule === rule && pathMatcher(entry.paths)(file));
 }
 
 async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {
-    const result = await runCheckCommand(input, [TOOL, ...argv], { cwd });
+    const result = await runCheckCommand(input, [CODEQL_TOOL, ...argv], { cwd });
     if (result.code !== 0)
         throw new Error(
-            `${TOOL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+            `${CODEQL_TOOL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
         );
     return result.stdout;
 }
@@ -204,7 +202,7 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
             .map((result) => ({
                 check,
                 ...placeOf(result, run, source),
-                rule: result.ruleId ?? TOOL,
+                rule: result.ruleId ?? CODEQL_TOOL,
                 message: result.message?.text ?? 'CodeQL reports a result here.',
                 fixable: false,
             }))
@@ -218,7 +216,7 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
  * @returns the findings
  */
 export async function codeql(input: EngineInput): Promise<Finding[]> {
-    const tool = input.view.tool(TOOL);
+    const tool = input.view.tool(CODEQL_TOOL);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
     const suite = (tool['suite'] as string | undefined) ?? DEFAULT_SUITE;
     const accepted = (tool['false_positives'] as AcceptedResult[] | undefined) ?? [];
@@ -241,7 +239,7 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
                 ),
             ),
         );
-    const packs = toolPin(input.manifests.values(), TOOL).query_packs;
+    const packs = toolPin(input.manifests.values(), CODEQL_TOOL).query_packs;
     const selected = [...new Set(languages.map((language) => metadata.aliases[language] ?? language))].map(
         (language) => {
             const version = packs?.[language];

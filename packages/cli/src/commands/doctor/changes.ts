@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { pinnedTwice } from '#cli/tools/mise.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { emitAll } from '#cli/generation/render.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
@@ -10,13 +11,12 @@ import type { GeneratedFile } from '#cli/types/generation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { MISE_CONFIG_PATH, pinnedTwice } from '#cli/tools/mise.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { CHANGE_HEAD_BYTES } from '#cli/constants/commands/doctor.ts';
 import type { ChangeReport, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
-
-const HEAD_BYTES = 600;
 
 function detectedNotSelected(
     session: Session,
@@ -76,7 +76,7 @@ function configurationNotOwned(
     const rendered = new Set(files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
-        .filter((config) => !hasHeader(head(session.root, config.path, HEAD_BYTES)))
+        .filter((config) => !hasHeader(head(session.root, config.path, CHANGE_HEAD_BYTES)))
         .map((config) => configurationRow(session, config, selected));
 }
 

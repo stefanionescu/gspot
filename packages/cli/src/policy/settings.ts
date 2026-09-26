@@ -1,5 +1,6 @@
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
+import { LANGUAGE_GROUP_TABLES } from '#cli/constants/policy/policy.ts';
 
 import type {
     NamingLanguageTable,
@@ -12,8 +13,6 @@ import type {
     SpecMatch,
     WrittenValue,
 } from '#cli/types/policy/policy.ts';
-
-const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
 function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (

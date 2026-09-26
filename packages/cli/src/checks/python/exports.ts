@@ -2,9 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { exportedNames } from '#cli/checks/python/modules.ts';
 import type { PythonModule } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-
-const DEFINITIONS = new Set(['function_definition', 'class_definition']);
-const PACKAGE_FILE = '__init__.py';
+import { DEFINITIONS, PACKAGE_FILE } from '#cli/constants/checks/python.ts';
 
 function at(module: PythonModule, node: Node, rule: string, text: string): StructureProblem {
     return { file: module.path, line: node.startPosition.row + 1, rule, text };

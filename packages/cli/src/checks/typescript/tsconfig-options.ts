@@ -2,10 +2,8 @@ import { join } from 'node:path';
 import type { CompilerOptions } from 'typescript';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { DECORATOR_OPTIONS } from '#cli/constants/checks/typescript.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
-
-// Nest injects by the emitted types of constructor parameters, which takes both decorator options.
-const DECORATOR_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true };
 
 function isTsconfigName(path: string): boolean {
     const name = path.slice(path.lastIndexOf('/') + 1);

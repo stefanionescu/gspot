@@ -1,23 +1,15 @@
 import type { Node } from 'web-tree-sitter';
 import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
 
-const PARAMETER_NODES = new Set(['identifier', 'typed_parameter', 'default_parameter', 'typed_default_parameter']);
-const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);
-const IMPLICIT_PARAMETERS = new Set(['self', 'cls']);
-const DUNDER = /^__\w+__$/u;
-const UPPER_SHAPE = /^_?[A-Z][A-Z\d_]*$/u;
-const EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
-const LABELS: Record<string, string> = {
-    classes: 'class',
-    exceptions: 'exception',
-    functions: 'function',
-    methods: 'method',
-    parameters: 'parameter',
-    variables: 'variable',
-    constants: 'constant',
-    attributes: 'attribute',
-    type_aliases: 'type alias',
-};
+import {
+    DUNDER,
+    EXCEPTION_BASE,
+    IMPLICIT_PARAMETERS,
+    PYTHON_LABELS,
+    PYTHON_PARAMETER_NODES,
+    PYTHON_UPPER_SHAPE,
+    SPLAT_NODES,
+} from '#cli/constants/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;
@@ -28,7 +20,7 @@ function add(sink: ExtractSink, node: Node, category: string): void {
         column: node.startPosition.column + 1,
         language: 'python',
         category,
-        kind: `python ${LABELS[category] ?? category}`,
+        kind: `python ${PYTHON_LABELS[category] ?? category}`,
         name,
     });
 }
@@ -62,7 +54,7 @@ function parameterName(parameter: Node): Node | null {
 function addParameters(sink: ExtractSink, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
     const names = parameters
-        .filter((parameter) => PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
+        .filter((parameter) => PYTHON_PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
         .map((parameter) => parameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text)) add(sink, name, 'parameters');
@@ -79,7 +71,7 @@ function addFunctions(sink: ExtractSink, root: Node): void {
 function bindingCategory(node: Node, name: string): string {
     const holder = holderOf(node.parent ?? node);
     if (holder === 'class_definition') return 'attributes';
-    return holder === 'module' && UPPER_SHAPE.test(name) ? 'constants' : 'variables';
+    return holder === 'module' && PYTHON_UPPER_SHAPE.test(name) ? 'constants' : 'variables';
 }
 
 function addAssignments(sink: ExtractSink, root: Node): void {

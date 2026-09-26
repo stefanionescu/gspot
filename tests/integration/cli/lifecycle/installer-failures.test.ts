@@ -2,7 +2,6 @@ import { delimiter, join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
@@ -10,6 +9,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

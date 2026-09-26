@@ -1,3 +1,4 @@
+import { SQL_LABELS } from '#cli/constants/checks/naming.ts';
 import type { Identifier } from '#cli/types/checks/naming.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
@@ -13,17 +14,6 @@ function addedColumns(fields: SqlNode): SqlNamed[] {
         .filter((command) => command['subtype'] === 'AT_AddColumn')
         .flatMap((command) => columns([command['def']]));
 }
-
-const LABELS: Record<string, string> = {
-    schemas: 'schema',
-    tables: 'table',
-    columns: 'column',
-    indexes: 'index',
-    triggers: 'trigger',
-    policies: 'policy',
-    functions: 'function',
-    parameters: 'parameter',
-};
 
 const READERS: Record<string, (fields: SqlNode) => SqlNamed[]> = {
     CreateSchemaStmt: (fields) => [{ category: 'schemas', name: textOf(fields['schemaname']) }],
@@ -60,7 +50,7 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
                     ...positionAt(source, found === -1 ? statement.start : found),
                     language: 'sql',
                     category: entry.category,
-                    kind: `sql ${LABELS[entry.category] ?? entry.category}`,
+                    kind: `sql ${SQL_LABELS[entry.category] ?? entry.category}`,
                     name: entry.name,
                 },
             ];

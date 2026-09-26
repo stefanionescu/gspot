@@ -1,48 +1,24 @@
 import type { Node } from 'web-tree-sitter';
 import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
 
-const FUNCTION_NODES = ['function_declaration', 'generator_function_declaration', 'function_expression'];
-const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'];
-const PARAMETER_NODES = ['required_parameter', 'optional_parameter'];
-const NAMED_DECLARATIONS: [string[], string][] = [
-    [FUNCTION_NODES, 'functions'],
-    [METHOD_NODES, 'methods'],
-    [['class_declaration', 'abstract_class_declaration'], 'classes'],
-    [['interface_declaration', 'type_alias_declaration', 'enum_declaration'], 'types'],
-    [['public_field_definition', 'property_signature'], 'properties'],
-    [['enum_assignment'], 'enum_cases'],
-];
-const NAME_NODES = new Set([
-    'identifier',
-    'property_identifier',
-    'private_property_identifier',
-    'type_identifier',
-    'shorthand_property_identifier_pattern',
-]);
-const PATTERN_FIELDS: Record<string, string> = {
-    pair_pattern: 'value',
-    object_assignment_pattern: 'left',
-    assignment_pattern: 'left',
-};
-const PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
-const UPPER_SHAPE = /^[A-Z][A-Z0-9_]*$/u;
-const SNAKE_SHAPE = /^[a-z][a-z0-9_]*$/u;
-const LABELS: Record<string, string> = {
-    functions: 'function',
-    methods: 'method',
-    classes: 'class',
-    types: 'type',
-    properties: 'property',
-    enum_cases: 'enum case',
-    parameters: 'parameter',
-    variables: 'variable',
-};
+import {
+    METHOD_NODES,
+    NAMED_DECLARATIONS,
+    NAME_NODES,
+    PATTERN_FIELDS,
+    PATTERN_LISTS,
+    SNAKE_SHAPE,
+    TYPESCRIPT_FUNCTION_NODES,
+    TYPESCRIPT_LABELS,
+    TYPESCRIPT_PARAMETER_NODES,
+    TYPESCRIPT_UPPER_SHAPE,
+} from '#cli/constants/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node | null, category: string): void {
     if (node === null || !NAME_NODES.has(node.type)) return;
     const name = node.type === 'private_property_identifier' ? node.text.slice(1) : node.text;
     if (name === '' || name === '_') return;
-    const kind = `${sink.language} ${LABELS[category] ?? category}`;
+    const kind = `${sink.language} ${TYPESCRIPT_LABELS[category] ?? category}`;
     sink.out.push({
         file: sink.file,
         line: node.startPosition.row + 1,
@@ -71,7 +47,7 @@ function addParameter(sink: ExtractSink, parameter: Node): void {
 
 function addParameters(sink: ExtractSink, node: Node): void {
     const parameters = node
-        .descendantsOfType(PARAMETER_NODES)
+        .descendantsOfType(TYPESCRIPT_PARAMETER_NODES)
         .filter((parameter) => parameter.parent?.parent?.id === node.id);
     for (const parameter of parameters) addParameter(sink, parameter);
     addPattern(sink, node.childForFieldName('parameter'), 'parameters');
@@ -81,7 +57,8 @@ function addParameters(sink: ExtractSink, node: Node): void {
 function isContractSignature(node: Node): boolean {
     const name = node.childForFieldName('name')?.text ?? '';
     return (
-        node.type === 'property_signature' && (UPPER_SHAPE.test(name) || (SNAKE_SHAPE.test(name) && name.includes('_')))
+        node.type === 'property_signature' &&
+        (TYPESCRIPT_UPPER_SHAPE.test(name) || (SNAKE_SHAPE.test(name) && name.includes('_')))
     );
 }
 
@@ -131,7 +108,7 @@ export function typescriptIdentifiers(root: Node, file: string, language: string
     addEnumCases(sink, root);
     const declarators = root.descendantsOfType('variable_declarator').filter((node) => !isImportBinding(node));
     for (const node of declarators) addPattern(sink, node.childForFieldName('name'), 'variables');
-    const callables = root.descendantsOfType([...FUNCTION_NODES, ...METHOD_NODES, 'arrow_function']);
+    const callables = root.descendantsOfType([...TYPESCRIPT_FUNCTION_NODES, ...METHOD_NODES, 'arrow_function']);
     for (const node of callables) addParameters(sink, node);
     return sink.out.toSorted((a, b) => a.line - b.line || a.column - b.column);
 }

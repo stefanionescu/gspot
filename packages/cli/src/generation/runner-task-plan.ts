@@ -5,8 +5,8 @@ import type { FileSnapshot } from '#cli/types/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
-import { PACKAGE_LIFECYCLE, RUNNER_TASKS } from '#cli/policy/runner.ts';
 import type { RunnerTask, RunnerTaskNames } from '#cli/types/policy/policy.ts';
+import { PACKAGE_LIFECYCLE, RUNNER_TASKS } from '#cli/constants/policy/policy.ts';
 
 function readRunnerTasks(
     root: string,

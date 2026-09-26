@@ -1,8 +1,7 @@
 // Questions the revision code asks Git, each answered by one command whose failure names the command.
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-
-const GIT_TIMEOUT_MS = 30_000;
+import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
 
 /**
  * What a Git command prints, or the selection error it failed with.

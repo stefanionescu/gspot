@@ -1,10 +1,7 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { isUnderLfs } from '#cli/repository/file-classification.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const KILOBYTE = 1024;
-
-const FILE_SIZE_KB_DEFAULT = 1024;
+import { FILE_SIZE_KB_DEFAULT, KILOBYTE } from '#cli/constants/checks/repository.ts';
 
 /**
  * One finding per tracked file over `limits.file_size_kb` that is neither under LFS nor declared.

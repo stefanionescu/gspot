@@ -6,13 +6,14 @@ import * as bundledPrettier from 'prettier';
 import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
-import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { prettierOptions } from '#cli/generation/format.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { CARRIED_REASON } from '#cli/constants/policy/policy.ts';
 import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { literalGlob, relocatedOverrides } from '#cli/generation/relocated-overrides.ts';
+import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/constants/evaluation.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
 
 import type {
@@ -62,18 +63,6 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
         throw new Error('The installed Prettier does not expose its configuration API. Repair that installation.');
     return loaded;
 }
-// The Prettier options the policy models as format fields; every other option is carried under extra.
-const MODELED_OPTIONS = new Set([
-    'tabWidth',
-    'printWidth',
-    'trailingComma',
-    'endOfLine',
-    'semi',
-    'useTabs',
-    'singleQuote',
-]);
-const MODULE_CONFIGURATION = /\.[cm]?[jt]s$/u;
-const PACKAGE_CONFIGURATION = /^package\.(?:json|yaml)$/u;
 
 // The ignore lines of every observed ignore file, each nested file's lines rebased onto its folder.
 function ignoreLines(files: ConfinedRoot, ignorePaths: string[]): string[] {

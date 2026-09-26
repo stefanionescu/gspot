@@ -3,6 +3,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
+import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/constants/checks/postgres.ts';
 
 const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 
@@ -35,10 +36,6 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
     }
     return migrations;
 }
-
-const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
-
-const MIGRATION_VERSION = /^(?<version>\d+)/u;
 
 /**
  * Every tracked migration in version order, read and parsed.

@@ -3,9 +3,7 @@ import { buildFolder } from '#cli/platform/paths.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { SwiftBuildPlan } from '#cli/types/checks/swift.ts';
-
-const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
-const WORKSPACE_SUFFIX = '.xcworkspace';
+import { DEFAULT_DESTINATION, WORKSPACE_SUFFIX } from '#cli/constants/checks/swift.ts';
 
 function text(input: EngineInput, key: string): string {
     const found = input.view.settings[key];

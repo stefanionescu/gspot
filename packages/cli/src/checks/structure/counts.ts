@@ -1,14 +1,8 @@
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
+import { OUTER_LEVELS, RULES } from '#cli/constants/checks/structure.ts';
 import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/types/checks/structure.ts';
-
-const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
-    'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
-    'bash-nesting': { limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
-    'bash-mutable-assignments': { limit: 'mutable_assignments', noun: 'assignments', isDepth: false },
-};
-const OUTER_LEVELS = 2;
 
 function depthOf(match: AstGrepMatch, siblings: AstGrepMatch[]): number {
     const containing = siblings.filter(

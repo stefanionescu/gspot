@@ -1,12 +1,12 @@
 import type { Command } from 'commander';
 import { installTools } from '#cli/tools/install.ts';
-import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';

@@ -1,9 +1,7 @@
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const PROJECT_FILE = 'ansible.cfg';
-const LINT_LINE = /^(?<file>[^:]+):(?<line>\d+):[\d:]* (?<rule>[^:]+): (?<text>.*)$/u;
+import { ANSIBLE_PROJECT_FILE, LINT_LINE } from '#cli/constants/checks/checks.ts';
 
 async function linted(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];
@@ -38,7 +36,7 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
 export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
     const folders = input.files
         .map((file) => file.path)
-        .filter((path) => path === PROJECT_FILE || path.endsWith(`/${PROJECT_FILE}`))
+        .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
     const skipped = input.view.rulesOff(input.spec.name);
     const findings: Finding[] = [];

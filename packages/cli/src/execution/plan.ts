@@ -8,6 +8,7 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { restrictIgnoredPaths, skipFor } from '#cli/execution/plan-skips.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
+import { HISTORY_ANALYSES, PLATFORM_NAMES } from '#cli/constants/execution/execution.ts';
 import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/plan-files.ts';
 
 import type {
@@ -18,10 +19,6 @@ import type {
     PlannedCheck,
     StageFilter,
 } from '#cli/types/execution/execution.ts';
-
-const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
-
-const HISTORY_ANALYSES = new Set(['commit-messages', 'gitleaks-history', 'verified-secrets']);
 
 function isStageWanted(filter: StageFilter, stage: Stage): boolean {
     if (filter === 'all') return stage === 'commit' || stage === 'push';

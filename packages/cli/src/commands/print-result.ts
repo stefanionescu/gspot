@@ -1,15 +1,6 @@
 import { fail, print, printJson } from '#cli/output/messages.ts';
+import { KNOWN_ERRORS } from '#cli/constants/commands/commands.ts';
 import type { CommandFailureJson, CommandResult } from '#cli/types/commands/commands.ts';
-
-const KNOWN_ERRORS = new Set([
-    'PolicyError',
-    'SelectionError',
-    'ManifestError',
-    'VersionPinError',
-    'NoTerminalError',
-    'PromptError',
-    'ProfileError',
-]);
 
 function printResult(result: CommandResult, isJson: boolean): void {
     if (isJson) printJson(result.json);

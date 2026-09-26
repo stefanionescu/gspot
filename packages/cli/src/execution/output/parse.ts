@@ -14,12 +14,14 @@ import {
     trufflehogFindings,
     typosFindings,
 } from '#cli/execution/output/tool-formats.ts';
-
-const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
-const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
-const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
-const TRAILING_BRACKET_RULE = /\[(?<rule>[\w:/@.-]+)\]$/u;
-const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
+import {
+    DEFAULT_FILE_PATTERN,
+    DEFAULT_GROUPED_PATTERN,
+    DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_PATTERN,
+    TRAILING_BRACKET_RULE,
+    TRAILING_PAREN_RULE,
+} from '#cli/constants/execution/output.ts';
 
 const eslintEntry = z.object({
     ruleId: z.string().nullable(),
@@ -30,8 +32,6 @@ const eslintEntry = z.object({
     severity: z.union([z.literal(1), z.literal(2)]),
 });
 const eslintFiles = z.array(z.object({ filePath: z.string().min(1), messages: z.array(eslintEntry) }));
-
-const DEFAULT_OUTPUT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
 
 function compiled(source: string | undefined, standard: string): RegExp {
     return new RegExp(source ?? standard, 'u');
@@ -185,7 +185,7 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
 
 // Findings from a tool's output, per the check's output format.
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {
-    const output = spec.output ?? DEFAULT_OUTPUT;
+    const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = Bun.stripANSI(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output);

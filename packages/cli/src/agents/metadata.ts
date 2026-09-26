@@ -1,11 +1,7 @@
-import { RULE_LAYERS } from '#cli/agents/terms.ts';
 import type { FrontMatter, RuleFinding } from '#cli/types/agents.ts';
+import { RULE_LAYERS, CONFIGURATION_ID, FENCE } from '#cli/constants/agents.ts';
 
-// A guide names one configuration or none.
-const CONFIGURATION_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
 const LAYERS = new Set(RULE_LAYERS);
-const FENCE = '---';
-
 function fieldsOf(lines: string[]): Record<string, string> {
     const fields: Record<string, string> = {};
     for (const line of lines) {

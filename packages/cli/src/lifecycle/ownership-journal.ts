@@ -1,10 +1,11 @@
 // The durable ownership journal an owner works from: its records, its recovery of an interrupted mutation, and
-// the backups it takes before a file changes hands.
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+// the backups it takes before a file changes hands.
+import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/constants/platform.ts';
+
 import type {
     Identity,
     Journal,

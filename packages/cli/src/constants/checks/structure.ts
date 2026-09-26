@@ -1,15 +1,64 @@
+// The literal values checks/structure reads: names, patterns, limits, and tables.
+
+export const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
+    'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
+    'bash-nesting': { limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
+    'bash-mutable-assignments': { limit: 'mutable_assignments', noun: 'assignments', isDepth: false },
+};
+export const OUTER_LEVELS = 2;
+export const FUNCTIONS = new Set([
+    'function_definition',
+    'function_declaration',
+    'init_declaration',
+    'deinit_declaration',
+    'lambda',
+    'lambda_literal',
+    'computed_getter',
+    'computed_setter',
+    'computed_property',
+    'willset_clause',
+    'didset_clause',
+]);
+export const TYPE_ALIASES = new Set(['type_alias_statement', 'typealias_declaration']);
+export const CONTAINERS = new Set([
+    'decorated_definition',
+    'class_definition',
+    'class_declaration',
+    'class_body',
+    'block',
+    'source_file',
+    'module',
+    'program',
+    'computed_property',
+]);
+export const CONTAINER_NOISE = new Set([
+    'identifier',
+    'type_identifier',
+    'modifiers',
+    'decorator',
+    'inheritance_specifier',
+]);
+export const NAMES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
+export const TYPE_REFERENCES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
+export const DEFAULT_MIN_LINES = 3;
+export const IDENTIFIER = /[A-Za-z_]\w*/gu;
+export const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
+export const WORD = /[A-Za-z0-9]+/gu;
+export const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-mutable-assignments']);
+export const SCRIPT_TAG = 'shell';
+export const GSPOT_DIRECTORY = '.gspot/';
+export const SOURCE = /\.[cm]?[jt]sx?$/u;
+export const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
+export const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
+export const OPERATORS = [' && ', ' || ', ' | ', ';'];
 /** The two shebangs a Bash script may open with. */
 export const BASH_SHEBANGS = ['#!/usr/bin/env bash', '#!/bin/bash'];
-
 /** A shebang that names another shell; such a file is not held to the Bash contract. */
 export const OTHER_INTERPRETER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
-
 /** The fourth header line: the Bash version and the platforms. */
 export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, (?<platforms>.+)\.$/u;
-
 /** How many header lines the contract asks for. */
 export const HEADER_LINES = 4;
-
 /** Features and their minimum Bash versions. */
 export const BASH_FEATURES: [RegExp, string, string][] = [
     [/\b(?:mapfile|readarray)\b/u, 'mapfile and readarray need Bash 4.0', '4.0.0'],
@@ -19,40 +68,29 @@ export const BASH_FEATURES: [RegExp, string, string][] = [
     [/\bwait\s+-n\b/u, 'wait -n needs Bash 4.3', '4.3.0'],
     [/\binherit_errexit\b/u, 'inherit_errexit needs Bash 4.4', '4.4.0'],
 ];
-
 /** The inherited errexit option and the Bash version that introduced it. */
 export const INHERITED_ERREXIT = { statement: 'shopt -s inherit_errexit', version: '4.4.0' };
-
 /** The start of a computed directory constant, and the three signs that mark one. */
 export const DIRECTORY_CONSTANT_START = /^[A-Z_][A-Z0-9_]*=/u;
 export const DIRECTORY_CONSTANT_SIGNS = ['cd', 'BASH_SOURCE[0]', 'pwd'];
-
 /** The four pieces a computed directory constant carries. */
 export const DIRECTORY_CONSTANT_PIECES = ['CDPATH=', 'cd --', 'pwd -P', '||'];
-
 /** A top-level assignment of an upper-case name. */
 export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
-
 /** A source statement. */
 export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
-
 /** The annotation a source statement carries on the line above it. */
 export const SOURCE_ANNOTATION = /^# shellcheck source=(?<path>\S+)$/u;
-
 /** The boundary header a script under an architecture root opens with, and how many words it needs. */
 export const BOUNDARY_HEADER = /^# Boundary: (?<description>.+)$/u;
 export const BOUNDARY_MIN_WORDS = 4;
 export const BOUNDARY_HEADER_WINDOW = 8;
-
 /** The line every executable ends with. */
 export const MAIN_CALL = 'main "$@"';
-
 /** Strict mode supported by every declared Bash version. */
 export const STRICT_MODE = ['set -euo pipefail'];
-
 /** Functions every script may leave uncalled. */
 export const ENTRY_FUNCTIONS = ['main', 'run_step'];
-
 /** Words that say nothing in a function summary. */
 export const VAGUE_SUMMARY_WORDS = [
     'a',
@@ -70,35 +108,25 @@ export const VAGUE_SUMMARY_WORDS = [
     'runs',
     'the',
 ];
-
 /** The doc sections a function comment may carry, in the order they go. */
-export const DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'];
-
+export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'];
 /** A positional parameter read, bare or braced. */
 export const POSITIONAL_PARAMETERS = [/(?:^|[^$])\$(?:[1-9]|[@*#])/u, /\$\{(?:[1-9]|[@*#])[:}]/u];
-
 /** Tokens that end the argument list of a call. */
 export const CALL_ENDINGS = ['&&', '||', '|', ';', ';;', 'then', 'do', 'fi', 'done', ')'];
-
 /** A flow keyword that may precede a call on the same line. */
 export const FLOW_PREFIX = /^(?:if|then|elif|while|until|for|do|time|!)\s+/u;
-
 /** An inline Node snippet. */
 export const INLINE_NODE = /\bnode\s+(?:-e|-p|<<)/u;
-
 /** A file stem that says the script is a wrapper. */
 export const FORWARDER_STEM = /(?:^|[._-])(?:compat|wrapper|forward)(?:[._-]|$)/iu;
-
 /** Prose that announces a deprecated alias. */
 export const DEPRECATED_ALIAS = /deprecated\s+command|deprecated\s+alias|compatibility\s+wrapper|forwarding\s+script/iu;
-
 /** A line that only forwards to another script: an interpreter first, a script name after. */
 export const FORWARDING_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
 export const FORWARDED_SCRIPT = /\.(?:sh|js)(?:\s|$)/u;
-
 /** The most non-comment lines a script may have and still count as a forwarding wrapper. */
 export const FORWARDING_MAX_LINES = 4;
-
 /** Inline runtime embeds, and what to say about them. */
 export const RUNTIME_EMBEDS: [RegExp, string][] = [
     [/\bpython[0-9.]*\s+-c\b/u, 'an inline Python command'],
@@ -110,21 +138,16 @@ export const RUNTIME_EMBEDS: [RegExp, string][] = [
     [/\bnode\s+<</u, 'an inline Node heredoc'],
     [/\bcat\s+>[^<]+<</u, 'a generated script heredoc'],
 ];
-
 /** The start of a run_ssh block, and what closes a multi-line one. */
 export const RUN_SSH_START = /run_ssh\s+(?<quote>["'])/u;
 export const CLOSING_QUOTE_LINE = /["']\s*$/u;
 export const SSH_BLOCK_MIN_LINES = 3;
-
 /** An ssh heredoc, which needs a name and a description on the line above. */
 export const SSH_HEREDOC = /\bssh\b.*<</u;
-
 /** A variable read with a non-empty default. */
 export const DEFAULT_EXPANSION = /\$\{[A-Z_][A-Z0-9_]*:-[^}]+\}/u;
-
 /** The include guard a configuration owner opens with, and the line after it. */
 export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>_CFG_[A-Z][A-Z0-9_]*_READY):-\} \]\] && return 0$/u;
-
 /** The safety rules, each a pattern and what to say. */
 export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
@@ -134,7 +157,6 @@ export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
         'a generated state file is sourced',
     ],
 ];
-
 /** Patterns only a safety owner may carry. */
 export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\bpkill\s+-f\b/u, 'broad-kill', 'processes are matched broadly'],
@@ -147,10 +169,8 @@ export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\/dev\/shm\/\S*\*/u, 'unowned-cleanup', 'shared memory is swept with a glob'],
     [/nvidia-smi\s+--query-compute-apps=pid/u, 'gpu-sweep', 'GPU processes are swept'],
 ];
-
 /** A cd that must carry a failure path. */
 export const UNCHECKED_CD = /^cd(?:\s|$)/u;
-
 /** Folder names that say nothing about what the folder holds. */
 export const BANNED_FOLDER_NAMES = [
     'common',
@@ -173,13 +193,38 @@ export const BANNED_FOLDER_NAMES = [
     'py',
     'sh',
 ];
-
 /** Git names its hooks, so the hook directories may hold pre-commit beside pre-push. */
-export const HOOK_DIRECTORIES = ['.gspot/hooks', '.githooks', '.husky', '.mise/tasks/hook'];
+export const STRUCTURE_HOOK_DIRECTORIES = ['.gspot/hooks', '.githooks', '.husky', '.mise/tasks/hook'];
 export const HOOK_PREFIX = 'pre';
-
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */
 export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
-
 /** Folders no analysis looks into. */
 export const IGNORED_FOLDERS = ['node_modules', 'dist', 'build', 'coverage', '.git'];
+export const QUOTES = new Set(["'", '"']);
+export const DECLARATION_WORDS = new Set(['readonly', 'export', 'declare', 'local']);
+export const DEFAULT_THRESHOLD = 2;
+export const NEST_KINDS = new Set([
+    'controller',
+    'service',
+    'module',
+    'guard',
+    'pipe',
+    'filter',
+    'interceptor',
+    'middleware',
+    'decorator',
+    'gateway',
+    'resolver',
+    'repository',
+    'entity',
+    'dto',
+    'strategy',
+    'provider',
+]);
+export const SCRIPT_ENDING = /\.[cm]?[jt]s$/u;
+export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
+// A tool names these files and finds them by that name, so a folder holds several of them by design.
+export const TOOL_PREFIXES = new Set(['tsconfig', 'jsconfig', 'vitest', 'vite', 'docker', 'eslint', 'playwright']);
+export const EXIT_CALL = /\bexit(?:\s|$)/u;
+export const REMOVE_CALL = /\brm\b/u;
+export const READONLY_WORD = 'readonly';

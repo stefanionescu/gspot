@@ -2,16 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const BLOCKING_NAMES = new Set([
-    'time.sleep',
-    'open',
-    'input',
-    'subprocess.run',
-    'subprocess.call',
-    'subprocess.check_output',
-]);
-const BLOCKING_MODULES = ['requests.', 'urllib.request.'];
+import { BLOCKING_MODULES, BLOCKING_NAMES } from '#cli/constants/checks/python.ts';
 
 function isBlocking(callee: string): boolean {
     return BLOCKING_NAMES.has(callee) || BLOCKING_MODULES.some((module) => callee.startsWith(module));

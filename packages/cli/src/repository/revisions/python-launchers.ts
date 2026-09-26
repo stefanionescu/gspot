@@ -1,5 +1,5 @@
 // A copied virtual environment names working-tree interpreters in its launchers; these read its facts and move them.
-import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
+import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join, posix } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';

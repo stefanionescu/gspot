@@ -2,10 +2,11 @@
 import semver from 'semver';
 import { join } from 'node:path';
 import { LOCKS } from '#cli/types/tools/packages.ts';
+import { SETUP } from '#cli/constants/tools/tools.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -13,11 +14,9 @@ import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import type { PackageManager, Resolution } from '#cli/types/tools/packages.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
+import { CREDENTIAL_KEY, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
 import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/probe.ts';
 
-const SETUP = 'Run: gspot apply, then gspot install';
-const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;
-const NPM_SETTING_PREFIX = 'npm_config_';
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
 const COMMANDS: Record<Exclude<PackageManager['name'], 'yarn'>, (frozen: boolean) => string[]> = {
     npm: (frozen) => [

@@ -1,16 +1,24 @@
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
-const TRAILING_PUNCTUATION = '.,;:';
+import {
+    FILE_EXTENSION,
+    FREE_TEXT_FENCES,
+    PATH_CHARS,
+    PATH_TOKEN_SKIPS,
+    RUN_TOKEN,
+    TOKEN_SEPARATORS,
+    TRAILING_PUNCTUATION,
+} from '#cli/constants/checks/docs.ts';
 
+const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 function knownPaths(input: EngineInput): Set<string> {
     const known = new Set<string>();
     if (input.repositoryFiles === undefined)
@@ -121,18 +129,6 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
         .toArray();
     return [...paths, ...runs];
 }
-
-const PATH_CHARS = /^[\w./-]+$/u;
-
-const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
-
-const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
-
-const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
-
-const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
-
-const PATH_TOKEN_SKIPS = [/^https?:/u, /^[a-z]+:\/\//u, /^\.\.?\/?$/u, /^\/dev\//u, /^\d+\/\d+$/u, /^\//u];
 
 /**
  * One finding per path token that names nothing tracked and per run invocation that names no task.

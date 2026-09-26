@@ -4,8 +4,7 @@ import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
 import type { OutputOptions } from '#cli/types/output.ts';
 import { isCi, isColorRefused } from '#cli/platform/environment.ts';
-
-const LEVELS: Record<OutputOptions['verbosity'], number> = { quiet: 1, normal: 3, verbose: 4 };
+import { LEVELS, MESSAGE_JSON_INDENT } from '#cli/constants/output.ts';
 
 const state: { options: OutputOptions; instance: ConsolaInstance | undefined } = {
     options: { verbosity: 'normal', json: false, color: false },
@@ -19,8 +18,6 @@ function consola(): ConsolaInstance {
     });
     return state.instance;
 }
-
-const JSON_INDENT = 2;
 
 export const colors = pc.createColors(false);
 
@@ -96,5 +93,5 @@ export function print(text: string): void {
  * @param value the documented object of the command
  */
 export function printJson(value: unknown): void {
-    process.stdout.write(`${JSON.stringify(value, null, JSON_INDENT)}\n`);
+    process.stdout.write(`${JSON.stringify(value, null, MESSAGE_JSON_INDENT)}\n`);
 }

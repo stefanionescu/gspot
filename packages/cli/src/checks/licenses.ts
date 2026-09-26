@@ -8,10 +8,10 @@ import { statSync, mkdtempSync, rmSync } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { LICENSE_CHECKER_TOOL } from '#cli/constants/checks/checks.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { LicenseException, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const TOOL = 'license-checker-rseidelsohn';
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);
 const pythonReportSchema = z.array(
@@ -91,7 +91,7 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
                       '--python',
                       join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
                   ]
-                : [TOOL, '--json', '--excludePrivatePackages', '--start', start];
+                : [LICENSE_CHECKER_TOOL, '--json', '--excludePrivatePackages', '--start', start];
             const result = await runCheckCommand(input, command, { cwd: isolated ?? start });
             if (result.code !== 0)
                 throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);

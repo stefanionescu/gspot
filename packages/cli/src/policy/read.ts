@@ -8,6 +8,7 @@ import { reasonProblems } from '#cli/policy/problems.ts';
 import { parse as parseToml, TomlError } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { FIELD_PROBLEMS } from '#cli/constants/policy/policy.ts';
 import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 
@@ -30,9 +31,6 @@ function issueText(issue: z.core.$ZodIssue): string {
     const shown = where === '' ? 'gspot.toml' : where;
     return `${shown}: ${issue.message}`;
 }
-
-// A problem on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
-const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
 
 function validatedRaw(text: string, path: string): RawPolicy {
     const result = policySchema.safeParse(parseTomlText(text, path));

@@ -1,4 +1,4 @@
-import { CONFIGURATION_DIRECTORY } from '#cli/platform/paths.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/constants/platform.ts';
 import type { ConfigurationTarget, Manifest } from '#cli/types/configurations.ts';
 
 const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;

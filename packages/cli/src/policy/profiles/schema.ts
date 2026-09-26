@@ -1,23 +1,7 @@
 import { z } from 'zod';
 // The zod schema of a profile: the policy schema without anything that names a path, with a name and a selection mode.
 import { policySchema } from '#cli/policy/schema.ts';
-
-const PATH_KEYS = new Set([
-    'paths',
-    'patterns',
-    'path',
-    'file',
-    'files',
-    'excludeFiles',
-    'basePath',
-    'ignores',
-    'ignore_patterns',
-    'glob',
-    'harness_directory',
-]);
-
-/** The tables a profile never holds, because each one belongs to one repository. */
-export const REPOSITORY_TABLES = ['scope', 'generated', 'vendored', 'check', 'exclude'] as const;
+import { PATH_KEYS } from '#cli/constants/policy/profiles.ts';
 
 /** A profile as written. */
 export const profileSchema = policySchema

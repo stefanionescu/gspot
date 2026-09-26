@@ -1,8 +1,5 @@
 import type { Directive, Rules } from '#cli/types/repository/repository.ts';
-
-const DIRECTIVE = /^([a-zA-Z-]+)=/u;
-const RULE_NAME = /^[a-zA-Z-]+$/u;
-const RULE_CODE = /^(?:SC)?\d+$/u;
+import { DIRECTIVE, RULE_CODE, RULE_NAME } from '#cli/constants/repository/repository.ts';
 
 // Whether a directive key names a rule list.
 function isRuleKey(key: string): key is keyof Rules {

@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
-import { DOC_SEPARATOR, docProblems } from '#cli/checks/postgres/migration-docs.ts';
+import { DOC_SEPARATOR } from '#cli/constants/checks/postgres.ts';
+import { docProblems } from '#cli/checks/postgres/migration-docs.ts';
 
 const SECTIONS = ['Schema', 'Tables', 'Indexes', 'Functions', 'Triggers', 'Extensions'];
 const NAME = '20240101000000_create_teams.sql';

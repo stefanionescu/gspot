@@ -7,11 +7,7 @@ import * as messages from '#cli/policy/messages.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { isRepositoryPath, profileSchema } from '#cli/policy/profiles/schema.ts';
-
-const GITHUB_PREFIX = 'github:';
-const RAW_HOST = 'https://raw.githubusercontent.com';
-const PROFILE_FILE = 'gspot.profile.toml';
-const REQUEST_TIMEOUT_MS = 10_000;
+import { GITHUB_PREFIX, PROFILE_FILE, RAW_HOST, REQUEST_TIMEOUT_MS } from '#cli/constants/policy/profiles.ts';
 
 function githubUrl(reference: string): string {
     const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@', 2);

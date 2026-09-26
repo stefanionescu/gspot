@@ -5,9 +5,8 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
+import { LINE_FEED } from '#cli/constants/execution/output.ts';
 import type { TypoEntry } from '#cli/types/execution/output.ts';
-
-const LINE_FEED = 10;
 
 const markdownlintEntries = z.array(
     z.object({

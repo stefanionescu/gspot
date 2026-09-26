@@ -3,12 +3,10 @@ import { createRequire } from 'node:module';
 import { stripVTControlCharacters } from 'node:util';
 import { MissingToolError } from '#cli/tools/probe.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
+import { FAILED_CHECK } from '#cli/constants/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-// Expo Doctor prints each failed check on a line of its own, then the issues it found, then its advice.
-const FAILED_CHECK = /^✖ (?<description>.+)$/u;
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

@@ -1,17 +1,13 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
 import type { TakeoverPlan } from '#cli/types/commands/init.ts';
-
-const COLUMN_GAP = 2;
+import { COLUMN_GAP, CONFIGURATION_WIDTH, REASON_WIDTH } from '#cli/constants/commands/init.ts';
 
 function section(title: string, rows: { path: string; note: string }[]): string[] {
     if (rows.length === 0) return [];
     const width = Math.max(...rows.map((row) => row.path.length)) + COLUMN_GAP;
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
-
-const CONFIGURATION_WIDTH = 16;
-const REASON_WIDTH = 12;
 
 function configurationSection(rows: TakeoverPlan['configurations']): string[] {
     if (rows.length === 0) return ['configurations', '  none: the rule files install alone', ''];

@@ -1,14 +1,19 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
 import { positionAt } from '#cli/parsers/sql/statements.ts';
+import { HEADER_LINES } from '#cli/constants/checks/structure.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { DocProblem, Migration } from '#cli/types/checks/postgres.ts';
 
-const PURPOSE = /^--\s*Purpose:/iu;
-const SECTION = /^-- (?<name>[A-Z][A-Za-z ]+)$/u;
-const LABELS: Record<string, RegExp> = { CreateStmt: /^--\s*Table:/iu, CreateFunctionStmt: /^--\s*Function:/iu };
-const HEADER_LINES = 4;
-const BLOCK_REACH = 12;
+import {
+    BLOCK_REACH,
+    DOC_SEPARATOR,
+    MIGRATION_DOC_LABELS,
+    MIGRATION_DOC_SECTIONS,
+    PURPOSE,
+    SECTION,
+    STATEMENT_WORDS,
+} from '#cli/constants/checks/postgres.ts';
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
     const problems: DocProblem[] = [];
@@ -54,7 +59,7 @@ function commentsAbove(lines: string[], line: number): string[] {
 
 function statementProblems(migration: Migration, lines: string[], sections: Set<string>): DocProblem[] {
     return migration.statements.flatMap((statement): DocProblem[] => {
-        const wanted = DOC_SECTIONS[statement.kind];
+        const wanted = MIGRATION_DOC_SECTIONS[statement.kind];
         if (wanted === undefined) return [];
         const { line } = positionAt(migration.text, statement.start);
         const words = STATEMENT_WORDS[statement.kind] ?? statement.kind;
@@ -66,7 +71,7 @@ function statementProblems(migration: Migration, lines: string[], sections: Set<
                 rule: 'placement',
                 text: `${words} belongs under "${wanted}", and it is under "${section ?? 'no section'}".`,
             });
-        const label = LABELS[statement.kind];
+        const label = MIGRATION_DOC_LABELS[statement.kind];
         const comments = commentsAbove(lines, line);
         const isLabeled =
             label === undefined ||
@@ -80,24 +85,6 @@ function statementProblems(migration: Migration, lines: string[], sections: Set<
         return problems;
     });
 }
-
-const DOC_SECTIONS: Record<string, string> = {
-    CreateSchemaStmt: 'Schema',
-    CreateStmt: 'Tables',
-    IndexStmt: 'Indexes',
-    CreateFunctionStmt: 'Functions',
-    CreateTrigStmt: 'Triggers',
-    CreateExtensionStmt: 'Extensions',
-};
-
-const STATEMENT_WORDS: Record<string, string> = {
-    CreateSchemaStmt: 'CREATE SCHEMA',
-    CreateStmt: 'CREATE TABLE',
-    IndexStmt: 'CREATE INDEX',
-    CreateFunctionStmt: 'CREATE FUNCTION',
-    CreateTrigStmt: 'CREATE TRIGGER',
-    CreateExtensionStmt: 'CREATE EXTENSION',
-};
 
 /**
  * The layout problems of one migration.
@@ -122,7 +109,7 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
  */
 export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool('postgres');
-    const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(DOC_SECTIONS);
+    const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(MIGRATION_DOC_SECTIONS);
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
         docProblems(migration, sections).map((problem) => ({
@@ -135,5 +122,3 @@ export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
         })),
     );
 }
-
-export const DOC_SEPARATOR = '-- ============================================================================';

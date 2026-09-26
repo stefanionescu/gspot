@@ -1,25 +1,10 @@
 import { dirname, join } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
+import { SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const SHOWN_LINES = 3;
-const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
-    bun: /lockfile had changes, but lockfile is frozen/u,
-    npm: /can only install packages when your package\.json and package-lock\.json or npm-shrinkwrap\.json are in sync/u,
-    pnpm: /ERR_PNPM_(?:OUTDATED_LOCKFILE|FROZEN_LOCKFILE_WITH_OUTDATED_LOCKFILE)/u,
-    uv: /lockfile[\s\S]*needs to be updated/u,
-    yarn: /Your lockfile needs to be updated|YN0028|lockfile would have been modified/u,
-};
-
-const FROZEN_INSTALLS: Record<string, string[]> = {
-    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
-    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
-    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
-    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
-    'uv.lock': ['uv', 'lock', '--check'],
-};
+import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/constants/checks/dependencies.ts';
 
 /**
  * One finding for each lockfile its package manager refuses to install from unchanged.

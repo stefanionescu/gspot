@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { fetchedObjects } from '#cli/repository/revisions/fetch-mappings.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
+import { ABSENT_OBJECT, DIFF_PATHS, LOG_PATHS, OBJECT_ID } from '#cli/constants/repository/revisions.ts';
 
 import type {
     PushRevision,
@@ -12,11 +13,6 @@ import type {
     PushContext,
     PushLine,
 } from '#cli/types/repository/revisions.ts';
-
-const OBJECT_ID = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
-const ABSENT_OBJECT = /^0+$/u;
-const DIFF_PATHS = ['diff', '--relative', '--no-ext-diff', '--name-only', '--no-renames', '-z'];
-const LOG_PATHS = ['log', '--relative', '--format=', '--name-only', '--no-renames', '--diff-merges=separate', '-z'];
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
 function isObjectPair(localObject: string | undefined, remoteObject: string | undefined): boolean {

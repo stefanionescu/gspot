@@ -4,6 +4,7 @@ import { posix } from 'node:path';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import { ABSOLUTE_OR_ESCAPED, GLOB_MAGIC, UNSAFE_EXTEND } from '#cli/constants/policy/adoption.ts';
 import { asRaw, asStrings, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
 
 import type {
@@ -21,10 +22,6 @@ const RUFF_LINT = z.strictObject({
     'per-file-ignores': z.record(z.string(), z.array(z.string())).optional(),
     'extend-per-file-ignores': z.record(z.string(), z.array(z.string())).optional(),
 });
-
-const ABSOLUTE_OR_ESCAPED = /[\\:]/u;
-const GLOB_MAGIC = /[*?{[!]/u;
-const UNSAFE_EXTEND = /[\\:$~]/u;
 
 // Refuses a per-file selector the policy cannot spell: absolute, escaped, climbing, or negated below the root.
 function assertConvertiblePerFile(glob: string, base: string, path: string): void {

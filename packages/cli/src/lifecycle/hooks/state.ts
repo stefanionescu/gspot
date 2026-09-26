@@ -1,10 +1,10 @@
+import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
+import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 import { hookBody, hookCommand, hookPrefix, huskyLines, simpleGitHookCommand } from '#cli/generation/hooks.ts';
 
 /**

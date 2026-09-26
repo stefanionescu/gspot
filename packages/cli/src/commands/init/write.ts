@@ -1,5 +1,4 @@
 // Writing what init prepared: the policy, the generated files, the retirements, and the tool installation.
-
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { PolicyError } from '#cli/policy/read.ts';
@@ -13,15 +12,14 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
+import { INCOMPLETE_INSTALL_EXIT } from '#cli/constants/commands/init.ts';
 import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Installed, Written, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
-const INCOMPLETE_INSTALL_EXIT = 2;
-
 // Retire explicitly replaced files after saving recoverable originals; retain directories.
 function retireReplaced(
     root: string,

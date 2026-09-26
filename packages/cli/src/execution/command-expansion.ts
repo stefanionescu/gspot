@@ -13,13 +13,15 @@ import type {
     Substitutions,
     ToolInvocation,
 } from '#cli/types/execution/execution.ts';
+import {
+    COMMAND_CONFIG_PLACEHOLDER,
+    EACH_PLACEHOLDER,
+    EXISTING_PLACEHOLDER,
+    POINTER_PLACEHOLDER,
+    SETTING_PLACEHOLDER,
+    WORKSPACE_PREFIX,
+} from '#cli/constants/execution/execution.ts';
 
-const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
-const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
-const WORKSPACE_PREFIX = '{workspace:';
-const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
-const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
-const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
 /**
  * Expands an each part, or returns undefined when the part is something else.
  * @param planned the check, whose scope holds the settings
@@ -139,7 +141,7 @@ export function commandConfigurations(
         ...new Set([
             ...implicit,
             ...parts.flatMap((part) => {
-                const configured = [...part.matchAll(CONFIG_PLACEHOLDER)]
+                const configured = [...part.matchAll(COMMAND_CONFIG_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) => configurationPath(session, planned, name));
@@ -163,7 +165,7 @@ export function commandConfigurations(
  */
 export function substituteValue(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
     return settingsFilled(planned, part)
-        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
+        .replaceAll(COMMAND_CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(pointerPath(name, sub.scope)))

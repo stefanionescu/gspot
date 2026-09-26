@@ -1,5 +1,8 @@
+// A literal directory followed by /** covers that complete scope and each descendant.
+
 import type { Manifest } from '#cli/types/configurations.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
+import { RESERVED_SLOTS, TOOL_PREFIX } from '#cli/constants/policy/policy.ts';
 import { listSettings, policyTables, settingValue } from '#cli/policy/settings.ts';
 
 import type {
@@ -11,10 +14,6 @@ import type {
     PolicyScopeLayer,
 } from '#cli/types/policy/policy.ts';
 
-const TOOL_PREFIX = 'tools.';
-const RESERVED_SLOTS = new Set(['extra']);
-
-// A literal directory followed by /** covers that complete scope and each descendant.
 // Partial selectors and selectors with exclusions must remain per-file filters.
 function coversScope(paths: string[], scope: string): boolean {
     if (scope === '' || paths.some((path) => path.startsWith('!'))) return false;

@@ -4,10 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
 import type { AssetContents, StringsFile } from '#cli/types/checks/xcode.ts';
-
-const NOT_WORD = /[^A-Za-z\d]/u;
-const IMAGE_SET = '.imageset/Contents.json';
-const NAMED_SETS = ['.imageset/Contents.json', '.colorset/Contents.json'];
+import { IMAGE_SET, NAMED_SETS, NOT_WORD } from '#cli/constants/checks/xcode.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {

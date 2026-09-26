@@ -3,26 +3,7 @@ import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-
-const AREA_BY_LAYER: Record<string, string> = {
-    agent: 'How to work here',
-    code: 'Code, everywhere',
-    prose: 'Documentation',
-    language: 'Languages',
-    runtime: 'Runtimes',
-    framework: 'Frameworks',
-    library: 'Libraries',
-    tool: 'Tools',
-    platform: 'Platforms',
-    database: 'Databases',
-    shared: 'Shared',
-    repository: 'Repository',
-};
-
-const CHECKS_INSTALLED =
-    'Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
-const RULES_ALONE =
-    'These files are installed copies. Change `[rules]` in `gspot.toml` and run `gspot apply`, and never edit files under the rules directory.';
+import { AREA_BY_LAYER, CHECKS_INSTALLED, RULES_ALONE } from '#cli/constants/agents.ts';
 
 function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();

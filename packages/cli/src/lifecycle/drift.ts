@@ -1,8 +1,8 @@
 import { createTwoFilesPatch } from 'diff';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
-import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
@@ -12,18 +12,7 @@ import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-
-const NEVER_STRAY = new Set([
-    'gspot.toml',
-    '.gitignore',
-    '.gspot/version',
-    '.gspot/reports/report.json',
-    '.gspot/reports/report.sarif',
-    '.gspot/reports/report.codequality.json',
-    '.gspot/state/ownership.json',
-    '.gspot/state/writer.lock',
-]);
-const DIFF_CONTEXT = 2;
+import { CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT, NEVER_STRAY } from '#cli/constants/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith('.gspot/state/')) return false;
@@ -34,11 +23,9 @@ function isStrayCandidate(path: string, policy: Policy): boolean {
 
 function patch(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(`a/${path}`, `b/${path}`, before, after, beforeName, 'rendered', {
-        context: DIFF_CONTEXT,
+        context: DRIFT_DIFF_CONTEXT,
     });
 }
-
-const CONFLICT_MARKERS = /^(?:<{7}|={7}|>{7})(?: |$)/mu;
 
 function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];

@@ -1,8 +1,6 @@
 // Moving Prettier overrides from the folder they were written in to a configuration generated elsewhere.
 import type { Basename, Group, NativeOverride } from '#cli/types/generation.ts';
-
-const LEADING_GLOBSTARS = /^(?:\*\*\/)+/u;
-const GLOB_GROUPING = /[{}()]/u;
+import { GLOB_GROUPING, LEADING_GLOBSTARS } from '#cli/constants/generation.ts';
 
 // A selector list as written: one string or several.
 function asList(value: string | string[] | undefined): string[] {

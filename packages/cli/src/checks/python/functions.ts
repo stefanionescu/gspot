@@ -1,9 +1,9 @@
 import { docstringOf } from '#cli/checks/python/modules.ts';
+import { PLACEHOLDERS } from '#cli/constants/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
 import type { PythonFunction, PythonModule } from '#cli/types/checks/python.ts';
 
-const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }

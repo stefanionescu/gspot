@@ -12,6 +12,7 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { KEY_GAP, VALUE_WIDTH } from '#cli/constants/commands/commands.ts';
 
 import type {
     Policy,
@@ -50,9 +51,6 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
         ];
     });
 }
-
-const KEY_GAP = 2;
-const VALUE_WIDTH = 28;
 
 function scopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;

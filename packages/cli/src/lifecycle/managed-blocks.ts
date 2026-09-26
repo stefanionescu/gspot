@@ -1,10 +1,11 @@
 import type { BlockStyle } from '#cli/types/lifecycle/lifecycle.ts';
 
-const MANAGED_BLOCK_START = '<!-- >>> gspot managed >>> -->';
-const MANAGED_BLOCK_END = '<!-- <<< gspot managed <<< -->';
-
-const HASH_BLOCK_START = '# >>> gspot managed >>>';
-const HASH_BLOCK_END = '# <<< gspot managed <<<';
+import {
+    HASH_BLOCK_END,
+    HASH_BLOCK_START,
+    MANAGED_BLOCK_END,
+    MANAGED_BLOCK_START,
+} from '#cli/constants/lifecycle/lifecycle.ts';
 
 /**
  * Locate one complete block, refusing ambiguous or malformed markers.

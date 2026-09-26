@@ -11,15 +11,14 @@ import type {
     SqlAnalysis,
     SqlSource,
 } from '#cli/types/checks/checks.ts';
-
-// The shipped limit on declared input parameters when the policy names none.
-const SHIPPED_PARAMETER_LIMIT = 7;
-
-const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
-const BLOCK_COMMENT = '/*';
-const LINE_COMMENT = '--';
-// A string, a quoted name, a line comment, or the start of a block comment, whichever comes first.
-const SQL_TOKENS = /'[^']*'|"[^"]*"|--[^\n]*|\/\*/gu;
+import {
+    BLOCK_COMMENT,
+    LINE_COMMENT,
+    OUTPUT_PARAMETERS,
+    POSTGRES_DIALECTS,
+    SHIPPED_PARAMETER_LIMIT,
+    SQL_TOKENS,
+} from '#cli/constants/checks/checks.ts';
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files
@@ -60,8 +59,6 @@ function sqlStatements(value: unknown): number {
     for (const [key, child] of Object.entries(value)) count += (key.endsWith('Stmt') ? 1 : 0) + sqlStatements(child);
     return count;
 }
-
-const OUTPUT_PARAMETERS = new Set(['FUNC_PARAM_OUT', 'FUNC_PARAM_TABLE']);
 
 // The declared input parameters of a function, leaving out its outputs and table columns.
 function inputParameters(statement: SqlStatementView): number {

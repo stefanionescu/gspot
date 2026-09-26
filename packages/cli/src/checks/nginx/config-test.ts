@@ -7,10 +7,7 @@ import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
 import type { EngineInput, EngineOutcome, Finding } from '#cli/types/checks/checks.ts';
-
-const MAIN_FILE = 'nginx.conf';
-const DEFAULT_IMAGE = 'nginx:stable-alpine';
-const CERTIFICATE_ARGUMENTS = ['req', '-x509', '-nodes', '-newkey', 'rsa:2048', '-subj', '/CN=localhost', '-days', '1'];
+import { CERTIFICATE_ARGUMENTS, DEFAULT_IMAGE, MAIN_FILE } from '#cli/constants/checks/nginx.ts';
 
 async function tested(input: EngineInput, path: string, work: string, image: string): Promise<EngineOutcome> {
     const directory = mkdtempSync(join(work, 'configuration-'));

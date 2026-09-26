@@ -4,6 +4,7 @@ import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
+import { LIMITS_PREFIX } from '#cli/constants/policy/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import { asRecord, policyTables, policyValue, specFor } from '#cli/policy/settings.ts';
 
@@ -15,8 +16,6 @@ import type {
     SpecMatch,
     WrittenValue,
 } from '#cli/types/policy/policy.ts';
-
-const LIMITS_PREFIX = 'limits.';
 
 function unknownKeyProblem(surface: ExposedSettings, key: string): string {
     const all = surface.specs.keys().toArray();

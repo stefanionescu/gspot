@@ -1,8 +1,8 @@
 import ts from 'typescript';
 import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';

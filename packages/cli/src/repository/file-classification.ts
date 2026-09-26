@@ -5,21 +5,19 @@ import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.ts';
 
 import {
+    BANNER_BYTES,
+    BINARY_ATTRIBUTES,
+    GENERATED_ATTRIBUTES,
+    VENDORED_ATTRIBUTES,
+} from '#cli/constants/repository/repository.ts';
+import {
     GENERATED_BANNERS,
     INSTALLED_PREFIXES,
     LICENSE_FILE,
     VALE_OWN_PREFIXES,
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
-} from '#cli/repository/patterns.ts';
-
-const BANNER_BYTES = 1024;
-
-const GENERATED_ATTRIBUTES = new Set(['linguist-generated', 'linguist-generated=true']);
-
-const VENDORED_ATTRIBUTES = new Set(['linguist-vendored', 'linguist-vendored=true']);
-
-const BINARY_ATTRIBUTES = new Set(['-text', 'binary']);
+} from '#cli/constants/repository/patterns.ts';
 
 function attributeRule(line: string): Attribute | undefined {
     const trimmed = line.trim();
@@ -139,15 +137,5 @@ export function readAttributes(root: string): Attribute[] {
         files.close();
     }
 }
-
-export const DEPENDENCY_FOLDERS = [
-    'node_modules',
-    'bower_components',
-    '.venv',
-    'venv',
-    'Pods',
-    'DerivedData',
-    '.build',
-];
 
 // What is in the tree: files, natures, tags, scopes, and the tooling init finds.

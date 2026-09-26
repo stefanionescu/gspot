@@ -16,12 +16,9 @@ import { readProfile } from '#cli/policy/profiles/read.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan-text.ts';
+import { ALREADY_INSTALLED, UNREADABLE_EXIT } from '#cli/constants/commands/init.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 import type { InitOptions, InitPrepared, InitResult } from '#cli/types/commands/init.ts';
-
-const UNREADABLE_EXIT = 2;
-const ALREADY_INSTALLED =
-    'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
 function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {

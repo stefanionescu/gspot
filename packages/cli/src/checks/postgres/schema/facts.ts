@@ -1,5 +1,6 @@
 import type { SqlNode } from '#cli/types/parsers/sql.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
+import { CONSTRAINT_SUFFIXES, DEFAULT_SCHEMA, KEY_KINDS } from '#cli/constants/checks/postgres.ts';
 import type { Migration, SchemaFacts, FactReader, Location, SchemaState } from '#cli/types/checks/postgres.ts';
 
 function qualified(relation: unknown): string {
@@ -20,9 +21,6 @@ function named(parts: string[]): string {
     const schema = parts.length === 1 ? DEFAULT_SCHEMA : (parts.slice(0, -1).at(-1) ?? DEFAULT_SCHEMA);
     return `${schema}.${name}`;
 }
-
-const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
-const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
 function constraintName(node: SqlNode, table: string, kind: string, keys: string[]): string {
@@ -156,9 +154,6 @@ function summarized(facts: SchemaState): SchemaFacts {
     }
     return { tables: facts.tables, secured: facts.secured, policed, foreignKeys, indexed };
 }
-
-// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
-export const DEFAULT_SCHEMA = 'public';
 
 /**
  * Reads every migration in order and gathers what they declare.

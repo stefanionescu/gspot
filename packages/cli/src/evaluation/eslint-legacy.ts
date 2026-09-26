@@ -2,6 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { dirname, relative, resolve } from 'node:path';
+import { CONFIG_KEYS } from '#cli/constants/evaluation.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
@@ -18,17 +19,6 @@ import type {
     Plugins,
     Translation,
 } from '#cli/types/evaluation.ts';
-
-const CONFIG_KEYS = [
-    'env',
-    'globals',
-    'noInlineConfig',
-    'parserOptions',
-    'reportUnusedDisableDirectives',
-    'rules',
-    'settings',
-    'processor',
-];
 
 // A directory name with every glob character escaped, for a files pattern that names it literally.
 function literalDirectory(directory: string): string {

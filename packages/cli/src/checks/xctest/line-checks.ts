@@ -4,18 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const COMMENT = /^\s*\/\/\s*\S{3,}/u;
-const SLEEP_CALLS = new Set([
-    'sleep',
-    'usleep',
-    'Darwin.sleep',
-    'Darwin.usleep',
-    'Glibc.sleep',
-    'Glibc.usleep',
-    'Thread.sleep',
-    'Task.sleep',
-]);
+import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/constants/checks/xctest.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;
@@ -101,7 +90,7 @@ export async function disabledTests(input: EngineInput): Promise<Finding[]> {
                     continue;
                 const message =
                     attribute.namedChildren.find((node) => node.text === 'message')?.nextNamedSibling ?? undefined;
-                if (!hasReason(message) && !COMMENT.test(lines[attribute.startPosition.row - 1] ?? ''))
+                if (!hasReason(message) && !SWIFT_COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? ''))
                     missing.push(attribute);
             }
             return missing;

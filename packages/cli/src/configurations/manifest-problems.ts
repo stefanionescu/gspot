@@ -2,10 +2,9 @@
 import semver from 'semver';
 // between manifests that do not hold.
 import { configurationName } from '#cli/configurations/targets.ts';
+import { SETTING_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
+import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/constants/configurations.ts';
 import type { CheckRule, Checks, Settings, Manifest, RawCheck, RawManifest } from '#cli/types/configurations.ts';
-
-const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
-const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
 // Whether a check command carries a placeholder.
 function commandHas(check: RawCheck, placeholder: string): boolean {
@@ -79,7 +78,7 @@ function configurationReaders(checks: RawCheck[]): Set<string> {
             ...(check.fix_command ?? []),
             ...Object.values(check.env ?? {}),
         ])
-            for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
+            for (const match of argument.matchAll(MANIFEST_CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
 

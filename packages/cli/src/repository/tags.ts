@@ -1,79 +1,9 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Tagged, RawEntry } from '#cli/types/repository/repository.ts';
-import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/repository/patterns.ts';
 import { shebangExecutable, shebangInterpreter } from '#cli/repository/shebang.ts';
-
-const EXTENSION_TAGS: Record<string, string[]> = {
-    '.sh': ['shell', 'bash', 'text'],
-    '.bash': ['shell', 'bash', 'text'],
-    '.zsh': ['shell', 'zsh', 'text'],
-    '.bats': ['shell', 'bats', 'text'],
-    '.py': ['python', 'text'],
-    '.pyi': ['python', 'pyi', 'text'],
-    '.js': ['javascript', 'text'],
-    '.mjs': ['javascript', 'text'],
-    '.cjs': ['javascript', 'text'],
-    '.jsx': ['javascript', 'jsx', 'text'],
-    '.ts': ['typescript', 'text'],
-    '.mts': ['typescript', 'text'],
-    '.cts': ['typescript', 'text'],
-    '.tsx': ['typescript', 'tsx', 'text'],
-    '.vue': ['vue', 'source', 'text'],
-    '.svelte': ['svelte', 'source', 'text'],
-    '.swift': ['swift', 'text'],
-    '.sql': ['sql', 'text'],
-    '.pgsql': ['sql', 'text'],
-    '.psql': ['sql', 'text'],
-    '.md': ['markdown', 'text'],
-    '.mdx': ['markdown', 'text'],
-    '.json': ['json', 'text'],
-    '.jsonc': ['json', 'jsonc', 'text'],
-    '.json5': ['json', 'text'],
-    '.yml': ['yaml', 'text'],
-    '.yaml': ['yaml', 'text'],
-    '.toml': ['toml', 'text'],
-    '.ini': ['ini', 'text'],
-    '.cfg': ['ini', 'text'],
-    '.css': ['css', 'text'],
-    '.scss': ['scss', 'text'],
-    '.html': ['html', 'text'],
-    '.htm': ['html', 'text'],
-    '.xml': ['xml', 'text'],
-    '.plist': ['plist', 'xml', 'text'],
-    '.entitlements': ['plist', 'xml', 'text'],
-    '.xcconfig': ['xcconfig', 'text'],
-    '.xcstrings': ['json', 'xcstrings', 'text'],
-    '.storyboard': ['xml', 'text'],
-    '.xib': ['xml', 'text'],
-    '.svg': ['svg', 'xml', 'text'],
-    '.txt': ['text'],
-    '.env': ['dotenv', 'text'],
-    '.conf': ['text'],
-    '.webmanifest': ['json', 'text'],
-};
-
-const FILENAME_TAGS: Record<string, string[]> = {
-    Dockerfile: ['dockerfile', 'text'],
-    Makefile: ['makefile', 'text'],
-    '.gitignore': ['text'],
-    '.gitattributes': ['text'],
-    '.editorconfig': ['ini', 'text'],
-    '.nvmrc': ['text'],
-    '.node-version': ['text'],
-    '.python-version': ['text'],
-    _headers: ['text'],
-    _redirects: ['text'],
-    LICENSE: ['text'],
-    'LICENSE.md': ['markdown', 'text'],
-    CODEOWNERS: ['text'],
-};
-
-const SHEBANG_TAGS: Record<string, string[]> = {
-    shell: ['shell', 'executable', 'text'],
-    python: ['python', 'executable', 'text'],
-    node: ['javascript', 'node', 'executable', 'text'],
-};
+import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#cli/constants/repository/patterns.ts';
+import { EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#cli/constants/repository/repository.ts';
 
 function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };

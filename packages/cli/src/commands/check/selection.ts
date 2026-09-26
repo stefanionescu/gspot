@@ -6,11 +6,10 @@ import { isAbsolute, relative, resolve, sep } from 'node:path';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { INVALID_INPUT_EXIT } from '#cli/constants/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
 import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
-
-const INVALID_INPUT_EXIT = 2;
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/constants/repository/repository.ts';
 
 function stagedEnvironmentFiles(staged: string[]): string[] {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));

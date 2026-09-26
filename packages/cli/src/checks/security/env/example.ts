@@ -1,5 +1,6 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EnvRead } from '#cli/types/checks/security.ts';
+import { KEY_GROUP } from '#cli/constants/checks/security.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
@@ -8,9 +9,7 @@ import {
     ENV_READ_EXTENSIONS,
     ENV_READ_PATTERNS,
     ENV_TEMPLATE_NAMES,
-} from '#cli/repository/env-patterns.ts';
-
-const KEY_GROUP = 1;
+} from '#cli/constants/repository/repository.ts';
 
 function templateNames(input: EngineInput): string[] {
     const listed = input.view.tool('dotenv')['templates'];

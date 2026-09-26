@@ -3,10 +3,7 @@ import { join } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { selectedTarget, targetInScope } from '#cli/configurations/targets.ts';
-
-// svelte-check writes each diagnostic on a line of its own: a timestamp, then the diagnostic as JSON.
-const DIAGNOSTIC_LINE = /^\d+ (?<diagnostic>\{.*\})$/u;
-const FAILURE_LINE = /^\d+ FAILURE (?<message>".*")$/u;
+import { DIAGNOSTIC_LINE, FAILURE_LINE } from '#cli/constants/checks/checks.ts';
 
 const diagnosticSchema = z.object({
     type: z.enum(['ERROR', 'WARNING']),

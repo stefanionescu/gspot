@@ -1,11 +1,10 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
+import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
+import { CHANGED_PATHS } from '#cli/constants/repository/revisions.ts';
 import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-
-const GIT_TIMEOUT_MS = 30_000;
-const CHANGED_PATHS = ['diff', '--relative', '--name-only', '--no-renames', '-z'];
 
 // The paths with unstaged or uncommitted changes in the working tree.
 async function workingPaths(root: string, cancelSignal?: AbortSignal): Promise<string[]> {

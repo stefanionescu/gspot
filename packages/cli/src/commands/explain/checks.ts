@@ -7,10 +7,8 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/constants/commands/explain.ts';
 import type { Explanation, Facts, Found, OwnCheck } from '#cli/types/commands/explain.ts';
-
-const TOOL_TIMEOUT_MS = 10_000;
-const SWIFTLINT_LINES = 6;
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {

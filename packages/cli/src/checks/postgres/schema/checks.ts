@@ -3,9 +3,10 @@ import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/types/checks/postgres.ts';
 // The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+import { DEFAULT_SCHEMA } from '#cli/constants/checks/postgres.ts';
+import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { schemaFacts, DEFAULT_SCHEMA } from '#cli/checks/postgres/schema/facts.ts';
 
 function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
     return {

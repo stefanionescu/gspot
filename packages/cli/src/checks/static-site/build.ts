@@ -10,10 +10,8 @@ import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { SiteBuild } from '#cli/types/checks/static-site.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { DEFAULT_BUILD, DEFAULT_BUILD_OUTPUT, SHOWN_DIFFERENCES } from '#cli/constants/checks/static-site.ts';
 
-const DEFAULT_OUTPUT = 'dist';
-const DEFAULT_BUILD = 'npm run build';
-const SHOWN_DIFFERENCES = 10;
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
 function text(input: EngineInput, key: string, otherwise: string): string {
@@ -22,7 +20,7 @@ function text(input: EngineInput, key: string, otherwise: string): string {
 }
 
 async function built(input: EngineInput): Promise<SiteBuild> {
-    const outputPath = text(input, 'output', DEFAULT_OUTPUT);
+    const outputPath = text(input, 'output', DEFAULT_BUILD_OUTPUT);
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
     const scratch = scratchCopy(

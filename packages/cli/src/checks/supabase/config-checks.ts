@@ -1,9 +1,8 @@
 import { posix } from 'node:path';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { SUPABASE_CONFIG, functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
-
-const MIGRATION_NAME = /^\d{14}_[a-z][a-z\d_]*\.sql$/u;
+import { MIGRATION_NAME, SUPABASE_CONFIG } from '#cli/constants/checks/supabase.ts';
+import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**
  * The project file parses, and every function it configures has a folder.

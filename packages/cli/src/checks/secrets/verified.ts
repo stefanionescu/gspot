@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { SecretScan } from '#cli/types/checks/secrets.ts';
@@ -12,22 +12,7 @@ import { gitBlobs } from '#cli/repository/revisions/snapshot.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-
-const GIT_TIMEOUT_MS = 30_000;
-const CHANGE_LINE =
-    /^:[0-7]{6} (100644|100755|120000) (?:[a-f0-9]{40}|[a-f0-9]{64}) ([a-f0-9]{40}|[a-f0-9]{64}) [AMT]$/u;
-const DIFF_TREE = [
-    'diff-tree',
-    '--root',
-    '--no-commit-id',
-    '--raw',
-    '-z',
-    '--no-renames',
-    '-r',
-    '-m',
-    '--diff-filter=AMT',
-];
-const COMMIT_METADATA = ['show', '--no-patch', '--no-show-signature', '--format=%an%n%ae%n%cn%n%ce%n%B'];
+import { CHANGE_LINE, COMMIT_METADATA, DIFF_TREE, GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
 
 // The commits under review: the ones the run supplies, or every commit since the push base.
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {

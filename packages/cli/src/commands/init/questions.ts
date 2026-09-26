@@ -1,29 +1,15 @@
-import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
 import type { FormatSettings, Policy } from '#cli/types/policy/policy.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+import { CI_CHOICES, HOOK_CHOICES } from '#cli/constants/commands/init.ts';
 import { askChoice, askConfirmation, askMany } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
-
-const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
-    { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
-    { value: 'lefthook', label: 'a block in lefthook.yml' },
-    { value: 'husky', label: 'lines in .husky/' },
-    { value: 'pre-commit', label: 'a local hook in .pre-commit-config.yaml' },
-    { value: 'simple-git-hooks', label: 'commands in package.json simple-git-hooks' },
-    { value: 'none', label: 'no hooks' },
-];
-
-const CI_CHOICES: { value: InitAnswers['ci']; label: string }[] = [
-    { value: 'github', label: '.github/workflows/gspot.yml' },
-    { value: 'gitlab', label: '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)' },
-    { value: 'none', label: 'no workflow' },
-];
 
 const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'mise', label: `mise (${MISE_CONFIG_PATH})` },

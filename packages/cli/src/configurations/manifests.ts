@@ -1,8 +1,9 @@
 import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
-import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
+import { PRIVATE_PATHS } from '#cli/constants/platform.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { OPTIONAL_TOOL_KEYS } from '#cli/constants/configurations.ts';
 import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
 import type { Manifest, ToolPin, CheckSpec, RawCheck, RawTool } from '#cli/types/configurations.ts';
 
@@ -14,23 +15,6 @@ import {
 } from '#cli/configurations/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
-
-// The pin fields a manifest may leave out, copied when declared.
-const OPTIONAL_TOOL_KEYS = [
-    'version',
-    'floor',
-    'provider',
-    'version_command',
-    'version_exit_code',
-    'version_regex',
-    'crash_pattern',
-    'rule_page',
-    'suppression',
-    'env',
-    'takeover',
-    'query_packs',
-    'prettier',
-] as const;
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
     const line = `${issue.path.map(String).join('.')}: ${issue.message}`;

@@ -1,22 +1,10 @@
 import Config from '@npmcli/config';
 import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { CONNECTION_KEYS } from '#cli/constants/tools/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 // eslint-disable-next-line gspot/no-index-imports -- the package defines flatten and shorthands in this file, and Vite reads the named exports only from the explicit path
 import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
-
-const CONNECTION_KEYS = new Set([
-    'registry',
-    'proxy',
-    'https-proxy',
-    'noproxy',
-    'strict-ssl',
-    'ca',
-    'cafile',
-    'cert',
-    'key',
-    'always-auth',
-]);
 
 /**
  * Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory.

@@ -1,5 +1,6 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILES } from '#cli/repository/locked-packages.ts';
+import { LOCKFILES } from '#cli/constants/repository/repository.ts';
+import { LOCKFILE_URL } from '#cli/constants/checks/dependencies.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
@@ -29,8 +30,6 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
             .toArray(),
     );
 }
-
-const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;
 
 /**
  * The findings of the lockfile host check over every tracked text lockfile.

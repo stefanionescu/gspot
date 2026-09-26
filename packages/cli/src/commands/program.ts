@@ -12,14 +12,13 @@ import { registerApply } from '#cli/commands/apply/command.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerUninstall } from '#cli/commands/uninstall.ts';
 import { installCompletion } from '#cli/commands/completion.ts';
+import { HELP_CODES } from '#cli/constants/commands/commands.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
 import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
-
-const HELP_CODES = new Set(['commander.helpDisplayed', 'commander.version', 'commander.help']);
 
 function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity'] {
     if (options['quiet'] === true) return 'quiet';

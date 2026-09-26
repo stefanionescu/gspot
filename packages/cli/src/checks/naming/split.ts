@@ -1,7 +1,5 @@
 import { splitByCase } from 'scule';
-
-const SEPARATORS = /[^A-Za-z0-9]+/u;
-const DIGIT = /\d/u;
+import { DIGIT, SEPARATORS } from '#cli/constants/checks/naming.ts';
 
 /**
  * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`.

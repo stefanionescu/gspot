@@ -1,19 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
-
-const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
-const FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];
-const MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
-const LABELS: Record<string, string> = {
-    types: 'type',
-    functions: 'function',
-    methods: 'method',
-    parameters: 'parameter',
-    properties: 'property',
-    constants: 'constant',
-    variables: 'variable',
-    enum_cases: 'enum case',
-};
+import { MEMBER_PARENTS, SWIFT_FUNCTION_NODES, SWIFT_LABELS, TYPE_NODES } from '#cli/constants/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text.replaceAll('`', '');
@@ -24,7 +11,7 @@ function add(sink: ExtractSink, node: Node, category: string): void {
         column: node.startPosition.column + 1,
         language: 'swift',
         category,
-        kind: `swift ${LABELS[category] ?? category}`,
+        kind: `swift ${SWIFT_LABELS[category] ?? category}`,
         name,
     });
 }
@@ -46,7 +33,7 @@ function addParameters(sink: ExtractSink, owner: Node): void {
 }
 
 function addFunctions(sink: ExtractSink, root: Node): void {
-    const declarations = root.descendantsOfType([...FUNCTION_NODES, 'init_declaration']);
+    const declarations = root.descendantsOfType([...SWIFT_FUNCTION_NODES, 'init_declaration']);
     for (const node of declarations) {
         addParameters(sink, node);
         const name = node.childForFieldName('name');

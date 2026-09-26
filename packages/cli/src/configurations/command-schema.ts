@@ -1,7 +1,5 @@
 import { z } from 'zod';
-
-/** Nonzero statuses documented by a checker or correction tool as source findings. */
-const LAST_EXIT_CODE = 255;
+import { LAST_EXIT_CODE } from '#cli/constants/configurations.ts';
 
 export const findingExitCodesSchema = z.array(z.number().int().min(1).max(LAST_EXIT_CODE));
 

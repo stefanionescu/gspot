@@ -1,10 +1,9 @@
 import { run } from '#cli/platform/spawn.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import { TOOL_DEADLINE } from '#cli/configurations/settings.ts';
+import { TOOL_DEADLINE } from '#cli/constants/configurations.ts';
+import { MILLISECONDS, TOOL_ENV } from '#cli/constants/tools/tools.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 
-const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
-const MILLISECONDS = 1000;
 /**
  * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
  * @param view the policy view whose limits apply, or undefined for the default

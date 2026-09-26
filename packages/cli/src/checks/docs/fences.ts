@@ -9,8 +9,14 @@ import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const STRUCTURED_PARSERS = new Set(['json', 'toml', 'yaml']);
-const TREE_PARSERS = new Set(['typescript', 'javascript', 'python']);
+import {
+    ANGLE_PLACEHOLDER,
+    ELLIPSIS_ARGUMENTS,
+    ELLIPSIS_LINE,
+    FENCE_PARSERS,
+    STRUCTURED_PARSERS,
+    TREE_PARSERS,
+} from '#cli/constants/checks/docs.ts';
 
 function fencesOf(text: string): FencedBlock[] {
     const out: FencedBlock[] = [];
@@ -93,32 +99,6 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
     }
     return findings;
 }
-
-const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
-
-const ELLIPSIS_ARGUMENTS = '(...)';
-
-const ANGLE_PLACEHOLDER = /<[A-Z][A-Z0-9_-]*>/gu;
-
-const FENCE_PARSERS: Record<string, 'json' | 'toml' | 'yaml' | 'bash' | 'typescript' | 'javascript' | 'python'> = {
-    json: 'json',
-    jsonc: 'json',
-    toml: 'toml',
-    yaml: 'yaml',
-    yml: 'yaml',
-    bash: 'bash',
-    sh: 'bash',
-    shell: 'bash',
-    ts: 'typescript',
-    typescript: 'typescript',
-    tsx: 'typescript',
-    js: 'javascript',
-    javascript: 'javascript',
-    mjs: 'javascript',
-    cjs: 'javascript',
-    python: 'python',
-    py: 'python',
-};
 
 /**
  * One finding per fenced block whose tagged language refuses to parse it.

@@ -5,6 +5,7 @@ import { coverageReport } from '#cli/execution/coverage.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
+import { FAILED_STATUSES, POLICY_CHECK, RAN_STATUSES, UNABLE_EXIT } from '#cli/constants/execution/execution.ts';
 
 import type {
     ReportInput,
@@ -15,11 +16,6 @@ import type {
     RunReport,
     Session,
 } from '#cli/types/execution/execution.ts';
-
-const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
-const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
-const POLICY_CHECK = 'integrity/policy';
-const UNABLE_EXIT = 2;
 
 // How often each suppression form appears in the checked sources.
 function census(session: Session, files: TrackedFile[]): Record<string, number> {

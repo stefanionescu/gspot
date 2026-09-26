@@ -1,15 +1,5 @@
 import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 
-export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
-
-export const MISE_BACKENDS: { installer: string; prefix: string }[] = [
-    { installer: 'mise', prefix: '' },
-    { installer: 'npm', prefix: 'npm:' },
-    { installer: 'pypi', prefix: 'pipx:' },
-    { installer: 'github', prefix: 'github:' },
-    { installer: 'cargo', prefix: 'cargo:' },
-];
-
 /**
  * Select the private installation used by both generated projects and tool resolution.
  * @param tool the pin

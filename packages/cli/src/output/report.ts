@@ -1,16 +1,15 @@
 import { join } from 'node:path';
-import { REPORT_DIRECTORY } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import packageManifest from '#package' with { type: 'json' };
+import { REPORT_DIRECTORY } from '#cli/constants/platform.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 import type { PushReport, RunReport } from '#cli/types/execution/execution.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
 const { version: GSPOT_VERSION } = packageManifest;
-
-const JSON_INDENT = 4;
 
 function locationOf(finding: Finding): { fileUri: string; startLine: number; startColumn: number } | undefined {
     if (finding.file === '') return undefined;
@@ -54,7 +53,7 @@ function codeQualityText(report: RunReport | PushReport): string {
             },
         ];
     });
-    return `${JSON.stringify(entries, null, JSON_INDENT)}\n`;
+    return `${JSON.stringify(entries, null, PACKAGE_JSON_INDENT)}\n`;
 }
 
 /**
@@ -104,7 +103,7 @@ function sarifRun(report: RunReport): SarifRunBuilder {
  * @param report the run report
  */
 export function writeReport(root: string, report: RunReport | PushReport): void {
-    const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
+    const json = `${JSON.stringify(report, null, PACKAGE_JSON_INDENT)}\n`;
     const sarif = sarifText(report);
     const path = join(root, REPORT_DIRECTORY, 'report.json');
     try {

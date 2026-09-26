@@ -1,12 +1,7 @@
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
-
-/** The days a release must be public before Bun installs it when the policy names no age. */
-export const DEFAULT_RELEASE_AGE_DAYS = 7;
-
-/** The seconds in one day, for the age Bun reads. */
-export const SECONDS_PER_DAY = 86_400;
+import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/constants/generation.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.

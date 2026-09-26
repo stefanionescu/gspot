@@ -4,12 +4,12 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { InstallationError, pythonPins } from '#cli/tools/pins.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import { InstallationError, pythonPins, UV_INSTALLER } from '#cli/tools/pins.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION, UV_INSTALLER } from '#cli/constants/tools/tools.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];

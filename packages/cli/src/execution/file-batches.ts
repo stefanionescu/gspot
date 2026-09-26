@@ -1,9 +1,10 @@
 // Batches file arguments within the process and npm wrapper command limits.
-
-const WINDOWS_COMMAND_LIMIT = 7000;
-const UNIX_COMMAND_LIMIT = 100_000;
-const WINDOWS_ESCAPE_EXPANSION = 5;
-const WINDOWS_ARGUMENT_OVERHEAD = 9;
+import {
+    UNIX_COMMAND_LIMIT,
+    WINDOWS_ARGUMENT_OVERHEAD,
+    WINDOWS_COMMAND_LIMIT,
+    WINDOWS_ESCAPE_EXPANSION,
+} from '#cli/constants/execution/execution.ts';
 
 /**
  * Splits file arguments while reserving space for the executable and fixed arguments.

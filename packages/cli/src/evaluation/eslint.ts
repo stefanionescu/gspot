@@ -3,6 +3,7 @@ import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { ACTIVE_LEVELS } from '#cli/constants/evaluation.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -11,9 +12,6 @@ import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 import type { Adoption, EslintRequest } from '#cli/types/evaluation.ts';
 import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
-
-// The ESLint severities that switch a rule on.
-const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
 
 // The values TOML cannot hold, which a configuration may carry only through a registered module.
 function isUnrepresentable(value: unknown): boolean {

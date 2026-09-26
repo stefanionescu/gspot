@@ -6,19 +6,16 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
 import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/python-launchers.ts';
+import { COPY_CONCURRENCY, LOCKS, VALE_CONFIGURATION } from '#cli/constants/repository/revisions.ts';
 import type { Directory, PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/python-site-packages.ts';
 
-const COPY_CONCURRENCY = 8;
-const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
-const VALE_CONFIGURATION = '.gspot/config/vale.ini';
-
 // Refuses a copied link that leaves the snapshot, unless it is an interpreter link the environment declared.
 async function assertInternalLink(
     root: string,

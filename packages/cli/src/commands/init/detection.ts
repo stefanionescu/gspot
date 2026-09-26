@@ -1,20 +1,11 @@
 // The header init prints: what it found in the repository, one row per kind.
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
 import type { ConfigurationEvidence as Proposal } from '#cli/types/configurations.ts';
+import { DETECTION_LABEL_WIDTH, GAP_WIDTH, KIND_ROWS } from '#cli/constants/commands/init.ts';
 
-const LABEL_WIDTH = 13;
-const GAP_WIDTH = 3;
 const GAP = ' '.repeat(GAP_WIDTH);
-const KIND_ROWS: { label: string; kind: string }[] = [
-    { label: 'frameworks', kind: 'framework' },
-    { label: 'platforms', kind: 'platform' },
-    { label: 'databases', kind: 'database' },
-    { label: 'tools', kind: 'tool' },
-    { label: 'libraries', kind: 'library' },
-];
-
 function row(label: string, items: string[]): string | undefined {
-    return items.length === 0 ? undefined : `${label.padEnd(LABEL_WIDTH)} ${items.join(GAP)}`;
+    return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(GAP)}`;
 }
 
 function proposalsOfKind(summary: DetectionSummary, kind: string): Proposal[] {
@@ -73,7 +64,7 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
 function unknownRows(summary: DetectionSummary): string[] {
     return summary.unknown.map(
         (entry) =>
-            `${'no configuration'.padEnd(LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
+            `${'no configuration'.padEnd(DETECTION_LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
     );
 }
 

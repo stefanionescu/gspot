@@ -5,15 +5,13 @@ import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const LANGUAGE_BY_EXTENSION: Record<string, string> = {
-    '.ts': 'typescript',
-    '.tsx': 'typescript',
-    '.mts': 'typescript',
-    '.cts': 'typescript',
-    '.js': 'javascript',
-    '.mjs': 'javascript',
-    '.cjs': 'javascript',
-};
+import {
+    CONFIG_CALL_ALLOWED,
+    CONFIG_IMPORT_PREFIXES,
+    CONFIG_LOGIC_NODES,
+    CONFIG_STATEMENTS,
+    LANGUAGE_BY_EXTENSION,
+} from '#cli/constants/checks/repository.ts';
 
 function configurationRolePaths(input: EngineInput): string[] {
     const role = input.policyFiles.policy.architecture.roles['config'];
@@ -95,36 +93,6 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
         tree.delete();
     }
 }
-
-const CONFIG_STATEMENTS = new Set([
-    'import_statement',
-    'export_statement',
-    'lexical_declaration',
-    'type_alias_declaration',
-    'comment',
-    'empty_statement',
-]);
-
-const CONFIG_LOGIC_NODES = new Set([
-    'function_declaration',
-    'generator_function_declaration',
-    'function_expression',
-    'arrow_function',
-    'class_declaration',
-    'if_statement',
-    'for_statement',
-    'for_in_statement',
-    'while_statement',
-    'do_statement',
-    'switch_statement',
-    'try_statement',
-    'await_expression',
-    'ternary_expression',
-]);
-
-const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
-
-const CONFIG_IMPORT_PREFIXES = ['#config/'];
 
 /**
  * One finding per statement, call, function or control-flow construct in a file under the config role.

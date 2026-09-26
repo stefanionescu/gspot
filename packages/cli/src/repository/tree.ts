@@ -3,11 +3,10 @@ import { tagEntry } from '#cli/repository/tags.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
 import { swiftTestTags } from '#cli/repository/swift-tests.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
+import { FILE_PREFIX_BYTES } from '#cli/constants/repository/repository.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/repository.ts';
 import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
-
-const FILE_PREFIX_BYTES = 4096;
 
 /**
  * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.

@@ -4,15 +4,11 @@ import { stripVTControlCharacters } from 'node:util';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const SHOWN_LINES = 3;
-const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;
+import { CAUSE_MARKS, SHOWN_LINES, TSC_LINE } from '#cli/constants/checks/nextjs.ts';
 
 function inScope(input: EngineInput, path: string): string {
     return input.scope === '' ? path : `${input.scope}/${path}`;
 }
-
-const CAUSE_MARKS = ['Please install', 'FATAL', 'Error:', '⨯'];
 
 // Next.js puts the cause and its detail above the longer stack trace.
 function lastLines(text: string): string {

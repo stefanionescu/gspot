@@ -4,6 +4,7 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { policyValue } from '#cli/policy/settings.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
+import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
 import { styleNames } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
@@ -13,17 +14,13 @@ import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import { aliasesFor, javascriptConfig } from '#cli/generation/javascript.ts';
 import type { TemplateInputs, PrettierPlugin } from '#cli/types/generation.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/constants/configurations.ts';
+import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 import { editorconfigOverrides, prettierConfig } from '#cli/generation/format.ts';
+import { RECOMMENDED_COMPILER_OPTIONS } from '#cli/constants/checks/typescript.ts';
 import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
-import { BLOCK_IGNORES, PROSE_FORMATS, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
-import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
-
-const JSON_INDENT = 4;
-
-const LEADING_NEWLINES = /^\n+/u;
-
-const JSON_EXTENSIONS = new Set(['.json', '.webmanifest']);
+import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 
 function toolNames(scopes: ScopeSelection[]): string[] {
     const names = scopes.flatMap((entry) =>
@@ -174,7 +171,7 @@ export function templateInputs(
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
         extra: view.extra,
-        json: (value, indent = JSON_INDENT) =>
+        json: (value, indent = PACKAGE_JSON_INDENT) =>
             JSON.stringify(value, null, indent)
                 .replaceAll('\u{2028}', String.raw`\u2028`)
                 .replaceAll('\u{2029}', String.raw`\u2029`),

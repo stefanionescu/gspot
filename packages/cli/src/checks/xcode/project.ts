@@ -4,10 +4,8 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { TestPlan } from '#cli/types/checks/xcode.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/revisions/snapshot.ts';
+import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/constants/checks/xcode.ts';
 import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
-
-const PROJECT_FILE = '.xcodeproj/project.pbxproj';
-const SYMLINK_MODE = '120000';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 function folderOf(projectFile: string): string {
@@ -21,7 +19,7 @@ function folderOf(projectFile: string): string {
  * @returns the findings
  */
 export function orphanSources(input: EngineInput): Finding[] {
-    const projects = trackedEnding(input, [PROJECT_FILE]).map((path) => ({
+    const projects = trackedEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
         ...readProject(
             readSource(input.root, path, input.observations).toString('utf8'),
@@ -90,7 +88,7 @@ export function testPlans(input: EngineInput): Finding[] {
                 'This scheme runs tests and names no test plan.',
             ),
         );
-    const targets = trackedEnding(input, [PROJECT_FILE]).flatMap((path) =>
+    const targets = trackedEnding(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
         projectTestTargets(readSource(input.root, path, input.observations).toString('utf8'))
             .filter((name) => !planned.has(name))
             .map((name) =>
@@ -111,7 +109,7 @@ export function testPlans(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
-    const folders = trackedEnding(input, [PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
+    const folders = trackedEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.observations);
     const links = entries.filter(

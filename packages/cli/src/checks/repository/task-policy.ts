@@ -1,4 +1,4 @@
-import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';

@@ -1,16 +1,16 @@
+// Actionlint's pinned parser predates GitHub's self-repository syntax. Give its
+
 import { join } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
+import { ACTIONLINT_COMMAND } from '#cli/constants/checks/checks.ts';
 import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
-const COMMAND = ['actionlint', '-no-color', '{files}'];
-
-// Actionlint's pinned parser predates GitHub's self-repository syntax. Give its
 // parser equivalent local references in an isolated copy, retaining every offset.
 function actionlintSource(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
@@ -67,7 +67,7 @@ export async function checkActions(session: Session, planned: PlannedCheck): Pro
         const prepared = actionlintSource(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }
-    if (replacements.size === 0) return runToolCheck(session, planned, COMMAND);
+    if (replacements.size === 0) return runToolCheck(session, planned, ACTIONLINT_COMMAND);
     using workspace = createFileWorkspace(
         session.root,
         session.repository.files.map((file) => file.path),
@@ -79,5 +79,5 @@ export async function checkActions(session: Session, planned: PlannedCheck): Pro
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runToolCheck({ ...session, root: workspace.root }, planned, COMMAND);
+    return await runToolCheck({ ...session, root: workspace.root }, planned, ACTIONLINT_COMMAND);
 }

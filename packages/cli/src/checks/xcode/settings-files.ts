@@ -1,11 +1,7 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
-
-const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
-const INCLUDE_LINE = /^#include\??\s+"[^"]+"$/u;
-const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;
-const ARBITRARY_LOADS = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;
+import { ARBITRARY_LOADS, INCLUDE_LINE, PLIST_KEY, SETTING_NAME } from '#cli/constants/checks/xcode.ts';
 
 // A setting is a name, which may carry conditions in brackets, then an equals sign outside the brackets.
 function isSetting(line: string): boolean {

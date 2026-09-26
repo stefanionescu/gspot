@@ -1,7 +1,7 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#cli/checks/structure/patterns.ts';
+import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#cli/constants/checks/structure.ts';
 
 /**
  * One finding per line that discards a failure, sources state, sweeps processes or trees outside an owner, or changes directory unchecked.

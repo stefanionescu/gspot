@@ -4,14 +4,10 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/execution/ignores.ts';
+import { GSPOT_SUPPRESSION } from '#cli/constants/checks/repository.ts';
 import type { SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { EngineInput, Finding, SuppressionComment } from '#cli/types/checks/checks.ts';
-
-const GSPOT_SUPPRESSION = {
-    marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
-    reason: String.raw` -- (?<reason>\S.*)`,
-};
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/constants/execution/execution.ts';
 
 function styleOf(file: TrackedFile): string | undefined {
     const dot = file.path.lastIndexOf('.');

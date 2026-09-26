@@ -1,8 +1,5 @@
 import { codePoints } from '#cli/platform/code-points.ts';
-
-const NEAR_LIMIT = 3;
-const TYPO_MIN = 2;
-const TYPO_FRACTION = 3;
+import { NEAR_DISTANCE_LIMIT, TYPO_FRACTION, TYPO_MIN } from '#cli/constants/policy/policy.ts';
 
 function distance(a: string, b: string): number {
     const right = codePoints(b);
@@ -39,6 +36,6 @@ export function nearMatches(name: string, candidates: string[]): string[] {
                 score <= limit || candidate.toLowerCase().includes(lower) || lower.includes(candidate.toLowerCase()),
         )
         .toSorted((a, b) => a.score - b.score)
-        .slice(0, NEAR_LIMIT)
+        .slice(0, NEAR_DISTANCE_LIMIT)
         .map(({ candidate }) => candidate);
 }

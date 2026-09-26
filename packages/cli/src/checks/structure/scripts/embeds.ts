@@ -1,4 +1,4 @@
-import { RUNTIME_EMBEDS } from '#cli/checks/structure/patterns.ts';
+import { RUNTIME_EMBEDS } from '#cli/constants/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**

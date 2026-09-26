@@ -5,21 +5,19 @@ import { emitTarget } from '#cli/generation/templates.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
+import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 import type { EditorconfigAdoption, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { EmitContext, Pointer, GeneratedFile, GeneratedProposal } from '#cli/types/generation.ts';
-
-const JSON_INDENT = 4;
 
 // A copied JSON pointer without the generated marker the body carries.
 function copyPointerContent(content: string, pointerPath: string): string {
     if (!pointerPath.endsWith('.json')) return content;
     const parsed = JSON.parse(content) as Record<string, unknown>;
     Reflect.deleteProperty(parsed, GENERATED_JSON_KEY);
-    return `${JSON.stringify(parsed, null, JSON_INDENT)}\n`;
+    return `${JSON.stringify(parsed, null, PACKAGE_JSON_INDENT)}\n`;
 }
 
 function pathInScope(scope: string, path: string): string {

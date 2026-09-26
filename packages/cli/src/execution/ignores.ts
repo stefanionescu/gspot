@@ -8,16 +8,13 @@ import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { IgnoreUse, InlineIgnore } from '#cli/types/execution/execution.ts';
 
-// reason is what follows `--` in the rest of the comment.
-const INLINE_IGNORE: Record<string, RegExp> = {
-    slash: /\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
-    hash: /# ?gspot-ignore +([a-z0-9/-]+)/u,
-    dash: /-- ?gspot-ignore +([a-z0-9/-]+)/u,
-    html: /<!-- ?gspot-ignore +([a-z0-9/-]+)/u,
-};
-
-const REASON_INTRODUCER = '--';
-const HTML_COMMENT_CLOSE = '-->';
+import {
+    COMMENT_OPENERS,
+    COMMENT_STYLE_BY_EXTENSION,
+    HTML_COMMENT_CLOSE,
+    INLINE_IGNORE,
+    REASON_INTRODUCER,
+} from '#cli/constants/execution/execution.ts';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
@@ -55,39 +52,6 @@ function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnor
     const reason = reasonIn(line.slice(match.index + match[0].length));
     return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
 }
-
-export const COMMENT_STYLE_BY_EXTENSION: Record<string, keyof typeof INLINE_IGNORE> = {
-    '.ts': 'slash',
-    '.tsx': 'slash',
-    '.js': 'slash',
-    '.mjs': 'slash',
-    '.cjs': 'slash',
-    '.jsx': 'slash',
-    '.swift': 'slash',
-    '.css': 'slash',
-    '.scss': 'slash',
-    '.py': 'hash',
-    '.sh': 'hash',
-    '.bash': 'hash',
-    '.zsh': 'hash',
-    '.toml': 'hash',
-    '.yml': 'hash',
-    '.yaml': 'hash',
-    '.rb': 'hash',
-    '.sql': 'dash',
-    '.pgsql': 'dash',
-    '.psql': 'dash',
-    '.md': 'html',
-    '.html': 'html',
-    '.htm': 'html',
-};
-
-export const COMMENT_OPENERS: Record<string, string[]> = {
-    slash: ['//', '/*'],
-    hash: ['#'],
-    dash: ['--'],
-    html: ['<!--'],
-};
 
 /**
  * Splits findings into kept and ignored, counting how many each entry matched.

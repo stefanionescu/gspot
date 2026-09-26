@@ -3,8 +3,8 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { CATEGORY_PARENTS } from '#cli/checks/naming/categories.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
+import { POLICY_ASSET, CATEGORY_PARENTS } from '#cli/constants/checks/naming.ts';
 import type { ExposedSettings, NamingRule, NamingSettings, Policy } from '#cli/types/policy/policy.ts';
 
 import type {
@@ -18,7 +18,6 @@ import type {
     Term,
 } from '#cli/types/checks/naming.ts';
 
-const POLICY_ASSET = 'packages/cli/configurations/policy/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
 function toSet(names: string[] | undefined): Set<string> | undefined {

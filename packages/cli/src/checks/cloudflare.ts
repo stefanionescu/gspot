@@ -8,11 +8,13 @@ import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;
-const STATUS_CODES = new Set(['200', '301', '302', '303', '307', '308', '404', '410']);
-const COMPATIBILITY_DATE = /^\d{4}-\d{2}-\d{2}$/u;
-const TYPES_FILE = 'cloudflare-env.d.ts';
-const REDIRECT_PARTS = { least: 2, most: 3 };
+import {
+    COMPATIBILITY_DATE,
+    HTTP_HEADER_LINE,
+    REDIRECT_PARTS,
+    STATUS_CODES,
+    TYPES_FILE,
+} from '#cli/constants/checks/checks.ts';
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };
@@ -45,7 +47,7 @@ function blockProblem(line: { text: string; number: number }): { number: number;
 function headerProblem(line: { text: string; number: number }, hasPath: boolean): { number: number; text: string }[] {
     if (!hasPath) return [{ number: line.number, text: 'This header sits under no path.' }];
     const header = line.text.trim();
-    const isHeader = HEADER_LINE.test(header) || header.startsWith('! ');
+    const isHeader = HTTP_HEADER_LINE.test(header) || header.startsWith('! ');
     return isHeader ? [] : [{ number: line.number, text: 'This line is no header: a name, a colon, and a value.' }];
 }
 

@@ -1,23 +1,9 @@
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { HOOK_ARGS, HOOK_HEADER, RUNNER_EXEC } from '#cli/constants/generation.ts';
 import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/types/generation.ts';
-import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
-
-const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
-
-const HOOK_ARGS: Record<HookName, string> = {
-    'pre-commit': 'check --staged',
-    'pre-push': 'check --push -- "$@"',
-    'commit-msg': 'check --stage message --message-file "$1"',
-};
-const RUNNER_EXEC: Record<string, string> = {
-    mise: 'mise exec -- gspot',
-    bun: 'bun run --no-install gspot',
-    npm: 'npm exec --no -- gspot',
-    pnpm: 'pnpm exec gspot',
-    yarn: 'yarn exec gspot',
-};
+import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 /**
  * Locate policy-owned hook configuration relative to the working directory Git uses for hooks.

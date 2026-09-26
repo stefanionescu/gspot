@@ -1,20 +1,17 @@
 import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { probeTool, toolPin } from '#cli/tools/probe.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
-import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
 import { readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import { executionFailure, hasToolError } from '#cli/execution/broken-tool.ts';
+import { FIX_DIFF_CONTEXT, FIX_ORDER } from '#cli/constants/execution/execution.ts';
 import { createFileWorkspace, scratchCopy } from '#cli/execution/file-workspace.ts';
 import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution/execution.ts';
-
-const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
-
-const DIFF_CONTEXT = 3;
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
     const contents = new Map<string, Buffer | undefined>();
@@ -93,7 +90,7 @@ function diffOf(path: string, was: Buffer | undefined, now: Buffer | undefined):
         '',
         '',
         {
-            context: DIFF_CONTEXT,
+            context: FIX_DIFF_CONTEXT,
         },
     );
 }

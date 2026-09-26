@@ -5,6 +5,7 @@ import { policyLayers } from '#cli/policy/problems.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { LOCATION_SPECIFIER } from '#cli/constants/policy/policy.ts';
 
 import type {
     Located,
@@ -15,9 +16,6 @@ import type {
     Policy,
     PolicyProblem,
 } from '#cli/types/policy/policy.ts';
-
-// A module specifier that names a location on disk rather than a package, unless it is repository-relative.
-const LOCATION_SPECIFIER = /^(?:\.|\/|\\|[A-Za-z]:)/u;
 
 // The problems a reader finds, or the error it threw, attributed to the policy value being read.
 function guarded(location: PathSegment[], read: () => PolicyProblem[]): PolicyProblem[] {

@@ -1,15 +1,6 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;
-const CONFIG_FILE = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;
-const SWITCHED_OFF = /\b(?<name>ignoreDuringBuilds|ignoreBuildErrors)\s*:\s*true\b/gu;
-const SECRET_KEY = /\b(?<name>[A-Z][A-Z\d_]*(?:SECRET|TOKEN|PASSWORD|PRIVATE_KEY|API_KEY)[A-Z\d_]*)\s*:/gu;
-const PAIRS: [string, string][] = [
-    ['next', 'eslint-config-next'],
-    ['next', '@next/eslint-plugin-next'],
-    ['react', 'react-dom'],
-];
+import { CONFIG_FILE, PAIRS, SECRET_KEY, SEGMENT_NAME, SWITCHED_OFF } from '#cli/constants/checks/nextjs.ts';
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };

@@ -1,3 +1,5 @@
+// A value in brackets is a list or a table, written as JSON or the way gspot.toml writes it.
+
 import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
 import { PolicyError } from '#cli/policy/read.ts';
@@ -15,15 +17,8 @@ import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts'
 import { directoryOf, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
+import { DECIMAL, INTEGER, RULE_KEY_DEPTH, SET_NEAR_LIMIT, STRUCTURED } from '#cli/constants/commands/commands.ts';
 
-const NEAR_LIMIT = 12;
-const RULE_KEY_DEPTH = 3;
-const INTEGER = /^-?\d+$/u;
-const DECIMAL = /^-?\d+\.\d+$/u;
-// A value that opens with a bracket is meant as a list or a table, whether or not it closes.
-const STRUCTURED = /^[[{]/u;
-
-// A value in brackets is a list or a table, written as JSON or the way gspot.toml writes it.
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
     try {
@@ -54,7 +49,7 @@ function unknownSetting(session: Session, selection: ScopeSelection, key: string
     const prefix = key.split('.').slice(0, depth).join('.');
     const all = selection.surface.specs.keys().toArray();
     const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
-    return new PolicyError([messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, NEAR_LIMIT))]);
+    return new PolicyError([messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, SET_NEAR_LIMIT))]);
 }
 
 function shaped(parsed: unknown[], isList: boolean): unknown {

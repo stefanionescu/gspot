@@ -12,6 +12,8 @@ const SOURCES = [
     'packages/cli/src/platform/paths.ts',
     'packages/cli/src/platform/environment.ts',
     'packages/cli/src/repository/hooks.ts',
+    'packages/cli/src/constants/platform.ts',
+    'packages/cli/src/constants/repository/repository.ts',
 ];
 const CONFIGURATION = '[configuration]\nname = "bash"\n';
 const PROBE = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';

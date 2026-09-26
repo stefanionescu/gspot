@@ -2,9 +2,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-
-const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
-const LINT_CHECKS = ['javascript/eslint', 'typescript/eslint'];
+import { ESLINT_FILE, LINT_CHECKS } from '#cli/constants/checks/typescript.ts';
 
 // The rules the selected configurations require, for each file ending they name.
 function requiredByEnding(input: EngineInput): Map<string, Set<string>> {

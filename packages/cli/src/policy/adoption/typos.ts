@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { policySchema } from '#cli/policy/schema.ts';
+import { COMMENT_MARK } from '#cli/constants/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
 import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
-
-const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
 
 function commentAbove(lines: string[], index: number): string | undefined {
     const above: string[] = [];

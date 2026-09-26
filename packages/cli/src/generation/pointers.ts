@@ -3,10 +3,9 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { PointerSpec } from '#cli/types/configurations.ts';
+import { TARGET_PLACEHOLDER } from '#cli/constants/generation.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
-
-const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 
 function parsePointer(text: string, pointerPath: string): Record<string, unknown> {
     const errors: ParseError[] = [];

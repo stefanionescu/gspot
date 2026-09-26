@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
 import { LOCKS } from '#cli/types/tools/packages.ts';
+import { SETUP } from '#cli/constants/tools/tools.ts';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
@@ -16,11 +17,9 @@ import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { TOOL_PACKAGE_PROJECT, YARN_SETTINGS } from '#cli/constants/tools/packages.ts';
 import { packageCommand, packageManagerCommand, prepareNativeWrappers } from '#cli/tools/packages/resolution.ts';
 
-const PROJECT = '.gspot/package.json';
-const YARN_SETTINGS = '.gspot/.yarnrc.yml';
-const SETUP = 'Run: gspot apply, then gspot install';
 const packageSchema = z.strictObject({
     name: z.literal('gspot-tools'),
     private: z.literal(true),
@@ -82,7 +81,7 @@ function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: Too
     const lockKept = readFileSync(join(work, project.lock)).equals(inputs.recorded.bytes);
     if (!manifestKept || !lockKept)
         throw new Error(`${project.manager.name} changed locked inputs. No installed files were published. ${SETUP}`);
-    const manifestSame = isDeepStrictEqual(owner.read(PROJECT), inputs.project);
+    const manifestSame = isDeepStrictEqual(owner.read(TOOL_PACKAGE_PROJECT), inputs.project);
     const lockSame = isDeepStrictEqual(owner.read(project.lockPath), inputs.recorded);
     if (!manifestSame || !lockSame || !isDeepStrictEqual(owner.read(YARN_SETTINGS), inputs.yarn))
         throw new Error('Tool project inputs changed during installation. Retry the command.');
@@ -120,12 +119,12 @@ export async function resolvePackageProject(
     files: GeneratedFile[],
     owner: LifecycleOwner,
 ): Promise<void> {
-    const generated = files.find((file) => file.path === PROJECT);
+    const generated = files.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (generated === undefined) return;
     const project = projectOf(generated.content);
     const original = owner.read(project.lockPath);
     const recorded = original?.bytes.toString('utf8');
-    const unchanged = owner.read(PROJECT)?.bytes.equals(Buffer.from(generated.content)) === true;
+    const unchanged = owner.read(TOOL_PACKAGE_PROJECT)?.bytes.equals(Buffer.from(generated.content)) === true;
     const content =
         unchanged && recorded !== undefined && isCurrentLock(project, original)
             ? recorded
@@ -149,7 +148,7 @@ export function packageLockDrift(
     root: string,
     generated: GeneratedFile[],
 ): { path: string; kind?: 'missing' | 'changed' } | undefined {
-    const manifest = generated.find((file) => file.path === PROJECT);
+    const manifest = generated.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (manifest === undefined) return undefined;
     const project = projectOf(manifest.content);
     const files = openConfinedRoot(root);
@@ -172,7 +171,7 @@ export function packageLockDrift(
 export function packageInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
     try {
-        const manifest = files.read(PROJECT);
+        const manifest = files.read(TOOL_PACKAGE_PROJECT);
         if (manifest === undefined) return [];
         const project = projectOf(manifest.bytes.toString('utf8'));
         if (!isCurrentLock(project, files.read(project.lockPath))) throw new Error(SETUP);
@@ -190,7 +189,7 @@ export function packageInstallSteps(root: string): string[][] {
  */
 export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {
-        const manifest = owner.read(PROJECT);
+        const manifest = owner.read(TOOL_PACKAGE_PROJECT);
         if (manifest === undefined) return '';
         const project = projectOf(manifest.bytes.toString('utf8'));
         const recorded = owner.read(project.lockPath);

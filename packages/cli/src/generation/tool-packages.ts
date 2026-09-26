@@ -2,9 +2,8 @@ import semver from 'semver';
 import { npmPins } from '#cli/tools/pins.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
+import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 import type { ToolPackageManager } from '#cli/types/tools/packages.ts';
-
-const JSON_INDENT = 4;
 
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.
@@ -31,7 +30,7 @@ export function toolPackages(
                     devDependencies: npmPins(manifests, runner),
                 },
                 null,
-                JSON_INDENT,
+                PACKAGE_JSON_INDENT,
             )}\n`,
             readOnly: true,
             kind: 'config',

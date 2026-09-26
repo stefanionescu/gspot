@@ -1,14 +1,19 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { LOCKFILES } from '#cli/repository/locked-packages.ts';
 import type { Reporter } from '#cli/types/checks/dependencies.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { LOCKFILES } from '#cli/constants/repository/repository.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
 
-const MANIFEST = 'package.json';
+import {
+    DEPENDENCY_TABLES,
+    EXACT_VERSION,
+    NON_REGISTRY_VERSION,
+    NPM_MANIFEST,
+} from '#cli/constants/checks/dependencies.ts';
 
 function isManifest(path: string): boolean {
-    return path === MANIFEST || path.endsWith(`/${MANIFEST}`);
+    return path === NPM_MANIFEST || path.endsWith(`/${NPM_MANIFEST}`);
 }
 
 function rangeFindings(input: EngineInput, path: string, manifest: PackageManifest): Finding[] {
@@ -30,16 +35,16 @@ function rootFindings(report: Reporter, root: PackageManifest | undefined): Find
     if (root === undefined) return [];
     const findings: Finding[] = [];
     if (root.packageManager === undefined)
-        findings.push(report(MANIFEST, 'package-manager', 'The root package.json names no packageManager.'));
+        findings.push(report(NPM_MANIFEST, 'package-manager', 'The root package.json names no packageManager.'));
     if (root.workspaces !== undefined && root.private !== true)
         findings.push(
-            report(MANIFEST, 'private-root', 'A workspace root is private, so nobody publishes it by accident.'),
+            report(NPM_MANIFEST, 'private-root', 'A workspace root is private, so nobody publishes it by accident.'),
         );
     return findings;
 }
 
 function installerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
-    const root = manifests.get(MANIFEST);
+    const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
     const report: Reporter = (file, rule, text) => ({
         check: input.spec.name,
@@ -86,12 +91,6 @@ function lockfileFindings(input: EngineInput): Finding[] {
             fixable: false,
         }));
 }
-
-const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
-
-const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
-
-const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
 
 /**
  * The findings of the manifest policy over every tracked package.json.

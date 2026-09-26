@@ -4,11 +4,10 @@ import { isAbsolute, join, relative, sep } from 'node:path';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { RAN_STATUSES } from '#cli/constants/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import type { RunHashes, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
-
-const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 
 // The path a tool is recorded under: inside the cache root when it lies inside the repository.
 function identityPath(session: Session, path: string): string {

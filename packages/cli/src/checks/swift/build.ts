@@ -6,11 +6,8 @@ import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
+import { DIAGNOSTIC, PRIVATE_PREFIX, RESPONSE_FILE, RULE_SUFFIX } from '#cli/constants/checks/swift.ts';
 
-const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
-const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
-const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
-const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 
 function relative(root: string, file: string): string {

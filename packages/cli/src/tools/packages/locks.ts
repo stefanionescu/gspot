@@ -6,10 +6,8 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
 import type { BunPackage, Dependencies, LockName } from '#cli/types/tools/packages.ts';
+import { CONFLICT_MARKER, HTTP_URL, INTEGRITY } from '#cli/constants/tools/packages.ts';
 
-const CONFLICT_MARKER = /^(?:<{7}|={7}|>{7})/mu;
-const HTTP_URL = /^https?:\/\//u;
-const INTEGRITY = /^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u;
 const DEV_DEPENDENCIES = z.object({ devDependencies: z.record(z.string(), z.string()).optional() });
 const NPM_LOCK = z.object({ packages: z.record(z.string(), DEV_DEPENDENCIES) });
 const BUN_LOCK = z.object({ workspaces: z.record(z.string(), DEV_DEPENDENCIES) });

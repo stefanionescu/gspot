@@ -1,12 +1,11 @@
 import { basename, dirname } from 'node:path';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { POLICY_FILE } from '#cli/constants/checks/repository.ts';
 import type { PathPattern } from '#cli/types/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { EngineInput, Finding, LicenseException } from '#cli/types/checks/checks.ts';
-
-const POLICY_FILE = 'gspot.toml';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];

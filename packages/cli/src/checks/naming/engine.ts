@@ -7,14 +7,12 @@ import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { REACT_FILE, TEST_FILE } from '#cli/constants/checks/naming.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/checks/naming/policy.ts';
 import type { Engine, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/checks/naming/paths.ts';
 import { languageConfigurations, selectForScope } from '#cli/configurations/select.ts';
 import type { EffectivePolicy, Identifier, NamingContext } from '#cli/types/checks/naming.ts';
-
-const REACT_FILE = /\.[jt]sx$/u;
-const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
     const languages = languageConfigurations(input.selection.selected);

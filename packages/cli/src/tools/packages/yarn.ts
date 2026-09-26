@@ -3,23 +3,7 @@ import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runToolCommand } from '#cli/tools/command.ts';
-
-const KEYS = new Set([
-    'npmRegistryServer',
-    'npmRegistries',
-    'npmScopes',
-    'npmAuthToken',
-    'npmAuthIdent',
-    'npmAlwaysAuth',
-    'httpProxy',
-    'httpsProxy',
-    'enableStrictSsl',
-    'httpsCaFilePath',
-    'httpsCertFilePath',
-    'httpsKeyFilePath',
-    'networkSettings',
-    'unsafeHttpWhitelist',
-]);
+import { KEYS } from '#cli/constants/tools/packages.ts';
 
 /**
  * Read Yarn-owned connection settings and give its isolated project environment references.

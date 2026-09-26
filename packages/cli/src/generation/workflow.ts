@@ -1,18 +1,9 @@
 import { stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
-
-const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
-const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';
-const SARIF = 'github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60';
-const UPLOAD = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
-const DOWNLOAD = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
-const CACHE = 'actions/cache@5a3ec84eff668545956fd18022155c47e93e2684';
-const RELEASES = 'https://github.com/stefanionescu/gspot/releases/download';
-
-const RUNNERS: Record<string, string> = { ubuntu: 'ubuntu-24.04', macos: 'macos-15', windows: 'windows-2025' };
+import { CACHE, CHECKOUT, DOWNLOAD, MISE, RELEASES, RUNNERS, SARIF, UPLOAD } from '#cli/constants/generation.ts';
 
 const ASSET_CASES = releaseTargets
     .filter((target) => target.os !== 'win32')

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { CHECK_LOCATION } from '#cli/constants/checks/supabase.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
@@ -17,8 +18,6 @@ const lintReport = z.object({
     ),
     errors: z.array(z.object({ file_path: z.string(), message: z.string() })),
 });
-const CHECK_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
-
 function denoFileArguments(root: string, folder: string): string[] {
     const path = join(root, folder, 'deno.json');
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : ['--config', path];

@@ -5,12 +5,7 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 import { outputSchema } from '#cli/configurations/output-format.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
-
-const INDENT_MAX = 8;
-
-const PRINT_WIDTH_MIN = 40;
-
-const PRINT_WIDTH_MAX = 400;
+import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/constants/policy/policy.ts';
 
 const text = z.string();
 

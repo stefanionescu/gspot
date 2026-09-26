@@ -2,8 +2,8 @@ import type { FileSnapshot } from '#cli/types/platform.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
 import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];

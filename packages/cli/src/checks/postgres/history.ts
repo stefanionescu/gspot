@@ -1,10 +1,8 @@
 import type { Migration } from '#cli/types/checks/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/constants/checks/postgres.ts';
 import { committedEntries, gitBlobs } from '#cli/repository/revisions/snapshot.ts';
-
-const FROZEN_NONE = 'none';
-const FROZEN_ALL = 'all';
 
 function report(input: EngineInput, migration: Migration, rule: string, text: string): Finding {
     return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };

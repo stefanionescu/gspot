@@ -2,14 +2,13 @@
 import { writeReport } from '#cli/output/report.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
+import { CANCELED_EXIT } from '#cli/constants/commands/check.ts';
 import type { PushReport } from '#cli/types/execution/execution.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
 import type { Checked, PushedRevision, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
-
-const CANCELED_EXIT = 2;
 
 // Refuses the options that select or change files, which a push of exact objects cannot honor.
 function assertPushOptions(options: CheckOptions): void {

@@ -9,14 +9,16 @@ import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { GitEntry, SnapshotSource } from '#cli/types/repository/revisions.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
 
+import {
+    ENTRY_MODES,
+    EXECUTABLE_MODE,
+    FILE_MODE,
+    MATERIALIZATION_BATCH_SIZE,
+    NEWLINE,
+} from '#cli/constants/repository/revisions.ts';
+
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
 
-const MATERIALIZATION_BATCH_SIZE = 64;
-const NEWLINE = 10;
-const EXECUTABLE_MODE = 0o755;
-const FILE_MODE = 0o644;
-const LINK_MODE = 0o777;
-const ENTRY_MODES: Record<string, number> = { '100644': FILE_MODE, '100755': EXECUTABLE_MODE, '120000': LINK_MODE };
 async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
     const result = await run(['git', ...args], {
         cwd: root,

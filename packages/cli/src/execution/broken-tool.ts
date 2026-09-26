@@ -8,8 +8,12 @@ import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import type { CheckSpec, OutputFormat, ToolPin } from '#cli/types/configurations.ts';
 
-// These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
-const FILELESS_FORMATS = new Set(['lines', 'none']);
+import {
+    FILELESS_FORMATS,
+    TAIL_LINES,
+    TRUFFLEHOG_FINDINGS,
+    TYPOS_FINDINGS,
+} from '#cli/constants/execution/execution.ts';
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
@@ -24,10 +28,6 @@ function isOnDisk(file: string, roots: string[]): boolean {
         (root) => statSync(isAbsolute(file) ? file : join(root, file), { throwIfNoEntry: false }) !== undefined,
     );
 }
-
-const TAIL_LINES = 20;
-const TRUFFLEHOG_FINDINGS = 183;
-const TYPOS_FINDINGS = 2;
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
     if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)

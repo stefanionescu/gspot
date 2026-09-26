@@ -5,15 +5,7 @@ import type { ChildProcess } from 'node:child_process';
 import { delimiter, dirname, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { AsyncSpawnOptions, BinarySpawnResult, SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
-
-const MISSING_CODE = 127;
-const FAILED_CODE = 1;
-// taskkill exits 128 when the process tree is already gone.
-const TASKKILL_GONE_CODE = 128;
-// How long a terminated tool may keep its output pipes open.
-const DRAIN_MS = 5000;
-// Bun emits exit before Darwin finishes reaping the group leader; descendants holding pipes are signaled after this.
-const REAP_MS = 10;
+import { DRAIN_MS, FAILED_CODE, MISSING_CODE, REAP_MS, TASKKILL_GONE_CODE } from '#cli/constants/platform.ts';
 
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };

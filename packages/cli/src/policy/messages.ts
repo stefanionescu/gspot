@@ -1,6 +1,5 @@
 import { quoteArgument } from '#cli/platform/arguments.ts';
-
-const LIST_LIMIT = 8;
+import { LIST_LIMIT } from '#cli/constants/policy/policy.ts';
 
 function list(items: string[], limit = LIST_LIMIT): string {
     const shown = items.slice(0, limit);

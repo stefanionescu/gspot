@@ -3,16 +3,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { visibilityOf } from '#cli/checks/swift/sources.ts';
 import type { SwiftSource } from '#cli/types/checks/swift.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-
-const DECLARATIONS = new Set([
-    'class_declaration',
-    'protocol_declaration',
-    'function_declaration',
-    'property_declaration',
-    'typealias_declaration',
-]);
-const FILE_LOCAL = new Set(['private', 'fileprivate']);
-const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
+import { DECLARATIONS, ENVIRONMENT_READ, FILE_LOCAL } from '#cli/constants/checks/swift.ts';
 
 function readLines(source: SwiftSource): number[] {
     return source.lines.flatMap((line, index) =>

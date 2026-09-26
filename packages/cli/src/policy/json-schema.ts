@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import type { SchemaNode } from '#cli/types/policy/policy.ts';
+import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
-
-const JSON_INDENT = 4;
 
 function childrenAt(node: SchemaNode, segment: string | number): SchemaNode[] {
     const options = node.anyOf ?? [node];
@@ -80,5 +79,5 @@ export function knownKeysAt(path: (string | number)[]): string[] {
  * @returns the JSON text
  */
 export function policyJsonSchemaText(): string {
-    return `${JSON.stringify(policyJsonSchema(), null, JSON_INDENT)}\n`;
+    return `${JSON.stringify(policyJsonSchema(), null, PACKAGE_JSON_INDENT)}\n`;
 }

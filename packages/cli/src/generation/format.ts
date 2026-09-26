@@ -3,7 +3,8 @@ import { dirname, relative } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
+import { UNREPRESENTABLE_SELECTOR } from '#cli/constants/generation.ts';
 import type { FormatSettings, Policy } from '#cli/types/policy/policy.ts';
 import { listedOverride, literalGlob, relocatedOverrides } from '#cli/generation/relocated-overrides.ts';
 
@@ -14,9 +15,6 @@ import type {
     PrettierPlugin,
     ScopedFormat,
 } from '#cli/types/generation.ts';
-
-// Line breaks and extglob groups, which EditorConfig sections cannot express.
-const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 
 function formatEntries(policy: Policy): ScopedFormat[] {
     const tables = [

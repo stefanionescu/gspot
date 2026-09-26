@@ -12,8 +12,8 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/constants/repository/patterns.ts';
 import type { ScopeEntry, ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {

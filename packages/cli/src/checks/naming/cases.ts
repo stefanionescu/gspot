@@ -1,10 +1,11 @@
-import { MIGRATION_TIMESTAMP_DIGITS } from '#cli/checks/naming/categories.ts';
-
-const LOWER_WORD = /^[a-z]+$/u;
-const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
-const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
-const UPPER_WORD = /^[A-Z]+$/u;
-const TIMESTAMP = /^\d+$/u;
+import {
+    MIGRATION_TIMESTAMP_DIGITS,
+    CAMEL_WORD,
+    LOWER_WORD,
+    PASCAL_WORD,
+    TIMESTAMP,
+    UPPER_WORD,
+} from '#cli/constants/checks/naming.ts';
 
 function isJoined(name: string, separator: string, pattern: RegExp): boolean {
     return name !== '' && name.split(separator).every((word) => pattern.test(word));

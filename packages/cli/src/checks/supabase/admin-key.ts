@@ -2,19 +2,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const DEFAULT_PATHS = [
-    'supabase/functions/**',
-    'supabase/tests/**',
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/tests/**',
-    'scripts/**',
-];
-
-const ADMIN_KEY_NAMES = ['SERVICE_ROLE_KEY', 'service_role_key', 'serviceRoleKey'];
-
-const CODE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.swift', '.py', '.kt', '.dart'];
+import { ADMIN_KEY_NAMES, CODE_EXTENSIONS, DEFAULT_PATHS } from '#cli/constants/checks/supabase.ts';
 
 /**
  * One finding for each line that names the service role key outside tools.supabase.admin_key_files.

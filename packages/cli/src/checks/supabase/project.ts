@@ -4,14 +4,12 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { DEFAULT_FUNCTIONS, SHARED_PREFIX, SUPABASE_CONFIG } from '#cli/constants/checks/supabase.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),
     storage: z.object({ buckets: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
-
-const DEFAULT_FUNCTIONS = 'supabase/functions';
-const SHARED_PREFIX = '_';
 
 /**
  * The parsed project file, or the text of the error when it does not parse, or undefined when the repository has none.
@@ -65,5 +63,3 @@ export function supabaseFinding(
 ): Finding {
     return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
-
-export const SUPABASE_CONFIG = 'supabase/config.toml';

@@ -11,22 +11,18 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { ChangeKey, ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
+import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
 
-const LABEL_WIDTH = 9;
-const VERSION_GAP = 4;
-const PATH_WIDTH = 40;
-const NAME_WIDTH = 34;
-const NOTE_WIDTH = 30;
-const PATHS_SHOWN = 4;
-const PARTIAL_SHOWN = 8;
-
-const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
-    { key: 'detectedNotSelected', title: 'detected, not selected' },
-    { key: 'recommendedNotSelected', title: 'recommended, not selected' },
-    { key: 'configurationNotOwned', title: 'configuration not owned' },
-    { key: 'changedOutsideGspot', title: 'changed outside gspot' },
-];
+import {
+    CHANGE_SECTIONS,
+    DOCTOR_LABEL_WIDTH,
+    NAME_WIDTH,
+    NOTE_WIDTH,
+    PARTIAL_SHOWN,
+    PATHS_SHOWN,
+    PATH_WIDTH,
+    VERSION_GAP,
+} from '#cli/constants/commands/doctor.ts';
 
 function stateLabel(tool: ToolProbe, colors: Colors): string {
     const { red, green, dim } = colors;
@@ -67,7 +63,7 @@ function toolLines(tools: ToolProbe[], colors: Colors): string[] {
         const tail = isBroken
             ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ')
             : (tool.path ?? '');
-        const label = stateLabel(tool, colors).padEnd(LABEL_WIDTH);
+        const label = stateLabel(tool, colors).padEnd(DOCTOR_LABEL_WIDTH);
         return `  ${label} ${versionText(tool).padEnd(width)} ${tail}`.trimEnd();
     });
 }

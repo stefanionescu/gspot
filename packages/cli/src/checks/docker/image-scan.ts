@@ -8,9 +8,8 @@ import { scopeFile } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/constants/checks/docker.ts';
 
-const FINDINGS_EXIT = 10;
-const SHOWN_FINDINGS = 20;
 const imageReportSchema = z.object({
     SchemaVersion: z.literal(2),
     ArtifactName: z.string().min(1),
@@ -34,8 +33,6 @@ const imageReportSchema = z.object({
 const composeSchema = z.object({
     services: z.record(z.string(), z.object({ image: z.string().min(1).optional() })).optional(),
 });
-
-const COMPOSE_FILES = ['**/docker-compose*.yml', '**/docker-compose*.yaml', '**/compose*.yml', '**/compose*.yaml'];
 
 /**
  * Scan each literal service image once per Compose file.

@@ -7,6 +7,7 @@ import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { Command, InvalidArgumentError, Option } from 'commander';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
+import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/constants/commands/check.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 
 class CheckCommand extends Command {
@@ -22,8 +23,7 @@ class CheckCommand extends Command {
         );
     }
 }
-const PUBLIC_STAGES: Stage[] = ['commit', 'push', 'manual'];
-const CANCELED_EXIT = 2;
+
 function stageArgument(value: string): Stage {
     if (value === 'message') return value;
     const stage = PUBLIC_STAGES.find((entry) => entry === value);

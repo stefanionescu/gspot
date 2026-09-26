@@ -1,7 +1,7 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/constants/repository/repository.ts';
 
 /**
  * One finding for each tracked environment file that is not a template.

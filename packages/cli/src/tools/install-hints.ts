@@ -1,19 +1,5 @@
-import { MISE_BACKENDS } from '#cli/tools/pins.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-
-const HOST_HINTS: Record<string, string> = {
-    xcodebuild: 'install Xcode from the App Store',
-    plutil: 'install Xcode from the App Store',
-    xcstringstool: 'install Xcode from the App Store',
-    docker: 'install Docker Desktop or the docker engine',
-    bash: "install bash through your platform's package manager",
-};
-const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string; command: string }[] = [
-    { platform: 'darwin', installer: 'brew', command: 'brew install' },
-    { platform: 'linux', installer: 'apt', command: 'sudo apt install' },
-    { platform: 'win32', installer: 'winget', command: 'winget install' },
-    { platform: 'win32', installer: 'scoop', command: 'scoop install' },
-];
+import { MISE_BACKENDS, HOST_HINTS, PLATFORM_INSTALLERS } from '#cli/constants/tools/tools.ts';
 
 function platformHint(installers: ToolPin['installers']): string | undefined {
     const match = PLATFORM_INSTALLERS.find(

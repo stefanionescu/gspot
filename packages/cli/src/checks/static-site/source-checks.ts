@@ -4,16 +4,12 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-// Below the all level, svgo must save a tenth of the file before the saving is reported.
-const REPORTED_SAVINGS_SHARE = 10;
-
-const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
-const ASSET_FOLDER = /(?:^|\/)assets\//u;
-const REQUIRED_HEADERS: Record<string, RegExp> = {
-    'x-content-type-options': /^nosniff$/iu,
-    'referrer-policy': /\S/u,
-    'x-frame-options': /^(?:deny|sameorigin)$/iu,
-};
+import {
+    ASSET_FOLDER,
+    REPORTED_SAVINGS_SHARE,
+    REQUIRED_HEADERS,
+    TEXT_SUFFIX,
+} from '#cli/constants/checks/static-site.ts';
 
 function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };

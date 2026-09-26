@@ -2,11 +2,10 @@
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
 import type { ExposedSettings } from '#cli/types/policy/policy.ts';
+import { OVERRIDING_KINDS } from '#cli/constants/policy/policy.ts';
 import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/configurations/settings.ts';
+import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/constants/configurations.ts';
 import { integrationSettingSchemas, rootSettingSchemas } from '#cli/policy/schema.ts';
-
-const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library', 'database']);
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(

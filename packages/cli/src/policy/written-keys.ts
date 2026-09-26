@@ -1,8 +1,7 @@
 // The setting keys a policy table writes, spelled the way the surface exposes them.
 import { asRecord } from '#cli/policy/settings.ts';
+import { NAMING_SCALARS } from '#cli/constants/policy/policy.ts';
 import type { ExposedSettings, NamingCategoryTable, Policy } from '#cli/types/policy/policy.ts';
-
-const NAMING_SCALARS = ['max_chars', 'max_words', 'case'] as const;
 
 function limitKeys(policy: Partial<Policy>): string[] {
     if (!policy.limits) return [];

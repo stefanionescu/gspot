@@ -5,20 +5,7 @@ import { dirname, join } from 'node:path';
 import { readFileSync, statSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { EmbeddedIndex } from '#cli/types/platform.ts';
-
-const GRAMMAR_SOURCES: Record<string, string> = {
-    'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',
-    'css.wasm': 'tree-sitter-css/tree-sitter-css.wasm',
-    'html.wasm': 'tree-sitter-html/tree-sitter-html.wasm',
-    'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',
-    'python.wasm': 'tree-sitter-python/tree-sitter-python.wasm',
-    'tsx.wasm': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
-    'typescript.wasm': 'tree-sitter-typescript/tree-sitter-typescript.wasm',
-    'web-tree-sitter.wasm': 'web-tree-sitter/web-tree-sitter.wasm',
-    'libpg-query.wasm': 'libpg-query/wasm/libpg-query.wasm',
-};
-
-const ROOT_SEARCH_DEPTH = 6;
+import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/constants/platform.ts';
 
 const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: string | undefined } = {
     embedded: undefined,

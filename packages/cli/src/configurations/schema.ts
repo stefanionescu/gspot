@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { outputSchema } from '#cli/configurations/output-format.ts';
+import { MAX_EXIT_CODE, SENTENCE_MIN } from '#cli/constants/configurations.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
@@ -13,7 +14,6 @@ const claimsSchema = z.strictObject({
     natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
-const MAX_EXIT_CODE = 255;
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
 const installerSchema = z.union([z.string(), installerDefinition]);
 const npmInstallerSchema = z.union([
@@ -163,7 +163,6 @@ const configSchema = z
         'A config that is not a fragment names its template.',
     );
 
-const SENTENCE_MIN = 12;
 const sentence = z.string().min(SENTENCE_MIN);
 
 const stringListTable = z.record(z.string(), z.array(z.string()));

@@ -1,7 +1,6 @@
+import { FORMAT_PREFIX } from '#cli/constants/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ListingRow, CheckSpec, Manifest } from '#cli/types/configurations.ts';
-
-const FORMAT_PREFIX = 'format.';
 
 /**
  * One manifest as a listing row.

@@ -9,15 +9,17 @@ import { SkippedCheckError } from '#cli/checks/result.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const MANIFEST = 'pyproject.toml';
+import {
+    BROKEN_CONTRACT,
+    INSTALL_HOLDERS,
+    PIP_INSTALL,
+    PYTHON_MANIFEST,
+    REQUIREMENTS_FILE,
+} from '#cli/constants/checks/python.ts';
+
 const importConfiguration = z.object({
     tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
-const BROKEN_CONTRACT = /^(?<name>.+?) BROKEN$/u;
-const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
-const PIP_INSTALL = /\bpip3? install\b/u;
-const INSTALL_HOLDERS = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'];
-
 function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
     return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
@@ -28,7 +30,7 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
  * @returns one finding for each broken contract
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
-    const manifest = input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`;
+    const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
         throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
     const project = importConfiguration.parse(
@@ -45,7 +47,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     });
     const said = [result.stderr, result.stdout].join('').trim().split('\n').at(-1) ?? '';
     if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${said}`);
-    const at = { file: input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`, line: 1 };
+    const at = { file: input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`, line: 1 };
     return broken.map((name) =>
         finding(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
     );

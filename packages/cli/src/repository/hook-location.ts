@@ -1,6 +1,6 @@
 // Where Git keeps this clone's hooks, and which root confines and records them.
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
+import { STATE_DIRECTORY } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';

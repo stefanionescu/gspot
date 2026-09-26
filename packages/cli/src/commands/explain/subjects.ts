@@ -7,20 +7,11 @@ import { settingValue, specFor } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { allChecks, toRow } from '#cli/configurations/listing.ts';
 import type { ResolvedSetting } from '#cli/types/policy/policy.ts';
+import { DIRECTIONS, STAGES } from '#cli/constants/commands/explain.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
-
-const STAGES = ['commit', 'push', 'manual', 'message'];
-const DIRECTIONS: Record<string, string> = {
-    ceiling: 'a ceiling: raising it needs a reason',
-    floor: 'a floor: lowering it needs a reason',
-    loosening: 'a loosening: setting it needs a reason',
-    tightening: 'a tightening: no reason needed',
-    neutral: 'neutral: no reason needed',
-    'per-rule': 'per rule: options and rules turned on; off is an ignore',
-};
 
 function listLine(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];

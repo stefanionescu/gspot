@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { BASELINE } from '#cli/constants/checks/security.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';
-
-const BASELINE = '.gspot/gitleaks-baseline.json';
 
 function finding(input: EngineInput, rule: string, text: string): Finding {
     return { check: input.spec.name, file: BASELINE, line: 1, rule, message: text, fixable: false };

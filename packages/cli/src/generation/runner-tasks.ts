@@ -1,11 +1,11 @@
-import { RUNNER_TASKS } from '#cli/policy/runner.ts';
+import { misePins } from '#cli/tools/mise.ts';
 import { headerFor } from '#cli/generation/headers.ts';
+import { BARE_KEY } from '#cli/constants/generation.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { RunnerTask } from '#cli/types/policy/policy.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION, misePins } from '#cli/tools/mise.ts';
-
-const BARE_KEY = /^[\w-]+$/u;
+import { RUNNER_TASKS } from '#cli/constants/policy/policy.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 
 function tomlKey(name: string): string {
     return BARE_KEY.test(name) ? name : JSON.stringify(name);

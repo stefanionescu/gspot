@@ -2,34 +2,14 @@
 import type { Node } from 'web-tree-sitter';
 import type { Language, Substance } from '#cli/types/checks/structure.ts';
 
-const FUNCTIONS = new Set([
-    'function_definition',
-    'function_declaration',
-    'init_declaration',
-    'deinit_declaration',
-    'lambda',
-    'lambda_literal',
-    'computed_getter',
-    'computed_setter',
-    'computed_property',
-    'willset_clause',
-    'didset_clause',
-]);
-const TYPE_ALIASES = new Set(['type_alias_statement', 'typealias_declaration']);
-const CONTAINERS = new Set([
-    'decorated_definition',
-    'class_definition',
-    'class_declaration',
-    'class_body',
-    'block',
-    'source_file',
-    'module',
-    'program',
-    'computed_property',
-]);
-const CONTAINER_NOISE = new Set(['identifier', 'type_identifier', 'modifiers', 'decorator', 'inheritance_specifier']);
-const NAMES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
-const TYPE_REFERENCES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
+import {
+    CONTAINERS,
+    CONTAINER_NOISE,
+    FUNCTIONS,
+    NAMES,
+    TYPE_ALIASES,
+    TYPE_REFERENCES,
+} from '#cli/constants/checks/structure.ts';
 
 // Whether a Bash node is one executable command or statement.
 function isBashStatement(node: Node): boolean {

@@ -17,22 +17,21 @@ import type {
     StructureContext,
 } from '#cli/types/checks/structure.ts';
 import {
+    EXIT_CALL,
+    READONLY_WORD,
+    REMOVE_CALL,
     BASH_FEATURES,
-    INHERITED_ERREXIT,
     BASH_SHEBANGS,
     DIRECTORY_CONSTANT_PIECES,
     HEADER_LINES,
+    INHERITED_ERREXIT,
     MAIN_CALL,
     OTHER_INTERPRETER_SHEBANG,
     RUNTIME_HEADER,
     SOURCE_STATEMENT,
     STRICT_MODE,
     TOP_LEVEL_ASSIGNMENT,
-} from '#cli/checks/structure/patterns.ts';
-
-const EXIT_CALL = /\bexit(?:\s|$)/u;
-const REMOVE_CALL = /\brm\b/u;
-const READONLY_WORD = 'readonly';
+} from '#cli/constants/checks/structure.ts';
 
 function shebangProblem(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))

@@ -1,33 +1,20 @@
+// NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
+
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/checks/structure/patterns.ts';
 import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/checks/structure/directories.ts';
 
-const DEFAULT_THRESHOLD = 2;
-const NEST_KINDS = new Set([
-    'controller',
-    'service',
-    'module',
-    'guard',
-    'pipe',
-    'filter',
-    'interceptor',
-    'middleware',
-    'decorator',
-    'gateway',
-    'resolver',
-    'repository',
-    'entity',
-    'dto',
-    'strategy',
-    'provider',
-]);
-const SCRIPT_ENDING = /\.[cm]?[jt]s$/u;
-const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
-// A tool names these files and finds them by that name, so a folder holds several of them by design.
-const TOOL_PREFIXES = new Set(['tsconfig', 'jsconfig', 'vitest', 'vite', 'docker', 'eslint', 'playwright']);
+import {
+    HOOK_PREFIX,
+    IGNORED_FOLDERS,
+    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
+    DEFAULT_THRESHOLD,
+    INDEX_STEMS,
+    NEST_KINDS,
+    SCRIPT_ENDING,
+    TOOL_PREFIXES,
+} from '#cli/constants/checks/structure.ts';
 
-// NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
 function isNestName(name: string): boolean {
     if (!SCRIPT_ENDING.test(name)) return false;

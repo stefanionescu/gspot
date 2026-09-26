@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
+import { DOCKERIGNORE_ENTRIES } from '#cli/constants/checks/docker.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function isDockerfile(path: string): boolean {
@@ -18,8 +19,6 @@ function missingEntries(text: string): string[] {
         [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
     );
 }
-
-const DOCKERIGNORE_ENTRIES = ['.git', 'node_modules', '.env'];
 
 /**
  * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.

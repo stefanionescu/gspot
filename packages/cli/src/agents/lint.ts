@@ -5,20 +5,21 @@ import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
 import type { RuleFinding, RuleText, RulesLintReport } from '#cli/types/agents.ts';
 
 import {
+    EM_DASH,
+    INLINE_CODE,
+    INLINE_CODE_SPANS,
+    ITEM_END,
+    LIST_ITEM,
+    RULE_LINK,
     BOUNDARY_LAYERS,
     BOUNDARY_TERMS,
-    RULE_LAYERS,
     CORRUPTION_TERMS,
-    INDEPENDENCE_TERMS,
     FENCE_LANGUAGES,
+    INDEPENDENCE_TERMS,
     RULE_FILE_LINE_CEILING,
-} from '#cli/agents/terms.ts';
+    RULE_LAYERS,
+} from '#cli/constants/agents.ts';
 
-const RULE_LINK =
-    /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;
-const INLINE_CODE = /`[^`]*`/u;
-const INLINE_CODE_SPANS = /`[^`]*`/gu;
-const EM_DASH = '—';
 const layerNames = new Set(RULE_LAYERS);
 const fenceLanguages = new Set(FENCE_LANGUAGES);
 const boundaryLayers = new Set(BOUNDARY_LAYERS);
@@ -74,9 +75,6 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
         ...independenceFindings(file, line, number, layer),
     ];
 }
-
-const LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s+/u;
-const ITEM_END = /[.!?]["')\]]*$/u;
 
 // A list item that stops at a comma, at "and", or without a full stop is a cut sentence. A parent that ends with a
 // colon and continues in a nested list is whole (K-229).

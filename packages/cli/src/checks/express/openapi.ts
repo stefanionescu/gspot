@@ -5,10 +5,9 @@ import { commandArguments } from '#cli/platform/arguments.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { SPECTRAL_LINE } from '#cli/constants/checks/express.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
 
 function setting(input: EngineInput, table: string, key: string): string {
     const found = input.view.tool(table)[key];

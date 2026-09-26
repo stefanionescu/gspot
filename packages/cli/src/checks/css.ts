@@ -3,10 +3,8 @@ import { parse } from 'postcss';
 import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
 import { readSource } from '#cli/repository/tracked.ts';
+import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/constants/checks/checks.ts';
 import type { Importer, EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const MODULE_SUFFIX = /\.module\.css$/u;
-const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;
 
 // Bind identifiers without reading dependencies or sources outside the selected inventory.
 function moduleImporters(code: { path: string; text: string }[], sheets: Set<string>): Map<string, Importer[]> {

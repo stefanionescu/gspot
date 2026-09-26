@@ -1,8 +1,8 @@
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
+import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
@@ -11,11 +11,7 @@ import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-
-const CACHE_FORMAT = 5;
-// Thirty days in milliseconds.
-const RETENTION_MS = 2_592_000_000;
-const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
+import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
 
 /**
  * The SHA-256 hex digest of a text.

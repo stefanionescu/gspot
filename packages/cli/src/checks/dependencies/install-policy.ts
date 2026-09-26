@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILES } from '#cli/repository/locked-packages.ts';
+import { SECONDS_PER_DAY } from '#cli/constants/generation.ts';
 import type { Reporter } from '#cli/types/checks/dependencies.ts';
+import { LOCKFILES } from '#cli/constants/repository/repository.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-const BUNFIG = 'bunfig.toml';
-const DEFAULT_AGE_DAYS = 7;
+import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/constants/checks/dependencies.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
@@ -35,8 +34,6 @@ function scannerFindings(report: Reporter, install: Record<string, unknown>, sca
     if (security?.scanner === scanner) return [];
     return [report(BUNFIG, 'security-scanner', `[install.security] scanner is not ${scanner}.`)];
 }
-
-const SECONDS_PER_DAY = 86_400;
 
 /**
  * The findings of the install policy; it reads bunfig.toml when the repository installs through Bun.

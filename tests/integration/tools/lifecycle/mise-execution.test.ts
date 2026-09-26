@@ -10,7 +10,7 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

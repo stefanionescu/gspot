@@ -3,9 +3,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { GeneratedProposal, HookName } from '#cli/types/generation.ts';
-import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
 import { requirePackageConfiguration, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { hookBody, hookCommand, hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks.ts';
+import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 const manifestSchema = z.object({
     'simple-git-hooks': z

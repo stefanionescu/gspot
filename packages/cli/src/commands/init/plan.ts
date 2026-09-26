@@ -1,16 +1,18 @@
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
+import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
+import { CURSOR_RULE, HOOKS_ROW } from '#cli/constants/commands/init.ts';
 import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
-import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
-import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/generation/bun.ts';
+import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/constants/generation.ts';
 
 import type {
     InstallSettings,
@@ -28,12 +30,6 @@ function carriedCount(value: unknown): number {
     if (typeof value === 'object' && value !== null) return Object.keys(value).length;
     return 1;
 }
-
-const CURSOR_RULE = '.cursor/rules/gspot.mdc';
-const HOOKS_ROW = {
-    path: 'Git-resolved hooks directory',
-    note: 'gspot install creates dispatchers; existing executables are retained as .gspot-original siblings; tracked hooks require hook-manager integration',
-};
 
 // The settings each scope carries from its own tool configuration files.
 function scopeCarriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {

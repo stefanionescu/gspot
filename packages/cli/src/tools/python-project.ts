@@ -9,10 +9,11 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { MODE_BITS, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
+import { MODE_BITS, PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import { INDEX_SETTINGS, LOCK, SETUP, TOOL_PYTHON_PROJECT } from '#cli/constants/tools/tools.ts';
 
 import {
     chmodSync,
@@ -26,9 +27,6 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-const PROJECT = '.gspot/pyproject.toml';
-const LOCK = '.gspot/uv.lock';
-const SETUP = 'Run: gspot apply, then gspot install';
 const projectSchema = z.strictObject({
     project: z.strictObject({
         name: z.literal('gspot-tools'),
@@ -74,19 +72,6 @@ function matches(project: string, lock: string): boolean {
         return false;
     }
 }
-
-const INDEX_SETTINGS = new Set([
-    'index',
-    'index-url',
-    'extra-index-url',
-    'find-links',
-    'index-strategy',
-    'keyring-provider',
-    'native-tls',
-    'system-certs',
-    'allow-insecure-host',
-    'offline',
-]);
 
 /**
  * Preserve repository index settings while uv owns user configuration and environment precedence.
@@ -165,7 +150,7 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
  * @param owner the lifecycle owner that records the lock
  */
 export async function resolvePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
-    const project = files.find((file) => file.path === PROJECT);
+    const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
     projectSchema.parse(parse(project.content));
     const original = owner.read(LOCK);
@@ -201,7 +186,7 @@ export function pythonLockDrift(
     root: string,
     generated: GeneratedFile[],
 ): { path: string; kind?: 'missing' | 'changed' } | undefined {
-    const project = generated.find((file) => file.path === PROJECT);
+    const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
     const files = openConfinedRoot(root);
     try {
@@ -221,7 +206,7 @@ export function pythonLockDrift(
 export function pythonInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
     try {
-        const project = files.read(PROJECT);
+        const project = files.read(TOOL_PYTHON_PROJECT);
         if (project === undefined) return [];
         projectSchema.parse(parse(project.bytes.toString('utf8')));
         const lock = files.read(LOCK);
@@ -241,7 +226,7 @@ export function pythonInstallSteps(root: string): string[][] {
  */
 export async function installPythonProject(root: string, executable = 'uv'): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {
-        const project = owner.read(PROJECT);
+        const project = owner.read(TOOL_PYTHON_PROJECT);
         if (project === undefined) return '';
         projectSchema.parse(parse(project.bytes.toString('utf8')));
         const lock = owner.read(LOCK);
@@ -276,7 +261,10 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
                 throw new Error(
                     'The Python interpreter cannot run from a copied environment. No installed files were published.',
                 );
-            if (!isDeepStrictEqual(owner.read(PROJECT), project) || !isDeepStrictEqual(owner.read(LOCK), lock))
+            if (
+                !isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) ||
+                !isDeepStrictEqual(owner.read(LOCK), lock)
+            )
                 throw new Error('Python tool inputs changed during installation. Retry the command.');
             publishInstalledFiles(owner, join(work, '.venv'), 'python');
             return 'installed locked Python tools under .gspot/.venv';

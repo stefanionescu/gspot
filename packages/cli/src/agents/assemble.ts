@@ -5,10 +5,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-
-const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);
-const RULES_PREFIX = 'packages/cli/rules/';
-const TITLE = /^# (?<title>.+)$/mu;
+import { AGENT_LAYERS, FIRST_READ, RULES_PREFIX, TITLE } from '#cli/constants/agents.ts';
 
 function titleOf(text: string): string {
     return TITLE.exec(text)?.groups?.['title'] ?? '';
@@ -36,9 +33,6 @@ function manifestFiles(manifests: Manifest[]): { source: string; layer: string; 
         ),
     );
 }
-
-/** The files the managed block tells the reader to open first; they cannot be left out. */
-export const FIRST_READ = ['general/agent/WORKING.md', 'general/prose/WRITING.md'];
 
 /**
  * The rule files the selection installs, in layer order, deduplicated.

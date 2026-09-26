@@ -1,9 +1,6 @@
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { CALL_ENDINGS, FLOW_PREFIX, POSITIONAL_PARAMETERS } from '#cli/checks/structure/patterns.ts';
-
-const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
-const OPERATORS = [' && ', ' || ', ' | ', ';'];
+import { CALL, OPERATORS, CALL_ENDINGS, FLOW_PREFIX, POSITIONAL_PARAMETERS } from '#cli/constants/checks/structure.ts';
 
 function argumentCount(rest: string): number {
     const cut = OPERATORS.map((token) => rest.indexOf(token)).filter((position) => position >= 0);

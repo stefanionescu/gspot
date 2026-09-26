@@ -3,11 +3,10 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import * as linguistLanguages from 'linguist-languages';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { GLOB_CHARS, SHEBANG_TAG } from '#cli/constants/configurations.ts';
 import type { ManifestFacts, TrackedFile, TreeFacts } from '#cli/types/repository/repository.ts';
 import type { Manifest, ConfigurationEvidence, LinguistEntry, UnknownLanguage } from '#cli/types/configurations.ts';
 
-const SHEBANG_TAG = 'shebang:';
-const GLOB_CHARS = /[*?{]/u;
 const LANGUAGE_BY_FILENAME = new Map(
     Object.entries(linguistLanguages).flatMap(([language, value]) =>
         ((value as LinguistEntry).filenames ?? []).map((filename) => [filename, language] as const),

@@ -58,8 +58,6 @@ function block(value: unknown, depth: number, format: JsonFormat, taken: number)
     return primitive(value) ?? 'null';
 }
 
-export const GENERATED_JSON_KEY = '_gspot';
-
 /**
  * The JSON text Prettier produces for a value, ending in a newline.
  * @param value the data

@@ -1,10 +1,9 @@
 // The objects a remote's fetch mappings already brought into the repository, which a push need not re-check.
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
+import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
 import { gitLines, gitText } from '#cli/repository/revisions/git-queries.ts';
 import type { FetchRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
-
-const GIT_TIMEOUT_MS = 30_000;
 
 // The text a wildcard pattern captures from a ref, '' for an exact match, or undefined when the ref does not match.
 function capturedRef(pattern: string, ref: string): string | undefined {

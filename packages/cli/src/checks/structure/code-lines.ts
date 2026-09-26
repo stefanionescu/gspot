@@ -1,8 +1,11 @@
 import type { CodeLine } from '#cli/types/checks/structure.ts';
-import { DIRECTORY_CONSTANT_SIGNS, DIRECTORY_CONSTANT_START } from '#cli/checks/structure/patterns.ts';
 
-const QUOTES = new Set(["'", '"']);
-const DECLARATION_WORDS = new Set(['readonly', 'export', 'declare', 'local']);
+import {
+    DECLARATION_WORDS,
+    QUOTES,
+    DIRECTORY_CONSTANT_SIGNS,
+    DIRECTORY_CONSTANT_START,
+} from '#cli/constants/checks/structure.ts';
 
 function quoteAfter(quote: string | undefined, char: string): string | undefined {
     if (quote !== undefined) return char === quote ? undefined : quote;

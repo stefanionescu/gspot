@@ -1,6 +1,6 @@
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/constants/repository/repository.ts';
 
 function dependencyFolder(path: string): string | undefined {
     const segments = path.split('/').slice(0, -1);

@@ -6,7 +6,6 @@ import type { Engine, EngineInput } from '#cli/types/checks/checks.ts';
 import { scriptEmbeds } from '#cli/checks/structure/scripts/embeds.ts';
 import { scriptPolicy } from '#cli/checks/structure/scripts/policy.ts';
 import { scriptSafety } from '#cli/checks/structure/scripts/safety.ts';
-import { DOCUMENT_EXTENSIONS } from '#cli/checks/structure/patterns.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
 import { deadParameters } from '#cli/checks/structure/dead-parameters.ts';
 import { functionLength } from '#cli/checks/structure/function-length.ts';
@@ -23,6 +22,7 @@ import { privateBeforePublic, privatePrefix } from '#cli/checks/structure/visibi
 import type { StructureAnalysis, StructureContext } from '#cli/types/checks/structure.ts';
 import { fileDirectoryCollision, fileLength } from '#cli/checks/structure/file-layout.ts';
 import { scriptConfigDefaults, scriptConfigGuards } from '#cli/checks/structure/scripts/configuration.ts';
+import { DOCUMENT_EXTENSIONS, COUNT_ANALYSES, GSPOT_DIRECTORY, SCRIPT_TAG } from '#cli/constants/checks/structure.ts';
 
 const ANALYSES: Record<string, StructureAnalysis> = {
     'single-file-folder': singleFileFolder,
@@ -48,10 +48,6 @@ const ANALYSES: Record<string, StructureAnalysis> = {
     'bash-boundaries': scriptBoundaries,
     'bash-safety': scriptSafety,
 };
-const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-mutable-assignments']);
-const SCRIPT_TAG = 'shell';
-const GSPOT_DIRECTORY = '.gspot/';
-
 function contextFor(input: EngineInput): StructureContext {
     const files = input.files.filter(
         (file) =>

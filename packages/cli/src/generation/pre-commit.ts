@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
+import { PATH } from '#cli/constants/generation.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
 
-const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({
     repos: z
         .array(z.looseObject({ repo: z.string(), hooks: z.array(z.looseObject({ id: z.string() })).optional() }))

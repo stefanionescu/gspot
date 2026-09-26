@@ -1,11 +1,8 @@
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import type { MergedView, Policy } from '#cli/types/policy/policy.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/configurations/vale.ts';
-
-const STYLE_ASSETS = 'packages/cli/configurations/policy/prose/styles/gspot/';
-const MAX_LINE = /^max: \d+$/mu;
-const LONGER_THAN = /longer than \d+/u;
+import { LONGER_THAN, MAX_LINE, STYLE_ASSETS } from '#cli/constants/generation.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/constants/configurations.ts';
 
 function renderedRule(stem: string, text: string, view: MergedView): string {
     const key = LENGTH_RULES[stem];

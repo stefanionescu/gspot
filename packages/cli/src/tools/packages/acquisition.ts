@@ -1,6 +1,4 @@
-// A package that fetches its binary at install time can fail for a reason the package manager does not name.
-const GITHUB_REFUSAL = /api\.github\.com|github\.com\/.*\/releases|HTTP 403|rate limit/iu;
-
+import { GITHUB_REFUSAL } from '#cli/constants/tools/packages.ts';
 /**
  * The one line that names the cause of a failed package installation when the output shows it.
  * @param output what the package manager printed on both streams

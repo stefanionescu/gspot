@@ -1,7 +1,6 @@
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
+import { DEFAULT_MIN_LINES } from '#cli/constants/checks/structure.ts';
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-
-const DEFAULT_MIN_LINES = 3;
 
 /**
  * One finding per group of functions whose normalized bodies match, at or above limits.bash.duplicate_min_lines.

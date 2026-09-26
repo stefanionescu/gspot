@@ -5,10 +5,9 @@ import { isInScope } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
+import { IMPORT_KINDS, SOURCE } from '#cli/constants/checks/structure.ts';
 import type { Edge, EdgeSource, ImportIndex } from '#cli/types/checks/structure.ts';
 
-const SOURCE = /\.[cm]?[jt]sx?$/u;
-const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
 const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();
 
 function modulePath(path: string, directory: string): string | undefined {

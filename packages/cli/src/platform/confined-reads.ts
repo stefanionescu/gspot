@@ -1,11 +1,9 @@
 // Resolving and reading paths under a confined root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
-import { MODE_BITS } from '#cli/platform/file-modes.ts';
+import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/constants/platform.ts';
 import { lstatSync, mkdirSync, readFileSync, readlinkSync, type Stats } from 'node:fs';
 import type { FileSnapshot, Confinement, PathFormat, Proposed } from '#cli/types/platform.ts';
 import { fileMode, mutationPath, nativePath, privateTarget } from '#cli/platform/safe-paths.ts';
-
-const PORTABLE_LINK_TARGET = /[\\:\p{Cc}]/u;
 
 // The directory's stat, creating it first when asked and it is absent.
 function directoryStat(directory: string, create: boolean): Stats {

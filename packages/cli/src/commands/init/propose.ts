@@ -5,8 +5,7 @@ import type { InitProposal } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
-
-const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
+import { PROFILE_HEAD, SCHEMA_LINE } from '#cli/constants/commands/init.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -87,8 +86,6 @@ function ignoreTables(carried: CarriedConfiguration): TomlTable[] {
             reason: entry.reason,
         }));
 }
-
-const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'configurations']);
 
 function asTable(value: unknown): TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};

@@ -1,28 +1,10 @@
 import { z } from 'zod';
-import type { RunnerTask, RunnerTaskNames } from '#cli/types/policy/policy.ts';
+import { PACKAGE_LIFECYCLE } from '#cli/constants/policy/policy.ts';
 
 const taskName = z
     .string()
     .regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]*$/u)
     .describe('The accepted runner task name.');
-
-export const PACKAGE_LIFECYCLE: readonly string[] = [
-    'preinstall',
-    'install',
-    'postinstall',
-    'prepublish',
-    'preprepare',
-    'prepare',
-    'postprepare',
-    'prepublishOnly',
-    'prepack',
-    'postpack',
-    'publish',
-    'postpublish',
-    'preversion',
-    'version',
-    'postversion',
-];
 
 export const runnerTasksSchema = z
     .strictObject({
@@ -54,15 +36,3 @@ export const runnerSchema = z
                         message: 'Package lifecycle scripts cannot be replaced.',
                     });
     });
-
-export const RUNNER_TASKS: (RunnerTask & { key: keyof RunnerTaskNames })[] = [
-    { key: 'check', name: 'gspot:check', description: 'Run selected checks', run: 'gspot check' },
-    { key: 'fix', name: 'gspot:fix', description: 'Apply corrections and check again', run: 'gspot check --fix' },
-    { key: 'apply', name: 'gspot:apply', description: 'Generate configuration from gspot.toml', run: 'gspot apply' },
-    {
-        key: 'doctor',
-        name: 'gspot:doctor',
-        description: 'Report tools, coverage, and configuration changes',
-        run: 'gspot doctor',
-    },
-];

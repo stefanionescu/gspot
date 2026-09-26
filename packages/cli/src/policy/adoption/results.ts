@@ -1,5 +1,5 @@
-import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import { asList } from '#cli/policy/adoption/source.ts';
+import { CARRIED_REASON } from '#cli/constants/policy/policy.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { CarriedConfiguration, CarriedIgnore } from '#cli/types/policy/adoption.ts';
 

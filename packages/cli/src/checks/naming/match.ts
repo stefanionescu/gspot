@@ -1,14 +1,6 @@
 import { splitParts } from '#cli/checks/naming/split.ts';
+import { RESERVED_USES } from '#cli/constants/checks/naming.ts';
 import type { EffectivePolicy, Identifier, Term } from '#cli/types/checks/naming.ts';
-
-const RESERVED_USES: Record<string, string[]> = {
-    directory: ['directories', 'packages'],
-    'file stem': ['files', 'modules'],
-    variable: ['variables', 'constants', 'parameters'],
-    property: ['properties', 'attributes', 'enum_cases'],
-    field: ['properties', 'attributes'],
-    'identifier word': ['*'],
-};
 
 function isConsecutive(parts: string[], termParts: string[]): boolean {
     if (termParts.length > parts.length) return false;

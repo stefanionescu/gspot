@@ -1,11 +1,16 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
-import { OWNER_WRITE_BIT, READ_ONLY_FILE, WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 
-const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
-const UNSAFE_CHARACTERS = /[\\:<>"|?*\p{Cc}]/u;
-const TRAILING_DOT_OR_SPACE = /[. ]$/u;
+import {
+    OWNER_WRITE_BIT,
+    READ_ONLY_FILE,
+    WRITABLE_FILE,
+    DEVICE_NAME,
+    LIFECYCLE_PRIVATE_PATH,
+    TRAILING_DOT_OR_SPACE,
+    UNSAFE_CHARACTERS,
+} from '#cli/constants/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {
@@ -13,10 +18,6 @@ function isUnsafeSegment(part: string): boolean {
     if (UNSAFE_CHARACTERS.test(part) || TRAILING_DOT_OR_SPACE.test(part)) return true;
     return DEVICE_NAME.test(part);
 }
-
-/** Recovery and ownership metadata never enter repository checks or generated proposals. */
-export const LIFECYCLE_PRIVATE_PATH =
-    /(?:^|\/)\.gspot\/(?:state(?:\/|$)|ownership\.json$|writer\.lock$|recovery(?:\/|$))/iu;
 
 /**
  * Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag.

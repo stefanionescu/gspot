@@ -7,9 +7,9 @@ import type { SpawnResult } from '#cli/types/platform.ts';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { VALE_CONFIG, VALE_STDIN } from '#cli/configurations/vale.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { ValeAlert, ProseRoute } from '#cli/types/checks/prose.ts';
+import { VALE_CONFIG, VALE_STDIN } from '#cli/constants/configurations.ts';
 
 const alertsSchema = z.record(
     z.string().min(1),

@@ -1,8 +1,8 @@
 import { hasCase } from '#cli/checks/naming/cases.ts';
-import { CALLBACK_VERB } from '#cli/checks/naming/categories.ts';
 import { limitsUnderRules, rulesFor } from '#cli/checks/naming/policy.ts';
 import { repeatedPart, splitParts, wordsOf } from '#cli/checks/naming/split.ts';
 import { bannedTerm, isExempt, isReservedUseAllowed } from '#cli/checks/naming/match.ts';
+import { CALLBACK_VERB, DIGIT, TEST_GROUP, VERB_CATEGORIES } from '#cli/constants/checks/naming.ts';
 
 import type {
     NameProblem,
@@ -12,10 +12,6 @@ import type {
     Identifier,
     PathRule,
 } from '#cli/types/checks/naming.ts';
-
-const DIGIT = /\d/u;
-const TEST_GROUP = 'test group';
-const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
 
 function stripped(name: string, rules: PathRule[]): string {
     let result = name;

@@ -4,17 +4,13 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { MarkupProblem, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-const INERT_SCRIPT_TYPES = new Set(['application/ld+json', 'application/json', 'importmap', 'speculationrules']);
-const COPY_ATTRIBUTES = new Set(['alt', 'aria-label', 'aria-description', 'placeholder', 'title']);
-// The marks that open and close a placeholder in the template languages a static site uses.
-const PLACEHOLDER_MARKS: [string, string][] = [
-    ['{{', '}}'],
-    ['{%', '%}'],
-    ['<%', '%>'],
-    ['${', '}'],
-];
-const SHOWN_TEXT = 40;
-const LETTERS = /\p{L}{2,}/u;
+import {
+    COPY_ATTRIBUTES,
+    INERT_SCRIPT_TYPES,
+    LETTERS,
+    PLACEHOLDER_MARKS,
+    SHOWN_TEXT,
+} from '#cli/constants/checks/checks.ts';
 
 function attributes(element: Node): { name: string; value: string; node: Node }[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
