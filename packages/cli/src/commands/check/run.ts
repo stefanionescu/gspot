@@ -1,322 +1,19 @@
-import { readFileSync } from 'node:fs';
-import { runText } from '#cli/output/reporter.ts';
-import { writeReport } from '#cli/output/report.ts';
-import { note, warn } from '#cli/output/messages.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import { openSession } from '#cli/execution/session.ts';
 // check: open the session, honor the pin, run, render, decide the exit code.
+import { relative, resolve } from 'node:path';
 import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { FixReport } from '#cli/execution/fixers.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 import type { StageFilter } from '#cli/execution/plan.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
-import { reproduceLine } from '#cli/execution/reproduce.ts';
+import { checkPushed } from '#cli/commands/check/push.ts';
+import { checkContent } from '#cli/commands/check/content.ts';
+import { refusalFor } from '#cli/commands/check/selection.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
-import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
-import type { PushReport, RunReport } from '#cli/execution/report.ts';
+import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
-import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
-import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
 
-const CHANGED_SHOWN = 8;
-function stagedEnvironmentFiles(staged: string[]): string[] {
-    const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
-    return staged.filter(
-        (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
-    );
-}
-
-function isReadable(path: string): boolean {
-    try {
-        readFileSync(path, 'utf8');
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-function runOptions(
-    options: CheckOptions,
-    stage: StageFilter,
-    staged: string[] | undefined,
-    changed: ChangedSet | undefined,
-): RunOptions {
-    return {
-        stage,
-        skips: options.skips,
-        fix: options.fix,
-        isDryRun: options.isDryRun,
-        noCache: options.noCache,
-        ...(options.onResult === undefined ? {} : { onResult: options.onResult }),
-        ...(staged === undefined ? {} : { staged }),
-        ...(changed === undefined
-            ? {}
-            : {
-                  changed: changed.paths,
-                  comparison: { content: 'working-tree' as const, reference: changed.reference },
-              }),
-        ...(options.only === undefined ? {} : { only: options.only }),
-        ...(options.paths.length === 0 ? {} : { paths: options.paths }),
-        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
-    };
-}
-
-function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
-    const failures = fixes.results.filter((result) => result.status === 'failed');
-    for (const result of failures) warn(`a fixer failed: ${result.check}: ${result.note}`);
-    const count = fixes.changed.length;
-    if (isDryRun) {
-        const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} file(s) would change`;
-        return `${fixes.diffs.join('\n')}\n${verdict}\n\n${text}`;
-    }
-    if (count === 0) note('no fixer changed anything');
-    else {
-        const shown = fixes.changed.slice(0, CHANGED_SHOWN).join(' ');
-        const more = count > CHANGED_SHOWN ? ' ...' : '';
-        warn(
-            `fixers changed ${String(count)} file(s); the changes are in the working tree and are not staged: ${shown}${more}`,
-        );
-    }
-    return text;
-}
-
-function refusalFor(
-    options: CheckOptions,
-    stage: StageFilter,
-    staged: string[] | undefined,
-): CommandResult | undefined {
-    const environmentStaged = staged === undefined ? [] : stagedEnvironmentFiles(staged);
-    if (environmentStaged.length > 0)
-        return {
-            text: `An environment file is staged: ${environmentStaged.join(', ')}. Unstage it (git restore --staged <file>); only templates like .env.example belong in git.\n`,
-            json: { failed: ['integrity/env-files'], files: environmentStaged },
-            exitCode: 1,
-        };
-    if (stage === 'message' && options.messageFile !== undefined && !isReadable(options.messageFile))
-        return {
-            text: `The commit message file ${options.messageFile} cannot be read.\n`,
-            json: { error: 'message-file' },
-            exitCode: 2,
-        };
-    return undefined;
-}
-
-function selectedPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
-    if (options.paths.length === 0) return [];
-    const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
-    const selected = new Set<string>();
-    for (const path of options.paths) {
-        const selector = relative(session.root, resolve(options.cwd, path)).split(sep).join('/');
-        if (selector === '..' || selector.startsWith('../') || isAbsolute(selector))
-            throw new SelectionError([`Path ${path} is outside this repository.`]);
-        const matches = candidates.filter(
-            (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
-        );
-        if (matches.length === 0) throw new SelectionError([`Path ${path} matches no repository files.`]);
-        for (const match of matches) selected.add(match);
-    }
-    return [...selected];
-}
-
-function unknownSelection(session: Session, only: string[] | undefined): CommandResult | undefined {
-    const known = new Set([
-        ...session.scopes.flatMap((scope) =>
-            scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
-        ),
-        ...session.policyFiles.policy.checks.map((check) => check.name),
-    ]);
-    const unknown = only?.find((check) => !known.has(check));
-    return unknown === undefined
-        ? undefined
-        : {
-              text: `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
-              json: { error: 'unknown-check' },
-              exitCode: 2,
-          };
-}
-
-async function revisionSelection(
-    session: Session,
-    options: CheckOptions,
-    signal: AbortSignal,
-): Promise<ChangedSet | undefined> {
-    if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
-        throw new SelectionError(['Revision selection requires a Git repository.']);
-    return options.changed === undefined ? undefined : changedFiles(session.root, options.changed, signal);
-}
-
-function resultFor(
-    options: CheckOptions,
-    outcome: Awaited<ReturnType<typeof executeRun>>,
-    unstaged: number,
-    reportRoot?: string,
-): CheckCommandResult {
-    outcome.report.unstaged = unstaged;
-    if (reportRoot !== undefined && !options.isDryRun && options.stage !== 'message')
-        writeReport(reportRoot, outcome.report);
-    const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
-    const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
-    return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
-}
-
-/**
- * Runs check and returns what to print.
- * @param root the tree to check: the repository, or a snapshot of a revision
- * @param options the parsed flags
- * @param signal cancellation for the run
- * @param revision what the snapshot stands for, when the root is one
- * @param revision.commits the commits under review
- * @param revision.historyComplete whether every commit under review is present
- * @param revision.content the staged index or a commit
- * @param revision.cacheRoot the repository whose cache the run reads and writes
- * @param revision.reference the revision named in the report
- * @param revision.reportRoot the repository the report is published to
- * @param revision.staged the staged files, for the commit stage
- * @param revision.changed the changed files, for a range under review
- * @returns the text, the run report and the exit code
- */
-async function checkContent(
-    root: string,
-    options: CheckOptions,
-    signal: AbortSignal,
-    revision?: {
-        commits?: string[];
-        historyComplete?: boolean;
-        content: 'index' | 'commit';
-        cacheRoot: string;
-        reference: string;
-        reportRoot?: string;
-        staged?: StagedSet;
-        changed?: string[];
-    },
-): Promise<CheckCommandResult> {
-    assertPinMatches(root);
-    const session = await openSession(root);
-    if (revision !== undefined) session.cacheRoot = revision.cacheRoot;
-    const unknown = unknownSelection(session, options.only);
-    if (unknown !== undefined) return unknown;
-    if (revision?.content !== 'commit') {
-        const hooks = hookStatus({
-            policy: session.policyFiles.policy,
-            repository: {
-                root: revision?.reportRoot ?? root,
-                hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
-            },
-        });
-        if (!hooks.ready) warn(`Configured hooks are not ready in this clone. ${hooks.text}`);
-    }
-    let changed =
-        revision?.changed === undefined
-            ? await revisionSelection(session, options, signal)
-            : { reference: revision.reference, paths: revision.changed };
-    if (revision?.content === 'commit' && session.policyFiles.policy.hooks?.push === 'all') changed = undefined;
-    const set =
-        revision?.staged ?? (options.staged ? await stagedFiles(root, signal) : { staged: undefined, unstaged: 0 });
-    const stage: StageFilter = options.stage ?? (options.staged ? 'commit' : 'all');
-    const refusal = refusalFor(options, stage, set.staged);
-    if (refusal) return refusal;
-    const paths = selectedPaths(
-        session,
-        options,
-        [set.staged, changed?.paths].flatMap((selection) => selection ?? []),
-    );
-    const outcome = await executeRun(session, {
-        ...runOptions({ ...options, paths }, stage, set.staged, changed),
-        ...(revision === undefined ? {} : { comparison: { content: revision.content, reference: revision.reference } }),
-        ...(revision?.commits === undefined ? {} : { commits: revision.commits }),
-        ...(revision?.historyComplete === undefined ? {} : { historyComplete: revision.historyComplete }),
-        cancelSignal: signal,
-    });
-    if (options.push !== undefined)
-        for (const check of outcome.report.checks)
-            if (check.reproduce !== undefined) check.reproduce = reproduceLine(check.check, check.scope, options);
-    return resultFor(options, outcome, set.unstaged, revision?.reportRoot);
-}
-/**
- * Check the working tree or an isolated, exact snapshot of the staged index.
- * @param options the parsed flags
- * @param signal cancellation for the run
- * @returns the text to print and the exit code
- */
-export async function checkCommand(options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
-    if ((options.staged || options.push !== undefined) && !isGitRepository(root))
-        throw new SelectionError(['Revision selection requires a Git repository.']);
-    if (options.push !== undefined) {
-        if (
-            options.staged ||
-            options.changed !== undefined ||
-            options.fix ||
-            options.stage !== undefined ||
-            options.messageFile !== undefined
-        )
-            throw new SelectionError([
-                'Pre-push object checks cannot be combined with staged, changed, fix, stage, or message-file options.',
-            ]);
-        const selected = await pushedRevisions(root, options.push.input, options.push.remote, signal);
-        const revisions: PushReport['revisions'] = [];
-        const rendered: string[] = [];
-        for (const revision of selected.revisions) {
-            let result: CheckCommandResult;
-            try {
-                result = await withRevisionSnapshot(
-                    root,
-                    { kind: 'commit', object: revision.object },
-                    (snapshot) =>
-                        checkContent(snapshot, options, signal, {
-                            commits: revision.commits,
-                            historyComplete: revision.historyComplete,
-                            content: 'commit',
-                            cacheRoot: root,
-                            reference: revision.object,
-                            ...(revision.paths === undefined ? {} : { changed: revision.paths }),
-                        }),
-                    signal,
-                );
-            } catch (error) {
-                if (!signal.aborted) throw error;
-                break;
-            }
-            if (result.report === undefined) return result;
-            revisions.push({
-                object: revision.object,
-                refs: revision.refs,
-                commits: revision.commits,
-                historyComplete: revision.historyComplete,
-                report: result.report,
-            });
-            rendered.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
-        }
-        const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
-        const exitCode = Math.max(signal.aborted ? 2 : 0, ...revisions.map((revision) => revision.report.exitCode));
-        const report: PushReport = {
-            revisions,
-            notApplicable: selected.notApplicable,
-            exitCode,
-            ...(signal.aborted ? { canceled: { pendingRefs } } : {}),
-        };
-        if (signal.aborted)
-            rendered.push(
-                `Push checks canceled. References not checked: ${pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
-            );
-        if (!options.isDryRun) writeReport(root, report);
-        return {
-            text: [
-                ...rendered,
-                ...selected.notApplicable.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`),
-            ].join(''),
-            json: report,
-            exitCode,
-        };
-    }
-    if (!options.staged) return checkContent(root, options, signal);
+// Checks an exact snapshot of the staged index, with the report published to the repository.
+async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
         throw new SelectionError([
             'Staged checks do not run fixers. Run gspot check --fix and stage the reviewed changes.',
@@ -340,6 +37,21 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
         },
         signal,
     );
+}
+
+/**
+ * Check the working tree or an isolated, exact snapshot of the staged index.
+ * @param options the parsed flags
+ * @param signal cancellation for the run
+ * @returns the text to print and the exit code
+ */
+export async function checkCommand(options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
+    const root = findRoot(options.cwd);
+    if ((options.staged || options.push !== undefined) && !isGitRepository(root))
+        throw new SelectionError(['Revision selection requires a Git repository.']);
+    if (options.push !== undefined) return checkPushed(root, options, options.push, signal);
+    if (!options.staged) return checkContent(root, options, signal);
+    return checkStaged(root, options, signal);
 }
 
 export type CheckOptions = {
