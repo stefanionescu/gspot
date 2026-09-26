@@ -1,4 +1,5 @@
 // What makes a manifest invalid: a check that contradicts itself, a configuration nothing reads, or references
+import semver from 'semver';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 // between manifests that do not hold.
 import { configurationName } from '#cli/configurations/targets.ts';
@@ -6,8 +7,10 @@ import type { RawCheck, RawManifest } from '#cli/configurations/schema.ts';
 
 type CheckRule = { applies: (check: RawCheck) => boolean; problem: (check: RawCheck) => string };
 type Checks = Map<string, Manifest['checks'][number]>;
+type Settings = Map<string, Manifest['settings'][number]>;
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
+const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
 // Whether a check command carries a placeholder.
 function commandHas(check: RawCheck, placeholder: string): boolean {
@@ -166,6 +169,64 @@ function assertReporting(manifest: Manifest, check: Manifest['checks'][number], 
     assertNoReplacementCycle(manifest, check, checks);
 }
 
+// Whether a pinned version sits below the floor the manifest names, comparing the versions both can coerce.
+function isBelowFloor(tool: Manifest['tools'][number]): boolean {
+    const pinned = semver.coerce(tool.version);
+    const floor = semver.coerce(tool.floor);
+    return pinned !== null && floor !== null && semver.lt(pinned, floor);
+}
+
+function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): void {
+    const isUnpinned =
+        tool.version === undefined && Object.values(tool.installers).some((entry) => entry.version === undefined);
+    if (isUnpinned && tool.floor === undefined)
+        throw new ManifestError(manifest.configuration.name, [`tool ${tool.name} has no version and no floor.`]);
+    if (isBelowFloor(tool))
+        throw new ManifestError(manifest.configuration.name, [
+            `tool ${tool.name} pins ${tool.version ?? ''}, below its floor ${tool.floor ?? ''}.`,
+        ]);
+}
+
+// Refuses the tools nobody pins; a host tool needs no pin.
+function assertToolPins(manifest: Manifest): void {
+    for (const tool of manifest.tools) if (tool.provider !== 'host') assertToolPin(manifest, tool);
+}
+
+// Whether a setting's default is nothing: unset, empty, off, or an empty list.
+function isEmptyDefault(spec: Manifest['settings'][number]): boolean {
+    const value = spec.default;
+    return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
+}
+
+// The settings a check's commands read through {setting:...} placeholders.
+function settingsRead(check: Manifest['checks'][number]): string[] {
+    const parts = [...(check.command ?? []), ...(check.fix_command ?? [])];
+    const names = parts.flatMap((part) =>
+        [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? ''),
+    );
+    return [...new Set(names)];
+}
+
+// Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
+function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number], settings: Settings): void {
+    if (check.waits_for !== undefined && !settings.has(check.waits_for))
+        throw new ManifestError(manifest.configuration.name, [
+            `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
+        ]);
+    for (const name of settingsRead(check)) {
+        const spec = settings.get(name);
+        if (spec !== undefined && isEmptyDefault(spec) && check.waits_for !== name)
+            throw new ManifestError(manifest.configuration.name, [
+                `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`,
+            ]);
+    }
+}
+
+// Refuses every check that reads an empty setting without waiting for it.
+function assertSettingWaits(manifest: Manifest, settings: Settings): void {
+    for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
+}
+
 export class ManifestError extends Error {
     /**
      * Names the configuration and lists its problems.
@@ -212,11 +273,18 @@ export function configurationProblems(raw: RawManifest): string[] {
 }
 
 /**
- * Validate required configurations, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * Validate required configurations, tool pins, setting waits, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
  * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {
-    for (const manifest of manifests.values()) assertRequirementsExist(manifest, manifests);
+    const settings: Settings = new Map(
+        [...manifests.values()].flatMap((manifest) => manifest.settings.map((spec) => [spec.name, spec] as const)),
+    );
+    for (const manifest of manifests.values()) {
+        assertRequirementsExist(manifest, manifests);
+        assertToolPins(manifest);
+        assertSettingWaits(manifest, settings);
+    }
     const owners = checkOwners(manifests);
     const checks: Checks = new Map(
         [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
@@ -226,4 +294,4 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
         assertTakeovers(manifest, checks);
         for (const check of manifest.checks) assertReporting(manifest, check, checks);
     }
-}
+} // Refuses a tool nobody pins: no version on the tool or on every installer, and no floor the repository supplies.

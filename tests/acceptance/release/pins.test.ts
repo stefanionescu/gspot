@@ -52,26 +52,6 @@ function registryUrl(pin: Pin): string {
     }
 }
 
-// A tool the repository supplies itself, such as its test runner, carries a floor and no pin.
-test('every non-host tool carries a version on the tool or on each installer, or a floor when the repository supplies it', () => {
-    const unversioned = tools.filter(
-        (tool) =>
-            tool.provider !== 'host' &&
-            tool.version === undefined &&
-            tool.floor === undefined &&
-            Object.values(tool.installers).some((entry) => entry.version === undefined),
-    );
-    expect(unversioned.map((tool) => tool.name)).toStrictEqual([]);
-});
-
-test('no pin sits below the floor its manifest names', () => {
-    const below = tools.filter(
-        (tool) =>
-            tool.floor !== undefined && tool.version !== undefined && Bun.semver.order(tool.version, tool.floor) < 0,
-    );
-    expect(below.map((tool) => `${tool.name} ${tool.version ?? ''} < ${tool.floor ?? ''}`)).toStrictEqual([]);
-});
-
 test.each(pins)(
     '$installer knows $name@$version',
     async (pin) => {

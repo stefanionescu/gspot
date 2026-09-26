@@ -124,3 +124,41 @@ test('check references require one standalone built-in owner and preserve its de
         validateManifests(manifests);
     }).toThrow('standalone built-in');
 });
+
+const PINNED_HEADER =
+    '[configuration]\nname = "pinned"\nkind = "tool"\ntitle = "Pinned"\ndescription = "Pins one tool for the tests."\n';
+
+test.each([
+    ['[[tools]]\nname = "unpinned"\nnpm = "unpinned"\n', 'has no version and no floor'],
+    ['[[tools]]\nname = "low"\nversion = "1.0.0"\nfloor = "2.0.0"\nnpm = "low"\n', 'below its floor 2.0.0'],
+])('a manifest whose tool is not pinned is refused: %s', (tools, message) => {
+    const manifest = parseManifest(`${PINNED_HEADER}${tools}`, 'configurations/pinned');
+    expect(() => {
+        validateManifests(new Map([['pinned', manifest]]));
+    }).toThrow(message);
+});
+
+// A manifest whose one check reads a setting with an empty default, waiting for whatever the test says.
+const header =
+    '[configuration]\nname = "waiting"\nkind = "tool"\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
+const setting =
+    '[[settings]]\nname = "tools.waiting.target"\nkind = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
+const check = (waits: string): string =>
+    `[[checks]]\nexample = "A wrong target is corrected before the tool runs again."\nname = "waiting/run"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${waits}summary = "Runs the tool."\nwhy = "The target matters."\nhelp = "Set the target."\n`;
+function loadWaiting(waits: string): void {
+    validateManifests(
+        new Map([['waiting', parseManifest(`${header}${setting}${check(waits)}`, 'configurations/waiting')]]),
+    );
+}
+
+test('a check that reads an empty setting must wait for it, and a wait must name a declared setting', () => {
+    expect(() => {
+        loadWaiting('');
+    }).toThrow('must wait for it');
+    expect(() => {
+        loadWaiting('waits_for = "tools.waiting.other"\n');
+    }).toThrow('which no configuration declares');
+    expect(() => {
+        loadWaiting('waits_for = "tools.waiting.target"\n');
+    }).not.toThrow();
+});
