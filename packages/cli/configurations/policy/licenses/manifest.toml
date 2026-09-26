@@ -43,6 +43,7 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "licenses-packages"
+waits_for = "tools.licenses.licenses_allowed"
 claims = {filenames = ["package.json", "pyproject.toml"]}
 coverage = ["licenses"]
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."
@@ -53,7 +54,8 @@ help = "Replace the package, or add an entry to tools.licenses.packages_allowed 
 name = "tools.licenses.licenses_allowed"
 kind = "list"
 direction = "neutral"
-default = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
+default = []
+default_all = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 summary = "The SPDX license ids a dependency may report."
 
 [[settings]]

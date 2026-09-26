@@ -77,6 +77,7 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
         type: 'layout',
         fixable: 'code',
         docs: {
+            level: 'all',
             title: 'Header comments before imports',
             example:
                 'A file header after an import and separated from the next declaration by two blank lines reports `headerFirst`. Move the header before the import. A comment attached to a declaration stays beside that declaration.',

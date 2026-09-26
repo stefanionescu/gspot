@@ -6,6 +6,11 @@ title: Bash
 
 # Bash
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The Bash rules span four files. This one covers scope, files, structure, options, output, comments,
 and formatting. Language covers functions, variables, quoting, arrays, conditionals, arithmetic,
 loops, and paths. Safety covers commands, processes, network, secrets, temporary files, security,

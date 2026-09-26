@@ -6,6 +6,11 @@ title: Express API
 
 # Express API
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Code fragments assume application-owned contracts, response helpers, and domain operations.
 Express does not provide helpers such as `validateRequest` or `sendOk`.
 Use the application's existing owners for those responsibilities.

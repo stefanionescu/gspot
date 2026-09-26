@@ -50,6 +50,7 @@ export const configurationSchema = z.object({
  * @returns the findings
  */
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
+    if ((input.view.settings['tools.licenses.licenses_allowed'] as string[]).length === 0) return [];
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
     const files = openConfinedRoot(input.root);

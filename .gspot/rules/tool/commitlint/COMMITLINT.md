@@ -6,6 +6,11 @@ title: Commit Messages
 
 # Commit Messages
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The format of every commit message in the repository.
 
 - Format: `<type>(<scope>): <subject>`, then a blank line, then the body, then footers.

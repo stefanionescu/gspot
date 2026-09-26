@@ -1,3 +1,4 @@
+import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
 import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
@@ -123,10 +124,11 @@ export function templateInputs(
         javascriptConfig: (targetPath) => javascriptConfig(root, policy, targetPath, selection.scope.path),
         prettierConfig: (targetPath) =>
             prettierConfig(policy, targetPath, view.extra('prettier'), prettierPlugins(selection.selected)),
-        markdownlintRules: markdownlintRules(view),
+        markdownlintRules: markdownlintRules(view, policy.level === 'all'),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
-        eslintPolicy: [...structuralRuleBlocks(scopes), ...eslintRuleBlocks(policy)],
+        eslintPolicy: [...structuralRuleBlocks(scopes, policy), ...eslintRuleBlocks(policy)],
+        eslintRuleLevels: ESLINT_RULE_LEVELS,
         isAll: policy.level === 'all',
         typescriptOptions: policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,
         prose: {

@@ -23,6 +23,7 @@ export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Environment access owner',
             example:
                 'In `src/turn/build.ts`, `const port = process.env.PORT;` reports an owner finding. Move the environment read to `src/env/index.ts` and pass the value to the build function.',

@@ -54,14 +54,18 @@ function schemaSpecs(): SettingSpec[] {
  * @param selected the manifests of the selection, in order
  * @returns the specs, their defaults and the conflicts found on the way
  */
-export function exposedSettings(selected: Manifest[]): ExposedSettings {
+export function exposedSettings(selected: Manifest[], level: 'recommended' | 'all' = 'recommended'): ExposedSettings {
     const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
     for (const spec of [TOOL_DEADLINE, COVERAGE_STRICT, ...schemaSpecs()]) {
         surface.specs.set(spec.name, spec);
         surface.defaults.set(spec.name, { value: spec.default, configuration: 'gspot' });
     }
     for (const manifest of selected) {
-        for (const spec of manifest.settings) {
+        for (const declared of manifest.settings) {
+            const spec =
+                level === 'all' && declared.default_all !== undefined
+                    ? { ...declared, default: declared.default_all }
+                    : declared;
             if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
             addDefault(surface, manifest, spec);
         }

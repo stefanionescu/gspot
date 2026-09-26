@@ -6,6 +6,11 @@ title: Comments
 
 # Comments
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## Present state only
 
 Comments and documentation describe what the code does right now. Never write `was removed`, `deleted`, `renamed`, `refactored`, or how the code `used to` work. No changelogs in comments.

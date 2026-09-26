@@ -11,7 +11,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
             title: 'Keep files substantive',
             example:
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Entry filenames do not exempt forwarding code.',
-            level: 'recommended',
+            level: 'all',
             summary: 'Finds files containing only forwarding, aliases, re-exports, or trivial functions.',
             why: 'A file needs substantial behavior or a meaningful owned schema.',
             fix: 'Move unnecessary wrappers and aliases to their owner. Keep substantial implementations and schemas together.',

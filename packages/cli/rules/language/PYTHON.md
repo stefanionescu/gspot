@@ -6,6 +6,11 @@ title: Python
 
 # Python
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The Python rules span five files: this one (modules, imports, interfaces, docstrings, entry points),
 Typing, Design (functions and classes), Flow (control flow, errors, logging, resources), and
 Packaging (installs and dependencies).

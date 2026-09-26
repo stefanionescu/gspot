@@ -32,8 +32,11 @@ level = "recommended"
 require_reasons = true
 ```
 
-Recommended checks include mandatory trivial-function and trivial-file enforcement. The
-optional `all` level adds further naming, ordering, and style preferences. Individual check
+`recommended` includes correctness, security, accessibility, type safety, dependency health,
+routine formatting, and explicitly declared project contracts. `all` adds stable vocabulary,
+architecture, naming, documentation, declaration order, API style, and complexity conventions.
+Trivial-file and trivial-function restrictions belong to `all`. Neither level enables
+experimental or preview rules. Individual check
 definitions state their selected level. Apply a manual edit with
 `gspot apply`. To change the level through the CLI:
 
@@ -85,3 +88,15 @@ changing one. Review `gspot.toml` and generated changes before sharing them.
 
 See [edit and retain repository files](/guides/generated-files/) for what to commit,
 regenerate, and keep for restoration.
+
+## Regenerate an existing recommended project
+
+Run `gspot apply` after upgrading. Recommended projects gain routine formatting and broader
+baseline checks; opinionated restrictions move to `all`. Tool installation follows selected
+integrations and their dependencies, independently of rule membership. Network access,
+platform support, execution cost, and commit or push stages do not determine a rule level.
+
+Coverage floors default to zero at recommended and 80% at all. Explicit floors apply at
+either level. Recommended enforces declared license and file-size policies without imposing
+a universal allowance list or size budget. Vulture uses 100% confidence at recommended and
+80% at all, unless `tools.vulture.min_confidence` is set explicitly.

@@ -31,6 +31,9 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         const root = sandbox.path;
+        const selectedIds = IDS.filter(
+            (id) => level === 'all' || !['ios-unsafe-pointer-cast', 'ios-wkwebview-javascript-enabled'].includes(id),
+        );
         await createFileTree(root, {
             'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["swift", "javascript", "security"]\n[rules]\ninstall = false\n`,
             'Value.swift': SWIFT,
@@ -75,8 +78,9 @@ test.each(['recommended', 'all'])(
         expect(report.errors).toStrictEqual([]);
         expect(
             report.results.map((entry) => entry.check_id).toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual([...IDS].toSorted((left, right) => left.localeCompare(right)));
+        ).toStrictEqual([...selectedIds].toSorted((left, right) => left.localeCompare(right)));
         for (const [index, rule] of IDS.entries()) {
+            if (!selectedIds.includes(rule)) continue;
             const path = index < 11 ? 'Value.swift' : index === 11 ? 'Info.plist' : 'scripts/build.js';
             const line = index < 11 ? index + 1 : index === 11 ? 1 : index - 11;
             expect(report.results).toContainEqual(containing({ check_id: rule, path, start: containing({ line }) }));
@@ -89,7 +93,7 @@ test.each(['recommended', 'all'])(
                 .map((finding) => finding.rule)
                 .filter((id) => id.startsWith('ios-'))
                 .toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual([...IDS].toSorted((left, right) => left.localeCompare(right)));
+        ).toStrictEqual([...selectedIds].toSorted((left, right) => left.localeCompare(right)));
         await Bun.write(
             join(root, 'Value.swift'),
             'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\nUserDefaults.standard.set(value, forKey: "theme")\nlet name = Bundle.main.object(forInfoDictionaryKey: "DisplayName")\nlet address = "https://example.com"\nlet local = "http://localhost:8080"\nlet hash = SHA256.hash(data: data)\nlet web = WKWebView()\nconfiguration.preferences.javaScriptEnabled = false\nprint("Operation completed")\n',

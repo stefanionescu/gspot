@@ -33,7 +33,9 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
         const asset = `${STYLE_ASSETS}${name}`;
         return {
             path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
-            content: renderedRule(stem, readAsset(asset), view),
+            content:
+                renderedRule(stem, readAsset(asset), view) +
+                (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
             readOnly: true,
             kind: 'config',
             configuration: 'prose',

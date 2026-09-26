@@ -101,6 +101,7 @@ export const importLayout = createRule<ImportLayoutOptions, 'layout'>({
         type: 'layout',
         fixable: 'code',
         docs: {
+            level: 'all',
             title: 'Import layout',
             example:
                 'The import block below reports `layout`:\n\n```ts\nimport { ccc } from "ccc";\nimport a from "a";\n```\n\nPut the shorter import first:\n\n```ts\nimport a from "a";\nimport { ccc } from "ccc";\n```',

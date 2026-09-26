@@ -7,6 +7,7 @@ export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'loc
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'No reexports',
             example:
                 'The following declaration reports `local`:\n\n```ts\nconst a = 1;\nexport { a };\n```\n\nExport at the declaration:\n\n```ts\nexport const a = 1;\n```',

@@ -6,6 +6,11 @@ title: FastAPI
 
 # FastAPI
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 These rules apply when a Python project uses FastAPI for an HTTP API, web
 service, internal service, webhook receiver, streaming endpoint, or API gateway.
 They do not apply to non-FastAPI Python modules except where the general Python

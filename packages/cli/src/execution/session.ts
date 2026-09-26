@@ -18,7 +18,7 @@ import type { PolicyFiles, ScopeSelection, Policy } from '#cli/types/policy/poli
 function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
     return scopes.map((scope) => {
         const selected = selectForScope(policy, scope.path, manifests);
-        const surface = exposedSettings(selected);
+        const surface = exposedSettings(selected, policy.level);
         const view = mergeForScope(surface, policy, selected, scope.path);
         return { scope, selected, surface, view };
     });

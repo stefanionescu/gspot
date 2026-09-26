@@ -11,7 +11,7 @@
         "function-no-unknown": [true, { "ignoreFunctions": ["theme"] }],
         "import-notation": "string",
         "property-no-vendor-prefix": [true, { "ignoreProperties": ["-webkit-text-size-adjust", "-webkit-backdrop-filter"] }]
-    }, chosen, Object.fromEntries(off.map((rule) => [rule, null])))) %>,
+    }, Object.fromEntries((isAll ? [] : ["no-descending-specificity", "container-name-pattern", "custom-media-pattern", "custom-property-pattern", "declaration-block-no-redundant-longhand-properties", "keyframes-name-pattern", "layer-name-pattern", "number-max-precision", "selector-class-pattern", "selector-id-pattern", "selector-not-notation"]).map((rule) => [rule, null])), chosen, Object.fromEntries(off.map((rule) => [rule, null])))) %>,
     "overrides": [
         {
             "files": ["*.vue", "*.svelte"],

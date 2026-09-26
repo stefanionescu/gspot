@@ -38,6 +38,7 @@ export const privateBeforePublic = createRule<[], 'order'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Private before public',
             example:
                 'The sequence `export const a = 1;` followed by `const b = 2;` reports `order`. Move the non-exported `b` declaration before the exported `a` declaration.',

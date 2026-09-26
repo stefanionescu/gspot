@@ -6,6 +6,11 @@ title: Postgres
 
 # Postgres
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Supabase examples use its `anon`, `authenticated`, and `service_role` roles and
 `config.toml` API settings. In other Postgres deployments, use the roles and
 exposed schemas declared by that application.

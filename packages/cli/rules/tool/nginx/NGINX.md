@@ -6,6 +6,11 @@ title: nginx
 
 # nginx
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## Edge responsibilities
 
 - nginx handles edge concerns: TLS, request body limits, compression, timeout policy, static

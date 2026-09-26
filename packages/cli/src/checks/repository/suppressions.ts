@@ -108,7 +108,7 @@ export function suppressions(input: EngineInput): Finding[] {
     if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
     return input.suppressions.flatMap((entry): Finding[] => {
         const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
-        if (entry.forbidden)
+        if (entry.forbidden && input.policyFiles.policy.level === 'all')
             return [
                 {
                     ...base,

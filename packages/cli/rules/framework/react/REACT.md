@@ -6,6 +6,11 @@ title: React
 
 # React
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Rules that hold for any React application: Next.js, Vite, Expo, or a library. The framework file
 adds routing, server components, and caching on top of these.
 

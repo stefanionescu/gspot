@@ -92,3 +92,84 @@
 <% for (const rule of rulesOff('swift/swiftformat')) { -%>
 --disable <%= rule %>
 <% } -%>
+
+<% if (!isAll) { -%>
+--disable hoistPatternLet
+--disable modifierOrder
+--disable redundantClosure
+--disable redundantExtensionACL
+--disable redundantFileprivate
+--disable redundantGet
+--disable redundantInit
+--disable redundantLet
+--disable redundantLetError
+--disable redundantNilInit
+--disable redundantObjc
+--disable redundantRawValues
+--disable redundantReturn
+--disable strongOutlets
+--disable strongifiedSelf
+--disable typeSugar
+--disable void
+--disable redundantSelf
+--disable sortSwitchCases
+--disable wrapEnumCases
+--disable acronyms
+--disable organizeDeclarations
+--disable sortDeclarations
+--disable markTypes
+--disable trailingClosures
+<% } -%>
+
+<% if (!isAll) { -%>
+--disable andOperator
+--disable anyObjectProtocol
+--disable applicationMain
+--disable assertionFailures
+--disable conditionalAssignment
+--disable consistentSwitchCaseSpacing
+--disable docCommentsBeforeModifiers
+--disable emptyExtensions
+--disable enumNamespaces
+--disable environmentEntry
+--disable extensionAccessControl
+--disable fileHeader
+--disable fileMacro
+--disable genericExtensions
+--disable headerFileName
+--disable hoistAwait
+--disable hoistTry
+--disable modifiersOnSameLine
+--disable noForceTryInTests
+--disable noForceUnwrapInTests
+--disable opaqueGenericParameters
+--disable preferForLoop
+--disable preferKeyPath
+--disable redundantAsync
+--disable redundantEmptyView
+--disable redundantEquatable
+--disable redundantInternal
+--disable redundantMemberwiseInit
+--disable redundantOptionalBinding
+--disable redundantProperty
+--disable redundantPublic
+--disable redundantSendable
+--disable redundantStaticSelf
+--disable redundantSwiftTestingSuite
+--disable redundantThrows
+--disable redundantType
+--disable redundantTypedThrows
+--disable redundantVariable
+--disable redundantViewBuilder
+--disable simplifyGenericConstraints
+--disable sortTypealiases
+--disable sortedImports
+--disable sortedSwitchCases
+--disable specifiers
+--disable swiftTestingTestCaseNames
+--disable throwingTests
+--disable wrapFunctionBodies
+--disable wrapPropertyBodies
+--disable wrapSingleLineComments
+--disable yodaConditions
+<% } -%>

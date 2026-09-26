@@ -6,6 +6,11 @@ title: Writing
 
 # Writing
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 All project-authored text must conform to `ISO 24495-1:2023`. This requirement
 applies to README files, guides, Markdown, comments, docstrings, interface help,
 tooltips, labels, errors, workflow notes, examples, and generated text.

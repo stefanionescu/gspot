@@ -6,6 +6,11 @@ title: Configuration
 
 # Configuration
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## One owner
 
 - Every process reads its environment in one configuration owner module. `process.env`,

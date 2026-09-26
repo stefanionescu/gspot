@@ -30,6 +30,14 @@ runtimes and source entry point without changing your working directory.
 For a new setup, follow [your first check](/guides/quick-start/) or
 [adopt an existing repository](/guides/existing-repository/).
 
+The default `recommended` level includes routine formatting and baseline correctness,
+security, accessibility, and type checks. Select `all` for additional stable conventions.
+Neither level enables experimental rules. Selected integrations determine installed tools,
+including parser and plugin dependencies for rules that are disabled.
+
+After an upgrade, run `gspot apply` to regenerate an existing project. Recommended projects
+gain formatting and broader baseline checks, while opinionated restrictions move to `all`.
+
 ## Match the repository version
 
 `gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in

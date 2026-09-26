@@ -3,9 +3,9 @@
     "extends": "../../../../packages/eslint-plugin/tsconfig.json",
     "compilerOptions": {
         "strict": true,
-        "noFallthroughCasesInSwitch": true,
         "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
-        "exactOptionalPropertyTypes": true
+        "noFallthroughCasesInSwitch": true
     }
 }

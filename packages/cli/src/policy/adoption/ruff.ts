@@ -1,6 +1,7 @@
 // Carrying a Ruff configuration into the policy: its ignored rules, per-file ignores, and inherited configuration.
 import { z } from 'zod';
 import { posix } from 'node:path';
+import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
@@ -15,6 +16,23 @@ import type {
     CarryPush,
     CarrySource,
 } from '#cli/types/policy/adoption.ts';
+
+/** Experimental lint activation cannot be retained as an adopted project contract. */
+export class ExperimentalRuffError extends Error {}
+
+/** Reject preview activation before adoption records or generates configuration. */
+export function assertStableRuff(source: CarrySource, path: string): void {
+    const lint = asRaw(source.parsed['lint']) ?? source.parsed;
+    const format = asRaw(source.parsed['format']);
+    const selected = [...asStrings(lint['select']), ...asStrings(lint['extend-select'])];
+    if (
+        source.parsed['preview'] === true ||
+        lint['preview'] === true ||
+        format?.['preview'] === true ||
+        selected.some((code) => RUFF_PREVIEW_RULES.has(code))
+    )
+        throw new ExperimentalRuffError(`${path}: Ruff preview activation is unsupported at both levels.`);
+}
 
 const RUFF_LINT = z.strictObject({
     ignore: z.array(z.string()).optional(),
@@ -151,6 +169,7 @@ function resolveLint(inheritance: Inheritance, path: string, source: CarrySource
     const { visiting, base } = inheritance;
     if (visiting.has(path)) throw new Error(`${path}: Ruff configuration inheritance contains a cycle.`);
     visiting.add(path);
+    assertStableRuff(source, path);
     const configuration = RUFF_SOURCE.parse(source.parsed);
     const lint = 'lint' in configuration ? configuration.lint : configuration;
     const parent = parentLint(inheritance, path, configuration.extend, adopting);

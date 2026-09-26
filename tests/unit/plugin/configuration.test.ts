@@ -34,7 +34,9 @@ describe('the plugin', () => {
                 line: entry.line,
                 column: entry.column,
             })),
-        ).toStrictEqual([{ ruleId: 'gspot/no-trivial-functions', messageId: 'trivial', line: 1, column: 1 }]);
+        ).toStrictEqual(
+            level === 'all' ? [{ ruleId: 'gspot/no-trivial-functions', messageId: 'trivial', line: 1, column: 1 }] : [],
+        );
     });
 });
 

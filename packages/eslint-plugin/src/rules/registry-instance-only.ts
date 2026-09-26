@@ -16,6 +16,7 @@ export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'reg
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Export one registry instance',
             example:
                 'Given a `Client` constructor, `export const client = new Client();` in `src/turn/client.ts` reports `registry`. Move that declaration and its required import to `src/turn/registry.ts`, then update consumers.',

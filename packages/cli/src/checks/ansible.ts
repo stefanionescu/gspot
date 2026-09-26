@@ -38,7 +38,13 @@ export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
-    const skipped = input.view.rulesOff(input.spec.name);
+    const skipped = [
+        ...input.view.rulesOff(input.spec.name),
+        'experimental',
+        ...(input.policyFiles.policy.level === 'all'
+            ? []
+            : ['name', 'var-naming', 'loop-var-prefix', 'key-order', 'fqcn', 'no-handler', 'no-relative-paths']),
+    ];
     const findings: Finding[] = [];
     for (const folder of folders) findings.push(...(await linted(input, folder, skipped)));
     return findings;

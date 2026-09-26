@@ -28,7 +28,7 @@ test('doctor coverage honors path exceptions and does not borrow syntax from ano
     expect(corrected.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('syntax');
 });
 
-test('doctor coverage excludes binary files and counts formatting only when its level enables it', async () => {
+test('doctor coverage excludes binary files and counts routine formatting at both levels', async () => {
     await using sandbox = await testdir();
     const policy = 'version = 1\nlevel = "recommended"\nconfigurations = ["bash"]\n';
     await createFileTree(sandbox.path, {
@@ -38,7 +38,7 @@ test('doctor coverage excludes binary files and counts formatting only when its 
     });
     const recommended = coverageReport(await openSession(sandbox.path));
     expect(recommended.unchecked.map((entry) => entry.path)).not.toContain('icon.png');
-    expect(recommended.partial.find((entry) => entry.path === 'source.sh')?.missing).toContain('format');
+    expect(recommended.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('format');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('recommended', 'all'));
     const all = coverageReport(await openSession(sandbox.path));
     expect(all.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('format');

@@ -6,6 +6,11 @@ title: Bash Operations
 
 # Bash Operations
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Module ownership across a script family, deployment and publishing pipelines, and CI scripts.
 Script structure and options are in the Bash file; commands, processes, and secrets in Bash Safety.
 

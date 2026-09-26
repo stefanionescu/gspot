@@ -2,6 +2,10 @@
 
 # Engineering Guidelines
 
+Selected level: `all`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.
+
+Guide requirements about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.
+
 Read `.gspot/rules/general/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read the guides for the files you change. A more specific layer wins over a general one.
 
 How to work here:

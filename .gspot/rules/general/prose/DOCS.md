@@ -6,6 +6,11 @@ title: Documentation
 
 # Documentation
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The documentation rules span six files. This one covers scope, standard, ownership, readers, the
 documentation set, topic types, and maintenance. Format covers Markdown, page structure, text
 formatting, lists, tables, and alerts. Content covers code examples, procedures, and links; Media covers interfaces, keyboard input,

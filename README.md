@@ -80,8 +80,10 @@ level = "recommended"
 
 <img src="docs/public/brand/diagrams/workflow.svg" alt="Choose policy, apply generated configuration, then run checks." width="720">
 
-`recommended` is the default. `all` adds further naming, ordering, and style checks. Mandatory
-trivial-file and trivial-function rules remain enabled at both levels. Change policy with
+`recommended` is the default: correctness, security, accessibility, type safety, dependency
+health, routine formatting, and declared project contracts. `all` adds stable conventions
+for naming, architecture, documentation, API style, ordering, and complexity. Neither
+level enables experimental or preview rules. Change policy with
 `gspot set` or `gspot ignore`; those commands apply their changes. Run `gspot apply` after
 editing `gspot.toml` directly. Do not edit generated files under `.gspot/`.
 

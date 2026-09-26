@@ -98,7 +98,7 @@ help = "Move the logic into a module under src and keep the literal in the confi
 name = "integrity/suppressions"
 title = "Suppressions"
 example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
-level = "all"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -154,7 +154,7 @@ help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooks
 name = "integrity/large-files"
 title = "Large files"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `over-limit`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."
-level = "all"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -324,7 +324,7 @@ summary = "Every implemented function with this many executable statements or fe
 name = "limits.file_size_kb"
 kind = "number"
 direction = "ceiling"
-default = 1024
+default_all = 1024
 summary = "The largest tracked file, in kilobytes, outside LFS, or a declaration."
 
 [[settings]]

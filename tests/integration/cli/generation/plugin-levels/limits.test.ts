@@ -18,7 +18,9 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
     const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
     const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
     for (const rule of rules)
-        expect(defect.flatMap((file) => file.messages).some((message) => message.ruleId === rule)).toBe(true);
+        expect(defect.flatMap((file) => file.messages).some((message) => message.ruleId === rule)).toBe(
+            level === 'all',
+        );
     const corrected = await eslint.lintText('export function count() { return 1; }\n', {
         filePath: 'sample.test.js',
     });
@@ -41,8 +43,8 @@ test.each(['recommended', 'all'])(
         for (const filePath of ['main.js', 'app/main.js']) {
             const defect = await eslint.lintText('export function start() { return launch(); }', { filePath });
             const rules = defect.flatMap((file) => file.messages).map((message) => message.ruleId);
-            expect(rules).toContain('gspot/no-trivial-files');
-            expect(rules).toContain('gspot/no-trivial-functions');
+            expect(rules.includes('gspot/no-trivial-files')).toBe(level === 'all');
+            expect(rules.includes('gspot/no-trivial-functions')).toBe(level === 'all');
             const corrected = await eslint.lintText(
                 'export function start() { const app = launch(); app.configure(); return app.run(); }',
                 { filePath },
@@ -72,7 +74,7 @@ test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit type
     const defect = await eslint.lintFiles(['value.ts']);
     expect(
         defect.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/types-placement'),
-    ).toMatchObject([{ severity: 2, line: 1, column: 8, messageId: 'aliasOutside' }]);
+    ).toMatchObject(level === 'all' ? [{ severity: 2, line: 1, column: 8, messageId: 'aliasOutside' }] : []);
     const corrected = await eslint.lintFiles(['contracts/value.ts']);
     expect(
         corrected.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/types-placement'),

@@ -54,7 +54,7 @@ code_files = ["**/*.vue"]
 name = "vue/eslint"
 title = "ESLint"
 example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
-level = "all"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]

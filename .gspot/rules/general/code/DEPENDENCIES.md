@@ -6,6 +6,11 @@ title: Dependencies
 
 # Dependencies
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## Adding one
 
 - Do not add a dependency for a one-line native API, a small local helper, or an array, object, or

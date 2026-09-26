@@ -6,6 +6,7 @@ export const requireServerOnly = createRule<[], 'missing'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'recommended',
             title: 'Mark server modules explicitly',
             example:
                 'A selected server module containing `export const secret = 1;` reports `missing`. With the `server-only` package installed, add `import "server-only";` before that declaration.',

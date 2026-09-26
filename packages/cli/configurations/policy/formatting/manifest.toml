@@ -135,7 +135,7 @@ target = ".prettierignore"
 name = "formatting/prettier"
 title = "Prettier"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
-level = "all"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
@@ -152,7 +152,7 @@ help = "Run gspot check --fix to format every file, or prettier --write on one f
 name = "formatting/editorconfig-checker"
 title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
-level = "all"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]

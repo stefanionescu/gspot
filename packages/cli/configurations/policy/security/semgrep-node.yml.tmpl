@@ -13,6 +13,7 @@ rules:
           cwe: ['CWE-94']
           category: security
 
+<% if (isAll) { %>
     - id: node-no-child-process-exec
       patterns:
           - pattern-either:
@@ -30,6 +31,7 @@ rules:
           cwe: ['CWE-78']
           category: security
 
+<% } %>
     - id: node-no-configured-require
       patterns:
           - pattern-either:

@@ -6,6 +6,11 @@ title: React Native
 
 # React Native
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 These rules cover React Native and Expo apps: components, lists, styles, navigation, native data, and releases.
 The React rules apply first. These add what a phone changes.
 

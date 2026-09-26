@@ -6,6 +6,11 @@ title: Next.js Security
 
 # Next.js Security
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Runtime boundaries, configuration, authorization, rich content, service workers, telemetry, and
 streaming endpoints. Routing, rendering, and caching rules are in the Next.js file.
 

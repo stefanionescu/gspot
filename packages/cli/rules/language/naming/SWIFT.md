@@ -6,6 +6,11 @@ title: Swift Naming
 
 # Swift Naming
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Swift naming follows Apple API Design Guidelines, Google Swift file guidance
 where useful, and the local quality rules. Optimize for call-site clarity.
 

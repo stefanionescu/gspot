@@ -1,7 +1,7 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { isUnderLfs } from '#cli/repository/file-classification.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { FILE_SIZE_KB_DEFAULT, KILOBYTE } from '#cli/constants/checks/repository.ts';
+import { KILOBYTE } from '#cli/constants/checks/repository.ts';
 
 /**
  * One finding per tracked file over `limits.file_size_kb` that is neither under LFS nor declared.
@@ -9,7 +9,8 @@ import { FILE_SIZE_KB_DEFAULT, KILOBYTE } from '#cli/constants/checks/repository
  * @returns the findings
  */
 export function largeFiles(input: EngineInput): Finding[] {
-    const limitKb = input.view.limit('file_size_kb') ?? FILE_SIZE_KB_DEFAULT;
+    const limitKb = input.view.limit('file_size_kb');
+    if (limitKb === undefined) return [];
     const isDeclared = pathMatcher(input.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
     if (input.repositoryFiles === undefined) throw new Error('Large-file validation requires once-only execution.');
     return input.repositoryFiles

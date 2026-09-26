@@ -6,6 +6,11 @@ title: Testing
 
 # Testing
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## Testing philosophy
 
 Tests exist to catch bugs. A test that cannot fail when someone introduces a bug is wasted code.

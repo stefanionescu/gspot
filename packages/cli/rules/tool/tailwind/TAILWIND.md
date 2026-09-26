@@ -6,6 +6,11 @@ title: Tailwind CSS
 
 # Tailwind CSS
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 - The theme is the token source. Colors, spacing, radii, fonts, and breakpoints are declared in
   the theme configuration and referenced by name. An arbitrary value (`w-[13px]`,
   `text-[#3b82f6]`) is a finding unless it carries a reason comment.

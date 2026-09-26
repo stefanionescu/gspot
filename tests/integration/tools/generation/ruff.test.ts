@@ -11,7 +11,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const defect = 'import pytest\n\n@pytest.fixture()\ndef example():\n    return 1\n';
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["python"]\n[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+            'version = 1\nconfigurations = ["python"]\n[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
         'tests/test_example.py': defect,
         'app/tests/test_example.py': defect,
     });
@@ -28,7 +28,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const root = parse(configs.find(({ path }) => path === '.gspot/config/ruff.toml')!.content);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
-    expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT']) } });
+    expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT001']) } });
     const run = (config: string, path: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,

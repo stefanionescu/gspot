@@ -223,7 +223,7 @@ test.each([
     async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n`,
             '.gitignore': '.gspot/\n',
             [path]: defect,
         });

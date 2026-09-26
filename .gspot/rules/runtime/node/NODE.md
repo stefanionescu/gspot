@@ -6,6 +6,11 @@ title: Node
 
 # Node
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Rules that hold because the code runs on Node, whatever language it is written in.
 
 ## Module resolution

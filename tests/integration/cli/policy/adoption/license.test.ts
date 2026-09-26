@@ -1,3 +1,4 @@
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { mkdirSync, symlinkSync } from 'node:fs';
@@ -6,7 +7,6 @@ import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
@@ -20,9 +20,7 @@ const tooling: ExistingTooling = {
     runner: 'none',
 };
 const scanner = join(import.meta.dir, '../../../../../node_modules/license-checker-rseidelsohn');
-const allowed = configurationManifests()
-    .get('licenses')!
-    .settings.find((setting) => setting.name === 'tools.licenses.licenses_allowed')!.default as string[];
+const allowed = ['MIT', 'ISC'];
 
 test.each(['root', 'nested'])(
     'license adoption at %s records native identities and refuses unresolved exclusions',
@@ -111,7 +109,7 @@ test.each(['root', 'nested'])(
     },
 );
 
-test.each(['MIT*;Public Domain', 'MIT OR ISC', 'MIT;ISC'])(
+test.each(['MIT*;Public Domain', 'MIT OR ISC', 'MIT;not-a-license'])(
     'license adoption retains unsupported allowance %s',
     async (allowance) => {
         await using sandbox = await testdir();

@@ -6,6 +6,11 @@ title: HTML Naming
 
 # HTML Naming
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 - File names are kebab-case and match the public route: `about-us.html`, `pricing/index.html`.
   Directory routes end in `index.html` in generated output.
 - Public routes are lowercase kebab-case path segments with no trailing slash ambiguity: one

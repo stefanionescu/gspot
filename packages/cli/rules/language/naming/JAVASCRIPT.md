@@ -6,6 +6,11 @@ title: JavaScript Naming
 
 # JavaScript Naming
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 JavaScript naming follows the same role, responsibility, and boundary principles
 as TypeScript. Use the JavaScript rules when editing `.js`, `.mjs`, `.cjs`, and
 plain JavaScript tooling files.

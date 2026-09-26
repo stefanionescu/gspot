@@ -4,7 +4,7 @@ templater = raw
 sql_file_exts = .sql,.pgsql,.psql
 max_line_length = <%= format.print_width %>
 large_file_skip_byte_limit = 0
-<% const off = rulesOff('sql/sqlfluff'); if (off.length > 0) { %>exclude_rules = <%= off.join(', ') %>
+<% const off = [...rulesOff('sql/sqlfluff'), ...(isAll ? [] : ["AL06", "AL07", "AM05", "AM09", "CV09", "CV11", "ST05", "ST07", "ST09"])]; if (off.length > 0) { %>exclude_rules = <%= off.join(', ') %>
 <% } %>
 [sqlfluff:indentation]
 indent_unit = <%= format.indent_style === 'tab' ? 'tab' : 'space' %>

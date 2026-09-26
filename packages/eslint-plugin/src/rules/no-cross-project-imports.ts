@@ -9,6 +9,7 @@ export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'esc
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Keep imports within project boundaries',
             example:
                 'With scopes `api` and `supabase`, an import of `../../supabase/src/a.js` from `api/src/b.ts` reports `escape`. Move shared behavior into a declared package dependency and import its package name. Relative imports within `api`, such as `../types/a.js`, remain in that scope.',

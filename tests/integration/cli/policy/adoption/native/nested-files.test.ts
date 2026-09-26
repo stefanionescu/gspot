@@ -36,7 +36,7 @@ test.each([
 test.each([
     ['gitleaks.toml', 'secrets', '[allowlist]\nregexes = ["example-token"]\n'],
     ['osv-scanner.toml', 'dependencies', '[[IgnoredVulns]]\nid = "GO-2022-0968"\n'],
-    ['.license-checker.json', 'licenses', '{"onlyAllow":"MIT"}\n'],
+    ['.license-checker.json', 'licenses', '{"onlyAllow":"MIT OR ISC"}\n'],
 ] as const)(
     'nested %s cannot silently widen settings to the whole repository',
     async (name, configuration, original) => {

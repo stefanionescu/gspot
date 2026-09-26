@@ -138,6 +138,7 @@ const pointerSchema = z
 
 // A syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
 const selectorSchema = z.strictObject({
+    level: z.enum(['recommended', 'all']),
     selector: z.string().min(1),
     message: z.string().min(1),
     files: z.array(z.string().min(1)).min(1).optional(),
@@ -277,6 +278,7 @@ const settingSchema = z.strictObject({
     kind: z.enum(['number', 'string', 'boolean', 'list', 'table']),
     direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'neutral', 'per-rule']),
     default: z.unknown().optional(),
+    default_all: z.unknown().optional(),
     summary: sentence,
     languages: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),

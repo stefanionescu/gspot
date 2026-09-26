@@ -102,7 +102,7 @@ const errorLevels = (rules) =>
 
 // One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
 // selectors join the base ones here, and each block below lists all that apply to its files.
-const BASE_SELECTORS = [
+const BASE_SELECTORS = <%= isAll %> ? [
         { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
         { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
         { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
@@ -115,11 +115,12 @@ const BASE_SELECTORS = [
         { selector: 'NewExpression[callee.name=/Error$/] > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
         { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
-];
+] : [];
 // The selectors the selected libraries add, grouped by the files each group reads: an absent files list means every code file.
 const FRAGMENT_SELECTORS = <%~ json(fragmentSelectors) %>;
 const librarySelectorBlocks = FRAGMENT_SELECTORS.map((group) => ({
-    files: group.files ?? CODE,
+    files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']),
+    ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`),
     rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] },
 }));
 
@@ -332,7 +333,7 @@ const importRules = {
 };
 
 const commentRules = {
-    '@eslint-community/eslint-comments/require-description': 'error',
+    '@eslint-community/eslint-comments/require-description': <%= policy.requireReasons ? "'error'" : "'off'" %>,
     '@eslint-community/eslint-comments/no-unused-disable': 'error',
 };
 
@@ -421,7 +422,7 @@ for (const entry of adopted) {
         entry.languageOptions.parser = await loadRegistration(entry.languageOptions.parser);
 }
 
-export default [
+const defaults = [
     { ignores: <%= json(ignoredPaths) %> },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },
@@ -435,12 +436,10 @@ export default [
         rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
-<% if (isAll) { %>    ...importStyleOverrides,
-<% } %>
+    ...importStyleOverrides,
     ...scopeRules,
     ...runtimeOverrides,
-<% if (isAll) { %>    ...boundaryConfigs,
-<% } %>
+    ...boundaryConfigs,
 <%~ fragments %>
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
@@ -465,9 +464,16 @@ export default [
 <% if (restricted.length > 0) { %>    { files: CODE, rules: { 'no-restricted-imports': ['error', { paths: <%= json(restricted) %> }] } },
 <% } %>    { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
+    { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
+];
+const ruleLevels = <%~ json(eslintRuleLevels) %>;
+const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
+    ...entry,
+    rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
+        [name, !<%= isAll %> && ruleLevels[name] === 'all' ? 'off' : value])),
+});
+export default [...selectedDefaults,
 <% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
     <%= json(entries) %>,
-<% } } %>    { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
-    ...adopted,
-    ...policyRules,
-];
+<% } } %>
+...adopted, ...policyRules];

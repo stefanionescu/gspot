@@ -29,6 +29,7 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Avoid repeated file prefixes',
             example:
                 'Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` report a shared `asset` prefix at the default threshold. Move them into `asset/` as `card.ts`, `list.ts`, and `row.ts`, and update every import.',

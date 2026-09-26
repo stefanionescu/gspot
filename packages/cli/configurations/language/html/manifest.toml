@@ -49,7 +49,7 @@ header = false
 name = "html/html-validate"
 title = "Validate HTML"
 example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
-level = "all"
+level = "recommended"
 stage = "commit"
 command = ["html-validate", "--config", "{config:html-validate-templates}", "--formatter", "json", "{files}"]
 coverage = ["syntax", "style", "accessibility"]

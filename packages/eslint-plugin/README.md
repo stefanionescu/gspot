@@ -19,17 +19,17 @@ import gspot from '@gspot/eslint-plugin';
 export default [gspot.configs.recommended];
 ```
 
-`recommended` enables four rules at error severity:
+`recommended` enables two rules at error severity:
 
 - `gspot/no-client-environment`
 - `gspot/no-duplicate-barrel-exports`
-- `gspot/no-trivial-files`
-- `gspot/no-trivial-functions`
 
 Use `gspot.configs.all` in place of `recommended` to include import, layout, and ordering
 checks. It includes every recommended rule. Neither configuration enables
 `require-server-only`, `max-barrel-reexports`, or `no-reexports-outside-index`.
-Select server files and alternative re-export policies explicitly.
+Select server files and alternative re-export policies explicitly. `require-server-only`
+is classified as recommended but needs an explicit file target. Trivial-file and
+trivial-function restrictions belong to `all`. Both presets select stable rules only.
 
 ## Correct a private environment read
 

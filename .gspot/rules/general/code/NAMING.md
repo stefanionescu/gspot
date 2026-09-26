@@ -6,6 +6,11 @@ title: Naming
 
 # Naming
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The naming rules span two files: this one (principles, vocabulary, functions, booleans) and Naming
 Files (casing across languages, files and directories, boundaries and external names, tests).
 

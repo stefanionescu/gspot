@@ -6,6 +6,11 @@ title: Documentation Format
 
 # Documentation Format
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Portable Markdown, page structure, text formatting, lists, tables, and alerts. The formatter and
 the Markdown linter own mechanical layout; these rules say what to write.
 

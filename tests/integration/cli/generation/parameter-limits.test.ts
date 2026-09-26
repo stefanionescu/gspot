@@ -23,7 +23,7 @@ for (const language of ['javascript', 'typescript']) {
             .join('\n');
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${limits}`,
+            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}"]\n${limits}`,
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,

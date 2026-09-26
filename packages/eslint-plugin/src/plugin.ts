@@ -65,7 +65,12 @@ const allRules = Object.fromEntries(
 
 const recommendedRules = Object.fromEntries(
     Object.entries(rules)
-        .filter(([, rule]) => rule.meta.docs?.level === 'recommended')
+        .filter(
+            ([name, rule]) =>
+                rule.meta.docs?.level === 'recommended' &&
+                name !== 'require-server-only' &&
+                !INDEX_ONLY_RULES.has(name),
+        )
         .map(([name]) => [`gspot/${name}`, 'error' as const]),
 );
 

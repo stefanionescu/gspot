@@ -1,3 +1,5 @@
+import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
+import { asRecord, policyTables, policyValue } from '#cli/policy/settings.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
@@ -36,10 +38,49 @@ export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
 export function completenessProblems(policy: Policy): PolicyProblem[] {
     const manifests = configurationManifests();
     const problems: PolicyProblem[] = [];
+    for (const { table } of policyTables(policy, undefined).concat(
+        Object.entries(policy.scopeTables).map(([name, table]) => ({ name, table })),
+    )) {
+        const selected = policyValue(table, 'tools.ruff.select')?.value;
+        if (Array.isArray(selected))
+            for (const code of selected) {
+                if (typeof code === 'string' && RUFF_PREVIEW_RULES.has(code))
+                    problems.push({
+                        path: ['tools', 'ruff', 'select'],
+                        message: `Ruff preview rule ${code} is unsupported at both levels.`,
+                    });
+            }
+        const extra = asRecord(table.tools?.['ruff']?.extra);
+        const lint = asRecord(extra?.['lint']);
+        for (const value of [extra?.['select'], extra?.['extend-select'], lint?.['select'], lint?.['extend-select']]) {
+            if (Array.isArray(value) && value.some((code) => typeof code === 'string' && RUFF_PREVIEW_RULES.has(code)))
+                problems.push({
+                    path: ['tools', 'ruff', 'extra'],
+                    message: 'Explicit Ruff preview rule selection is unsupported at both levels.',
+                });
+        }
+        if (table.tools?.['basedpyright']?.extra?.['enableExperimentalFeatures'] === true)
+            problems.push({
+                path: ['tools', 'basedpyright', 'extra'],
+                message: 'Experimental Basedpyright features are unsupported at both levels.',
+            });
+        if (
+            extra?.['preview'] === true ||
+            asRecord(extra?.['lint'])?.['preview'] === true ||
+            asRecord(extra?.['format'])?.['preview'] === true
+        )
+            problems.push({
+                path: ['tools', 'ruff', 'extra'],
+                message: 'Ruff preview activation is unsupported at both levels.',
+            });
+    }
     const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
     const scopeSurfaces = new Map(
-        policy.scopes.map((scope) => [scope.path, exposedSettings(selectForScope(policy, scope.path, manifests))]),
+        policy.scopes.map((scope) => [
+            scope.path,
+            exposedSettings(selectForScope(policy, scope.path, manifests), policy.level),
+        ]),
     );
     const selectedNames = new Set(
         [...rootSelected, ...policy.scopes.flatMap((scope) => selectForScope(policy, scope.path, manifests))].flatMap(
@@ -56,7 +97,7 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
         ...policy.rules.exclude.flatMap((entry, index) =>
             excludeProblems([entry]).map((message) => ({ path: ['rules', 'exclude', index], message })),
         ),
-        ...validateAgainstSurface(exposedSettings(rootSelected), policy, scopeSurfaces),
+        ...validateAgainstSurface(exposedSettings(rootSelected, policy.level), policy, scopeSurfaces),
     );
     return problems;
 }

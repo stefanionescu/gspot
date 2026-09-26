@@ -50,28 +50,32 @@ help = "Correct failed tests and cover the reported branches, functions, lines, 
 name = "tools.jest.coverage_lines"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The minimum percentage of source lines covered by tests."
 
 [[settings]]
 name = "tools.jest.coverage_branches"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The minimum percentage of source branches covered by tests."
 
 [[settings]]
 name = "tools.jest.coverage_functions"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The minimum percentage of source functions covered by tests."
 
 [[settings]]
 name = "tools.jest.coverage_statements"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The minimum percentage of source statements covered by tests."
 
 [[settings]]

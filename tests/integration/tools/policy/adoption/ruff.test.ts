@@ -101,7 +101,7 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
         'backend/ruff.toml': original,
         'backend/ignored.py': 'import os, sys\n',
         'backend/kept.py': 'import os\n',
-        'backend/statements.py': 'if True: print("one"); print("two")\n',
+        'backend/statements.py': 'values = []\nif True: values.append(1); values.append(2)\n',
     });
     const run = (config: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', ...paths], {
@@ -156,7 +156,7 @@ test('Ruff inheritance retains native merges and each parent selector directory'
         'backend/parent.py': 'import os\n',
         'backend/ignored.py': 'import os\n',
         'backend/tests/example.py': 'import os, sys\n',
-        'backend/statements.py': 'if True: print("one"); print("two")\n',
+        'backend/statements.py': 'values = []\nif True: values.append(1); values.append(2)\n',
     });
     const run = (config?: string) =>
         Bun.spawnSync(

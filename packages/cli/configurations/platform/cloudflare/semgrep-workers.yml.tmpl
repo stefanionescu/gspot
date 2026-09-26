@@ -27,6 +27,7 @@ rules:
       include:
         - '/shared/**'
 
+<% if (isAll) { %>
   - id: workers-no-wildcard-cors-origin
     pattern-either:
       - pattern: |
@@ -42,6 +43,7 @@ rules:
       include:
         - '/functions/**'
 
+<% } %>
   - id: workers-no-unvalidated-request-json
     patterns:
       - pattern: await $REQUEST.json()

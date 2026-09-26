@@ -11,7 +11,7 @@ extensions = [".plist"]
 
 [[tools]]
 name = "semgrep"
-suppression = {marker = "\\bnosemgrep\\b", reason = "(?<reason>never)", forbidden = true}
+suppression = {marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true}
 version = "1.178.0"
 floor = "1.100.0"
 pypi = "semgrep"

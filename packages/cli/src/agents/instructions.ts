@@ -37,12 +37,25 @@ function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
  * @param manifests the selected configurations
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
-export function managedBlock(rules: Policy['rules'], manifests: Manifest[]): string {
+export function managedBlock(
+    rules: Policy['rules'],
+    manifests: Manifest[],
+    level: Policy['level'] = 'recommended',
+): string {
     const files = selectRuleFiles(rules, manifests);
     const index = files.length > 0 ? indexLines(rules, files) : [];
     const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
-    return ['# Engineering Guidelines', '', ...index, closing].join('\n');
+    return [
+        '# Engineering Guidelines',
+        '',
+        `Selected level: \`${level}\`. Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.`,
+        '',
+        'Guide requirements about vocabulary, architecture, naming, documentation coverage, declaration order, API style, and complexity apply only at all or when the project explicitly opts into them. Neither level enables experimental or preview lint rules.',
+        '',
+        ...index,
+        closing,
+    ].join('\n');
 }
 
 /**

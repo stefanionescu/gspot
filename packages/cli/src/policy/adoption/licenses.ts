@@ -5,7 +5,6 @@ import { licenseResponse } from '#cli/evaluation/protocol.ts';
 import { asList, asStrings } from '#cli/policy/adoption/source.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
 import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
@@ -24,15 +23,6 @@ async function carryLicenses(
 ): Promise<void> {
     const parsed = source.parsed;
     const allowed = namesOf(parsed['onlyAllow']);
-    const defaults = z.array(z.string()).parse(
-        configurationManifests()
-            .get('licenses')
-            ?.settings.find((setting) => setting.name === 'tools.licenses.licenses_allowed')?.default,
-    );
-    if (allowed.length > 0 && defaults.some((license) => !allowed.includes(license)))
-        throw new Error(
-            `${path}: the license allowlist is narrower than the shipped policy and requires explicit conversion.`,
-        );
     for (const license of allowed) {
         try {
             const parsed = parseLicense(license);

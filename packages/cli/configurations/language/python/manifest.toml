@@ -126,7 +126,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 name = "python/ruff-format"
 title = "Ruff format"
 example = "The Python assignment `value=1` differs from Ruff formatting. Format the file so the assignment becomes `value = 1`, then rerun."
-level = "all"
+level = "recommended"
 stage = "commit"
 command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
 findings_exit_codes = [1]
@@ -152,7 +152,7 @@ findings_exit_codes = [1]
 claims = {extensions = [".py", ".pyi"]}
 coverage = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
-summary = "Type checks the project with standard rules at recommended and all rules at all."
+summary = "Type checks the project with stable diagnostics and adds annotation conventions at all."
 why = "A type error found here is a crash that never reaches a user."
 help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
@@ -177,7 +177,7 @@ help = "Move the import to the side the contract allows, or change the contract 
 name = "python/pydoclint"
 title = "Pydoclint"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
-level = "all"
+level = "recommended"
 stage = "commit"
 command = ["pydoclint", "--allow-init-docstring", "true", "--quiet", "{files}"]
 claims = {extensions = [".py"]}
@@ -207,11 +207,11 @@ help = "Declare the dependency, or remove the one nothing imports. Turn one rule
 name = "python/vulture"
 title = "Vulture"
 example = "An unused `import colorsys` reports `unused import 'colorsys'`. Remove the unused import and rerun. Dynamically used names need exact entries in the configured allowlist."
-level = "all"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
-command = ["vulture", ".", "--min-confidence", "80", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
+command = ["vulture", ".", "--min-confidence", "{setting:tools.vulture.min_confidence}", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
 findings_exit_codes = [3]
 claims = {extensions = [".py"]}
 coverage = ["structure"]
@@ -299,7 +299,7 @@ help = "Move one job of the function into a function of its own."
 name = "python/trivial-function"
 title = "Trivial function"
 example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
-level = "recommended"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -494,3 +494,11 @@ summary = "Names vulture treats as used, such as functions a framework calls."
 
 [rule_files]
 language = ["language/PYTHON.md", "language/python/TYPING.md", "language/python/DESIGN.md", "language/python/FLOW.md", "language/python/PACKAGING.md", "language/naming/PYTHON.md"]
+
+[[settings]]
+name = "tools.vulture.min_confidence"
+kind = "number"
+direction = "ceiling"
+default = 100
+default_all = 80
+summary = "The minimum confidence percentage for reporting unused Python code."

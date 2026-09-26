@@ -104,7 +104,7 @@ function blockOutputs(
         style: 'hash',
     });
     if (!policy.rules.install) return;
-    const block = managedBlock(policy.rules, manifests);
+    const block = managedBlock(policy.rules, manifests, policy.level);
     for (const path of agentFiles(root, policy.rules.agents)) {
         if (path === '.cursor/rules/gspot.mdc') {
             out.files.push({

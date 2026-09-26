@@ -6,6 +6,11 @@ title: Playwright
 
 # Playwright
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 ## Tests
 
 - One test per user journey. A test that covers a screen's every control is several tests.

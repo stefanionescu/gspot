@@ -9,6 +9,7 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Limit barrel exports',
             example:
                 'With `max: 3`, four re-export statements in `src/index.ts` report `tooMany`. Remove an unnecessary re-export and update its consumers to import from the declaring module. Three remaining re-export statements meet that limit.',

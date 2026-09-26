@@ -88,7 +88,7 @@ test.each(
         const prefix = `import { describe, test, expect } from '${globalPackage}';\n`;
         const failed = await eslint.lintText(prefix + planted, { filePath: 'sample.test.js' });
         expect(failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === `jest/${rule}`)).toMatchObject(
-            [{ line: 2, severity: 2 }],
+            level === 'recommended' && rule === 'prefer-strict-equal' ? [] : [{ line: 2, severity: 2 }],
         );
         const fixed = await eslint.lintText(prefix + corrected, { filePath: 'sample.test.js' });
         expect(

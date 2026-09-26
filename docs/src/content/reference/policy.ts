@@ -47,7 +47,9 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
 }
 
 function comparable(setting: SettingSpec): Record<string, unknown> {
-    return Object.fromEntries(Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'detect'));
+    return Object.fromEntries(
+        Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'default_all' && key !== 'detect'),
+    );
 }
 
 /**
@@ -91,7 +93,12 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
             throw new Error(
                 `Conflicting setting definition: ${setting.name} (${previous.owners.join(', ')} and ${owner}).`,
             );
-        const variant = variants.find((entry) => isDeepStrictEqual(entry.setting.default, setting.default));
+        const variant = variants.find((entry) =>
+            isDeepStrictEqual(
+                [entry.setting.default, entry.setting.default_all],
+                [setting.default, setting.default_all],
+            ),
+        );
         if (variant === undefined) variants.push({ setting, owners: [owner] });
         else if (!variant.owners.includes(owner)) variant.owners.push(owner);
     }
@@ -104,7 +111,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
             `\`${setting.name}\``,
             setting.kind,
             setting.direction,
-            setting.default === undefined ? '' : `\`${cell(JSON.stringify(setting.default))}\``,
+            `recommended: \`${cell(JSON.stringify(setting.default) ?? 'unset')}\`; all: \`${cell(JSON.stringify(setting.default_all ?? setting.default) ?? 'unset')}\``,
             cell(setting.summary),
             owners.join(', '),
         ]);
@@ -115,7 +122,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
 
 ## Scope and precedence
 
-Configuration defaults apply first. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected configuration determines which tool settings are available in each scope.
+Configuration defaults apply first. At all, a level-specific default replaces the recommended default when provided. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected configuration determines which tool settings are available in each scope.
 
 Use \`gspot set <key> <value> --scope <path>\` to write an existing scope. Without \`--scope\`, the command writes the root. \`--default\` removes a written override; an inherited value can still apply. Integration settings such as hooks, CI, rules, and runner configuration belong to the repository root. See [configuration fields](/reference/configuration/) for the fields accepted inside a scope.
 

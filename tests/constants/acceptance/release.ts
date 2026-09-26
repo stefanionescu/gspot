@@ -27,8 +27,8 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
         assert.deepEqual(layout[0].messages.filter(({ ruleId }) => ruleId === 'gspot/private-before-public').map(({ ruleId, line }) => ({ ruleId, line })), level === 'recommended' ? [] : [{ ruleId: 'gspot/private-before-public', line: 2 }]);
         const forwarding = await eslint.lintText('function forward(value) { return build(value); }\n', { filePath: 'example.js' });
         assert.equal(forwarding.length, 1);
-        assert.deepEqual(forwarding[0].messages.map(({ ruleId }) => ruleId).sort(), ['gspot/no-trivial-files', 'gspot/no-trivial-functions']);
-        assert.equal(forwarding[0].messages.find(({ ruleId }) => ruleId === 'gspot/no-trivial-functions').message, 'This function has 1 executable statements, at most 2. Inline it or explain its required API with a narrow suppression.');
+        assert.deepEqual(forwarding[0].messages.map(({ ruleId }) => ruleId).sort(), level === 'all' ? ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] : []);
+        if (level === 'all') assert.equal(forwarding[0].messages.find(({ ruleId }) => ruleId === 'gspot/no-trivial-functions').message, 'This function has 1 executable statements, at most 2. Inline it or explain its required API with a narrow suppression.');
     }
     const barrel = new ESLint({ overrideConfigFile: true, overrideConfig: [{
         plugins: { gspot: published }, rules: { 'gspot/no-duplicate-barrel-exports': 'error' },

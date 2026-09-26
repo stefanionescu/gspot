@@ -6,6 +6,7 @@ export const noReexportsOutsideIndex = createRule<[], 'outsideIndex'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'No reexports outside index',
             example:
                 'The statement `export { b } from "./b";` in `src/c.ts` reports `outsideIndex`. Remove it and import `b` directly from its owner at each consumer. If the project explicitly uses an index contract, re-exports in `src/index.ts` are accepted by this rule.',

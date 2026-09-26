@@ -17,6 +17,7 @@ export const noExportedAliasConstants = createRule<[], 'alias'>({
     meta: {
         type: 'suggestion',
         docs: {
+            level: 'all',
             title: 'No exported alias constants',
             example:
                 'The declaration `export const a = b;` reports `alias`. Remove `a` and update its consumers to use `b` from its owner. A declaration that owns a value, such as `export const a = 1;`, does not report this finding.',

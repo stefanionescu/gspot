@@ -80,6 +80,7 @@ rules:
           cwe:
               - CWE-319
           category: security
+<% if (isAll) { %>
     - id: ios-unsafe-pointer-cast
       pattern-either:
           - pattern: UnsafeRawPointer(...)
@@ -95,6 +96,7 @@ rules:
           cwe:
               - CWE-787
           category: security
+<% } %>
     - id: ios-weak-hash-algorithm
       pattern-either:
           - pattern: Insecure.MD5
@@ -121,6 +123,7 @@ rules:
           cwe:
               - CWE-919
           category: security
+<% if (isAll) { %>
     - id: ios-wkwebview-javascript-enabled
       pattern: |
           $CONFIG.preferences.javaScriptEnabled = true
@@ -134,6 +137,7 @@ rules:
           cwe:
               - CWE-79
           category: security
+<% } %>
     - id: ios-log-sensitive-data
       patterns:
           - pattern-either:

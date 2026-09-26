@@ -26,6 +26,7 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [[configs.selectors]]
+level = "all"
 selector = "TaggedTemplateExpression[tag.name='sql']"
 message = "Raw SQL skips the types of the schema. Use the query builder, or allow the path under tools.drizzle.raw_sql_allowed with a reason."
 allowed = "tools.drizzle.raw_sql_allowed"
@@ -34,7 +35,7 @@ allowed = "tools.drizzle.raw_sql_allowed"
 name = "drizzle/relations-complete"
 title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
-level = "recommended"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "drizzle-relations"

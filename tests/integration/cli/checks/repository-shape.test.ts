@@ -35,7 +35,7 @@ describe('the repository-shape analyses', () => {
         const found = suppressions(observation);
         expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
             'a.ts:2 eslint-no-reason',
-            'b.sh:2 semgrep',
+            'b.sh:2 semgrep-no-reason',
         ]);
     });
 

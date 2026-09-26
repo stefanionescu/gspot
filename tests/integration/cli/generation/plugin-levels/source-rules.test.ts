@@ -69,7 +69,7 @@ test.each(['recommended', 'all'])(
         const planted = await eslint.lintFiles(['client.ts']);
         expect(
             planted.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jsdoc/no-types'),
-        ).toMatchObject([{ line: 3 }, { line: 4 }]);
+        ).toMatchObject(level === 'all' ? [{ line: 3 }, { line: 4 }] : []);
         const corrected = await eslint.lintText(
             description.replace('{string} ', '').replace('{number} ', '') + typescript,
             { filePath: 'client.ts' },

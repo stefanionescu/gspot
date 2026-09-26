@@ -32,10 +32,10 @@ test.each(['recommended', 'all'])('Swift documentation comment style has native 
         );
     await generate();
     const broken = await native();
-    expect(broken.code, broken.stdout + broken.stderr).toBe(2);
-    expect(JSON.parse(broken.stdout)).toStrictEqual([
-        containing({ rule_id: 'doc_comment_style', line: 1, character: 1 }),
-    ]);
+    expect(broken.code, broken.stdout + broken.stderr).toBe(level === 'all' ? 2 : 0);
+    expect(JSON.parse(broken.stdout)).toStrictEqual(
+        level === 'all' ? [containing({ rule_id: 'doc_comment_style', line: 1, character: 1 })] : [],
+    );
     // The documentation style rule is on at the all level alone, so the CLI reports it there and passes otherwise.
     const cli = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
     const docComment = containing({ rule: 'doc_comment_style', file: 'Value.swift', line: 1, column: 1 });

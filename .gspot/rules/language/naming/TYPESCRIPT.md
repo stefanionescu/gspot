@@ -6,6 +6,11 @@ title: TypeScript Naming
 
 # TypeScript Naming
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 TypeScript naming follows the project rules here. Google TypeScript guidance is
 a strong default for many language choices. The rules below deliberately override some of it, and
 say so where they do.

@@ -199,6 +199,6 @@ Harper.OkToOkay = NO
 Harper.MoreAdjective2 = NO
 # "it reports that an inflected form exists, which is not an error"
 Harper.MoreAdjective4 = NO
-<% } else { for (const style of prose.styles) { if (style !== 'dates') { %>
+<% } else { for (const style of prose.styles) { if (!['dates', 'links', 'alt-text'].includes(style)) { %>
 gspot.<%= style %> = NO
 <% } } } %>

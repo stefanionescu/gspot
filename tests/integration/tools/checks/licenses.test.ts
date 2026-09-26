@@ -31,7 +31,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n',
         'pyproject.toml':
             '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
     });
@@ -65,14 +65,14 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\nconfigurations = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
+        'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT');
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({ rule: 'license', message: textContaining('exception no longer holds') }),
     ]);
-    await Bun.write(join(root, 'gspot.toml'), 'version = 1\nconfigurations = ["licenses"]\n');
+    await Bun.write(join(root, 'gspot.toml'), 'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n');
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await writeLicense('MIT-0');
     expect(await licensesPackages(await input(root))).toStrictEqual([
@@ -80,7 +80,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
+        'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
 });

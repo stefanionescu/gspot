@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { dirname } from 'node:path';
 import { osvImporter } from '#cli/policy/adoption/osv.ts';
-import { ruffImporter } from '#cli/policy/adoption/ruff.ts';
+import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
 import { typosImporter } from '#cli/policy/adoption/typos.ts';
 import { collectEslint } from '#cli/policy/adoption/eslint.ts';
 import { appendSetting } from '#cli/policy/adoption/results.ts';
@@ -38,6 +38,7 @@ function assertShellcheckSupported(source: CarrySource, path: string): void {
 
 // Refuses a configuration the tool's importer cannot carry in full.
 function assertSupported(source: CarrySource, tool: string, path: string): void {
+    if (tool === 'ruff') assertStableRuff(source, path);
     if (tool === 'shellcheck') assertShellcheckSupported(source, path);
     else assertImportable(source, tool, path);
 }
@@ -130,6 +131,7 @@ async function carryOwned(root: string, entry: Owned, lists: CarriedConfiguratio
         const source = parseCarrySource(observed, tool, path, selectorOf(entry));
         await carryFrom(source, { tool, path, lists, root, reader: carries, check });
     } catch (error) {
+        if (error instanceof ExperimentalRuffError) throw error;
         lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
         return;
     }

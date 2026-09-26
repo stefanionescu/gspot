@@ -58,7 +58,8 @@ test('Ruff selects the families the test runner and the framework declare, and i
     expect(plain.select).not.toContain('FAST');
     expect(plain['per-file-ignores']).toBeUndefined();
     const tested = await ruffLint('version = 1\nconfigurations = ["python", "pytest"]\n');
-    expect(tested.select.filter((family) => family === 'PT')).toStrictEqual(['PT']);
+    expect(tested.select).toContain('PT009');
+    expect(tested.select).not.toContain('PT001');
     expect(tested['per-file-ignores']).toStrictEqual({
         '**/tests/**': ['S101', 'ARG', 'PLR2004'],
         '**/test_*.py': ['S101', 'ARG', 'PLR2004'],
@@ -66,7 +67,7 @@ test('Ruff selects the families the test runner and the framework declare, and i
         '**/conftest.py': ['S101', 'ARG', 'PLR2004'],
     });
     const served = await ruffLint('version = 1\nconfigurations = ["python", "fastapi"]\n');
-    expect(served.select).toContain('FAST');
+    expect(served.select).toContain('FAST003');
     expect(served['per-file-ignores']).toBeUndefined();
 });
 

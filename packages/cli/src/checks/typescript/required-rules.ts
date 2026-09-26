@@ -1,3 +1,4 @@
+import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
@@ -10,7 +11,15 @@ function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
     const required = new Map<string, Set<string>>();
     for (const manifest of selected)
         for (const [ending, rules] of Object.entries(manifest.required_rules))
-            required.set(ending, new Set([...(required.get(ending) ?? []), ...rules]));
+            required.set(
+                ending,
+                new Set([
+                    ...(required.get(ending) ?? []),
+                    ...rules.filter(
+                        (rule) => input.policyFiles.policy.level === 'all' || ESLINT_RULE_LEVELS[rule] !== 'all',
+                    ),
+                ]),
+            );
     return required;
 }
 

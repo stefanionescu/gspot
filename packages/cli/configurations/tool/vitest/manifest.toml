@@ -56,28 +56,32 @@ summary = "The Vitest configuration the coverage run reads, relative to the scop
 name = "tools.vitest.coverage_lines"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The smallest share of lines the tests cover, out of 100."
 
 [[settings]]
 name = "tools.vitest.coverage_branches"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The smallest share of branches the tests cover, out of 100."
 
 [[settings]]
 name = "tools.vitest.coverage_functions"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The smallest share of functions the tests cover, out of 100."
 
 [[settings]]
 name = "tools.vitest.coverage_statements"
 kind = "number"
 direction = "floor"
-default = 80
+default = 0
+default_all = 80
 summary = "The smallest share of statements the tests cover, out of 100."
 
 [[settings]]

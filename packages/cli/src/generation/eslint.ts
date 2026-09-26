@@ -57,13 +57,14 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
  * @param scopes the resolved scopes, in any order
  * @returns one block per scope and language, shallowest scope first
  */
-export function structuralRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
+export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
     const blocks: EslintRuleBlock[] = [];
     for (const selection of scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {
         for (const [language, pattern] of [
             ['javascript', '**/*.{js,mjs,cjs,jsx}'],
             ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte}'],
         ] as const) {
+            if (policy.level !== 'all') continue;
             const maxStatements =
                 selection.view.limit('trivial_statements', language) ?? selection.view.limit('trivial_statements');
             blocks.push({

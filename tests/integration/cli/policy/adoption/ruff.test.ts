@@ -103,3 +103,16 @@ test('overlapping Ruff configurations cannot turn a parent exception into a chil
     expect(await Bun.file(join(sandbox.path, 'ruff.toml')).text()).toBe('[lint]\nignore = ["F401"]\n');
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe('[lint]\nignore = ["E401"]\n');
 });
+
+test.each(['preview = true\n', '[lint]\npreview = true\n', '[format]\npreview = true\n'])(
+    'Ruff adoption refuses experimental activation without changing the source: %s',
+    async (original) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'backend/ruff.toml': original });
+        await expect(collectCarried(sandbox.path, tooling, new Set(['python']), [])).rejects.toThrow(
+            'preview activation',
+        );
+        expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
+        expect(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).exists()).toBe(false);
+    },
+);

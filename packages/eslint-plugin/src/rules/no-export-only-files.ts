@@ -17,6 +17,7 @@ export const noExportOnlyFiles = createRule<[], 'exportOnly'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Keep implementation with exports',
             example:
                 'A `src/b.ts` containing only `export * from "./a";` reports `exportOnly`. Update consumers to import from `a.ts`, then delete `b.ts`. Do not add unrelated code to keep the forwarding file.',

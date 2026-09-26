@@ -7,6 +7,7 @@ export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'b
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'No harness barrel imports',
             example:
                 'With `barrels: ["@tests/harness"]`, importing `a` from `@tests/harness` inside `tests/harness/b.ts` reports `barrel`. Import it from its owner with `import { a } from "@tests/harness/a.js";`.',

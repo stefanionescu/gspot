@@ -404,7 +404,9 @@ export const rootSettingSchemas = {
     level: z
         .enum(['recommended', 'all'])
         .default('recommended')
-        .describe('Recommended runs defect checks. All also runs style and layout checks.'),
+        .describe(
+            'Recommended includes correctness, security, accessibility, type safety, routine formatting, and declared contracts. All adds stable conventions. Neither enables experimental rules.',
+        ),
     require_reasons: flag.default(false).describe('Require a reason for ignores and loosened settings.'),
     extra_checks: textList.default([]).describe('Checks at level all to run individually at level recommended.'),
     exclude: textList.default([]).describe('Paths and directory patterns excluded before reading source content.'),

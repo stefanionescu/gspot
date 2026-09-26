@@ -6,6 +6,11 @@ title: Next.js
 
 # Next.js
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 The Next.js rules span two files: this one (application rules, data access and caching) and
 Next.js Security (runtime boundaries, configuration, authorization, rendering user content, service
 workers, telemetry, streaming).

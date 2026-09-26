@@ -6,6 +6,11 @@ title: Documentation Surfaces
 
 # Documentation Surfaces
 
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
 Command-line interfaces, APIs, libraries, configuration, environment variables, architecture,
 contributor guides, troubleshooting, logs, audit events, and release notes.
 

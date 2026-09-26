@@ -242,13 +242,17 @@ export function settingValue(
     if (!match) return undefined;
     const { spec } = match;
     const shipped = surface.defaults.get(spec.name) ?? surface.defaults.get(key);
+    const layers = policyTables(policy, scope);
+    const declaredLicenses =
+        key === 'tools.licenses.licenses_allowed' &&
+        layers.some((layer) => policyValue(layer.table, key) !== undefined);
     const start: SettingState = {
-        value: shipped?.value,
+        value: declaredLicenses ? [] : shipped?.value,
         source: shipped ? `configuration ${shipped.configuration}` : 'unset',
         reason: undefined,
     };
     const candidates = match.language === undefined ? [key] : [spec.name, key];
-    const { value, source, reason } = applyLayers(spec, key, start, policyTables(policy, scope), candidates);
+    const { value, source, reason } = applyLayers(spec, key, start, layers, candidates);
     return {
         key,
         spec,

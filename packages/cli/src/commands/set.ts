@@ -190,7 +190,7 @@ export function registerSet(program: Command): void {
         .description('Write one setting; the key is the dotted path gspot list settings prints')
         .addHelpText(
             'after',
-            '\nEffects:\nValidates and writes the setting to gspot.toml, then applies generated configuration. --scope writes to an existing scope. Lists append by default; --replace replaces the written list and --remove removes written entries. --default deletes the written key so inherited or shipped values apply. It does not install tools.\n\nExit codes:\n0: the setting change was applied. 2: invalid input or inability to complete the request.\n\nExample:\ngspot set level all',
+            '\nEffects:\nValidates and writes the setting to gspot.toml, then applies generated configuration. --scope writes to an existing scope. Lists append by default; --replace replaces the written list and --remove removes written entries. --default deletes the written key so inherited or shipped values apply. It does not install tools.\n\nLevels:\nrecommended (default) enforces correctness, security, accessibility, type safety, dependency health, routine formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level enables experimental or preview rules.\n\nExit codes:\n0: the setting change was applied. 2: invalid input or inability to complete the request.\n\nExample:\ngspot set level all',
         )
         .option('--reason <text>', 'Optional explanation; require_reasons makes it required for loosening changes')
         .option('--scope <path>', 'Write into a scope table instead of the root')

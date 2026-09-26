@@ -26,13 +26,24 @@ function fragmentsOf(scopes: ScopeSelection[], selection: ScopeSelection, owner:
 }
 
 // The rendered text of every fragment that has a template.
-function renderedFragments(fragments: Fragment[], inputs: TemplateInputs): string {
+function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes: ScopeSelection[]): string {
     return fragments
-        .flatMap(({ manifest, config }) =>
-            config.template === undefined
-                ? []
-                : [eta.renderString(readAsset(`${manifest.dir}/${config.template}`), inputs)],
-        )
+        .flatMap(({ manifest, config }) => {
+            if (config.template === undefined) return [];
+            const source = readAsset(`${manifest.dir}/${config.template}`);
+            if (!config.target.endsWith('eslint.config.mjs')) return [eta.renderString(source, inputs)];
+            return scopes
+                .filter((scope) => scope.selected.includes(manifest))
+                .map((selection) => {
+                    const rendered = eta.renderString(source, { ...inputs, ...selection.view });
+                    const scope = selection.scope.path;
+                    const children = scopes
+                        .map((entry) => entry.scope.path)
+                        .filter((path) => path !== scope && (scope === '' || path.startsWith(`${scope}/`)));
+                    const pattern = scope === '' ? '**/*' : `${scope}/**/*`;
+                    return `...[${rendered}].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), ${JSON.stringify(pattern)}]), ignores: [...(entry.ignores ?? []), ...${JSON.stringify(children.map((path) => `${path}/**`))}] })),`;
+                });
+        })
         .join('\n');
 }
 
@@ -55,16 +66,18 @@ function allowedPaths(selection: ScopeSelection, setting: string): string[] {
 }
 
 // The selectors the fragments add, grouped by the file set each one applies to.
-function fragmentSelectors(fragments: Fragment[], selection: ScopeSelection): SelectorGroup[] {
+function fragmentSelectors(fragments: Fragment[], selection: ScopeSelection, isAll: boolean): SelectorGroup[] {
     const resolved = fragments.flatMap(({ config }) =>
-        config.selectors.map(
-            (entry: FragmentSelector): ResolvedSelector => ({
-                selector: entry.selector,
-                message: entry.message,
-                ...(entry.files === undefined ? {} : { files: entry.files }),
-                ...(entry.allowed === undefined ? {} : { except: allowedPaths(selection, entry.allowed) }),
-            }),
-        ),
+        config.selectors
+            .filter((entry) => isAll || entry.level === 'recommended')
+            .map(
+                (entry: FragmentSelector): ResolvedSelector => ({
+                    selector: entry.selector,
+                    message: entry.message,
+                    ...(entry.files === undefined ? {} : { files: entry.files }),
+                    ...(entry.allowed === undefined ? {} : { except: allowedPaths(selection, entry.allowed) }),
+                }),
+            ),
     );
     return selectorGroups(resolved);
 }
@@ -85,9 +98,25 @@ export function fragmentInputs(
 ): Pick<TemplateInputs, 'fragments' | 'fragmentImports' | 'fragmentFiles' | 'fragmentSelectors'> {
     const fragments = fragmentsOf(scopes, selection, owner);
     return {
-        fragments: renderedFragments(fragments, inputs),
+        fragments: renderedFragments(fragments, inputs, scopes),
         fragmentImports: fragmentImports(fragments),
         fragmentFiles: [...new Set(fragments.flatMap(({ config }) => config.code_files))],
-        fragmentSelectors: fragmentSelectors(fragments, selection),
+        fragmentSelectors: scopes.flatMap((scope) =>
+            fragmentSelectors(
+                fragments.filter(({ manifest }) => scope.selected.includes(manifest)),
+                scope,
+                inputs.isAll,
+            ).map((group) => ({
+                ...group,
+                scope: scope.scope.path,
+                ignoredScopes: scopes
+                    .map((entry) => entry.scope.path)
+                    .filter(
+                        (path) =>
+                            path !== scope.scope.path &&
+                            (scope.scope.path === '' || path.startsWith(`${scope.scope.path}/`)),
+                    ),
+            })),
+        ),
     };
 }

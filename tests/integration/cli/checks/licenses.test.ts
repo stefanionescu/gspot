@@ -31,7 +31,7 @@ async function input(root: string): Promise<EngineInput> {
 test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
+        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
         'package.json': '{"name":"example","private":true}',
     });
     expect(await rejection(licensesPackages(await input(sandbox.path)))).toBe(
@@ -44,7 +44,7 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',
@@ -85,7 +85,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
+            'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',

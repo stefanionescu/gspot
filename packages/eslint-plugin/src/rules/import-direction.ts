@@ -65,6 +65,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'Import direction',
             example:
                 'With `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesOnlyTypes`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',

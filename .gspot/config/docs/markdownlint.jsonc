@@ -8,11 +8,12 @@
     "MD024": {
         "siblings_only": true
     },
+    "MD033": false,
+    "MD041": true,
+    "MD045": false,
     "MD025": {
         "front_matter_title": ""
     },
-    "MD033": false,
-    "MD041": true,
     "MD046": {
         "style": "fenced"
     },

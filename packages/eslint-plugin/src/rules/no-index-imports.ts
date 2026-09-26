@@ -10,6 +10,7 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'all',
             title: 'No index imports',
             example:
                 'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',

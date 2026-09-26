@@ -25,6 +25,7 @@ export type TemplateInputs = {
     prettierConfig: (targetPath: string) => Record<string, unknown>;
     editorconfigOverrides: () => EditorconfigOverride[];
     eslintPolicy: EslintRuleBlock[];
+    eslintRuleLevels: Record<string, 'recommended' | 'all'>;
     isAll: boolean;
     typescriptOptions: Record<string, boolean>;
     prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[]; formats: [string, string][] };
@@ -113,7 +114,12 @@ export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<s
 /** A fragment selector with the allowed setting replaced by the paths it holds. */
 export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
 /** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */
-export type SelectorGroup = { files?: string[]; selectors: { selector: string; message: string }[] };
+export type SelectorGroup = {
+    scope?: string;
+    ignoredScopes?: string[];
+    files?: string[];
+    selectors: { selector: string; message: string }[];
+};
 export type GenerationOptions = {
     version: string;
     packageManager: ToolPackageManager | undefined;
