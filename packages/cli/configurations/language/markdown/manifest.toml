@@ -61,7 +61,7 @@ template = "markdownlint.jsonc.tmpl"
 target = ".gspot/config/markdownlint.jsonc"
 per_scope = true
 rules_path = [""]
-stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"{target}\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
+pointer = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"{target}\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
 
 [[configs]]
 template = "markdownlint-cli2.mjs.tmpl"

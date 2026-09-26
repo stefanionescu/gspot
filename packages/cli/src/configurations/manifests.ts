@@ -110,7 +110,7 @@ function configurationProblems(raw: RawManifest): string[] {
     const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
     if (hasEngineCheck) return [];
     return raw.configs
-        .filter((config) => !config.fragment && config.stub === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined)
         .filter((config) => {
             const name = configurationName(config.target);
             const isReadByTemplate = raw.configs.some(
@@ -120,7 +120,7 @@ function configurationProblems(raw: RawManifest): string[] {
         })
         .map(
             (config) =>
-                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no stub.`,
+                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no pointer.`,
         );
 }
 

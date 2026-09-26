@@ -82,14 +82,14 @@ template = "swiftlint.yml.tmpl"
 target = ".gspot/config/swiftlint.yml"
 rules_path = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
 per_scope = true
-stub = {path = ".swiftlint.yml", body = "parent_config: {target_json}\n"}
+pointer = {path = ".swiftlint.yml", body = "parent_config: {target_json}\n"}
 
 [[configs]]
 template = "swiftformat.tmpl"
 target = ".gspot/config/swiftformat"
 rules_path = ["enable", "disable", "rules", "lint-only"]
 per_scope = true
-stub = {path = ".swiftformat", copy = true}
+pointer = {path = ".swiftformat", copy = true}
 
 [[configs]]
 template = "periphery.yml.tmpl"

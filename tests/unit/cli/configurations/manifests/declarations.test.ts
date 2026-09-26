@@ -2,11 +2,11 @@ import { parseManifest } from '#cli/configurations/manifests.ts';
 import { expect, test } from 'bun:test';
 
 test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
-    'a template stub rejects the conflicting emission mode %s',
+    'a template pointer rejects the conflicting emission mode %s',
     (mode) => {
-        const source = `[configuration]\nname = "example"\nkind = "policy"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.stub]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
+        const source = `[configuration]\nname = "example"\nkind = "policy"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
         expect(() => parseManifest(`${source}${mode}\n`, 'configurations/example')).toThrow(
-            'A template stub cannot also specify body, merge, or copy.',
+            'A template pointer cannot also specify body, merge, or copy.',
         );
         expect(() => parseManifest(source, 'configurations/example')).not.toThrow();
     },

@@ -19,7 +19,7 @@ template = "swiftlint.yml.tmpl"
 target = ".gspot/config/swiftlint.yml"
 per_scope = true
 fragment = true
-stub = {path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n"}
+pointer = {path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n"}
 
 [[checks]]
 name = "xctest/disabled"

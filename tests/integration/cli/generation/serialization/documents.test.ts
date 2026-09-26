@@ -1,6 +1,6 @@
 import { openSession } from '#cli/execution/session.ts';
 import { emitAll } from '#cli/generation/render.ts';
-import { mergeStub } from '#cli/generation/stubs.ts';
+import { mergePointer } from '#cli/generation/pointers.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { expect, test } from 'bun:test';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -78,19 +78,19 @@ test('shared output readers reject external links without changing their targets
     await createFileTree(sandbox.path, { 'project/.keep': '', outside: original });
     const project = join(sandbox.path, 'project');
     symlinkSync(join(sandbox.path, 'outside'), join(project, 'linked.json'));
-    const stub = { path: 'linked.json', merge: { extends: '{target}' } };
-    expect(() => mergeStub(project, stub, stub.path, '.gspot/tsconfig.json')).toThrow('private regular file');
-    expect(() => hasConfiguration(project, { path: stub.path, format: 'json', changes: [] })).toThrow(
+    const pointer = { path: 'linked.json', merge: { extends: '{target}' } };
+    expect(() => mergePointer(project, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow('private regular file');
+    expect(() => hasConfiguration(project, { path: pointer.path, format: 'json', changes: [] })).toThrow(
         'private regular file',
     );
     expect(() =>
         hasConfiguration(project, {
-            path: stub.path,
+            path: pointer.path,
             format: 'json',
             changes: [{ path: ['scripts', 'check'], value: 'gspot check' }],
         }),
     ).toThrow('private regular file');
-    expect(() => hasConfiguration(project, { path: stub.path, format: 'yaml', changes: [] })).toThrow(
+    expect(() => hasConfiguration(project, { path: pointer.path, format: 'yaml', changes: [] })).toThrow(
         'private regular file',
     );
     expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe(original);
@@ -101,12 +101,12 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'tsconfig.json': content });
-        const stub = { path: 'tsconfig.json', merge: { extends: '{target}' } };
-        expect(() => mergeStub(sandbox.path, stub, stub.path, '.gspot/tsconfig.json')).toThrow('valid JSON object');
-        expect(() => hasConfiguration(sandbox.path, { path: stub.path, format: 'json', changes: [] })).toThrow(
+        const pointer = { path: 'tsconfig.json', merge: { extends: '{target}' } };
+        expect(() => mergePointer(sandbox.path, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow('valid JSON object');
+        expect(() => hasConfiguration(sandbox.path, { path: pointer.path, format: 'json', changes: [] })).toThrow(
             'valid JSON object',
         );
-        expect(readFileSync(join(sandbox.path, stub.path), 'utf8')).toBe(content);
+        expect(readFileSync(join(sandbox.path, pointer.path), 'utf8')).toBe(content);
     },
 );
 

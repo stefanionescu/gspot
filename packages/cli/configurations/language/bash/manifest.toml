@@ -63,7 +63,7 @@ per_scope = true
 template = "shellcheckrc.tmpl"
 target = ".gspot/config/shellcheckrc"
 rules_path = ["enable", "disable"]
-stub = {path = ".shellcheckrc", copy = true}
+pointer = {path = ".shellcheckrc", copy = true}
 
 [[checks]]
 name = "bash/syntax"

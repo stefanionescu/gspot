@@ -217,7 +217,7 @@ npm = "typescript"
 template = "eslint.config.js.tmpl"
 target = ".gspot/config/eslint.config.mjs"
 rules_path = ["rules"]
-stub = {path = "eslint.config.mjs", body = "export { default } from '{target}';"}
+pointer = {path = "eslint.config.mjs", body = "export { default } from '{target}';"}
 
 [[configs]]
 template = "jsconfig.json.tmpl"

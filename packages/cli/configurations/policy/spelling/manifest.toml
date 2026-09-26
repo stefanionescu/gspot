@@ -35,7 +35,7 @@ carries = "words"
 template = "typos.toml.tmpl"
 target = ".gspot/config/typos.toml"
 per_scope = true
-stub = {path = "typos.toml", template = "typos.toml.tmpl"}
+pointer = {path = "typos.toml", template = "typos.toml.tmpl"}
 
 [[checks]]
 name = "spelling/typos"

@@ -100,7 +100,7 @@ rules_path = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 [[configs]]
 template = "basedpyrightconfig.json.tmpl"
 target = ".gspot/config/basedpyrightconfig.json"
-stub = {path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}"}
+pointer = {path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}"}
 per_scope = true
 header = false
 

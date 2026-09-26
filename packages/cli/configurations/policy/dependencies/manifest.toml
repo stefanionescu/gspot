@@ -63,7 +63,7 @@ carries = "rules-table"
 [[configs]]
 template = "osv-scanner.toml.tmpl"
 target = ".gspot/config/osv-scanner.toml"
-stub = {path = "osv-scanner.toml", copy = true}
+pointer = {path = "osv-scanner.toml", copy = true}
 
 [[configs]]
 template = "syncpack.json.tmpl"

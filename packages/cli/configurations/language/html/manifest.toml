@@ -37,7 +37,7 @@ template = "html-validate-templates.json.tmpl"
 target = ".gspot/config/html-validate-templates.json"
 rules_path = ["rules"]
 header = false
-stub = {path = ".htmlvalidate.json", body = "{\n    \"extends\": [\"{target}\"]\n}\n"}
+pointer = {path = ".htmlvalidate.json", body = "{\n    \"extends\": [\"{target}\"]\n}\n"}
 
 [[configs]]
 template = "html-validate-built.json.tmpl"

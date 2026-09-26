@@ -83,7 +83,7 @@ target = ".gspot/config/stylelint.json"
 rules_path = ["rules"]
 per_scope = true
 header = false
-stub = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n"}
+pointer = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n"}
 
 [[checks]]
 name = "css/stylelint"

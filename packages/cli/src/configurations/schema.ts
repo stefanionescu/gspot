@@ -112,7 +112,7 @@ const toolSchema = z.strictObject({
     ...installerFields,
 });
 
-const stubSchema = z
+const pointerSchema = z
     .strictObject({
         path: z.string(),
         directories: z.array(z.string().min(1)).min(1).optional(),
@@ -122,19 +122,19 @@ const stubSchema = z
         template: z.string().optional(),
     })
     .refine(
-        (stub) =>
-            stub.template === undefined ||
-            (stub.body === undefined && stub.merge === undefined && stub.copy === undefined),
-        'A template stub cannot also specify body, merge, or copy.',
+        (pointer) =>
+            pointer.template === undefined ||
+            (pointer.body === undefined && pointer.merge === undefined && pointer.copy === undefined),
+        'A template pointer cannot also specify body, merge, or copy.',
     )
     .refine(
-        (stub) =>
-            stub.directories === undefined ||
-            (stub.body !== undefined &&
-                stub.merge === undefined &&
-                stub.copy === undefined &&
-                stub.template === undefined),
-        'Directory stubs require a body without merge, copy, or template.',
+        (pointer) =>
+            pointer.directories === undefined ||
+            (pointer.body !== undefined &&
+                pointer.merge === undefined &&
+                pointer.copy === undefined &&
+                pointer.template === undefined),
+        'Directory pointers require a body without merge, copy, or template.',
     );
 
 // A syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
@@ -151,7 +151,7 @@ const configSchema = z
         imports: z.string().optional(),
         target: z.string(),
         rules_path: z.array(z.string()).optional(),
-        stub: stubSchema.optional(),
+        pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         header: z.boolean().default(true),
@@ -337,7 +337,7 @@ export type ConfigurationTarget = RawManifest['configs'][number];
 
 export type FragmentSelector = z.infer<typeof selectorSchema>;
 
-export type StubSpec = NonNullable<ConfigurationTarget['stub']>;
+export type PointerSpec = NonNullable<ConfigurationTarget['pointer']>;
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */
 export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string };

@@ -59,7 +59,7 @@ carries = "rules-table"
 template = "commitlint.config.cjs.tmpl"
 target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
-stub = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/commitlint.config.cjs\"]\n}\n"}
+pointer = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/commitlint.config.cjs\"]\n}\n"}
 
 [[checks]]
 name = "commits/commitlint"

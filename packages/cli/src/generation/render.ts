@@ -14,7 +14,7 @@ import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { simpleGitHookOutputs } from '#cli/generation/simple-git-hooks.ts';
-import { bodyStub, mergeStub } from '#cli/generation/stubs.ts';
+import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import type { TemplateInputs } from '#cli/generation/templates.ts';
 import { emitTarget, eta, templateInputs } from '#cli/generation/templates.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
@@ -40,8 +40,8 @@ import { posix } from 'node:path';
 
 const JSON_INDENT = 4;
 
-function copyStubContent(content: string, stubPath: string): string {
-    if (!stubPath.endsWith('.json')) return content;
+function copyPointerContent(content: string, pointerPath: string): string {
+    if (!pointerPath.endsWith('.json')) return content;
     const parsed = JSON.parse(content) as Record<string, unknown>;
     Reflect.deleteProperty(parsed, GENERATED_JSON_KEY);
     return `${JSON.stringify(parsed, null, JSON_INDENT)}\n`;
@@ -51,13 +51,13 @@ function pathInScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }
 
-function directoryStubs(context: EmitContext, config: ConfigurationTarget, target: string): GeneratedFile[] {
+function directoryPointers(context: EmitContext, config: ConfigurationTarget, target: string): GeneratedFile[] {
     const { scopes, files, inputs, selection, manifest } = context;
-    const stub = config.stub;
-    if (stub?.directories === undefined) return [];
+    const pointer = config.pointer;
+    if (pointer?.directories === undefined) return [];
     const scope = selection.scope.path;
     const children = scopes.map((entry) => entry.scope.path).filter((path) => path !== '' && path !== scope);
-    const matches = pathMatcher(stub.directories);
+    const matches = pathMatcher(pointer.directories);
     const directories = new Set<string>();
     for (const file of claimedByClaims(manifest.claims, selection.selected, files, scope)) {
         if (
@@ -74,7 +74,7 @@ function directoryStubs(context: EmitContext, config: ConfigurationTarget, targe
         }
     }
     return [...directories].map((directory) =>
-        bodyStub(stub, `${directory}/${stub.path}`, target, inputs.version, manifest.configuration.name),
+        bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version, manifest.configuration.name),
     );
 }
 
@@ -158,44 +158,49 @@ function fragmentImportsFor(scopes: ScopeSelection[], selection: ScopeSelection,
     return [...new Set(lines)].join('\n');
 }
 
-function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: GeneratedProposal): void {
+function pointerFor(
+    context: EmitContext,
+    config: ConfigurationTarget,
+    file: GeneratedFile,
+    out: GeneratedProposal,
+): void {
     const { root, inputs, selection, manifest } = context;
-    const { stub } = config;
-    if (!stub) return;
-    if (stub.directories !== undefined) {
-        out.files.push(...directoryStubs(context, config, file.path));
+    const { pointer } = config;
+    if (!pointer) return;
+    if (pointer.directories !== undefined) {
+        out.files.push(...directoryPointers(context, config, file.path));
         return;
     }
-    const stubPath = pathInScope(config.per_scope ? selection.scope.path : '', stub.path);
+    const pointerPath = pathInScope(config.per_scope ? selection.scope.path : '', pointer.path);
     const replaced = selection.selected.some((owner) =>
         owner.configs.some(
             (fragment) =>
                 fragment.fragment &&
                 fragment.target === config.target &&
-                directoryStubs({ ...context, manifest: owner }, fragment, file.path).some(
-                    (nested) => nested.path === stubPath,
+                directoryPointers({ ...context, manifest: owner }, fragment, file.path).some(
+                    (nested) => nested.path === pointerPath,
                 ),
         ),
     );
     if (replaced) return;
-    if (stub.merge) out.merges.push(mergeStub(root, stub, stubPath, file.path));
-    else if (stub.template !== undefined)
+    if (pointer.merge) out.merges.push(mergePointer(root, pointer, pointerPath, file.path));
+    else if (pointer.template !== undefined)
         out.files.push({
-            path: stubPath,
-            content: emitTarget(`${manifest.dir}/${stub.template}`, stubPath, inputs, config.header),
+            path: pointerPath,
+            content: emitTarget(`${manifest.dir}/${pointer.template}`, pointerPath, inputs, config.header),
             readOnly: true,
-            kind: 'stub',
+            kind: 'pointer',
             configuration: manifest.configuration.name,
         });
-    else if (stub.copy === true)
+    else if (pointer.copy === true)
         out.files.push({
-            path: stubPath,
-            content: copyStubContent(file.content, stubPath),
+            path: pointerPath,
+            content: copyPointerContent(file.content, pointerPath),
             readOnly: true,
-            kind: 'stub',
+            kind: 'pointer',
             configuration: manifest.configuration.name,
         });
-    else out.files.push(bodyStub(stub, stubPath, file.path, inputs.version, manifest.configuration.name));
+    else out.files.push(bodyPointer(pointer, pointerPath, file.path, inputs.version, manifest.configuration.name));
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
@@ -212,7 +217,7 @@ function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: 
         if (!isWanted(config, scopes, selection)) continue;
         const target = targetInScope(selection.scope.path, config);
         if (config.fragment) {
-            out.files.push(...directoryStubs(context, config, target));
+            out.files.push(...directoryPointers(context, config, target));
             continue;
         }
         if (seen.has(target) || config.template === undefined) continue;
@@ -248,7 +253,7 @@ function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: 
                 });
             }
         }
-        stubFor({ ...context, inputs }, config, file, out);
+        pointerFor({ ...context, inputs }, config, file, out);
     }
 }
 

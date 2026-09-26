@@ -111,13 +111,13 @@ test(
         expect(policy).toContain('MD033 = true');
         const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/config/markdownlint.jsonc'), 'utf8'));
         expect(markdown).toMatchObject({ MD013: false, MD033: true });
-        for (const stub of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
-            expect(readFileSync(join(sandbox.path, stub), 'utf8')).toContain('gspot');
-        const eslintStub = ['eslint.config.js', 'eslint.config.mjs'].find((name) =>
+        for (const pointer of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
+            expect(readFileSync(join(sandbox.path, pointer), 'utf8')).toContain('gspot');
+        const eslintPointer = ['eslint.config.js', 'eslint.config.mjs'].find((name) =>
             existsSync(join(sandbox.path, name)),
         );
-        expect(eslintStub).toBeDefined();
-        expect(readFileSync(join(sandbox.path, eslintStub ?? ''), 'utf8')).toContain('gspot');
+        expect(eslintPointer).toBeDefined();
+        expect(readFileSync(join(sandbox.path, eslintPointer ?? ''), 'utf8')).toContain('gspot');
         expect(existsSync(join(sandbox.path, '.markdownlint.jsonc'))).toBe(false);
         expect(existsSync(join(sandbox.path, 'quality', 'lint.sh'))).toBe(true);
         const applied = await run(sandbox.path, ['apply', '--dry-run', '--json']);

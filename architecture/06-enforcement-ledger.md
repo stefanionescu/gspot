@@ -945,14 +945,14 @@ Generated configuration:
 
 Checks:
 
-| Id                      | Stage  | Command                                                                                                                                                                     |
-| ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/config/markdownlint.jsonc {files}` (the stub's globs are for editors; the check lints the file list alone); fix, order format |
-| `markdown/prettier`     | commit | through formatting                                                                                                                                                          |
-| `docs/links`            | commit | lychee offline with fragments, through docs                                                                                                                                 |
-| `docs/headings`         | commit | banned headings absent                                                                                                                                                      |
-| `markdown/fences`       | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check          |
-| `prose/vale`            | commit | through prose                                                                                                                                                               |
+| Id                      | Stage  | Command                                                                                                                                                                        |
+| ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/config/markdownlint.jsonc {files}` (the pointer's globs are for editors; the check lints the file list alone); fix, order format |
+| `markdown/prettier`     | commit | through formatting                                                                                                                                                             |
+| `docs/links`            | commit | lychee offline with fragments, through docs                                                                                                                                    |
+| `docs/headings`         | commit | banned headings absent                                                                                                                                                         |
+| `markdown/fences`       | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check             |
+| `prose/vale`            | commit | through prose                                                                                                                                                                  |
 
 Settings:
 
@@ -1167,7 +1167,7 @@ Checks:
 basedpyright takes the folder of its configuration as the project root. The generated
 configuration sits under `.gspot/`, so the scope holds a root pointer, `pyrightconfig.json`, with
 one key: `extends`. It is generated and read-only, unlike the
-`tsconfig.json` stub, because a repository has nothing of its own to keep in it. Takeover replaces
+`tsconfig.json` pointer, because a repository has nothing of its own to keep in it. Takeover replaces
 an old `pyrightconfig.json` and carries its `exclude` paths into `tools.basedpyright.exclude`, without
 dot folders and the folders the configuration leaves out by itself.
 
@@ -1799,7 +1799,7 @@ Generated configuration:
 | `.gspot/config/yamllint.yml` | `extends: default`, line length and document start off, `truthy` not on keys (the `on:` of a workflow), one space allowed inside braces and brackets (the Prettier style), indent from `[format]`                                               |
 | `.gspot/config/v8r.yml`      | errors for files with no known schema ignored; a custom catalog with the mise schema and every `[tools.v8r] schemas` entry on top of SchemaStore                                                                                                |
 
-Each has a stub at the conventional path (`.taplo.toml`, `.yamllint.yml`, `.v8rrc.yml`) so editors
+Each has a pointer at the conventional path (`.taplo.toml`, `.yamllint.yml`, `.v8rrc.yml`) so editors
 and bare tool runs find it.
 
 Checks:
@@ -2211,7 +2211,7 @@ commitlint binary runs.
 
 Generated configuration:
 
-`.gspot/config/commitlint.config.cjs` with a `.commitlintrc.json` stub that extends it. The rules:
+`.gspot/config/commitlint.config.cjs` with a `.commitlintrc.json` pointer that extends it. The rules:
 
 - `type-enum` from `[tools.commitlint] types` (default: `feat`, `fix`, `refactor`, `perf`,
   `docs`, `test`, `build`, `ci`, `chore`, the corpus list); `type-case` lower; `type-empty`
@@ -2506,7 +2506,7 @@ typos.
 
 Generated configuration:
 
-`.gspot/config/typos.toml` with a `typos.toml` stub: `[files] extend-exclude` from natures and
+`.gspot/config/typos.toml` with a `typos.toml` pointer: `[files] extend-exclude` from natures and
 `[tools.typos] exclude`; `[default.extend-words]` from `[tools.typos] words`, each with its
 reason as a comment.
 

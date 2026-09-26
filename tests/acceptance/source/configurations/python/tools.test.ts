@@ -143,9 +143,9 @@ describe('the python configuration', () => {
             expect(await Bun.file(`${sandbox.path}/gspot.toml`).exists()).toBe(false);
             await Bun.write(`${sandbox.path}/pyrightconfig.json`, '{"exclude":[".venv","planted/skipped.py"]}\n');
             await install(sandbox.path, [...INIT, '--allow-dirty'], environment);
-            const stub = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
-            expect(stub).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
-            expect(stub).not.toContain('basic');
+            const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
+            expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
+            expect(pointer).not.toContain('basic');
             const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
             expect(policy).toContain('planted/skipped.py');
             expect(policy).toContain('.venv');

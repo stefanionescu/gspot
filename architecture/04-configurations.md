@@ -243,6 +243,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that
   numbers by itself.
+- A config takes `pointer`, the small file at the conventional root path that sends a tool or an
+  editor to the generated file: `{ path, body }` with `{target}` for the relative path, `copy =
+true` for a copy, `merge` for keys set in a file the developer keeps, or `template` for a
+  rendered file. `directories` writes one pointer per matching folder.
 - A setting takes `detect`, a small table `init` reads to fill it from the repository.
 - `[detect] project_files` names the files that mark a project: a file name, a folder name such
   as `*.xcodeproj`, or a short path such as `supabase/config.toml`. `init` proposes the

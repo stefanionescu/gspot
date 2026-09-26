@@ -44,12 +44,12 @@ function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
     return rows;
 }
 
-function stubRows(everySelected: Manifest[]): TakeoverPlan['write'] {
+function pointerRows(everySelected: Manifest[]): TakeoverPlan['write'] {
     return everySelected
         .flatMap((manifest) => manifest.configs)
-        .map((config) => config.stub?.path)
+        .map((config) => config.pointer?.path)
         .filter((path) => path !== undefined)
-        .map((path) => ({ path, note: 'stub' }));
+        .map((path) => ({ path, note: 'pointer' }));
 }
 
 function runnerRows(
@@ -190,7 +190,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         write: [
             { path: 'gspot.toml', note: `your policy, ${String(policyLines)} lines` },
             { path: '.gspot/', note: 'generated configuration and version pin' },
-            ...stubRows(everySelected),
+            ...pointerRows(everySelected),
             ...agentRows,
             ...(answers.ci === 'none'
                 ? []

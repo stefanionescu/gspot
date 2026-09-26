@@ -392,12 +392,13 @@ Owner: `configurations/ and tools/`. Dependencies: normal pinned acquisition. Co
 Acceptance: K-251, K-207, K-249, K-206, K-250, K-213.
 
 Done 2026-09-26, step 4.4. `tests/acceptance/release/pins.test.ts` asks npm, PyPI, crates.io, and
-GitHub for every pin, holds each pin at or above the floor its manifest names, and holds the
-ESLint pin inside the peer range of every plugin (K-206, K-249, K-207). A tool the repository
-supplies carries a floor and no pin. `tests/integration/tools/flags.test.ts` runs the help of
-every pinned tool a command names and holds each flag it passes (K-251); a tool absent from the
-machine is a visible skip. K-250 holds through the licenses and readme-shape tests. K-213 has no
-text in the architecture folder.
+GitHub for every pin (K-206). It holds each pin at or above the floor its manifest names
+(K-249), and the ESLint pin inside the peer range of every plugin (K-207). A tool the repository
+supplies carries a floor and no pin.
+
+`tests/integration/tools/flags.test.ts` runs the help of every pinned tool a command names and
+holds each flag it passes (K-251). A tool absent from the machine is a visible skip. K-250 holds
+through the licenses and readme-shape tests. K-213 has no text in the architecture folder.
 
 ### NestJS integration
 
@@ -491,6 +492,20 @@ Verify supported root pointers, meaningful generated-drift findings, and merge-c
 Owner: `generation/ and lifecycle/drift.ts`. Dependencies: publication and ownership. Completion evidence: Root pointers, meaningful drift, conflict recovery, metadata retention, and manifest-derived ignore paths pass.
 
 Acceptance: D-100, K-47, K-259, K-246, A-5, K-296, K-274.
+
+Done 2026-09-26, steps 5.2 to 5.6. Repairs: the setting messages say a configuration has a
+setting, and a unit test holds every message function to the words of the config (K-89);
+`integrity/generated-drift` is declared in the structure manifest and tested (K-246); a
+generated file holding merge conflict markers is a drift finding that names `gspot apply` and
+`gspot install`, and `apply` writes it again (K-274); the manifest key `stub` is `pointer`, and
+`generation/pointers.ts` writes them (K-269). Checked without change: K-36, K-193, K-120, K-59,
+K-217, K-182, K-53, K-64, K-126, K-128, K-62, K-95, K-284, K-287, K-291, K-290, K-66, K-111,
+K-114, K-234, A-5, K-296, D-100, D-129, K-308, K-259.
+
+Open under step 5.3: a setting takes no `detect` table yet (K-93, K-40). The types folder,
+the build command, and the Xcode destination are proposed by code in `commands/init/`, not by a
+table of the manifest. No text exists in the architecture folder for K-41, K-239, K-270, K-214,
+K-247, K-127, K-63, K-98, K-285, K-288, K-289, K-115, K-110, or K-47.
 
 Exit: supported carryover is lossless, unsupported originals remain active, and command,
 profile, exception, generated-output, and recovery behavior agree with policy.
