@@ -191,6 +191,8 @@ const checkFields = z.strictObject({
     limit: z.string().optional(),
     count_regex: z.string().optional(),
     tool_errors: z.string().optional(),
+    // true: the check reads git and is skipped in a folder with no .git; false: it stands in for one and runs only there.
+    needs_git: z.boolean().optional(),
     requires: z.enum(['build', 'docker', 'network']).optional(),
     waits_for: z.string().optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
@@ -280,6 +282,8 @@ export const manifestSchema = z.strictObject({
         recommends: stringList,
         default: z.boolean().default(false),
         proposed: z.boolean().default(false),
+        // A configuration whose checks all read git is not proposed in a folder with no .git.
+        needs_git: z.boolean().default(false),
         description: sentence,
     }),
     detect: z

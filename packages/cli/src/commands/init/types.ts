@@ -83,6 +83,8 @@ export type InitContext = {
     files: TrackedFile[];
     facts: ManifestFacts[];
     options: InitOptions;
+    /** Whether the folder is a git repository; a configuration whose checks all read git stays out otherwise. */
+    hasGit: boolean;
 };
 
 /** The inputs to init selection. */

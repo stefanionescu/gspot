@@ -122,6 +122,7 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
                 unowned: unownedTools(tooling, detected.selectedIds),
                 unknown: unknownLanguages(repo.files, manifests),
                 manifests,
+                hasGit: repo.hasGit,
             }),
         );
     const selection = await chosenSelection(inputs, options, detected);

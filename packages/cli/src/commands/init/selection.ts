@@ -54,6 +54,7 @@ function isRootCandidate(
     const manifest = context.manifests.get(configuration);
     if (!manifest || without.has(configuration)) return false;
     const { kind, proposed } = manifest.configuration;
+    if (manifest.configuration.needs_git && !context.hasGit) return false;
     if (hasScopes && kind !== 'policy' && kind !== 'language') return false;
     return !proposed || context.options.yes;
 }
@@ -71,6 +72,7 @@ function rootSelection(context: InitContext, rootProposals: { configuration: str
 function isScopeCandidate(context: InitContext, configuration: string, without: Set<string>): boolean {
     const manifest = context.manifests.get(configuration);
     if (!manifest || without.has(configuration)) return false;
+    if (manifest.configuration.needs_git && !context.hasGit) return false;
     return manifest.configuration.kind !== 'policy' && (!manifest.configuration.proposed || context.options.yes);
 }
 
@@ -210,7 +212,7 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, facts, workspace, manifests, options } = inputs;
-    const context: InitContext = { manifests, files: repo.files, facts, options };
+    const context: InitContext = { manifests, files: repo.files, facts, options, hasGit: repo.hasGit };
     const scopeFlags = parseScopeFlags(options.scopes);
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
@@ -257,6 +259,7 @@ export type DetectionSummary = {
     unowned: string[];
     unknown: UnknownLanguage[];
     manifests: Map<string, Manifest>;
+    hasGit: boolean;
 };
 
 export type ConfigurationReason = 'named' | 'detected' | 'recommended' | 'required';

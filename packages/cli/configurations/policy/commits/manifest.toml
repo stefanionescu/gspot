@@ -3,6 +3,7 @@ name = "commits"
 kind = "policy"
 title = "Commits"
 default = true
+needs_git = true
 description = "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
 
 [claims]

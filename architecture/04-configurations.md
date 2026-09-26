@@ -211,6 +211,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A check takes `needs`, the configuration whose generated files it reads. Where the scope does
   not select it, the check is skipped with that note.
 - A check takes `cached = false` when its verdict depends on more than its files.
+- A check takes `needs_git`. With `true` it reads git and is skipped, with a note, in a folder
+  that has no `.git`; with `false` it stands in for such a check and runs only there. A
+  configuration takes `needs_git = true` when every check of it reads git, and `init` leaves it
+  out of a folder with no `.git`.
 - A check takes `env`, a table of environment values for its tool. Values expand scalar command
   placeholders such as `{config:name}` before execution.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and

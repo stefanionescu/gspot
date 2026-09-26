@@ -170,7 +170,7 @@ function platformSkipFor(spec: CheckSpec, tool: ToolPin | undefined, platform: s
     return undefined;
 }
 
-function skipFor(check: PlannedCheck, options: PlanOptions, platform: string): PlannedCheck['skip'] {
+function skipFor(check: PlannedCheck, options: PlanOptions, platform: string, hasGit: boolean): PlannedCheck['skip'] {
     const { spec, tool } = check;
     const ignored = check.scope.view
         .ignoresFor(spec.name)
@@ -185,6 +185,10 @@ function skipFor(check: PlannedCheck, options: PlanOptions, platform: string): P
     if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
     if (spec.needs !== undefined && !check.scope.view.configurations.includes(spec.needs))
         return { source: 'rules', note: `needs the ${spec.needs} configuration, which this scope does not select` };
+    if (spec.needs_git === true && !hasGit)
+        return { source: 'rules', note: 'this folder is no git repository, so the check has nothing to read' };
+    if (spec.needs_git === false && hasGit)
+        return { source: 'rules', note: 'this folder is a git repository, so the git check covers it' };
     const platformSkip = platformSkipFor(spec, tool, platform);
     if (platformSkip !== undefined) return platformSkip;
     if (options.skips.includes(spec.name)) return { source: 'flag', note: 'skipped by --skip' };
@@ -231,7 +235,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
     if (tool) check.tool = tool;
     if (options.commits !== undefined) check.commits = options.commits;
     if (options.messageFile !== undefined) check.messageFile = options.messageFile;
-    const skip = skipFor(check, options, platform);
+    const skip = skipFor(check, options, platform, session.repository.hasGit);
     if (skip) check.skip = skip;
     return restrictIgnoredPaths(check);
 }

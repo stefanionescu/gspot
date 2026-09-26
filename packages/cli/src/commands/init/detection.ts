@@ -96,6 +96,9 @@ export function detectionText(summary: DetectionSummary): string {
     );
     return [
         `reading ${summary.files.length.toLocaleString('en-US')} tracked files`,
+        ...(summary.hasGit
+            ? []
+            : ['no git repository: the hooks and the configurations that read git stay out until git init runs']),
         '',
         ...rows,
         ...unknownRows(summary),
