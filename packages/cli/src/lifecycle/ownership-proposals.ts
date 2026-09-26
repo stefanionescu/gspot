@@ -5,7 +5,8 @@ import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import { type ConfigurationFormat, planConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { planConfiguration } from '#cli/lifecycle/configuration-plan.ts';
+import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
 import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';
 
 type Block = NonNullable<OwnershipEntry['block']>;
