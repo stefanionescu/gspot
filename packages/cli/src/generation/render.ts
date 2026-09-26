@@ -1,288 +1,50 @@
-import { posix } from 'node:path';
-import { eta } from '#cli/generation/registry.ts';
+// Every generated output of a repository: configuration files, pointers, blocks, hooks, runner tasks, and rules.
+import { binaryPath } from '#cli/platform/assets.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
-import { selectorGroups } from '#cli/generation/eslint.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { targetInScope } from '#cli/configurations/targets.ts';
+import { templateInputs } from '#cli/generation/templates.ts';
 import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import { binaryPath, readAsset } from '#cli/platform/assets.ts';
-import { claimedByClaims } from '#cli/configurations/claims.ts';
 import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
 import { toolPackages } from '#cli/generation/tool-packages.ts';
-import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
-import type { TemplateInputs } from '#cli/generation/templates.ts';
-import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
+import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
-import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
+import { withdrawRetained } from '#cli/generation/retained-outputs.ts';
 import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { emitTarget, templateInputs } from '#cli/generation/templates.ts';
 import { simpleGitHookOutputs } from '#cli/generation/simple-git-hooks.ts';
+import { configurationFiles } from '#cli/generation/configuration-files.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-import { retainedConfigurationPaths } from '#cli/lifecycle/retained-config.ts';
-import type { GeneratedFile, GeneratedProposal } from '#cli/lifecycle/apply.ts';
-import type { ResolvedSelector, SelectorGroup } from '#cli/generation/eslint.ts';
 import { gitignoreBlock, type Manifest } from '#cli/configurations/manifests.ts';
-import type { ConfigurationTarget, FragmentSelector } from '#cli/configurations/schema.ts';
 
-const JSON_INDENT = 4;
-
-function copyPointerContent(content: string, pointerPath: string): string {
-    if (!pointerPath.endsWith('.json')) return content;
-    const parsed = JSON.parse(content) as Record<string, unknown>;
-    Reflect.deleteProperty(parsed, GENERATED_JSON_KEY);
-    return `${JSON.stringify(parsed, null, JSON_INDENT)}\n`;
-}
-
-function pathInScope(scope: string, path: string): string {
-    return scope === '' ? path : `${scope}/${path}`;
-}
-
-function directoryPointers(context: EmitContext, config: ConfigurationTarget, target: string): GeneratedFile[] {
-    const { scopes, files, inputs, selection, manifest } = context;
-    const pointer = config.pointer;
-    if (pointer?.directories === undefined) return [];
-    const scope = selection.scope.path;
-    const children = scopes.map((entry) => entry.scope.path).filter((path) => path !== '' && path !== scope);
-    const matches = pathMatcher(pointer.directories);
-    const directories = new Set<string>();
-    for (const file of claimedByClaims(manifest.claims, selection.selected, files, scope)) {
-        if (
-            children.some(
-                (child) => file.path.startsWith(`${child}/`) && (scope === '' || child.startsWith(`${scope}/`)),
-            )
-        )
-            continue;
-        for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
-            if (matches(directory))
-                directories.add(
-                    scope !== '' && directory !== scope && !directory.startsWith(`${scope}/`) ? scope : directory,
-                );
-        }
-    }
-    return [...directories].map((directory) =>
-        bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version, manifest.configuration.name),
-    );
-}
-
-// The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
-function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
-    if (owner.per_scope) return selection.selected;
-    const every = [selection, ...scopes].flatMap((entry) => entry.selected);
-    return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
-}
-
-function fragmentsFor(
-    scopes: ScopeSelection[],
-    selection: ScopeSelection,
-    owner: ConfigurationTarget,
-    inputs: TemplateInputs,
-): string {
-    return fragmentOwners(scopes, selection, owner)
-        .flatMap((manifest) =>
-            manifest.configs
-                .filter((fragment) => fragment.fragment && fragment.target === owner.target)
-                .flatMap((fragment) =>
-                    fragment.template === undefined
-                        ? []
-                        : [eta.renderString(readAsset(`${manifest.dir}/${fragment.template}`), inputs)],
-                ),
-        )
-        .join('\n');
-}
-
-// The fragment entries of a target across its owners, in configuration order.
-function fragmentEntries(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget) {
-    return fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
-        manifest.configs.filter((fragment) => fragment.fragment && fragment.target === owner.target),
-    );
-}
-
-// The file globs the selected fragments add to the code files of a target, each once.
-function fragmentFilesFor(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): string[] {
-    return [...new Set(fragmentEntries(scopes, selection, owner).flatMap((fragment) => fragment.code_files))];
-}
-
-// The paths a loosening setting allows: every entry's paths, in the order written.
-function allowedPaths(selection: ScopeSelection, setting: string): string[] {
-    const value = selection.view.settings[setting];
-    if (!Array.isArray(value)) return [];
-    return value.flatMap((entry: unknown) => {
-        const paths = typeof entry === 'object' && entry !== null ? (entry as { paths?: unknown }).paths : undefined;
-        return Array.isArray(paths) ? paths.filter((path): path is string => typeof path === 'string') : [];
-    });
-}
-
-// The selectors the selected fragments add, grouped by the file set each one applies to.
-function fragmentSelectorsFor(
-    scopes: ScopeSelection[],
-    selection: ScopeSelection,
-    owner: ConfigurationTarget,
-): SelectorGroup[] {
-    const resolved = fragmentEntries(scopes, selection, owner).flatMap((fragment) =>
-        fragment.selectors.map(
-            (entry: FragmentSelector): ResolvedSelector => ({
-                selector: entry.selector,
-                message: entry.message,
-                ...(entry.files === undefined ? {} : { files: entry.files }),
-                ...(entry.allowed === undefined ? {} : { except: allowedPaths(selection, entry.allowed) }),
-            }),
-        ),
-    );
-    return selectorGroups(resolved);
-}
-
-// The import lines the selected fragments declare, each once, in configuration order.
-function fragmentImportsFor(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): string {
-    const lines = fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
-        manifest.configs
-            .flatMap((fragment) =>
-                fragment.fragment && fragment.target === owner.target && fragment.imports !== undefined
-                    ? readAsset(`${manifest.dir}/${fragment.imports}`).split('\n')
-                    : [],
-            )
-            .filter((line) => line.trim() !== ''),
-    );
-    return [...new Set(lines)].join('\n');
-}
-
-function pointerFor(
-    context: EmitContext,
-    config: ConfigurationTarget,
-    file: GeneratedFile,
-    out: GeneratedProposal,
-): void {
-    const { root, inputs, selection, manifest } = context;
-    const { pointer } = config;
-    if (!pointer) return;
-    if (pointer.directories !== undefined) {
-        out.files.push(...directoryPointers(context, config, file.path));
-        return;
-    }
-    const pointerPath = pathInScope(config.per_scope ? selection.scope.path : '', pointer.path);
-    const replaced = selection.selected.some((owner) =>
-        owner.configs.some(
-            (fragment) =>
-                fragment.fragment &&
-                fragment.target === config.target &&
-                directoryPointers({ ...context, manifest: owner }, fragment, file.path).some(
-                    (nested) => nested.path === pointerPath,
-                ),
-        ),
-    );
-    if (replaced) return;
-    if (pointer.merge) out.merges.push(mergePointer(root, pointer, pointerPath, file.path));
-    else if (pointer.template !== undefined)
-        out.files.push({
-            path: pointerPath,
-            content: emitTarget(`${manifest.dir}/${pointer.template}`, pointerPath, inputs, config.header),
-            readOnly: true,
-            kind: 'pointer',
-            configuration: manifest.configuration.name,
-        });
-    else if (pointer.copy === true)
-        out.files.push({
-            path: pointerPath,
-            content: copyPointerContent(file.content, pointerPath),
-            readOnly: true,
-            kind: 'pointer',
-            configuration: manifest.configuration.name,
-        });
-    else out.files.push(bodyPointer(pointer, pointerPath, file.path, inputs.version, manifest.configuration.name));
-}
-
-// Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
-function isWanted(config: ConfigurationTarget, scopes: ScopeSelection[], selection: ScopeSelection): boolean {
-    if (config.needs === undefined) return true;
-    const wanted = config.needs;
-    const selectedScopes = config.per_scope ? [selection] : scopes;
-    return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === wanted));
-}
-
-function configurationFiles(context: EmitContext, out: GeneratedProposal, seen: Set<string>): void {
-    const { scopes, selection, manifest } = context;
-    for (const config of manifest.configs) {
-        if (!isWanted(config, scopes, selection)) continue;
-        const target = targetInScope(selection.scope.path, config);
-        if (config.fragment) {
-            out.files.push(...directoryPointers(context, config, target));
-            continue;
-        }
-        if (seen.has(target) || config.template === undefined) continue;
-        seen.add(target);
-        const inputs = {
-            ...context.inputs,
-            fragments: fragmentsFor(scopes, selection, config, context.inputs),
-            fragmentImports: fragmentImportsFor(scopes, selection, config),
-            fragmentFiles: fragmentFilesFor(scopes, selection, config),
-            fragmentSelectors: fragmentSelectorsFor(scopes, selection, config),
-        };
-        const file: GeneratedFile = {
-            path: target,
-            content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
-            readOnly: true,
-            kind: 'config',
-            configuration: manifest.configuration.name,
-            ...(config.rules_path === undefined ? {} : { rulesPath: config.rules_path }),
-        };
-        out.files.push(file);
-        if (manifest.configuration.name === 'formatting' && config.target === '.editorconfig') {
-            const adopted = selection.view.tool('editorconfig')['adopted'] as EditorconfigAdoption | undefined;
-            for (const directory of adopted?.directories ?? []) {
-                const path = `${directory.basePath}/.editorconfig`;
-                const nestedInputs = {
-                    ...inputs,
-                    tool: (name: string) => (name === 'editorconfig' ? { adopted: directory } : inputs.tool(name)),
-                };
-                out.files.push({
-                    ...file,
-                    path,
-                    content: emitTarget(`${manifest.dir}/${config.template}`, path, nestedInputs, config.header),
-                });
-            }
-        }
-        pointerFor({ ...context, inputs }, config, file, out);
-    }
-}
+// The hook manager integrations gspot writes, by the tool the policy names; gspot's own hooks need none.
+const HOOK_OUTPUTS: Record<
+    string,
+    (root: string, runner: string | undefined, out: GeneratedProposal, binary: string | undefined) => void
+> = {
+    'pre-commit': (root, runner, out, binary) => out.configurations.push(preCommitConfiguration(root, runner, binary)),
+    'simple-git-hooks': (root, runner, out, binary) => { simpleGitHookOutputs(root, runner, out, binary); },
+    husky: (root, runner, out, binary) => {
+        for (const line of huskyLines(root, runner, binary))
+            out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
+    },
+    lefthook: (root, runner, out, binary) => out.configurations.push(lefthookConfiguration(root, runner, binary)),
+};
 
 function hookOutputs(root: string, policy: Policy, out: GeneratedProposal, binary: string | undefined): void {
-    const runner = policy.runner?.tool;
-    switch (policy.hooks?.tool) {
-        case 'gspot': {
-            break;
-        }
-        case 'pre-commit': {
-            out.configurations.push(preCommitConfiguration(root, runner, binary));
-            break;
-        }
-        case 'simple-git-hooks': {
-            simpleGitHookOutputs(root, policy.runner?.tool, out, binary);
-            break;
-        }
-        case 'husky': {
-            for (const line of huskyLines(root, runner, binary))
-                out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
-            break;
-        }
-        case 'lefthook': {
-            out.configurations.push(lefthookConfiguration(root, runner, binary));
-            break;
-        }
-        // No default
-    }
+    const tool = policy.hooks?.tool;
+    if (tool === undefined) return;
+    HOOK_OUTPUTS[tool]?.(root, policy.runner?.tool, out, binary);
 }
 
 function runnerOutputs(
@@ -316,6 +78,11 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
             isMise: policy.runner?.tool === 'mise',
         }),
     );
+}
+
+// Whether any scope selects the configuration.
+function isSelected(scopes: ScopeSelection[], name: string): boolean {
+    return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
 }
 
 function rootView(scopes: ScopeSelection[]): MergedView {
@@ -377,15 +144,6 @@ function validateProposal(proposal: GeneratedProposal): void {
     }
 }
 
-type EmitContext = {
-    root: string;
-    files: TrackedFile[];
-    scopes: ScopeSelection[];
-    inputs: TemplateInputs;
-    selection: ScopeSelection;
-    manifest: Manifest;
-};
-
 /**
  * Renders proposed files in memory while retaining observations at the caller’s lifecycle lock boundary.
  * @param policy the repository policy
@@ -411,63 +169,14 @@ export function emitAll(
         for (const manifest of selection.selected)
             configurationFiles({ root, files, scopes, inputs, selection, manifest }, out, seen);
     }
-    if (out.files.some((file) => file.configuration === 'formatting')) {
-        const retained = retainedConfigurationPaths(
-            root,
-            files.filter((file) => file.nature === 'source').map((file) => file.path),
-            ['prettier', 'ec'],
-            takeover,
-        );
-        if (retained.length > 0) {
-            const adopted = policy.tools['editorconfig']?.['adopted'] as EditorconfigAdoption | undefined;
-            const editorconfigs = new Set(
-                adopted === undefined
-                    ? []
-                    : [
-                          '.editorconfig',
-                          ...(adopted.directories ?? []).map((directory) => `${directory.basePath}/.editorconfig`),
-                      ],
-            );
-            out.files = out.files.filter(
-                (file) =>
-                    file.configuration !== 'formatting' ||
-                    file.path.startsWith('.gspot/') ||
-                    editorconfigs.has(file.path) ||
-                    retained.every((path) => posix.dirname(path) !== posix.dirname(file.path)),
-            );
-            out.notes.push(
-                ...retained.map(
-                    (path) =>
-                        `retained ${path}: editor configuration remains active; gspot checks use generated policy`,
-                ),
-            );
-        }
-    }
-    if (out.files.some((file) => file.path === '.gspot/config/eslint.config.mjs')) {
-        const retained = retainedConfigurationPaths(
-            root,
-            files.filter((file) => file.nature === 'source').map((file) => file.path),
-            ['eslint'],
-            takeover,
-        );
-        if (retained.length > 0) {
-            out.files = out.files.filter((file) => file.path !== 'eslint.config.mjs');
-            out.notes.push(
-                ...retained.map(
-                    (path) =>
-                        `retained ${path}: authored ESLint configuration remains active; gspot checks use generated policy`,
-                ),
-            );
-        }
-    }
+    withdrawRetained({ root, policy, files, takeover }, out);
     out.configurations.push(...bunConfiguration(root, scopes));
     hookOutputs(root, policy, out, binary);
     out.files.push(...toolPackages(manifests, packageManager, policy.runner?.tool), ...toolEnvironment(manifests));
     runnerOutputs(root, policy, manifests, version, packageManager !== undefined, out);
     workflowOutput(policy, scopes, version, out);
     out.files.push(...assembleRules(policy.rules, manifests));
-    if (scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'prose')))
-        out.files.push(...styleFiles(policy, rootView(scopes)));
+    if (isSelected(scopes, 'prose')) out.files.push(...styleFiles(policy, rootView(scopes)));
     blockOutputs(root, policy, manifests, hasGit, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));
     combineConfigurations(out);
