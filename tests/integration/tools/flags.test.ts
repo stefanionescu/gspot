@@ -104,13 +104,14 @@ test('every pinned tool a manifest command names is defined in that manifest', (
 for (const command of distinct) {
     const executable = executableOf(command.tool);
     const title = `${command.tool.name} ${command.subcommands.join(' ')}`.trim();
-    test.skipIf(executable === undefined)(
-        `the help of ${title} names ${command.flags.join(' ')}`,
-        async () => {
-            const text = await helpText(executable!, command.subcommands, command.flags);
-            const missing = command.flags.filter((flag) => !text.includes(flag));
-            expect(missing, `${title}: ${text.slice(0, 400)}`).toStrictEqual([]);
-        },
-        HELP_TIMEOUT_MS,
-    );
+    if (executable !== undefined)
+        test(
+            `the help of ${title} names ${command.flags.join(' ')}`,
+            async () => {
+                const text = await helpText(executable!, command.subcommands, command.flags);
+                const missing = command.flags.filter((flag) => !text.includes(flag));
+                expect(missing, `${title}: ${text.slice(0, 400)}`).toStrictEqual([]);
+            },
+            HELP_TIMEOUT_MS,
+        );
 }

@@ -52,22 +52,21 @@ describe('the ansible configuration', () => {
                 environment,
             );
             const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            if (process.platform === 'win32') {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-                expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: 'skipped' }]);
-                expect(report.skips).toContainEqual({ check: 'ansible/lint', source: 'platform' });
-                return;
-            }
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: 'fail' }]);
-            expect(report.checks[0]?.findings).toContainEqual(
-                expect.objectContaining({
-                    check: 'ansible/lint',
-                    file: 'deploy/site.yml',
-                    rule: 'command-instead-of-module',
-                    line: 5,
-                }),
+            // ansible-lint has no Windows build, so the check is skipped there for the platform and the run passes.
+            const isWindows = process.platform === 'win32';
+            const commandInsteadOfModule = expect.objectContaining({
+                check: 'ansible/lint',
+                file: 'deploy/site.yml',
+                rule: 'command-instead-of-module',
+                line: 5,
+            });
+            const withCommand = expect.arrayContaining([commandInsteadOfModule]);
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
+            expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'fail' }]);
+            expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.source === 'platform')).toBe(
+                isWindows,
             );
+            expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : withCommand);
             const corrected = await run(
                 sandbox.path,
                 ['check', '--only', 'ansible/lint', '--no-cache', '--json'],
@@ -75,7 +74,7 @@ describe('the ansible configuration', () => {
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'ansible/lint', status: 'ok', findings: [] },
+                { check: 'ansible/lint', status: isWindows ? 'skipped' : 'ok', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS * 4,

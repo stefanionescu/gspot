@@ -34,10 +34,10 @@ test('initialization and cold and warm staged checks stay within the 5000-file p
         measurements.push(elapsed);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout);
-        if (measurements.length === 2)
-            expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe(
-                'cache',
-            );
+        // The first run executes the check; the second run answers from the cache.
+        expect(report.checks.find((check: { check: string }) => check.check === 'bash/syntax')?.status).toBe(
+            measurements.length === 2 ? 'cache' : 'ok',
+        );
         console.log(
             `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${ceiling} ms`,
         );

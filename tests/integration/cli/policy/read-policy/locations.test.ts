@@ -86,7 +86,8 @@ describe('parsePolicyText', () => {
         const found = policyProblems(text);
         expect(found).toHaveLength(1);
         expect(found[0]).toStartWith(`gspot.toml:${String(line)}:`);
-        if (name === 'a quoted key') expect(found[0]).toContain('expected boolean, received string');
+        // The quoted key keeps its type message beside the position.
+        expect(name !== 'a quoted key' || found[0]!.includes('expected boolean, received string')).toBe(true);
         expect(policyProblems(text.replace(correction[0], correction[1]))).toStrictEqual([]);
     });
     test.each(['\n', '\r\n'])(

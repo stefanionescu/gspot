@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { chmodSync, statSync } from 'node:fs';
+import { existsSync, chmodSync, statSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
@@ -66,14 +66,14 @@ test.each([false, true])(
         );
         expect(await Bun.file(join(sandbox.path, generated.path)).text()).toBe(generated.content);
         expect(statSync(join(sandbox.path, generated.path)).mode & 0o777).toBe(0o444);
-        if (authored) {
-            expect(await Bun.file(join(sandbox.path, 'jsconfig.json')).text()).toBe(config);
-            await Bun.write(join(sandbox.path, 'jsconfig.json'), '{');
-            const invalid = await run(sandbox.path, command, env);
-            expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-            expect(invalid.stderr).toContain('jsconfig.json');
-            expect(await Bun.file(join(sandbox.path, 'jsconfig.json')).text()).toBe('{');
-        }
+        // An authored jsconfig is read, never rewritten, and a broken one stops the check with its name.
+        const jsconfig = join(sandbox.path, 'jsconfig.json');
+        expect(existsSync(jsconfig) ? await Bun.file(jsconfig).text() : undefined).toBe(authored ? config : undefined);
+        if (authored) await Bun.write(jsconfig, '{');
+        const invalid = authored ? await run(sandbox.path, command, env) : undefined;
+        expect(invalid?.code, (invalid?.stdout ?? '') + (invalid?.stderr ?? '')).toBe(authored ? 2 : undefined);
+        expect(invalid?.stderr.includes('jsconfig.json')).toBe(authored ? true : undefined);
+        expect(existsSync(jsconfig) ? await Bun.file(jsconfig).text() : undefined).toBe(authored ? '{' : undefined);
     },
     60_000,
 );

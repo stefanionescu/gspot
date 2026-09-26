@@ -69,8 +69,8 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
     });
     expect(result?.fatalErrorCount).toBe(0);
     const layout = result!.messages.filter((message) => message.ruleId === 'gspot/private-before-public');
-    if (level === 'recommended') expect(layout).toStrictEqual([]);
-    else expect(layout).toMatchObject([{ ruleId: 'gspot/private-before-public', line: 2 }]);
+    // The layout rule belongs to the all level alone.
+    expect(layout).toMatchObject(level === 'recommended' ? [] : [{ ruleId: 'gspot/private-before-public', line: 2 }]);
 });
 
 test('license configuration retains scoped exceptions and inherited license allowances', async () => {

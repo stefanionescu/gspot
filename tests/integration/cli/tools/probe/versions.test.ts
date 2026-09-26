@@ -17,11 +17,8 @@ test.each([
         const tool = { ...commandPin('version-teller', '3.8.1'), version_command: ['-e', script] };
         const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
         expect(probe.state).toBe(state);
-        if (note === undefined) {
-            expect(probe.found).toBe('3.8.1');
-        } else {
-            expect(probe.note).toContain(note);
-        }
+        // A usable tool reports the version it printed; any other state explains itself in the note.
+        expect(note === undefined ? probe.found : probe.note).toContain(note ?? '3.8.1');
     } finally {
         which.mockRestore();
     }
@@ -119,22 +116,24 @@ test('a command shares version observations and the next session probes again', 
 });
 
 test.each([
-    ['wrapper', 'ok'],
-    ['other-package', 'error'],
-] as const)('the declared npm version exit applies only to the matching package: %s', async (packageName, state) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/wrapper/package.json': JSON.stringify({ name: packageName, version: '0.7.0' }),
-        '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho 0.9.0\nexit 1\n',
-    });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), RUNS);
-    mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-    symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
-    const tool = commandPin('wrapped', '0.10.0');
-    tool.floor = '0.9.0';
-    tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
-    const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
-    expect(observed.state).toBe(state);
-    if (state === 'ok') expect(observed.found).toBe('0.9.0');
-    else expect(observed.note).toContain('version probe exited 1');
-});
+    ['wrapper', 'ok', '0.9.0'],
+    ['other-package', 'error', 'version probe exited 1'],
+] as const)(
+    'the declared npm version exit applies only to the matching package: %s',
+    async (packageName, state, text) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            '.gspot/node_modules/wrapper/package.json': JSON.stringify({ name: packageName, version: '0.7.0' }),
+            '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho 0.9.0\nexit 1\n',
+        });
+        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), RUNS);
+        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
+        symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
+        const tool = commandPin('wrapped', '0.10.0');
+        tool.floor = '0.9.0';
+        tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
+        const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+        expect(observed.state).toBe(state);
+        expect(state === 'ok' ? observed.found : observed.note).toContain(text);
+    },
+);

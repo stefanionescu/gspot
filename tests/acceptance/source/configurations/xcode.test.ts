@@ -152,14 +152,12 @@ describe('the xcode configuration', () => {
             const environment = prepared.environment;
             const outcome = await runPlanted(sandbox.path, planted, environment);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            if (planted.check === 'xcode/plist' && process.platform !== 'darwin') {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-                expect(failed.checks).toMatchObject([{ check: planted.check, status: 'skipped' }]);
-                return;
-            }
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            // The plist check needs the macOS plutil, so it is skipped elsewhere and the run passes.
+            const isSkipped = planted.check === 'xcode/plist' && process.platform !== 'darwin';
+            const withExpected = expect.arrayContaining([expect.objectContaining(planted.expected)]);
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
+            expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
+            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);
             const files: Record<string, string> = {};
             if (planted.expected.rule === 'orphan-asset') {
                 Object.assign(files, planted.files);
@@ -189,7 +187,9 @@ describe('the xcode configuration', () => {
             const accepted = reportSchema.parse(
                 await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
             );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+            expect(accepted.checks).toMatchObject([
+                { check: planted.check, status: isSkipped ? 'skipped' : 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 5,
     );

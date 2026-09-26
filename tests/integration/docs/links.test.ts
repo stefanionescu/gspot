@@ -1,10 +1,10 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
 import { validateSiteLinks } from '../../../docs/scripts/links';
+import { rejection } from '#tests/support/rejection.ts';
 
 test('built-site validation covers landing fragments, relative manual links, encoded paths, and assets', async () => {
     await using sandbox = await testdir();
@@ -17,13 +17,17 @@ test('built-site validation covers landing fragments, relative manual links, enc
     const directory = pathToFileURL(`${sandbox.path}/`);
     await validateSiteLinks(directory, 'https://gspot.dev');
     writeFileSync(join(sandbox.path, 'index.html'), '<a href="/guide/#missing">Missing section</a>');
-    await rejects(validateSiteLinks(directory, 'https://gspot.dev'), { message: /fragment #missing does not exist/u });
+    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
+        /fragment #missing does not exist/u,
+    );
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><a href="/absent/">Missing page</a>');
-    await rejects(validateSiteLinks(directory, 'https://gspot.dev'), { message: /destination does not exist/u });
+    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
+        /destination does not exist/u,
+    );
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><img src="/assets/missing.png">');
-    await rejects(validateSiteLinks(directory, 'https://gspot.dev'), {
-        message: /missing.png: destination does not exist/u,
-    });
+    expect((await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).message).toMatch(
+        /missing.png: destination does not exist/u,
+    );
     writeFileSync(
         join(sandbox.path, 'index.html'),
         '<h1 id="finding">Finding</h1><a href="https://example.com">External</a>',

@@ -7,7 +7,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
-import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
@@ -94,18 +94,16 @@ test.each(['', "apps/worker's tools"])(
             ).ready,
         ).toBe(false);
         writeFileSync(managerPath, manager);
-        if (process.platform !== 'win32') {
-            chmodSync(managerPath, 0o644);
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            chmodSync(managerPath, 0o755);
-        }
+        // A manager file that lost its executable bit is not ready; Windows has no such bit to lose.
+        if (process.platform !== 'win32') chmodSync(managerPath, 0o644);
+        const unexecutable = hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready;
+        expect(unexecutable).toBe(process.platform === 'win32');
+        chmodSync(managerPath, 0o755);
         expect(
             hookStatus(
                 await openSession(root).then((session) => ({
@@ -156,19 +154,17 @@ test.each(['', "apps/worker's tools"])(
         ] as const) {
             writeFileSync(rc, body);
             writeFileSync(join(root, 'gspot-runs'), '');
+            for (const capture of ['gspot-input', 'gspot-args']) rmSync(join(root, capture), { force: true });
             const result = await run(args, { cwd: root, env: { ...env, SIMPLE_GIT_HOOKS_RC: rc } });
             expect(result.code, result.stdout + result.stderr).toBe(status);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
-            if (calls !== '') {
-                expect(readFileSync(join(root, 'gspot-input'), 'utf8')).toBe(input);
-                expect(JSON.parse(readFileSync(join(root, 'gspot-args'), 'utf8'))).toStrictEqual([
-                    'check',
-                    '--push',
-                    '--',
-                    'origin',
-                    'remote with spaces',
-                ]);
-            }
+            // A run that reached gspot handed it the push input and the arguments; one that did not left no capture.
+            const captured = (name: string) =>
+                existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
+            expect(captured('gspot-input')).toBe(calls === '' ? undefined : input);
+            expect(captured('gspot-args')).toBe(
+                calls === '' ? undefined : JSON.stringify(['check', '--push', '--', 'origin', 'remote with spaces']),
+            );
         }
         expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(originalManifest);

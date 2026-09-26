@@ -34,16 +34,14 @@ test.each(['', 'hooks', '.husky'])(
             ...(hooksPath === '' ? {} : { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        if (hooksPath !== '') expect(git(sandbox.path, ['config', 'core.hooksPath', hooksPath]).code).toBe(0);
+        const configured = hooksPath === '' ? { code: 0 } : git(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
+        expect(configured.code).toBe(0);
         const result = await run(sandbox.path, [...INIT, '--dry-run']);
         expect(result.code).toBe(0);
-        const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line));
-        if (hooksPath === '') expect(hooks).toMatch(/^hooks\s+none$/);
-        else {
-            expect(hooks).toContain(`${hooksPath}/`);
-            expect(hooks).toContain('pre-commit');
-            expect(hooks?.split('(hand-written)')).toHaveLength(2);
-        }
+        const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
+        // No configured hooks reads "none"; a configured folder is named with its one hand-written hook.
+        expect(hooks).toMatch(hooksPath === '' ? /^hooks\s+none$/ : new RegExp(`^hooks\\s.*${hooksPath}/.*pre-commit`));
+        expect(hooks.split('(hand-written)')).toHaveLength(hooksPath === '' ? 1 : 2);
         expect(readFileSync(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },

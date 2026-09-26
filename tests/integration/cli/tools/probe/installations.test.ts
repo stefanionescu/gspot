@@ -8,9 +8,8 @@ import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 
 describe('the tool probe', () => {
-    test.skipIf(process.platform === 'win32')(
-        'version probes and tool execution prefer helpers from the selected installation',
-        async () => {
+    if (process.platform !== 'win32')
+        test('version probes and tool execution prefer helpers from the selected installation', async () => {
             await using sandbox = await testdir();
             const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
             await createFileTree(sandbox.path, {
@@ -28,8 +27,7 @@ describe('the tool probe', () => {
             expect(executed.code).toBe(0);
             expect(executed.stdout.trim()).toBe('3.8.1');
             expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);
-        },
-    );
+        });
 
     test('an active PATH executable wins over an unrelated mise shim', async () => {
         await using sandbox = await testdir();

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -35,9 +34,9 @@ test('license analysis refuses absent dependencies instead of reporting a succes
         'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n',
         'package.json': '{"name":"example","private":true}',
     });
-    await rejects(licensesPackages(await input(sandbox.path)), {
-        message: 'Dependency licenses cannot be checked before installing the project dependencies.',
-    });
+    expect((await rejection(licensesPackages(await input(sandbox.path)))).message).toBe(
+        'Dependency licenses cannot be checked before installing the project dependencies.',
+    );
 });
 
 test.each(['malformed JSON', 'missing version', 'missing license', 'empty report', 'scanner failure'])(
@@ -111,8 +110,11 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         try {
             await rejection(licensesPackages(selected));
             expect(spawn).not.toHaveBeenCalled();
+            // A linked configuration outside the repository is never written.
+            expect(
+                failure !== 'external link' || readFileSync(join(outside.path, 'configuration.json')).equals(original),
+            ).toBe(true);
             if (failure === 'external link') {
-                expect(readFileSync(join(outside.path, 'configuration.json'))).toStrictEqual(original);
                 unlinkSync(path);
             }
             await Bun.write(path, original);

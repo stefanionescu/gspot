@@ -56,17 +56,18 @@ process.exitCode = ${String(status)};`;
             expect(result.stderr).not.toBe('');
         });
 
-        test.skipIf(process.platform === 'win32')('denied execution is distinct from a missing file', async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
-            const executable = join(sandbox.path, 'denied.sh');
-            chmodSync(executable, 0o600);
-            const result = await backend.execute([executable], { cwd: sandbox.path });
-            expect(result.code).not.toBe(0);
-            expect(result.code).not.toBe(127);
-            expect(result.missing).toBe(false);
-            expect(result.stderr).not.toBe('');
-        });
+        if (process.platform !== 'win32')
+            test('denied execution is distinct from a missing file', async () => {
+                await using sandbox = await testdir();
+                await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
+                const executable = join(sandbox.path, 'denied.sh');
+                chmodSync(executable, 0o600);
+                const result = await backend.execute([executable], { cwd: sandbox.path });
+                expect(result.code).not.toBe(0);
+                expect(result.code).not.toBe(127);
+                expect(result.missing).toBe(false);
+                expect(result.stderr).not.toBe('');
+            });
 
         test('a genuine deadline terminates the process and reports timeout', async () => {
             await using sandbox = await testdir();

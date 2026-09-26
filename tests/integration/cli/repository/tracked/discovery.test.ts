@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { statSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readRepository } from '#cli/repository/tree.ts';
 import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
+import { rejection } from '#tests/support/rejection.ts';
 
 describe('repository file discovery', () => {
     test('excluded links are omitted before resolving external targets', async () => {
@@ -20,7 +20,9 @@ describe('repository file discovery', () => {
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: root }).code).toBe(0);
         const repository = await readRepository(root, [], [], ['excluded.ts']);
         expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-        await rejects(readRepository(root, [], [], []), { message: /Source link leaves the repository/u });
+        expect((await rejection(readRepository(root, [], [], []))).message).toMatch(
+            /Source link leaves the repository/u,
+        );
         expect(fs.readFileSync(join(sandbox.path, 'outside.ts'), 'utf8')).toBe('private external bytes');
     });
 
@@ -51,7 +53,7 @@ describe('repository file discovery', () => {
                 throw denied;
             });
             try {
-                await rejects(trackedEntries(sandbox.path), denied);
+                expect(await rejection(trackedEntries(sandbox.path))).toBe(denied);
             } finally {
                 metadata.mockRestore();
                 listed.mockRestore();
@@ -94,7 +96,9 @@ describe('repository file discovery', () => {
             expect(() => head(sandbox.path, 'source.ts')).toThrow('Planted read failure');
             const descriptor = opened.mock.results[0];
             expect(descriptor?.type).toBe('return');
-            if (descriptor?.type === 'return') expect(() => fs.fstatSync(descriptor.value)).toThrow('EBADF');
+            // The descriptor the failed read opened is closed again.
+            const openedDescriptor = descriptor?.type === 'return' ? descriptor.value : undefined;
+            expect(() => fs.fstatSync(Number(openedDescriptor))).toThrow('EBADF');
         } finally {
             opened.mockRestore();
             reads.mockRestore();
@@ -143,7 +147,7 @@ describe('repository file discovery', () => {
         const entries = await trackedEntries(cwd);
         expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
         writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
-        await rejects(trackedEntries(cwd), { message: /Git ls-files failed/u });
+        expect((await rejection(trackedEntries(cwd))).message).toMatch(/Git ls-files failed/u);
     });
 
     test('reports invalid Git metadata instead of treating the directory as non-Git', async () => {
@@ -152,7 +156,7 @@ describe('repository file discovery', () => {
             '.git/sentinel': 'incomplete metadata',
             'source.ts': 'export {};\n',
         });
-        await rejects(trackedEntries(sandbox.path), { message: /Git ls-files failed/u });
+        expect((await rejection(trackedEntries(sandbox.path))).message).toMatch(/Git ls-files failed/u);
         expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
         expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
     });
@@ -168,7 +172,7 @@ describe('repository file discovery', () => {
             duration: 0,
         });
         try {
-            await rejects(trackedEntries(sandbox.path), { message: /git executable not found/u });
+            expect((await rejection(trackedEntries(sandbox.path))).message).toMatch(/git executable not found/u);
             expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
             expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
         } finally {

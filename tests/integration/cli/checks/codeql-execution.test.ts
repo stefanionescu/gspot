@@ -24,6 +24,8 @@ test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
             files: session.repository.files,
         });
         const copies: string[] = [];
+        // What the database creation saw in its copy of the repository.
+        const sources: string[] = [];
         const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
             if (argv.includes('resolve'))
                 return {
@@ -35,10 +37,9 @@ test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
                 };
             const cwd = options?.cwd;
             if (cwd === undefined) throw new Error('CodeQL requires a working directory.');
-            expect(cwd).not.toBe(directory.path);
             copies.push(cwd);
             if (argv.includes('create')) {
-                expect(readFileSync(join(cwd, 'source.py'), 'utf8')).toBe('value = 1\n');
+                sources.push(readFileSync(join(cwd, 'source.py'), 'utf8'));
                 writeFileSync(join(cwd, 'generated.py'), 'build side effect');
             }
             const output = argv.find((part) => part.startsWith('--output='));
@@ -61,6 +62,8 @@ test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
                 ),
             ).toStrictEqual([]);
             expect(run).toHaveBeenCalledTimes(3);
+            expect(copies).not.toContain(directory.path);
+            expect(sources).toStrictEqual(['value = 1\n']);
             expect(existsSync(join(directory.path, 'generated.py'))).toBe(false);
             expect(copies.every((copy) => !existsSync(copy))).toBe(true);
         } finally {
@@ -80,7 +83,8 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
     const manifest = session.manifests.get('security')!;
     const spec = manifest.checks.find((entry) => entry.analysis === 'codeql')!;
     const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript'];
-    let analyses = 0;
+    // Every database creation and analysis the check ran, with the copy it ran in.
+    const invoked: { argv: string[]; cwd: string }[] = [];
     const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
         const base = { code: 0, missing: false, stderr: '', duration: 1 };
         if (argv.includes('resolve'))
@@ -92,13 +96,8 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
                 }),
             };
         const cwd = options.cwd;
-        expect(cwd).not.toBe(directory.path);
-        if (argv.includes('create')) expect(argv).toContain('--language=javascript');
-        else if (argv.includes('analyze')) {
-            analyses += 1;
-            expect(argv).toContain(
-                `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
-            );
+        invoked.push({ argv, cwd });
+        if (argv.includes('analyze')) {
             const output = argv.find((part) => part.startsWith('--output='))!;
             writeFileSync(
                 output.slice('--output='.length),
@@ -126,7 +125,7 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
                     ],
                 }),
             );
-        } else throw new Error('Unexpected CodeQL command');
+        } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
         return { ...base, stdout: '' };
     });
     try {
@@ -137,7 +136,15 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
                 files: session.repository.files,
             }),
         );
-        expect(analyses).toBe(1);
+        expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
+        const option = (command: string, prefix: string) =>
+            invoked
+                .filter(({ argv }) => argv.includes(command))
+                .map(({ argv }) => argv.find((part) => part.startsWith(prefix)));
+        expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
+        expect(option('analyze', 'codeql/')).toStrictEqual([
+            `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
+        ]);
         expect(findings).toMatchObject([
             { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },
         ]);

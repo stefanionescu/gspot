@@ -13,10 +13,10 @@ test('verified upstream grammar is cached and reused without another download', 
     const path = join(sandbox.path, 'build/swift.wasm');
     using download = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);
-    expect(readFileSync(path)).toEqual(bytes);
+    expect(readFileSync(path)).toStrictEqual(bytes);
     download.mockRejectedValue(new Error('Cached preparation must not use the network.'));
     await prepareInput(path, SWIFT_GRAMMAR);
-    expect(readFileSync(path)).toEqual(bytes);
+    expect(readFileSync(path)).toStrictEqual(bytes);
 });
 
 test('a corrupted download never becomes a cached parser', async () => {
@@ -27,7 +27,7 @@ test('a corrupted download never becomes a cached parser', async () => {
     expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);
-    expect(readFileSync(path)).toEqual(bytes);
+    expect(readFileSync(path)).toStrictEqual(bytes);
 });
 
 test('a corrupt cache is refused without replacing it or making a network request', async () => {
@@ -48,5 +48,5 @@ test('an upstream HTTP failure leaves no parser and a corrected response prepare
     expect(existsSync(path)).toBe(false);
     download.mockResolvedValue(new Response(bytes));
     await prepareInput(path, SWIFT_GRAMMAR);
-    expect(readFileSync(path)).toEqual(bytes);
+    expect(readFileSync(path)).toStrictEqual(bytes);
 });

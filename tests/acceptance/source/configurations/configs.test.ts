@@ -118,42 +118,45 @@ describe('the configs configuration', () => {
         PLANTED_TIMEOUT_MS * 2,
     );
 
-    test.skipIf(process.platform !== 'darwin')(
-        'configs/plist reports a property list that does not parse',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-            await install(sandbox.path, [...INIT, '--no-hooks'], environment);
-            const outcome = await runPlanted(
-                sandbox.path,
-                {
-                    check: 'configs/plist',
-                    files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
-                },
-                environment,
-            );
-            expect(outcome.code, outcome.stdout).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ file: 'app/Info.plist' }));
-            await Bun.write(
-                join(sandbox.path, 'app/Info.plist'),
-                '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
-            );
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'configs/plist', '--no-cache', '--json'],
-                environment,
-            );
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'configs/plist', status: 'ok', findings: [] },
-            ]);
-        },
-        PLANTED_TIMEOUT_MS,
-    );
+    if (process.platform === 'darwin')
+        test(
+            'configs/plist reports a property list that does not parse',
+            async () => {
+                await using sandbox = await testdir();
+                await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+                commitAll(sandbox.path);
+                const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
+                await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+                const outcome = await runPlanted(
+                    sandbox.path,
+                    {
+                        check: 'configs/plist',
+                        files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
+                    },
+                    environment,
+                );
+                expect(outcome.code, outcome.stdout).toBe(1);
+                const failed = reportSchema.parse(
+                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
+                );
+                expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
+                expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining({ file: 'app/Info.plist' }));
+                await Bun.write(
+                    join(sandbox.path, 'app/Info.plist'),
+                    '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
+                );
+                const corrected = await run(
+                    sandbox.path,
+                    ['check', '--only', 'configs/plist', '--no-cache', '--json'],
+                    environment,
+                );
+                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                    { check: 'configs/plist', status: 'ok', findings: [] },
+                ]);
+            },
+            PLANTED_TIMEOUT_MS,
+        );
 
     test.each([
         {

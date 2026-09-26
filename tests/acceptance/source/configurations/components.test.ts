@@ -176,12 +176,13 @@ test.each([
         ).toStrictEqual([
             { check: `${framework}/eslint`, rule: 'gspot/no-trivial-functions', file: filename, line: 2, column: 1 },
         ]);
-        if (language === 'typescript')
-            expect(
-                report.checks
-                    .flatMap((check) => check.findings)
-                    .find((finding) => finding.rule === '@typescript-eslint/no-explicit-any'),
-            ).toMatchObject({ file: filename, line: 2 });
+        // The typed component also reports its explicit any; the plain one has no type rules.
+        const explicitAny = report.checks
+            .flatMap((check) => check.findings)
+            .find((finding) => finding.rule === '@typescript-eslint/no-explicit-any');
+        expect(
+            explicitAny === undefined ? undefined : { file: explicitAny.file, line: explicitAny.line },
+        ).toStrictEqual(language === 'typescript' ? { file: filename, line: 2 } : undefined);
         await Bun.write(
             join(sandbox.path, filename),
             `<script${framework === 'vue' ? ' setup' : ''}${language === 'typescript' ? ' lang="ts"' : ''}>\nconst answer = 42;\n</script>\n` +

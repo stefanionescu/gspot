@@ -14,11 +14,64 @@ import {
     readFileSync,
     readdirSync,
     renameSync,
+    rmSync,
     unlinkSync,
     utimesSync,
     writeFileSync,
 } from 'node:fs';
 import { rejection } from '#tests/support/rejection.ts';
+
+// Lefthook's own helper is repaired on install, an edit to it is refused, and a missing one is not ready.
+async function expectHelperRepairs(
+    root: string,
+    helperPath: string,
+    originalHelper: Buffer<ArrayBuffer>,
+): Promise<void> {
+    const repaired = readFileSync(helperPath);
+    expect(repaired).not.toStrictEqual(originalHelper);
+    writeFileSync(helperPath, '#!/bin/sh\nexit 0\n');
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(false);
+    expect(
+        (
+            await rejection(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            )
+        ).message,
+    ).toContain('Retained edited hook');
+    expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
+    writeFileSync(helperPath, repaired);
+    unlinkSync(helperPath);
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(false);
+    writeFileSync(helperPath, repaired, { mode: 0o755 });
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(true);
+}
 
 test.each(['custom', 'native'])(
     'native Lefthook preserves a %s hook and delivers exact Git input',
@@ -91,10 +144,12 @@ test.each(['custom', 'native'])(
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(readFileSync(join(root, 'lefthook.yml'), 'utf8')).toBe(configuration);
         const location = hookLocation(root);
-        if (existing === 'native') {
-            const prepared = await run([join(root, 'node_modules/.bin/lefthook'), 'install'], options);
-            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-        } else {
+        const prepared =
+            existing === 'native'
+                ? await run([join(root, 'node_modules/.bin/lefthook'), 'install'], options)
+                : undefined;
+        expect(prepared?.code ?? 0, (prepared?.stdout ?? '') + (prepared?.stderr ?? '')).toBe(0);
+        if (existing !== 'native') {
             writeFileSync(join(location.absolute, 'pre-commit'), '#!/bin/sh\nprintf retained > original-ran\n', {
                 mode: 0o755,
             });
@@ -154,59 +209,19 @@ test.each(['custom', 'native'])(
                 })),
             ).ready,
         ).toBe(true);
-        if (existing === 'native' && originalHelper !== undefined) {
-            const repaired = readFileSync(helperPath);
-            expect(repaired).not.toStrictEqual(originalHelper);
-            writeFileSync(helperPath, '#!/bin/sh\nexit 0\n');
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            expect(
-                (
-                    await rejection(
-                        installHookManager(
-                            await openSession(root).then((session) => ({
-                                policy: session.policyFiles.policy,
-                                repository: session.repository,
-                                tools: session,
-                            })),
-                        ),
-                    )
-                ).message,
-            ).toContain('Retained edited hook');
-            expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
-            writeFileSync(helperPath, repaired);
-            unlinkSync(helperPath);
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            writeFileSync(helperPath, repaired, { mode: 0o755 });
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(true);
-        }
+        if (existing === 'native' && originalHelper !== undefined)
+            await expectHelperRepairs(root, helperPath, originalHelper);
         expect((await run(['git', 'add', 'gspot.toml'], { cwd: root })).code).toBe(0);
         unlinkSync(join(root, 'failed'));
         writeFileSync(join(root, 'gspot-runs'), '');
         const native = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
         expect(native.code, native.stdout + native.stderr).toBe(0);
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
-        if (existing === 'custom') expect(readFileSync(join(root, 'original-ran'), 'utf8')).toBe('retained');
+        // The retained custom hook ran beside gspot; a native installation had no such hook.
+        const originalRan = join(root, 'original-ran');
+        expect(existsSync(originalRan) ? readFileSync(originalRan, 'utf8') : undefined).toBe(
+            existing === 'custom' ? 'retained' : undefined,
+        );
         expect(readFileSync(join(root, 'rc-ran'), 'utf8')).toBe('updated');
         expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8')).args).toStrictEqual(['check', '--staged']);
         const changedAt = new Date(Date.now() + 2000);
@@ -225,10 +240,14 @@ test.each(['custom', 'native'])(
             { ...options, stdin: '' },
         );
         expect(committed.code, committed.stdout + committed.stderr).toBe(0);
-        if (existing === 'custom') {
-            expect(readFileSync(helperPath, 'utf8')).toBe('#!/bin/sh\nprintf retained > helper-ran\n');
-            expect(readFileSync(join(root, 'helper-ran'), 'utf8')).toBe('retained');
-        }
+        // The custom helper is kept and ran; a native helper is Lefthook's own.
+        const helperRan = join(root, 'helper-ran');
+        expect(existsSync(helperRan) ? readFileSync(helperRan, 'utf8') : undefined).toBe(
+            existing === 'custom' ? 'retained' : undefined,
+        );
+        expect(readFileSync(helperPath, 'utf8') === '#!/bin/sh\nprintf retained > helper-ran\n').toBe(
+            existing === 'custom',
+        );
         expect(readFileSync(join(location.absolute, 'pre-commit'))).toStrictEqual(dispatcher);
         writeFileSync(join(root, 'failed'), 'finding');
         const messagePath = 'message with spaces "quotes" $dollar `literal`';
@@ -275,17 +294,18 @@ test.each(['custom', 'native'])(
             writeFileSync(join(root, 'hook-init-updated.sh'), `${body}\n`);
             writeFileSync(join(root, 'failed'), 'finding');
             writeFileSync(join(root, 'gspot-runs'), '');
+            rmSync(join(root, 'captured.json'), { force: true });
             const initialized = await run(
                 ['git', 'hook', 'run', '--to-stdin', 'push-input', 'pre-push', '--', 'origin', remote],
                 { ...options, stdin: '' },
             );
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(code);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
-            if (calls !== '')
-                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
-                    args: ['check', '--push', '--', 'origin', remote],
-                    input,
-                });
+            // A run that reached gspot captured the push input and arguments; a failed init left nothing.
+            const capturedPath = join(root, 'captured.json');
+            expect(existsSync(capturedPath) ? JSON.parse(readFileSync(capturedPath, 'utf8')) : undefined).toStrictEqual(
+                calls === '' ? undefined : { args: ['check', '--push', '--', 'origin', remote], input },
+            );
             expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
         }
         expect(readFileSync(join(root, 'rc-input'), 'utf8')).toBe(input);
@@ -360,11 +380,8 @@ test.each(['custom', 'native'])(
         expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
         expect(existsSync(join(location.absolute, 'pre-commit.gspot-manager'))).toBe(false);
-        if (originalHelper === undefined) {
-            expect(existsSync(helperPath)).toBe(false);
-        } else {
-            expect(readFileSync(helperPath)).toStrictEqual(originalHelper);
-        }
+        // Uninstall puts the native helper back and removes the one gspot created.
+        expect(existsSync(helperPath) ? readFileSync(helperPath) : undefined).toStrictEqual(originalHelper);
     },
     60_000,
 );

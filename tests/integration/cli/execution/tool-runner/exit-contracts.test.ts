@@ -78,9 +78,8 @@ test.each([0, 1, 3])(
         expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
         expect(statSync(join(sandbox.path, '.github/workflows/caller.yml')).mode & 0o777).toBe(0o444);
         expect(existsSync(join(sandbox.path, '.git'))).toBe(false);
-        if (code === 3) {
-            expect(result.note).toContain('exit 3');
-            expect(result.findings).toStrictEqual([]);
-        }
+        // An exit outside the contract is an error that names the exit code and carries no findings.
+        expect(result.note?.includes('exit 3') ?? false).toBe(code === 3);
+        expect(result.findings.length > 0).toBe(code === 1);
     },
 );

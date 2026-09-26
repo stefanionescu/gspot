@@ -92,7 +92,8 @@ test.each(['', 'guide[1]', 'native-defaults'])(
             'A paragraph.\n\n<span>Content</span>\n',
         );
         for (const name of literalFiles) {
-            if (!name.includes('\n')) expect(failed.stdout).toContain(`nested/${name}`);
+            // A name with a line break cannot be printed on one line; every other file is named in the output.
+            expect(name.includes('\n') || failed.stdout.includes(`nested/${name}`)).toBe(true);
             expect(readFileSync(join(sandbox.path, scope, 'nested', name), 'utf8')).toBe(
                 'A paragraph.\n\n<span>Content</span>\n',
             );

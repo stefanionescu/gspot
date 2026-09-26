@@ -25,14 +25,14 @@ test.each(['default', 'external'] as const)(
                 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
         });
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
-        if (kind === 'external') {
-            await createFileTree(external.path, { 'hooks/.keep': '' });
-            expect(
-                processes.runBlocking(['git', 'config', 'core.hooksPath', join(external.path, 'hooks')], {
-                    cwd: sandbox.path,
-                }).code,
-            ).toBe(0);
-        }
+        if (kind === 'external') await createFileTree(external.path, { 'hooks/.keep': '' });
+        const configured =
+            kind === 'external'
+                ? processes.runBlocking(['git', 'config', 'core.hooksPath', join(external.path, 'hooks')], {
+                      cwd: sandbox.path,
+                  })
+                : undefined;
+        expect(configured?.code ?? 0, configured?.stderr).toBe(0);
         const location = hookLocation(root);
         const hook = join(location.absolute, 'pre-commit');
         const original = '#!/bin/sh\nprintf private-original\n';
@@ -80,12 +80,11 @@ test.each([undefined, 'custom-hooks'])(
         });
         const initialized = await processes.run(['git', 'init', '--quiet'], { cwd: sandbox.path });
         expect(initialized.code, initialized.stderr).toBe(0);
-        if (hooksPath !== undefined) {
-            const configured = await processes.run(['git', 'config', 'core.hooksPath', hooksPath], {
-                cwd: sandbox.path,
-            });
-            expect(configured.code, configured.stderr).toBe(0);
-        }
+        const configured =
+            hooksPath === undefined
+                ? undefined
+                : await processes.run(['git', 'config', 'core.hooksPath', hooksPath], { cwd: sandbox.path });
+        expect(configured?.code ?? 0, configured?.stderr).toBe(0);
         const configPath = join(sandbox.path, '.git/config');
         const originalConfig = readFileSync(configPath);
         await applyAll(await openSession(sandbox.path));

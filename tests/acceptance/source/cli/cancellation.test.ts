@@ -96,7 +96,8 @@ test.each(['diff', 'clone', 'cat-file'])(
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
             await waitForExit(started.pid);
-            if (started.snapshot !== undefined) expect(existsSync(started.snapshot)).toBe(false);
+            // A snapshot the run had started is gone with it.
+            expect(started.snapshot !== undefined && existsSync(started.snapshot)).toBe(false);
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);

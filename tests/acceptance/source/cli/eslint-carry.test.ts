@@ -99,9 +99,10 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
                 .filter(({ ruleId }) => ruleId === 'eqeqeq')
                 .map(({ ruleId, severity }) => ({ ruleId, severity })),
         ).toStrictEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
-        if (path === 'package.json') expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
-        else if (existsSync(join(repository.path, path)))
-            expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
+        // The package manifest keeps its authored text; a native configuration file is rewritten or removed.
+        const authored = join(repository.path, path);
+        const kept = existsSync(authored) && readFileSync(authored, 'utf8') === original;
+        expect(kept).toBe(path === 'package.json');
         expect(existsSync(join(repository.path, '.gspot/reports/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
@@ -133,7 +134,8 @@ test(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain("Cannot find package 'eslint'");
+        // The runtime words the missing dependency its own way; the note names the package either way.
+        expect(JSON.parse(result.stdout).plan.unread[0].note).toMatch(/Cannot find (?:package|module) 'eslint'/u);
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
         expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe(SOURCE);

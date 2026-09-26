@@ -66,7 +66,7 @@ test.each([
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
     expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
-    if (result.status === 'failed') expect(result.note).toContain('exited 3');
+    expect(result.status === 'failed' && result.note.includes('exited 3')).toBe(status === 'failed');
 });
 
 test('compares bytes that decode to the same replacement character', async () => {

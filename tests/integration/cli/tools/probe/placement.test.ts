@@ -56,8 +56,10 @@ test.each([
     expect(tool).toBeDefined();
     const placement = privateToolInstallation(tool, runner);
     expect(placement?.kind).toBe(kind);
-    if (placement !== undefined)
-        expect(tool.installers[placement.kind === 'python' ? 'pypi' : 'npm']?.version).toBe(placement.version);
+    // A private installation pins the version its installer names.
+    const pinned =
+        placement === undefined ? undefined : tool.installers[placement.kind === 'python' ? 'pypi' : 'npm']?.version;
+    expect(pinned).toBe(placement?.version);
 });
 
 test('a missing private npm binary cannot fall back to the developer executable', async () => {

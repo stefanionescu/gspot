@@ -52,10 +52,11 @@ test.each(['cycle', 'escape', 'external link', 'unsupported parent'])(
         expect(refused.removed).toStrictEqual([]);
         expect(refused.tools.get('markdownlint')?.settings['rules']).toBeUndefined();
         expect(await Bun.file(join(sandbox.path, '.markdownlint-cli2.jsonc')).text()).toBe(original);
-        if (defect === 'external link') {
-            expect(await Bun.file(join(outside.path, 'base.jsonc')).text()).toBe(validParent);
-            unlinkSync(join(sandbox.path, 'config/base.jsonc'));
-        }
+        // A parent linked from outside the repository is never written.
+        expect(
+            defect !== 'external link' || (await Bun.file(join(outside.path, 'base.jsonc')).text()) === validParent,
+        ).toBe(true);
+        if (defect === 'external link') unlinkSync(join(sandbox.path, 'config/base.jsonc'));
         await Bun.write(join(sandbox.path, 'config/base.jsonc'), validParent);
         const corrected = await collectCarried(sandbox.path, discover, new Set(['markdown']), []);
         expect(corrected.unread).toStrictEqual([]);

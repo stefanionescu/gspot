@@ -8,15 +8,15 @@ describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# Thing\n\nWhat it is.\n\n## Setup\n\nRun it.\n' });
-        expect(await readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']))).toStrictEqual([]);
+        expect(readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']))).toStrictEqual([]);
     });
 
     test('a README missing the pieces names each one', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
-        const found = await readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']));
+        const found = readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']));
         expect(found.map((finding) => finding.rule)).toStrictEqual(['one-h1', 'opening-paragraph', 'start-section']);
-        const headings = await docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md']));
+        const headings = docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md']));
         expect(headings.map((finding) => finding.line)).toStrictEqual([3]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
@@ -26,18 +26,18 @@ describe('readme shape', () => {
                 'Thing\n=====\n\nWhat it is.\n\nSetup\n-----\n\n~~~md\n# Example\n## Project structure\n~~~~\n',
             'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
         });
-        expect(await readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']))).toStrictEqual([]);
-        expect(
-            await docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md'])),
-        ).toStrictEqual([]);
-        const found = await docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['guide.md']));
+        expect(readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']))).toStrictEqual([]);
+        expect(docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['README.md']))).toStrictEqual(
+            [],
+        );
+        const found = docsHeadings(await checkInput(sandbox.path, 'integrity/docs-headings', ['guide.md']));
         expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([[5, 'banned-heading']]);
     });
 
     test('a list before the setup section does not supply an opening paragraph', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
-        const found = await readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']));
+        const found = readmeShape(await checkInput(sandbox.path, 'docs/readme-shape', ['README.md']));
         expect(found.map((finding) => finding.rule)).toStrictEqual(['opening-paragraph']);
     });
 });

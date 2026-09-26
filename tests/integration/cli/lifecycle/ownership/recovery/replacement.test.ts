@@ -9,14 +9,15 @@ import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 const implementation = cliSource('lifecycle/ownership.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
-test.each(['success', 'error', 'interruption', 'edited', 'damaged backup'] as const)(
-    'read-only replacement preserves recovery bytes through %s with Windows filesystem semantics',
-    async (point) => {
-        await using directory = await testdir();
-        const original = Buffer.from([0, 255, 10, 13]);
-        const destination = join(directory.path, 'config.txt');
-        writeFileSync(destination, original, { mode: 0o444 });
-        const program = String.raw`
+type Point = 'success' | 'error' | 'interruption' | 'edited' | 'damaged backup';
+
+// Publishes a read-only file through a child whose rename fails at the chosen point, with Windows semantics.
+async function publish(point: Point) {
+    const directory = await testdir();
+    const original = Buffer.from([0, 255, 10, 13]);
+    const destination = join(directory.path, 'config.txt');
+    writeFileSync(destination, original, { mode: 0o444 });
+    const program = String.raw`
 import { mock } from 'bun:test';
 const fs = await import('node:fs');
 const rename = fs.renameSync;
@@ -48,41 +49,84 @@ try {
     if (point !== 'error' || error.message !== 'Publication failed') throw error;
 } finally { owner.close(); }
 `;
-        const child = Bun.spawnSync([process.execPath, '-e', program], {
-            cwd: directory.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-        expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
-            point === 'success' || point === 'error' ? 0 : 73,
-        );
-        const state = ownershipSchema.parse(
-            JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-        );
-        if (point === 'damaged backup') {
-            const backup = state.pending![0]!.beforeBackup!.backup;
-            writeFileSync(join(directory.path, backup), 'damaged');
-            expect(() => openLifecycleOwner(directory.path)).toThrow('backup is missing or changed');
-            expect(() => readFileSync(destination)).toThrow();
-            writeFileSync(join(directory.path, backup), original);
-        }
-        if (point === 'edited') {
-            expect(() => openLifecycleOwner(directory.path)).toThrow('conflicts with edited');
-            expect(readFileSync(destination, 'utf8')).toBe('developer edit\n');
-            expect(readFileSync(join(directory.path, state.pending![0]!.beforeBackup!.backup))).toStrictEqual(original);
-            return;
-        }
+    const child = Bun.spawnSync([process.execPath, '-e', program], {
+        cwd: directory.path,
+        stdout: 'pipe',
+        stderr: 'pipe',
+    });
+    expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
+        point === 'success' || point === 'error' ? 0 : 73,
+    );
+    const state = ownershipSchema.parse(
+        JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
+    );
+    return { directory, original, destination, backup: state.pending?.[0]?.beforeBackup?.backup };
+}
+
+type Published = Awaited<ReturnType<typeof publish>>;
+
+// What recovery leaves behind: the file's bytes and mode, and what the owner still records as installed.
+function recovered(owner: ReturnType<typeof openLifecycleOwner>, { destination }: Published) {
+    return {
+        bytes: readFileSync(destination),
+        mode: statSync(destination).mode & 0o777,
+        installed: owner.installedPaths(),
+    };
+}
+
+test('a completed read-only replacement restores the original bytes on request with Windows semantics', async () => {
+    const published = await publish('success');
+    await using directory = published.directory;
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        expect(owner.restore('config.txt')).toBe('changed');
+        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
+    } finally {
+        owner.close();
+    }
+});
+
+test.each(['error', 'interruption'] as const)(
+    'read-only replacement recovers the original bytes after %s with Windows semantics',
+    async (point) => {
+        const published = await publish(point);
+        await using directory = published.directory;
         const owner = openLifecycleOwner(directory.path);
         try {
-            if (point === 'success') expect(owner.restore('config.txt')).toBe('changed');
-            expect(readFileSync(destination)).toStrictEqual(original);
-            expect(statSync(destination).mode & 0o777).toBe(0o444);
-            expect(owner.installedPaths()).toStrictEqual([]);
+            expect(recovered(owner, published)).toStrictEqual({
+                bytes: published.original,
+                mode: 0o444,
+                installed: [],
+            });
         } finally {
             owner.close();
         }
     },
 );
+
+test('a damaged backup refuses recovery until the backup is put back', async () => {
+    const published = await publish('damaged backup');
+    await using directory = published.directory;
+    const backup = join(directory.path, published.backup!);
+    writeFileSync(backup, 'damaged');
+    expect(() => openLifecycleOwner(directory.path)).toThrow('backup is missing or changed');
+    expect(() => readFileSync(published.destination)).toThrow();
+    writeFileSync(backup, published.original);
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
+    } finally {
+        owner.close();
+    }
+});
+
+test('a file edited during an interrupted replacement is kept, and recovery refuses to overwrite it', async () => {
+    const published = await publish('edited');
+    await using directory = published.directory;
+    expect(() => openLifecycleOwner(directory.path)).toThrow('conflicts with edited');
+    expect(readFileSync(published.destination, 'utf8')).toBe('developer edit\n');
+    expect(readFileSync(join(directory.path, published.backup!))).toStrictEqual(published.original);
+});
 
 test('an inconsistent interrupted journal cannot acquire ownership of current bytes', async () => {
     await using directory = await testdir();

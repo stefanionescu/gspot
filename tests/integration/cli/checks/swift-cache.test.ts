@@ -14,7 +14,8 @@ test('build state is platform-local, stable for one repository, and distinct bet
     expect(folder).toBe(buildFolder(first.path));
     expect(folder).not.toBe(buildFolder(second.path));
     expect(folder.startsWith(join(cacheHome(), 'gspot') + '/')).toBe(true);
-    if (process.platform === 'darwin') expect(cacheHome()).toBe(join(homedir(), 'Library', 'Caches'));
+    // macOS keeps caches under the library folder; other platforms follow their own convention.
+    expect(process.platform !== 'darwin' || cacheHome() === join(homedir(), 'Library', 'Caches')).toBe(true);
     expect(existsSync(join(first.path, '.gspot'))).toBe(false);
 });
 

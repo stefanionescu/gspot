@@ -40,28 +40,26 @@ for (const scope of ['', 'apps/web']) {
                 chmodSync(config, 0o640);
                 const mode = statSync(config).mode;
                 const directories: string[] = [];
+                // What the mocked commands were asked and saw, asserted once the check has run.
+                const probes: string[][] = [];
+                const routesSeen: string[] = [];
                 const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
                 const runBlocking = processes.runBlocking;
                 const probe = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
                     if (command[0] === 'git') return runBlocking(command, options);
-                    expect(command.slice(1)).toStrictEqual(['--version']);
+                    probes.push(command.slice(1));
                     return { code: 0, missing: false, duration: 1, stdout: 'Version 5.9.3', stderr: '' };
                 });
                 const run = spyOn(processes, 'run').mockImplementation(async (command, options) => {
                     const cwd = options.cwd;
                     directories.push(cwd);
-                    expect(cwd).not.toBe(join(directory.path, scope));
                     const isBad = readFileSync(join(cwd, 'src/page.ts'), 'utf8').includes('bad');
                     if (command[1] === 'typegen' || command[1] === 'build') {
                         writeFileSync(join(cwd, 'tsconfig.json'), '{}\n');
                         writeFileSync(join(cwd, 'next-env.d.ts'), '// Generated\n');
                         mkdirSync(join(cwd, '.next/types'), { recursive: true });
                         writeFileSync(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
-                    } else {
-                        expect(readFileSync(join(cwd, '.next/types/routes.d.ts'), 'utf8')).toBe(
-                            '// Generated routes\n',
-                        );
-                    }
+                    } else routesSeen.push(readFileSync(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
                     const failed = isBad && command[1] !== 'typegen';
                     return {
                         code: failed ? 1 : 0,
@@ -89,6 +87,9 @@ for (const scope of ['', 'apps/web']) {
                     writeFileSync(join(directory.path, path('src/page.ts')), 'corrected input\n');
                     expect(await execute(input)).toStrictEqual([]);
                     expect(directories).toHaveLength(check === 'nextjs/typecheck' ? 4 : 2);
+                    expect(directories).not.toContain(join(directory.path, scope));
+                    expect(probes.every((args) => args.length === 1 && args[0] === '--version')).toBe(true);
+                    expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
                     expect(directories.every((cwd) => !existsSync(cwd))).toBe(true);
                     expect(readFileSync(config)).toStrictEqual(original);
                     expect(statSync(config).mode).toBe(mode);

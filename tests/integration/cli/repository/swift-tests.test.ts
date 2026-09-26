@@ -104,8 +104,7 @@ test.each([
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(result.report.exitCode).toBe(missing ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check: 'xctest/disabled', status: missing ? 'fail' : 'ok' }]);
-    expect(findings).toHaveLength(missing ? 1 : 0);
-    if (missing) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 });
+    expect(findings).toMatchObject(missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : []);
 });
 
 test('Swift test checks apply sleep allowances in their declared scope', async () => {
@@ -158,13 +157,11 @@ test.each([
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
-    if (count > 0) {
-        await Bun.write(`${sandbox.path}/Examples/Checks.swift`, source('#expect(true)'));
-        const corrected = await inspect();
-        expect(corrected.report.exitCode).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
-        expect(corrected.report.checks.flatMap((entry) => entry.findings)).toStrictEqual([]);
-    }
+    // A reported body is corrected and inspected again; a clean body already stands as the corrected run.
+    if (count > 0) await Bun.write(`${sandbox.path}/Examples/Checks.swift`, source('#expect(true)'));
+    const corrected = count > 0 ? await inspect() : result;
+    expect(corrected.report.exitCode).toBe(0);
+    expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
 });
 
 test('snapshot layouts match semantic owners by path and respect nested scopes', async () => {

@@ -52,7 +52,7 @@ test(
             { check: 'css/stylelint', scope: '', status: 'fail' },
             { check: 'css/stylelint', scope: 'app', status: 'fail' },
         ]);
-        expect(failedReport.checks.flatMap(({ findings }) => findings)).toEqual(
+        expect(failedReport.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             expect.arrayContaining([
                 expect.objectContaining({ file: 'site.css', rule: 'color-named', line: 2 }),
                 expect.objectContaining({ file: 'app/site.css', rule: 'color-named', line: 2 }),
@@ -122,7 +122,7 @@ test.each([
         expect(failedReport.checks).toContainEqual(
             expect.objectContaining({ check: 'css/stylelint', scope, status: 'fail' }),
         );
-        expect(failedReport.checks.flatMap(({ findings }) => findings)).toEqual(
+        expect(failedReport.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             expect.arrayContaining([
                 expect.objectContaining({ rule: 'color-named', file: `${prefix}future.css`, line: 2 }),
                 expect.objectContaining({ rule: 'selector-max-id', file: `${prefix}future.css`, line: 1 }),
@@ -150,7 +150,10 @@ test.each([
         expect(readFileSync(join(sandbox.path, configuration), 'utf8')).toBe(original);
         expect(statSync(join(sandbox.path, configuration)).mode).toBe(mode);
         expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(manifest);
-        if (inherited) expect(readFileSync(join(sandbox.path, prefix, 'styles/config.json'), 'utf8')).toBe(parent);
+        // An inherited parent configuration is left as it was.
+        expect(!inherited || readFileSync(join(sandbox.path, prefix, 'styles/config.json'), 'utf8') === parent).toBe(
+            true,
+        );
     },
     PLANTED_TIMEOUT_MS * 5,
 );

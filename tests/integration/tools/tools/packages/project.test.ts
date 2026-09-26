@@ -20,6 +20,87 @@ const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', imp
 
 const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;
 
+// A fresh clone installs the locked project twice without tracked changes and runs the formatter.
+async function expectFreshCloneInstalls(
+    repositoryPath: string,
+    artifactsPath: string,
+    tools: Parameters<typeof installPackageProject>[1],
+    manager: keyof typeof LOCKS,
+    lock: Buffer<ArrayBuffer>,
+    manifest: Buffer<ArrayBuffer>,
+): Promise<void> {
+    const clone = join(artifactsPath, 'clone');
+    for (const argv of [
+        ['git', 'add', '--all'],
+        [
+            'git',
+            '-c',
+            'user.name=Fixture',
+            '-c',
+            'user.email=fixture@example.com',
+            '-c',
+            'commit.gpgsign=false',
+            'commit',
+            '--quiet',
+            '-m',
+            'Fixture',
+        ],
+        ['git', 'clone', '--quiet', '--no-local', repositoryPath, clone],
+    ]) {
+        const result = await run(argv, { cwd: repositoryPath });
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+    }
+    expect(existsSync(join(clone, '.gspot/node_modules'))).toBe(false);
+    expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const installed = await installPackageProject(clone, tools);
+        expect(installed).toContain('.gspot/node_modules');
+        const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
+        expect(status.code, status.stderr).toBe(0);
+        expect(status.stdout).toBe('');
+        expect(readFileSync(join(clone, '.gspot', LOCKS[manager]))).toStrictEqual(lock);
+        expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
+    }
+    const formatter = join(clone, '.gspot/node_modules/.bin/prettier');
+    writeFileSync(join(clone, 'source.js'), 'export const greeting="hello";');
+    const defect = await run([formatter, '--check', 'source.js'], { cwd: clone });
+    expect(defect.code, defect.stdout + defect.stderr).toBe(1);
+    const fixed = await run([formatter, '--write', 'source.js'], { cwd: clone });
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    const clean = await run([formatter, '--check', 'source.js'], { cwd: clone });
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+}
+
+// A failed native wrapper download installs nothing and leaves the lock as it was.
+async function expectWrapperDownloadRefused(
+    repositoryPath: string,
+    tools: Parameters<typeof installPackageProject>[1],
+    lockPath: string,
+    lock: Buffer<ArrayBuffer>,
+): Promise<void> {
+    const original = spawn.run;
+    const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
+        if (argv[0]?.includes('editorconfig-checker') === true)
+            return {
+                code: 7,
+                stdout: '',
+                stderr: 'Native wrapper download failed',
+                missing: false,
+                duration: 1,
+            };
+        return original(argv, options);
+    });
+    try {
+        expect((await rejection(installPackageProject(repositoryPath, tools))).message).toContain(
+            'Native wrapper download failed',
+        );
+        expect(existsSync(join(repositoryPath, '.gspot/node_modules/prettier'))).toBe(false);
+        expect(readFileSync(lockPath)).toStrictEqual(lock);
+    } finally {
+        initialize.mockRestore();
+    }
+}
+
 test.each([
     ['npm', 'package.json', 'mise'],
     ['bun', 'package.json', 'mise'],
@@ -54,20 +135,24 @@ test.each([
             string,
             { version: string; bin: Record<string, string>; archive: Buffer; integrity: string }
         >([['prettier', { version: '3.8.1', bin: { prettier: 'bin/prettier.cjs' }, archive, integrity }]]);
-        if (runner === 'none') {
-            const checker = await run(
-                [
-                    'npm',
-                    'pack',
-                    'editorconfig-checker@7.0.0',
-                    '--ignore-scripts',
-                    '--json',
-                    '--pack-destination',
-                    artifacts.path,
-                ],
-                { cwd: artifacts.path, timeoutMs: 30_000 },
-            );
-            expect(checker.code, checker.stdout + checker.stderr).toBe(0);
+        // Without a runner the CLI installs the native wrapper too, so the registry serves it.
+        const checker =
+            runner === 'none'
+                ? await run(
+                      [
+                          'npm',
+                          'pack',
+                          'editorconfig-checker@7.0.0',
+                          '--ignore-scripts',
+                          '--json',
+                          '--pack-destination',
+                          artifacts.path,
+                      ],
+                      { cwd: artifacts.path, timeoutMs: 30_000 },
+                  )
+                : undefined;
+        expect(checker?.code ?? 0, (checker?.stdout ?? '') + (checker?.stderr ?? '')).toBe(0);
+        if (checker !== undefined) {
             const checkerArchive = readFileSync(join(artifacts.path, JSON.parse(checker.stdout)[0].filename));
             packages.set('editorconfig-checker', {
                 version: '7.0.0',
@@ -148,8 +233,9 @@ test.each([
             expect(JSON.parse(preview.stdout).isDryRun).toBe(true);
             expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
             expect(lock.toString('utf8')).not.toContain(token);
-            if (manager === 'yarn' && version.stdout.trim().startsWith('1.'))
-                expect(lock.toString('utf8')).not.toContain(`http://127.0.0.1:${server.port}`);
+            // Yarn 1 writes resolved URLs into its lock; the private registry must not be among them.
+            const isYarnOne = manager === 'yarn' && version.stdout.trim().startsWith('1.');
+            expect(isYarnOne && lock.toString('utf8').includes(`http://127.0.0.1:${server.port}`)).toBe(false);
             const stale = lock.toString('utf8').replaceAll('3.8.1', '0.0.0');
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, stale);
@@ -220,62 +306,45 @@ ${lock.toString('utf8')}
             chmodSync(manifestPath, 0o444);
             if (manager === 'yarn') process.env['YARN_CACHE_FOLDER'] = join(artifacts.path, 'installation-cache');
             if (manager === 'yarn') process.env['YARN_GLOBAL_FOLDER'] = join(artifacts.path, 'installation-global');
-            if (runner === 'none') {
-                const original = spawn.run;
-                const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
-                    if (argv[0]?.includes('editorconfig-checker') === true)
-                        return {
-                            code: 7,
-                            stdout: '',
-                            stderr: 'Native wrapper download failed',
-                            missing: false,
-                            duration: 1,
-                        };
-                    return original(argv, options);
-                });
-                try {
-                    expect((await rejection(installPackageProject(repository.path, tools))).message).toContain(
-                        'Native wrapper download failed',
-                    );
-                    expect(existsSync(join(repository.path, '.gspot/node_modules/prettier'))).toBe(false);
-                    expect(readFileSync(lockPath)).toStrictEqual(lock);
-                } finally {
-                    initialize.mockRestore();
-                }
-            }
+            if (runner === 'none') await expectWrapperDownloadRefused(repository.path, tools, lockPath, lock);
             const beforeInstall = requests;
-            let installed: string;
-            if (runner === 'none') {
-                const result = await run([process.execPath, CLI, 'install'], { cwd: repository.path });
-                expect(result.code, result.stdout + result.stderr).toBe(0);
-                installed = result.stdout;
-            } else installed = await installPackageProject(repository.path, tools);
-            if (manager === 'yarn') expect(requests).toBeGreaterThan(beforeInstall);
-            if (runner === 'none') {
-                const binary = readOwnership(repository.path).files.find(
-                    (entry) =>
-                        entry.path.startsWith('.gspot/node_modules/editorconfig-checker/bin/') &&
-                        entry.path.endsWith('/editorconfig-checker'),
-                );
-                expect(binary?.installed).toBeDefined();
-                const checker = configurationManifests()
-                    .get('formatting')!
-                    .tools.find((tool) => tool.name === 'ec')!;
-                expect(probeTool({ root: repository.path, probes: new Map() }, checker).state).toBe('ok');
-                expect(readOwnership(repository.path).files.find((entry) => entry.path === binary?.path)).toStrictEqual(
-                    binary,
-                );
-            }
+            // Without a runner the CLI installs; with one the library installs the same project.
+            const result =
+                runner === 'none' ? await run([process.execPath, CLI, 'install'], { cwd: repository.path }) : undefined;
+            expect(result?.code ?? 0, (result?.stdout ?? '') + (result?.stderr ?? '')).toBe(0);
+            const installed = result?.stdout ?? (await installPackageProject(repository.path, tools));
+            // Yarn fetches through the registry again on install; the other managers reuse what resolution fetched.
+            expect(manager !== 'yarn' || requests > beforeInstall).toBe(true);
+            // The CLI install records the wrapper's binary and the probe finds it usable.
+            const binary =
+                runner === 'none'
+                    ? readOwnership(repository.path).files.find(
+                          (entry) =>
+                              entry.path.startsWith('.gspot/node_modules/editorconfig-checker/bin/') &&
+                              entry.path.endsWith('/editorconfig-checker'),
+                      )
+                    : undefined;
+            expect(binary?.installed !== undefined).toBe(runner === 'none');
+            const checker = configurationManifests()
+                .get('formatting')!
+                .tools.find((tool) => tool.name === 'ec')!;
+            expect(
+                runner !== 'none' || probeTool({ root: repository.path, probes: new Map() }, checker).state === 'ok',
+            ).toBe(true);
+            expect(readOwnership(repository.path).files.find((entry) => entry.path === binary?.path)).toStrictEqual(
+                binary,
+            );
 
             expect(installed).toContain('.gspot/node_modules');
             expect(requests).toBeGreaterThan(0);
             expect(readFileSync(join(repository.path, projectPath), 'utf8')).toBe(rootPackage);
-            if (projectPath === 'package.json')
-                expect(readFileSync(join(repository.path, 'pnpm-workspace.yaml'), 'utf8')).toBe(
-                    'packages:\n  - "**"\n',
-                );
-            if (yarnConfiguration !== undefined)
-                expect(readFileSync(join(repository.path, '.yarnrc.yml'), 'utf8')).toBe(yarnConfiguration);
+            // The authored workspace and Yarn files of the root are untouched, and none is created elsewhere.
+            const workspace = join(repository.path, 'pnpm-workspace.yaml');
+            expect(existsSync(workspace) ? readFileSync(workspace, 'utf8') : undefined).toBe(
+                projectPath === 'package.json' ? 'packages:\n  - "**"\n' : undefined,
+            );
+            const yarnrc = join(repository.path, '.yarnrc.yml');
+            expect(existsSync(yarnrc) ? readFileSync(yarnrc, 'utf8') : undefined).toBe(yarnConfiguration);
             expect(readFileSync(join(repository.path, 'node_modules/authored.txt'), 'utf8')).toBe(
                 'keep project dependencies',
             );
@@ -327,48 +396,8 @@ ${lock.toString('utf8')}
             writeFileSync(readmePath, readme);
             await installPackageProject(repository.path, tools);
             expect(probeTool(context, pin).state).toBe('ok');
-            if (projectPath === 'package.json' && runner === 'mise') {
-                const clone = join(artifacts.path, 'clone');
-                for (const argv of [
-                    ['git', 'add', '--all'],
-                    [
-                        'git',
-                        '-c',
-                        'user.name=Fixture',
-                        '-c',
-                        'user.email=fixture@example.com',
-                        '-c',
-                        'commit.gpgsign=false',
-                        'commit',
-                        '--quiet',
-                        '-m',
-                        'Fixture',
-                    ],
-                    ['git', 'clone', '--quiet', '--no-local', repository.path, clone],
-                ]) {
-                    const result = await run(argv, { cwd: repository.path });
-                    expect(result.code, result.stdout + result.stderr).toBe(0);
-                }
-                expect(existsSync(join(clone, '.gspot/node_modules'))).toBe(false);
-                expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
-                for (let attempt = 0; attempt < 2; attempt++) {
-                    const installed = await installPackageProject(clone, tools);
-                    expect(installed).toContain('.gspot/node_modules');
-                    const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
-                    expect(status.code, status.stderr).toBe(0);
-                    expect(status.stdout).toBe('');
-                    expect(readFileSync(join(clone, '.gspot', LOCKS[manager]))).toStrictEqual(lock);
-                    expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
-                }
-                const formatter = join(clone, '.gspot/node_modules/.bin/prettier');
-                writeFileSync(join(clone, 'source.js'), 'export const greeting="hello";');
-                const defect = await run([formatter, '--check', 'source.js'], { cwd: clone });
-                expect(defect.code, defect.stdout + defect.stderr).toBe(1);
-                const fixed = await run([formatter, '--write', 'source.js'], { cwd: clone });
-                expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-                const clean = await run([formatter, '--check', 'source.js'], { cwd: clone });
-                expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            }
+            if (projectPath === 'package.json' && runner === 'mise')
+                await expectFreshCloneInstalls(repository.path, artifacts.path, tools, manager, lock, manifest);
         } finally {
             if (previousCache === undefined) delete process.env['YARN_CACHE_FOLDER'];
             else process.env['YARN_CACHE_FOLDER'] = previousCache;

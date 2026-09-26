@@ -175,7 +175,7 @@ test.each(['absolute', 'symlink'])(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(failed.code, failed.stdout + failed.stderr).toBe(kind === 'absolute' ? 2 : 0);
-        if (kind === 'absolute') expect(failed.stdout + failed.stderr).toContain('Unsafe lifecycle path');
+        expect((failed.stdout + failed.stderr).includes('Unsafe lifecycle path')).toBe(kind === 'absolute');
         expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
         writeFileSync(join(sandbox.path, 'app/tsconfig.json'), project('./dist'));
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);

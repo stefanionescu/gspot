@@ -7,8 +7,55 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
-import { chmodSync, existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { rejection } from '#tests/support/rejection.ts';
+
+// Switching the runner leaves the hooks not ready until they are installed again, both ways.
+async function expectRunnerSwitch(root: string): Promise<void> {
+    const policy = readFileSync(join(root, 'gspot.toml'), 'utf8');
+    writeFileSync(join(root, 'gspot.toml'), policy + '\n[runner]\ntool = "mise"\n');
+    expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(false);
+    await installHookManager(
+        await openSession(root).then((session) => ({
+            policy: session.policyFiles.policy,
+            repository: session.repository,
+            tools: session,
+        })),
+    );
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(true);
+    writeFileSync(join(root, 'gspot.toml'), policy);
+    expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
+    await installHookManager(
+        await openSession(root).then((session) => ({
+            policy: session.policyFiles.policy,
+            repository: session.repository,
+            tools: session,
+        })),
+    );
+    expect(
+        hookStatus(
+            await openSession(root).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(true);
+}
 
 test.each(['default', 'native', 'nested'])(
     'Husky preserves authored hooks and exact Git input in a %s installation',
@@ -45,10 +92,8 @@ test.each(['default', 'native', 'nested'])(
                 TMPDIR: join(root, 'scratch'),
             },
         };
-        if (kind === 'native') {
-            const native = await run([join(root, 'node_modules/.bin/husky')], options);
-            expect(native.code, native.stderr).toBe(0);
-        }
+        const native = kind === 'native' ? await run([join(root, 'node_modules/.bin/husky')], options) : undefined;
+        expect(native?.code ?? 0, native?.stderr).toBe(0);
         const location = hookLocation(root);
         const original =
             kind === 'native'
@@ -100,7 +145,11 @@ test.each(['default', 'native', 'nested'])(
             });
             expect(readFileSync(join(top, 'authored-input'), 'utf8')).toBe(input);
             expect(readFileSync(join(top, 'authored-args'), 'utf8')).toBe(`origin\n${remote}\n`);
-            if (kind !== 'native') expect(readFileSync(join(top, 'local-input'), 'utf8')).toBe(input);
+            // The local hook that gspot preserved beside its own still receives the push input.
+            const localInput = join(top, 'local-input');
+            expect(existsSync(localInput) ? readFileSync(localInput, 'utf8') : undefined).toBe(
+                kind === 'native' ? undefined : input,
+            );
         }
         const managed = readFileSync(join(root, '.husky/pre-push'), 'utf8');
         for (const [body, status, calls] of [
@@ -113,17 +162,18 @@ test.each(['default', 'native', 'nested'])(
             writeFileSync(join(root, '.husky/pre-push'), managed.replace(authored, body));
             writeFileSync(join(root, 'verdict'), '1');
             writeFileSync(join(root, 'gspot-runs'), '');
+            rmSync(join(root, 'captured.json'), { force: true });
             const result = await run(
                 ['git', 'hook', 'run', '--to-stdin', 'push-input', 'pre-push', '--', 'origin', remote],
                 options,
             );
             expect(result.code, result.stdout + result.stderr).toBe(status);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
-            if (calls !== '')
-                expect(JSON.parse(readFileSync(join(root, 'captured.json'), 'utf8'))).toStrictEqual({
-                    args: ['check', '--push', '--', 'origin', remote],
-                    input,
-                });
+            // A run that reached gspot captured the push input and arguments; a failed authored step left nothing.
+            const capturedPath = join(root, 'captured.json');
+            expect(existsSync(capturedPath) ? JSON.parse(readFileSync(capturedPath, 'utf8')) : undefined).toStrictEqual(
+                calls === '' ? undefined : { args: ['check', '--push', '--', 'origin', remote], input },
+            );
         }
         writeFileSync(join(root, '.husky/pre-push'), managed.replace(authored, 'set +e\n') + '\nexit 0\n');
         writeFileSync(join(root, 'gspot-runs'), '');
@@ -225,51 +275,7 @@ test.each(['default', 'native', 'nested'])(
         ]);
         expect(readFileSync(join(top, 'initialized'), 'utf8')).toBe('initialized');
         expect(readdirSync(join(root, 'scratch'))).toStrictEqual(['.keep']);
-        if (kind === 'default') {
-            const policy = readFileSync(join(root, 'gspot.toml'), 'utf8');
-            writeFileSync(join(root, 'gspot.toml'), policy + '\n[runner]\ntool = "mise"\n');
-            expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            await installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            );
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(true);
-            writeFileSync(join(root, 'gspot.toml'), policy);
-            expect((await applyCommand({ cwd: root, isDryRun: false })).exitCode).toBe(0);
-            await installHookManager(
-                await openSession(root).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            );
-            expect(
-                hookStatus(
-                    await openSession(root).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(true);
-        }
+        if (kind === 'default') await expectRunnerSwitch(root);
         expect((await uninstallCommand({ cwd: root, yes: true, isDryRun: false })).exitCode).toBe(0);
         expect(readFileSync(join(location.absolute, 'pre-push'))).toStrictEqual(original);
         expect(readFileSync(join(root, '.husky/pre-push'), 'utf8')).toBe(authored);

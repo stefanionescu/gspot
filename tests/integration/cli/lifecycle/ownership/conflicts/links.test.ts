@@ -27,96 +27,97 @@ test('installation refuses a linked output root before publication and accepts a
         owner.close();
     }
 });
-describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
-    test('an exactly reproduced escaping link is refused before ownership or recovery changes', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
-        const project = join(directory.path, 'project');
-        symlinkSync('../outside', join(project, 'tool'));
-        const owner = openLifecycleOwner(project);
-        try {
-            expect(() =>
-                owner.replace(
-                    'tool',
-                    {
-                        bytes: Buffer.from('../outside'),
-                        mode: lstatSync(join(project, 'tool')).mode & 0o7777,
-                        isLink: true,
-                    },
-                    'config',
-                ),
-            ).toThrow();
-            expect(owner.paths()).toStrictEqual([]);
-            expect(readlinkSync(join(project, 'tool'))).toBe('../outside');
-            expect(readFileSync(join(directory.path, 'outside'), 'utf8')).toBe('authored');
-            expect(owner.replace('valid', { bytes: Buffer.from('corrected input'), mode: 0o644 }, 'config')).toBe(
-                'changed',
-            );
-        } finally {
-            owner.close();
-        }
-    });
-
-    test('later edits survive both apply and uninstall, with the original recovery bytes retained', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { 'config.txt': 'authored original\n' });
-        const owner = openLifecycleOwner(directory.path);
-        try {
-            expect(
-                owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config', true),
-            ).toBe('changed');
-            writeFileSync(join(directory.path, 'config.txt'), 'authored later\n');
-            expect(owner.replace('config.txt', { bytes: Buffer.from('upgrade\n'), mode: 0o644 }, 'config')).toBe(
-                'preserved',
-            );
-            expect(owner.restore('config.txt')).toBe('preserved');
-            expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored later\n');
-            const state = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-            );
-            expect(readFileSync(join(directory.path, state.files[0]!.original!.backup), 'utf8')).toBe(
-                'authored original\n',
-            );
-            expect(owner.restore('.gspot/unowned')).toBe('preserved');
-        } finally {
-            owner.close();
-        }
-    });
-
-    test.each(['bytes', 'mode', 'removed'])(
-        'stale takeover %s refuses replacement and retirement, then a fresh observation succeeds',
-        async (change) => {
+if (process.platform !== 'win32')
+    describe('lifecycle ownership', () => {
+        test('an exactly reproduced escaping link is refused before ownership or recovery changes', async () => {
             await using directory = await testdir();
-            const path = join(directory.path, 'authored.json');
-            writeFileSync(path, '{"semi":false}\n', { mode: 0o640 });
-            const owner = openLifecycleOwner(directory.path);
+            await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
+            const project = join(directory.path, 'project');
+            symlinkSync('../outside', join(project, 'tool'));
+            const owner = openLifecycleOwner(project);
             try {
-                const observed = owner.read('authored.json')!;
-                if (change === 'bytes') writeFileSync(path, '{"semi":true}\n');
-                if (change === 'mode') chmodSync(path, 0o600);
-                if (change === 'removed') unlinkSync(path);
-                const edited = owner.read('authored.json');
                 expect(() =>
                     owner.replace(
-                        'authored.json',
-                        { bytes: Buffer.from('{}\n'), mode: 0o444 },
+                        'tool',
+                        {
+                            bytes: Buffer.from('../outside'),
+                            mode: lstatSync(join(project, 'tool')).mode & 0o7777,
+                            isLink: true,
+                        },
                         'config',
-                        true,
-                        observed,
                     ),
-                ).toThrow('changed after takeover was planned');
-                expect(() => owner.proposeRetirement('authored.json', observed)).toThrow(
-                    'changed after takeover was planned',
+                ).toThrow();
+                expect(owner.paths()).toStrictEqual([]);
+                expect(readlinkSync(join(project, 'tool'))).toBe('../outside');
+                expect(readFileSync(join(directory.path, 'outside'), 'utf8')).toBe('authored');
+                expect(owner.replace('valid', { bytes: Buffer.from('corrected input'), mode: 0o644 }, 'config')).toBe(
+                    'changed',
                 );
-                expect(owner.read('authored.json')).toStrictEqual(edited);
-                if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });
-                const refreshed = owner.read('authored.json')!;
-                expect(owner.applyProposal(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
-                expect(owner.restore('authored.json')).toBe('changed');
-                expect(owner.read('authored.json')).toStrictEqual(refreshed);
             } finally {
                 owner.close();
             }
-        },
-    );
-});
+        });
+
+        test('later edits survive both apply and uninstall, with the original recovery bytes retained', async () => {
+            await using directory = await testdir();
+            await createFileTree(directory.path, { 'config.txt': 'authored original\n' });
+            const owner = openLifecycleOwner(directory.path);
+            try {
+                expect(
+                    owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config', true),
+                ).toBe('changed');
+                writeFileSync(join(directory.path, 'config.txt'), 'authored later\n');
+                expect(owner.replace('config.txt', { bytes: Buffer.from('upgrade\n'), mode: 0o644 }, 'config')).toBe(
+                    'preserved',
+                );
+                expect(owner.restore('config.txt')).toBe('preserved');
+                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored later\n');
+                const state = ownershipSchema.parse(
+                    JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
+                );
+                expect(readFileSync(join(directory.path, state.files[0]!.original!.backup), 'utf8')).toBe(
+                    'authored original\n',
+                );
+                expect(owner.restore('.gspot/unowned')).toBe('preserved');
+            } finally {
+                owner.close();
+            }
+        });
+
+        test.each(['bytes', 'mode', 'removed'])(
+            'stale takeover %s refuses replacement and retirement, then a fresh observation succeeds',
+            async (change) => {
+                await using directory = await testdir();
+                const path = join(directory.path, 'authored.json');
+                writeFileSync(path, '{"semi":false}\n', { mode: 0o640 });
+                const owner = openLifecycleOwner(directory.path);
+                try {
+                    const observed = owner.read('authored.json')!;
+                    if (change === 'bytes') writeFileSync(path, '{"semi":true}\n');
+                    if (change === 'mode') chmodSync(path, 0o600);
+                    if (change === 'removed') unlinkSync(path);
+                    const edited = owner.read('authored.json');
+                    expect(() =>
+                        owner.replace(
+                            'authored.json',
+                            { bytes: Buffer.from('{}\n'), mode: 0o444 },
+                            'config',
+                            true,
+                            observed,
+                        ),
+                    ).toThrow('changed after takeover was planned');
+                    expect(() => owner.proposeRetirement('authored.json', observed)).toThrow(
+                        'changed after takeover was planned',
+                    );
+                    expect(owner.read('authored.json')).toStrictEqual(edited);
+                    if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });
+                    const refreshed = owner.read('authored.json')!;
+                    expect(owner.applyProposal(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
+                    expect(owner.restore('authored.json')).toBe('changed');
+                    expect(owner.read('authored.json')).toStrictEqual(refreshed);
+                } finally {
+                    owner.close();
+                }
+            },
+        );
+    });

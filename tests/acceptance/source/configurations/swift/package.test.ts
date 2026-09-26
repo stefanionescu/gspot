@@ -55,14 +55,12 @@ describe('the swift configuration over a package', () => {
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            if (process.platform !== 'darwin') {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-                expect(failed.checks).toMatchObject([{ check: planted.check, status: 'skipped' }]);
-                return;
-            }
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            // The Swift toolchain checks run on macOS alone; elsewhere they are skipped and the run passes.
+            const isSkipped = process.platform !== 'darwin';
+            const withExpected = expect.arrayContaining([expect.objectContaining(planted.expected)]);
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
+            expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
+            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);
             const path = planted.expected.file;
             const text = planted.files[path]!;
             const correctedText =
@@ -80,7 +78,9 @@ describe('the swift configuration over a package', () => {
             const accepted = reportSchema.parse(
                 await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
             );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+            expect(accepted.checks).toMatchObject([
+                { check: planted.check, status: isSkipped ? 'skipped' : 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 10,
     );

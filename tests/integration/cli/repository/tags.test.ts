@@ -19,7 +19,8 @@ describe('tags', () => {
         const repository = await readRepository(sandbox.path, [], [], []);
         const files = new Map(repository.files.map((file) => [file.path, file]));
         const hook = files.get('hook')!;
-        if (process.platform !== 'win32') expect(hook.tags).toContain('executable');
+        // Windows has no executable bit to read.
+        expect(hook.tags.includes('executable')).toBe(process.platform !== 'win32');
         for (const tag of ['shell', 'shebang:shell', 'text']) expect(hook.tags).toContain(tag);
         expect(files.get('a.png')!.nature).toBe('binary');
         expect(files.get('binary.js')!.nature).toBe('binary');

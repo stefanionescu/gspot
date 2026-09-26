@@ -32,7 +32,7 @@ describe('the repository-shape analyses', () => {
             .flatMap((manifest) => manifest.checks)
             .find((check) => check.name === 'integrity/suppressions')!;
         const observation = engineInput(session, { scope, spec, files: session.repository.files });
-        const found = await suppressions(observation);
+        const found = suppressions(observation);
         expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
             'a.ts:2 eslint-no-reason',
             'b.sh:2 semgrep',
@@ -43,9 +43,7 @@ describe('the repository-shape analyses', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'src/a.ts': '', 'data/x.bin': '', 'docs/a.md': '' });
         const paths = ['src/a.ts', 'data/x.bin', 'docs/a.md'];
-        const found = await allowlistsMatch(
-            await checkInput(sandbox.path, 'integrity/allowlists-match', paths, policy),
-        );
+        const found = allowlistsMatch(await checkInput(sandbox.path, 'integrity/allowlists-match', paths, policy));
         expect(found.map((finding) => finding.message)).toStrictEqual([
             'gone/** under [[ignore]] matches no tracked file or folder.',
         ]);
@@ -59,7 +57,7 @@ describe('the repository-shape analyses', () => {
             'small.txt': 'small',
         });
         const paths = ['big.bin', 'data/big.bin', 'small.txt'];
-        const found = await largeFiles(await checkInput(sandbox.path, 'integrity/large-files', paths, policy));
+        const found = largeFiles(await checkInput(sandbox.path, 'integrity/large-files', paths, policy));
         expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
     });
 

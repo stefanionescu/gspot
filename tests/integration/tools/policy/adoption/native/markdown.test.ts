@@ -100,15 +100,27 @@ test.each([false, true])(
             ['sample.md'],
         );
         expect(carried.unread).toStrictEqual([]);
-        if (inherited) {
-            expect(carried.removed.map(({ path }) => path)).toStrictEqual(['.markdownlint.jsonc']);
-            expect(carried.retained.map(({ path }) => path).toSorted()).toStrictEqual([
-                'config/base.jsonc',
-                'config/parent.yaml',
-            ]);
-            expect(carried.observed.get('config/base.jsonc')?.bytes.toString()).toContain('"default":false');
-            expect(carried.observed.get('config/parent.yaml')?.bytes.toString()).toContain('line_length: 3');
-        }
+        // An inherited configuration keeps its parents in place and reads their settings; a flat one has no parents.
+        expect({
+            removed: carried.removed.map(({ path }) => path),
+            retained: carried.retained.map(({ path }) => path).toSorted(),
+            base: carried.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
+            parent: carried.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
+        }).toStrictEqual(
+            inherited
+                ? {
+                      removed: ['.markdownlint.jsonc'],
+                      retained: ['config/base.jsonc', 'config/parent.yaml'],
+                      base: true,
+                      parent: true,
+                  }
+                : {
+                      removed: carried.removed.map(({ path }) => path),
+                      retained: [],
+                      base: undefined,
+                      parent: undefined,
+                  },
+        );
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
             proposeText({

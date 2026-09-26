@@ -87,16 +87,24 @@ test('a failed site build skips every output consumer and a new session rebuilds
         )
     ).flat();
     expect(planned).toHaveLength(consumers.size + 1);
+    // The build fails with its own output, and every check that reads the built site is skipped with one note.
+    const outcomes: { check: string; status: string; note: string | undefined; message: string | undefined }[] = [];
     for (const check of planned) {
         const result = await resolveCheck(check.spec)(session, check);
-        if (check.check === 'static-site/build') {
-            expect(result.status).toBe('fail');
-            expect(result.findings[0]?.message).toContain('Planted build failure');
-        } else {
-            expect(result.status).toBe('skipped');
-            expect(result.note).toBe('The site did not build.');
-        }
+        outcomes.push({
+            check: check.check,
+            status: result.status,
+            note: result.note,
+            message: result.findings[0]?.message,
+        });
     }
+    const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
+    expect(outcomes.toSorted(byCheck)).toMatchObject(
+        [
+            { check: 'static-site/build', status: 'fail', message: expect.stringContaining('Planted build failure') },
+            ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
+        ].toSorted(byCheck),
+    );
     writeFileSync(
         join(sandbox.path, 'build.js'),
         'import {mkdirSync, writeFileSync} from "node:fs"; mkdirSync("dist"); writeFileSync("dist/index.html", "built");',

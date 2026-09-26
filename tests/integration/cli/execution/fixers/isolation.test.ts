@@ -59,7 +59,9 @@ test.each([false, true])(
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
         expect(readFileSync(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
-        if (preview) expect(result.diffs[0]).toContain('+corrected');
+        // A preview shows the correction as a diff instead of writing it.
+        const withCorrected = expect.stringContaining('+corrected');
+        expect(result.diffs).toStrictEqual(preview ? [withCorrected] : []);
     },
 );
 
@@ -137,7 +139,8 @@ test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', as
     } finally {
         temporaryDirectory.mockRestore();
     }
-    if (operation === 'read') expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    // A failed read leaves the source untouched; a failed copy had already replaced it with a directory.
+    expect(operation !== 'read' || readFileSync(join(sandbox.path, 'source.txt'), 'utf8') === 'original').toBe(true);
 });
 
 test('preview copies workspace dependencies and preserves executable links without writing through either', async () => {

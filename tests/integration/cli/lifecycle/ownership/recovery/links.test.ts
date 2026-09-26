@@ -9,14 +9,15 @@ import { readFileSync, readlinkSync, symlinkSync } from 'node:fs';
 const implementation = cliSource('lifecycle/ownership.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
-describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
-    test.each(['before', 'after'] as const)(
-        'interrupted link publication %s rename recovers without losing the original',
-        async (point) => {
-            await using directory = await testdir();
-            await createFileTree(directory.path, { target: 'installed target', original: 'authored target' });
-            symlinkSync('original', join(directory.path, 'tool'));
-            const script = `
+if (process.platform !== 'win32')
+    describe('lifecycle ownership', () => {
+        test.each(['before', 'after'] as const)(
+            'interrupted link publication %s rename recovers without losing the original',
+            async (point) => {
+                await using directory = await testdir();
+                await createFileTree(directory.path, { target: 'installed target', original: 'authored target' });
+                symlinkSync('original', join(directory.path, 'tool'));
+                const script = `
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
             const open = boundary.openConfinedRoot;
@@ -31,49 +32,53 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             const { openLifecycleOwner } = await import(${JSON.stringify(implementation)});
             openLifecycleOwner(process.cwd()).replace('tool', {bytes: Buffer.from('target'), mode: 511, isLink: true}, 'config', true);
         `;
-            const child = Bun.spawnSync([process.execPath, '-e', script], {
-                cwd: directory.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
+                const child = Bun.spawnSync([process.execPath, '-e', script], {
+                    cwd: directory.path,
+                    stdout: 'pipe',
+                    stderr: 'pipe',
+                });
+                expect(child.exitCode, child.stderr.toString()).toBe(73);
+                const owner = openLifecycleOwner(directory.path);
+                try {
+                    // A publication that completed is restored on request; one that never happened has nothing to restore.
+                    const restored = point === 'after' ? owner.restore('tool') : undefined;
+                    expect(restored).toBe(point === 'after' ? 'changed' : undefined);
+                    expect(readlinkSync(join(directory.path, 'tool'))).toBe('original');
+                    expect(readFileSync(join(directory.path, 'original'), 'utf8')).toBe('authored target');
+                    expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('installed target');
+                    expect(owner.paths()).toStrictEqual([]);
+                } finally {
+                    owner.close();
+                }
+            },
+        );
+
+        test('unavailable recovery refuses takeover before modifying the original', async () => {
+            await using directory = await testdir();
+            await createFileTree(directory.path, {
+                'config.txt': 'original\n',
+                '.gspot/state/recovery': 'authored obstruction\n',
             });
-            expect(child.exitCode, child.stderr.toString()).toBe(73);
             const owner = openLifecycleOwner(directory.path);
             try {
-                if (point === 'after') expect(owner.restore('tool')).toBe('changed');
-                expect(readlinkSync(join(directory.path, 'tool'))).toBe('original');
-                expect(readFileSync(join(directory.path, 'original'), 'utf8')).toBe('authored target');
-                expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('installed target');
-                expect(owner.paths()).toStrictEqual([]);
+                expect(() =>
+                    owner.replace('config.txt', { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
+                ).toThrow();
+                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
+                expect(readFileSync(join(directory.path, '.gspot/state/recovery'), 'utf8')).toBe(
+                    'authored obstruction\n',
+                );
             } finally {
                 owner.close();
             }
-        },
-    );
-
-    test('unavailable recovery refuses takeover before modifying the original', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'config.txt': 'original\n',
-            '.gspot/state/recovery': 'authored obstruction\n',
         });
-        const owner = openLifecycleOwner(directory.path);
-        try {
-            expect(() =>
-                owner.replace('config.txt', { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
-            ).toThrow();
-            expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
-            expect(readFileSync(join(directory.path, '.gspot/state/recovery'), 'utf8')).toBe('authored obstruction\n');
-        } finally {
-            owner.close();
-        }
-    });
 
-    test.each(['before', 'after'] as const)(
-        'an interrupted replacement %s publication recovers and releases its writer lock',
-        async (point) => {
-            await using directory = await testdir();
-            await createFileTree(directory.path, { 'config.txt': 'original\n' });
-            const script = String.raw`
+        test.each(['before', 'after'] as const)(
+            'an interrupted replacement %s publication recovers and releases its writer lock',
+            async (point) => {
+                await using directory = await testdir();
+                await createFileTree(directory.path, { 'config.txt': 'original\n' });
+                const script = String.raw`
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
             const open = boundary.openConfinedRoot;
@@ -91,30 +96,29 @@ describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
             const { openLifecycleOwner } = await import(${JSON.stringify(implementation)});
             openLifecycleOwner(process.cwd()).replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 420}, 'config', true);
         `;
-            const child = Bun.spawnSync([process.execPath, '-e', script], {
-                cwd: directory.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            });
-            expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(73);
-            const pending = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-            );
-            expect(pending.pending?.[0]?.path).toBe('config.txt');
-            const owner = openLifecycleOwner(directory.path);
-            try {
-                if (point === 'after') {
-                    expect(owner.paths()).toStrictEqual(['config.txt']);
-                    expect(owner.restore('config.txt')).toBe('changed');
-                } else expect(owner.paths()).toStrictEqual([]);
-                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
-                const recovered = ownershipSchema.parse(
+                const child = Bun.spawnSync([process.execPath, '-e', script], {
+                    cwd: directory.path,
+                    stdout: 'pipe',
+                    stderr: 'pipe',
+                });
+                expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(73);
+                const pending = ownershipSchema.parse(
                     JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
                 );
-                expect(recovered.pending).toBeUndefined();
-            } finally {
-                owner.close();
-            }
-        },
-    );
-});
+                expect(pending.pending?.[0]?.path).toBe('config.txt');
+                const owner = openLifecycleOwner(directory.path);
+                try {
+                    expect(owner.paths()).toStrictEqual(point === 'after' ? ['config.txt'] : []);
+                    const restored = point === 'after' ? owner.restore('config.txt') : undefined;
+                    expect(restored).toBe(point === 'after' ? 'changed' : undefined);
+                    expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
+                    const recovered = ownershipSchema.parse(
+                        JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
+                    );
+                    expect(recovered.pending).toBeUndefined();
+                } finally {
+                    owner.close();
+                }
+            },
+        );
+    });

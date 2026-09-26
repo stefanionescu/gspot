@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import * as spawn from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -21,11 +20,12 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
     const input = await swiftInput(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        if (code === 0) expect(await swiftBuild(input)).toStrictEqual([]);
-        else
-            expect((await rejection(swiftBuild(input))).message).toContain(
-                `The Swift build exited ${String(code)} without source diagnostics.`,
-            );
+        // A clean build reports nothing; a failed build without diagnostics is an error that names the exit code.
+        const findings = code === 0 ? await swiftBuild(input) : undefined;
+        const refusal = code === 0 ? undefined : (await rejection(swiftBuild(input))).message;
+        const exited = expect.stringContaining(`The Swift build exited ${String(code)} without source diagnostics.`);
+        expect(findings).toStrictEqual(code === 0 ? [] : undefined);
+        expect(refusal).toStrictEqual(code === 0 ? undefined : exited);
     } finally {
         run.mockRestore();
     }
@@ -134,12 +134,12 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
     const input = await swiftInput(sandbox.path, 'swift/build');
     input.cancelSignal = AbortSignal.abort();
-    await rejects(swiftBuild(input), { message: 'The command was canceled.' });
+    expect((await rejection(swiftBuild(input))).message).toBe('The command was canceled.');
     const analyzer = swiftBuildPlan(input, 'analyze');
     mkdirSync(analyzer.scratch!, { recursive: true });
     const state = join(analyzer.scratch!, 'state');
     writeFileSync(state, 'retained compiler state');
-    await rejects(swiftAnalyze(input), { message: 'The command was canceled.' });
+    expect((await rejection(swiftAnalyze(input))).message).toBe('The command was canceled.');
     expect(readFileSync(state, 'utf8')).toBe('retained compiler state');
 });
 

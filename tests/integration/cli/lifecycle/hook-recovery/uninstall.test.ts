@@ -37,8 +37,8 @@ test.each([true, false])(
         expect((await uninstallCommand(options)).text).toContain('restore or remove unchanged dispatchers');
         expect(readFileSync(hook)).toStrictEqual(installed);
         expect((await uninstallCommand({ ...options, isDryRun: false })).exitCode).toBe(0);
-        if (hasOriginal) expect(readFileSync(hook, 'utf8')).toBe(original);
-        else expect(existsSync(hook)).toBe(false);
+        // The authored hook comes back; a hook gspot created is removed.
+        expect(existsSync(hook) ? readFileSync(hook, 'utf8') : undefined).toBe(hasOriginal ? original : undefined);
         expect(
             processes.runBlocking(['git', 'config', '--get', 'core.hooksPath'], { cwd: directory.path }).stdout.trim(),
         ).toBe('.custom-hooks');

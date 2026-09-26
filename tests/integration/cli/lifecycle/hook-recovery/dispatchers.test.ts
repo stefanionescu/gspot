@@ -27,23 +27,20 @@ test.each(['default', 'external', 'worktree'] as const)(
             expect(result.code, result.stderr).toBe(0);
         }
         let root = sandbox.path;
-        if (kind === 'external') {
-            await createFileTree(external.path, { "author's hooks/.keep": '' });
-            expect(
-                (
-                    await processes.run(['git', 'config', 'core.hooksPath', join(external.path, "author's hooks")], {
-                        cwd: root,
-                    })
-                ).code,
-            ).toBe(0);
-        }
-        if (kind === 'worktree') {
-            root = join(external.path, "linked author's tree");
-            const result = await processes.run(['git', 'worktree', 'add', '--detach', root, 'HEAD'], {
-                cwd: sandbox.path,
-            });
-            expect(result.code, result.stderr).toBe(0);
-        }
+        if (kind === 'external') await createFileTree(external.path, { "author's hooks/.keep": '' });
+        const configured =
+            kind === 'external'
+                ? await processes.run(['git', 'config', 'core.hooksPath', join(external.path, "author's hooks")], {
+                      cwd: root,
+                  })
+                : undefined;
+        expect(configured?.code ?? 0, configured?.stderr).toBe(0);
+        if (kind === 'worktree') root = join(external.path, "linked author's tree");
+        const added =
+            kind === 'worktree'
+                ? await processes.run(['git', 'worktree', 'add', '--detach', root, 'HEAD'], { cwd: sandbox.path })
+                : undefined;
+        expect(added?.code ?? 0, added?.stderr).toBe(0);
         const directory = hookLocation(root).absolute;
         const hook = join(directory, 'pre-push');
         const original = `#!/usr/bin/env bun\nawait Bun.write('original.json', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text(), cwd: process.cwd()}));\nprocess.exit(0);\n`;

@@ -30,9 +30,8 @@ const SOURCE = 'func first() -> Int {\n    return 1\n}\nfunc second() -> Int {\n
 const TESTS =
     'import XCTest\nfinal class ValueTests: XCTestCase {\n    func testValues() {\n        XCTAssertEqual(first(), 1)\n    }\n}\n';
 
-test.skipIf(process.platform !== 'darwin')(
-    'XCTest and xccov report a below-floor target and pass after testing its uncovered function',
-    async () => {
+if (process.platform === 'darwin')
+    test('XCTest and xccov report a below-floor target and pass after testing its uncovered function', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
@@ -79,6 +78,4 @@ test.skipIf(process.platform !== 'darwin')(
         } finally {
             rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
         }
-    },
-    180_000,
-);
+    }, 180_000);

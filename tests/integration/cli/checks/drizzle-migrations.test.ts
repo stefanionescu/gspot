@@ -26,136 +26,137 @@ if (schema === 'failure') {
 }
 `;
 
-for (const scope of ['', 'packages/db']) {
-    for (const isFailure of [false, true]) {
-        test(`migration generation in ${scope || 'root'} preserves tracked and untracked files after ${isFailure ? 'failure' : 'success'}`, async () => {
-            await using directory = await testdir();
-            const path = (file: string) => join(scope, file);
-            await createFileTree(directory.path, {
-                'gspot.toml':
-                    'version = 1\nconfigurations = ["drizzle"]\n' +
-                    (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nconfigurations = []\n`),
-                [path('package.json')]: '{"private":true}\n',
-                [path('drizzle.config.ts')]: 'export default {};\n',
-                [path('schema.txt')]: isFailure ? 'failure' : 'changed',
-                [path('generate')]: GENERATOR,
-                [path('migrations/0000_initial.sql')]: 'CREATE TABLE records (id int);\n',
-                [path('migrations/meta/journal.json')]: '{"version":1}\n',
-                'unrelated/keep.sql': '-- Keep another scope\n',
-            });
-            commitAll(directory.path);
-            const manual = join(directory.path, path('migrations/0009_manual.sql'));
-            writeFileSync(manual, '-- Preserve manual migration\n');
-            chmodSync(manual, 0o640);
-            const mode = statSync(manual).mode;
-            const initial = join(directory.path, path('migrations/0000_initial.sql'));
-            writeFileSync(initial, '-- Developer edit\n');
-            const bin = join(directory.path, 'node_modules/.bin');
-            mkdirSync(bin, { recursive: true });
-            symlinkSync(
-                process.execPath,
-                join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'),
-                'file',
-            );
-            const session = await openSession(directory.path);
-            const spec = session.manifests
-                .get('drizzle')!
-                .checks.find((entry) => entry.analysis === 'drizzle-migrations')!;
-            const planned = await planRun(session, { stage: 'push', skips: [], only: [spec.name] });
-            const input = engineInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
-            const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-            try {
-                if (isFailure) {
-                    expect((await rejection(drizzleMigrations(input))).message).toContain(
-                        'Migration generation failed',
-                    );
-                    writeFileSync(join(directory.path, path('schema.txt')), 'current');
-                    expect(await drizzleMigrations(input)).toStrictEqual([]);
-                } else {
-                    const found = await drizzleMigrations(input);
-                    expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
-                        {
-                            check: spec.name,
-                            file: path('migrations/0001_change.sql').replaceAll('\\', '/'),
-                            rule: 'missing-migration',
-                        },
-                        {
-                            check: spec.name,
-                            file: path('migrations/meta/journal.json').replaceAll('\\', '/'),
-                            rule: 'missing-migration',
-                        },
-                    ]);
-                    expect(
-                        found.every(
-                            (entry) =>
-                                entry.message ===
-                                'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
-                        ),
-                    ).toBe(true);
-                    if (scope === '') {
-                        const checked = await runCli(directory.path, [
-                            'check',
-                            '--stage',
-                            'push',
-                            '--only',
-                            spec.name,
-                            '--no-cache',
-                            '--json',
-                        ]);
-                        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-                        const report = reportSchema.parse(JSON.parse(checked.stdout));
-                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-                            { check: spec.name, status: 'fail' },
-                        ]);
-                        expect(report.skips).toStrictEqual([]);
-                        expect(
-                            report.checks[0]!.findings.map(({ check, file, line, rule, message }) => ({
-                                check,
-                                file,
-                                line,
-                                rule,
-                                message,
-                            })),
-                        ).toStrictEqual(
-                            found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
-                        );
-                    }
-                    writeFileSync(join(directory.path, path('schema.txt')), 'current');
-                    expect(await drizzleMigrations(input)).toStrictEqual([]);
-                    if (scope === '') {
-                        const checked = await runCli(directory.path, [
-                            'check',
-                            '--stage',
-                            'push',
-                            '--only',
-                            spec.name,
-                            '--no-cache',
-                            '--json',
-                        ]);
-                        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-                        const report = reportSchema.parse(JSON.parse(checked.stdout));
-                        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-                            { check: spec.name, status: 'ok' },
-                        ]);
-                        expect(report.skips).toStrictEqual([]);
-                        expect(report.checks[0]!.findings).toStrictEqual([]);
-                    }
-                }
-                expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
-                expect(statSync(manual).mode).toBe(mode);
-                expect(readFileSync(initial, 'utf8')).toBe('-- Developer edit\n');
-                expect(readFileSync(join(directory.path, path('migrations/meta/journal.json')), 'utf8')).toBe(
-                    '{"version":1}\n',
-                );
-                expect(readFileSync(join(directory.path, 'unrelated/keep.sql'), 'utf8')).toBe(
-                    '-- Keep another scope\n',
-                );
-            } finally {
-                locate.mockRestore();
-            }
-        });
-    }
+const SCOPES = ['', 'packages/db'];
+
+// A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
+async function plant(scope: string, schema: 'changed' | 'failure') {
+    const directory = await testdir();
+    const path = (file: string) => join(scope, file);
+    await createFileTree(directory.path, {
+        'gspot.toml':
+            'version = 1\nconfigurations = ["drizzle"]\n' +
+            (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nconfigurations = []\n`),
+        [path('package.json')]: '{"private":true}\n',
+        [path('drizzle.config.ts')]: 'export default {};\n',
+        [path('schema.txt')]: schema,
+        [path('generate')]: GENERATOR,
+        [path('migrations/0000_initial.sql')]: 'CREATE TABLE records (id int);\n',
+        [path('migrations/meta/journal.json')]: '{"version":1}\n',
+        'unrelated/keep.sql': '-- Keep another scope\n',
+    });
+    commitAll(directory.path);
+    const manual = join(directory.path, path('migrations/0009_manual.sql'));
+    writeFileSync(manual, '-- Preserve manual migration\n');
+    chmodSync(manual, 0o640);
+    const initial = join(directory.path, path('migrations/0000_initial.sql'));
+    writeFileSync(initial, '-- Developer edit\n');
+    const bin = join(directory.path, 'node_modules/.bin');
+    mkdirSync(bin, { recursive: true });
+    symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'), 'file');
+    const session = await openSession(directory.path);
+    const spec = session.manifests.get('drizzle')!.checks.find((entry) => entry.analysis === 'drizzle-migrations')!;
+    const planned = await planRun(session, { stage: 'push', skips: [], only: [spec.name] });
+    const input = engineInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
+    return { directory, path, manual, mode: statSync(manual).mode, initial, spec, input };
 }
+
+type Planted = Awaited<ReturnType<typeof plant>>;
+
+// Whatever the generator did, the tracked edits, the untracked migration, and the other scope are untouched.
+function expectPreserved({ directory, path, manual, mode, initial }: Planted): void {
+    expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
+    expect(statSync(manual).mode).toBe(mode);
+    expect(readFileSync(initial, 'utf8')).toBe('-- Developer edit\n');
+    expect(readFileSync(join(directory.path, path('migrations/meta/journal.json')), 'utf8')).toBe('{"version":1}\n');
+    expect(readFileSync(join(directory.path, 'unrelated/keep.sql'), 'utf8')).toBe('-- Keep another scope\n');
+}
+
+test.each(SCOPES)('a failed generation in %s reports the failure and preserves every file', async (scope) => {
+    const planted = await plant(scope, 'failure');
+    await using directory = planted.directory;
+    const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        expect((await rejection(drizzleMigrations(planted.input))).message).toContain('Migration generation failed');
+        writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
+        expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
+        expectPreserved(planted);
+    } finally {
+        locate.mockRestore();
+    }
+});
+
+test.each(SCOPES)(
+    'a stale schema in %s reports the missing migration files and preserves every file',
+    async (scope) => {
+        const planted = await plant(scope, 'changed');
+        await using directory = planted.directory;
+        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+        try {
+            const found = await drizzleMigrations(planted.input);
+            expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
+                {
+                    check: planted.spec.name,
+                    file: planted.path('migrations/0001_change.sql').replaceAll('\\', '/'),
+                    rule: 'missing-migration',
+                },
+                {
+                    check: planted.spec.name,
+                    file: planted.path('migrations/meta/journal.json').replaceAll('\\', '/'),
+                    rule: 'missing-migration',
+                },
+            ]);
+            expect(
+                found.every(
+                    (entry) =>
+                        entry.message ===
+                        'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
+                ),
+            ).toBe(true);
+            writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
+            expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
+            expectPreserved(planted);
+        } finally {
+            locate.mockRestore();
+        }
+    },
+);
+
+test('the check command reports the missing migrations of the root and their correction', async () => {
+    const planted = await plant('', 'changed');
+    await using directory = planted.directory;
+    const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const args = ['check', '--stage', 'push', '--only', planted.spec.name, '--no-cache', '--json'];
+    try {
+        const found = await drizzleMigrations(planted.input);
+        const checked = await runCli(directory.path, args);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        const report = reportSchema.parse(JSON.parse(checked.stdout));
+        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+            { check: planted.spec.name, status: 'fail' },
+        ]);
+        expect(report.skips).toStrictEqual([]);
+        expect(
+            report.checks[0]!.findings.map(({ check, file, line, rule, message }) => ({
+                check,
+                file,
+                line,
+                rule,
+                message,
+            })),
+        ).toStrictEqual(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })));
+        writeFileSync(join(directory.path, 'schema.txt'), 'current');
+        const corrected = await runCli(directory.path, args);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const clean = reportSchema.parse(JSON.parse(corrected.stdout));
+        expect(clean.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+            { check: planted.spec.name, status: 'ok' },
+        ]);
+        expect(clean.skips).toStrictEqual([]);
+        expect(clean.checks[0]!.findings).toStrictEqual([]);
+    } finally {
+        locate.mockRestore();
+    }
+});
 
 test.each(['cancellation', 'deadline'])(
     'migration generation honors %s, removes its copy, and accepts a corrected generator',

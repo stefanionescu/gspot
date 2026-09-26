@@ -51,25 +51,21 @@ test.each(['recommended', 'all'] as const)(
         const config: object[] = [{ ...plugin.configs[level], files: ['**/*.ts'], languageOptions: { parser } }];
         const filename = join(sandbox.path, 'feature/only.ts');
         const findings = linter.verify('interface Order { total: number }', config, { filename });
-        if (level === 'recommended') expect(findings).toStrictEqual([]);
-        else {
-            expect(findings.find((finding) => finding.ruleId === 'gspot/no-single-file-folders')).toMatchObject({
-                messageId: 'lone',
-                line: 1,
-                column: 1,
-            });
-            expect(findings.find((finding) => finding.ruleId === 'gspot/types-placement')).toBeUndefined();
-        }
+        // The layout rules belong to the all level alone; the types file is placed where it is allowed at both.
+        const shape = (list: typeof findings) =>
+            list.map(({ ruleId, messageId, line, column }) => ({ ruleId, messageId, line, column }));
+        expect(shape(findings).filter((entry) => entry.ruleId !== 'gspot/no-trivial-files')).toStrictEqual(
+            level === 'recommended'
+                ? []
+                : [{ ruleId: 'gspot/no-single-file-folders', messageId: 'lone', line: 1, column: 1 }],
+        );
         const card = join(sandbox.path, 'cards/asset-card.ts');
         const collisions = linter.verify('export const value = 1;', config, { filename: card });
-        if (level === 'recommended') expect(collisions).toStrictEqual([]);
-        else {
-            expect(collisions.find((finding) => finding.ruleId === 'gspot/no-prefix-collisions')).toMatchObject({
-                messageId: 'collision',
-                line: 1,
-                column: 1,
-            });
-        }
+        expect(shape(collisions).filter((entry) => entry.ruleId !== 'gspot/no-trivial-files')).toStrictEqual(
+            level === 'recommended'
+                ? []
+                : [{ ruleId: 'gspot/no-prefix-collisions', messageId: 'collision', line: 1, column: 1 }],
+        );
         await Bun.write(join(sandbox.path, 'feature/second.ts'), '');
         renameSync(join(sandbox.path, 'cards/asset-list.ts'), join(sandbox.path, 'cards/other.ts'));
         expect(linter.verify("'use server';\nexport const value = 1;", config, { filename })).toStrictEqual([]);

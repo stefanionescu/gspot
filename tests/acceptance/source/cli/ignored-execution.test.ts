@@ -122,14 +122,13 @@ rules = {eqeqeq = ["error", "always"]}
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     writeFileSync(join(directory.path, 'tests/future.js'), source);
     for (const ignored of [false, true]) {
-        if (ignored) {
+        if (ignored)
             writeFileSync(
                 join(directory.path, 'gspot.toml'),
                 policy + '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\n',
             );
-            const updated = await run(directory.path, ['apply']);
-            expect(updated.code, updated.stdout + updated.stderr).toBe(0);
-        }
+        const updated = ignored ? await run(directory.path, ['apply']) : undefined;
+        expect(updated?.code ?? 0, (updated?.stdout ?? '') + (updated?.stderr ?? '')).toBe(0);
         const lint = await runProcess(
             [
                 join(modules, '.bin/eslint'),

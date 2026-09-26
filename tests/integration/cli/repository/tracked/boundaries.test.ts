@@ -146,16 +146,16 @@ test('a non-Git walk preserves newline directories, nested negations, pruning, a
     expect((await trackedEntries(root)).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
 });
 
-test.skipIf(process.platform === 'win32')('a non-Git walk omits named pipes from readable source files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    expect((await trackedEntries(sandbox.path)).map((entry) => entry.path)).toStrictEqual(['source.ts']);
-});
+if (process.platform !== 'win32')
+    test('a non-Git walk omits named pipes from readable source files', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+        expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
+        expect((await trackedEntries(sandbox.path)).map((entry) => entry.path)).toStrictEqual(['source.ts']);
+    });
 
-test.skipIf(process.platform === 'win32')(
-    'Bash findings retain newline and colon directory names without Git',
-    async () => {
+if (process.platform !== 'win32')
+    test('Bash findings retain newline and colon directory names without Git', async () => {
         await using sandbox = await testdir();
         const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
         await createFileTree(sandbox.path, {
@@ -179,5 +179,4 @@ test.skipIf(process.platform === 'win32')(
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
-    },
-);
+    });

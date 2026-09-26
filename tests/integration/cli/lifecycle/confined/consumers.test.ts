@@ -10,29 +10,32 @@ import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { rejection } from '#tests/support/rejection.ts';
 
-describe.skipIf(process.platform === 'win32')('confined discovery', () => {
-    test.each(['project', 'configuration', 'schemes'] as const)(
-        'Xcode discovery rejects a symlinked %s and leaves outside data unchanged',
-        async (kind) => {
-            await using directory = await testdir();
-            await createFileTree(directory.path, {
-                'project/app.xcodeproj/.keep': '',
-                'outside/schemes/Main.xcscheme': 'authored scheme',
-                'outside/periphery.yml': 'schemes:\n  - Authored\n',
-            });
-            const root = join(directory.path, 'project');
-            if (kind === 'project') symlinkSync('../outside', join(root, 'aaa.xcodeproj'));
-            if (kind === 'configuration') symlinkSync('../outside/periphery.yml', join(root, '.periphery.yml'));
-            if (kind === 'schemes') symlinkSync('../../outside', join(root, 'app.xcodeproj/xcshareddata'));
-            expect(() => xcodeProposal(root, [''])).toThrow(/(?:Unsafe lifecycle|Lifecycle destination)/u);
-            expect(readFileSync(join(directory.path, 'outside/periphery.yml'), 'utf8')).toBe(
-                'schemes:\n  - Authored\n',
-            );
-            expect(readFileSync(join(directory.path, 'outside/schemes/Main.xcscheme'), 'utf8')).toBe('authored scheme');
-            expect(existsSync(join(root, '.gspot'))).toBe(false);
-        },
-    );
-});
+if (process.platform !== 'win32')
+    describe('confined discovery', () => {
+        test.each(['project', 'configuration', 'schemes'] as const)(
+            'Xcode discovery rejects a symlinked %s and leaves outside data unchanged',
+            async (kind) => {
+                await using directory = await testdir();
+                await createFileTree(directory.path, {
+                    'project/app.xcodeproj/.keep': '',
+                    'outside/schemes/Main.xcscheme': 'authored scheme',
+                    'outside/periphery.yml': 'schemes:\n  - Authored\n',
+                });
+                const root = join(directory.path, 'project');
+                if (kind === 'project') symlinkSync('../outside', join(root, 'aaa.xcodeproj'));
+                if (kind === 'configuration') symlinkSync('../outside/periphery.yml', join(root, '.periphery.yml'));
+                if (kind === 'schemes') symlinkSync('../../outside', join(root, 'app.xcodeproj/xcshareddata'));
+                expect(() => xcodeProposal(root, [''])).toThrow(/(?:Unsafe lifecycle|Lifecycle destination)/u);
+                expect(readFileSync(join(directory.path, 'outside/periphery.yml'), 'utf8')).toBe(
+                    'schemes:\n  - Authored\n',
+                );
+                expect(readFileSync(join(directory.path, 'outside/schemes/Main.xcscheme'), 'utf8')).toBe(
+                    'authored scheme',
+                );
+                expect(existsSync(join(root, '.gspot'))).toBe(false);
+            },
+        );
+    });
 
 test('structural rule caching confines writes and preserves later rule edits', async () => {
     await using directory = await testdir();

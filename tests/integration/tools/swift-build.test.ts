@@ -58,9 +58,8 @@ test('incremental Swift builds preserve compiler state and still detect a change
     expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toStrictEqual([]);
 }, 120_000);
 
-test.skipIf(process.platform !== 'darwin')(
-    'Xcode reuses compiled objects and reports source errors without changing the project',
-    async () => {
+if (process.platform === 'darwin')
+    test('Xcode reuses compiled objects and reports source errors without changing the project', async () => {
         await using sandbox = await testdir();
         const project = `// !$*UTF8*$!
 {
@@ -111,6 +110,4 @@ test.skipIf(process.platform !== 'darwin')(
         ]);
         writeFileSync(join(sandbox.path, 'main.swift'), source);
         expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toStrictEqual([]);
-    },
-    120_000,
-);
+    }, 120_000);

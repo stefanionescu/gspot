@@ -245,9 +245,8 @@ test.each([
     expect(corrected.report.exitCode).toBe(0);
 });
 
-test.skipIf(process.platform === 'win32')(
-    'prefix groups remain distinct when directory and prefix contain newlines',
-    async () => {
+if (process.platform !== 'win32')
+    test('prefix groups remain distinct when directory and prefix contain newlines', async () => {
         await using sandbox = await testdir();
         const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
         await createFileTree(sandbox.path, {
@@ -273,5 +272,4 @@ test.skipIf(process.platform === 'win32')(
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
-    },
-);
+    });

@@ -90,7 +90,7 @@ test('Xcode source membership does not mix independent nested projects', async (
         const spec = selected.selected
             .flatMap((manifest) => manifest.checks)
             .find((check) => check.name === 'xcode/orphan-sources')!;
-        const findings = await orphanSources(
+        const findings = orphanSources(
             engineInput(session, {
                 scope: session.scopes.find((entry) => entry.scope.path === selected.scope.path)!,
                 spec: spec,

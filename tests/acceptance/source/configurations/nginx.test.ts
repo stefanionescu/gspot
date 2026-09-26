@@ -127,28 +127,24 @@ describe('the nginx configuration', () => {
                 environment,
             );
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            if (process.platform === 'win32') {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-                expect(failed.checks).toMatchObject([{ check: 'nginx/gixy', status: 'skipped' }]);
-            } else {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-                expect(failed.checks).toMatchObject([
-                    {
-                        check: 'nginx/gixy',
-                        status: 'fail',
-                        findings: [expect.objectContaining({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 })],
-                    },
-                ]);
-                const corrected = await run(
-                    sandbox.path,
-                    ['check', '--only', 'nginx/gixy', '--no-cache', '--json'],
-                    environment,
-                );
-                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                    { check: 'nginx/gixy', status: 'ok', findings: [] },
-                ]);
-            }
+            // Gixy has no Windows build, so the check is skipped there and the run passes.
+            const isWindows = process.platform === 'win32';
+            const forged = expect.objectContaining({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
+            expect(failed.checks).toMatchObject([
+                isWindows
+                    ? { check: 'nginx/gixy', status: 'skipped' }
+                    : { check: 'nginx/gixy', status: 'fail', findings: [forged] },
+            ]);
+            const corrected = await run(
+                sandbox.path,
+                ['check', '--only', 'nginx/gixy', '--no-cache', '--json'],
+                environment,
+            );
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },
+            ]);
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];

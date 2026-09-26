@@ -102,10 +102,15 @@ test.each(['mise', 'npm'] as const)(
         const installed = readFileSync(join(directory.path, path), 'utf8');
         await applyAll(await openSession(directory.path));
         expect(readFileSync(join(directory.path, path), 'utf8')).toBe(installed);
-        if (runner === 'npm') {
-            expect(JSON.parse(installed).scripts.prepare).toBe('authored setup');
-            expect(JSON.parse(installed).scripts['gspot:doctor']).toBe('authored doctor');
-        } else expect(installed).toContain('Keep this description');
+        // The authored tasks survive beside the generated ones: the npm scripts, or the mise description.
+        const scripts = (
+            JSON.parse(runner === 'npm' ? installed : '{"scripts":{}}') as { scripts: Record<string, string> }
+        ).scripts;
+        const authoredKept =
+            runner === 'npm'
+                ? scripts['prepare'] === 'authored setup' && scripts['gspot:doctor'] === 'authored doctor'
+                : installed.includes('Keep this description');
+        expect(authoredKept).toBe(true);
         const argv =
             runner === 'mise'
                 ? ['mise', 'run', '--skip-tools', 'lint', '--', '--json', 'a b']
@@ -120,13 +125,17 @@ test.each(['mise', 'npm'] as const)(
             MISE_CACHE_DIR: join(launcher.path, 'cache'),
             MISE_OFFLINE: '1',
         };
-        if (runner === 'mise') {
-            const linked = Bun.spawnSync(
-                ['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, launcher.path],
-                { cwd: directory.path, env, stdout: 'pipe', stderr: 'pipe', timeout: 10_000 },
-            );
-            expect(linked.exitCode, linked.stderr.toString()).toBe(0);
-        }
+        const linked =
+            runner === 'mise'
+                ? Bun.spawnSync(['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, launcher.path], {
+                      cwd: directory.path,
+                      env,
+                      stdout: 'pipe',
+                      stderr: 'pipe',
+                      timeout: 10_000,
+                  })
+                : undefined;
+        expect(linked?.exitCode ?? 0, linked?.stderr.toString()).toBe(0);
         const executed = Bun.spawnSync(argv, {
             cwd: directory.path,
             env,

@@ -5,7 +5,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema, type RunReport } from '#cli/execution/report.ts';
-import { runProcess, PLANTED_TIMEOUT_MS, run  } from '#tests/support/cli/command.ts';
+import { runProcess, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));
@@ -128,7 +128,7 @@ test(
             const report = JSON.parse(checked.stdout) as RunReport;
             expect(checked.code, checked.stdout + checked.stderr).toBe(1);
             expect(report.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
-            expect(report.checks.flatMap((check) => check.findings)).toEqual(
+            expect(report.checks.flatMap((check) => check.findings)).toStrictEqual(
                 expect.arrayContaining([
                     expect.objectContaining({ rule: 'gspot/no-trivial-functions', file: 'src/main.js', line: 2 }),
                     expect.objectContaining({ rule: 'gspot/no-trivial-files', file: 'src/main.js', line: 1 }),

@@ -4,7 +4,38 @@ import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { gspot, run, runProcess  } from '#tests/support/cli/command.ts';
+import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
+
+type Step = { run?: string; uses?: string; if?: string; with?: Record<string, string> };
+type Generated = {
+    gspot: { script: string[]; artifacts: { paths: string[]; when: string; reports: { codequality: string } } };
+    jobs: Record<string, { steps: Step[] }>;
+};
+type Retention = { always: boolean; keepsCodequality: boolean; manualStage?: 'manual job only' | 'every job' };
+
+const CODEQUALITY_REPORT = '.gspot/reports/report.codequality.json';
+const RETENTION: Record<'gitlab' | 'github', Retention> = {
+    gitlab: { always: true, keepsCodequality: true },
+    github: { always: true, keepsCodequality: true, manualStage: 'manual job only' },
+};
+
+// What the generated job says about keeping reports and running the manual stage, in one shape per provider.
+function retention(provider: 'gitlab' | 'github', generated: Generated): Retention {
+    if (provider === 'gitlab')
+        return {
+            always: generated.gspot.artifacts.when === 'always',
+            keepsCodequality: generated.gspot.artifacts.reports.codequality === CODEQUALITY_REPORT,
+        };
+    const check = generated.jobs['check-ubuntu']!.steps;
+    const manual = generated.jobs['manual-ubuntu']!.steps;
+    const artifact = check.find((step) => step.uses?.startsWith('actions/upload-artifact@'))!;
+    const runsManual = (steps: Step[]) => steps.some((step) => step.run?.includes('--stage manual'));
+    return {
+        always: artifact.if?.includes('always()') === true,
+        keepsCodequality: artifact.with?.['path']?.includes(CODEQUALITY_REPORT) === true,
+        manualStage: runsManual(manual) && !runsManual(check) ? 'manual job only' : 'every job',
+    };
+}
 
 test.each(['gitlab', 'github'] as const)(
     'the generated %s job verifies its download, checks exact changed objects, retains reports, and accepts corrections',
@@ -87,16 +118,7 @@ process.exit(child.exitCode);
             );
             chmodSync(join(executables.path, 'curl'), 0o755);
             const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
-            const generated = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as {
-                gspot: {
-                    script: string[];
-                    artifacts: { paths: string[]; when: string; reports: { codequality: string } };
-                };
-                jobs: Record<
-                    string,
-                    { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }
-                >;
-            };
+            const generated = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as Generated;
             let script =
                 provider === 'gitlab'
                     ? generated.gspot.script
@@ -131,22 +153,7 @@ process.exit(child.exitCode);
                 '.gspot/reports/report.codequality.json',
             ])
                 expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
-            if (provider === 'gitlab') {
-                expect(generated.gspot.artifacts.when).toBe('always');
-                expect(generated.gspot.artifacts.reports.codequality).toBe('.gspot/reports/report.codequality.json');
-            } else {
-                const artifact = generated.jobs['check-ubuntu']!.steps.find((step) =>
-                    step.uses?.startsWith('actions/upload-artifact@'),
-                )!;
-                expect(artifact.if).toContain('always()');
-                expect(artifact.with?.['path']).toContain('.gspot/reports/report.codequality.json');
-                expect(
-                    generated.jobs['manual-ubuntu']!.steps.some((step) => step.run?.includes('--stage manual')),
-                ).toBe(true);
-                expect(generated.jobs['check-ubuntu']!.steps.some((step) => step.run?.includes('--stage manual'))).toBe(
-                    false,
-                );
-            }
+            expect(retention(provider, generated)).toMatchObject(RETENTION[provider]);
             writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
             const corrected = commit('correct syntax');
             const valid = await execute(base);
@@ -179,7 +186,8 @@ process.exit(child.exitCode);
             }
             commit('check the full tree in CI');
             const full = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as typeof generated;
-            if (provider === 'github') expect(full.jobs['code-scanning']).toBeUndefined();
+            // Code scanning is a separate job that ci.run = "all" does not add; GitLab has no jobs table at all.
+            expect(provider === 'github' && 'code-scanning' in full.jobs).toBe(false);
             script =
                 provider === 'gitlab'
                     ? full.gspot.script
@@ -196,26 +204,41 @@ process.exit(child.exitCode);
     120_000,
 );
 
+// Each row names the provider init proposes and the note or file its plan must carry.
 test.each([
-    ['Jenkinsfile', 'pipeline { agent any }\n', 'git@github.com:example/project.git', 'none'],
-    ['.gitlab-ci.yml', 'application:\n  script: echo app\n', 'git@github.com:example/project.git', 'gitlab'],
+    ['Jenkinsfile', 'pipeline { agent any }\n', 'git@github.com:example/project.git', 'none', 'CI retained'],
+    [
+        '.gitlab-ci.yml',
+        'application:\n  script: echo app\n',
+        'git@github.com:example/project.git',
+        'gitlab',
+        'include:',
+    ],
     [
         '.github/workflows/application.yml',
         'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo app\n',
         'git@gitlab.com:example/project.git',
         'github',
+        '.github/workflows/gspot.yml',
     ],
-    ['README.md', '# Project\n', 'git@gitlab.com:example/project.git', 'gitlab'],
-    ['.gitlab-ci.yml', 'lint:\n  script: npm run lint\n', 'git@github.com:example/project.git', 'none'],
+    ['README.md', '# Project\n', 'git@gitlab.com:example/project.git', 'gitlab', 'include:'],
+    [
+        '.gitlab-ci.yml',
+        'lint:\n  script: npm run lint\n',
+        'git@github.com:example/project.git',
+        'none',
+        'no duplicate CI job',
+    ],
     [
         '.github/workflows/application.yml',
         'on: push\njobs:\n  quality:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: npm run lint\n',
         'git@gitlab.com:example/project.git',
         'none',
+        'no duplicate CI job',
     ],
 ] as const)(
     'init reads %s before its remote and preserves existing CI jobs',
-    async (path, content, remote, provider) => {
+    async (path, content, remote, provider, note) => {
         await using repository = await testdir();
         await createFileTree(repository.path, { [path]: content });
         expect(git(repository.path, ['init', '-q']).code).toBe(0);
@@ -233,16 +256,9 @@ test.each([
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const proposal = JSON.parse(result.stdout);
-        if (provider === 'none') {
-            expect(proposal.policy).not.toContain('[ci]');
-            expect(JSON.stringify(proposal.plan.retained)).toContain(
-                path === 'Jenkinsfile' ? 'CI retained' : 'no duplicate CI job',
-            );
-        } else {
-            expect(proposal.policy).toContain(`provider = "${provider}"`);
-            if (provider === 'gitlab') expect(JSON.stringify(proposal.plan.write)).toContain('include:');
-        }
+        const proposal = JSON.parse(result.stdout) as { policy: string; plan: { retained: unknown; write: unknown } };
+        expect(/provider = "(\w+)"/u.exec(proposal.policy)?.[1] ?? 'none').toBe(provider);
+        expect(JSON.stringify(proposal.plan)).toContain(note);
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(content);
         expect(await Bun.file(join(repository.path, 'gspot.toml')).exists()).toBe(false);
     },

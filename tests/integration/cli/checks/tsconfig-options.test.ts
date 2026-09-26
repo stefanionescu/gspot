@@ -98,14 +98,14 @@ test.each([
         'right.json': '{"extends":"./base.json"}',
         'base.json': '{ // Shared options.\n"compilerOptions":{"strict":true,},}',
     });
-    const findings = await tsconfigOptions(await inputFor(sandbox.path));
+    const findings = tsconfigOptions(await inputFor(sandbox.path));
     expect(findings.some((finding) => finding.rule === 'strict')).toBe(second === 'left');
 });
 
 test('a scope without tsconfig.json reports the missing configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POLICY });
-    const findings = await tsconfigOptions(await inputFor(sandbox.path));
+    const findings = tsconfigOptions(await inputFor(sandbox.path));
     expect(findings).toMatchObject([
         {
             check: 'integrity/tsconfig-options',
@@ -132,13 +132,13 @@ test.each(['tsconfig.json', 'strict.json'])(
             [`node_modules/@example/config/${filename}`]: '{"compilerOptions":{"strict":true}}',
         });
         const input = await inputFor(sandbox.path);
-        const inherited = await tsconfigOptions(input);
+        const inherited = tsconfigOptions(input);
         expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
         fs.writeFileSync(
             join(sandbox.path, 'apps/web/tsconfig.json'),
             '{"extends":"@example/config","compilerOptions":{"strict":false}}',
         );
-        const overridden = await tsconfigOptions(input);
+        const overridden = tsconfigOptions(input);
         expect(
             overridden
                 .filter((finding) => finding.rule === 'strict')

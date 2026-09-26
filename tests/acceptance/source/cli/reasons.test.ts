@@ -4,8 +4,9 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
-test('ignore and loosened settings accept omitted reasons by default and enforce the repository preference', async () => {
-    for (const required of [false, true]) {
+test.each([false, true])(
+    'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
+    async (required) => {
         await using directory = await testdir();
         const policy = `version = 1\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
@@ -13,16 +14,12 @@ test('ignore and loosened settings accept omitted reasons by default and enforce
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
         const loosened = await run(directory.path, ['set', 'limits.file_lines', '400']);
         expect(loosened.code, loosened.stdout + loosened.stderr).toBe(required ? 2 : 0);
-        if (required) {
-            expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
-            const explained = await run(directory.path, [
-                'ignore',
-                'bash/syntax',
-                '--reason',
-                'Reviewed independently.',
-            ]);
-            expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        }
+        // A refused write leaves the policy as it was; the ignore then needs its reason.
+        expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
+        const explained = required
+            ? await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'Reviewed independently.'])
+            : ignored;
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
         const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout) as { ignores: { check: string; reason?: string; matched: number }[] };
@@ -30,30 +27,30 @@ test('ignore and loosened settings accept omitted reasons by default and enforce
         expect(report.ignores[0]?.matched).toBe(0);
         expect(report.ignores[0]?.reason).toBe(required ? 'Reviewed independently.' : undefined);
         expect(ignored.stdout + ignored.stderr).not.toContain('undefined');
-    }
-});
+    },
+);
 
-test(
-    'named allowances follow require_reasons and removal restores enforcement',
-    async () => {
-        for (const required of [false, true]) {
+test.each([false, true])(
+    'named allowances follow require_reasons=%s and removal restores enforcement',
+    async (required) => {
+        {
             await using directory = await testdir();
             const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash", "naming"]\n[rules]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
             const entry = '{"name":"shell_command"}';
             const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
-            if (required) {
-                expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
-                const explained = await run(directory.path, [
-                    'set',
-                    'naming.allowed',
-                    entry,
-                    '--reason',
-                    'External protocol fixes this name',
-                ]);
-                expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-            }
+            expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
+            const explained = required
+                ? await run(directory.path, [
+                      'set',
+                      'naming.allowed',
+                      entry,
+                      '--reason',
+                      'External protocol fixes this name',
+                  ])
+                : allowed;
+            expect(explained.code, explained.stdout + explained.stderr).toBe(0);
             const command = ['check', '--only', 'naming/identifiers', '--no-cache', '--json'];
             const checked = await run(directory.path, command);
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
@@ -84,18 +81,13 @@ test.each([false, true])(
         const missing = await run(directory.path, command);
         expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
         const report = JSON.parse(missing.stdout);
-        expect(report.checks[0].findings).toStrictEqual(
-            required
-                ? [
-                      expect.objectContaining({
-                          check: 'integrity/suppressions',
-                          file: 'entry.sh',
-                          line: 1,
-                          rule: 'shellcheck-no-reason',
-                      }),
-                  ]
-                : [],
-        );
+        const unexplained = expect.objectContaining({
+            check: 'integrity/suppressions',
+            file: 'entry.sh',
+            line: 1,
+            rule: 'shellcheck-no-reason',
+        });
+        expect(report.checks[0].findings).toStrictEqual(required ? [unexplained] : []);
         expect(report.suppressions['shellcheck']).toBe(1);
         await Bun.write(join(directory.path, 'entry.sh'), '# shellcheck disable=SC2086 # reason: N/A\necho $name\n');
         const empty = await run(directory.path, command);
@@ -206,9 +198,8 @@ test.each([false, true])(
         ).checks
             .filter((check) => check.check === 'integrity/policy')
             .flatMap((check) => check.findings);
-        expect(findings).toMatchObject(
-            required ? [{ file: 'gspot.toml', message: expect.stringContaining('extra') }] : [],
-        );
+        const aboutExtra = { file: 'gspot.toml', message: expect.stringContaining('extra') };
+        expect(findings).toMatchObject(required ? [aboutExtra] : []);
         expect(readFileSync(policyPath, 'utf8')).toBe(
             written + '\n[tools.shellcheck.extra]\nexternal_sources = true\n',
         );

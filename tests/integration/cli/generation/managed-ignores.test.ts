@@ -24,13 +24,13 @@ test.each([true, false])(
         });
         await applyAll(await openSession(repository.path));
         const path = join(repository.path, '.gitignore');
-        expect(existsSync(path)).toBe(authored);
-        if (authored) expect(readFileSync(path, 'utf8')).toBe(original);
+        // Without Git there is nothing to manage: an authored file is untouched and none is created.
+        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(authored ? original : undefined);
         const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
         expect(initialized.code, initialized.stderr).toBe(0);
         await applyAll(await openSession(repository.path));
         const installed = readFileSync(path, 'utf8');
-        if (authored) expect(installed.startsWith(original)).toBe(true);
+        expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/cache/');
         await applyAll(await openSession(repository.path));
         expect(readFileSync(path, 'utf8')).toBe(installed);

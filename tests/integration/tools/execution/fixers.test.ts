@@ -10,9 +10,8 @@ import { explain } from '#cli/commands/explain/subjects.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
-    'SQLFluff write failures remain execution errors when its exit code also means findings',
-    async () => {
+if (!(process.platform === 'win32' || process.getuid?.() === 0))
+    test('SQLFluff write failures remain execution errors when its exit code also means findings', async () => {
         await using sandbox = await testdir();
         const sql = configurationManifests().get('sql')!;
         const spec = sql.checks.find((check) => check.name === 'sql/sqlfluff')!;
@@ -58,8 +57,7 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
         expect(remaining.fixes?.results).toMatchObject([{ status: 'changed', changed: ['source/sample.sql'] }]);
         await Bun.write(join(sandbox.path, 'source/sample.sql'), 'select id from foo;\n');
         expect((await executeRun(await openSession(sandbox.path), options)).report.exitCode).toBe(0);
-    },
-);
+    });
 
 test.each([
     {

@@ -20,6 +20,64 @@ import {
 } from '#cli/tools/python-project.ts';
 import { rejection } from '#tests/support/rejection.ts';
 
+// A fresh clone installs the locked Python tools twice without tracked changes and runs the checker.
+async function expectFreshCloneInstalls(
+    repositoryPath: string,
+    artifactsPath: string,
+    recorded: {
+        manifest: Buffer<ArrayBuffer>;
+        lock: Buffer<ArrayBuffer>;
+        configuration: string;
+        rootConfiguration: Buffer<ArrayBuffer>;
+    },
+): Promise<void> {
+    const clone = join(artifactsPath, 'clone');
+    for (const argv of [
+        ['git', 'init', '--quiet'],
+        ['git', 'add', '--all'],
+        [
+            'git',
+            '-c',
+            'user.name=Fixture',
+            '-c',
+            'user.email=fixture@example.com',
+            '-c',
+            'commit.gpgsign=false',
+            'commit',
+            '--quiet',
+            '-m',
+            'Fixture',
+        ],
+        ['git', 'clone', '--quiet', '--no-local', repositoryPath, clone],
+    ]) {
+        const result = await run(argv, { cwd: repositoryPath });
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+    }
+    expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
+    expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        expect(await installPythonProject(clone)).toContain('installed locked Python tools');
+        const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
+        expect(status.code, status.stderr).toBe(0);
+        expect(status.stdout).toBe('');
+        expect(readFileSync(join(clone, '.gspot/pyproject.toml'))).toStrictEqual(recorded.manifest);
+        expect(readFileSync(join(clone, '.gspot/uv.lock'))).toStrictEqual(recorded.lock);
+        expect(readFileSync(join(clone, recorded.configuration))).toStrictEqual(recorded.rootConfiguration);
+    }
+    const checker = join(clone, '.gspot/.venv/bin/ruff');
+    writeFileSync(join(clone, 'source.py'), 'import os\n');
+    const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
+    expect(defect.code, defect.stderr).toBe(1);
+    expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual(['F401']);
+    const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
+    expect(fixed.code, fixed.stderr).toBe(0);
+    const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
+    expect(clean.code, clean.stderr).toBe(0);
+    const prefix = await run([join(clone, '.gspot/.venv/bin/gspot-relocation-probe')], { cwd: clone });
+    expect(prefix.code, prefix.stderr).toBe(0);
+    expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
+}
+
 test.each([
     ['uv.toml', 'none'],
     ['pyproject.toml', 'mise'],
@@ -184,55 +242,13 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
             expect(corrected.code, corrected.stderr).toBe(0);
             expect((await run([installed, 'check', 'source.py'], { cwd: repository.path })).code).toBe(0);
-            if (runner === 'none') {
-                const clone = join(artifacts.path, 'clone');
-                for (const argv of [
-                    ['git', 'init', '--quiet'],
-                    ['git', 'add', '--all'],
-                    [
-                        'git',
-                        '-c',
-                        'user.name=Fixture',
-                        '-c',
-                        'user.email=fixture@example.com',
-                        '-c',
-                        'commit.gpgsign=false',
-                        'commit',
-                        '--quiet',
-                        '-m',
-                        'Fixture',
-                    ],
-                    ['git', 'clone', '--quiet', '--no-local', repository.path, clone],
-                ]) {
-                    const result = await run(argv, { cwd: repository.path });
-                    expect(result.code, result.stdout + result.stderr).toBe(0);
-                }
-                expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
-                expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
-                for (let attempt = 0; attempt < 2; attempt++) {
-                    expect(await installPythonProject(clone)).toContain('installed locked Python tools');
-                    const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
-                    expect(status.code, status.stderr).toBe(0);
-                    expect(status.stdout).toBe('');
-                    expect(readFileSync(join(clone, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
-                    expect(readFileSync(join(clone, '.gspot/uv.lock'))).toStrictEqual(lock);
-                    expect(readFileSync(join(clone, configuration))).toStrictEqual(rootConfiguration);
-                }
-                const checker = join(clone, '.gspot/.venv/bin/ruff');
-                writeFileSync(join(clone, 'source.py'), 'import os\n');
-                const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
-                expect(defect.code, defect.stderr).toBe(1);
-                expect(JSON.parse(defect.stdout).map((finding: { code: string }) => finding.code)).toStrictEqual([
-                    'F401',
-                ]);
-                const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
-                expect(fixed.code, fixed.stderr).toBe(0);
-                const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
-                expect(clean.code, clean.stderr).toBe(0);
-                const prefix = await run([join(clone, '.gspot/.venv/bin/gspot-relocation-probe')], { cwd: clone });
-                expect(prefix.code, prefix.stderr).toBe(0);
-                expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
-            }
+            if (runner === 'none')
+                await expectFreshCloneInstalls(repository.path, artifacts.path, {
+                    manifest,
+                    lock,
+                    configuration,
+                    rootConfiguration,
+                });
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');

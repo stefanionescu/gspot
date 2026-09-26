@@ -88,7 +88,10 @@ test.each(['only', 'ignore', 'flag'])(
             status: 'fail',
             findings: [{ check: 'typescript/tsc', file: 'src/count.ts', rule: 'TS2322', line: 1, column: 14 }],
         });
-        if (selection !== 'only') expect(report.skips).toContainEqual({ check: 'nextjs/typecheck', source: selection });
+        // The Next.js type check is skipped for the reason the selection gives, and not when it runs alone.
+        expect(report.skips.some((skip) => skip.check === 'nextjs/typecheck' && skip.source === selection)).toBe(
+            selection !== 'only',
+        );
         writeFileSync(join(sandbox.path, 'src/count.ts'), 'export const count: number = 3;\n');
         const corrected = await run(sandbox.path, args);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

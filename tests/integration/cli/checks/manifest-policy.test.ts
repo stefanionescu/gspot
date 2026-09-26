@@ -55,8 +55,8 @@ describe('manifest policy observations', () => {
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': POLICY, 'README.md': '# Example\n' });
-        expect(await manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
+        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
         fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
-        expect(await manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
+        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
     });
 });

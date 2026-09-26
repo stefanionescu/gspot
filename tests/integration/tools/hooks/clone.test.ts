@@ -8,6 +8,107 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 
+// Switching the runner in a clone refuses an edited original, reinstalls the dispatcher, and leaves the tree clean.
+async function expectRunnerSwitchInClone(
+    clonePath: string,
+    main: string,
+    options: { cwd: string; timeoutMs: number; env: Record<string, string> },
+): Promise<void> {
+    await using launcher = await testdir();
+    await createFileTree(launcher.path, {
+        gspot: `#!${process.execPath}\nawait Bun.write('runner-observed', JSON.stringify(process.argv.slice(2)));\n`,
+    });
+    chmodSync(join(launcher.path, 'gspot'), 0o755);
+    const policy = readFileSync(join(clonePath, 'gspot.toml'));
+    const originalPath = join(clonePath, '.gspot/integrations/simple-git-hooks/pre-commit.gspot-original');
+    const original = readFileSync(originalPath);
+    writeFileSync(join(clonePath, 'gspot.toml'), policy.toString('utf8') + '\n[runner]\ntool = "bun"\n');
+    writeFileSync(originalPath, '#!/bin/sh\nexit 0\n');
+    const edited = await run([process.execPath, main, 'apply'], options);
+    expect(edited.code, edited.stdout + edited.stderr).toBe(2);
+    expect(readFileSync(originalPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
+    writeFileSync(originalPath, original);
+    const changed = await run([process.execPath, main, 'apply'], options);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    expect(
+        hookStatus(
+            await openSession(clonePath).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(false);
+    await installHookManager(
+        await openSession(clonePath).then((session) => ({
+            policy: session.policyFiles.policy,
+            repository: session.repository,
+            tools: session,
+        })),
+    );
+    expect(
+        hookStatus(
+            await openSession(clonePath).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(true);
+    const dispatched = await run(['bash', '.gspot/integrations/simple-git-hooks/pre-commit'], {
+        ...options,
+        env: { PATH: `${launcher.path}${delimiter}${options.env['PATH']}` },
+    });
+    expect(dispatched.code, dispatched.stdout + dispatched.stderr).toBe(0);
+    expect(JSON.parse(readFileSync(join(clonePath, 'runner-observed'), 'utf8'))).toStrictEqual(['check', '--staged']);
+    unlinkSync(join(clonePath, 'runner-observed'));
+    expect(readFileSync(originalPath)).toStrictEqual(original);
+    writeFileSync(join(clonePath, 'gspot.toml'), policy);
+    const restoredRunner = await run([process.execPath, main, 'apply'], options);
+    expect(restoredRunner.code, restoredRunner.stdout + restoredRunner.stderr).toBe(0);
+    expect(
+        hookStatus(
+            await openSession(clonePath).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(false);
+    await installHookManager(
+        await openSession(clonePath).then((session) => ({
+            policy: session.policyFiles.policy,
+            repository: session.repository,
+            tools: session,
+        })),
+    );
+    expect(
+        hookStatus(
+            await openSession(clonePath).then((session) => ({
+                policy: session.policyFiles.policy,
+                repository: session.repository,
+            })),
+        ).ready,
+    ).toBe(true);
+    const roundTrip = await run(['git', 'status', '--porcelain'], options);
+    expect(roundTrip.code, roundTrip.stderr).toBe(0);
+    expect(roundTrip.stdout, (await run(['git', 'diff', '--', 'package.json'], options)).stdout).toBe('');
+}
+
+// An edited simple-git-hooks integration refuses install and apply and stays as edited.
+async function expectEditedIntegrationRefused(clonePath: string, main: string): Promise<void> {
+    const path = join(clonePath, '.gspot/integrations/simple-git-hooks/pre-commit');
+    const original = readFileSync(path);
+    writeFileSync(path, '#!/bin/sh\nexit 0\n');
+    const refused = await run([process.execPath, main, 'install'], { cwd: clonePath, timeoutMs: 60_000 });
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain('integration is missing or edited');
+    expect(existsSync(join(clonePath, '.git/hooks/pre-commit'))).toBe(false);
+    const refusedApply = await run([process.execPath, main, 'apply'], { cwd: clonePath, timeoutMs: 60_000 });
+    expect(refusedApply.code, refusedApply.stdout + refusedApply.stderr).toBe(2);
+    expect(readFileSync(path, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
+    const retained = await run(['git', 'status', '--porcelain'], { cwd: clonePath });
+    expect(retained.stdout).toBe(' M .gspot/integrations/simple-git-hooks/pre-commit\n');
+    writeFileSync(path, original);
+}
+
 test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'])(
     'a fresh %s clone installs without tracked changes and enforces staged source through real commits',
     async (manager) => {
@@ -96,21 +197,7 @@ format = "lines"
                 })),
             ).ready,
         ).toBe(false);
-        if (manager === 'simple-git-hooks') {
-            const path = join(clone.path, '.gspot/integrations/simple-git-hooks/pre-commit');
-            const original = readFileSync(path);
-            writeFileSync(path, '#!/bin/sh\nexit 0\n');
-            const refused = await run([process.execPath, main, 'install'], { cwd: clone.path, timeoutMs: 60_000 });
-            expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-            expect(refused.stdout + refused.stderr).toContain('integration is missing or edited');
-            expect(existsSync(join(clone.path, '.git/hooks/pre-commit'))).toBe(false);
-            const refusedApply = await run([process.execPath, main, 'apply'], { cwd: clone.path, timeoutMs: 60_000 });
-            expect(refusedApply.code, refusedApply.stdout + refusedApply.stderr).toBe(2);
-            expect(readFileSync(path, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
-            const retained = await run(['git', 'status', '--porcelain'], { cwd: clone.path });
-            expect(retained.stdout).toBe(' M .gspot/integrations/simple-git-hooks/pre-commit\n');
-            writeFileSync(path, original);
-        }
+        if (manager === 'simple-git-hooks') await expectEditedIntegrationRefused(clone.path, main);
         const lockPath = join(clone.path, manager === 'pre-commit' ? 'uv.lock' : 'package-lock.json');
         const lock = readFileSync(lockPath);
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -183,87 +270,7 @@ format = "lines"
         const status = await run(['git', 'status', '--porcelain'], options);
         expect(status.code, status.stderr).toBe(0);
         expect(status.stdout).toBe('');
-        if (manager === 'simple-git-hooks') {
-            await using launcher = await testdir();
-            await createFileTree(launcher.path, {
-                gspot: `#!${process.execPath}\nawait Bun.write('runner-observed', JSON.stringify(process.argv.slice(2)));\n`,
-            });
-            chmodSync(join(launcher.path, 'gspot'), 0o755);
-            const policy = readFileSync(join(clone.path, 'gspot.toml'));
-            const originalPath = join(clone.path, '.gspot/integrations/simple-git-hooks/pre-commit.gspot-original');
-            const original = readFileSync(originalPath);
-            writeFileSync(join(clone.path, 'gspot.toml'), policy.toString('utf8') + '\n[runner]\ntool = "bun"\n');
-            writeFileSync(originalPath, '#!/bin/sh\nexit 0\n');
-            const edited = await run([process.execPath, main, 'apply'], options);
-            expect(edited.code, edited.stdout + edited.stderr).toBe(2);
-            expect(readFileSync(originalPath, 'utf8')).toBe('#!/bin/sh\nexit 0\n');
-            writeFileSync(originalPath, original);
-            const changed = await run([process.execPath, main, 'apply'], options);
-            expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-            expect(
-                hookStatus(
-                    await openSession(clone.path).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            await installHookManager(
-                await openSession(clone.path).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            );
-            expect(
-                hookStatus(
-                    await openSession(clone.path).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(true);
-            const dispatched = await run(['bash', '.gspot/integrations/simple-git-hooks/pre-commit'], {
-                ...options,
-                env: { PATH: `${launcher.path}${delimiter}${options.env.PATH}` },
-            });
-            expect(dispatched.code, dispatched.stdout + dispatched.stderr).toBe(0);
-            expect(JSON.parse(readFileSync(join(clone.path, 'runner-observed'), 'utf8'))).toStrictEqual([
-                'check',
-                '--staged',
-            ]);
-            unlinkSync(join(clone.path, 'runner-observed'));
-            expect(readFileSync(originalPath)).toStrictEqual(original);
-            writeFileSync(join(clone.path, 'gspot.toml'), policy);
-            const restoredRunner = await run([process.execPath, main, 'apply'], options);
-            expect(restoredRunner.code, restoredRunner.stdout + restoredRunner.stderr).toBe(0);
-            expect(
-                hookStatus(
-                    await openSession(clone.path).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(false);
-            await installHookManager(
-                await openSession(clone.path).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                    tools: session,
-                })),
-            );
-            expect(
-                hookStatus(
-                    await openSession(clone.path).then((session) => ({
-                        policy: session.policyFiles.policy,
-                        repository: session.repository,
-                    })),
-                ).ready,
-            ).toBe(true);
-            const roundTrip = await run(['git', 'status', '--porcelain'], options);
-            expect(roundTrip.code, roundTrip.stderr).toBe(0);
-            expect(roundTrip.stdout, (await run(['git', 'diff', '--', 'package.json'], options)).stdout).toBe('');
-        }
+        if (manager === 'simple-git-hooks') await expectRunnerSwitchInClone(clone.path, main, options);
         const removed = await run([process.execPath, main, 'uninstall', '--yes'], options);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(existsSync(join(clone.path, '.git/hooks/pre-commit'))).toBe(false);

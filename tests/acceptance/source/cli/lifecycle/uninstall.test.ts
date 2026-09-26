@@ -112,10 +112,8 @@ test.each([false, true])(
             const git = await spawn(['git', ...args], { cwd: directory.path });
             expect(git.code, git.stderr).toBe(0);
         }
-        if (applyFirst) {
-            const applied = await run(directory.path, ['apply']);
-            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        }
+        const applied = applyFirst ? await run(directory.path, ['apply']) : undefined;
+        expect(applied?.code ?? 0, (applied?.stdout ?? '') + (applied?.stderr ?? '')).toBe(0);
         const removed = await run(directory.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         for (const [path, content] of Object.entries(originals)) {

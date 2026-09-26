@@ -59,8 +59,9 @@ test.each(['no-project', 'failed-test', 'timeout', 'malformed', 'invalid-number'
         expect(outcome.report.checks[0]!.status).toBe(failure === 'under-floor' ? 'fail' : 'error');
         expect(existsSync(join(sandbox.path, 'viewed.txt'))).toBe(false);
         const viewed = join(buildFolder(sandbox.path), 'swift/root/coverage/source/viewed.txt');
-        expect(existsSync(viewed)).toBe(!['no-project', 'failed-test', 'timeout'].includes(failure));
-        if (existsSync(viewed)) expect(readFileSync(viewed, 'utf8')).toBe('viewed');
+        // The coverage view is kept in the build folder whenever the run got as far as producing it.
+        const produced = !['no-project', 'failed-test', 'timeout'].includes(failure);
+        expect(existsSync(viewed) ? readFileSync(viewed, 'utf8') : undefined).toBe(produced ? 'viewed' : undefined);
         writeFileSync(join(sandbox.path, 'gspot.toml'), POLICY);
         writeFileSync(join(sandbox.path, 'node_modules/.bin/xcodebuild'), script(''));
         writeFileSync(

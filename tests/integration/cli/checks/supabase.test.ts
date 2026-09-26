@@ -35,10 +35,10 @@ test('Supabase configurations and function discovery stay within nested project 
     const nested = input(session, 'apps/api', 'supabase/config');
     expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
     expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
-    expect(await projectValid(root)).toMatchObject([{ file: 'supabase/config.toml', line: 1, rule: 'function' }]);
-    expect(await projectValid(nested)).toStrictEqual([]);
+    expect(projectValid(root)).toMatchObject([{ file: 'supabase/config.toml', line: 1, rule: 'function' }]);
+    expect(projectValid(nested)).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
-    expect(await projectValid(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
+    expect(projectValid(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
     await rejects(storagePolicies(input(await openSession(sandbox.path), 'apps/api', 'supabase/config')), {
         message: /Cannot inspect storage policies/u,

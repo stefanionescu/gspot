@@ -11,6 +11,61 @@ import { rejection } from '#tests/support/rejection.ts';
 
 const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 
+// An edited Lefthook helper is kept and refuses the installation without leaving manager files behind.
+async function expectLefthookRefusesEditedHelper(
+    root: string,
+    location: ReturnType<typeof hookLocation>,
+    names: string[],
+): Promise<void> {
+    const helper = join(location.absolute, 'prepare-commit-msg');
+    const native = readFileSync(helper);
+    const editedHelper = native.toString('utf8') + '\n# Authored helper edit\n';
+    writeFileSync(helper, editedHelper);
+    expect(
+        (
+            await rejection(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            )
+        ).message,
+    ).toContain('Retained differing native hook');
+    expect(readFileSync(helper, 'utf8')).toBe(editedHelper);
+    for (const name of names) expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
+    writeFileSync(helper, native);
+}
+
+// A native Lefthook init script keeps the native commit-msg hook and refuses the installation.
+async function expectLefthookRefusesNativeInit(
+    root: string,
+    location: ReturnType<typeof hookLocation>,
+    original: Buffer<ArrayBuffer>[],
+): Promise<void> {
+    const message = original[2];
+    if (message === undefined) throw new Error('Missing native commit-msg fixture');
+    writeFileSync(join(location.absolute, 'commit-msg'), message);
+    const config = join(root, 'lefthook.yml');
+    writeFileSync(config, readFileSync(config, 'utf8') + '\nrc: ./native-init.sh\n');
+    expect(
+        (
+            await rejection(
+                installHookManager(
+                    await openSession(root).then((session) => ({
+                        policy: session.policyFiles.policy,
+                        repository: session.repository,
+                        tools: session,
+                    })),
+                ),
+            )
+        ).message,
+    ).toContain('Retained differing native hook');
+    expect(readFileSync(join(location.absolute, 'commit-msg'))).toStrictEqual(message);
+}
+
 test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
     'first adoption preserves an edited %s launcher and accepts native regeneration',
     async (manager) => {
@@ -87,56 +142,17 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         ).toContain('Retained differing native hook');
         expect(readFileSync(join(location.absolute, 'commit-msg'), 'utf8')).toBe(edited);
         for (const [index, name] of names.entries()) {
-            if (name !== 'commit-msg')
-                expect(original[index]).toStrictEqual(readFileSync(join(location.absolute, name)));
+            // The refused installation left every other native hook as it was.
+            expect(name === 'commit-msg' || original[index]!.equals(readFileSync(join(location.absolute, name)))).toBe(
+                true,
+            );
             expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
             expect(existsSync(join(location.absolute, `${name}.gspot-original`))).toBe(false);
         }
-        if (manager === 'lefthook') {
-            const message = original[2];
-            if (message === undefined) throw new Error('Missing native commit-msg fixture');
-            writeFileSync(join(location.absolute, 'commit-msg'), message);
-            const config = join(root, 'lefthook.yml');
-            writeFileSync(config, readFileSync(config, 'utf8') + '\nrc: ./native-init.sh\n');
-            expect(
-                (
-                    await rejection(
-                        installHookManager(
-                            await openSession(root).then((session) => ({
-                                policy: session.policyFiles.policy,
-                                repository: session.repository,
-                                tools: session,
-                            })),
-                        ),
-                    )
-                ).message,
-            ).toContain('Retained differing native hook');
-            expect(readFileSync(join(location.absolute, 'commit-msg'))).toStrictEqual(message);
-        }
+        if (manager === 'lefthook') await expectLefthookRefusesNativeInit(root, location, original);
         const regenerated = await run(prepare, options);
         expect(regenerated.code, regenerated.stdout + regenerated.stderr).toBe(0);
-        if (manager === 'lefthook') {
-            const helper = join(location.absolute, 'prepare-commit-msg');
-            const native = readFileSync(helper);
-            const editedHelper = native.toString('utf8') + '\n# Authored helper edit\n';
-            writeFileSync(helper, editedHelper);
-            expect(
-                (
-                    await rejection(
-                        installHookManager(
-                            await openSession(root).then((session) => ({
-                                policy: session.policyFiles.policy,
-                                repository: session.repository,
-                                tools: session,
-                            })),
-                        ),
-                    )
-                ).message,
-            ).toContain('Retained differing native hook');
-            expect(readFileSync(helper, 'utf8')).toBe(editedHelper);
-            for (const name of names) expect(existsSync(join(location.absolute, `${name}.gspot-manager`))).toBe(false);
-            writeFileSync(helper, native);
-        }
+        if (manager === 'lefthook') await expectLefthookRefusesEditedHelper(root, location, names);
         await installHookManager(
             await openSession(root).then((session) => ({
                 policy: session.policyFiles.policy,

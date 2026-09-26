@@ -260,18 +260,19 @@ describe('the typescript configuration', () => {
                 await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
             );
             expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
-            if (planted.check === 'spelling/typos') {
-                // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
-                const excluded = await runPlanted(
-                    sandbox.path,
-                    {
-                        check: 'spelling/typos',
-                        files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
-                    },
-                    environment,
-                );
-                expect(excluded.code, excluded.stdout).toBe(0);
-            }
+            // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
+            const excluded =
+                planted.check === 'spelling/typos'
+                    ? await runPlanted(
+                          sandbox.path,
+                          {
+                              check: 'spelling/typos',
+                              files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
+                          },
+                          environment,
+                      )
+                    : undefined;
+            expect(excluded?.code ?? 0, excluded?.stdout).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 5,
     );

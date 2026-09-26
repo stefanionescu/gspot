@@ -35,13 +35,14 @@ else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_0
         };
         const running = executeRun(session, { ...options, cancelSignal: controller.signal });
         try {
+            const started = join(sandbox.path, 'deploy/started.txt');
             if (failure === 'canceled') {
                 const deadline = performance.now() + 5000;
-                while (!existsSync(join(sandbox.path, 'deploy/started.txt')) && performance.now() < deadline)
-                    await Bun.sleep(20);
-                expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(true);
-                controller.abort();
+                while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
             }
+            // The cancellation reaches a tool that has started running.
+            expect(failure !== 'canceled' || existsSync(started)).toBe(true);
+            if (failure === 'canceled') controller.abort();
             const outcome = await running;
             expect(outcome.report.exitCode).toBe(2);
             expect(outcome.report.checks).toHaveLength(1);

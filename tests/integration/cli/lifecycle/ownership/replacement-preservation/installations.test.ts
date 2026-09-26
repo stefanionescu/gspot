@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { cliSource } from '#tests/support/cli/sources.ts';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
@@ -35,8 +35,9 @@ test.each([false, true])(
             expect(owner.restore('mise.toml')).toBe('changed');
             const restored = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
             expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
-            if (edited) expect(parseToml(restored)['env']).toStrictEqual({ APP_MODE: 'authored' });
-            else expect(restored).toBe(original);
+            // An authored edit survives the restore; without one the file is byte for byte the original.
+            expect(parseToml(restored)['env']).toStrictEqual(edited ? { APP_MODE: 'authored' } : undefined);
+            expect(restored === original).toBe(!edited);
         } finally {
             owner.close();
         }
@@ -105,37 +106,40 @@ test('Python installation preserves runtime bytecode caches without publishing o
         owner.close();
     }
 });
-describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
-    test.each(['link', 'pruning'] as const)(
-        'installation preserves every destination when %s conflicts, then installs corrected inputs',
-        async (conflict) => {
-            await using directory = await testdir();
-            await using staged = await testdir();
-            await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '' });
-            symlinkSync('../package/bin/tool', join(staged.path, '.bin/tool'));
-            const owner = openLifecycleOwner(directory.path);
-            const target = '.gspot/node_modules/package/bin/tool';
-            const obstructed = conflict === 'link' ? '.gspot/node_modules/.bin/tool' : '.gspot/node_modules/obsolete';
-            try {
-                owner.replace(target, { bytes: Buffer.from('installed executable'), mode: 0o644 }, 'dependency');
-                owner.replace(obstructed, { bytes: Buffer.from('installed file'), mode: 0o644 }, 'dependency');
-                writeFileSync(join(directory.path, obstructed), 'authored edit');
-                expect(() => {
+if (process.platform !== 'win32')
+    describe('lifecycle ownership', () => {
+        test.each(['link', 'pruning'] as const)(
+            'installation preserves every destination when %s conflicts, then installs corrected inputs',
+            async (conflict) => {
+                await using directory = await testdir();
+                await using staged = await testdir();
+                await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '' });
+                symlinkSync('../package/bin/tool', join(staged.path, '.bin/tool'));
+                const owner = openLifecycleOwner(directory.path);
+                const target = '.gspot/node_modules/package/bin/tool';
+                const obstructed =
+                    conflict === 'link' ? '.gspot/node_modules/.bin/tool' : '.gspot/node_modules/obsolete';
+                try {
+                    owner.replace(target, { bytes: Buffer.from('installed executable'), mode: 0o644 }, 'dependency');
+                    owner.replace(obstructed, { bytes: Buffer.from('installed file'), mode: 0o644 }, 'dependency');
+                    writeFileSync(join(directory.path, obstructed), 'authored edit');
+                    expect(() => {
+                        publishInstalledFiles(owner, staged.path, 'npm');
+                    }).toThrow('Preserved edited or unowned');
+                    expect(owner.read(target)?.bytes.toString()).toBe('installed executable');
+                    expect(owner.read(obstructed)?.bytes.toString()).toBe('authored edit');
+                    writeFileSync(join(directory.path, obstructed), 'installed file');
                     publishInstalledFiles(owner, staged.path, 'npm');
-                }).toThrow('Preserved edited or unowned');
-                expect(owner.read(target)?.bytes.toString()).toBe('installed executable');
-                expect(owner.read(obstructed)?.bytes.toString()).toBe('authored edit');
-                writeFileSync(join(directory.path, obstructed), 'installed file');
-                publishInstalledFiles(owner, staged.path, 'npm');
-                expect(owner.read(target)?.bytes.toString()).toBe('new executable');
-                expect(readFileSync(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe(
-                    'new executable',
-                );
-                publishInstalledFiles(owner, staged.path, 'npm');
-                if (conflict === 'pruning') expect(owner.read(obstructed)).toBeUndefined();
-            } finally {
-                owner.close();
-            }
-        },
-    );
-});
+                    expect(owner.read(target)?.bytes.toString()).toBe('new executable');
+                    expect(readFileSync(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe(
+                        'new executable',
+                    );
+                    publishInstalledFiles(owner, staged.path, 'npm');
+                    // An obsolete owned file is pruned once its bytes are back; the linked tool stays in place.
+                    expect(existsSync(join(directory.path, obstructed))).toBe(conflict === 'link');
+                } finally {
+                    owner.close();
+                }
+            },
+        );
+    });

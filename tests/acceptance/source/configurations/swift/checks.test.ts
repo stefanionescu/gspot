@@ -134,14 +134,12 @@ describe('the swift configuration', () => {
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            if (process.platform === 'win32' && planted.check === 'swift/swiftlint') {
-                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
-                expect(failed.checks).toMatchObject([{ check: planted.check, status: 'skipped' }]);
-                return;
-            }
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(expect.objectContaining(planted.expected));
+            // SwiftLint has no Windows build, so that check is skipped there and the run passes.
+            const isSkipped = process.platform === 'win32' && planted.check === 'swift/swiftlint';
+            const withExpected = expect.arrayContaining([expect.objectContaining(planted.expected)]);
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
+            expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
+            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);
             const files = Object.fromEntries(
                 Object.keys(planted.files).map((path, index) => [
                     path,
@@ -156,7 +154,9 @@ describe('the swift configuration', () => {
             const accepted = reportSchema.parse(
                 await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
             );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+            expect(accepted.checks).toMatchObject([
+                { check: planted.check, status: isSkipped ? 'skipped' : 'ok', findings: [] },
+            ]);
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];

@@ -29,7 +29,7 @@ describe('fences and paths', () => {
             'src/here.ts': 'export {};\n',
             'mise.toml': '[tasks.build]\nrun = "x"\n',
         });
-        const found = await stalePaths(await checkInput(sandbox.path, 'integrity/stale-paths', ['a.md']));
+        const found = stalePaths(await checkInput(sandbox.path, 'integrity/stale-paths', ['a.md']));
         expect(found.map((finding) => finding.message)).toStrictEqual([
             'src/gone.ts names no tracked file or folder.',
             'mise run gone names no task or script.',
@@ -52,7 +52,7 @@ describe('fences and paths', () => {
         await createFileTree(sandbox.path, {
             'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n',
         });
-        const found = await stalePaths(await checkInput(sandbox.path, 'integrity/stale-paths', ['a.md']));
+        const found = stalePaths(await checkInput(sandbox.path, 'integrity/stale-paths', ['a.md']));
         expect(found.map((finding) => [finding.line, finding.message])).toStrictEqual([
             [6, 'src/missing.ts names no tracked file or folder.'],
         ]);

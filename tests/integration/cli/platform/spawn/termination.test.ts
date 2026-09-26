@@ -103,7 +103,9 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     const child = Bun.spawn([process.execPath, '-e', script], { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
-    const timer = setTimeout(() => { child.kill('SIGKILL'); }, 5000);
+    const timer = setTimeout(() => {
+        child.kill('SIGKILL');
+    }, 5000);
     try {
         expect(await child.exited, await errors).toBe(19);
         const pid = Number((await output).trim());
@@ -181,29 +183,30 @@ test.each(['text', 'binary'] as const)(
     },
 );
 
-test.skipIf(process.platform === 'win32')('preserves execution and process-group permission errors', async () => {
-    await using sandbox = await testdir();
-    const original = process.kill;
-    const denied = Object.assign(new Error('Group permission denied.'), { code: 'EPERM' });
-    const signaling = spyOn(process, 'kill').mockImplementation((pid, signal) => {
-        if (pid < 0) throw denied;
-        return original(pid, signal);
-    });
-    try {
-        for (const execute of [run, runBinary]) {
-            let observed: unknown;
-            try {
-                await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
-                    cwd: sandbox.path,
-                });
-            } catch (error) {
-                observed = error;
+if (process.platform !== 'win32')
+    test('preserves execution and process-group permission errors', async () => {
+        await using sandbox = await testdir();
+        const original = process.kill;
+        const denied = Object.assign(new Error('Group permission denied.'), { code: 'EPERM' });
+        const signaling = spyOn(process, 'kill').mockImplementation((pid, signal) => {
+            if (pid < 0) throw denied;
+            return original(pid, signal);
+        });
+        try {
+            for (const execute of [run, runBinary]) {
+                let observed: unknown;
+                try {
+                    await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
+                        cwd: sandbox.path,
+                    });
+                } catch (error) {
+                    observed = error;
+                }
+                expect(observed).toBeInstanceOf(AggregateError);
+                expect((observed as AggregateError).errors[0].message).toContain('exit code 7');
+                expect((observed as AggregateError).errors[1]).toBe(denied);
             }
-            expect(observed).toBeInstanceOf(AggregateError);
-            expect((observed as AggregateError).errors[0].message).toContain('exit code 7');
-            expect((observed as AggregateError).errors[1]).toBe(denied);
+        } finally {
+            signaling.mockRestore();
         }
-    } finally {
-        signaling.mockRestore();
-    }
-});
+    });

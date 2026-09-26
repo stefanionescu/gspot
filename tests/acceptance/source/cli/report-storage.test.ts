@@ -47,9 +47,8 @@ test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
     },
 );
 
-test.skipIf(process.platform === 'win32')(
-    'a read-only report directory preserves CLI findings and verdict',
-    async () => {
+if (process.platform !== 'win32')
+    test('a read-only report directory preserves CLI findings and verdict', async () => {
         const command = [process.execPath, '-e', "console.log('Retained CLI finding'); process.exitCode = 1"];
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -80,8 +79,7 @@ format = "lines"
         } finally {
             chmodSync(directory, mode);
         }
-    },
-);
+    });
 
 test.each(['directory', 'report', 'cache'])(
     'runtime storage refuses a symbolic-link %s without changing outside bytes',
@@ -102,14 +100,14 @@ test.each(['directory', 'report', 'cache'])(
             );
         }
         const result = await run(sandbox.path, ['check', '--json', ...(target === 'cache' ? [] : ['--no-cache'])]);
-        if (target === 'directory') {
-            expect(result.code, result.stdout + result.stderr).toBe(2);
-            expect(result.stderr).toContain('Unsafe lifecycle parent');
-        } else {
-            expect(result.code, result.stdout + result.stderr).toBe(1);
-            expect((JSON.parse(result.stdout) as RunReport).checks[0]?.findings[0]?.message).toBe('Exact finding');
-            expect(result.stderr).toContain('Could not write');
-        }
+        // A linked .gspot directory refuses the run; a linked report or cache is refused while the check still reports.
+        const isDirectory = target === 'directory';
+        expect(result.code, result.stdout + result.stderr).toBe(isDirectory ? 2 : 1);
+        expect(result.stderr).toContain(isDirectory ? 'Unsafe lifecycle parent' : 'Could not write');
+        const finding = isDirectory
+            ? undefined
+            : (JSON.parse(result.stdout) as RunReport).checks[0]?.findings[0]?.message;
+        expect(finding).toBe(isDirectory ? undefined : 'Exact finding');
         expect(readFileSync(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
         expect(readdirSync(outside.path)).toStrictEqual(['sentinel']);
     },
@@ -183,8 +181,9 @@ await import(${JSON.stringify(cli)});
     const errors = new Response(child.stderr).text();
     expect(await child.exited, (await output) + (await errors)).toBe(73);
     const published = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
-    if (point === 'before') expect(published).toBe(previous);
-    else expect((JSON.parse(published) as RunReport).exitCode).toBe(0);
+    // Stopped before the write, the previous report stands; stopped after it, the new passing report is on disk.
+    const state = published === previous ? 'previous report' : (JSON.parse(published) as RunReport).exitCode;
+    expect(state).toBe(point === 'before' ? 'previous report' : 0);
     const pending = JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8'));
     expect(pending.pending[0].path).toBe('.gspot/reports/report.json');
     expect(pending.pending.map((entry: { path: string }) => entry.path)).toStrictEqual([

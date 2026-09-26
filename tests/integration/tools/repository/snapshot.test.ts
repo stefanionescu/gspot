@@ -12,6 +12,44 @@ function git(root: string, args: string[]): string {
     return result.stdout.trim();
 }
 
+// A setuptools namespace package resolves to the snapshot, not the working checkout.
+async function expectNamespaceFromSnapshot(
+    root: string,
+    source: Parameters<typeof withRevisionSnapshot>[1],
+): Promise<void> {
+    await withRevisionSnapshot(root, source, async (snapshot) => {
+        const result = await run(
+            [join(snapshot, '.venv/bin/python'), '-I', '-c', 'from namespace_fixture.child import main; main()'],
+            { cwd: snapshot },
+        );
+        expect(result.code, result.stderr).toBe(0);
+        expect(result.stdout.trim()).toBe('selected namespace');
+    });
+}
+
+// An editable loader whose mapping cannot be parsed stops the snapshot instead of guessing at sources.
+async function expectCorruptLoaderRefused(
+    root: string,
+    source: Parameters<typeof withRevisionSnapshot>[1],
+    siteDirectory: string,
+    backend: string,
+): Promise<void> {
+    const finder = readdirSync(siteDirectory).find(
+        (name) => name.endsWith('_finder.py') || (name.startsWith('_editable_impl_') && name.endsWith('.py')),
+    )!;
+    const loader = join(siteDirectory, finder);
+    const originalLoader = readFileSync(loader);
+    writeFileSync(
+        loader,
+        originalLoader.toString('utf8') +
+            (backend === 'setuptools' ? '\nMAPPING = dict()\n' : '\nF.map_module("bad", str())\n'),
+    );
+    expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
+        'Cannot parse installed editable Python loader metadata',
+    );
+    writeFileSync(loader, originalLoader);
+}
+
 test.each([
     ['index', 'plain'],
     ['commit', "author's tools"],
@@ -163,19 +201,21 @@ test.each([
             join(root, 'libsrc/namespace_child/__init__.py'),
             'def main():\n    print("working namespace")\n',
         );
-        if (backend !== 'hatchling') {
-            const compiled = await run(
-                [
-                    join(root, '.venv/bin/python'),
-                    '-I',
-                    '-S',
-                    '-c',
-                    'import glob, py_compile; [py_compile.compile(path, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH) for path in glob.glob(".venv/lib/python*/site-packages/*_finder.py") + glob.glob(".venv/lib/python*/site-packages/_editable_impl_*.py")]',
-                ],
-                { cwd: root },
-            );
-            expect(compiled.code, compiled.stderr).toBe(0);
-        }
+        // Hatchling maps modules itself; the other backends read compiled files, so the working tree gets some.
+        const compiled =
+            backend === 'hatchling'
+                ? undefined
+                : await run(
+                      [
+                          join(root, '.venv/bin/python'),
+                          '-I',
+                          '-S',
+                          '-c',
+                          'import glob, py_compile; [py_compile.compile(path, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH) for path in glob.glob(".venv/lib/python*/site-packages/*_finder.py") + glob.glob(".venv/lib/python*/site-packages/_editable_impl_*.py")]',
+                      ],
+                      { cwd: root },
+                  );
+        expect(compiled?.code ?? 0, compiled?.stderr).toBe(0);
         await withRevisionSnapshot(root, source, async (snapshot) => {
             for (const command of [
                 [join(snapshot, '.venv/bin/python'), '-I', '-c', 'from editable_fixture import main; main()'],
@@ -186,21 +226,7 @@ test.each([
                 expect(result.stdout.trim()).toBe('selected source');
             }
         });
-        if (backend === 'setuptools') {
-            await withRevisionSnapshot(root, source, async (snapshot) => {
-                const result = await run(
-                    [
-                        join(snapshot, '.venv/bin/python'),
-                        '-I',
-                        '-c',
-                        'from namespace_fixture.child import main; main()',
-                    ],
-                    { cwd: snapshot },
-                );
-                expect(result.code, result.stderr).toBe(0);
-                expect(result.stdout.trim()).toBe('selected namespace');
-            });
-        }
+        if (backend === 'setuptools') await expectNamespaceFromSnapshot(root, source);
         expect(readFileSync(join(root, packageDirectory, '__init__.py'), 'utf8')).toBe(working);
         const original = await run([join(root, '.venv/bin/fixture-entry')], { cwd: root });
         expect(original.code, original.stderr).toBe(0);
@@ -208,22 +234,7 @@ test.each([
         const python = join(root, '.venv/bin/python');
         const sites = await run([python, '-I', '-c', 'import site; print(site.getsitepackages()[0])'], { cwd: root });
         expect(sites.code, sites.stderr).toBe(0);
-        if (backend !== 'hatchling') {
-            const finder = readdirSync(sites.stdout.trim()).find(
-                (name) => name.endsWith('_finder.py') || (name.startsWith('_editable_impl_') && name.endsWith('.py')),
-            )!;
-            const loader = join(sites.stdout.trim(), finder);
-            const originalLoader = readFileSync(loader);
-            writeFileSync(
-                loader,
-                originalLoader.toString('utf8') +
-                    (backend === 'setuptools' ? '\nMAPPING = dict()\n' : '\nF.map_module("bad", str())\n'),
-            );
-            expect((await rejection(withRevisionSnapshot(root, source, async () => undefined))).message).toContain(
-                'Cannot parse installed editable Python loader metadata',
-            );
-            writeFileSync(loader, originalLoader);
-        }
+        if (backend !== 'hatchling') await expectCorruptLoaderRefused(root, source, sites.stdout.trim(), backend);
         const metadata = join(sites.stdout.trim(), 'fixture-path.pth');
         await using external = await testdir();
         writeFileSync(metadata, `${external.path}\n`);

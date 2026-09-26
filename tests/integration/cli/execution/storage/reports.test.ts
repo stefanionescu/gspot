@@ -35,8 +35,11 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
             const diagnostics = stderr.mock.calls.map((call) => String(call[0])).join('');
             expect(diagnostics).toContain(target);
             expect(diagnostics).toContain('Could not write');
-            if (target === 'cache') expect(fs.readFileSync(obstruction, 'utf8')).toBe('authored obstruction\n');
-            else expect(fs.statSync(obstruction).isDirectory()).toBe(true);
+            // The authored obstruction is untouched: a file keeps its bytes, a directory stays a directory.
+            const obstructed = fs.statSync(obstruction).isDirectory()
+                ? 'directory'
+                : fs.readFileSync(obstruction, 'utf8');
+            expect(obstructed).toBe(target === 'cache' ? 'authored obstruction\n' : 'directory');
             expect(diagnostics.trim().split('\n')).toHaveLength(1);
         } finally {
             stderr.mockRestore();
