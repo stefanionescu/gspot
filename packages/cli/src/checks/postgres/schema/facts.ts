@@ -7,12 +7,13 @@ function qualified(relation: unknown): string {
     return `${textOf(node['schemaname']) || DEFAULT_SCHEMA}.${textOf(node['relname'])}`;
 }
 
-type SchemaState = SchemaFacts & {
+type SchemaState = Pick<SchemaFacts, 'tables' | 'secured'> & {
     policies: Map<string, Set<string>>;
     indexes: { table: string; name: string; column: string; constraint: string }[];
     constraints: Map<string, Map<string, SchemaFacts['foreignKeys']>>;
 };
 type FactReader = (facts: SchemaState, migration: Migration, statement: SqlStatementView) => void;
+type Location = { migration: Migration; statement: SqlStatementView; table: string };
 
 function forgetTable(facts: SchemaState, table: string): void {
     facts.tables.delete(table);
@@ -29,37 +30,43 @@ function named(parts: string[]): string {
 }
 
 const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
+const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
 
-// One constraint of a table: a foreign key is recorded, and a primary or unique key counts as an index on its first column.
-function constraint(
-    facts: SchemaState,
-    at: { migration: Migration; statement: SqlStatementView; table: string },
-    node: SqlNode,
-    column?: string,
-): void {
-    const kind = textOf(node['contype']);
-    const [first] = column === undefined ? partsOf(node['keys']) : [column];
-    const columns = column === undefined ? partsOf(node['fk_attrs']) : [column];
-    const tableName = at.table.slice(at.table.indexOf('.') + 1);
-    const suffix = kind === 'CONSTR_PRIMARY' ? 'pkey' : kind === 'CONSTR_UNIQUE' ? 'key' : 'fkey';
-    const keys = kind === 'CONSTR_FOREIGN' ? columns : column === undefined ? partsOf(node['keys']) : [column];
-    const name = textOf(node['conname']) || [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
-    if (KEY_KINDS.has(kind) && first !== undefined) {
-        facts.indexes.push({ table: at.table, name, column: first, constraint: name });
-    }
-    if (kind !== 'CONSTR_FOREIGN') return;
+// The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
+function constraintName(node: SqlNode, table: string, kind: string, keys: string[]): string {
+    const declared = textOf(node['conname']);
+    if (declared !== '') return declared;
+    const tableName = table.slice(table.indexOf('.') + 1);
+    const suffix = CONSTRAINT_SUFFIXES[kind] ?? 'fkey';
+    return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
+}
+
+// Records a foreign key's columns under the constraint name, with where the constraint was declared.
+function recordForeignKey(facts: SchemaState, at: Location, name: string, columns: string[]): void {
     const constraints = facts.constraints.get(at.table) ?? new Map<string, SchemaFacts['foreignKeys']>();
-    constraints.set(
-        name,
-        columns.map((name) => ({
-            table: at.table,
-            column: name,
-            path: at.migration.path,
-            offset: at.statement.start,
-            text: at.migration.text,
-        })),
-    );
+    const keys = columns.map((column) => ({
+        table: at.table,
+        column,
+        path: at.migration.path,
+        offset: at.statement.start,
+        text: at.migration.text,
+    }));
+    constraints.set(name, keys);
     facts.constraints.set(at.table, constraints);
+}
+
+// One constraint of a table: a foreign key is recorded, and a primary or unique key counts as an index on its first
+// column.
+function constraint(facts: SchemaState, at: Location, node: SqlNode, column?: string): void {
+    const kind = textOf(node['contype']);
+    const keys = column === undefined ? partsOf(node['keys']) : [column];
+    const columns = column === undefined ? partsOf(node['fk_attrs']) : [column];
+    const isForeign = kind === 'CONSTR_FOREIGN';
+    const name = constraintName(node, at.table, kind, isForeign ? columns : keys);
+    const [first] = keys;
+    if (KEY_KINDS.has(kind) && first !== undefined)
+        facts.indexes.push({ table: at.table, name, column: first, constraint: name });
+    if (isForeign) recordForeignKey(facts, at, name, columns);
 }
 
 const created: FactReader = (facts, migration, statement) => {
@@ -77,21 +84,29 @@ const created: FactReader = (facts, migration, statement) => {
     for (const node of inTable) constraint(facts, at, node);
 };
 
-const altered: FactReader = (facts, migration, statement) => {
-    const table = qualified(statement.fields['relation']);
-    const commands = nodesOf(statement.fields['cmds'], 'AlterTableCmd');
-    for (const command of commands) {
-        if (command['subtype'] === 'AT_EnableRowSecurity') facts.secured.add(table);
-        if (command['subtype'] === 'AT_DisableRowSecurity') facts.secured.delete(table);
-        if (command['subtype'] === 'AT_DropConstraint') {
-            const name = textOf(command['name']);
-            facts.constraints.get(table)?.delete(name);
-            facts.indexes = facts.indexes.filter((index) => index.table !== table || index.constraint !== name);
-        }
-        if (command['subtype'] !== 'AT_AddConstraint') continue;
+// Forgets a constraint by name: its foreign key and the index a key constraint counted as.
+function dropConstraint(facts: SchemaState, table: string, name: string): void {
+    facts.constraints.get(table)?.delete(name);
+    facts.indexes = facts.indexes.filter((index) => index.table !== table || index.constraint !== name);
+}
+
+// What each ALTER TABLE command changes in the facts.
+const ALTERATIONS: Record<string, (facts: SchemaState, at: Location, command: SqlNode) => void> = {
+    AT_EnableRowSecurity: (facts, at) => facts.secured.add(at.table),
+    AT_DisableRowSecurity: (facts, at) => facts.secured.delete(at.table),
+    AT_DropConstraint: (facts, at, command) => {
+        dropConstraint(facts, at.table, textOf(command['name']));
+    },
+    AT_AddConstraint: (facts, at, command) => {
         const node = (command['def'] as SqlNode | undefined)?.['Constraint'] as SqlNode | undefined;
-        if (node !== undefined) constraint(facts, { migration, statement, table }, node);
-    }
+        if (node !== undefined) constraint(facts, at, node);
+    },
+};
+
+const altered: FactReader = (facts, migration, statement) => {
+    const at: Location = { migration, statement, table: qualified(statement.fields['relation']) };
+    for (const command of nodesOf(statement.fields['cmds'], 'AlterTableCmd'))
+        ALTERATIONS[String(command['subtype'])]?.(facts, at, command);
 };
 
 // A dropped table leaves the facts, so the checks ask nothing of a table the schema does not hold.
@@ -137,6 +152,19 @@ const READERS: Record<string, FactReader> = {
         facts.indexes.push({ table, name: textOf(statement.fields['idxname']), column, constraint: '' });
     },
 };
+// The facts the checks read: policed tables, every foreign key, and the indexed columns of each table.
+function summarized(facts: SchemaState): SchemaFacts {
+    const policed = new Set([...facts.policies].filter(([, policies]) => policies.size > 0).map(([table]) => table));
+    const foreignKeys = [...facts.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
+    const indexed = new Map<string, Set<string>>();
+    for (const index of facts.indexes) {
+        const columns = indexed.get(index.table) ?? new Set<string>();
+        columns.add(index.column);
+        indexed.set(index.table, columns);
+    }
+    return { tables: facts.tables, secured: facts.secured, policed, foreignKeys, indexed };
+}
+
 // What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
 export const DEFAULT_SCHEMA = 'public';
 
@@ -152,25 +180,8 @@ export function schemaFacts(migrations: Migration[]): SchemaFacts {
         constraints: new Map(),
         tables: new Map(),
         secured: new Set(),
-        policed: new Set(),
-        foreignKeys: [],
-        indexed: new Map(),
     };
     for (const migration of migrations)
         for (const statement of migration.statements) READERS[statement.kind]?.(facts, migration, statement);
-    for (const [table, policies] of facts.policies) if (policies.size > 0) facts.policed.add(table);
-    for (const constraints of facts.constraints.values())
-        for (const keys of constraints.values()) facts.foreignKeys.push(...keys);
-    for (const index of facts.indexes) {
-        const columns = facts.indexed.get(index.table) ?? new Set<string>();
-        columns.add(index.column);
-        facts.indexed.set(index.table, columns);
-    }
-    return {
-        tables: facts.tables,
-        secured: facts.secured,
-        policed: facts.policed,
-        foreignKeys: facts.foreignKeys,
-        indexed: facts.indexed,
-    };
+    return summarized(facts);
 }
