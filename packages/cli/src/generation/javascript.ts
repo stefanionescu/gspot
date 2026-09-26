@@ -50,6 +50,11 @@ function tsconfigAliases(root: string, prefix: string): Record<string, string> {
     return aliases;
 }
 
+// Whether an authored jsconfig names its own files or include globs.
+function listsSources(raw: unknown): boolean {
+    return typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);
+}
+
 /**
  * The import aliases a scope declares, from its package.json imports and its tsconfig paths.
  * @param root the repository root
@@ -63,11 +68,6 @@ export function aliasesFor(root: string, scope: string): Record<string, string> 
 
 // Inherit authored resolution and file selection. A default input glob belongs to the repository,
 // not the generated configuration directory.
-// Whether an authored jsconfig names its own files or include globs.
-function listsSources(raw: unknown): boolean {
-    return typeof raw === 'object' && raw !== null && ('files' in raw || 'include' in raw);
-}
-
 /**
  * The generated jsconfig: type-checks JavaScript with the scope's own resolution when it has one.
  * @param root the repository root

@@ -4,9 +4,9 @@ import { expect, test } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { pushReportSchema } from '#cli/execution/report.ts';
 import type { SarifReport } from '#tests/support/cli/reports.ts';
 import type { CommandFailureJson } from '#cli/commands/print-result.ts';
-import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test(
@@ -107,7 +107,7 @@ test(
         const saved = pushReportSchema.parse(
             JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')),
         );
-        expect(saved).toStrictEqual(JSON.parse(multiple.stdout));
+        expect(saved).toStrictEqual(pushReportSchema.parse(JSON.parse(multiple.stdout)));
         expect(saved.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
         const sarif = JSON.parse(
             readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'),

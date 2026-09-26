@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { Finding } from '#cli/checks/result.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
@@ -82,8 +83,8 @@ test.each([false, true])(
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
         const missing = await run(directory.path, command);
         expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
-        const report = JSON.parse(missing.stdout);
-        const unexplained = containing({
+        const report = reportSchema.parse(JSON.parse(missing.stdout));
+        const unexplained: Finding = containing({
             check: 'integrity/suppressions',
             file: 'entry.sh',
             line: 1,

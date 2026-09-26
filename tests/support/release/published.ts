@@ -16,6 +16,8 @@ import {
     root,
 } from '#tests/support/release/packages.ts';
 
+type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };
+
 /** The registry holding the published release, its version, and the npmrc private tool installs read. */
 export type PublishedRelease = {
     registry: Awaited<ReturnType<typeof startRegistry>>;
@@ -172,5 +174,3 @@ export async function initializeConsumer(release: PublishedRelease, fixture: Ins
     expect(futureJson?.tabWidth).toBe(4);
     expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
 }
-
-type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };

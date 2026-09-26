@@ -163,7 +163,9 @@ process.exit(child.exitCode);
             const corrected = commit('correct syntax');
             const valid = await execute(base);
             expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-            expect(JSON.parse(readFileSync(reportPath, 'utf8')).revisions[0].object).toBe(corrected);
+            expect(pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).revisions[0]!.object).toBe(
+                corrected,
+            );
             const firstPush = await execute('0'.repeat(40));
             expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
             expect(firstPush.stdout).toContain('legacy.sh');

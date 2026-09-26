@@ -25,10 +25,11 @@ const LOCKS: [string, string][] = [
     ['pdm.lock', '[[package]]\nname = "example"\nversion = "1.2.3"\n'],
 ];
 
+const policy = (version: string): string =>
+    `version = 1\nconfigurations = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
+
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
     await using repository = await testdir();
-    const policy = (version: string): string =>
-        `version = 1\nconfigurations = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
     await createFileTree(repository.path, { 'gspot.toml': policy('2.0.0'), [filename]: lock });
     const check = async () => {
         const session = await openSession(repository.path);
@@ -151,12 +152,10 @@ test.each(['root', 'nested', 'combined'])(
         const session = await openSession(root);
         const plan = await planRun(session, { stage: 'commit', only: ['integrity/allowlists-match'], skips: [] });
         expect(plan).toHaveLength(1);
-        if (selection !== 'combined')
-            expect(
-                session.scopes
-                    .flatMap((scope) => scope.selected)
-                    .some((manifest) => manifest.configuration.name === 'structure'),
-            ).toBe(false);
+        const selectsStructure = session.scopes
+            .flatMap((scope) => scope.selected)
+            .some((manifest) => manifest.configuration.name === 'structure');
+        expect(selectsStructure).toBe(selection === 'combined');
         const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(result.stdout)).checks).toMatchObject([
