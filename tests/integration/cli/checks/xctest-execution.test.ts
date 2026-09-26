@@ -14,14 +14,14 @@ afterEach(() => {
 
 const POLICY = `version = 1
 configurations = ["xctest", "xcode"]
-[limits]
-tool_seconds = 1
 [tools.xcode]
 project = "Example.xcodeproj"
 scheme = "Example"
 [tools.xctest]
 coverage = [{ target = "Example", percent = 80 }]
 `;
+// A one-second tool limit, for the run whose fake xcodebuild sleeps past it.
+const SLOW_POLICY = POLICY.replace('[tools.xcode]', '[limits]\ntool_seconds = 1\n[tools.xcode]');
 const OPTIONS = {
     stage: 'push' as const,
     skips: [],
@@ -30,6 +30,12 @@ const OPTIONS = {
     isDryRun: false,
     noCache: true,
 };
+// The policy a failure starts from: no project, a one-second limit, or the plain one.
+function initialPolicy(failure: string): string {
+    if (failure === 'no-project') return POLICY.replace('project = "Example.xcodeproj"', 'project = ""');
+    return failure === 'timeout' ? SLOW_POLICY : POLICY;
+}
+
 const script = (body: string): string => `#!${process.execPath}\n${body}\n`;
 
 test.each(['no-project', 'failed-test', 'timeout', 'malformed', 'invalid-number', 'under-floor'])(
@@ -38,8 +44,7 @@ test.each(['no-project', 'failed-test', 'timeout', 'malformed', 'invalid-number'
         await using sandbox = await testdir();
         caches.add(buildFolder(sandbox.path));
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                failure === 'no-project' ? POLICY.replace('project = "Example.xcodeproj"', 'project = ""') : POLICY,
+            'gspot.toml': initialPolicy(failure),
             'ExampleTests.swift': 'import XCTest\n',
             'Example.xcodeproj/project.pbxproj': '',
             'node_modules/.bin/xcodebuild': script(
