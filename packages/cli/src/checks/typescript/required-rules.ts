@@ -44,7 +44,7 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
     for (const file of files) {
         const ending = file.path.split('.').at(-1) ?? '';
         const enabled = new Set(resolved[file.path]);
-        const off = [...required.get(ending)!].filter((rule) => !decided.has(rule) && !enabled.has(rule));
+        const off = [...(required.get(ending) ?? [])].filter((rule) => !decided.has(rule) && !enabled.has(rule));
         findings.push(
             ...off.map((rule) => ({
                 check: input.spec.name,

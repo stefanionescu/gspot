@@ -1,4 +1,5 @@
 import { tmpdir } from 'node:os';
+import { PERMISSION_BITS } from '#cli/platform/file-modes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
@@ -45,7 +46,7 @@ export function createFileWorkspace(
                 originals.set(path, bytes);
                 const target = join(directory, path);
                 mkdirSync(dirname(target), { recursive: true });
-                writeFileSync(target, bytes, { mode: statSync(source).mode & 0o777 });
+                writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
             }
         } finally {
             files.close();

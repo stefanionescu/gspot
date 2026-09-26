@@ -3,7 +3,41 @@ import { SelectionError } from '#cli/configurations/select.ts';
 
 const DIRECTORY_FLAG = 0x80_00_00_00;
 const OFFSET_MASK = 0x7f_ff_ff_ff;
+
+// Offsets and sizes from the PE/COFF specification, in bytes.
+const DOS_HEADER_SIZE = 64;
+const PE_OFFSET_FIELD = 60;
+const PE_SIGNATURE_SIZE = 4;
+const COFF_HEADER_SIZE = 20;
+const SECTION_COUNT_FIELD = 2;
+const OPTIONAL_HEADER_SIZE_FIELD = 16;
+const PE32_MAGIC = 0x1_0b;
+const PE32_PLUS_MAGIC = 0x2_0b;
+const PE32_DATA_DIRECTORIES = 96;
+const PE32_PLUS_DATA_DIRECTORIES = 112;
+const SIZE_OF_CODE_FIELD = 8;
+const SECTION_ALIGNMENT_FIELD = 32;
+const FILE_ALIGNMENT_FIELD = 36;
+const SIZE_OF_IMAGE_FIELD = 56;
+const SIZE_OF_HEADERS_FIELD = 60;
+const CHECKSUM_FIELD = 64;
+const DIRECTORY_ENTRY_SIZE = 8;
+const RESOURCE_DIRECTORY = 2;
+const CERTIFICATE_DIRECTORY = 4;
 const SECTION_SIZE = 40;
+const SECTION_VIRTUAL_SIZE_FIELD = 8;
+const SECTION_VIRTUAL_ADDRESS_FIELD = 12;
+const SECTION_RAW_SIZE_FIELD = 16;
+const SECTION_RAW_POINTER_FIELD = 20;
+const SECTION_CHARACTERISTICS_FIELD = 36;
+const READABLE_INITIALIZED_DATA = 0x40_00_00_40;
+const RESOURCE_TABLE_HEADER_SIZE = 16;
+const RESOURCE_NAMED_COUNT_FIELD = 12;
+const RESOURCE_ID_COUNT_FIELD = 14;
+const RESOURCE_ENTRY_SIZE = 8;
+const RESOURCE_ENTRY_TARGET_FIELD = 4;
+const RESOURCE_DATA_SIZE_FIELD = 4;
+const RCDATA_TYPE = 10;
 
 /**
  * Relocate uv interpreter metadata without changing its native code or embedded Python ZIP.
@@ -17,9 +51,11 @@ export function relocateWindowsLauncher(
     interpreters: ReadonlyMap<string, string>,
     hosts: ReadonlySet<string>,
 ): Buffer | undefined {
-    if (bytes.length < 64 || bytes.toString('ascii', 0, 2) !== 'MZ') return undefined;
-    const pe = bytes.readUInt32LE(60);
-    if (pe + 24 > bytes.length || bytes.toString('ascii', pe, pe + 4) !== 'PE\0\0') return undefined;
+    if (bytes.length < DOS_HEADER_SIZE || bytes.toString('ascii', 0, 2) !== 'MZ') return undefined;
+    const pe = bytes.readUInt32LE(PE_OFFSET_FIELD);
+    const coff = pe + PE_SIGNATURE_SIZE;
+    const optional = coff + COFF_HEADER_SIZE;
+    if (optional > bytes.length || bytes.toString('ascii', pe, coff) !== 'PE\0\0') return undefined;
     const fail = (): never => {
         throw new SelectionError([
             'Cannot relocate installed Windows Python launcher metadata. Reinstall dependencies for the selected revision.',
@@ -31,34 +67,33 @@ export function relocateWindowsLauncher(
     };
     const short = (offset: number): number => bytes.readUInt16LE(range(offset, 2));
     const word = (offset: number): number => bytes.readUInt32LE(range(offset, 4));
-    const count = short(pe + 6);
-    const optional = pe + 24;
+    const count = short(coff + SECTION_COUNT_FIELD);
     const magic = short(optional);
-    if (magic !== 0x1_0b && magic !== 0x2_0b) return undefined;
-    const directories = optional + (magic === 0x2_0b ? 112 : 96);
-    const sectionTable = optional + short(pe + 20);
+    if (magic !== PE32_MAGIC && magic !== PE32_PLUS_MAGIC) return undefined;
+    const directories = optional + (magic === PE32_PLUS_MAGIC ? PE32_PLUS_DATA_DIRECTORIES : PE32_DATA_DIRECTORIES);
+    const sectionTable = optional + short(coff + OPTIONAL_HEADER_SIZE_FIELD);
     range(sectionTable, count * SECTION_SIZE);
     const sections = Array.from({ length: count }, (_, index) => sectionTable + index * SECTION_SIZE);
     const location = (rva: number, size: number): number => {
         for (const section of sections) {
-            const address = word(section + 12);
-            const rawSize = word(section + 16);
+            const address = word(section + SECTION_VIRTUAL_ADDRESS_FIELD);
+            const rawSize = word(section + SECTION_RAW_SIZE_FIELD);
             if (rva >= address && rva + size <= address + rawSize)
-                return range(word(section + 20) + rva - address, size);
+                return range(word(section + SECTION_RAW_POINTER_FIELD) + rva - address, size);
         }
         return fail();
     };
-    const resourceRva = word(directories + 16);
+    const resourceRva = word(directories + RESOURCE_DIRECTORY * DIRECTORY_ENTRY_SIZE);
     if (resourceRva === 0) return undefined;
-    const resources = location(resourceRva, 16);
+    const resources = location(resourceRva, RESOURCE_TABLE_HEADER_SIZE);
     const entries = (offset: number): { name: string | number; target: number; directory: boolean }[] => {
         const table = resources + offset;
-        const length = short(table + 12) + short(table + 14);
-        range(table + 16, length * 8);
+        const length = short(table + RESOURCE_NAMED_COUNT_FIELD) + short(table + RESOURCE_ID_COUNT_FIELD);
+        range(table + RESOURCE_TABLE_HEADER_SIZE, length * RESOURCE_ENTRY_SIZE);
         return Array.from({ length }, (_, index) => {
-            const entry = table + 16 + index * 8;
+            const entry = table + RESOURCE_TABLE_HEADER_SIZE + index * RESOURCE_ENTRY_SIZE;
             const key = word(entry);
-            const target = word(entry + 4);
+            const target = word(entry + RESOURCE_ENTRY_TARGET_FIELD);
             let name: string | number = key;
             if ((key & DIRECTORY_FLAG) !== 0) {
                 const start = resources + (key & OFFSET_MASK);
@@ -69,7 +104,7 @@ export function relocateWindowsLauncher(
             return { name, target: target & OFFSET_MASK, directory: (target & DIRECTORY_FLAG) !== 0 };
         });
     };
-    const data = entries(0).find((entry) => entry.name === 10 && entry.directory);
+    const data = entries(0).find((entry) => entry.name === RCDATA_TYPE && entry.directory);
     if (data === undefined) return undefined;
     const named = entries(data.target);
     const resource = (name: string): { descriptor: number; offset: number; size: number } | undefined => {
@@ -78,7 +113,7 @@ export function relocateWindowsLauncher(
         const languages = entries(entry.target);
         if (languages.length !== 1 || languages[0]?.directory !== false) return fail();
         const descriptor = resources + languages[0].target;
-        const size = word(descriptor + 4);
+        const size = word(descriptor + RESOURCE_DATA_SIZE_FIELD);
         return { descriptor, offset: location(word(descriptor), size), size };
     };
     const kind = resource('UV_TRAMPOLINE_KIND');
@@ -101,15 +136,29 @@ export function relocateWindowsLauncher(
     if (destination === undefined) return fail();
     if (isHost && source === win32.normalize(destination).toLowerCase()) return undefined;
     const value = Buffer.from(destination);
-    const fileAlignment = word(optional + 36);
-    const sectionAlignment = word(optional + 32);
-    if (fileAlignment === 0 || sectionAlignment === 0 || word(directories + 32) !== 0) return fail();
+    const fileAlignment = word(optional + FILE_ALIGNMENT_FIELD);
+    const sectionAlignment = word(optional + SECTION_ALIGNMENT_FIELD);
+    if (
+        fileAlignment === 0 ||
+        sectionAlignment === 0 ||
+        word(directories + CERTIFICATE_DIRECTORY * DIRECTORY_ENTRY_SIZE) !== 0
+    )
+        return fail();
     const align = (value: number, alignment: number): number => Math.ceil(value / alignment) * alignment;
     const header = sectionTable + count * SECTION_SIZE;
-    const firstRaw = Math.min(...sections.map((section) => word(section + 20)).filter((offset) => offset !== 0));
-    if (header + SECTION_SIZE > firstRaw || header + SECTION_SIZE > word(optional + 60)) return fail();
+    const firstRaw = Math.min(
+        ...sections.map((section) => word(section + SECTION_RAW_POINTER_FIELD)).filter((offset) => offset !== 0),
+    );
+    if (header + SECTION_SIZE > firstRaw || header + SECTION_SIZE > word(optional + SIZE_OF_HEADERS_FIELD))
+        return fail();
     const address = align(
-        Math.max(...sections.map((section) => word(section + 12) + Math.max(word(section + 8), word(section + 16)))),
+        Math.max(
+            ...sections.map(
+                (section) =>
+                    word(section + SECTION_VIRTUAL_ADDRESS_FIELD) +
+                    Math.max(word(section + SECTION_VIRTUAL_SIZE_FIELD), word(section + SECTION_RAW_SIZE_FIELD)),
+            ),
+        ),
         sectionAlignment,
     );
     const rawOffset = align(bytes.length, fileAlignment);
@@ -119,16 +168,16 @@ export function relocateWindowsLauncher(
     value.copy(result, rawOffset);
     result.fill(0, header, header + SECTION_SIZE);
     result.write('.gspath', header, 'ascii');
-    result.writeUInt32LE(value.length, header + 8);
-    result.writeUInt32LE(address, header + 12);
-    result.writeUInt32LE(rawSize, header + 16);
-    result.writeUInt32LE(rawOffset, header + 20);
-    result.writeUInt32LE(0x40_00_00_40, header + 36);
-    result.writeUInt16LE(count + 1, pe + 6);
-    result.writeUInt32LE(word(optional + 8) + rawSize, optional + 8);
-    result.writeUInt32LE(align(address + value.length, sectionAlignment), optional + 56);
-    result.writeUInt32LE(0, optional + 64);
+    result.writeUInt32LE(value.length, header + SECTION_VIRTUAL_SIZE_FIELD);
+    result.writeUInt32LE(address, header + SECTION_VIRTUAL_ADDRESS_FIELD);
+    result.writeUInt32LE(rawSize, header + SECTION_RAW_SIZE_FIELD);
+    result.writeUInt32LE(rawOffset, header + SECTION_RAW_POINTER_FIELD);
+    result.writeUInt32LE(READABLE_INITIALIZED_DATA, header + SECTION_CHARACTERISTICS_FIELD);
+    result.writeUInt16LE(count + 1, coff + SECTION_COUNT_FIELD);
+    result.writeUInt32LE(word(optional + SIZE_OF_CODE_FIELD) + rawSize, optional + SIZE_OF_CODE_FIELD);
+    result.writeUInt32LE(align(address + value.length, sectionAlignment), optional + SIZE_OF_IMAGE_FIELD);
+    result.writeUInt32LE(0, optional + CHECKSUM_FIELD);
     result.writeUInt32LE(address, path.descriptor);
-    result.writeUInt32LE(value.length, path.descriptor + 4);
+    result.writeUInt32LE(value.length, path.descriptor + RESOURCE_DATA_SIZE_FIELD);
     return result;
 }

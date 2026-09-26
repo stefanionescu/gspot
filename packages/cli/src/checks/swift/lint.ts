@@ -4,6 +4,7 @@ import { chmodSync, writeFileSync } from 'node:fs';
 import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
@@ -57,7 +58,8 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
                 (comment) =>
                     comment.type === 'multiline_comment' &&
                     comment.text.startsWith('/**') &&
-                    source.lines[comment.startPosition.row]!.slice(0, comment.startPosition.column).trim() !== '',
+                    (source.lines[comment.startPosition.row] ?? '').slice(0, comment.startPosition.column).trim() !==
+                        '',
             );
             return inline.length === 0 ? [] : [{ source, comments, inline }];
         });
@@ -68,7 +70,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
         ]);
         for (const { source, comments } of candidates) {
             const path = join(workspace.root, source.path);
-            chmodSync(path, 0o600);
+            chmodSync(path, PRIVATE_FILE);
             writeFileSync(path, commentSource(source.text, comments));
         }
         const checked = await runToolCheck({ ...session, root: workspace.root }, planned, COMMAND);

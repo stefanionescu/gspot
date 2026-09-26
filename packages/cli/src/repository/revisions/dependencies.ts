@@ -9,7 +9,11 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
+import { EXECUTE_BITS, MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
+
+// The local file header signature that opens a ZIP archive.
+const ZIP_SIGNATURE = Buffer.from('PK\u0003\u0004');
 
 const COPY_CONCURRENCY = 8;
 const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
@@ -197,8 +201,8 @@ export async function copyDependencies(
                 throw new SelectionError([
                     'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
                 ]);
-            const sourceMode = (await stat(source)).mode & 0o7777;
-            await mkdir(target, { mode: 0o700 });
+            const sourceMode = (await stat(source)).mode & MODE_BITS;
+            await mkdir(target, { mode: PRIVATE_DIRECTORY });
             const copy = pLimit(COPY_CONCURRENCY);
             // Each child has its own destination. Drain every copy before cleanup or link validation.
             const copied = await Promise.allSettled(
@@ -244,7 +248,9 @@ export async function copyDependencies(
                             try {
                                 const path = await realpath(join(home, name));
                                 const entry = await stat(path);
-                                return entry.isFile() && (windows || (entry.mode & 0o111) !== 0) ? path : undefined;
+                                return entry.isFile() && (windows || (entry.mode & EXECUTE_BITS) !== 0)
+                                    ? path
+                                    : undefined;
                             } catch (error) {
                                 if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
                                 throw error;
@@ -318,8 +324,11 @@ export async function copyDependencies(
                             return (
                                 offset !== -1 &&
                                 current.bytes
-                                    .subarray(offset + candidate.length, offset + candidate.length + 4)
-                                    .equals(Buffer.from('PK\u0003\u0004'))
+                                    .subarray(
+                                        offset + candidate.length,
+                                        offset + candidate.length + ZIP_SIGNATURE.length,
+                                    )
+                                    .equals(ZIP_SIGNATURE)
                             );
                         });
                         if (header === undefined) continue;
@@ -392,7 +401,8 @@ export async function copyDependencies(
                         // Unchecked hash caches can retain working-tree paths after source relocation.
                         const cache = posix.join(sitePackages, '__pycache__');
                         for (const name of selected.list(cache)) {
-                            if (!name.startsWith(`${entry.name.slice(0, -3)}.`) || !name.endsWith('.pyc')) continue;
+                            if (!name.startsWith(`${entry.name.slice(0, -'.py'.length)}.`) || !name.endsWith('.pyc'))
+                                continue;
                             const cachedPath = posix.join(cache, name);
                             const cached = selected.read(cachedPath);
                             if (cached !== undefined) selected.remove(cachedPath, cached);

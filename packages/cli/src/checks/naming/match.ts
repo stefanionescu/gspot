@@ -43,9 +43,10 @@ export function compileTerms(terms: string[], source: string): Term[] {
  * @returns the term, or undefined
  */
 export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
-    return terms.find((term) =>
-        term.parts.length === 1 ? parts.includes(term.parts[0]!) : isConsecutive(parts, term.parts),
-    );
+    return terms.find((term) => {
+        const [only, ...more] = term.parts;
+        return only !== undefined && more.length === 0 ? parts.includes(only) : isConsecutive(parts, term.parts);
+    });
 }
 
 /**

@@ -210,8 +210,11 @@ function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.spec.runs !== 'per-file-list' || check.files.length === 0) return check;
     const ignored = check.scope.view
         .ignoresFor(check.check)
-        .filter((entry) => entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0)
-        .map((entry) => pathMatcher(entry.paths!));
+        .flatMap((entry) =>
+            entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0
+                ? [pathMatcher(entry.paths)]
+                : [],
+        );
     if (ignored.length === 0) return check;
     const files = check.files.filter((file) => !ignored.some((matches) => matches(file.path)));
     return files.length === 0

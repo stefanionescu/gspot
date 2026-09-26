@@ -18,7 +18,7 @@ export function nginxDirectives(text: string): string[][] {
             continue;
         }
         const value = token.replace(/^(["'])([\s\S]*)\1$/u, '$2');
-        directive.push(value.replaceAll(/\\([trn"'\\])/gu, (_, escaped: string) => ESCAPES[escaped]!));
+        directive.push(value.replaceAll(/\\([trn"'\\])/gu, (_, escaped: string) => ESCAPES[escaped] ?? escaped));
     }
     return directives;
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
+import { MODE_BITS, OWNER_WRITE_BIT, PRIVATE_FILE, READ_ONLY_FILE, WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 
 import {
     type Stats,
@@ -64,8 +65,8 @@ export const LIFECYCLE_PRIVATE_PATH =
  */
 export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
-    if (file.isLink || (file.mode & 0o200) !== 0) return 0o666;
-    return 0o444;
+    if (file.isLink || (file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
+    return READ_ONLY_FILE;
 }
 
 /**
@@ -112,7 +113,8 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
     const locks = new Map<string, string>();
     const parent = (path: string, create = false): string => {
         const parts = partsOf(path);
-        const leaf = parts.pop()!;
+        const leaf = parts.pop();
+        if (leaf === undefined) throw new Error('A path inside the root cannot be empty.');
         let directory = canonical;
         for (const part of parts) {
             directory = join(directory, part);
@@ -139,7 +141,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             if (allowLink && stat.isSymbolicLink())
                 return {
                     bytes: Buffer.from(readlinkSync(target)),
-                    mode: fileMode({ mode: stat.mode & 0o7777, isLink: true }),
+                    mode: fileMode({ mode: stat.mode & MODE_BITS, isLink: true }),
                     isLink: true,
                 };
             if (!stat.isFile() || stat.nlink !== 1)
@@ -148,7 +150,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             const after = lstatSync(target);
             if (stat.size !== bytes.length || stat.mtimeMs !== after.mtimeMs || stat.ctimeMs !== after.ctimeMs)
                 throw new Error(`Lifecycle destination changed while being read: ${path}`);
-            return { bytes, mode: fileMode({ mode: stat.mode & 0o7777 }) };
+            return { bytes, mode: fileMode({ mode: stat.mode & MODE_BITS }) };
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
             throw error;
@@ -187,7 +189,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         let removed = false;
         try {
             if (link === undefined) {
-                const file = openSync(temporary, 'wx', 0o600);
+                const file = openSync(temporary, 'wx', PRIVATE_FILE);
                 staged = true;
                 try {
                     writeFileSync(file, value.bytes);
@@ -210,7 +212,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
                 process.platform === 'win32' &&
                 expected !== undefined &&
                 !expected.isLink &&
-                (expected.mode & 0o200) === 0
+                (expected.mode & OWNER_WRITE_BIT) === 0
             ) {
                 unlinkSync(parent(path));
                 removed = true;
@@ -291,7 +293,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             const token = `${process.pid}:${randomUUID()}`;
             for (;;) {
                 try {
-                    writeFileSync(target, token, { flag: 'wx', mode: 0o600 });
+                    writeFileSync(target, token, { flag: 'wx', mode: PRIVATE_FILE });
                     locks.set(path, token);
                     return;
                 } catch (error) {

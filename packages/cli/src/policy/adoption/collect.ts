@@ -187,7 +187,9 @@ export async function collectCarried(
                 table === undefined && key === undefined
                     ? undefined
                     : { ...(table === undefined ? {} : { table }), ...(key === undefined ? {} : { key }) };
-            const source = parseCarrySource(lists.observed.get(path)!, tool, path, selector);
+            const observed = lists.observed.get(path);
+            if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
+            const source = parseCarrySource(observed, tool, path, selector);
             await carryFrom(source, tool, path, lists, root, carries, check);
         } catch (error) {
             lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });

@@ -144,12 +144,12 @@ function relativeYarnLock(content: string, registry: string): string {
     const expected = structuredClone(entries);
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
     let edited = content;
-    for (const [key, entry] of Object.entries(entries)) {
+    for (const entry of Object.values(expected)) {
         if (entry.resolved === undefined || !/^https?:\/\//u.test(entry.resolved)) continue;
         const url = new URL(entry.resolved);
         if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) continue;
         const relative = `${url.pathname.slice(base.pathname.length)}${url.search}${url.hash}`;
-        expected[key]!.resolved = relative;
+        entry.resolved = relative;
         edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
     }
     if (!isDeepStrictEqual(schema.parse(parseSyml(edited)), expected))
@@ -186,7 +186,8 @@ function portableBunLock(content: string, env: Record<string, string>): string {
         const filename = name.slice(name.lastIndexOf('/') + 1);
         const standard = new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
         if (resolved !== standard) continue;
-        expected.packages[key]![1] = '';
+        const copy = expected.packages[key];
+        if (copy !== undefined) copy[1] = '';
         edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
     }
     if (!isDeepStrictEqual(schema.parse(parseJsonc(edited)), expected))
@@ -266,8 +267,12 @@ async function packageCommand(
             'The package manager included registry credentials in its lock. Existing files were preserved.',
         );
     if (!frozen && manager.name === 'bun') writeFileSync(lockPath, portableBunLock(lock, env));
-    if (!frozen && manager.name === 'yarn' && semver.major(manager.version) === 1)
-        writeFileSync(lockPath, relativeYarnLock(lock, env['npm_config_registry']!));
+    if (!frozen && manager.name === 'yarn' && semver.major(manager.version) === 1) {
+        const registry = env['npm_config_registry'];
+        if (registry === undefined)
+            throw new Error('A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
+        writeFileSync(lockPath, relativeYarnLock(lock, registry));
+    }
 }
 
 function writeProject(work: string, manifest: string, yarn: string | undefined): void {

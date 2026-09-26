@@ -162,12 +162,13 @@ async function runOne(
     if (cached) return cached;
     const result = await run(session, planned, staged);
     if (key !== undefined && !options.isDryRun && RAN_STATUSES.has(result.status)) {
+        const { cacheRoot } = session;
         const stored =
-            session.cacheRoot === undefined || result.command === undefined
+            cacheRoot === undefined || result.command === undefined
                 ? result
                 : {
                       ...result,
-                      command: result.command.map((part) => part.replaceAll(session.root, () => session.cacheRoot!)),
+                      command: result.command.map((part) => part.replaceAll(session.root, () => cacheRoot)),
                   };
         writeCached(session.cacheRoot ?? session.root, key, stored);
     }
@@ -319,8 +320,9 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         fixes?.results.some((result) => result.status === 'failed') === true;
     const claimed = new Set(
         active.flatMap((check, index) => {
-            if (!RAN_STATUSES.has(ran[index]!.status)) return [];
-            if (ran[index]!.checkedFiles !== undefined) return ran[index]!.checkedFiles;
+            const outcome = ran[index];
+            if (outcome === undefined || !RAN_STATUSES.has(outcome.status)) return [];
+            if (outcome.checkedFiles !== undefined) return outcome.checkedFiles;
             return claimedInputs(session, check).map((file) => file.path);
         }),
     );

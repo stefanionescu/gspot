@@ -10,6 +10,7 @@ import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { fileMode, mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { OwnershipEntry, OwnershipState, identitySchema, originalSchema } from '#cli/lifecycle/journal.ts';
+import { OWNER_WRITABLE_FILE, PRIVATE_DIRECTORY, PRIVATE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
 
 import {
     type ConfigurationFormat,
@@ -45,8 +46,8 @@ export function publicationSnapshot(proposed: FileSnapshot, current: FileSnapsho
     const { bytes } = proposed;
     const mode = fileMode(proposed);
     const checkout =
-        mode === 0o444 &&
-        current?.mode === fileMode({ mode: 0o644 }) &&
+        mode === READ_ONLY_FILE &&
+        current?.mode === fileMode({ mode: OWNER_WRITABLE_FILE }) &&
         current.isLink !== true &&
         current.bytes.equals(bytes);
     return { bytes, mode: checkout ? current.mode : mode };
@@ -74,7 +75,7 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
         const save = (): void => {
             state.files = [...entries.values()];
             ownershipSchema.parse(state);
-            const next = { bytes: Buffer.from(`${JSON.stringify(state, null, 2)}\n`), mode: 0o600 };
+            const next = { bytes: Buffer.from(`${JSON.stringify(state, null, 2)}\n`), mode: PRIVATE_FILE };
             confined.write(RECORD, next, recorded);
             recorded = next;
         };
@@ -84,7 +85,7 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
             else entries.set(key, pending.entry);
         };
         const finish = (): void => {
-            for (const pending of state.pending!) accept(pending);
+            for (const pending of state.pending ?? []) accept(pending);
             delete state.pending;
             save();
         };
@@ -122,16 +123,16 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
         let isRecoveryReady = false;
         const backup = (path: string, file: FileSnapshot): z.infer<typeof originalSchema> => {
             if (!isRecoveryReady) {
-                confined.mkdir(RECOVERY, 0o700);
-                confined.mkdir(operation, 0o700);
+                confined.mkdir(RECOVERY, PRIVATE_DIRECTORY);
+                confined.mkdir(operation, PRIVATE_DIRECTORY);
                 isRecoveryReady = true;
             }
             const destination = `${operation}/${randomUUID()}.original`;
-            confined.write(destination, { bytes: file.bytes, mode: 0o600 }, undefined);
+            confined.write(destination, { bytes: file.bytes, mode: PRIVATE_FILE }, undefined);
             const details = { path, backup: destination, ...identity(file) };
             confined.write(
                 `${destination}.json`,
-                { bytes: Buffer.from(`${JSON.stringify(details)}\n`), mode: 0o600 },
+                { bytes: Buffer.from(`${JSON.stringify(details)}\n`), mode: PRIVATE_FILE },
                 undefined,
             );
             return { backup: destination, ...identity(file) };
@@ -225,7 +226,7 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
                     prefix,
                 };
             }
-            const next = { bytes: Buffer.from(nextText), mode: current?.mode ?? 0o644 };
+            const next = { bytes: Buffer.from(nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
             if (existing?.block !== undefined && matches(current, identity(next)))
                 return { path, current, previous: existing, status: 'unchanged' };
             const entry: OwnershipEntry = {
@@ -364,8 +365,12 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
             finish();
             return statuses;
         };
-        const applyProposal: LifecycleOwner['applyProposal'] = (proposal) =>
-            proposal.status === 'preserved' ? 'preserved' : applyProposals([proposal])[0]!;
+        const applyProposal: LifecycleOwner['applyProposal'] = (proposal) => {
+            if (proposal.status === 'preserved') return 'preserved';
+            const [status] = applyProposals([proposal]);
+            if (status === undefined) throw new Error(`Applying ${proposal.path} produced no status.`);
+            return status;
+        };
 
         return {
             beginInstallation(kind) {

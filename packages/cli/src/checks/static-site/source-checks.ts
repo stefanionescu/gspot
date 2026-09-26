@@ -5,6 +5,9 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 
+// Below the all level, svgo must save a tenth of the file before the saving is reported.
+const REPORTED_SAVINGS_SHARE = 10;
+
 const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
 const ASSET_FOLDER = /(?:^|\/)assets\//u;
 const REQUIRED_HEADERS: Record<string, RegExp> = {
@@ -27,7 +30,8 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     if (result.code !== 0) throw new Error(`SVGO could not optimize ${path}: ${result.stderr.trim()}`);
     const originalBytes = Buffer.byteLength(original);
     const saved = originalBytes - Buffer.byteLength(result.stdout);
-    const exceeds = input.policyFiles.policy.level === 'all' ? saved > 0 : saved * 10 > originalBytes;
+    const exceeds =
+        input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
     return exceeds ? [finding(input, path, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)] : [];
 }
 

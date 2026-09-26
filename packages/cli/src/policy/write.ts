@@ -12,7 +12,8 @@ function isTable(value: unknown): value is TomlTable {
 
 function splitKey(key: string): { path: string[]; name: string } {
     const path = key.split('.');
-    const name = path.pop()!;
+    const name = path.pop();
+    if (name === undefined) throw new Error('A policy key cannot be empty.');
     return { path, name };
 }
 
@@ -152,14 +153,21 @@ export function deleteKey(key: string): Mutation {
     return (raw) => {
         const { path, name } = splitKey(key);
         const tables = [raw];
+        let table = raw;
         for (const part of path) {
-            const next = tables.at(-1)![part];
+            const next = table[part];
             if (!isTable(next)) return;
             tables.push(next);
+            table = next;
         }
-        Reflect.deleteProperty(tables.at(-1)!, name);
-        for (let index = tables.length - 1; index > 0; index -= 1)
-            if (Object.keys(tables[index]!).length === 0) Reflect.deleteProperty(tables[index - 1]!, path[index - 1]!);
+        Reflect.deleteProperty(table, name);
+        for (let index = tables.length - 1; index > 0; index -= 1) {
+            const [parent, child] = tables.slice(index - 1, index + 1);
+            const part = path[index - 1];
+            if (parent === undefined || child === undefined || part === undefined || Object.keys(child).length > 0)
+                break;
+            Reflect.deleteProperty(parent, part);
+        }
     };
 }
 

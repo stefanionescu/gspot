@@ -33,7 +33,8 @@ function isNestName(name: string): boolean {
     if (!SCRIPT_ENDING.test(name)) return false;
     const parts = name.replace(SCRIPT_ENDING, '').split('.');
     const named = parts.at(-1) === 'spec' ? parts.slice(0, -1) : parts;
-    return named.length > 1 && NEST_KINDS.has(named.at(-1)!);
+    const kind = named.at(-1);
+    return named.length > 1 && kind !== undefined && NEST_KINDS.has(kind);
 }
 
 function isSkipped(directory: string, prefix: string, isAllowed: (path: string) => boolean): boolean {
@@ -72,7 +73,7 @@ export const prefixCollisions: Analysis = (context) => {
             isSkipped(directory, prefix, isAllowed)
         )
             return [];
-        const peers = tree.get(directory)!.filter((entry) => {
+        const peers = (tree.get(directory) ?? []).filter((entry) => {
             if (entry.kind === 'dir')
                 return (
                     !entry.name.startsWith('.') &&

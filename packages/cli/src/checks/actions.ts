@@ -3,6 +3,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
@@ -46,7 +47,7 @@ function actionlintSource(text: string): string {
                 : token.offset;
         const source = token.source;
         const replaced = source.replace(/\$|\\x24|\\u0024|\\U00000024/u, (value) =>
-            value === '$' ? '.' : value.slice(0, -2) + '2e',
+            value === '$' ? '.' : value.replace(/24$/u, '2e'),
         );
         prepared = prepared.slice(0, start) + replaced + prepared.slice(start + source.length);
     }
@@ -76,7 +77,7 @@ export async function checkActions(session: Session, planned: PlannedCheck): Pro
     mkdirSync(join(workspace.root, '.git'));
     for (const [path, source] of replacements) {
         const target = join(workspace.root, path);
-        chmodSync(target, 0o600);
+        chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
     return await runToolCheck({ ...session, root: workspace.root }, planned, COMMAND);

@@ -41,9 +41,9 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     const argv = nginxTestArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
     const result = await runCheckCommand(input, ['docker', ...argv], { cwd: input.root });
     if (result.code === 0) {
-        const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):\r?$/gmu)].map(
-            (match) => match.groups!['path']!,
-        );
+        const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):\r?$/gmu)]
+            .map((match) => match.groups?.['path'])
+            .filter((path) => path !== undefined);
         if (!parsed.includes('/etc/nginx/nginx.conf'))
             throw new Error('The nginx run produced no configuration dump confirming the tested source.');
         return {

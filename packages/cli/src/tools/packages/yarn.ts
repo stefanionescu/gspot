@@ -56,11 +56,11 @@ export async function yarnSettings(root: string, work: string, env: Record<strin
     const registries: Record<string, Record<string, unknown>> = {};
     const scopes: Record<string, Record<string, unknown>> = {};
     for (const [key, value] of Object.entries(env)) {
-        const scoped = /^npm_config_@([^:]+):registry$/u.exec(key);
-        if (scoped !== null) scopes[scoped[1]!] = { npmRegistryServer: reference(value, 'npmRegistryServer') };
-        const authenticated = /^npm_config_(\/\/[^\s]+):_authToken$/u.exec(key);
-        if (authenticated !== null)
-            registries[authenticated[1]!] = { npmAuthToken: reference(value, 'npmAuthToken'), npmAlwaysAuth: true };
+        const scope = /^npm_config_@([^:]+):registry$/u.exec(key)?.[1];
+        if (scope !== undefined) scopes[scope] = { npmRegistryServer: reference(value, 'npmRegistryServer') };
+        const host = /^npm_config_(\/\/[^\s]+):_authToken$/u.exec(key)?.[1];
+        if (host !== undefined)
+            registries[host] = { npmAuthToken: reference(value, 'npmAuthToken'), npmAlwaysAuth: true };
     }
     if (Object.keys(registries).length > 0) settings['npmRegistries'] = registries;
     if (Object.keys(scopes).length > 0) settings['npmScopes'] = scopes;

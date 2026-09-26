@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { MODE_BITS } from '#cli/platform/file-modes.ts';
 import { mutationPath, mutationTarget } from '#cli/platform/filesystem.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
-const modeSchema = z.number().int().min(0).max(0o7777);
+const modeSchema = z.number().int().min(0).max(MODE_BITS);
 const pathSchema = z.string().superRefine((path, context) => {
     try {
         mutationTarget(path);

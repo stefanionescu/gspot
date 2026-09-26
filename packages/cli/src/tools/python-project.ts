@@ -8,6 +8,7 @@ import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { MODE_BITS, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
@@ -60,7 +61,8 @@ function matches(project: string, lock: string): boolean {
         const expected = manifest.dependencies
             .map((value) => {
                 const [name, version] = value.split('==');
-                return `${normalizedPythonPackage(name!)}==${version}`;
+                if (name === undefined || version === undefined) throw new Error(`Invalid pinned dependency: ${value}`);
+                return `${normalizedPythonPackage(name)}==${version}`;
             })
             .toSorted((left, right) => left.localeCompare(right));
         const actual = (root.metadata?.['requires-dist'] ?? [])
@@ -112,7 +114,8 @@ function pythonSettings(root: string, owner: LifecycleOwner, work: string): stri
             .array(z.looseObject({ url: z.string() }))
             .parse(selected['index'])
             .map((index) => ({ ...index, url: location(index.url) }));
-    if (Object.keys(selected).length > 0) writeFileSync(join(work, 'uv.toml'), stringify(selected), { mode: 0o600 });
+    if (Object.keys(selected).length > 0)
+        writeFileSync(join(work, 'uv.toml'), stringify(selected), { mode: PRIVATE_FILE });
     return Object.entries(selected).flatMap(([key, value]) => {
         const values =
             key === 'index' && Array.isArray(value)
@@ -254,7 +257,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
             // uv links the host interpreter. Copy its executable so the published environment has no external link.
             const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
             const source = realpathSync(interpreter);
-            const mode = lstatSync(source).mode & 0o7777;
+            const mode = lstatSync(source).mode & MODE_BITS;
             if (lstatSync(interpreter).isSymbolicLink()) {
                 unlinkSync(interpreter);
                 copyFileSync(source, interpreter);

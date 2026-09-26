@@ -224,9 +224,9 @@ export async function pushedRevisions(
         : new Set<string>();
     for (const line of input.split('\n').filter((row) => row.trim() !== '')) {
         const fields = line.trim().split(/\s+/u);
-        const [localRef, localObject, remoteRef, remoteObject] = fields;
+        const [localRef, localObject, remoteRef, remoteObject, ...extra] = fields;
         if (
-            fields.length !== 4 ||
+            extra.length > 0 ||
             localRef === undefined ||
             remoteRef === undefined ||
             localObject === undefined ||

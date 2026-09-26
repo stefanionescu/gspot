@@ -142,11 +142,11 @@ export function proposeText(proposal: Proposal): string {
         tools['editorconfig'] = { adopted: proposal.formatter.editorconfig };
     // What init read from the repository for the settings whose manifests say where to look (K-93).
     for (const { key, value } of proposal.detected ?? []) {
-        const [table, ...rest] = key.split('.');
-        if (table === 'tools' && rest.length === 2)
-            tools[rest[0]!] = { ...asTable(tools[rest[0]!]), [rest[1]!]: value };
-        else if (table === 'architecture' && rest.length === 1)
-            document['architecture'] = { ...asTable(document['architecture']), [rest[0]!]: value };
+        const [table, first, second, ...more] = key.split('.');
+        if (table === 'tools' && first !== undefined && second !== undefined && more.length === 0)
+            tools[first] = { ...asTable(tools[first]), [second]: value };
+        else if (table === 'architecture' && first !== undefined && second === undefined)
+            document['architecture'] = { ...asTable(document['architecture']), [first]: value };
     }
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);

@@ -5,6 +5,7 @@ import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
@@ -72,10 +73,9 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
  */
 export async function checkJavascript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
-    const target = targetInScope(
-        scope,
-        planned.manifest!.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json')!,
-    );
+    const jsconfig = planned.manifest?.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json');
+    if (jsconfig === undefined) throw new Error('The typescript configuration declares no jsconfig target.');
+    const target = targetInScope(scope, jsconfig);
     const scratch = scratchCopy(
         session.root,
         [...session.repository.files.map((file) => file.path), target],
@@ -92,7 +92,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
         );
         const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
         // Managed configurations are read-only; only the disposable copy is rewritten.
-        chmodSync(generatedPath, 0o600);
+        chmodSync(generatedPath, PRIVATE_FILE);
         writeFileSync(
             generatedPath,
             JSON.stringify({

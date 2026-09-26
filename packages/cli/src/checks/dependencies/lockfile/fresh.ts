@@ -48,7 +48,11 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
         });
         if (result.code === 0) continue;
         const said = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
-        if (!STALE_LOCK_DIAGNOSTICS[command[0]!]!.test(said.join('\n')))
+        const [manager] = command;
+        const staleDiagnostic = manager === undefined ? undefined : STALE_LOCK_DIAGNOSTICS[manager];
+        if (staleDiagnostic === undefined)
+            throw new Error(`No stale lockfile diagnostic is known for ${command.join(' ')}.`);
+        if (!staleDiagnostic.test(said.join('\n')))
             throw new Error(
                 `${command.join(' ')} could not validate the lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`,
             );

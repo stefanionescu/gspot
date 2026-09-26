@@ -150,10 +150,11 @@ function fragmentSelectorsFor(
 function fragmentImportsFor(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): string {
     const lines = fragmentOwners(scopes, selection, owner).flatMap((manifest) =>
         manifest.configs
-            .filter(
-                (fragment) => fragment.fragment && fragment.target === owner.target && fragment.imports !== undefined,
+            .flatMap((fragment) =>
+                fragment.fragment && fragment.target === owner.target && fragment.imports !== undefined
+                    ? readAsset(`${manifest.dir}/${fragment.imports}`).split('\n')
+                    : [],
             )
-            .flatMap((fragment) => readAsset(`${manifest.dir}/${fragment.imports!}`).split('\n'))
             .filter((line) => line.trim() !== ''),
     );
     return [...new Set(lines)].join('\n');

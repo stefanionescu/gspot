@@ -8,6 +8,7 @@ import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { mutationTarget } from '#cli/platform/filesystem.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
@@ -34,7 +35,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
         const current = owner.read(path);
         const proposal = owner.proposeReplacement(
             path,
-            { bytes: Buffer.from(saved.text), mode: current?.mode ?? 0o644 },
+            { bytes: Buffer.from(saved.text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
             'export',
         );
         owner.applyProposals([proposal]);

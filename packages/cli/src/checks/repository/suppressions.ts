@@ -53,7 +53,9 @@ export function suppressionComments(
         const style = styleOf(file);
         if (style === undefined) return [];
         const scope = scopeOf(file.path, scopes);
-        const selected = selections.find((selection) => selection.scope.path === scope.path)!.selected;
+        const selection = selections.find((candidate) => candidate.scope.path === scope.path);
+        if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
+        const { selected } = selection;
         const readers = new Set(
             selected.flatMap((manifest) =>
                 manifest.checks.flatMap((check) =>

@@ -37,15 +37,18 @@ async function writeNextjsTypes(input: EngineInput): Promise<void> {
 
 function typeFinding(input: EngineInput, line: string): Finding[] {
     const groups = TSC_LINE.exec(line)?.groups;
-    if (groups === undefined) return [];
+    const file = groups?.['file'];
+    const rule = groups?.['rule'];
+    const text = groups?.['text'];
+    if (groups === undefined || file === undefined || rule === undefined || text === undefined) return [];
     return [
         {
             check: input.spec.name,
-            file: inScope(input, groups['file']!),
+            file: inScope(input, file),
             line: Number(groups['line']),
             column: Number(groups['column']),
-            rule: groups['rule']!,
-            message: groups['text']!,
+            rule,
+            message: text,
             fixable: false,
         },
     ];

@@ -5,6 +5,7 @@ import { locateTool } from '#cli/tools/probe.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { basename, dirname, join, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { STYLES_DIRECTORY, VALE_CONFIG } from '#cli/configurations/vale.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -85,7 +86,7 @@ export async function installPackages(root: string): Promise<string | undefined>
                 const content = owner.read(path);
                 if (content === undefined) throw new Error(`Vale setup input is missing: ${path}`);
                 mkdirSync(dirname(join(work, path)), { recursive: true });
-                writeFileSync(join(work, path), content.bytes, { mode: 0o600 });
+                writeFileSync(join(work, path), content.bytes, { mode: PRIVATE_FILE });
             }
             const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
             if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
@@ -104,7 +105,7 @@ export async function installPackages(root: string): Promise<string | undefined>
                     .filter((entry) => isValePackageFile(entry.path));
                 const proposals = outputs.map((output) => {
                     const current = owner.read(output.path);
-                    const mode = current?.bytes.equals(output.content.bytes) === true ? current.mode : 0o444;
+                    const mode = current?.bytes.equals(output.content.bytes) === true ? current.mode : READ_ONLY_FILE;
                     return owner.proposeReplacement(output.path, { bytes: output.content.bytes, mode }, 'config');
                 });
                 const retained = new Set(outputs.map((output) => output.path));

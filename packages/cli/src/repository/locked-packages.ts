@@ -5,6 +5,10 @@ import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 
+const LOCKFILE_V2 = 2;
+const LOCKFILE_V3 = 3;
+const LOCKFILE_VERSIONS = [LOCKFILE_V2, LOCKFILE_V3];
+
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });
 
@@ -33,13 +37,15 @@ export function lockedPackages(filename: string, text: string): Set<string> {
                 const entry = z
                     .object({ version: z.string(), dependencies: z.record(z.string(), z.unknown()).optional() })
                     .parse(value);
-                identities.add(entry.version.startsWith('npm:') ? entry.version.slice(4) : `${name}@${entry.version}`);
+                identities.add(
+                    entry.version.startsWith('npm:') ? entry.version.slice('npm:'.length) : `${name}@${entry.version}`,
+                );
                 pending.push(...Object.entries(entry.dependencies ?? {}));
             }
             return identities;
         }
         const lock = z
-            .object({ lockfileVersion: z.union([z.literal(2), z.literal(3)]), packages: z.record(z.string(), VERSION) })
+            .object({ lockfileVersion: z.literal(LOCKFILE_VERSIONS), packages: z.record(z.string(), VERSION) })
             .parse(parsed);
         return new Set(
             Object.entries(lock.packages).flatMap(([path, entry]) => {
@@ -78,12 +84,12 @@ export function lockedPackages(filename: string, text: string): Set<string> {
         return new Set(
             Object.entries(lock).flatMap(([descriptors, entry]) => {
                 if (entry.version === undefined) return [];
-                const descriptor = entry.resolution ?? descriptors.split(/,\s*/u, 1)[0]!;
+                const descriptor = entry.resolution ?? descriptors.split(/,\s*/u, 1)[0] ?? descriptors;
                 const separator = descriptor.indexOf('@', 1);
                 if (separator < 1) throw new Error('Cannot read a resolved package identity from the Yarn lockfile.');
                 const reference = descriptor.slice(separator + 1);
                 if (reference.startsWith('npm:')) {
-                    const alias = reference.slice(4);
+                    const alias = reference.slice('npm:'.length);
                     const versionSeparator = alias.lastIndexOf('@');
                     if (versionSeparator > 0) return [`${alias.slice(0, versionSeparator)}@${entry.version}`];
                 }

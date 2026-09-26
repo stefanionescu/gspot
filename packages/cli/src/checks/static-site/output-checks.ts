@@ -207,7 +207,8 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const urls = readSource(build.output, 'sitemap.xml')
         .toString('utf8')
         .matchAll(SITEMAP_LOCATION)
-        .map((match) => match.groups!['url']!)
+        .map((match) => match.groups?.['url'])
+        .filter((url) => url !== undefined)
         .toArray();
     const listed = new Set(urls.flatMap(pageOf));
     const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);

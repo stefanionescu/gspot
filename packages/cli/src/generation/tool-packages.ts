@@ -4,6 +4,8 @@ import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 
+const JSON_INDENT = 4;
+
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.
  * @param manifests the selected manifests
@@ -29,7 +31,7 @@ export function toolPackages(
                     devDependencies: npmPins(manifests, runner),
                 },
                 null,
-                4,
+                JSON_INDENT,
             )}\n`,
             readOnly: true,
             kind: 'config',

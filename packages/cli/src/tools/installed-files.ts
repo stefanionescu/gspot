@@ -1,4 +1,5 @@
 import { basename, dirname, join } from 'node:path';
+import { MODE_BITS } from '#cli/platform/file-modes.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -32,11 +33,11 @@ export function publishInstalledFiles(owner: LifecycleOwner, directory: string, 
             if (kind === 'python' && stat.isDirectory() && name === '__pycache__') continue;
             if (stat.isDirectory()) collect(local);
             else if (stat.isFile())
-                outputs.push({ path, file: { bytes: readFileSync(files.source(local)), mode: stat.mode & 0o7777 } });
+                outputs.push({ path, file: { bytes: readFileSync(files.source(local)), mode: stat.mode & MODE_BITS } });
             else if (stat.isSymbolicLink())
                 outputs.push({
                     path,
-                    file: { bytes: Buffer.from(readlinkSync(source)), mode: stat.mode & 0o7777, isLink: true },
+                    file: { bytes: Buffer.from(readlinkSync(source)), mode: stat.mode & MODE_BITS, isLink: true },
                 });
             else throw new Error(`Unsupported installed entry: ${path}`);
         }

@@ -5,6 +5,7 @@ import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 
@@ -86,7 +87,8 @@ export function configurationDocument(
                         throw new Error(`TOML configuration field is not a table: ${String(key)}`);
                     table = child as Record<string, unknown>;
                 }
-                const key = path.at(-1)!;
+                const key = path.at(-1);
+                if (key === undefined) throw new Error('A configuration key path cannot be empty.');
                 if (value === undefined) Reflect.deleteProperty(table, key);
                 else Object.defineProperty(table, key, { value, enumerable: true, writable: true, configurable: true });
             },
@@ -246,7 +248,7 @@ export function planConfiguration(
         requested.map((field) => field.path),
     );
     const nextText = document.text();
-    const next = { bytes: Buffer.from(nextText), mode: current?.mode ?? 0o644 };
+    const next = { bytes: Buffer.from(nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
     const edited =
         existing?.configuration?.edited === true ||
         (existing !== undefined && current !== undefined && !matchesInstalled);

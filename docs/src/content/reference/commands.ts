@@ -4,7 +4,7 @@ import { referencePage, section, table, cell } from './page.ts';
 import { buildProgram } from '@gspot/cli/src/commands/program.ts';
 
 function commandPage(command: Command, name: string): ReferencePage {
-    const rootCommand = name.split(' ', 1)[0]!;
+    const [rootCommand = name] = name.split(' ', 1);
     const owner =
         rootCommand === 'completion'
             ? 'commands/completion.ts'

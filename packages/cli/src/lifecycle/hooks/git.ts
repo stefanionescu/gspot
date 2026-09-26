@@ -10,6 +10,7 @@ import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import type { PreparedHook } from '#cli/lifecycle/hooks/managers.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
@@ -148,7 +149,7 @@ export function installHooks(
                     predecessor !== undefined && predecessor.bytes.toString('utf8') !== manager?.get(name)?.generated;
                 rejectDifferingNativeHook(path, predecessor, manager?.get(name)?.generated, nativeMarker);
                 if (chain && original === undefined && current !== undefined) {
-                    if (process.platform !== 'win32' && (current.mode & 0o111) === 0)
+                    if (process.platform !== 'win32' && (current.mode & EXECUTE_BITS) === 0)
                         throw new Error(
                             `Existing hook is not executable: ${path}. Retained without changing its behavior.`,
                         );
@@ -161,7 +162,7 @@ export function installHooks(
                     proposals.push(
                         owner.proposeReplacement(
                             managerPath,
-                            { bytes: Buffer.from(content.installed), mode: 0o755 },
+                            { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE },
                             'hook',
                         ),
                     );
@@ -183,7 +184,7 @@ export function installHooks(
                         path,
                         {
                             bytes: Buffer.from(hookBody(name, policy.runner?.tool, binaryPath(), chain, commands)),
-                            mode: 0o755,
+                            mode: EXECUTABLE_FILE,
                         },
                         'hook',
                         current !== undefined && !recorded.has(path),
@@ -219,7 +220,7 @@ export function installHooks(
                 proposals.push(
                     owner.proposeReplacement(
                         path,
-                        { bytes: Buffer.from(content.installed), mode: 0o755 },
+                        { bytes: Buffer.from(content.installed), mode: EXECUTABLE_FILE },
                         'hook',
                         !recorded.has(path),
                         current,
@@ -345,7 +346,7 @@ export function hookStatus({
             const sibling = `${path}.gspot-original`;
             if (entries.some((entry) => entry.path === sibling)) {
                 const original = files.read(sibling);
-                if (original === undefined || (process.platform !== 'win32' && (original.mode & 0o111) === 0))
+                if (original === undefined || (process.platform !== 'win32' && (original.mode & EXECUTE_BITS) === 0))
                     return {
                         ready: false,
                         text: `${location.absolute}: original ${name} is missing or not executable; restore it from recovery and run gspot install`,

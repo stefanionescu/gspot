@@ -42,12 +42,13 @@ function declarationProblems(policy: Policy): PolicyProblem[] {
             .filter((entry) => entry.nature === nature)
             .flatMap((entry, index) => {
                 const where = `[[${entry.nature}]] ${entry.paths.join(', ')}`;
+                const [firstPath = ''] = entry.paths;
                 return located(
                     [nature, index, 'reason'],
                     needReason(
                         where,
                         entry.reason,
-                        `gspot set ${entry.nature} ${quoteArgument(entry.paths[0]!)} --reason "..."`,
+                        `gspot set ${entry.nature} ${quoteArgument(firstPath)} --reason "..."`,
                     ),
                 );
             }),

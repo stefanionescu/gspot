@@ -3,6 +3,7 @@ import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
@@ -91,7 +92,12 @@ export function publishGenerated(
             publicationSnapshot(
                 {
                     bytes: Buffer.from(file.content),
-                    mode: file.executable === true ? 0o755 : file.readOnly ? 0o444 : 0o644,
+                    mode:
+                        file.executable === true
+                            ? EXECUTABLE_FILE
+                            : file.readOnly
+                              ? READ_ONLY_FILE
+                              : OWNER_WRITABLE_FILE,
                 },
                 owner.read(file.path),
             ),

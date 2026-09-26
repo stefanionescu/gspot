@@ -13,6 +13,7 @@ import type { DetectedSetting } from '#cli/commands/init/settings.ts';
 import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
 import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
+import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/generation/bun.ts';
 import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
 
 function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
@@ -116,7 +117,9 @@ export function buildProposal(
                 const security = install?.['security'] as Record<string, unknown> | undefined;
                 const scanner = security?.['scanner'];
                 const settings = {
-                    ...(typeof age === 'number' ? { min_release_age_days: Math.max(7, age / 86_400) } : {}),
+                    ...(typeof age === 'number'
+                        ? { min_release_age_days: Math.max(DEFAULT_RELEASE_AGE_DAYS, age / SECONDS_PER_DAY) }
+                        : {}),
                     ...(typeof scanner === 'string' ? { security_scanner: scanner } : {}),
                 };
                 if (Object.keys(settings).length === 0) continue;

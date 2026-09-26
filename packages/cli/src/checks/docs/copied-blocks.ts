@@ -9,6 +9,8 @@ import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 
+const FULL_PERCENTAGE = 100;
+
 const TOOL = 'jscpd';
 const DEFAULT_CEILING = 4;
 
@@ -18,7 +20,7 @@ const clonePlaceSchema = z.object({
     end: z.number().int().positive(),
 });
 const cloneReportSchema = z.object({
-    statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(100) }) }),
+    statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(FULL_PERCENTAGE) }) }),
     duplicates: z.array(
         z.object({ lines: z.number().int().positive(), firstFile: clonePlaceSchema, secondFile: clonePlaceSchema }),
     ),

@@ -7,6 +7,12 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 
 const MISSING_CODE = 127;
 const FAILED_CODE = 1;
+// taskkill exits 128 when the process tree is already gone.
+const TASKKILL_GONE_CODE = 128;
+// How long a terminated tool may keep its output pipes open.
+const DRAIN_MS = 5000;
+// Bun emits exit before Darwin finishes reaping the group leader; descendants holding pipes are signaled after this.
+const REAP_MS = 10;
 
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };
@@ -63,9 +69,9 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
             if (process.platform === 'win32') {
                 const result = execaSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
                     reject: false,
-                    timeout: 5000,
+                    timeout: DRAIN_MS,
                 });
-                if (result.exitCode !== 0 && result.exitCode !== 128)
+                if (result.exitCode !== 0 && result.exitCode !== TASKKILL_GONE_CODE)
                     throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
             } else process.kill(-child.pid, 'SIGKILL');
         } catch (error) {
@@ -76,7 +82,7 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
         drainTimer = setTimeout(() => {
             const error = new Error('Tool output did not close within 5 seconds after termination.');
             for (const stream of child.stdio) stream?.destroy(error);
-        }, 5000);
+        }, DRAIN_MS);
     };
     const cancel = () => {
         if (stopped) return;
@@ -95,14 +101,12 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     let exitCleanup: Promise<void> | undefined;
     const exited = () => {
         clearTimeout(timer);
-        // Bun emits exit before Darwin finishes reaping the group leader.
-        // Allow a 10 ms reaping window before signaling descendants holding output pipes.
         exitCleanup = new Promise((resolve) => {
             setTimeout(() => {
                 if (process.platform !== 'win32') stopTree();
                 stopped = true;
                 resolve();
-            }, 10);
+            }, REAP_MS);
         });
     };
     child.once('exit', exited);

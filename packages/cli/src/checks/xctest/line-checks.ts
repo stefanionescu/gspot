@@ -15,7 +15,7 @@ function hasReason(value: Node | undefined): boolean {
     const literal = /^(#*)("""|")([\s\S]*)\2\1$/u.exec(value.text);
     if (literal === null) return true;
     const whitespace = new RegExp(`\\\\${literal[1]}[nrt0]`, 'gu');
-    return literal[3]!.replaceAll(whitespace, ' ').trim() !== '';
+    return (literal[3] ?? '').replaceAll(whitespace, ' ').trim() !== '';
 }
 
 async function testFindings(

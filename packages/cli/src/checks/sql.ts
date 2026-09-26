@@ -4,6 +4,9 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 
+// The shipped limit on declared input parameters when the policy names none.
+const SHIPPED_PARAMETER_LIMIT = 7;
+
 const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
 const BLOCK_COMMENT = '/*';
 const LINE_COMMENT = '--';
@@ -124,7 +127,7 @@ export function sqlFileLength(input: EngineInput): Finding[] {
 export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     const threshold = input.view.limit('trivial_statements', 'sql') ?? 2;
-    const maximum = input.view.limit('function_parameters', 'sql') ?? 7;
+    const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
     for (const source of sources(input)) {
         const parsed = await sqlFile(source.text, input.observations);
         if (parsed.error !== undefined)

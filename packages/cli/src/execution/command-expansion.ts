@@ -132,17 +132,18 @@ export function commandConfigurations(
     return [
         ...new Set([
             ...implicit,
-            ...parts.flatMap((part) => [
-                ...Array.from(part.matchAll(CONFIG_PLACEHOLDER), (match) =>
-                    configurationPath(session, planned, match.groups!['name']!),
-                ),
-                ...Array.from(part.matchAll(POINTER_PLACEHOLDER), (match) =>
-                    pointerPath(match.groups!['name']!, scope),
-                ),
-                ...(EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'] === undefined
-                    ? []
-                    : [EXISTING_PLACEHOLDER.exec(part)!.groups!['path']!]),
-            ]),
+            ...parts.flatMap((part) => {
+                const configured = [...part.matchAll(CONFIG_PLACEHOLDER)]
+                    .map((match) => match.groups?.['name'])
+                    .filter((name) => name !== undefined)
+                    .map((name) => configurationPath(session, planned, name));
+                const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
+                    .map((match) => match.groups?.['name'])
+                    .filter((name) => name !== undefined)
+                    .map((name) => pointerPath(name, scope));
+                const existing = EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'];
+                return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
+            }),
         ]),
     ].toSorted((left, right) => left.localeCompare(right));
 }

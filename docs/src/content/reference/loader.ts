@@ -23,7 +23,7 @@ export function referencePages(): Map<string, ReferencePage> {
         .values()
         .toArray()
         .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
-    const kinds = [
+    const kinds: [string, string][] = [
         ['language', 'Languages'],
         ['framework', 'Frameworks'],
         ['tool', 'Tools'],
@@ -40,7 +40,7 @@ export function referencePages(): Map<string, ReferencePage> {
             kinds
                 .map(([kind, title]) =>
                     section(
-                        title!,
+                        title,
                         bullets(
                             manifests
                                 .filter((manifest) => manifest.configuration.kind === kind)
@@ -83,7 +83,7 @@ export function referenceLoader(): Loader {
             await docsLoader().load(context);
             const entries = [];
             for (const [path, page] of referencePages()) {
-                const id = path === 'engines.md' ? 'development/engines' : `reference/${path.slice(0, -3)}`;
+                const id = path === 'engines.md' ? 'development/engines' : `reference/${path.slice(0, -'.md'.length)}`;
                 if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
                 const { body } = page;
                 const data = await context.parseData({ id, data: page.data });

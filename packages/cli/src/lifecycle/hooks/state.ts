@@ -1,3 +1,4 @@
+import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -71,7 +72,8 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
             if (!current?.bytes.equals(Buffer.from(expected))) return false;
             if (
                 process.platform !== 'win32' &&
-                ((current.mode & 0o111) === 0 || (original !== undefined && (original.mode & 0o111) === 0))
+                ((current.mode & EXECUTE_BITS) === 0 ||
+                    (original !== undefined && (original.mode & EXECUTE_BITS) === 0))
             )
                 return false;
             return [path, ...(original === undefined ? [] : [`${path}.gspot-original`])].every((path) => {

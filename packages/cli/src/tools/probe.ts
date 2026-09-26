@@ -75,7 +75,9 @@ function packageVersion(root: string, path: string, name: string | undefined): s
     const managed = relative(root, path).replaceAll('\\', '/').startsWith('.gspot/');
     const files = managed ? openConfinedRoot(root) : undefined;
     try {
-        let folder = dirname(managed ? files!.source(relative(root, path).replaceAll('\\', '/')) : realpathSync(path));
+        let folder = dirname(
+            files === undefined ? realpathSync(path) : files.source(relative(root, path).replaceAll('\\', '/')),
+        );
         while (folder !== dirname(folder)) {
             const manifest = join(folder, 'package.json');
             const local = relative(root, manifest).replaceAll('\\', '/');

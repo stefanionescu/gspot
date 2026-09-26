@@ -159,7 +159,13 @@ export function projectFolder(path: string, pattern: string): string | undefined
     const segments = path.split('/');
     const wanted = pattern.split('/');
     for (let start = 0; start + wanted.length <= segments.length; start += 1) {
-        if (wanted.every((part, index) => segmentMatches(part, segments[start + index]!)))
+        const window = segments.slice(start, start + wanted.length);
+        if (
+            wanted.every((part, index) => {
+                const segment = window[index];
+                return segment !== undefined && segmentMatches(part, segment);
+            })
+        )
             return segments.slice(0, start).join('/');
     }
     return undefined;

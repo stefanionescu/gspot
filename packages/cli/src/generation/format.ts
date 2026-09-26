@@ -221,7 +221,7 @@ export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
                 );
             let path = pattern;
             if (scope !== '' && !path.startsWith(`${scope}/`)) {
-                if (!path.startsWith('**/') || path.slice(3).includes('/'))
+                if (!path.startsWith('**/') || path.slice('**/'.length).includes('/'))
                     throw new Error(
                         `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
                     );

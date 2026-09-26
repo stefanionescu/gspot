@@ -82,11 +82,13 @@ function unixInstall(version: string): string[] {
 
 function windowsInstall(version: string): string[] {
     const base = `${RELEASES}/v${version}`;
+    const windows = releaseTargets.find((target) => target.os === 'win32');
+    if (windows === undefined) throw new Error('The release targets name no Windows build.');
     return [
         '      - name: Install gspot',
         '        shell: pwsh',
         '        run: |',
-        `          $asset = '${releaseTargets.find((target) => target.os === 'win32')!.binary}'`,
+        `          $asset = '${windows.binary}'`,
         "          $bin = Join-Path $env:RUNNER_TEMP 'gspot-bin'",
         '          New-Item -ItemType Directory -Force -Path $bin | Out-Null',
         `          Invoke-WebRequest "${base}/$asset" -OutFile (Join-Path $bin 'gspot.exe')`,

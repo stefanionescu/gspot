@@ -35,7 +35,7 @@ function entryFor(root: string, path: string): RawEntry | undefined {
         return undefined;
     }
     if (stat.isSymbolicLink()) {
-        if (DEPENDENCY_FOLDERS.includes(path.split('/').at(-1)!)) return undefined;
+        if (DEPENDENCY_FOLDERS.includes(path.slice(path.lastIndexOf('/') + 1))) return undefined;
         // Inventory installed links without reading their dependency targets outside this root.
         if (
             path
@@ -79,8 +79,8 @@ function isOutsideGit(
 function walkPaths(root: string): string[] {
     const paths: string[] = [];
     const pending: { directory: string; rules: { base: string; matcher: Ignore }[] }[] = [{ directory: '', rules: [] }];
-    while (pending.length > 0) {
-        const { directory, rules } = pending.pop()!;
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+        const { directory, rules } = next;
         const entries = readdirSync(join(root, directory), { withFileTypes: true });
         const localRules = [...rules];
         if (entries.some((entry) => entry.name === '.gitignore' && entry.isFile())) {

@@ -23,7 +23,9 @@ function forgetTable(facts: SchemaState, table: string): void {
 }
 
 function named(parts: string[]): string {
-    return `${parts.length === 1 ? DEFAULT_SCHEMA : parts.at(-2)}.${parts.at(-1)}`;
+    const name = parts.at(-1) ?? '';
+    const schema = parts.length === 1 ? DEFAULT_SCHEMA : (parts.slice(0, -1).at(-1) ?? DEFAULT_SCHEMA);
+    return `${schema}.${name}`;
 }
 
 const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
@@ -102,7 +104,8 @@ const dropped: FactReader = (facts, _migration, statement) => {
                 break;
             }
             case 'OBJECT_POLICY': {
-                facts.policies.get(named(parts.slice(0, -1)))?.delete(parts.at(-1)!);
+                const policy = parts.at(-1);
+                if (policy !== undefined) facts.policies.get(named(parts.slice(0, -1)))?.delete(policy);
                 break;
             }
             case 'OBJECT_INDEX': {

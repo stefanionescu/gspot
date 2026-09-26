@@ -46,8 +46,10 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     );
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
         const groups = SPECTRAL_LINE.exec(line.trim())?.groups;
-        if (groups === undefined) return [];
-        return [finding(input, { file: document, line: Number(groups['line']) }, groups['rule']!, groups['text']!)];
+        const rule = groups?.['rule'];
+        const text = groups?.['text'];
+        if (groups === undefined || rule === undefined || text === undefined) return [];
+        return [finding(input, { file: document, line: Number(groups['line']) }, rule, text)];
     });
     if (result.code !== 0 && found.length === 0) throw new Error(toolOutputDetail(result, 'Spectral failed'));
     return found;

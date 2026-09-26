@@ -32,7 +32,8 @@ export async function build(targets: string[], out: string): Promise<void> {
         root: here,
     });
     if (!evaluator.success) throw new Error(evaluator.logs.map((log) => log.message).join('\n'));
-    const metadata = [{ inputs: evaluator.metafile!.inputs, cwd: process.cwd() }];
+    if (evaluator.metafile === undefined) throw new Error('The evaluator build wrote no metafile.');
+    const metadata = [{ inputs: evaluator.metafile.inputs, cwd: process.cwd() }];
     const entry = writeEntry();
     mkdirSync(out, { recursive: true });
     for (const target of targets) {
@@ -67,7 +68,8 @@ export async function build(targets: string[], out: string): Promise<void> {
             ],
         });
         if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
-        metadata.push({ inputs: result.metafile!.inputs, cwd: process.cwd() });
+        if (result.metafile === undefined) throw new Error(`The ${target} build wrote no metafile.`);
+        metadata.push({ inputs: result.metafile.inputs, cwd: process.cwd() });
         if (process.platform === 'darwin' && target.startsWith('bun-darwin-')) {
             execaSync('codesign', ['--force', '--sign', '-', outfile], {
                 stdout: 'inherit',

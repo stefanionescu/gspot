@@ -4,6 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
 import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
 
 /**
@@ -16,7 +17,7 @@ export function openBuildCache(folder: string): ConfinedRoot {
     mkdirSync(home, { recursive: true });
     const boundary = openConfinedRoot(home);
     try {
-        boundary.mkdir(relative(home, folder).replaceAll('\\', '/'), 0o700);
+        boundary.mkdir(relative(home, folder).replaceAll('\\', '/'), PRIVATE_DIRECTORY);
     } finally {
         boundary.close();
     }
@@ -53,7 +54,7 @@ export function prepareBuildSources(root: string, paths: string[], folder: strin
     try {
         for (const file of paths) {
             const path = `source/${file}`;
-            const mode = statSync(source.source(file)).mode & 0o7777;
+            const mode = statSync(source.source(file)).mode & MODE_BITS;
             desired.set(path, { bytes: readSource(root, file), mode });
         }
     } finally {
@@ -84,7 +85,7 @@ export function prepareBuildSources(root: string, paths: string[], folder: strin
     }
     for (const directory of emptyDirectories.toSorted((left, right) => right.length - left.length))
         files.rmdir(directory);
-    files.mkdir('source', 0o700);
+    files.mkdir('source', PRIVATE_DIRECTORY);
     for (const [path, next] of desired) {
         const current = files.read(path);
         if (!isDeepStrictEqual(current, next)) files.write(path, next, current);

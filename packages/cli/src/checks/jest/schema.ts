@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-export const jestPercentage = z.number().min(0).max(100);
+const FULL_PERCENTAGE = 100;
+
+export const jestPercentage = z.number().min(0).max(FULL_PERCENTAGE);
 
 /** Coverage floors shared by policy validation and native Jest execution. */
 export const jestCoverageSettings = z.object({

@@ -64,7 +64,9 @@ export async function collectFormatting(
         const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
         const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
         const document = (path: string) => {
-            const sections = parseBuffer(lists.observed.get(path)!.bytes);
+            const observed = lists.observed.get(path);
+            if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
+            const sections = parseBuffer(observed.bytes);
             return {
                 preamble: sections.find(([glob]) => glob === null)?.[1] ?? {},
                 sections: sections
@@ -93,12 +95,16 @@ export async function collectFormatting(
         const folders = new Set(format.map(({ path }) => dirname(path)));
         if (folders.size !== format.length)
             throw new Error('Multiple Prettier configurations in one directory require explicit conversion.');
-        const sources = format.map((input) => ({
-            from: input.path,
-            ...(/\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(basename(input.path))
-                ? {}
-                : { source: parseCarrySource(lists.observed.get(input.path)!, input.tool, input.path) }),
-        }));
+        const sources = format.map((input) => {
+            const observed = lists.observed.get(input.path);
+            if (observed === undefined) throw new Error(`${input.path} was not observed in the repository.`);
+            return {
+                from: input.path,
+                ...(/\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(basename(input.path))
+                    ? {}
+                    : { source: parseCarrySource(observed, input.tool, input.path) }),
+            };
+        });
         lists.formatter = await carryFormat(
             root,
             sources,

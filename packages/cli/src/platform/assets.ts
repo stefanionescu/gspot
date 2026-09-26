@@ -109,7 +109,8 @@ export function grammarPath(name: string): string {
             throw new Error('The Swift grammar is not prepared; run mise run prepare:grammar.');
         return path;
     }
-    const source = GRAMMAR_SOURCES[name]!;
+    const source = GRAMMAR_SOURCES[name];
+    if (source === undefined) throw new Error(`No grammar source is known for ${name}.`);
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
     const found = candidates.find((candidate) => statSync(candidate, { throwIfNoEntry: false }) !== undefined);
     if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);

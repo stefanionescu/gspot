@@ -105,7 +105,7 @@ async function legacyEntries(
         let source: LegacyEslintEntry[] = [];
         for (const ancestor of directories) {
             if (ancestor !== '.' && ancestor !== directory && !directory.startsWith(`${ancestor}/`)) continue;
-            const entries = configurations.get(ancestor)!;
+            const entries = configurations.get(ancestor) ?? [];
             if (entries.some((entry) => entry['root'] === true)) source = [];
             source.push(...entries);
         }

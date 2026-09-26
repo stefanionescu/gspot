@@ -10,6 +10,8 @@ import { parseJson } from '#cli/execution/output/json.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { OutputFormat } from '#cli/configurations/output-format.ts';
 
+const LINE_FEED = 10;
+
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
 
@@ -122,7 +124,7 @@ function typosFindings(check: string, stdout: string, help: string, root: string
                         lines = [];
                         let start = 0;
                         for (let index = 0; index < source.length; index += 1)
-                            if (source[index] === 10) {
+                            if (source[index] === LINE_FEED) {
                                 lines.push(source.subarray(start, index));
                                 start = index + 1;
                             }

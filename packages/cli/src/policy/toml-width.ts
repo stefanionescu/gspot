@@ -30,9 +30,10 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
     if (value.type !== 'InlineArray' || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
     const items = value.items.map((entry) => entry.item);
-    if (items.length === 0 || items.some((item) => item.range === undefined || !isValue(item))) return undefined;
+    const ranges = items.flatMap((item) => (item.range === undefined || !isValue(item) ? [] : [item.range]));
+    if (items.length === 0 || ranges.length !== items.length) return undefined;
     const pad = ' '.repeat(pair.loc.start.column);
-    const body = items.map((item) => `${pad}${indent}${text.slice(item.range![0], item.range![1])},`).join('\n');
+    const body = ranges.map(([start, end]) => `${pad}${indent}${text.slice(start, end)},`).join('\n');
     return { start: value.range[0], end: value.range[1], replacement: `[\n${body}\n${pad}]` };
 }
 
