@@ -753,6 +753,35 @@ Owner: `gspot.toml and .mise/conf.d/repo.toml`. Dependencies: all behavior owner
 
 Acceptance: S-1, S-2, S-3, S-7, S-8, S-12, G-13, K-306.
 
+Done 2026-09-26, steps 7.1 to 7.4. The repairs:
+
+- The rules lint reports a list item that ends with a comma, with `and`, or without a full
+  stop (K-229). A parent that ends with a colon before a nested list is whole.
+- The corpus holds 185 such items in 12 files, 71 of them in the Docker guide. They are stage 4
+  findings.
+- `CONTRIBUTING.md` explains local verification and how to read CI results (S-3).
+- A completion test asks the completion engine for every command and every visible flag of
+  the program, and holds that each shell script defers to the program (T-22).
+- A generation test renders every configuration at both levels and parses each JSON, TOML,
+  YAML, and JavaScript output with its reader (S-1). The formatter pass belongs to the tools lane.
+
+Checked without change: the rules lint tests, the managed block tests, the reference loader
+tests, the asset path tests (K-306), and the agent file tests (K-279).
+
+Open under section 7:
+
+- K-230: rule files do not vary by level, so the two assemblies have nothing to compare.
+- K-231: a word list built from every manifest's tool names flags ordinary words such as
+  `next` and `globals`. The lint keeps its curated boundary terms.
+- K-241: no lint holds a rule file against the check that refuses what it asks for.
+
+No text exists in the architecture folder for these names:
+
+- K-232, K-260, K-242, K-262, S-5, S-11, S-14, S-16, S-17, K-225
+- S-2, S-7, S-8, S-12
+- T-4, T-8, T-21, T-1, T-2, T-32, T-6, T-7, T-13, T-17, T-14, T-30, G-2
+- T-26, T-5, T-18, T-10, T-15, T-16, T-25, T-35, T-9
+
 Exit: examples exercise the intended rules, all retained scenarios are discovered in the
 proper lane, and repository gates detect required failures. This prepares the final gate;
 release-matched site and installed acceptance execute in phase 9.

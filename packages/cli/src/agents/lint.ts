@@ -74,6 +74,57 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
     ];
 }
 
+const LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s+/u;
+const ITEM_END = /[.!?]["')\]]*$/u;
+
+// A list item that stops at a comma, at "and", or without a full stop is a cut sentence. A parent that ends with a
+// colon and continues in a nested list is whole (K-229).
+function cutItemFinding(file: string, item: { line: number; last: string; nested: boolean }): RuleFinding | undefined {
+    const last = item.last.trim();
+    if (last === '' || (last.endsWith(':') && item.nested)) return undefined;
+    if (last.endsWith(',')) return { file, line: item.line, message: 'list item ends with a comma' };
+    if (/\band$/u.test(last)) return { file, line: item.line, message: 'list item ends with "and"' };
+    if (!ITEM_END.test(last)) return { file, line: item.line, message: 'list item ends without a full stop' };
+    return undefined;
+}
+
+function listItemFindings(file: string, lines: string[]): RuleFinding[] {
+    if (file.startsWith('templates/')) return [];
+    const findings: RuleFinding[] = [];
+    let item: { line: number; indent: number; last: string; nested: boolean } | undefined;
+    let fence: string | undefined;
+    const close = (): void => {
+        const finding = item === undefined ? undefined : cutItemFinding(file, item);
+        if (finding !== undefined) findings.push(finding);
+        item = undefined;
+    };
+    for (const [index, line] of lines.entries()) {
+        const opening = fenceOpening(line);
+        if (fence !== undefined) {
+            if (line.trim() === fence) fence = undefined;
+            continue;
+        }
+        if (opening !== undefined) {
+            fence = opening.ticks;
+            close();
+            continue;
+        }
+        const match = LIST_ITEM.exec(line);
+        if (match !== null) {
+            const indent = match[0].length - match[0].trimStart().length;
+            if (item !== undefined && indent > item.indent) item.nested = true;
+            close();
+            item = { line: index + 1, indent, last: line, nested: false };
+            continue;
+        }
+        if (item === undefined) continue;
+        if (line.trim() === '' || line.startsWith('#')) close();
+        else item.last = line;
+    }
+    close();
+    return findings;
+}
+
 function lineFindings(file: string, lines: string[]): RuleFinding[] {
     const layer = file.startsWith('templates/') ? 'template' : layerOfPath(file);
     const prose: RuleFinding[] = [];
@@ -114,6 +165,7 @@ function fileReport(file: RuleText): RuleFinding[] {
         ...frontMatterFindings(file.path, file.text),
         ...sizeFindings(file.path, lines),
         ...lineFindings(file.path, lines),
+        ...listItemFindings(file.path, lines),
     ];
 }
 

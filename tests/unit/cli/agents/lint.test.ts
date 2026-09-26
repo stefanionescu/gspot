@@ -12,6 +12,29 @@ describe('rule lint', () => {
         expect(isRulePath('check-ids.txt')).toBe(false);
     });
 
+    test('a list item is a whole sentence: a comma, an "and", or no full stop at its end is a finding', () => {
+        const body = [
+            '- Name things well,',
+            '- Read the file and',
+            '- Keep it short',
+            '- Start from least privilege:',
+            '    - Revoke every grant first.',
+            '- A whole sentence ends here.',
+            '- A quoted one ends here too."',
+            '',
+            '```sh',
+            '- not prose',
+            '```',
+            '',
+        ].join('\n');
+        const report = lintRules([file('general/code/A.md', body)]);
+        expect(report.findings.map((finding) => [finding.line, finding.message])).toStrictEqual([
+            [9, 'list item ends with a comma'],
+            [10, 'list item ends with "and"'],
+            [11, 'list item ends without a full stop'],
+        ]);
+    });
+
     test('a clean file has no findings', () => {
         const report = lintRules([file('general/code/A.md', '- Name things well.\n- Or not.\n')]);
         expect(report.findings).toStrictEqual([]);
