@@ -141,8 +141,8 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     const base = commandOptions(options, executable);
     const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32' });
     const supervision = supervise(child, options);
-    if (options.onStdout !== undefined) child.stdout?.on('data', options.onStdout);
-    if (options.onStderr !== undefined) child.stderr?.on('data', options.onStderr);
+    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
+    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
     let executionFailure: Error | undefined;
     try {
         const result = await child;

@@ -5,10 +5,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { chmodSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 

@@ -108,7 +108,7 @@ function namingProblems(policy: Policy): PolicyProblem[] {
 }
 
 function isOff(option: unknown): boolean {
-    const severity = Array.isArray(option) ? option[0] : option;
+    const severity: unknown = Array.isArray(option) ? option[0] : option;
     return severity === 'off' || severity === 0;
 }
 

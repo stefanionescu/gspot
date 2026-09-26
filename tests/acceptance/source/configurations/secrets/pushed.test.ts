@@ -166,7 +166,7 @@ test(
             expect(requests).toStrictEqual([]);
             expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
         } finally {
-            verifier.stop(true);
+            await verifier.stop(true);
         }
     },
     PLANTED_TIMEOUT_MS,

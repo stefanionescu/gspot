@@ -5,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 
 const SOURCE =
@@ -97,20 +98,17 @@ test('Swift inline documentation retains native exceptions and original source p
     const check = async (code: 0 | 1) => {
         const result = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(code);
-        expect(JSON.parse(result.stdout).checks[0]).toMatchObject({
-            check: 'swift/swiftlint',
-            status: code === 0 ? 'ok' : 'fail',
-        });
-        return JSON.parse(result.stdout).checks[0].findings.filter(
-            (finding: { rule: string }) => finding.rule === 'doc_comment_style',
-        );
+        const [checked] = reportSchema.parse(JSON.parse(result.stdout)).checks;
+        if (checked === undefined) throw new Error('The report holds no check.');
+        expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'ok' : 'fail' });
+        return checked.findings.filter((finding) => finding.rule === 'doc_comment_style');
     };
     await generate();
     chmodSync(join(root, 'Value.swift'), 0o444);
     const found = await check(1);
     expect(statSync(join(root, 'Value.swift')).mode & 0o777).toBe(0o444);
     chmodSync(join(root, 'Value.swift'), 0o644);
-    expect(found.map(({ line, column }: { line: number; column: number }) => [line, column])).toStrictEqual([
+    expect(found.map(({ line, column }) => [line, column])).toStrictEqual([
         [4, 14],
         [7, 39],
         [8, 25],

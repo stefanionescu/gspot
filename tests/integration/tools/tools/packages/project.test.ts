@@ -14,8 +14,8 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
+import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 
 const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', import.meta.url));
 
@@ -404,7 +404,7 @@ ${lock.toString('utf8')}
         } finally {
             setEnvironmentVariable('YARN_CACHE_FOLDER', previousCache);
             setEnvironmentVariable('YARN_GLOBAL_FOLDER', previousGlobal);
-            server.stop(true);
+            await server.stop(true);
         }
     },
     120_000,

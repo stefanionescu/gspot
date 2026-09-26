@@ -20,7 +20,7 @@ function readRunnerTasks(
     } finally {
         files.close();
     }
-    const document =
+    const document: unknown =
         source === undefined
             ? {}
             : runner === 'mise'

@@ -11,6 +11,7 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
+import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
 
 import {
@@ -19,7 +20,6 @@ import {
     pythonInstallSteps,
     pythonLockDrift,
 } from '#cli/tools/python-project.ts';
-import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
 // A fresh clone installs the locked Python tools twice without tracked changes and runs the checker.
 async function expectFreshCloneInstalls(
@@ -280,7 +280,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
             for (const [name, value] of previousProjects) {
                 setEnvironmentVariable(name, value);
             }
-            server.stop(true);
+            await server.stop(true);
         }
     },
     120_000,

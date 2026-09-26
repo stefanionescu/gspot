@@ -263,7 +263,6 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
         const revisions: PushReport['revisions'] = [];
         const rendered: string[] = [];
         for (const revision of selected.revisions) {
-            if (signal.aborted) break;
             let result: CheckCommandResult;
             try {
                 result = await withRevisionSnapshot(

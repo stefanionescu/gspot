@@ -51,7 +51,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
             files,
         );
         expect(received).toStrictEqual(files);
-        expect(matches?.map((match) => match.file)).toStrictEqual(files);
+        expect(matches.map((match) => match.file)).toStrictEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
     } finally {
         processRun.mockRestore();

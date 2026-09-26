@@ -2,7 +2,7 @@ import Config from '@npmcli/config';
 import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
+import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions';
 
 const CONNECTION_KEYS = new Set([
     'registry',
@@ -41,7 +41,8 @@ export async function packageEnvironment(root: string): Promise<Record<string, s
     } catch {
         throw new Error('Cannot load the repository registry settings. Check the package manager configuration.');
     }
-    const effective: Record<string, unknown> = Object.assign({}, ...config.list.toReversed());
+    const effective: Record<string, unknown> = {};
+    for (const layer of config.list.toReversed()) Object.assign(effective, layer);
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(effective)) {
         if (

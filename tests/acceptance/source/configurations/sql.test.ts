@@ -84,7 +84,7 @@ describe('the sql configuration', () => {
             );
             await createFileTree(
                 sandbox.path,
-                Object.fromEntries(Object.keys(planted.files ?? {}).map((file) => [file, CLEAN])),
+                Object.fromEntries(Object.keys(planted.files).map((file) => [file, CLEAN])),
             );
             const corrected = await run(
                 sandbox.path,

@@ -63,6 +63,6 @@ test('native registry settings authenticate from an isolated project and preserv
         expect(readFileSync(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
         expect(statSync(join(repository.path, '.npmrc')).mode).toBe(mode);
     } finally {
-        server.stop(true);
+        await server.stop(true);
     }
 });

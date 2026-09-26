@@ -162,7 +162,7 @@ export function parseManifest(text: string, dir: string): Manifest {
             .filter((config) => !config.fragment && (config.code_files.length > 0 || config.selectors.length > 0))
             .map((config) => `config ${config.target} declares code files or selectors, which only a fragment adds.`),
     ];
-    if (raw.checks.some((check) => raw.configuration.check_references?.includes(check.name)))
+    if (raw.checks.some((check) => raw.configuration.check_references.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');
     if (problems.length > 0) throw new ManifestError(raw.configuration.name, problems);
     return {
@@ -217,9 +217,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
                 owners.get(reference) === manifest.configuration.name ||
                 target.engine === undefined ||
                 target.runs !== 'once' ||
-                target.command !== undefined ||
-                target.tool !== undefined ||
-                target.reported_by !== undefined
+                target.tool !== undefined
             )
                 throw new ManifestError(manifest.configuration.name, [
                     `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,

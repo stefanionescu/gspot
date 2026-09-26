@@ -97,7 +97,7 @@ export function policyPosition(
     path: PathSegment[],
 ): { line: number; column: number } {
     const remaining = [...path];
-    while (true) {
+    for (;;) {
         const position = locations.get(JSON.stringify(remaining));
         if (position !== undefined) return { line: position.line, column: position.column + 1 };
         remaining.pop();

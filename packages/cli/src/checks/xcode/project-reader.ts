@@ -61,36 +61,41 @@ function parse(text: string): Plist {
             throw new Error(`Expected ${value} in Xcode project at character ${(input[at]?.at ?? text.length) + 1}.`);
         at += 1;
     };
-    const value = (): Plist => {
-        if (is('{')) {
-            take('{');
-            const entries = new Map<string, Plist>();
-            while (!is('}')) {
-                const key = value();
-                if (typeof key !== 'string') throw new Error('An Xcode project dictionary key must be text.');
-                take('=');
-                if (entries.has(key)) throw new Error(`Duplicate Xcode project key: ${key}.`);
-                entries.set(key, value());
-                take(';');
-            }
-            take('}');
-            return Object.fromEntries(entries);
+    const dictionary = (): Plist => {
+        take('{');
+        const entries = new Map<string, Plist>();
+        while (!is('}')) {
+            const key = value();
+            if (typeof key !== 'string') throw new Error('An Xcode project dictionary key must be text.');
+            take('=');
+            if (entries.has(key)) throw new Error(`Duplicate Xcode project key: ${key}.`);
+            entries.set(key, value());
+            take(';');
         }
-        if (is('(')) {
-            take('(');
-            const entries: Plist[] = [];
-            while (!is(')')) {
-                entries.push(value());
-                if (is(')')) break;
-                take(',');
-            }
-            take(')');
-            return entries;
+        take('}');
+        return Object.fromEntries(entries);
+    };
+    const list = (): Plist => {
+        take('(');
+        const entries: Plist[] = [];
+        while (!is(')')) {
+            entries.push(value());
+            if (is(')')) break;
+            take(',');
         }
+        take(')');
+        return entries;
+    };
+    const scalar = (): Plist => {
         const token = input[at++];
         if (token === undefined || (!token.quoted && /^[{}()=;,]$/u.test(token.text)))
             throw new Error('Expected a value in the Xcode project.');
         return token.text;
+    };
+    const value = (): Plist => {
+        if (is('{')) return dictionary();
+        if (is('(')) return list();
+        return scalar();
     };
     const result = value();
     if (at !== input.length) throw new Error('Unexpected content after the Xcode project dictionary.');

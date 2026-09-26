@@ -107,16 +107,15 @@ export function mergeForScope(
         if (row.reason !== undefined) reasons[row.key] = row.reason;
     }
     const layer: PolicyScopeLayer = { surface, policy, scope };
+    const format = shippedFormat() as FormatSettings;
+    for (const { table } of policyTables(policy, scope)) Object.assign(format, table.format ?? {});
     const ignoresFor = (check: string): IgnoreEntry[] => policy.ignores.filter((entry) => entry.check === check);
     return {
         scope,
         configurations: selected.map((manifest) => manifest.configuration.name),
         settings,
         reasons,
-        format: Object.assign(
-            shippedFormat() as FormatSettings,
-            ...policyTables(policy, scope).map(({ table }) => table.format ?? {}),
-        ),
+        format,
         limit: (key, language) => limitOf(layer, key, language),
         tool: (name) => toolSlots(settings, toolTables(policy, scope, name), name),
         ignoresFor,

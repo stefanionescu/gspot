@@ -93,7 +93,7 @@ export async function evaluateFormat(request: z.infer<typeof formatRequest>): Pr
             : Object.fromEntries(
                   (await prettier.getSupportInfo()).options
                       .filter((option) => option.name !== undefined && supported.has(option.name))
-                      .map((option) => [option.name, option.default]),
+                      .map((option): [string, unknown] => [option.name ?? '', option.default]),
               );
     const { overrides = [], ...raw } = source;
     const base = supportedOptions({ ...defaults, ...raw });

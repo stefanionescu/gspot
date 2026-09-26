@@ -94,15 +94,16 @@ export function registerCheck(program: Command): void {
                                     'Pre-push expects the remote name and URL supplied by Git.',
                                 );
                             const reader = Bun.stdin.stream().getReader();
+                            let cancellation: Promise<void> | undefined;
                             const stopReading = (): void => {
-                                void reader.cancel();
+                                cancellation = reader.cancel();
                             };
                             controller.signal.addEventListener('abort', stopReading, { once: true });
                             const decoder = new TextDecoder('utf-8', { fatal: true });
                             let input = '';
                             try {
                                 controller.signal.throwIfAborted();
-                                while (true) {
+                                for (;;) {
                                     const chunk = await reader.read();
                                     controller.signal.throwIfAborted();
                                     if (chunk.done) break;
@@ -111,6 +112,7 @@ export function registerCheck(program: Command): void {
                                 input += decoder.decode();
                             } finally {
                                 controller.signal.removeEventListener('abort', stopReading);
+                                await cancellation;
                                 reader.releaseLock();
                             }
                             options.paths = [];

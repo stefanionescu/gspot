@@ -60,7 +60,9 @@ function pageProblems(page: PageLinks, origin: string, files: Set<string>, pages
 if (import.meta.main) {
     if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
     await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
-    const schema = JSON.parse(await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'));
+    const schema: unknown = JSON.parse(
+        await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'),
+    );
     if (!isDeepStrictEqual(schema, policyJsonSchema()))
         throw new Error('The public schema differs from the runtime policy schema.');
     process.stdout.write('All built-site links and fragment targets are valid.\n');

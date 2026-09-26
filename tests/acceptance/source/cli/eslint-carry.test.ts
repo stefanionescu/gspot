@@ -198,7 +198,9 @@ test(
         ];
         const invalid = await run(repository.path, args);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-        expect(() => JSON.parse(invalid.stdout)).not.toThrow();
+        expect(() => {
+            JSON.parse(invalid.stdout);
+        }).not.toThrow();
         expect(invalid.stdout).not.toContain('authored linter log');
         expect(invalid.stdout + invalid.stderr).toContain('eqeqeq');
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
@@ -207,7 +209,9 @@ test(
         writeFileSync(join(repository.path, 'eslint.config.mjs'), corrected);
         const accepted = await run(repository.path, args);
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-        expect(() => JSON.parse(accepted.stdout)).not.toThrow();
+        expect(() => {
+            JSON.parse(accepted.stdout);
+        }).not.toThrow();
         expect(accepted.stdout).not.toContain('authored linter log');
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).not.toBe(corrected);
     },

@@ -46,7 +46,7 @@ async function main(): Promise<void> {
             timeoutMs: SETUP_MS,
             ...output,
         });
-        if (built.code !== 0 || controller.signal.aborted) {
+        if (built.code !== 0 || built.isCanceled === true) {
             process.exitCode ||= built.code;
             return;
         }
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
                 timeoutMs: SETUP_MS,
                 ...output,
             });
-            if (published.code !== 0 || controller.signal.aborted) {
+            if (published.code !== 0 || published.isCanceled === true) {
                 process.exitCode ||= published.code;
                 return;
             }
@@ -92,7 +92,8 @@ async function main(): Promise<void> {
         if (executionError !== undefined && cleanupError !== undefined)
             throw new AggregateError([executionError, cleanupError], 'Acceptance execution and cleanup failed.');
         const failure: unknown = executionError ?? cleanupError;
-        if (failure !== undefined) throw failure instanceof Error ? failure : new Error(String(failure));
+        if (failure instanceof Error) throw failure;
+        if (failure !== undefined) throw new Error(`Acceptance execution failed: ${JSON.stringify(failure)}`);
     } finally {
         process.removeListener('SIGINT', interrupt);
         process.removeListener('SIGTERM', terminate);

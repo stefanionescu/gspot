@@ -17,7 +17,7 @@ export default defineConfig({
                     mkdirSync(licenses, { recursive: true });
                     for (const font of ['geist', 'geist-mono']) {
                         copyFileSync(
-                            new URL(`./node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
+                            new URL(`node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
                             new URL(`${font}.txt`, licenses),
                         );
                     }

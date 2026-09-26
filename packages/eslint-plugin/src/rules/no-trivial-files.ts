@@ -42,7 +42,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                 case AST_NODE_TYPES.FunctionExpression:
                 case AST_NODE_TYPES.ArrowFunctionExpression: {
                     return (
-                        node.body?.type === AST_NODE_TYPES.BlockStatement &&
+                        node.body.type === AST_NODE_TYPES.BlockStatement &&
                         statementCount(node.body, context.sourceCode.visitorKeys) > max
                     );
                 }

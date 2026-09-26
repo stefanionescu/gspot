@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 // Switching the runner in a clone refuses an edited original, reinstalls the dispatcher, and leaves the tree clean.
 async function expectRunnerSwitchInClone(

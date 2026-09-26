@@ -198,7 +198,9 @@ test.each([false, true])(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(fails ? 2 : 0);
-        expect(() => JSON.parse(result.stdout)).not.toThrow();
+        expect(() => {
+            JSON.parse(result.stdout);
+        }).not.toThrow();
         expect(result.stdout).not.toContain('formatter stdout');
         // A failing formatter leaves everything as it was and says why; a working one is carried and removed.
         const config = join(repository.path, 'prettier.config.mjs');

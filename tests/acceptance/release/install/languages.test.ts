@@ -2,19 +2,16 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
-import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { afterAll, expect, test } from 'bun:test';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { PublishedRelease } from '#tests/support/release/published.ts';
 import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 
-let release: PublishedRelease;
-beforeAll(async () => {
-    release = await publishRelease();
-}, RELEASE_TIMEOUT_MS);
+// The release publishes once for this file, and its registry stops when the file's tests end.
+const release = await publishRelease();
 afterAll(async () => {
-    await release?.registry.stop();
+    await release.registry.stop();
 });
 
 test(

@@ -151,7 +151,9 @@ export async function initializeConsumer(release: PublishedRelease, fixture: Ins
     expect(installedTools.code, installedTools.stdout + installedTools.stderr).toBe(0);
     expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
     expect(existsSync(join(consumer, 'prettier.config.mjs'))).toBe(false);
-    expect(() => JSON.parse(initialized.stdout)).not.toThrow();
+    expect(() => {
+        JSON.parse(initialized.stdout);
+    }).not.toThrow();
     expect(initialized.stdout).not.toContain('formatter stdout');
     const filepath = join(consumer, 'source.js');
     const carried = await prettier.resolveConfig(filepath, {

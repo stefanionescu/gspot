@@ -135,7 +135,7 @@ export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
     if (proposal.formatter?.extra !== undefined)
-        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.formatter?.extra };
+        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.formatter.extra };
     if (proposal.formatter?.nativeDefaults === true)
         tools['prettier'] = { ...(tools['prettier'] as TomlTable), native_defaults: true };
     if (proposal.formatter?.editorconfig !== undefined)

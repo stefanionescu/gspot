@@ -63,9 +63,7 @@ export function lockedPackages(filename: string, text: string): Set<string> {
         const lock = z.object({ packages: z.record(z.string(), z.unknown()) }).parse(parseYaml(text));
         return new Set(
             Object.keys(lock.packages).map((key) => {
-                const match = /^\/?(?<name>@[^/]+\/[^/@]+|[^/@]+)(?:@|\/)(?<version>[^(_]+)(?:[(_].*)?$/u.exec(
-                    key,
-                )?.groups;
+                const match = /^\/?(?<name>@[^/]+\/[^/@]+|[^/@]+)[@/](?<version>[^(_]+)(?:[(_].*)?$/u.exec(key)?.groups;
                 if (match?.['name'] === undefined || match['version'] === undefined)
                     throw new Error('Cannot read a resolved package identity from the pnpm lockfile.');
                 return `${match['name']}@${match['version']}`;

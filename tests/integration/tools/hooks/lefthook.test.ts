@@ -6,6 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/rejection.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 
@@ -20,7 +21,6 @@ import {
     utimesSync,
     writeFileSync,
 } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 // Lefthook's own helper is repaired on install, an edit to it is refused, and a missing one is not ready.
 async function expectHelperRepairs(

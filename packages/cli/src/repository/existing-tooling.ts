@@ -4,7 +4,6 @@ import type { Policy } from '#cli/policy/normalize.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import type { ToolPin } from '#cli/configurations/manifests.ts';
@@ -12,6 +11,7 @@ import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
+import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 import {
     AGENT_FILE_NAMES,
@@ -87,6 +87,47 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
 }
 
+// The tool configurations one takeover row finds among the tracked files.
+function takeoverTools(
+    files: ConfinedRoot,
+    inventory: Set<string>,
+    tool: string,
+    takeover: NonNullable<ToolPin['takeover']>[number],
+): ExistingTool[] {
+    const matches = pathMatcher([takeover.file, `**/${takeover.file}`]);
+    const candidates = new Set(inventory);
+    if (
+        !picomatch.scan(takeover.file).isGlob &&
+        !candidates.has(takeover.file) &&
+        files.stat(takeover.file) !== undefined
+    )
+        candidates.add(takeover.file);
+    return [...candidates].filter(matches).flatMap((path): ExistingTool[] => {
+        if (takeover.table !== undefined || takeover.key !== undefined) {
+            const source = files.read(path);
+            if (
+                source === undefined ||
+                configurationSection(source.bytes.toString('utf8'), path, {
+                    ...(takeover.table === undefined ? {} : { table: takeover.table }),
+                    ...(takeover.key === undefined ? {} : { key: takeover.key }),
+                }) === undefined
+            )
+                return [];
+        }
+        return [
+            {
+                tool,
+                path,
+                shared: takeover.shared,
+                carries: takeover.carries,
+                ...(takeover.check === undefined ? {} : { check: takeover.check }),
+                ...(takeover.table === undefined ? {} : { table: takeover.table }),
+                ...(takeover.key === undefined ? {} : { key: takeover.key }),
+            },
+        ];
+    });
+}
+
 /**
  * Discover configuration sections declared by the tools that own them.
  * @param root the repository root
@@ -104,40 +145,7 @@ export function declaredConfigurations(root: string, paths: Iterable<string>, se
             manifest.tools
                 .filter((tool) => selected === undefined || selected.includes(tool.name))
                 .flatMap((tool) =>
-                    (tool.takeover ?? []).flatMap((takeover) => {
-                        const matches = pathMatcher([takeover.file, `**/${takeover.file}`]);
-                        const candidates = new Set(inventory);
-                        if (
-                            !picomatch.scan(takeover.file).isGlob &&
-                            !candidates.has(takeover.file) &&
-                            files.stat(takeover.file) !== undefined
-                        )
-                            candidates.add(takeover.file);
-                        return [...candidates].filter(matches).flatMap((path): ExistingTool[] => {
-                            if (takeover.table !== undefined || takeover.key !== undefined) {
-                                const source = files.read(path);
-                                if (
-                                    source === undefined ||
-                                    configurationSection(source.bytes.toString('utf8'), path, {
-                                        ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                                        ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                                    }) === undefined
-                                )
-                                    return [];
-                            }
-                            return [
-                                {
-                                    tool: tool.name,
-                                    path,
-                                    shared: takeover.shared,
-                                    carries: takeover.carries,
-                                    ...(takeover.check === undefined ? {} : { check: takeover.check }),
-                                    ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                                    ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                                },
-                            ];
-                        });
-                    }),
+                    (tool.takeover ?? []).flatMap((takeover) => takeoverTools(files, inventory, tool.name, takeover)),
                 ),
         );
     } finally {

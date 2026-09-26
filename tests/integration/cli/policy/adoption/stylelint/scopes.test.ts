@@ -8,9 +8,9 @@ import { readFileSync, symlinkSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each([
     { paths: ['app/**'], disabled: true },

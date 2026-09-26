@@ -57,13 +57,19 @@ export function sqlfluffRules(text: string): Record<string, unknown> {
     const defaults = sections.get('DEFAULT') ?? new Map<string, string>();
     const core = new Map([...defaults, ...(sections.get('sqlfluff') ?? [])]);
     const options: Record<string, unknown> = Object.fromEntries([
-        ...[...(sections.get('sqlfluff:rules') ?? [])].map(([option, setting]) => [option, value(setting.trim())]),
+        ...[...(sections.get('sqlfluff:rules') ?? [])].map(([option, setting]): [string, unknown] => [
+            option,
+            value(setting.trim()),
+        ]),
         ...[...sections]
             .filter(([name]) => name.startsWith('sqlfluff:rules:'))
-            .map(([name, entries]) => [
+            .map(([name, entries]): [string, unknown] => [
                 name.slice('sqlfluff:rules:'.length),
                 Object.fromEntries(
-                    [...new Map([...defaults, ...entries])].map(([option, setting]) => [option, value(setting.trim())]),
+                    [...new Map([...defaults, ...entries])].map(([option, setting]): [string, unknown] => [
+                        option,
+                        value(setting.trim()),
+                    ]),
                 ),
             ]),
     ]);

@@ -4,8 +4,8 @@ import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
 
 type Step = { run?: string; uses?: string; if?: string; with?: Record<string, string> };
 type Generated = {
@@ -199,7 +199,7 @@ process.exit(child.exitCode);
             expect(readFileSync(join(repository.path, pipelinePath), 'utf8')).toBe(pipeline);
             expect(readFileSync(join(repository.path, 'changed.sh'), 'utf8')).toBe('echo corrected\n');
         } finally {
-            server.stop(true);
+            await server.stop(true);
         }
     },
     120_000,

@@ -6,8 +6,8 @@ import { run } from '#tests/support/cli/command.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
 
@@ -211,8 +211,8 @@ await import(${JSON.stringify(CLI)});
         const output = new Response(child.stdout).text();
         const errors = new Response(child.stderr).text();
         try {
-            child.stdin.write('refs/heads/incomplete ');
-            child.stdin.flush();
+            await child.stdin.write('refs/heads/incomplete ');
+            await child.stdin.flush();
             const deadline = performance.now() + 10_000;
             while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
             expect(existsSync(started)).toBe(true);
@@ -225,7 +225,7 @@ await import(${JSON.stringify(CLI)});
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
             expect(JSON.parse(retry.stdout).checks[0].status).toBe('ok');
         } finally {
-            child.stdin.end();
+            await child.stdin.end();
             if (child.exitCode === null) child.kill('SIGKILL');
             await child.exited;
             await output;

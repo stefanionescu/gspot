@@ -96,6 +96,6 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
         expect(readFileSync(join(directory.path, installed), 'utf8')).toBe(edited);
         expect(readFileSync(join(directory.path, 'authored.txt'), 'utf8')).toBe('keep\n');
     } finally {
-        server.stop(true);
+        await server.stop(true);
     }
 }, 60_000);

@@ -8,6 +8,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import type { RunOptions } from '#cli/execution/execute.ts';
 
 /** A planted token with the shape gitleaks looks for; it belongs to nothing. */
+// eslint-disable-next-line sonarjs/no-hardcoded-secrets -- the planted token is the defect the secrets check must find
 const PLANTED_TOKEN = 'const token = "ghp_Xk92lM3nPq7RsT1vWy4ZaB6cDe8FgH0iJkLmN";\n';
 const POLICY = 'version = 1\nconfigurations = ["secrets"]\n[rules]\ninstall = false\n';
 
