@@ -1,10 +1,10 @@
 import type { Command } from 'commander';
 import { emitAll } from '#cli/generation/render.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/execution/session.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';

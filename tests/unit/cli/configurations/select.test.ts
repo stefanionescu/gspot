@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { testManifest } from '#tests/support/cli/manifests.ts';
+import { testManifest } from '#tests/support/cli/tooling.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

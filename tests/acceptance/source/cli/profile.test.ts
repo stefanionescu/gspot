@@ -6,7 +6,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
+import { treeContents } from '#tests/support/cli/preservation.ts';
 // Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 

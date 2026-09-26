@@ -7,7 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
+import { treeContents } from '#tests/support/cli/preservation.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];

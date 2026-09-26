@@ -4,7 +4,6 @@ import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { TestPlan } from '#cli/checks/xcode/types.ts';
-import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/revisions/snapshot.ts';
 import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
 
@@ -137,4 +136,40 @@ export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
             `A symlink to ${target.toString('utf8')}; Xcode and the checks each follow it their own way.`,
         );
     });
+}
+
+/**
+ * The tracked source files whose path ends one of the given ways.
+ * @param input the engine input
+ * @param endings the path endings
+ * @returns the paths
+ */
+export function trackedEnding(input: EngineInput, endings: string[]): string[] {
+    return input.files
+        .filter(
+            (file) =>
+                file.nature === 'source' &&
+                scopeOf(file.path, input.scopeEntries).path === input.scope &&
+                endings.some((ending) => file.path.endsWith(ending)),
+        )
+        .map((file) => file.path);
+}
+
+/**
+ * One finding of an xcode check.
+ * @param input the engine input
+ * @param at the file and the line
+ * @param at.file the file
+ * @param at.line the line
+ * @param rule the rule
+ * @param text the message
+ * @returns the finding
+ */
+export function xcodeFinding(
+    input: EngineInput,
+    at: { file: string; line: number },
+    rule: string,
+    text: string,
+): Finding {
+    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }

@@ -3,7 +3,6 @@ import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { allChecks } from '#cli/configurations/listing.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { PolicyError, readPolicy } from '#cli/policy/read.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
@@ -11,7 +10,7 @@ import type { CommandResult } from '#cli/commands/print-result.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
+import { directoryOf, listFlag, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
 
 type IgnoreOptions = {
     cwd: string;

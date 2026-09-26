@@ -2,8 +2,8 @@
 import type { Command } from 'commander';
 import { readPolicy } from '#cli/policy/read.ts';
 import { relative, resolve, sep } from 'node:path';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { mutationTarget } from '#cli/platform/filesystem.ts';
 import { printCommand } from '#cli/commands/print-result.ts';

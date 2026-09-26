@@ -10,32 +10,32 @@ import { outsideCallers } from '#cli/checks/structure/cross-file-index.ts';
  */
 export const privatePrefix: Analysis = async (context, scripts) => {
     const index = await scripts();
-    return index.files.flatMap((file) =>
-        file.functions.flatMap((entry) => {
-            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+    const findings = [];
+    for (const file of index.files)
+        for (const entry of file.functions) {
+            if (ENTRY_FUNCTIONS.includes(entry.name)) continue;
             const callers = outsideCallers(index, entry.name, file.path);
             const isPrivate = entry.name.startsWith('_');
             if (isPrivate && callers.length > 0)
-                return [
+                findings.push(
                     context.report(
                         file.path,
                         entry.start,
                         'private-called-outside',
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
                     ),
-                ];
+                );
             if (!isPrivate && callers.length === 0)
-                return [
+                findings.push(
                     context.report(
                         file.path,
                         entry.start,
                         'file-local',
                         `${entry.name} is called from no other file; name it _${entry.name}.`,
                     ),
-                ];
-            return [];
-        }),
-    );
+                );
+        }
+    return findings;
 };
 
 /**
@@ -46,28 +46,26 @@ export const privatePrefix: Analysis = async (context, scripts) => {
  */
 export const privateBeforePublic: Analysis = async (context, scripts) => {
     const index = await scripts();
-    return index.files.flatMap((file) => {
+    const findings = [];
+    for (const file of index.files) {
         let isPublicSeen = false;
-        const findings = file.functions.flatMap((entry) => {
+        for (const entry of file.functions) {
             const isPrivate = entry.name.startsWith('_');
-            const found =
-                isPrivate && isPublicSeen
-                    ? [
-                          context.report(
-                              file.path,
-                              entry.start,
-                              'private-below-public',
-                              `${entry.name} is private and sits below a public function.`,
-                          ),
-                      ]
-                    : [];
+            if (isPrivate && isPublicSeen)
+                findings.push(
+                    context.report(
+                        file.path,
+                        entry.start,
+                        'private-below-public',
+                        `${entry.name} is private and sits below a public function.`,
+                    ),
+                );
             isPublicSeen ||= !isPrivate;
-            return found;
-        });
+        }
         const main = file.functions.find((entry) => entry.name === 'main');
         const last = file.functions.at(-1);
         if (main !== undefined && last !== undefined && last.name !== 'main')
             findings.push(context.report(file.path, main.start, 'main-not-last', 'main is not the last function.'));
-        return findings;
-    });
+    }
+    return findings;
 };

@@ -1,4 +1,4 @@
-import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
+import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
 import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
 

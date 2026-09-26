@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { relative, resolve } from 'node:path';
-import { directoryOf } from '#cli/commands/flags.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { OwnershipState } from '#cli/lifecycle/journal.ts';

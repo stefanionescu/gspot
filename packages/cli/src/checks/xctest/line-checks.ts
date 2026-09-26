@@ -4,7 +4,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { xcodeFinding } from '#cli/checks/xcode/project.ts';
 
 const COMMENT = /^\s*\/\/\s*\S{3,}/u;
 const SLEEP = /^(?:(?:Darwin\.|Glibc\.)?(?:sleep|usleep)|Thread\.sleep|Task(?:<[^>]+>)?\.sleep)$/u;

@@ -1,5 +1,6 @@
-// The tooling discovery result the adoption tests start from: the named configurations and nothing else.
+// What the adoption and selection tests start from: a discovery result naming configurations, and a minimal manifest.
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import { type Manifest, parseManifest } from '#cli/configurations/manifests.ts';
 
 /**
  * A discovery result holding only the given configuration files.
@@ -23,3 +24,16 @@ export function discoveredTooling(configs: ExistingTooling['configs']): Existing
 export const PRETTIER_TOOLING = discoveredTooling([
     { tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' },
 ]);
+
+/**
+ * A language manifest with a name and the configurations it requires, and nothing else.
+ * @param name the configuration name
+ * @param requires the configurations it requires
+ * @returns the parsed manifest
+ */
+export function testManifest(name: string, requires: string[] = []): Manifest {
+    return parseManifest(
+        `[configuration]\nname = "${name}"\nkind = "language"\ntitle = "${name}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A configuration for the tests, long enough."\n`,
+        `configurations/${name}`,
+    );
+}

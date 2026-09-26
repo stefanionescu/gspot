@@ -69,3 +69,15 @@ export function pythonPins(manifests: Manifest[]): string[] {
         return installation?.kind === 'python' ? [`${installation.name}==${installation.version}`] : [];
     });
 }
+
+/** An installer could not make the already validated, locked tools available. */
+export class InstallationError extends Error {
+    /**
+     * Names the installation that failed.
+     * @param message what the installer reported
+     */
+    constructor(message: string) {
+        super(message);
+        this.name = 'InstallationError';
+    }
+}

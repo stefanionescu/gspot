@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
 import { isAbsolute, join, resolve } from 'node:path';
+import { InstallationError } from '#cli/tools/pins.ts';
+import { MissingToolError } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -11,7 +13,6 @@ import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
 
 import {
     chmodSync,

@@ -10,7 +10,7 @@ import type { InstallJson } from '#cli/commands/install.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';

@@ -1,15 +1,15 @@
 import semver from 'semver';
+import { MissingToolError } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
-import { UV_INSTALLER, pythonPins } from '#cli/tools/pins.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
+import { InstallationError, pythonPins, UV_INSTALLER } from '#cli/tools/pins.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];

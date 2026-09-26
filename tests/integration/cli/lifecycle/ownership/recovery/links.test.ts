@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { cliSource } from '#tests/support/cli/sources.ts';
+import { cliSource } from '#tests/support/cli/process.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readFileSync, readlinkSync, symlinkSync } from 'node:fs';

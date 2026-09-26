@@ -1,11 +1,11 @@
-import { progress } from '#cli/output/progress.ts';
+import { progress } from '#cli/output/reporter.ts';
 import type { StageFilter } from '#cli/execution/plan.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import type { Stage } from '#cli/configurations/schema.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { CheckOptions } from '#cli/commands/check/run.ts';
 import { Command, InvalidArgumentError, Option } from 'commander';
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {

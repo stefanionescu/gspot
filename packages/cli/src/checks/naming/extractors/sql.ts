@@ -1,7 +1,7 @@
 import type { Identifier } from '#cli/checks/naming/extract.ts';
-import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
 import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 
 function columns(elements: unknown): SqlNamed[] {

@@ -181,3 +181,23 @@ export function runText(report: RunReport, options: ReportOptions): string {
               : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
     return `${comparison}${lines.join('\n')}\n`;
 }
+
+/**
+ * Print completed check states without mixing progress into machine-readable output.
+ * @param stream the stream progress goes to
+ * @param stream.isTTY whether a person is watching it
+ * @param stream.write writes one line
+ * @param quiet whether progress stays off
+ * @returns the function each completed check is handed to
+ */
+export function progress(
+    stream: { isTTY?: boolean; write(text: string): unknown },
+    quiet: boolean,
+): (result: CheckResult) => void {
+    return (result) => {
+        const failed = ['fail', 'missing', 'error'].includes(result.status);
+        if (!failed && (quiet || stream.isTTY !== true)) return;
+        const status = result.status === 'cache' ? 'unchanged' : result.status;
+        stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${status}\n`);
+    };
+}

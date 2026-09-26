@@ -7,8 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
-import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
+import { configurationManifests, gitignoreBlock, parseManifest } from '#cli/configurations/manifests.ts';
 
 const CONFIGURATION =
     '\n[configuration]\nname = "local"\nkind = "policy"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';

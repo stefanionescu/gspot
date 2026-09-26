@@ -1,10 +1,10 @@
 import { Argument, type Command } from 'commander';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/execution/session.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';

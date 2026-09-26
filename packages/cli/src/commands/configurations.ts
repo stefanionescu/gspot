@@ -10,9 +10,9 @@ import { commitPolicy } from '#cli/commands/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { requireChain } from '#cli/configurations/select.ts';
-import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
+import { directoryOf, textEntry } from '#cli/platform/arguments.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 type AddOptions = { cwd: string; isDryRun: boolean; configurations: string[]; scope?: string };

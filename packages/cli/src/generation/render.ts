@@ -19,10 +19,8 @@ import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
 import { toolPackages } from '#cli/generation/tool-packages.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
 import type { TemplateInputs } from '#cli/generation/templates.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
@@ -37,6 +35,7 @@ import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
 import { retainedConfigurationPaths } from '#cli/lifecycle/retained-config.ts';
 import type { GeneratedFile, GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import type { ResolvedSelector, SelectorGroup } from '#cli/generation/eslint.ts';
+import { gitignoreBlock, type Manifest } from '#cli/configurations/manifests.ts';
 import type { ConfigurationTarget, FragmentSelector } from '#cli/configurations/schema.ts';
 
 const JSON_INDENT = 4;

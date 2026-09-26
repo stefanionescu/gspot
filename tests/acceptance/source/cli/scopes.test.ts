@@ -8,8 +8,8 @@ import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InitJson } from '#cli/commands/init/types.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { treeContents } from '#tests/support/cli/preservation.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

@@ -6,7 +6,7 @@ import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import type { PreparedHook } from '#cli/lifecycle/hooks/managers.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';

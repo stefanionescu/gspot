@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { treeContents } from '#tests/support/cli/contents.ts';
+import { treeContents } from '#tests/support/cli/preservation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
 

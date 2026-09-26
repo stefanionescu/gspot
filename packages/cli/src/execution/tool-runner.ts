@@ -1,8 +1,6 @@
 import { isAbsolute, join } from 'node:path';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { MissingToolError } from '#cli/tools/errors.ts';
 import type { Session } from '#cli/execution/session.ts';
-import { probeTool, toolPin } from '#cli/tools/probe.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
@@ -13,6 +11,7 @@ import { ToolOutputError } from '#cli/execution/output/parse.ts';
 import type { CheckResult, Finding } from '#cli/checks/result.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
+import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
 import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/execution/broken-tool.ts';

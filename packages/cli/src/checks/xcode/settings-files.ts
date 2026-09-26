@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
+import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
 
 const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
 const INCLUDE_LINE = /^#include\??\s+"[^"]+"$/u;

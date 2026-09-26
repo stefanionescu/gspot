@@ -1,3 +1,4 @@
+/* eslint-disable gspot/no-trivial-files -- Astro serves one route per file, and this route only hands the schema text to the response */
 import { policyJsonSchemaText } from '@gspot/cli/src/policy/json-schema.ts';
 
 /**

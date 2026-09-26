@@ -9,20 +9,20 @@ import { RUNTIME_EMBEDS } from '#cli/checks/structure/patterns.ts';
  */
 export const scriptEmbeds: Analysis = async (context, scripts) => {
     const index = await scripts();
-    return index.files.flatMap((file) =>
-        file.lines.flatMap((line, position) => {
-            if (line.trimStart().startsWith('#')) return [];
+    const findings = [];
+    for (const file of index.files)
+        for (const [position, line] of file.lines.entries()) {
+            if (line.trimStart().startsWith('#')) continue;
             const embed = RUNTIME_EMBEDS.find(([pattern]) => pattern.test(line));
-            return embed === undefined
-                ? []
-                : [
-                      context.report(
-                          file.path,
-                          position + 1,
-                          'runtime-embed',
-                          `This line carries ${embed[1]}; put it in its own file.`,
-                      ),
-                  ];
-        }),
-    );
+            if (embed === undefined) continue;
+            findings.push(
+                context.report(
+                    file.path,
+                    position + 1,
+                    'runtime-embed',
+                    `This line carries ${embed[1]}; put it in its own file.`,
+                ),
+            );
+        }
+    return findings;
 };

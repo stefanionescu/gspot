@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { installTools } from '#cli/tools/install.ts';
 import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { everyManifest } from '#cli/configurations/select.ts';

@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import { hasPolicy } from '#cli/policy/read.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { directoryOf } from '#cli/platform/arguments.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';

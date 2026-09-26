@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { emitAll } from '#cli/generation/render.ts';
 import { checkActions } from '#cli/checks/actions.ts';
+import { MissingToolError } from '#cli/tools/probe.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { MissingToolError } from '#cli/tools/errors.ts';
 import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';

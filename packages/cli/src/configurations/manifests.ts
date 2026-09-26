@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
+import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { configurationName } from '#cli/configurations/targets.ts';
 import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
@@ -330,3 +331,14 @@ export type Manifest = Omit<RawManifest, 'configuration' | 'tools' | 'checks' | 
     settings: SettingSpec[];
     dir: string;
 };
+
+/**
+ * The .gitignore block: the paths gspot writes that git never tracks.
+ * @param manifests the manifests whose untracked paths count, every one by default
+ * @returns the block body
+ */
+export function gitignoreBlock(
+    manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values(),
+): string {
+    return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
+}

@@ -7,14 +7,13 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { isLoosening } from '#cli/policy/loosening.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Session } from '#cli/execution/session.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
+import { directoryOf, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
 

@@ -1,8 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { plant } from '#tests/support/cli/preservation.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
+import { plant, treeContents } from '#tests/support/cli/preservation.ts';
 import { chmodSync, lstatSync, readFileSync, readlinkSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('preservation captures distinguish symlink targets without following linked contents', async () => {
