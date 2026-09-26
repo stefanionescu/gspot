@@ -143,99 +143,118 @@ function parse(text: string): Plist {
     return result;
 }
 
+type ProjectObject = z.infer<typeof objectSchema>;
+type ProjectRoot = ProjectObject & { mainGroup: string };
+type Project = {
+    objects: Record<string, ProjectObject>;
+    root: ProjectRoot;
+    directory: string;
+    parents: Map<string, string>;
+    visiting: Set<string>;
+};
+type Folder = { path: string; excluded: Set<string> };
+
+const BUILD_SETTING = /\$[({]/u;
+
+// The object an id names, which must exist.
+function objectOf(project: Pick<Project, 'objects'>, id: string): ProjectObject {
+    const found = project.objects[id];
+    if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
+    return found;
+}
+
+// The group each object is a child of, refusing an object two groups claim.
+function parentGroups(objects: Record<string, ProjectObject>): Map<string, string> {
+    const parents = new Map<string, string>();
+    for (const [id, entry] of Object.entries(objects))
+        for (const child of entry.children ?? []) {
+            if (parents.has(child))
+                throw new Error(`The Xcode project gives an object multiple parent groups: ${child}.`);
+            parents.set(child, id);
+        }
+    return parents;
+}
+
+// The folder a group-relative object is resolved against: the project folder for the main group, else its parent's.
+function groupBase(project: Project, id: string): string {
+    if (id === project.root.mainGroup) return posix.join(project.directory, project.root.projectDirPath ?? '');
+    const parent = project.parents.get(id);
+    if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
+    return resolvePath(project, parent);
+}
+
+// The folder an object's source tree starts from.
+function treeBase(project: Project, id: string, tree: string): string {
+    if (tree === 'SOURCE_ROOT') return project.directory;
+    if (tree === '<absolute>') return '/';
+    if (tree === '<group>') return groupBase(project, id);
+    throw new Error(`Cannot resolve Xcode source tree ${tree} without build settings.`);
+}
+
+// The repository-relative path of an object, following its groups up to the main group.
+function resolvePath(project: Project, id: string): string {
+    if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
+    project.visiting.add(id);
+    const entry = objectOf(project, id);
+    const base = treeBase(project, id, entry.sourceTree ?? '<group>');
+    const path = entry.path ?? '';
+    if (BUILD_SETTING.test(path)) throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
+    project.visiting.delete(id);
+    return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
+}
+
+// The Swift files a target compiles, from its sources build phases.
+function targetSources(project: Project, target: ProjectObject): string[] {
+    const phases = (target.buildPhases ?? []).map((phaseId) => objectOf(project, phaseId));
+    return phases
+        .filter((phase) => phase.isa === 'PBXSourcesBuildPhase')
+        .flatMap((phase) => phase.files ?? [])
+        .flatMap((buildId) => {
+            const build = objectOf(project, buildId);
+            if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
+            const file = objectOf(project, build.fileRef);
+            return file.path?.endsWith('.swift') === true ? [resolvePath(project, build.fileRef)] : [];
+        });
+}
+
+// The synchronized folders a target owns, each with the files its exceptions leave out.
+function targetFolders(project: Project, id: string, target: ProjectObject): Folder[] {
+    return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
+        const group = objectOf(project, groupId);
+        const path = resolvePath(project, groupId);
+        const exceptions = (group.exceptions ?? []).map((exceptionId) => objectOf(project, exceptionId));
+        const excluded = exceptions
+            .filter((exception) => exception.target === id)
+            .flatMap((exception) => (exception.membershipExceptions ?? []).map((name) => posix.join(path, name)));
+        return { path: `${path}/`, excluded: new Set(excluded) };
+    });
+}
+
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
  * @param text the project file text
  * @param directory the folder the project file lives in, relative to the repository root
  * @returns the source paths and the synchronized folders with their exclusions
  */
-export function readProject(
-    text: string,
-    directory: string,
-): {
-    sources: Set<string>;
-    folders: { path: string; excluded: Set<string> }[];
-} {
-    const project = projectSchema.parse(parse(text));
-    const object = (id: string): z.infer<typeof objectSchema> => {
-        const found = project.objects[id];
-        if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
-        return found;
-    };
-    const root = object(project.rootObject);
+export function readProject(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
+    const parsed = projectSchema.parse(parse(text));
+    const root = objectOf(parsed, parsed.rootObject);
     if (root.isa !== 'PBXProject' || root.mainGroup === undefined)
         throw new Error('The Xcode project has no main group.');
-    const parents = new Map<string, string>();
-    for (const [id, entry] of Object.entries(project.objects)) {
-        for (const child of entry.children ?? []) {
-            if (parents.has(child))
-                throw new Error(`The Xcode project gives an object multiple parent groups: ${child}.`);
-            parents.set(child, id);
-        }
-    }
-    const visiting = new Set<string>();
-    const resolve = (id: string): string => {
-        if (visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
-        visiting.add(id);
-        const entry = object(id);
-        const tree = entry.sourceTree ?? '<group>';
-        let base: string;
-        switch (tree) {
-            case 'SOURCE_ROOT': {
-                base = directory;
-                break;
-            }
-            case '<absolute>': {
-                base = '/';
-                break;
-            }
-            case '<group>': {
-                if (id === root.mainGroup) base = posix.join(directory, root.projectDirPath ?? '');
-                else {
-                    const parent = parents.get(id);
-                    if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
-                    base = resolve(parent);
-                }
-
-                break;
-            }
-            default: {
-                throw new Error(`Cannot resolve Xcode source tree ${tree} without build settings.`);
-            }
-        }
-        const path = entry.path ?? '';
-        if (/\$[({]/u.test(path)) throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
-        visiting.delete(id);
-        return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
+    const project: Project = {
+        objects: parsed.objects,
+        root: { ...root, mainGroup: root.mainGroup },
+        directory,
+        parents: parentGroups(parsed.objects),
+        visiting: new Set(),
     };
     const sources = new Set<string>();
-    const folders: { path: string; excluded: Set<string> }[] = [];
+    const folders: Folder[] = [];
     for (const id of root.targets ?? []) {
-        const target = object(id);
+        const target = objectOf(project, id);
         if (target.isa !== 'PBXNativeTarget') continue;
-        for (const phaseId of target.buildPhases ?? []) {
-            const phase = object(phaseId);
-            if (phase.isa !== 'PBXSourcesBuildPhase') continue;
-            for (const buildId of phase.files ?? []) {
-                const build = object(buildId);
-                if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
-                const file = object(build.fileRef);
-                if (file.path?.endsWith('.swift') === true) sources.add(resolve(build.fileRef));
-            }
-        }
-        for (const groupId of target.fileSystemSynchronizedGroups ?? []) {
-            const group = object(groupId);
-            const path = resolve(groupId);
-            const excluded = new Set(
-                (group.exceptions ?? []).flatMap((exceptionId) => {
-                    const exception = object(exceptionId);
-                    return exception.target === id
-                        ? (exception.membershipExceptions ?? []).map((name) => posix.join(path, name))
-                        : [];
-                }),
-            );
-            folders.push({ path: `${path}/`, excluded });
-        }
+        for (const source of targetSources(project, target)) sources.add(source);
+        folders.push(...targetFolders(project, id, target));
     }
     return { sources, folders };
 }
