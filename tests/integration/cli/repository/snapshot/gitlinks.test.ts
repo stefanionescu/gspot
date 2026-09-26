@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { pushedRevisions } from '#cli/repository/revisions/selection.ts';
 import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
 import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 
 test.each(['index', 'commit'] as const)(

@@ -20,9 +20,10 @@ import type { CommandResult } from '#cli/commands/print-result.ts';
 import type { PushReport, RunReport } from '#cli/execution/report.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
+import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
 import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
-import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 const CHANGED_SHOWN = 8;
 function stagedEnvironmentFiles(staged: string[]): string[] {

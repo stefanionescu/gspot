@@ -3,8 +3,8 @@ import { join, relative } from 'node:path';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
+import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
 
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
@@ -29,6 +29,19 @@ async function gitOutput(root: string, args: string[], cancelSignal?: AbortSigna
     return result.stdout;
 }
 
+// Writes one tracked entry into the snapshot: a directory for a gitlink, otherwise the blob with its mode.
+function materializeEntry(confined: ConfinedRoot, entry: GitEntry, objects: Map<string, Buffer>): void {
+    if (entry.mode === '160000') {
+        confined.mkdir(entry.path, EXECUTABLE_MODE);
+        return;
+    }
+    const bytes = objects.get(entry.object);
+    if (bytes === undefined) throw new SelectionError(['A requested Git blob was not returned.']);
+    const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
+    const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
+    confined.write(entry.path, content, undefined);
+}
+
 async function materialize(
     snapshot: string,
     entries: GitEntry[],
@@ -47,16 +60,7 @@ async function materialize(
                 await Bun.sleep(0);
                 cancelSignal?.throwIfAborted();
             }
-            if (entry.mode === '160000') {
-                confined.mkdir(entry.path, EXECUTABLE_MODE);
-                continue;
-            }
-            const bytes = objects.get(entry.object);
-            if (bytes === undefined) throw new SelectionError(['A requested Git blob was not returned.']);
-            const isLink = entry.mode === '120000';
-            const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
-            const content = isLink ? { bytes, mode, isLink: true as const } : { bytes, mode };
-            confined.write(entry.path, content, undefined);
+            materializeEntry(confined, entry, objects);
         }
     } finally {
         confined.close();
@@ -219,7 +223,8 @@ export async function withRevisionSnapshot<Result>(
     action: (snapshot: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {
-    const gitRoot = (await gitOutput(root, ['rev-parse', '--show-toplevel'], cancelSignal)).replace(/\n$/u, '');
+    const printedRoot = await gitOutput(root, ['rev-parse', '--show-toplevel'], cancelSignal);
+    const gitRoot = printedRoot.replace(/\n$/u, '');
     const directory = relative(realpathSync(gitRoot), realpathSync(root));
     const entries = await gitEntries(gitRoot, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.object} 0\t${entry.path}\0`).join('');

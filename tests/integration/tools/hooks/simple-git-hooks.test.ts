@@ -3,12 +3,12 @@ import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/location.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
