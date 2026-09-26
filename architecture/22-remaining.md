@@ -229,6 +229,15 @@ names live in the javascript, python, swift, xcode, and supabase manifests. `sco
 name)` in `configurations/targets.ts` is the one function that spells the path of a scope's
 generated file.
 
+Checked without change, 2026-09-26: K-88 (a folder selector means everything under it, the
+deepest scope holds a file), K-215 (the vocabulary test), K-222 (one indent width, no YAML block
+in the EditorConfig template), K-116 (one output schema), K-238 (the serialization tests). K-224
+and K-228 have no text in the architecture folder.
+
+Done 2026-09-26, K-233 (step 2.4): the css configuration detects and claims `.css` alone. The
+css checks read `.module.css` and no Sass; a `.scss` file is a language init lists without a
+configuration.
+
 ### CSS claims contradict the contract
 
 Step 2.4. Confirmed defect.
@@ -262,6 +271,12 @@ Verify common ownership routing, proposal publication, pruning, and interrupted 
 Owner: `lifecycle/ownership.ts`. Dependencies: confinement. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
 
 Acceptance: K-257, K-252, K-118, K-299.
+
+Checked without change, 2026-09-26, steps 2.5 and 2.6. The confinement tests hold escaped,
+linked, private, and missing targets, a second writer, read-only identities, and empty-directory
+removal. The ownership tests hold two replacements, later edits through apply and uninstall,
+interrupted journals, damaged backups, a full disk during a batch, a failed rename, and a fresh
+clone. K-252 has no text in the architecture folder.
 
 Exit: fixture scenarios reach their intended assertions; schemas, scopes, CSS claims, and
 local publication/recovery contracts agree. Verify confinement primitives in 2.5, then their
