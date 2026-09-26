@@ -78,7 +78,7 @@ export async function evaluateEslintPreview(
     const path = resolve(request.root, ...mutationPath(request.path));
     // Every module is on disk before the first import: the runtime reads the directory once and keeps that listing.
     const modules = request.sources.map((source, index) => {
-        const module = join(work, `eslint-preview-${index}.mjs`);
+        const module = join(work, `eslint-preview-${String(index)}.mjs`);
         writeFileSync(module, moduleSource(path, source), { mode: 0o600 });
         return module;
     });

@@ -32,18 +32,18 @@ export function swiftformatRules(text: string): Record<string, string[]> {
             throw new Error('SwiftFormat rule comparison does not support configuration sections or filters.');
         const option = /^--([a-z-]+)(?:\s+(.*))?$/iu.exec(line);
         const key = option?.[1]?.toLowerCase();
-        if (key === undefined) throw new Error(`Invalid SwiftFormat option on line ${index + 1}.`);
+        if (key === undefined) throw new Error(`Invalid SwiftFormat option on line ${String(index + 1)}.`);
         if (!Object.hasOwn(rules, key)) continue;
         const value = option?.[2] ?? '';
         if (!/^(?:[a-zA-Z\d,\s]|"[a-zA-Z\d,\s]*")*$/u.test(value))
-            throw new Error(`Invalid SwiftFormat ${key} list on line ${index + 1}.`);
+            throw new Error(`Invalid SwiftFormat ${key} list on line ${String(index + 1)}.`);
         const entries = value
             .replaceAll('"', '')
             .split(',')
             .map((entry) => entry.trim())
             .filter(Boolean);
         if (entries.some((entry) => !/^[a-zA-Z][a-zA-Z\d]*$/u.test(entry)))
-            throw new Error(`Invalid SwiftFormat ${key} list on line ${index + 1}.`);
+            throw new Error(`Invalid SwiftFormat ${key} list on line ${String(index + 1)}.`);
         rules[key]?.push(...entries);
     }
     return rules;

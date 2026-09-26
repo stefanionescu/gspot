@@ -74,7 +74,7 @@ function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set
             for (const manifest of selected.selected)
                 for (const spec of manifest.checks)
                     if (
-                        manifest.configuration.check_references?.includes(spec.name) &&
+                        manifest.configuration.check_references?.includes(spec.name) === true &&
                         !entries.some((entry) => entry.spec.name === spec.name)
                     )
                         entries.push({ spec, manifest });
@@ -175,11 +175,10 @@ function skipFor(check: PlannedCheck, options: PlanOptions, platform: string, ha
     const ignored = check.scope.view
         .ignoresFor(spec.name)
         .find((entry) => entry.rule === undefined && (entry.paths === undefined || entry.paths.length === 0));
-    if (ignored !== undefined)
-        return {
-            source: 'ignore',
-            note: `disabled by gspot.toml${ignored.reason === undefined ? '' : `: ${ignored.reason}`}`,
-        };
+    if (ignored !== undefined) {
+        const reason = ignored.reason === undefined ? '' : `: ${ignored.reason}`;
+        return { source: 'ignore', note: `disabled by gspot.toml${reason}` };
+    }
     const waiting = waitingFor(check);
     if (waiting) return waiting;
     if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
@@ -325,7 +324,7 @@ export function configuredChecks(session: Session): PlannedCheck[] {
         ...session.policyFiles.policy.checks.map((check) => check.name),
     ];
     return planScopes(session, { stage: 'all', only, skips: [] })
-        .flatMap(yielded)
+        .flatMap((planned) => yielded(planned))
         .filter((check) => isActive(check) && check.skip === undefined);
 }
 

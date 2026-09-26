@@ -86,7 +86,7 @@ export function envExample(input: EngineInput): Finding[] {
     if (templates.length === 0) return [];
     const known = new Set(templates.flatMap((file) => keysOfTemplate(input, file)));
     const patterns = readPatterns(input);
-    const searched = inScope.filter(isSearched);
+    const searched = inScope.filter((file) => isSearched(file));
     return searched.flatMap((file) =>
         firstMissing(readsIn(input, file, patterns), known).map((read) => ({
             check: input.spec.name,

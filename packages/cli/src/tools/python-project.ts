@@ -108,7 +108,10 @@ function pythonSettings(root: string, owner: LifecycleOwner, work: string): stri
         /^[a-z][a-z0-9+.-]*:/iu.test(value) || isAbsolute(value) ? value : resolve(root, value);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (selected['find-links'] !== undefined)
-        selected['find-links'] = z.array(z.string()).parse(selected['find-links']).map(location);
+        selected['find-links'] = z
+            .array(z.string())
+            .parse(selected['find-links'])
+            .map((value) => location(value));
     if (selected['index'] !== undefined)
         selected['index'] = z
             .array(z.looseObject({ url: z.string() }))
@@ -145,7 +148,7 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
     );
     if (result.missing) throw new MissingToolError(`Install uv, then run: gspot install. ${SETUP}`);
     if (result.code !== 0) {
-        const message = `uv ${args[0]} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
+        const message = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
         if (args[0] === 'sync') throw new InstallationError(message);
         throw new Error(message);
     }

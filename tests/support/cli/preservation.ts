@@ -77,7 +77,7 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     for (const [path, text] of Object.entries(planted.files)) {
         const full = join(cwd, path);
         mkdirSync(dirname(full), { recursive: true });
-        if (lstatSync(full, { throwIfNoEntry: false })?.isSymbolicLink()) unlinkSync(full);
+        if (lstatSync(full, { throwIfNoEntry: false })?.isSymbolicLink() === true) unlinkSync(full);
         writeFileSync(full, text);
     }
     for (const path of executable) chmodSync(join(cwd, path), statSync(join(cwd, path)).mode | 0o111);

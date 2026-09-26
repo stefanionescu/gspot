@@ -132,7 +132,7 @@ export function readAttributes(root: string): Attribute[] {
     try {
         return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
             .split('\n')
-            .map(attributeRule)
+            .map((line) => attributeRule(line))
             .filter((rule) => rule !== undefined);
     } finally {
         files.close();

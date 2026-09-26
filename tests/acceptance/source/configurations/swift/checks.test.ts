@@ -145,7 +145,7 @@ describe('the swift configuration', () => {
                     path,
                     CLEAN_SWIFT.replaceAll('greeting', index === 0 ? 'greetPerson' : 'greetVisitor').replaceAll(
                         'hello',
-                        `welcome ${index}`,
+                        `welcome ${String(index)}`,
                     ),
                 ]),
             );

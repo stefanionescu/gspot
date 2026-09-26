@@ -28,7 +28,7 @@ test('native registry settings authenticate from an isolated project and preserv
         },
     });
     try {
-        const registry = `http://127.0.0.1:${server.port}/`;
+        const registry = `http://127.0.0.1:${String(server.port)}/`;
         await createFileTree(repository.path, {
             'package.json': '{"private":true}\n',
             '.npmrc': `registry=${registry}\n`,
@@ -49,7 +49,7 @@ test('native registry settings authenticate from an isolated project and preserv
         });
         expect(missing.code).not.toBe(0);
         expect(rejected).toBeGreaterThan(0);
-        const source = `registry=${registry}\n//127.0.0.1:${server.port}/:_authToken=${token}\n`;
+        const source = `registry=${registry}\n//127.0.0.1:${String(server.port)}/:_authToken=${token}\n`;
         writeFileSync(join(repository.path, '.npmrc'), source, { mode: 0o600 });
         const mode = statSync(join(repository.path, '.npmrc')).mode;
         const corrected = await runToolCommand(undefined, command, {

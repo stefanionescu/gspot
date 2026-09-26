@@ -38,6 +38,13 @@ const RESOURCE_ENTRY_SIZE = 8;
 const RESOURCE_ENTRY_TARGET_FIELD = 4;
 const RESOURCE_DATA_SIZE_FIELD = 4;
 const RCDATA_TYPE = 10;
+const WORD_SIZE = 4;
+
+function fail(): never {
+    throw new SelectionError([
+        'Cannot relocate installed Windows Python launcher metadata. Reinstall dependencies for the selected revision.',
+    ]);
+}
 
 /**
  * Relocate uv interpreter metadata without changing its native code or embedded Python ZIP.
@@ -56,17 +63,12 @@ export function relocateWindowsLauncher(
     const coff = pe + PE_SIGNATURE_SIZE;
     const optional = coff + COFF_HEADER_SIZE;
     if (optional > bytes.length || bytes.toString('ascii', pe, coff) !== 'PE\0\0') return undefined;
-    const fail = (): never => {
-        throw new SelectionError([
-            'Cannot relocate installed Windows Python launcher metadata. Reinstall dependencies for the selected revision.',
-        ]);
-    };
     const range = (offset: number, length: number): number => {
         if (offset < 0 || length < 0 || offset + length > bytes.length) fail();
         return offset;
     };
     const short = (offset: number): number => bytes.readUInt16LE(range(offset, 2));
-    const word = (offset: number): number => bytes.readUInt32LE(range(offset, 4));
+    const word = (offset: number): number => bytes.readUInt32LE(range(offset, WORD_SIZE));
     const count = short(coff + SECTION_COUNT_FIELD);
     const magic = short(optional);
     if (magic !== PE32_MAGIC && magic !== PE32_PLUS_MAGIC) return undefined;

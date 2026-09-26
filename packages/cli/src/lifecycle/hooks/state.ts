@@ -69,7 +69,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
             const expected = hookBody(name, runner, binary, original !== undefined, [
                 hookCommand(name, runner, binary, prefix),
             ]);
-            if (!current?.bytes.equals(Buffer.from(expected))) return false;
+            if (current?.bytes.equals(Buffer.from(expected)) !== true) return false;
             if (
                 process.platform !== 'win32' &&
                 ((current.mode & EXECUTE_BITS) === 0 ||

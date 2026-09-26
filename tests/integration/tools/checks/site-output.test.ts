@@ -8,6 +8,9 @@ import { siteBuild } from '#cli/checks/static-site/build.ts';
 import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
 import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
 
+const page = (body: string) =>
+    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`;
+
 test.each([
     ['links', internalLinks],
     ['markup', builtMarkup],
@@ -27,8 +30,6 @@ test.each([
         .flatMap((manifest) => manifest.checks)
         .find((spec) => spec.name === check)!;
     const build = await siteBuild(request);
-    const page = (body: string) =>
-        `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`;
     await createFileTree(sandbox.path, {
         '.gspot/config/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
     });

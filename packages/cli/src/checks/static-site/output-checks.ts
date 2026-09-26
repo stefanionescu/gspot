@@ -179,7 +179,7 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
     return limits.flatMap((limit) => {
         const isCounted = pathMatcher(limit.paths);
         const bytes = files
-            .filter(isCounted)
+            .filter((entry) => isCounted(entry))
             .reduce((sum, path) => sum + gzipSync(readSource(build.output, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kb
@@ -210,7 +210,7 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
         .map((match) => match.groups?.['url'])
         .filter((url) => url !== undefined)
         .toArray();
-    const listed = new Set(urls.flatMap(pageOf));
+    const listed = new Set(urls.flatMap((url) => pageOf(url)));
     const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))

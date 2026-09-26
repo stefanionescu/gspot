@@ -120,9 +120,8 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
     const found = diagnostics(input, originalPaths, new Set(['error']), 'compiler');
     if (code === 0 || found.length > 0) return found;
     const detail = output.trim();
-    throw new Error(
-        `The Swift build exited ${String(code)} without source diagnostics.${detail === '' ? '' : `\n${detail}`}`,
-    );
+    const suffix = detail === '' ? '' : `\n${detail}`;
+    throw new Error(`The Swift build exited ${String(code)} without source diagnostics.${suffix}`);
 }
 
 /**

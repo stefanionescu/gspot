@@ -31,7 +31,7 @@ function tokens(text: string): Token[] {
     while (at < text.length) {
         TOKEN.lastIndex = at;
         const match = TOKEN.exec(text);
-        if (!match) throw new Error(`Invalid Xcode project syntax at character ${at + 1}.`);
+        if (!match) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
         const raw = match[0];
         if (!/^\s|^\/\//u.test(raw) && !raw.startsWith('/*')) {
             const quoted = raw.startsWith('"');
@@ -58,7 +58,9 @@ function parse(text: string): Plist {
     const is = (value: string): boolean => input[at]?.quoted === false && input[at]?.text === value;
     const take = (value: string): void => {
         if (!is(value))
-            throw new Error(`Expected ${value} in Xcode project at character ${(input[at]?.at ?? text.length) + 1}.`);
+            throw new Error(
+                `Expected ${value} in Xcode project at character ${String((input[at]?.at ?? text.length) + 1)}.`,
+            );
         at += 1;
     };
     const dictionary = (): Plist => {
@@ -179,7 +181,7 @@ export function readProject(
                 const build = object(buildId);
                 if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
                 const file = object(build.fileRef);
-                if (file.path?.endsWith('.swift')) sources.add(resolve(build.fileRef));
+                if (file.path?.endsWith('.swift') === true) sources.add(resolve(build.fileRef));
             }
         }
         for (const groupId of target.fileSystemSynchronizedGroups ?? []) {

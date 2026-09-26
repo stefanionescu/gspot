@@ -74,7 +74,7 @@ export function prepareBuildSources(root: string, paths: string[], folder: strin
             if (lstatSync(join(folder, path)).isSymbolicLink()) {
                 const current = files.readEntry(path);
                 if (current !== undefined) files.remove(path, current);
-            } else if (files.stat(path)?.isDirectory()) {
+            } else if (files.stat(path)?.isDirectory() === true) {
                 directories.push(path);
                 if (!wantedDirectories.has(path)) emptyDirectories.push(path);
             } else if (!desired.has(path)) {

@@ -7,11 +7,12 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 
+const policy = (dialect: string) =>
+    `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
+
 test('apply rejects injected SQLFluff dialect directives with exit 2 before changing configuration', async () => {
     await using sandbox = await testdir();
     const original = '[sqlfluff]\ndialect = postgres\n';
-    const policy = (dialect: string) =>
-        `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': policy('sqlite\nexclude_rules = ALL'),
         '.gspot/config/sqlfluff.cfg': original,

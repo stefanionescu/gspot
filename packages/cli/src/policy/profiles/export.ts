@@ -32,7 +32,8 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
     const entries = Object.entries(value)
         .filter(([key, inner]) => {
             if (!isRepositoryPath(key, inner)) return true;
-            leftOut.push(`${where === '' ? key : `${where}.${key}`}: names a repository path`);
+            const location = where === '' ? key : `${where}.${key}`;
+            leftOut.push(`${location}: names a repository path`);
             return false;
         })
         .map(([key, inner]): [string, unknown] => [

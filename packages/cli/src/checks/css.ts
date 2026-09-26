@@ -49,28 +49,31 @@ function moduleImporters(code: { path: string; text: string }[], sheets: Set<str
             if (binding === undefined) continue;
             const symbol = checker.getSymbolAtLocation(binding);
             if (symbol === undefined) continue;
-            const reads = new Set<string>();
             const entries = importers.get(sheet) ?? [];
-            const importer: Importer = { path, read: [] };
+            const importer: Importer = { path, read: [...bindingReads(checker, symbol, source)] };
             entries.push(importer);
             importers.set(sheet, entries);
-            // Each imported binding owns its uses, including lexical shadowing.
-            const visit = (node: ts.Node): void => {
-                if (
-                    (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
-                    ts.isIdentifier(node.expression) &&
-                    checker.getSymbolAtLocation(node.expression) === symbol
-                ) {
-                    if (ts.isPropertyAccessExpression(node)) reads.add(node.name.text);
-                    else if (ts.isStringLiteral(node.argumentExpression)) reads.add(node.argumentExpression.text);
-                }
-                ts.forEachChild(node, visit);
-            };
-            visit(source);
-            importer.read = [...reads];
         }
     }
     return importers;
+}
+
+// The properties read through one imported binding, including where lexical shadowing hides the name.
+function bindingReads(checker: ts.TypeChecker, symbol: ts.Symbol, source: ts.Node): Set<string> {
+    const reads = new Set<string>();
+    const visit = (node: ts.Node): void => {
+        if (
+            (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) &&
+            ts.isIdentifier(node.expression) &&
+            checker.getSymbolAtLocation(node.expression) === symbol
+        ) {
+            if (ts.isPropertyAccessExpression(node)) reads.add(node.name.text);
+            else if (ts.isStringLiteral(node.argumentExpression)) reads.add(node.argumentExpression.text);
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return reads;
 }
 
 function camel(name: string): string {

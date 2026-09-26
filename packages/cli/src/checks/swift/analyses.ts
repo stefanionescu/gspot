@@ -18,7 +18,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
     return async (input) => {
         const sources = await swiftSources(input);
         try {
-            const problems = read({ sources, functions: sources.flatMap(functionsOf) }, input);
+            const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
             return problems.map((entry) => ({
                 check: input.spec.name,
                 file: entry.file,

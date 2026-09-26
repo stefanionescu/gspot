@@ -22,7 +22,7 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
     try {
         for (const file of config.fileNames) {
             files.source(relative(root, file).replaceAll('\\', '/'));
-            if (config.options.noEmit) continue;
+            if (config.options.noEmit === true) continue;
             for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
                 files.stat(relative(root, output).replaceAll('\\', '/'));
         }
@@ -54,7 +54,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     );
     try {
         if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-        else if (config?.options.incremental || config?.options.composite)
+        else if (config?.options.incremental === true || config?.options.composite === true)
             command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'tsconfig.check.tsbuildinfo'));
         const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)
@@ -105,7 +105,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
         const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
         const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
         if (roots !== undefined) command.push('--typeRoots', roots.join(','));
-        if (config?.options.incremental || config?.options.composite)
+        if (config?.options.incremental === true || config?.options.composite === true)
             command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'jsconfig.check.tsbuildinfo'));
         const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)

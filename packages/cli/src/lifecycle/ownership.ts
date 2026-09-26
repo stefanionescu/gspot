@@ -337,10 +337,10 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
                 if (entry === undefined && proposal.status !== 'changed') return [];
                 const recovery =
                     current !== undefined &&
-                    (proposal.saveOriginal || next === undefined || !matches(current, identity(next)))
+                    (proposal.saveOriginal === true || next === undefined || !matches(current, identity(next)))
                         ? backup(path, current)
                         : undefined;
-                const original = proposal.saveOriginal ? recovery : entry?.original;
+                const original = proposal.saveOriginal === true ? recovery : entry?.original;
                 const recordedEntry =
                     entry === undefined ? undefined : { ...entry, ...(original === undefined ? {} : { original }) };
                 return [{ path, current, next, entry: recordedEntry, recovery }];
@@ -378,7 +378,7 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
                 save();
             },
             finishInstallation(kind) {
-                if (!state.installations?.includes(kind))
+                if (state.installations?.includes(kind) !== true)
                     throw new Error('Installation recovery state changed. Retry gspot install.');
                 state.installations = state.installations.filter((entry) => entry !== kind);
                 if (state.installations.length === 0) delete state.installations;

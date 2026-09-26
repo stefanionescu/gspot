@@ -71,6 +71,12 @@ for (const scope of ['', 'api/']) {
     );
 }
 
+const project = (outDir: string): string =>
+    JSON.stringify({
+        compilerOptions: { composite: true, types: [], outDir },
+        include: ['*.ts'],
+    });
+
 test.each(['', 'apps/web'])(
     'Vite initialization in %s preserves authored compiler settings while each level checks its diagnostic flags',
     async (scope) => {
@@ -157,11 +163,6 @@ test.each(['absolute', 'symlink'])(
         await createFileTree(outside.path, { 'value.js': 'authored output\n', '.bin': {} });
         symlinkSync(join(INSTALLED_MODULES, 'typescript'), join(outside.path, 'typescript'), 'dir');
         symlinkSync('../typescript/bin/tsc', join(outside.path, '.bin/tsc'));
-        const project = (outDir: string): string =>
-            JSON.stringify({
-                compilerOptions: { composite: true, types: [], outDir },
-                include: ['*.ts'],
-            });
         await createFileTree(sandbox.path, {
             'gspot.toml': POLICY,
             '.gitignore': 'node_modules\n.gspot\n',

@@ -128,6 +128,10 @@ function tailLines(report: RunReport, options: ReportOptions, colors: Colors): s
     return lines;
 }
 
+function counted(value: number, noun: string): string {
+    return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
+}
+
 function summaryLine(report: RunReport, colors: Colors): string {
     const passed = report.checks.filter((check) => check.status === 'ok' || check.status === 'cache').length;
     const failed = report.checks.filter((check) => ['fail', 'missing', 'error'].includes(check.status)).length;
@@ -136,8 +140,7 @@ function summaryLine(report: RunReport, colors: Colors): string {
         (count, check) => count + check.findings.length,
         report.coverage.findings.length,
     );
-    const count = (value: number, noun: string): string => `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
-    const summary = `${count(passed, 'check')} passed, ${count(failed, 'check')} failed, ${count(skipped, 'check')} skipped, ${count(findings, 'finding')}, ${seconds(report.duration)}`;
+    const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
     if (report.exitCode === 2) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }

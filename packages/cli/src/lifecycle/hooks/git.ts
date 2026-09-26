@@ -198,7 +198,7 @@ export function installHooks(
                 const name = basename(entry.path);
                 if (HOOK_FILES.some((hook) => [hook, `${hook}.gspot-original`, `${hook}.gspot-manager`].includes(name)))
                     continue;
-                if (!manager?.has(name)) proposals.push(owner.proposeRestoration(entry.path));
+                if (manager?.has(name) !== true) proposals.push(owner.proposeRestoration(entry.path));
             }
             for (const [name, content] of manager ?? []) {
                 if ((HOOK_FILES as readonly string[]).includes(name)) continue;

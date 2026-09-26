@@ -16,8 +16,9 @@ for (const scope of ['', 'apps/web']) {
             test(`${check} reports a defect, accepts its correction, and preserves source output`, async () => {
                 await using directory = await testdir();
                 const path = (file: string) => join(scope, file);
+                const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
                 await createFileTree(directory.path, {
-                    'gspot.toml': `version = 1\nconfigurations = ["nextjs"]\n${scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`}`,
+                    'gspot.toml': `version = 1\nconfigurations = ["nextjs"]\n${scopeTable}`,
                     [path('package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
                     [path('tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
                     [path('next-env.d.ts')]: '// Authored type declaration\n',

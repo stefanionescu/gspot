@@ -31,7 +31,10 @@ export const environment: Record<string, string | undefined> = {
     ...inherited,
     NODE_PATH: undefined,
     NODE_OPTIONS: undefined,
-    PATH: (inherited['PATH'] ?? '').split(delimiter).filter(isOutsideCheckout).join(delimiter),
+    PATH: (inherited['PATH'] ?? '')
+        .split(delimiter)
+        .filter((entry) => isOutsideCheckout(entry))
+        .join(delimiter),
 };
 
 export function preparePackages(work: string): string {

@@ -85,10 +85,10 @@ async function carryFrom(
         const schema = nativeImporters[tool]?.schema;
         if (schema === undefined) throw new Error(`${path}: no complete ${tool} configuration importer is available.`);
         const parsed = schema.safeParse(source.parsed);
-        if (!parsed.success)
-            throw new Error(
-                `${path}: unsupported settings: ${parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`,
-            );
+        if (!parsed.success) {
+            const issues = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+            throw new Error(`${path}: unsupported settings: ${issues}`);
+        }
     }
     const carrier =
         reader === 'words'
@@ -114,8 +114,8 @@ function sortedUnique(items: string[]): string[] {
  */
 export function isOwned(tool: string, selected: Set<string>): boolean {
     const manifests = configurationManifests();
-    return [...selected].some((id) =>
-        manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined),
+    return [...selected].some(
+        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined) === true,
     );
 }
 

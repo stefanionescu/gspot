@@ -14,7 +14,7 @@ function oneLine(value: unknown): string | undefined {
     const flat = primitive(value);
     if (flat !== undefined) return flat;
     if (Array.isArray(value)) {
-        const parts = value.map(oneLine);
+        const parts = value.map((entry) => oneLine(entry));
         return parts.includes(undefined) ? undefined : `[${parts.join(', ')}]`;
     }
     return isPlainRecord(value) && Object.keys(value).length === 0 ? '{}' : undefined;

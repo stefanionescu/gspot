@@ -36,7 +36,10 @@ function missingOptions(input: EngineInput, path: string, options: CompilerOptio
  */
 export function tsconfigOptions(input: EngineInput): Finding[] {
     const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
-    const candidates = new Set([scopeTsconfig, ...input.files.map((file) => file.path).filter(isTsconfigName)]);
+    const candidates = new Set([
+        scopeTsconfig,
+        ...input.files.map((file) => file.path).filter((path) => isTsconfigName(path)),
+    ]);
     return [...candidates].flatMap((path) => {
         const parsed = getTsconfig(input.root, join(input.root, path));
         if (parsed !== undefined) return missingOptions(input, path, parsed.options);

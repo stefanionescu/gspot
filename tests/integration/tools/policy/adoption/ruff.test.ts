@@ -56,7 +56,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     const session = await openSession(sandbox.path);
     const version = Bun.spawnSync(['ruff', '--version'], { stdout: 'pipe', stderr: 'pipe' });
     expect(version.stdout.toString().trim()).toBe(
-        `ruff ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'ruff')!.version}`,
+        `ruff ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'ruff')!.version!}`,
     );
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,

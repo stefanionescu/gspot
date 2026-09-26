@@ -105,6 +105,7 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
                     path,
                     lockedPackages(basename(path), readSource(input.root, path, input.observations).toString('utf8')),
                 );
+        const where = scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`;
         for (const exception of exceptions) {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (
@@ -124,7 +125,7 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
                 file: POLICY_FILE,
                 line: 1,
                 rule: 'unlocked-package',
-                message: `${exception.package} under ${scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
+                message: `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
                 fixable: false,
             });
         }

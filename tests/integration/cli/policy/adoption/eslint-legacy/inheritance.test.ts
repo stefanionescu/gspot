@@ -30,9 +30,9 @@ test('legacy ESLint adoption preserves inherited overrides and ignores for futur
         flat: false,
         from: '.eslintrc.json',
     });
-    expect(carried.adopted.some((entry) => entry.legacyCriteria?.patterns[0]?.includes?.includes('src/**/*.js'))).toBe(
-        true,
-    );
+    expect(
+        carried.adopted.some((entry) => entry.legacyCriteria?.patterns[0]?.includes?.includes('src/**/*.js') === true),
+    ).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
@@ -86,7 +86,7 @@ test('legacy ESLint adoption preserves inherited plugin environments and extensi
     expect(
         carried.adopted.some(
             (entry) =>
-                entry.languageOptions?.['globals'] &&
+                entry.languageOptions?.['globals'] !== undefined &&
                 (entry.languageOptions['globals'] as Record<string, unknown>)['allowed'] === false,
         ),
     ).toBe(true);

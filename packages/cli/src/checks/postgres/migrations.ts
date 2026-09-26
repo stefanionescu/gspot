@@ -22,7 +22,9 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
         const name = path.slice(path.lastIndexOf('/') + 1);
         const parsed = await sqlFile(text, input.observations);
         if (parsed.error !== undefined)
-            throw new Error(`SQL parse failed at ${parsed.error.line}:${parsed.error.column}: ${parsed.error.text}`);
+            throw new Error(
+                `SQL parse failed at ${String(parsed.error.line)}:${String(parsed.error.column)}: ${parsed.error.text}`,
+            );
         migrations.push({
             path,
             name,

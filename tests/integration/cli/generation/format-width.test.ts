@@ -44,8 +44,8 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
     expect(parseToml(generated.get('.gspot/config/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
-    expect(generated.get('.gspot/config/sqlfluff.cfg')).toContain(`tab_space_size = ${width}`);
-    expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${width}\n`);
+    expect(generated.get('.gspot/config/sqlfluff.cfg')).toContain(`tab_space_size = ${String(width)}`);
+    expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${String(width)}\n`);
     const source = await Bun.file(path).text();
     const expected = `parent:\n${' '.repeat(width)}child: value\n`;
     expect(await prettier.check(source, { ...editor, filepath: path })).toBe(false);

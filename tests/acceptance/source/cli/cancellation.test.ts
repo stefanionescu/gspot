@@ -250,7 +250,7 @@ test('staged cancellation during dependency copying removes partial output and p
     const dependencies = join(sandbox.path, 'node_modules');
     mkdirSync(dependencies);
     for (let index = 0; index < 4000; index++)
-        writeFileSync(join(dependencies, `${index}.js`), `export const value=${index};\n`);
+        writeFileSync(join(dependencies, `${String(index)}.js`), `export const value=${String(index)};\n`);
     const marker = join(sandbox.path, 'copying.json');
     const program = `
 import { mock } from 'bun:test';

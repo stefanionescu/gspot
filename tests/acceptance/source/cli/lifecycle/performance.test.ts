@@ -39,7 +39,7 @@ test('initialization and cold and warm staged checks stay within the 5000-file p
             measurements.length === 2 ? 'cache' : 'ok',
         );
         console.log(
-            `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${ceiling} ms`,
+            `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${String(ceiling)} ms`,
         );
         expect(elapsed).toBeLessThan(ceiling);
         expect(report.checks.some((check: { status: string }) => ['error', 'missing'].includes(check.status))).toBe(

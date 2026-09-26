@@ -53,7 +53,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
         const candidates = sources.flatMap((source) => {
             const comments = source.tree.rootNode
                 .descendantsOfType(['comment', 'multiline_comment'])
-                .filter(isSourceComment);
+                .filter((node) => isSourceComment(node));
             const inline = comments.filter(
                 (comment) =>
                     comment.type === 'multiline_comment' &&

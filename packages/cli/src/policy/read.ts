@@ -167,7 +167,7 @@ export function readPolicyText(
     ];
 
     if (found.length === 0) return { policy: complete, problems: [] };
-    if (found.some(isSettledElsewhere)) throw new PolicyError(problemLines(text, path, found));
+    if (found.some((problem) => isSettledElsewhere(problem))) throw new PolicyError(problemLines(text, path, found));
     const locations = sourceLocations(text);
     const problems = found.map((problem) => ({ ...problem, ...policyPosition(locations, problem.path) }));
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));

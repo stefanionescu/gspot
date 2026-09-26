@@ -11,7 +11,11 @@ test.each(['recommended', 'all'])('generated %s lint enforces size limits in tes
     });
     const eslint = await generatedEslint(sandbox.path);
     const rules = new Set(['max-lines', 'max-lines-per-function', 'max-statements']);
-    const source = `export function count() {\n${Array.from({ length: 9 }, (_, index) => `    const value${index} = ${index};`).join('\n')}\n    return value0;\n}\n`;
+    const declarations = Array.from(
+        { length: 9 },
+        (_, index) => `    const value${String(index)} = ${String(index)};`,
+    ).join('\n');
+    const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
     const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
     for (const rule of rules)
         expect(defect.flatMap((file) => file.messages).some((message) => message.ruleId === rule)).toBe(true);

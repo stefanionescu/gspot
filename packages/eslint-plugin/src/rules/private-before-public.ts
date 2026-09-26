@@ -63,7 +63,7 @@ export const privateBeforePublic = createRule<[], 'order'>({
     create(context) {
         return {
             Program(node) {
-                const firstExport = node.body.find(isExport);
+                const firstExport = node.body.find((statement) => isExport(statement));
                 if (firstExport === undefined) return;
                 const after = node.body.slice(node.body.indexOf(firstExport) + 1);
                 for (const statement of after)

@@ -176,7 +176,8 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         privateTarget(destination);
         if (posix.relative(posix.dirname(path), destination) !== target)
             throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
-        const targetFile = proposed?.has(destination) ? proposed.get(destination) : readEntry(destination, false);
+        const targetFile =
+            proposed?.has(destination) === true ? proposed.get(destination) : readEntry(destination, false);
         if (targetFile === undefined) throw new Error(`Lifecycle link target is missing: ${path}`);
         if (targetFile.isLink) throw new Error(`Lifecycle link target is not a regular file: ${path}`);
         return target;
@@ -290,7 +291,7 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         },
         lock(path) {
             const target = parent(path, true);
-            const token = `${process.pid}:${randomUUID()}`;
+            const token = `${String(process.pid)}:${randomUUID()}`;
             for (;;) {
                 try {
                     writeFileSync(target, token, { flag: 'wx', mode: PRIVATE_FILE });

@@ -31,7 +31,7 @@ test('pinned Vale installs in isolation, publishes owned rules, and preserves ed
                 '.gspot/config/vale.ini',
                 {
                     bytes: Buffer.from(
-                        `StylesPath = vale/styles\nPackages = http://127.0.0.1:${server.port}/LocalStyle.zip\n\n[*]\nBasedOnStyles = LocalStyle\n`,
+                        `StylesPath = vale/styles\nPackages = http://127.0.0.1:${String(server.port)}/LocalStyle.zip\n\n[*]\nBasedOnStyles = LocalStyle\n`,
                     ),
                     mode: 0o444,
                 },

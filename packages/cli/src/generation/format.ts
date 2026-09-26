@@ -39,7 +39,20 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
  * @param entries the authored overrides
  * @param base the folder the authored file lived in, relative to the root
  * @param prefix the path from the generated file's folder back to the root
+ * @param pattern
+ * @param place
  * @returns the overrides with their selectors moved
+ */
+// A negation keeps its mark in front of the moved selector.
+function relocated(pattern: string, place: (selector: string) => string): string {
+    return pattern.startsWith('!') ? `!${place(pattern.slice(1))}` : place(pattern);
+}
+
+/**
+ *
+ * @param entries
+ * @param base
+ * @param prefix
  */
 export function relocatedOverrides<Options>(
     entries: NativeOverride<Options>[],
@@ -48,9 +61,6 @@ export function relocatedOverrides<Options>(
 ): NativeOverride<Options>[] {
     const fromConfig = (pattern: string): string =>
         [prefix, literalGlob(base), pattern].filter((part) => part !== '' && part !== '.').join('/');
-    // A negation keeps its mark in front of the moved selector.
-    const relocated = (pattern: string, place: (selector: string) => string): string =>
-        pattern.startsWith('!') ? `!${place(pattern.slice(1))}` : place(pattern);
     return entries.flatMap((entry) => {
         const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
         const excluded =
@@ -79,7 +89,10 @@ export function relocatedOverrides<Options>(
                 ? excluded.map((pattern) => relocated(pattern, fromConfig))
                 : basenames
                       .filter(({ basename }) => !basename.includes('/'))
-                      .map(({ isNegated, basename }) => `${isNegated ? '!' : ''}${fromConfig(`**/${basename}`)}`);
+                      .map(({ isNegated, basename }) => {
+                          const moved = fromConfig(`**/${basename}`);
+                          return `${isNegated ? '!' : ''}${moved}`;
+                      });
             const place = (selector: string): string => fromConfig(hasSlash ? selector : `**/${selector}`);
             if (base === '')
                 return [
@@ -101,7 +114,13 @@ export function relocatedOverrides<Options>(
             return [
                 ...(included.length === 0
                     ? []
-                    : [{ files: included.map(place), excludeFiles: exclusions, options: entry.options }]),
+                    : [
+                          {
+                              files: included.map((selector) => place(selector)),
+                              excludeFiles: exclusions,
+                              options: entry.options,
+                          },
+                      ]),
                 ...complements,
             ];
         });
@@ -157,7 +176,7 @@ export function prettierConfig(
     const pluginOverrides = plugins.flatMap((plugin) => plugin.overrides);
     const overrides = formatEntries(policy).map(({ scope, paths, format }) => {
         const expanded = expandedPaths(paths);
-        const files = expanded.filter((path) => !path.startsWith('!')).map(fromConfig);
+        const files = expanded.filter((path) => !path.startsWith('!')).map((path) => fromConfig(path));
         const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => fromConfig(path.slice(1)));
         if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
         return { files, excludeFiles, options: prettierOptions(format) };

@@ -37,10 +37,13 @@ async function writeNextjsTypes(input: EngineInput): Promise<void> {
 
 function typeFinding(input: EngineInput, line: string): Finding[] {
     const groups = TSC_LINE.exec(line)?.groups;
-    const file = groups?.['file'];
-    const rule = groups?.['rule'];
-    const text = groups?.['text'];
-    if (groups === undefined || file === undefined || rule === undefined || text === undefined) return [];
+    if (groups === undefined) return [];
+    const file = groups['file'];
+    if (file === undefined) return [];
+    const rule = groups['rule'];
+    if (rule === undefined) return [];
+    const text = groups['text'];
+    if (text === undefined) return [];
     return [
         {
             check: input.spec.name,
@@ -72,8 +75,8 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
         const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
         const result = await runCheckCommand(isolated, command, { cwd });
         const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
-        if (result.code !== 0 && found.length === 0)
-            throw new Error(`The tsc command failed: ${lastLines(`${result.stdout}\n${result.stderr}`)}`);
+        const said = `${result.stdout}\n${result.stderr}`;
+        if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(said)}`);
         return found;
     } finally {
         rmSync(scratch, { recursive: true, force: true });

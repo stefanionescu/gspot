@@ -26,7 +26,7 @@ export function trivialFunctions(functions: PythonFunction[], threshold: number)
                   problem(
                       fn,
                       'trivial-function',
-                      `${fn.name} has ${count} executable statements, at most ${threshold}. Inline it or suppress its required API with a reason.`,
+                      `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
                   ),
               ]
             : [];

@@ -43,7 +43,7 @@ const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
 function listDir(root: string, rel: string): string[] {
     const files = openConfinedRoot(root);
     try {
-        if (!files.stat(rel)?.isDirectory()) return [];
+        if (files.stat(rel)?.isDirectory() !== true) return [];
         return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
     } finally {
         files.close();
@@ -102,30 +102,32 @@ function takeoverTools(
         files.stat(takeover.file) !== undefined
     )
         candidates.add(takeover.file);
-    return [...candidates].filter(matches).flatMap((path): ExistingTool[] => {
-        if (takeover.table !== undefined || takeover.key !== undefined) {
-            const source = files.read(path);
-            if (
-                source === undefined ||
-                configurationSection(source.bytes.toString('utf8'), path, {
+    return [...candidates]
+        .filter((candidate) => matches(candidate))
+        .flatMap((path): ExistingTool[] => {
+            if (takeover.table !== undefined || takeover.key !== undefined) {
+                const source = files.read(path);
+                if (
+                    source === undefined ||
+                    configurationSection(source.bytes.toString('utf8'), path, {
+                        ...(takeover.table === undefined ? {} : { table: takeover.table }),
+                        ...(takeover.key === undefined ? {} : { key: takeover.key }),
+                    }) === undefined
+                )
+                    return [];
+            }
+            return [
+                {
+                    tool,
+                    path,
+                    shared: takeover.shared,
+                    carries: takeover.carries,
+                    ...(takeover.check === undefined ? {} : { check: takeover.check }),
                     ...(takeover.table === undefined ? {} : { table: takeover.table }),
                     ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                }) === undefined
-            )
-                return [];
-        }
-        return [
-            {
-                tool,
-                path,
-                shared: takeover.shared,
-                carries: takeover.carries,
-                ...(takeover.check === undefined ? {} : { check: takeover.check }),
-                ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                ...(takeover.key === undefined ? {} : { key: takeover.key }),
-            },
-        ];
-    });
+                },
+            ];
+        });
 }
 
 /**

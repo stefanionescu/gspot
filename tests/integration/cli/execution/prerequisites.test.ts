@@ -17,6 +17,8 @@ const WAITING = new Map([
     ['static-site/size', 'tools.site.size_limits'],
 ]);
 
+const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
+
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -98,7 +100,6 @@ test('a failed site build skips every output consumer and a new session rebuilds
             message: result.findings[0]?.message,
         });
     }
-    const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
     expect(outcomes.toSorted(byCheck)).toMatchObject(
         [
             { check: 'static-site/build', status: 'fail', message: expect.stringContaining('Planted build failure') },

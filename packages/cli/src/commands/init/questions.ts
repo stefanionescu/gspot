@@ -47,7 +47,7 @@ function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
     const files = openConfinedRoot(root);
     try {
         if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
-        if (files.stat('.github/workflows')?.isDirectory()) return 'github';
+        if (files.stat('.github/workflows')?.isDirectory() === true) return 'github';
     } finally {
         files.close();
     }

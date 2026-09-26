@@ -19,7 +19,7 @@ export const trivialFunction: Analysis = async (context, scripts) => {
                           file.path,
                           entry.start,
                           'trivial-function',
-                          `${entry.name} has ${entry.statements} executable statements, at most ${threshold}. Inline it or suppress its required API with a reason.`,
+                          `${entry.name} has ${String(entry.statements)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
                       ),
                   ]
                 : [],

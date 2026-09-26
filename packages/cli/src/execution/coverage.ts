@@ -40,7 +40,7 @@ function endingCoverage(session: Session, provided: Map<string, Set<string>>): C
         if (file.nature !== 'source') continue;
         const ending = extensionOf(file.path);
         const scope = scopeOf(file.path, session.repository.scopes).path;
-        const kinds = [...CORE_KINDS].filter((kind) => provided.get(file.path)?.has(kind));
+        const kinds = [...CORE_KINDS].filter((kind) => provided.get(file.path)?.has(kind) === true);
         const key = JSON.stringify([scope, ending, kinds]);
         const group = groups.get(key) ?? { ending, scope, kinds, files: 0 };
         group.files += 1;

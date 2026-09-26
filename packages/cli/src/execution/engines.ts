@@ -35,6 +35,11 @@ const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Eng
 };
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
+
+// The engine of a check that runs its declared command.
+function toolEngine(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    return runToolCheck(session, planned);
+}
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
     if (error instanceof SkippedCheckError) return { status: 'skipped', note: error.message };
     if (error instanceof MissingToolError) return { status: 'missing', note: error.message };
@@ -122,7 +127,7 @@ export async function runEngineCheck(
         const findings = Array.isArray(outcome) ? outcome : outcome.findings;
         const checkedFiles = Array.isArray(outcome) ? undefined : [...new Set(outcome.checkedFiles)];
         const allowedFiles = input.repositoryFiles ?? input.files;
-        if (checkedFiles?.some((path) => !allowedFiles.some((file) => file.path === path)))
+        if (checkedFiles?.some((path) => !allowedFiles.some((file) => file.path === path)) === true)
             throw new Error('The engine reported coverage for a file outside its supplied source inventory.');
         for (const finding of findings) {
             if (name !== undefined) finding.engine = name;
@@ -170,5 +175,5 @@ export function resolveCheck(
                 duration: 0,
                 findings: [],
             });
-    return (session, planned) => runToolCheck(session, planned);
+    return toolEngine;
 }

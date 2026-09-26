@@ -206,14 +206,14 @@ test.each([
                 [projectPath]: rootPackage,
                 'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
                 ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
-                '.npmrc': `registry=http://127.0.0.1:${server.port}/\nalways-auth=true\n//127.0.0.1:${server.port}/:_authToken=${token}\n`,
+                '.npmrc': `registry=http://127.0.0.1:${String(server.port)}/\nalways-auth=true\n//127.0.0.1:${String(server.port)}/:_authToken=${token}\n`,
                 'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["formatting"]\n${runner === 'none' ? '' : '[runner]\ntool = "mise"\n'}[rules]\ninstall = false\n`,
                 'source.js': 'export const greeting="hello";',
                 'node_modules/authored.txt': 'keep project dependencies',
             });
             const yarnConfiguration =
                 manager === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2
-                    ? `npmRegistryServer: "http://127.0.0.1:${server.port}"\nnpmAuthToken: "${token}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
+                    ? `npmRegistryServer: "http://127.0.0.1:${String(server.port)}"\nnpmAuthToken: "${token}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
                     : undefined;
             if (yarnConfiguration !== undefined)
                 writeFileSync(join(repository.path, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
@@ -236,7 +236,7 @@ test.each([
             expect(lock.toString('utf8')).not.toContain(token);
             // Yarn 1 writes resolved URLs into its lock; the private registry must not be among them.
             const isYarnOne = manager === 'yarn' && version.stdout.trim().startsWith('1.');
-            expect(isYarnOne && lock.toString('utf8').includes(`http://127.0.0.1:${server.port}`)).toBe(false);
+            expect(isYarnOne && lock.toString('utf8').includes(`http://127.0.0.1:${String(server.port)}`)).toBe(false);
             const stale = lock.toString('utf8').replaceAll('3.8.1', '0.0.0');
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, stale);

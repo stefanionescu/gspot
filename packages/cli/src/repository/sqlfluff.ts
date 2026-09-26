@@ -20,18 +20,18 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
         const line = original.trim();
         if (line.startsWith('#') || line.startsWith(';')) continue;
         if (line === '') {
-            if (section !== undefined && key !== undefined) section.set(key, `${section.get(key)}\n`);
+            if (section !== undefined && key !== undefined) section.set(key, `${section.get(key) ?? ''}\n`);
             continue;
         }
         const indent = original.length - original.trimStart().length;
         if (section !== undefined && key !== undefined && indent > indentation) {
-            section.set(key, `${section.get(key)}\n${line}`);
+            section.set(key, `${section.get(key) ?? ''}\n${line}`);
             continue;
         }
         indentation = indent;
         const heading = /^\[([^\]]+)\]/u.exec(line)?.[1];
         if (heading !== undefined) {
-            if (sections.has(heading)) throw new Error(`Duplicate SQLFluff section on line ${index + 1}.`);
+            if (sections.has(heading)) throw new Error(`Duplicate SQLFluff section on line ${String(index + 1)}.`);
             section = new Map();
             sections.set(heading, section);
             key = undefined;
@@ -39,9 +39,9 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
         }
         const separator = line.indexOf('=');
         if (section === undefined || separator <= 0)
-            throw new Error(`Invalid SQLFluff configuration on line ${index + 1}.`);
+            throw new Error(`Invalid SQLFluff configuration on line ${String(index + 1)}.`);
         key = line.slice(0, separator).trimEnd();
-        if (section.has(key)) throw new Error(`Duplicate SQLFluff option on line ${index + 1}.`);
+        if (section.has(key)) throw new Error(`Duplicate SQLFluff option on line ${String(index + 1)}.`);
         section.set(key, line.slice(separator + 1).trimStart());
     }
     return sections;

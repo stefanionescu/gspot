@@ -54,6 +54,9 @@ for (const scoped of [false, true]) {
     );
 }
 
+const configured = (adopted: unknown[]) =>
+    stringify({ version: 1, configurations: ['javascript'], tools: { eslint: { adopted } } });
+
 test.each([
     'paths = []\nrules = {eqeqeq = "error"}',
     'paths = ["src"]\nrules = {eqeqeq = 0}',
@@ -77,8 +80,6 @@ test('ESLint selector bases and local registrations reject links while future se
     });
     const root = join(directory.path, 'project');
     symlinkSync('../outside', join(root, 'linked'));
-    const configured = (adopted: unknown[]) =>
-        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: { adopted } } });
     expect(() => parsePolicyText(configured([{ basePath: 'linked' }]), 'gspot.toml', root)).toThrow('Unsafe lifecycle');
     expect(() =>
         parsePolicyText(

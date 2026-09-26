@@ -9,12 +9,13 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/rejection.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
+const policy = (value: string) =>
+    `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
+
 test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'CodeQL refuses output language %s before spawning and accepts a corrected language',
     async (language) => {
         await using directory = await testdir();
-        const policy = (value: string) =>
-            `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
         const session = await openSession(directory.path);
         const spec = session.manifests.get('security')!.checks.find((entry) => entry.analysis === 'codeql')!;
@@ -142,7 +143,7 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
                 .map(({ argv }) => argv.find((part) => part.startsWith(prefix)));
         expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
         expect(option('analyze', 'codeql/')).toStrictEqual([
-            `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
+            `codeql/javascript-queries@${packVersion!}:codeql-suites/javascript-security-extended.qls`,
         ]);
         expect(findings).toMatchObject([
             { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },

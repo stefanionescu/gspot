@@ -80,10 +80,10 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
                 ],
                 { cwd: input.root },
             );
-            if (result.code !== 0 && result.code !== FINDINGS_EXIT)
-                throw new Error(
-                    `Trivy could not scan ${image}: ${toolOutputDetail(result, `exit ${String(result.code)}`)}`,
-                );
+            if (result.code !== 0 && result.code !== FINDINGS_EXIT) {
+                const detail = toolOutputDetail(result, `exit ${String(result.code)}`);
+                throw new Error(`Trivy could not scan ${image}: ${detail}`);
+            }
             const report = imageReportSchema.parse(JSON.parse(result.stdout));
             const messages = (report.Results ?? []).flatMap((entry) => [
                 ...(entry.Vulnerabilities ?? []).map(

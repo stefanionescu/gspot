@@ -16,7 +16,7 @@ import { parseOutput, ToolOutputError } from '#cli/execution/output/parse.ts';
 test('native image reports distinguish a generated test key, invalid configuration, and a clean image', async () => {
     await using sandbox = await testdir();
     const prefix = `gspot-image-acceptance-${randomUUID()}`;
-    const tags = [`${prefix}:defect`, `${prefix}:corrected`];
+    const tags = [`${prefix}:defect`, `${prefix}:corrected`] as const;
     const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({
         type: 'pkcs1',
         format: 'pem',

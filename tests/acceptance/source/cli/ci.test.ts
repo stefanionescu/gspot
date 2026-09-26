@@ -20,6 +20,10 @@ const RETENTION: Record<'gitlab' | 'github', Retention> = {
     github: { always: true, keepsCodequality: true, manualStage: 'manual job only' },
 };
 
+function runsManual(steps: Step[]): boolean {
+    return steps.some((step) => step.run?.includes('--stage manual') === true);
+}
+
 // What the generated job says about keeping reports and running the manual stage, in one shape per provider.
 function retention(provider: 'gitlab' | 'github', generated: Generated): Retention {
     if (provider === 'gitlab')
@@ -29,8 +33,7 @@ function retention(provider: 'gitlab' | 'github', generated: Generated): Retenti
         };
     const check = generated.jobs['check-ubuntu']!.steps;
     const manual = generated.jobs['manual-ubuntu']!.steps;
-    const artifact = check.find((step) => step.uses?.startsWith('actions/upload-artifact@'))!;
-    const runsManual = (steps: Step[]) => steps.some((step) => step.run?.includes('--stage manual'));
+    const artifact = check.find((step) => step.uses?.startsWith('actions/upload-artifact@') === true)!;
     return {
         always: artifact.if?.includes('always()') === true,
         keepsCodequality: artifact.with?.['path']?.includes(CODEQUALITY_REPORT) === true,
@@ -113,7 +116,7 @@ process.exit(child.exitCode);
             writeFileSync(
                 join(executables.path, 'curl'),
                 `#!/usr/bin/env bun
-    const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${server.port}`)} + new URL(value).pathname : value);
+    const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${String(server.port)}`)} + new URL(value).pathname : value);
     process.exit(Bun.spawnSync([${JSON.stringify(curl)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'}).exitCode);
     `,
             );
@@ -130,7 +133,7 @@ process.exit(child.exitCode);
                 runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
                     cwd: repository.path,
                     env: {
-                        PATH: `${executables.path}${delimiter}${environmentVariables()['PATH']}`,
+                        PATH: `${executables.path}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
                         CI_COMMIT_BEFORE_SHA: comparison,
                         CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
                         GSPOT_CI_BASE: comparison,

@@ -16,8 +16,9 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     await using sandbox = await testdir();
     const root = sandbox.path;
     const prefix = scope === '' ? '' : `${scope}/`;
+    const scopeTable = scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["xctest"]\n`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["xctest"]\n`}`,
+        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scopeTable}`,
         [`${prefix}Sources/Value.swift`]: DEFECT,
         [`${prefix}AppTests/Value.swift`]: DEFECT,
         [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,

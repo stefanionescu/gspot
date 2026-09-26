@@ -46,7 +46,7 @@ function widestCalls(index: ScriptIndex, names: Set<string>): Map<string, number
 }
 
 function isReadingPositional(body: string[]): boolean {
-    const code = body.map(withoutComment).join('\n');
+    const code = body.map((line) => withoutComment(line)).join('\n');
     return POSITIONAL_PARAMETERS.some((pattern) => pattern.test(code));
 }
 

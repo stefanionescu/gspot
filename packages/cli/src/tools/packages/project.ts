@@ -239,7 +239,7 @@ async function packageCommand(
     const references: string[] = [];
     for (const [key, value] of Object.entries(env)) {
         if (!key.startsWith('npm_config_')) continue;
-        const variable = `GSPOT_PACKAGE_SETTING_${references.length}`;
+        const variable = `GSPOT_PACKAGE_SETTING_${String(references.length)}`;
         env[variable] = value;
         references.push(`${key.slice('npm_config_'.length)}=\${${variable}}`);
     }
@@ -256,7 +256,8 @@ async function packageCommand(
     const result = await runToolCommand(undefined, commands(manager, frozen), { cwd: work, env });
     if (result.code !== 0) {
         const cause = acquisitionNote(`${result.stdout}\n${result.stderr}`);
-        const message = `${manager.name} ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit ${String(result.code)}). ${SETUP}. Registry credentials and package-manager output are not included.${cause === undefined ? '' : ` ${cause}`}`;
+        const causeNote = cause === undefined ? '' : ` ${cause}`;
+        const message = `${manager.name} ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit ${String(result.code)}). ${SETUP}. Registry credentials and package-manager output are not included.${causeNote}`;
         if (frozen) throw new InstallationError(message);
         throw new Error(message);
     }

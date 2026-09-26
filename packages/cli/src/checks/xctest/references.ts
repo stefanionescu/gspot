@@ -37,8 +37,8 @@ export function referenceOwners(input: EngineInput): Finding[] {
         const match = reference.exec(path);
         if (!match?.groups) return [];
         const base = match.groups['base'] ?? '';
-        if (owners.get(base)?.some((owner) => owner.test(path.slice(base.length)))) return [];
-        const owner = `${base}${match.groups['file']}.swift`;
+        if (owners.get(base)?.some((owner) => owner.test(path.slice(base.length))) === true) return [];
+        const owner = `${base}${match.groups['file'] ?? ''}.swift`;
         return [
             xcodeFinding(
                 input,

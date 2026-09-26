@@ -81,8 +81,9 @@ test.each(['{ broken', '{}', ''])(
     'custom JSON output %j produces inability instead of a discarded finding',
     async (output) => {
         await using sandbox = await testdir();
+        const program = `process.stdout.write(${JSON.stringify(output)})`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', `process.stdout.write(${JSON.stringify(output)})`])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
+            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
             'source.txt': 'original',
             '.gspot/version': GSPOT_VERSION + '\n',
         });

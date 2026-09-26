@@ -11,15 +11,17 @@ for (const language of ['python', 'swift']) {
         const extension = { python: 'py', swift: 'swift' }[language]!;
         const source = [7, 8]
             .map((count) => {
-                const names = Array.from({ length: count }, (_, index) => `value${index}`);
+                const names = Array.from({ length: count }, (_, index) => `value${String(index)}`);
                 const name = count === 7 ? 'seven' : 'eight';
                 if (language === 'python')
                     return `def ${name}(${names.join(', ')}):\n    return ${names.join(' + ')}\n`;
-                return `func ${name}(${names.map((name) => `${name}: Int = 0`).join(', ')}) -> Int { return ${names.join(' + ')} }`;
+                const parameters = names.map((parameter) => `${parameter}: Int = 0`).join(', ');
+                return `func ${name}(${parameters}) -> Int { return ${names.join(' + ')} }`;
             })
             .join('\n');
+        const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${maximum}\n`}`,
+            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${limits}`,
             [`example.${extension}`]: source,
         });
         const renderSession1 = await openSession(directory.path);

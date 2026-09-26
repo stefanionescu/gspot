@@ -12,6 +12,12 @@ import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } fro
 // The ESLint severities that switch a rule on.
 const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
 
+// A directory name with every glob character escaped, for a files pattern that names it literally.
+function literalDirectory(directory: string): string {
+    return directory.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
+}
+
+
 async function registerEslintModule(
     root: string,
     configPath: string,
@@ -95,8 +101,6 @@ async function legacyEntries(
     const directories = [...new Set(['.', ...configPaths.map((path) => dirname(path))])].toSorted(
         (left, right) => left.length - right.length,
     );
-    const literalDirectory = (directory: string): string =>
-        directory.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
     const configurations = new Map(
         directories.map((directory) => [directory, factory.loadInDirectory(resolve(root, directory))]),
     );
@@ -278,17 +282,17 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
     const adopted = [];
     for (const [index, raw] of entries.entries()) {
         if (raw === null || typeof raw !== 'object' || Array.isArray(raw))
-            throw new Error(`ESLint configuration ${index} is not a flat configuration object.`);
+            throw new Error(`ESLint configuration ${String(index)} is not a flat configuration object.`);
         const entry = { ...raw } as Record<string, unknown>;
         if (entry['processor'] !== undefined && typeof entry['processor'] !== 'string') {
             const reference = references.get(entry['processor']);
             if (reference === undefined)
-                throw new Error(`ESLint configuration ${index}: processor has no imported module owner.`);
+                throw new Error(`ESLint configuration ${String(index)}: processor has no imported module owner.`);
             entry['processor'] = reference;
         }
         if (request.flat && (entry['basePath'] !== undefined || dirname(configPath) !== request.root)) {
             if (entry['basePath'] !== undefined && typeof entry['basePath'] !== 'string')
-                throw new Error(`ESLint configuration ${index}: basePath must be a directory path.`);
+                throw new Error(`ESLint configuration ${String(index)}: basePath must be a directory path.`);
             const base = relative(request.root, resolve(dirname(configPath), entry['basePath'] ?? '.')).replaceAll(
                 '\\',
                 '/',
@@ -300,7 +304,7 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
                 try {
                     const directory = files.stat(base);
                     if (directory !== undefined && !directory.isDirectory())
-                        throw new Error(`ESLint configuration ${index}: basePath is not a directory.`);
+                        throw new Error(`ESLint configuration ${String(index)}: basePath is not a directory.`);
                 } finally {
                     files.close();
                 }
@@ -324,12 +328,12 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
         if (language?.['parser'] !== undefined) {
             const reference = references.get(language['parser']);
             if (reference === undefined)
-                throw new Error(`ESLint configuration ${index}: parser has no imported module owner.`);
+                throw new Error(`ESLint configuration ${String(index)}: parser has no imported module owner.`);
             entry['languageOptions'] = { ...language, parser: reference };
         }
         if (!z.json().safeParse(entry).success)
             throw new Error(
-                `ESLint configuration ${index} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
+                `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
             );
         const serialized = JSON.stringify(entry, (_key, value: unknown) => {
             if (
@@ -342,7 +346,7 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
                 value instanceof RegExp
             )
                 throw new Error(
-                    `ESLint configuration ${index} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
+                    `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
                 );
             return value;
         });

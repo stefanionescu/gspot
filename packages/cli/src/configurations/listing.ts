@@ -33,7 +33,7 @@ export function allChecks(): Map<string, { check: CheckSpec; configuration: Mani
     const checks = new Map<string, { check: CheckSpec; configuration: Manifest }>();
     for (const manifest of configurationManifests().values())
         for (const check of manifest.checks) {
-            if (manifest.configuration.check_references?.includes(check.name)) continue;
+            if (manifest.configuration.check_references?.includes(check.name) === true) continue;
             if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
             checks.set(check.name, { check, configuration: manifest });
         }

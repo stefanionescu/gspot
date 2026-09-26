@@ -13,7 +13,7 @@ export function valeRules(text: string): Record<string, unknown> {
         if (line === '' || line.startsWith('#') || line.startsWith(';')) continue;
         if (line.startsWith('[')) {
             const end = line.lastIndexOf(']');
-            if (end === -1) throw new Error(`Unclosed Vale section on line ${index + 1}.`);
+            if (end === -1) throw new Error(`Unclosed Vale section on line ${String(index + 1)}.`);
             const name = line.slice(1, end);
             section = sections.get(name) ?? new Map<string, string[]>();
             sections.set(name, section);
@@ -21,7 +21,7 @@ export function valeRules(text: string): Record<string, unknown> {
         }
         const entry = /^(?:"([^"]+)"|`([^`]+)`|([^=:]+))\s*[=:]\s*(.*)$/u.exec(line);
         const key = (entry?.[1] ?? entry?.[2] ?? entry?.[3])?.trim();
-        if (key === undefined || key === '') throw new Error(`Invalid Vale option on line ${index + 1}.`);
+        if (key === undefined || key === '') throw new Error(`Invalid Vale option on line ${String(index + 1)}.`);
         let value = entry?.[4] ?? '';
         const quote = value.startsWith('"""') ? '"""' : value.startsWith('`') ? '`' : undefined;
         if (quote === undefined) {

@@ -117,9 +117,9 @@ test.each(['js', 'jsx'])(
         const focused =
             "import { test, expect } from 'bun:test';\ntest.only('counts', () => { expect(1).toBe(1); });\n";
         const root = await eslint.lintText(focused, { filePath: `root.test.${extension}` });
-        expect(root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/'))).toStrictEqual(
-            [],
-        );
+        expect(
+            root.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.startsWith('jest/') === true),
+        ).toStrictEqual([]);
         const nested = await eslint.lintText(focused, { filePath: `app/sample.test.${extension}` });
         expect(
             nested.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jest/no-focused-tests'),

@@ -145,7 +145,7 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
                     file: source.path,
                     ...positionAt(source.text, statement.start),
                     rule: 'function-parameters',
-                    message: `${count} declared input parameters exceeds ${maximum}.`,
+                    message: `${String(count)} declared input parameters exceeds ${String(maximum)}.`,
                     fixable: false,
                 });
             const options = (statement.fields['options'] ?? []) as {
@@ -181,7 +181,7 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
                     file: source.path,
                     ...positionAt(source.text, statement.start),
                     rule: 'trivial-function',
-                    message: `This function has ${statements} executable statements, at most ${threshold}. Inline it or suppress its required API with a reason.`,
+                    message: `This function has ${String(statements)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
                     fixable: false,
                 });
             }

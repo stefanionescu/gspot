@@ -155,17 +155,21 @@ function writeValue(
     if (o.items.length === 0)
         throw new PolicyError([`gspot set ${o.key} needs a value, or --default to remove yours.`]);
     const isList = spec.kind === 'list';
-    const parsed = shaped(o.items.map(parseValue), isList);
+    const parsed = shaped(
+        o.items.map((item) => parseValue(item)),
+        isList,
+    );
     const isDeclaration = o.key === 'generated' || o.key === 'vendored';
     const paths = isDeclaration && Array.isArray(parsed) && parsed.every((item) => typeof item === 'string');
     const value = reasonsFilled(paths && !o.remove ? [{ paths: parsed }] : parsed, isList ? o.reason : undefined);
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
+    const scopeFlag = o.scope === undefined ? '' : ` --scope ${quoteArgument(o.scope)}`;
     if (session.policyFiles.policy.requireReasons && isReasonOwed(spec, o, value, shipped))
         requireReason(
             o.reason,
             where,
-            `gspot set ${quoteArgument(o.key)} ${o.items.map(quoteArgument).join(' ')}${o.scope === undefined ? '' : ` --scope ${quoteArgument(o.scope)}`}${o.replace ? ' --replace' : ''}${o.remove ? ' --remove' : ''} --reason "..."`,
+            `gspot set ${quoteArgument(o.key)} ${o.items.map((item) => quoteArgument(item)).join(' ')}${scopeFlag}${o.replace ? ' --replace' : ''}${o.remove ? ' --remove' : ''} --reason "..."`,
         );
     else if (session.policyFiles.policy.requireReasons) refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;

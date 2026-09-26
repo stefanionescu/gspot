@@ -38,7 +38,8 @@ function ignoresFor(session: Session, path: string): PathExplanation['ignores'] 
 
 function ignoreLine(entry: PathExplanation['ignores'][number]): string {
     const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
-    return `  ${entry.check}${rule}${entry.reason === undefined ? '' : `  ${entry.reason}`}`;
+    const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
+    return `  ${entry.check}${rule}${reason}`;
 }
 
 function annotated(report: PathExplanation, file: TrackedFile): PathExplanation {
@@ -98,7 +99,10 @@ function pathText(report: PathExplanation): string {
                 (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
             ),
         ),
-        ...section('ignores:', report.ignores.map(ignoreLine)),
+        ...section(
+            'ignores:',
+            report.ignores.map((entry) => ignoreLine(entry)),
+        ),
         ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;

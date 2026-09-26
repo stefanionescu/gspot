@@ -72,7 +72,7 @@ export function compact<T extends object>(value: T): Defined<T> {
  * @returns the compacted objects
  */
 export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
-    return (entries ?? []).map(compact);
+    return (entries ?? []).map((entry) => compact(entry));
 }
 
 /**

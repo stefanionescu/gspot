@@ -22,14 +22,14 @@ export function retainedConfigurationPaths(
     const ownership = new Map(readOwnership(root).files.map((entry) => [entry.path, entry]));
     const declarations = declaredConfigurations(root, sourcePaths, tools);
     const candidates = new Set(declarations.map((entry) => entry.path));
-    const shared = new Set(declarations.filter((entry) => entry.shared).map((entry) => entry.path));
+    const shared = new Set(declarations.filter((entry) => entry.shared === true).map((entry) => entry.path));
     const files = openConfinedRoot(root);
     try {
         return [...candidates].flatMap((path) => {
             if (shared.has(path)) return [path];
             const current = files.read(path);
             if (current === undefined) return [];
-            if (takeover?.has(path) && isDeepStrictEqual(current, takeover.get(path))) return [];
+            if (takeover?.has(path) === true && isDeepStrictEqual(current, takeover.get(path))) return [];
             const installed = ownership.get(path)?.installed;
             return current.mode === installed?.mode &&
                 createHash('sha256').update(current.bytes).digest('hex') === installed.hash

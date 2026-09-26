@@ -60,9 +60,8 @@ export async function expoDoctor(input: EngineInput): Promise<Finding[]> {
         throw new MissingToolError('Expo is not installed in this scope; Expo Doctor reads an installed Expo project.');
     const result = await runCheckCommand(input, ['expo-doctor'], { cwd: input.scopeRoot });
     const findings = doctorFindings(input.spec.name, path, result.stdout);
+    const said = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     if (result.code !== 0 && findings.length === 0)
-        throw new Error(
-            `Expo Doctor exited ${String(result.code)}: ${stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim()}`,
-        );
+        throw new Error(`Expo Doctor exited ${String(result.code)}: ${said}`);
     return findings;
 }

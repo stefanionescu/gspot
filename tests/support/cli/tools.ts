@@ -22,7 +22,7 @@ export function toolsPath(names: string[]): string {
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
         const found = probeTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
-            throw new Error(`Required tool ${name} is ${found.state}. ${found.hint} ${found.note ?? ''}`);
+            throw new Error(`Required tool ${name} is ${found.state}. ${found.hint ?? ''} ${found.note ?? ''}`);
         return [dirname(found.path)];
     });
     return [...folders, join(root, 'node_modules', '.bin'), environmentVariables()['PATH'] ?? ''].join(delimiter);

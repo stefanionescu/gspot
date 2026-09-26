@@ -1,8 +1,8 @@
 // Installs built packages from an isolated registry: the launcher stops its owned process on a signal and uninstall restores adopted files.
 import { join } from 'node:path';
+import { afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { afterAll, expect, test } from 'bun:test';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';

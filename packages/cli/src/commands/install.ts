@@ -72,15 +72,19 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
                 ? hookLocation(root).absolute
                 : undefined;
         if (options.isDryRun && failures.length > 0) throw new Error([...new Set(failures)].join('\n'));
-        if (options.isDryRun)
+        if (options.isDryRun) {
+            const lines = [
+                ...steps.map((step) => step.join(' ')),
+                ...(hooks === undefined
+                    ? []
+                    : [`install hook dispatchers in ${hooks}; retain original executables as siblings`]),
+            ];
             return {
-                text:
-                    steps.length === 0 && hooks === undefined
-                        ? 'No managed tools or hooks to install.\n'
-                        : `${[...steps.map((step) => step.join(' ')), ...(hooks === undefined ? [] : [`install hook dispatchers in ${hooks}; retain original executables as siblings`])].join('\n')}\n`,
+                text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
                 json: { isDryRun: true, steps, ...(hooks === undefined ? {} : { hooks }) },
                 exitCode: 0,
             };
+        }
         let note = '';
         try {
             note = await installTools(session, true);

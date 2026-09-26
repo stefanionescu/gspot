@@ -1,8 +1,8 @@
 // Installs built packages from an isolated registry: the pinned language tools report defects and accept corrections.
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { afterAll, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -149,7 +149,7 @@ test(
             .tools.find((tool) => tool.name === 'shellcheck')!;
         const toolVersion = await run(['shellcheck', '--version'], options);
         expect(toolVersion.code, toolVersion.stdout + toolVersion.stderr).toBe(0);
-        expect(toolVersion.stdout).toContain(`version: ${shellcheck.version}\n`);
+        expect(toolVersion.stdout).toContain(`version: ${shellcheck.version!}\n`);
         writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" $1\n');
         const unquoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--no-cache', '--json'], options);
         expect(unquoted.code, unquoted.stdout + unquoted.stderr).toBe(1);

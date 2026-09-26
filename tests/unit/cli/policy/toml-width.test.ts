@@ -26,7 +26,8 @@ test('a short array, an array already on several lines, and a nested array keep 
 });
 
 test('an array under a scope entry keeps the indentation of its key', () => {
-    const text = `version = 1\n[[scope]]\npath = "api"\n  configurations = [${Array.from({ length: 12 }, (_, index) => `"configuration-${String(index)}"`).join(', ')}]\n`;
+    const names = Array.from({ length: 12 }, (_, index) => `"configuration-${String(index)}"`).join(', ');
+    const text = `version = 1\n[[scope]]\npath = "api"\n  configurations = [${names}]\n`;
     const wrapped = wrapLongArrays(text, '\t');
     expect(wrapped).toContain('  configurations = [\n  \t"configuration-0",\n');
     expect(wrapped).toContain('\n  ]\n');

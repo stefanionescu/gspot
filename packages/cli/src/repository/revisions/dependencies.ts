@@ -82,7 +82,7 @@ async function validateCopiedLinks(
             const target = relative(root, resolved);
             if (
                 (isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`)) &&
-                !interpreterLinks.get(path)?.has(resolved)
+                interpreterLinks.get(path)?.has(resolved) !== true
             )
                 throw new SelectionError([
                     'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',

@@ -12,6 +12,9 @@ import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync 
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
+const captured = (root: string, name: string) =>
+    existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
+
 test.each(['', "apps/worker's tools"])(
     'native simple-git-hooks preserves commands and restores policy directory %s',
     async (directory) => {
@@ -160,10 +163,8 @@ test.each(['', "apps/worker's tools"])(
             expect(result.code, result.stdout + result.stderr).toBe(status);
             expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe(calls);
             // A run that reached gspot handed it the push input and the arguments; one that did not left no capture.
-            const captured = (name: string) =>
-                existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
-            expect(captured('gspot-input')).toBe(calls === '' ? undefined : input);
-            expect(captured('gspot-args')).toBe(
+            expect(captured(root, 'gspot-input')).toBe(calls === '' ? undefined : input);
+            expect(captured(root, 'gspot-args')).toBe(
                 calls === '' ? undefined : JSON.stringify(['check', '--push', '--', 'origin', 'remote with spaces']),
             );
         }

@@ -14,15 +14,16 @@ for (const language of ['javascript', 'typescript']) {
         const extension = { javascript: 'js', typescript: 'ts' }[language]!;
         const source = [7, 8]
             .map((count) => {
-                const names = Array.from({ length: count }, (_, index) => `value${index}`);
+                const names = Array.from({ length: count }, (_, index) => `value${String(index)}`);
                 const name = count === 7 ? 'seven' : 'eight';
                 const parameters =
                     language === 'typescript' ? ['this: void', ...names.map((name) => `${name}: number`)] : names;
                 return `export function ${name}(${parameters.join(', ')}) { return ${names.join(' + ')}; }`;
             })
             .join('\n');
+        const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${maximum}\n`}`,
+            'gspot.toml': `version = 1\nconfigurations = ["${language}"]\n${limits}`,
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,

@@ -9,10 +9,10 @@ import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { pythonModules } from '#cli/checks/python/modules.ts';
 
 for (const threshold of [1, 2, 3]) {
-    test(`SQL and PL/pgSQL use statement threshold ${threshold} and seven input parameters`, async () => {
+    test(`SQL and PL/pgSQL use statement threshold ${String(threshold)} and seven input parameters`, async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${threshold}\n`,
+            'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${String(threshold)}\n`,
             'functions.sql': [
                 String.raw`\set account '前言'`,
                 'SELECT :account::int;',

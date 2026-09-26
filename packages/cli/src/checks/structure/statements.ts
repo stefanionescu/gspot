@@ -64,7 +64,7 @@ export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', t
         if (node.type.includes('comment') || node.type.startsWith('import') || node.type === 'hash_bang_line')
             return false;
         if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
-            return node.namedChildren.some(substantial);
+            return node.namedChildren.some((child) => substantial(child));
         if (FUNCTIONS.has(node.type)) {
             if (node.type === 'lambda') return false;
             const body = node.childForFieldName('body') ?? node;
@@ -100,7 +100,7 @@ export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', t
                             child.type,
                         ),
                 )
-                .some(substantial);
+                .some((child) => substantial(child));
         }
         if (node.type === 'expression_statement') {
             const child = node.namedChildren[0];
@@ -136,5 +136,5 @@ export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', t
                 node.namedChildren[0]?.type === 'string'
             ),
     );
-    return statements.length > 0 && !statements.some(substantial);
+    return statements.length > 0 && !statements.some((child) => substantial(child));
 }

@@ -80,7 +80,7 @@ function withoutTrailingPunctuation(token: string): string {
 function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
-        .map(withoutTrailingPunctuation)
+        .map((token) => withoutTrailingPunctuation(token))
         .filter(
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),

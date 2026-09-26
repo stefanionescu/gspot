@@ -27,7 +27,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
     return async (input) => {
         const modules = await pythonModules(input);
         try {
-            const problems = read({ modules, functions: modules.flatMap(functionsOf) }, input);
+            const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
             return problems.map((entry) => ({
                 check: input.spec.name,
                 file: entry.file,

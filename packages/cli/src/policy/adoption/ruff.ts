@@ -35,8 +35,9 @@ function disabledRuff(parsed: TomlTable, push: CarryPush, path: string): void {
         const negative = glob.startsWith('!');
         const pattern = negative ? glob.slice(1) : glob;
         const relative = pattern.includes('/') ? pattern : `**/${pattern}`;
+        const folder = base === '.' ? '' : `${base}/`;
         return {
-            pattern: `${negative ? '!' : ''}${base === '.' ? '' : `${base}/`}${relative}`,
+            pattern: `${negative ? '!' : ''}${folder}${relative}`,
             codes: asStrings(codes),
         };
     });

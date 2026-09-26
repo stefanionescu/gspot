@@ -97,7 +97,7 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
                 : [TOOL, '--json', '--excludePrivatePackages', '--start', start];
             const result = await runCheckCommand(input, command, { cwd: isolated ?? start });
             if (result.code !== 0)
-                throw new Error(`${command[0]} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
+                throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
             const report: unknown = JSON.parse(result.stdout);
             const packages = python
                 ? pythonReportSchema

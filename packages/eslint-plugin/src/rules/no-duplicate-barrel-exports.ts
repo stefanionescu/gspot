@@ -63,7 +63,7 @@ function namesInBraces(rest: string): string[] {
     return body
         .slice(1, close)
         .split(',')
-        .map(exportedName)
+        .map((part) => exportedName(part))
         .filter((name) => name !== undefined);
 }
 

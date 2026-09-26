@@ -135,7 +135,8 @@ test.each([false, true])(
         const prefix = Buffer.from('MZ\u0000native executable bytes\u0000');
         const payload = Buffer.from('PK\u0003\u0004binary script payload\u0000ÿ', 'latin1');
         const interpreter = join(root, '.venv/Scripts/python.exe');
-        const header = `#!${quoted ? `"${interpreter}"` : interpreter}\n`;
+        const program = quoted ? `"${interpreter}"` : interpreter;
+        const header = `#!${program}\n`;
         const launcher = Buffer.concat([prefix, Buffer.from(header), payload]);
         await createFileTree(root, {
             '.gitignore': '.venv/\n',
@@ -172,7 +173,7 @@ test('cancellation drains dependency copies before removing the snapshot and pre
         'source.js': 'export const value = 1;\n',
         ...Object.fromEntries(
             Array.from({ length: 24 }, (_, index) => [
-                `node_modules/item-${index}/value.js`,
+                `node_modules/item-${String(index)}/value.js`,
                 'export const value = 2;\n',
             ]),
         ),

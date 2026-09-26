@@ -48,7 +48,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                 }
                 case AST_NODE_TYPES.ClassDeclaration:
                 case AST_NODE_TYPES.ClassExpression: {
-                    return node.body.body.some(substantial);
+                    return node.body.body.some((statement) => substantial(statement));
                 }
                 case AST_NODE_TYPES.MethodDefinition:
                 case AST_NODE_TYPES.PropertyDefinition: {
@@ -108,7 +108,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
         };
         return {
             Program(node) {
-                if (node.body.length > 0 && !node.body.some(substantial))
+                if (node.body.length > 0 && !node.body.some((statement) => substantial(statement)))
                     context.report({ node, messageId: 'trivial' });
             },
         };

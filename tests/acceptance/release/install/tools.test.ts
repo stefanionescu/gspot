@@ -1,7 +1,7 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
 import { fileURLToPath } from 'node:url';
-import { reportSchema } from '#cli/execution/report.ts';
 import { afterAll, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/execution/report.ts';
 import { delimiter, dirname, join, relative } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';

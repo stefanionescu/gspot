@@ -88,9 +88,10 @@ test.each([
     async (configuration, runner) => {
         await using repository = await testdir();
         await using artifacts = await testdir();
+        const runnerTable = runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`;
         await createFileTree(repository.path, {
             '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
-            'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["python"]\n${runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`}[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["python"]\n${runnerTable}[rules]\ninstall = false\n`,
             'pyproject.toml':
                 '[project]\nname = "authored"\nversion = "1.0.0"\ndependencies = ["authored-dependency"]\n',
             '.venv/authored.txt': 'keep the project environment',
@@ -172,7 +173,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                     name === 'UV_PROJECT_ENVIRONMENT' ? join(repository.path, '.venv') : repository.path,
                 );
             setEnvironmentVariable('UV_DEFAULT_INDEX', undefined);
-            const index = `[[${configuration === 'pyproject.toml' ? 'tool.uv.' : ''}index]]\nname = "gspot-test"\nurl = "http://gspot:synthetic-uv-password@127.0.0.1:${server.port}/simple"\ndefault = true\n`;
+            const index = `[[${configuration === 'pyproject.toml' ? 'tool.uv.' : ''}index]]\nname = "gspot-test"\nurl = "http://gspot:synthetic-uv-password@127.0.0.1:${String(server.port)}/simple"\ndefault = true\n`;
             const authored =
                 configuration === 'pyproject.toml' ? readFileSync(join(repository.path, configuration), 'utf8') : '';
             writeFileSync(join(repository.path, configuration), authored + index);

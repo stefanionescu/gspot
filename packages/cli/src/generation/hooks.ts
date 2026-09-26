@@ -234,5 +234,6 @@ export type LefthookBlock = Record<string, { commands: Record<string, unknown> }
  * @returns the simple-git-hooks command text
  */
 export function simpleGitHookCommand(prefix: string, name: string): string {
-    return `bash '${`${prefix}${DIRECTORY}/${name}`.replaceAll("'", "'\"'\"'")}' "$@"`;
+    const program = `${prefix}${DIRECTORY}/${name}`.replaceAll("'", "'\"'\"'");
+    return `bash '${program}' "$@"`;
 }

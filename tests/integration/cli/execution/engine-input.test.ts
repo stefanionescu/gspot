@@ -127,7 +127,9 @@ test('shell observations distinguish filename lists containing newlines', async 
     const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
-        ...Object.fromEntries(names.map((name, index) => [name, `function name${index}() { echo ${index}; }\n`])),
+        ...Object.fromEntries(
+            names.map((name, index) => [name, `function name${String(index)}() { echo ${String(index)}; }\n`]),
+        ),
     });
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;

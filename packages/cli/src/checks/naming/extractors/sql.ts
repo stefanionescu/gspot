@@ -81,6 +81,8 @@ export async function sqlIdentifiers(
 ): Promise<Identifier[]> {
     const parsed = await sqlFile(source, observations);
     if (parsed.error !== undefined)
-        throw new Error(`SQL parse failed at ${parsed.error.line}:${parsed.error.column}: ${parsed.error.text}`);
+        throw new Error(
+            `SQL parse failed at ${String(parsed.error.line)}:${String(parsed.error.column)}: ${parsed.error.text}`,
+        );
     return parsed.statements.flatMap((statement) => identifiers(file, source, statement, parsed));
 }

@@ -33,7 +33,7 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
 
 function ignoreCommandLine(o: IgnoreOptions): string {
     const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
-    const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map(quoteArgument).join(' ')}`;
+    const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map((path) => quoteArgument(path)).join(' ')}`;
     return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
 }
 

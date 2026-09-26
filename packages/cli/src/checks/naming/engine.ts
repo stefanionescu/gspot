@@ -33,15 +33,18 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
 function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[], path: string): Finding[] {
     const context: NamingContext = { policy, isReactFile: REACT_FILE.test(path), isTestFile: TEST_FILE.test(path) };
     return identifiers.flatMap((identifier) =>
-        nameProblems(identifier, context).map((problem) => ({
-            check: input.spec.name,
-            file: identifier.file,
-            line: identifier.line,
-            column: identifier.column,
-            rule: problem.rule,
-            message: `${identifier.kind} "${identifier.name}": ${problem.message}${problem.source === undefined ? '' : ` (${problem.source})`}.`,
-            fixable: false,
-        })),
+        nameProblems(identifier, context).map((problem) => {
+            const source = problem.source === undefined ? '' : ` (${problem.source})`;
+            return {
+                check: input.spec.name,
+                file: identifier.file,
+                line: identifier.line,
+                column: identifier.column,
+                rule: problem.rule,
+                message: `${identifier.kind} "${identifier.name}": ${problem.message}${source}.`,
+                fixable: false,
+            };
+        }),
     );
 }
 

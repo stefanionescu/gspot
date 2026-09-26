@@ -38,7 +38,7 @@ function callsOf(node: Node): Node[] {
 export function blockingCalls(root: Node): { line: number; callee: string }[] {
     return root
         .descendantsOfType('function_definition')
-        .filter(isAsync)
+        .filter((definition) => isAsync(definition))
         .flatMap((definition) => {
             const body = definition.childForFieldName('body');
             return body === null ? [] : callsOf(body);

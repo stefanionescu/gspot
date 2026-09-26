@@ -85,6 +85,11 @@ test('quoted project strings preserve escapes and ignore comment-like text', () 
     ).toBe('/repo/First é Group/Shared.swift');
 });
 
+const smallProject = (source: string): string =>
+    PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+        .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
+        .replace('path = Root.swift;', `path = ${source};`);
+
 test.each([
     PROJECT.slice(0, -3),
     PROJECT.replace('B1, B2,', 'MISSING, B2,'),
@@ -106,10 +111,6 @@ test.each([
 
 test('membership combines projects in a scope and checks nested scopes independently', async () => {
     await using sandbox = await testdir();
-    const smallProject = (source: string): string =>
-        PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
-            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
-            .replace('path = Root.swift;', `path = ${source};`);
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\n',
         'One.xcodeproj/project.pbxproj': smallProject('One.swift'),

@@ -35,7 +35,8 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
     try {
         for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
             if (path === '') continue;
-            if (!files.stat(path)?.isDirectory()) throw new SelectionError([`Scope directory does not exist: ${path}`]);
+            if (files.stat(path)?.isDirectory() !== true)
+                throw new SelectionError([`Scope directory does not exist: ${path}`]);
             if (scopes.every((scope) => scope.path !== path))
                 scopes.push({ name: path.split('/').pop() ?? path, path, configurations: [], source: 'gspot.toml' });
         }

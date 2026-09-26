@@ -12,14 +12,13 @@ const RESERVED_SLOTS = new Set(['extra']);
 function coversScope(paths: string[], scope: string): boolean {
     if (scope === '' || paths.some((path) => path.startsWith('!'))) return false;
     const segments = scope.split('/');
-    return segments.some((_, index) =>
-        paths.includes(
-            `${segments
-                .slice(0, index + 1)
-                .join('/')
-                .replaceAll(/[?*[\]{}]/gu, String.raw`\$&`)}/**`,
-        ),
-    );
+    return segments.some((_, index) => {
+        const literal = segments
+            .slice(0, index + 1)
+            .join('/')
+            .replaceAll(/[?*[\]{}]/gu, String.raw`\$&`);
+        return paths.includes(`${literal}/**`);
+    });
 }
 
 function groupedLimit(policy: Policy, scope: string, key: string, language: string): number | undefined {

@@ -1,16 +1,19 @@
+import { codePoints } from '#cli/platform/code-points.ts';
+
 const NEAR_LIMIT = 3;
 const TYPO_MIN = 2;
 const TYPO_FRACTION = 3;
 
 function distance(a: string, b: string): number {
-    let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
-    let result = b.length;
-    for (let row = 0; row < a.length; row += 1) {
+    const right = codePoints(b);
+    let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+    let result = right.length;
+    for (const [row, letter] of codePoints(a).entries()) {
         const current: number[] = [];
         let left = row + 1;
         let diagonal = 0;
         for (const [column, above] of previous.entries()) {
-            if (column > 0) left = Math.min(above + 1, left + 1, diagonal + (a[row] === b[column - 1] ? 0 : 1));
+            if (column > 0) left = Math.min(above + 1, left + 1, diagonal + (letter === right[column - 1] ? 0 : 1));
             current.push(left);
             diagonal = above;
         }

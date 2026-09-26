@@ -33,7 +33,7 @@ function segmentMatches(pattern: string, segment: string): boolean {
 // A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
 function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: Iterable<Manifest>): ScopeEntry[] {
     const patterns = [...manifests].flatMap((manifest) => manifest.detect.project_files);
-    const lintOnly = new Set(facts.filter(isLintOnlyManifest).map((fact) => fact.path));
+    const lintOnly = new Set(facts.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
     const folders = new Set<string>();
     for (const file of files) {
         if (file.nature !== 'source' || lintOnly.has(file.path)) continue;
@@ -78,7 +78,7 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
             fs: { readdirSync: readDirectory },
         });
         for (const path of paths) {
-            if (files.stat(path)?.isDirectory()) files.read(`${path}/package.json`);
+            if (files.stat(path)?.isDirectory() === true) files.read(`${path}/package.json`);
         }
     } finally {
         files.close();
@@ -142,7 +142,7 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
     const files = openConfinedRoot(root);
     try {
         return members
-            .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory())
+            .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)
             .map((member) => workspaceEntry(member));
     } finally {
         files.close();

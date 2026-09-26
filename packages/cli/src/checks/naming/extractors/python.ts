@@ -63,7 +63,7 @@ function addParameters(sink: ExtractSink, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
     const names = parameters
         .filter((parameter) => PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
-        .map(parameterName);
+        .map((parameter) => parameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text)) add(sink, name, 'parameters');
 }

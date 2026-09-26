@@ -121,7 +121,7 @@ async function isolatedCorrection(
         const destinations = new Map<string, string>();
         for (const [path, original] of workspace.originals) {
             if (!result.changed.includes(path)) continue;
-            if (!current.get(path)?.equals(original))
+            if (current.get(path)?.equals(original) !== true)
                 throw new Error(
                     `${path} changed while its correction was running; the isolated correction was not applied.`,
                 );

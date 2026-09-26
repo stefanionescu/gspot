@@ -173,7 +173,7 @@ if (import.meta.main) {
     const rulesFolder = fileURLToPath(new URL('../../rules/', import.meta.url));
     const paths = await globby(['**/*.md'], { cwd: rulesFolder });
     const files = paths
-        .filter(isRulePath)
+        .filter((path) => isRulePath(path))
         .toSorted((a, b) => a.localeCompare(b))
         .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
     const report = lintRules(files);
@@ -198,7 +198,7 @@ export function isRulePath(path: string): boolean {
  * @returns the findings and file count
  */
 export function lintRules(files: RuleText[]): RulesLintReport {
-    return { findings: files.flatMap(fileReport), files: files.length };
+    return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
 }
 
 /** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */

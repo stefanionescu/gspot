@@ -16,7 +16,7 @@ export function gixyRules(text: string): Record<string, string[]> {
         const flag = /^([^:=;#\s]+)\s*(?:\s[;#].*)?$/u.exec(line);
         const option = /^([^:=;#\s]+)(?:\s*[:=]\s*|\s+)(.+?)\s*(?:\s[;#].*)?$/u.exec(line);
         if (flag === null && option === null) throw new Error('Gixy rule configuration contains an invalid option.');
-        const key = flag?.[1] ?? `${section}${option?.[1]}`;
+        const key = flag?.[1] ?? `${section}${option?.[1] ?? ''}`;
         const canonical = key.replace(/^--/u, '');
         if (!['checks', 'tests', 'skips'].includes(canonical)) continue;
         const value = flag === null ? option?.[2] : 'true';

@@ -38,7 +38,8 @@ export async function yarnSettings(root: string, work: string, env: Record<strin
     const reference = (value: unknown, key: string): unknown => {
         if (typeof value === 'string') {
             if (key === 'npmAuthToken' || key === 'npmAuthIdent') secrets.push(value);
-            const name = `GSPOT_YARN_SETTING_${variable++}`;
+            const name = `GSPOT_YARN_SETTING_${String(variable)}`;
+            variable += 1;
             env[name] = value;
             return `\${${name}}`;
         }

@@ -68,9 +68,8 @@ export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
     ];
     const result = await runCheckCommand(input, command, { cwd: input.scopeRoot });
     const findings = svelteFindings(input.spec.name, input.scope, result.stdout);
+    const said = `${result.stdout}\n${result.stderr}`.trim();
     if (result.code !== 0 && findings.length === 0)
-        throw new Error(
-            `The svelte-check run exited ${String(result.code)}: ${`${result.stdout}\n${result.stderr}`.trim()}`,
-        );
+        throw new Error(`The svelte-check run exited ${String(result.code)}: ${said}`);
     return findings;
 }

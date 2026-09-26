@@ -57,7 +57,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
             for (const directory of directories) {
                 for (const name of files.list(directory)) {
                     const path = `${directory}/${name}`;
-                    if (files.stat(path)?.isDirectory()) directories.push(path);
+                    if (files.stat(path)?.isDirectory() === true) directories.push(path);
                     else {
                         const previous = files.read(path);
                         if (previous !== undefined) files.remove(path, previous);

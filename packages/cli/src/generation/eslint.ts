@@ -45,7 +45,9 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
             : [
                   {
                       scope: '',
-                      ...pathExpressions(entry.paths?.length ? entry.paths : ['**/*']),
+                      ...pathExpressions(
+                          entry.paths === undefined || entry.paths.length === 0 ? ['**/*'] : entry.paths,
+                      ),
                       rules: { [entry.rule]: 'off' },
                   },
               ],
@@ -93,11 +95,15 @@ export function structuralRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[
  */
 export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
     const general = selectors.filter((entry) => entry.files === undefined);
-    const groups: SelectorGroup[] = general.length === 0 ? [] : [{ selectors: general.map(shape) }];
-    for (const paths of distinctLists(general.flatMap((entry) => (entry.except?.length ? [entry.except] : []))))
+    const groups: SelectorGroup[] = general.length === 0 ? [] : [{ selectors: general.map((entry) => shape(entry)) }];
+    for (const paths of distinctLists(
+        general.flatMap((entry) => (entry.except === undefined || entry.except.length === 0 ? [] : [entry.except])),
+    ))
         groups.push({
             files: paths,
-            selectors: general.filter((entry) => JSON.stringify(entry.except) !== JSON.stringify(paths)).map(shape),
+            selectors: general
+                .filter((entry) => JSON.stringify(entry.except) !== JSON.stringify(paths))
+                .map((entry) => shape(entry)),
         });
     for (const files of distinctLists(selectors.flatMap((entry) => (entry.files === undefined ? [] : [entry.files]))))
         groups.push({
@@ -105,7 +111,7 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
             selectors: [
                 ...general,
                 ...selectors.filter((entry) => JSON.stringify(entry.files) === JSON.stringify(files)),
-            ].map(shape),
+            ].map((entry) => shape(entry)),
         });
     return groups;
 }

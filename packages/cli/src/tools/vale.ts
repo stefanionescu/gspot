@@ -30,7 +30,7 @@ export function hasPackages(root: string, requireOwnership = false): boolean {
             .map((name) => basename(/^https?:\/\//u.test(name) ? new URL(name).pathname : name).replace(/\.zip$/u, ''));
         // Harper requires the dictionaries installed beside its styles.
         const needed = [...packages, ...(packages.includes('Harper') ? ['config/dictionaries'] : [])];
-        if (!needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory())) return false;
+        if (!needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true)) return false;
         if (!requireOwnership || packages.length === 0) return true;
         const selected = (path: string) =>
             isValePackageFile(path) && needed.some((name) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`));
@@ -43,7 +43,7 @@ export function hasPackages(root: string, requireOwnership = false): boolean {
         const visit = (directory: string): void => {
             for (const name of files.list(directory)) {
                 const path = `${directory}/${name}`;
-                if (files.stat(path)?.isDirectory()) visit(path);
+                if (files.stat(path)?.isDirectory() === true) visit(path);
                 else if (selected(path)) installed.push(path);
             }
         };

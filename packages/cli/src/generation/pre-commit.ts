@@ -59,7 +59,7 @@ export function preCommitConfiguration(
     const owned = record?.configuration?.fields.find(
         (field) => field.path[0] === 'repos' && typeof field.path[1] === 'number',
     );
-    const matching = config.repos.findIndex((repo) => repo.hooks?.some((hook) => hook.id === 'gspot'));
+    const matching = config.repos.findIndex((repo) => repo.hooks?.some((hook) => hook.id === 'gspot') === true);
     if (owned === undefined && matching !== -1 && !isDeepStrictEqual(config.repos[matching], value))
         throw new Error(
             'Retained an authored pre-commit hook named gspot. Rename it before selecting the gspot integration.',

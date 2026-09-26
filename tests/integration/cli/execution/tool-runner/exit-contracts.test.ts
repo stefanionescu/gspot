@@ -63,7 +63,7 @@ test.each([0, 1, 3])(
         await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
             '.github/workflows/caller.yml': workflow,
-            actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${code} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${code}; }\n`,
+            actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });
         chmodSync(executable, 0o755);
         chmodSync(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);

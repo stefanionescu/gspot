@@ -13,7 +13,7 @@ const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined }
 function issueLines(issue: z.core.$ZodIssue): string[] {
     const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
     return issue.code === 'invalid_union'
-        ? [line, ...issue.errors.flatMap((branch) => branch.flatMap(issueLines))]
+        ? [line, ...issue.errors.flatMap((branch) => branch.flatMap((nested) => issueLines(nested)))]
         : [line];
 }
 
@@ -61,13 +61,14 @@ function checkProblems(check: RawCheck): string[] {
         check.nested_config !== undefined && check.cwd !== 'scope'
             ? `check ${check.name} discovers nested configuration and requires cwd = scope.`
             : undefined,
-        check.file_prefix !== undefined && (check.runs !== 'per-file-list' || !check.command?.includes('{files}'))
+        check.file_prefix !== undefined &&
+        (check.runs !== 'per-file-list' || check.command?.includes('{files}') !== true)
             ? `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`
             : undefined,
         check.isolated_files === true &&
         !(
-            (check.runs === 'per-file-list' && check.command?.includes('{files}')) ||
-            (check.runs === 'per-scope' && check.command?.includes('{root}'))
+            (check.runs === 'per-file-list' && check.command?.includes('{files}') === true) ||
+            (check.runs === 'per-scope' && check.command?.includes('{root}') === true)
         )
             ? `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`
             : undefined,
@@ -150,10 +151,12 @@ export function parseManifest(text: string, dir: string): Manifest {
     const result = manifestSchema.safeParse(parsed);
     const configurationName = result.success ? result.data.configuration.name : dir;
     if (!result.success)
-        throw new ManifestError(configurationName, [...new Set(result.error.issues.flatMap(issueLines))]);
+        throw new ManifestError(configurationName, [
+            ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
+        ]);
     const raw = result.data;
     const problems = [
-        ...raw.checks.flatMap(checkProblems),
+        ...raw.checks.flatMap((check) => checkProblems(check)),
         ...configurationProblems(raw),
         ...raw.configs
             .filter((config) => config.imports !== undefined && !config.fragment)
@@ -170,9 +173,9 @@ export function parseManifest(text: string, dir: string): Manifest {
         untracked: raw.untracked,
         detect: raw.detect,
         claims: raw.claims,
-        tools: raw.tools.map(toTool),
+        tools: raw.tools.map((tool) => toTool(tool)),
         configs: raw.configs,
-        checks: raw.checks.map(toCheck),
+        checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
         entry_files: raw.entry_files,
         naming: raw.naming,
@@ -196,7 +199,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
                     `it requires \`${required}\`, which does not exist.`,
                 ]);
         for (const check of manifest.checks) {
-            if (manifest.configuration.check_references?.includes(check.name)) continue;
+            if (manifest.configuration.check_references?.includes(check.name) === true) continue;
             const previous = owners.get(check.name);
             if (previous !== undefined)
                 throw new ManifestError(manifest.configuration.name, [

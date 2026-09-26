@@ -13,7 +13,7 @@ export function javascriptRules(path: string, text: string): unknown {
     if (source.statements.length !== 1 || statement === undefined)
         throw new Error('JavaScript rule comparison requires a single static configuration export.');
     let expression: ts.Expression | undefined;
-    if (ts.isExportAssignment(statement) && !statement.isExportEquals) expression = statement.expression;
+    if (ts.isExportAssignment(statement) && statement.isExportEquals !== true) expression = statement.expression;
     else if (ts.isExpressionStatement(statement) && ts.isBinaryExpression(statement.expression)) {
         const assignment = statement.expression;
         const target = assignment.left;

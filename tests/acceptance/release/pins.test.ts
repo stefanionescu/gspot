@@ -20,7 +20,7 @@ const tools = [...configurationManifests().values()].flatMap((manifest) => manif
 // gspot's own packages reach the registry with the first release (D-158), so they are not looked up before it.
 const pins = tools
     .filter((tool) => tool.provider !== 'host')
-    .flatMap(pinsOf)
+    .flatMap((tool) => pinsOf(tool))
     .filter((pin) => !pin.name.startsWith('@gspot/'));
 const eslintPin = tools.find((tool) => tool.name === 'eslint')?.version;
 

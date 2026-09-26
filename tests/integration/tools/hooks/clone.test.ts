@@ -56,7 +56,7 @@ async function expectRunnerSwitchInClone(
     ).toBe(true);
     const dispatched = await run(['bash', '.gspot/integrations/simple-git-hooks/pre-commit'], {
         ...options,
-        env: { PATH: `${launcher.path}${delimiter}${options.env['PATH']}` },
+        env: { PATH: `${launcher.path}${delimiter}${options.env['PATH'] ?? ''}` },
     });
     expect(dispatched.code, dispatched.stdout + dispatched.stderr).toBe(0);
     expect(JSON.parse(readFileSync(join(clonePath, 'runner-observed'), 'utf8'))).toStrictEqual(['check', '--staged']);

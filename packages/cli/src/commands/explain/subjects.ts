@@ -110,7 +110,10 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
     if (settings.length > 0) lines.push(`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`);
     if (rules.length > 0) lines.push(`Rule files that state it: ${rules.join(', ')}`);
     if (own !== undefined)
-        lines.push(`Command: ${own.command.map(quoteArgument).join(' ')}`, `Paths: ${own.paths.join(', ')}`);
+        lines.push(
+            `Command: ${own.command.map((part) => quoteArgument(part)).join(' ')}`,
+            `Paths: ${own.paths.join(', ')}`,
+        );
     if (session && configuration !== undefined)
         lines.push(
             isSelected(session, configuration.configuration.name)
@@ -162,6 +165,7 @@ function toolRuleExplanation(session: Session | undefined, tool: string, rule: s
     if (!check) return undefined;
     const summary = toolSummary(session, tool, rule);
     const page = rulePage(check, tool, rule);
+    const optionKey = quoteArgument(`tools.${tool}.rules.${rule}`);
     const lines = [
         `${tool}/${rule}  (run by ${check.name})`,
         '',
@@ -173,7 +177,7 @@ function toolRuleExplanation(session: Session | undefined, tool: string, rule: s
         '',
         `Turn it off everywhere: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --reason "..."`,
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --paths "<glob>" --reason "..."`,
-        `Change its options: gspot set ${quoteArgument(`tools.${tool}.rules.${rule}`)} <options> --reason "..."`,
+        `Change its options: gspot set ${optionKey} <options> --reason "..."`,
     ];
     return {
         kind: 'tool-rule',

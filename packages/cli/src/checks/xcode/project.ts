@@ -113,7 +113,7 @@ export function testPlans(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
-    const folders = trackedEnding(input, [PROJECT_FILE]).map(folderOf);
+    const folders = trackedEnding(input, [PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.observations);
     const links = entries.filter(

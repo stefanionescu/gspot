@@ -88,7 +88,7 @@ export async function runProcess(
             if (failure !== undefined || code === null) {
                 reject(
                     new Error(
-                        `Could not complete ${argv.join(' ')} in ${options.cwd}: ${failure?.message ?? signal}\n${stdout}\n${stderr}`,
+                        `Could not complete ${argv.join(' ')} in ${options.cwd}: ${failure?.message ?? signal ?? 'no signal'}\n${stdout}\n${stderr}`,
                         { cause: failure },
                     ),
                 );

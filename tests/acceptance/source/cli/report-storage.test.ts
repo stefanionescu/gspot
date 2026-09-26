@@ -151,8 +151,9 @@ test('runtime ownership preserves authored reports and edited cache results thro
 
 test.each(['before', 'after'])('an interrupted report %s publication recovers on the next check', async (point) => {
     await using sandbox = await testdir();
+    const correction = String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`])}\n`,
+        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', correction])}\n`,
         'source.txt': 'defect\n',
     });
     const first = await run(sandbox.path, ['check', '--json']);
