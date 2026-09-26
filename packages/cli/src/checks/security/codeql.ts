@@ -197,7 +197,8 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
             run.invocations?.some(
                 (invocation) =>
                     invocation.executionSuccessful === false ||
-                    invocation.toolExecutionNotifications?.some((notification) => notification.level === 'error'),
+                    invocation.toolExecutionNotifications?.some((notification) => notification.level === 'error') ===
+                        true,
             ) === true
         )
             throw new Error('CodeQL reported an unsuccessful analysis. Repair the native scan before retrying.');

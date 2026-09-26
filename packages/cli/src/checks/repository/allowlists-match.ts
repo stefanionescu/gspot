@@ -109,14 +109,15 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
         for (const exception of exceptions) {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (
-                paths.some(({ path }) =>
-                    locks
-                        .get(path)
-                        ?.has(
-                            ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path))
-                                ? pythonIdentity
-                                : exception.package,
-                        ),
+                paths.some(
+                    ({ path }) =>
+                        locks
+                            .get(path)
+                            ?.has(
+                                ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path))
+                                    ? pythonIdentity
+                                    : exception.package,
+                            ) === true,
                 )
             )
                 continue;

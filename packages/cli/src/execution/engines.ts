@@ -34,12 +34,12 @@ const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Eng
     },
 };
 
-// Classify missing tools and unmet prerequisites separately from engine errors.
-
 // The engine of a check that runs its declared command.
 function toolEngine(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     return runToolCheck(session, planned);
 }
+
+// Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
     if (error instanceof SkippedCheckError) return { status: 'skipped', note: error.message };
     if (error instanceof MissingToolError) return { status: 'missing', note: error.message };

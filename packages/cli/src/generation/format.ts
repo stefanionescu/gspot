@@ -34,25 +34,17 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
     };
 }
 
-/**
- * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
- * @param entries the authored overrides
- * @param base the folder the authored file lived in, relative to the root
- * @param prefix the path from the generated file's folder back to the root
- * @param pattern
- * @param place
- * @returns the overrides with their selectors moved
- */
 // A negation keeps its mark in front of the moved selector.
 function relocated(pattern: string, place: (selector: string) => string): string {
     return pattern.startsWith('!') ? `!${place(pattern.slice(1))}` : place(pattern);
 }
 
 /**
- *
- * @param entries
- * @param base
- * @param prefix
+ * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
+ * @param entries the authored overrides
+ * @param base the folder the authored file lived in, relative to the root
+ * @param prefix the path from the generated file's folder back to the root
+ * @returns the overrides with their selectors moved
  */
 export function relocatedOverrides<Options>(
     entries: NativeOverride<Options>[],
