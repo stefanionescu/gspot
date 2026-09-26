@@ -117,6 +117,7 @@ kind = "string"
 direction = "neutral"
 default = "ansi"
 summary = "The sqlfluff dialect; a database configuration sets it."
+detect = {dependencies = {pg = "postgres", postgres = "postgres", mysql2 = "mysql", "better-sqlite3" = "sqlite"}, folder_values = {supabase = "postgres"}}
 
 [[settings]]
 name = "tools.sqlfluff.exclude"

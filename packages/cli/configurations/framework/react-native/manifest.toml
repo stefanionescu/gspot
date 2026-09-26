@@ -3,7 +3,7 @@ name = "react-native"
 kind = "framework"
 title = "React Native"
 requires = ["react"]
-recommends = ["typescript", "vitest"]
+recommends = ["typescript", "jest"]
 description = "A React Native or Expo app: the React Native and Expo rules, lists that render through FlatList with keys, touch through Pressable, no secret in AsyncStorage, and Expo Doctor in an Expo project."
 
 [detect]

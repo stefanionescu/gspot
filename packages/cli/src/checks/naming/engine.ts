@@ -152,7 +152,12 @@ export function resolveNaming(spec: CheckSpec): Engine {
     const analysis = ANALYSES[spec.analysis ?? ''];
     if (analysis === undefined) throw new Error(`No naming analysis is called ${spec.analysis ?? ''}.`);
     return (input) => {
-        const policy = effectivePolicy(input.selection.surface, input.policyFiles.policy, input.scope);
+        const policy = effectivePolicy(
+            input.selection.surface,
+            input.policyFiles.policy,
+            input.scope,
+            input.selection.selected,
+        );
         return analysis(input, policy);
     };
 }

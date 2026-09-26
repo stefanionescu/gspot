@@ -3,9 +3,11 @@ import { readAsset } from '#cli/platform/assets.ts';
 import type { Identifier } from '#cli/checks/naming/extract.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { CATEGORY_PARENTS } from '#cli/checks/naming/categories.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ExposedSettings } from '#cli/policy/settings.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
 import type { NamingSettings, NamingRule, Policy } from '#cli/policy/normalize.ts';
+import { compact } from '#cli/policy/normalize.ts';
 
 const POLICY_ASSET = 'packages/cli/configurations/policy/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
@@ -29,7 +31,7 @@ function compileRule(rule: ShippedRule, source: string): PathRule {
     };
 }
 
-function writtenRule(rule: NamingRule, index: number): PathRule {
+function writtenRule(rule: NamingRule, source: string): PathRule {
     const shaped: ShippedRule = {
         paths: rule.paths,
         languages: rule.languages,
@@ -41,7 +43,7 @@ function writtenRule(rule: NamingRule, index: number): PathRule {
         structuralPrefix: rule.structural_prefix,
         case: rule.case,
     };
-    return compileRule(shaped, `[[naming.rules]] entry ${String(index + 1)}`);
+    return compileRule(shaped, source);
 }
 
 function groupTerms(shipped: ShippedPolicy, naming: NamingSettings): Term[] {
@@ -115,7 +117,12 @@ export function shippedPolicy(): ShippedPolicy {
  * @param scope the scope path, '' for the root
  * @returns the effective policy
  */
-export function effectivePolicy(surface: ExposedSettings, policy: Policy, scope: string): EffectivePolicy {
+export function effectivePolicy(
+    surface: ExposedSettings,
+    policy: Policy,
+    scope: string,
+    manifests: Pick<Manifest, 'configuration' | 'naming'>[] = [],
+): EffectivePolicy {
     const shipped = shippedPolicy();
     const tables = policyTables(policy, scope).map(({ table }) => table.naming);
     const naming: NamingSettings = {
@@ -129,9 +136,15 @@ export function effectivePolicy(surface: ExposedSettings, policy: Policy, scope:
         rules: tables.flatMap((table) => table?.rules ?? []),
     };
     const terms = [...groupTerms(shipped, naming), ...compileTerms(naming.banned_terms, 'naming.banned_terms')];
+    // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
-        ...naming.rules.map(writtenRule),
+        ...manifests.flatMap((manifest) =>
+            (manifest.naming?.rules ?? []).map((rule) =>
+                writtenRule(compact(rule), `the ${manifest.configuration.name} configuration`),
+            ),
+        ),
+        ...naming.rules.map((rule, index) => writtenRule(rule, `[[naming.rules]] entry ${String(index + 1)}`)),
     ];
     return {
         terms,

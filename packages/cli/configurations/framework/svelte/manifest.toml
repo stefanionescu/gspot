@@ -89,6 +89,13 @@ why = "The TypeScript compiler cannot read a component file, and the Svelte comp
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
 [[settings]]
+name = "structure.single_file_folder_allowed"
+kind = "list"
+direction = "loosening"
+default = [{paths = ["src/routes/**"], reason = "SvelteKit names a route by its folder, and one page or layout file stands in it."}]
+summary = "Folders allowed to hold one file, by path, each with a reason."
+
+[[settings]]
 name = "tools.eslint.script_languages"
 kind = "list"
 direction = "neutral"

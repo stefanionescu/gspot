@@ -473,6 +473,7 @@ name = "architecture.types_directory"
 kind = "string"
 direction = "neutral"
 summary = "The directory every type alias lives under; turns on the types placement rules."
+detect = {folders = ["types", "src/types"]}
 
 [[settings]]
 name = "architecture.roles"

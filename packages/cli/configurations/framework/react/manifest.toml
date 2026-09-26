@@ -45,6 +45,25 @@ target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
+[[naming.rules]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["files"]
+case = ["pascal", "kebab"]
+reason = "A component file takes the component's name."
+
+[[naming.rules]]
+paths = ["**/*.tsx", "**/*.jsx"]
+categories = ["functions"]
+case = ["pascal", "camel"]
+reason = "A function that returns JSX is a component and takes a capital."
+
+[[naming.rules]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+structural_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
+
 [rule_files]
 framework = ["framework/react/REACT.md"]
 

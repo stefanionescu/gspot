@@ -5,6 +5,7 @@ import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import type { CarriedFormatter, CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { DetectedSetting } from '#cli/commands/init/settings.ts';
 
 const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 
@@ -139,6 +140,14 @@ export function proposeText(proposal: Proposal): string {
         tools['prettier'] = { ...(tools['prettier'] as TomlTable), native_defaults: true };
     if (proposal.formatter?.editorconfig !== undefined)
         tools['editorconfig'] = { adopted: proposal.formatter.editorconfig };
+    // What init read from the repository for the settings whose manifests say where to look (K-93).
+    for (const { key, value } of proposal.detected ?? []) {
+        const [table, ...rest] = key.split('.');
+        if (table === 'tools' && rest.length === 2)
+            tools[rest[0]!] = { ...asTable(tools[rest[0]!]), [rest[1]!]: value };
+        else if (table === 'architecture' && rest.length === 1)
+            document['architecture'] = { ...asTable(document['architecture']), [rest[0]!]: value };
+    }
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);
     if ([...proposal.carried.tools.values()].some((tool) => tool.ignores.length > 0))
@@ -178,5 +187,7 @@ export type Proposal = {
     formatter?: CarriedFormatter;
     /** The Xcode project and scheme init found, for the tools.xcode table. */
     xcode?: { scope: string; project: string; scheme?: string };
+    /** The settings init filled from the repository through their detect tables. */
+    detected?: DetectedSetting[];
     commitScopes?: string[];
 };

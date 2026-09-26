@@ -130,6 +130,20 @@ direction = "neutral"
 default = []
 summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."
 
+[[naming.rules]]
+paths = ["**/app/**", "**/pages/**"]
+categories = ["files"]
+names = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon"]
+exclude = true
+reason = "Next.js names these files."
+
+[[naming.rules]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+structural_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
+
 [rule_files]
 framework = ["framework/nextjs/NEXTJS.md"]
 

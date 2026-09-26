@@ -249,6 +249,29 @@ const checkSchema = z.union(
     { error: 'Choose one command, tool analysis, engine, or reported_by owner without combining execution forms.' },
 );
 
+// How init fills a setting from the repository: a dependency that turns it on, dependencies that each name a value,
+// the first folder that exists, or folders that each name a value (K-93).
+const settingDetectSchema = z.strictObject({
+    dependency: z.string().min(1).optional(),
+    dependencies: z.record(z.string().min(1), z.unknown()).optional(),
+    folders: z.array(z.string().min(1)).optional(),
+    folder_values: z.record(z.string().min(1), z.unknown()).optional(),
+});
+
+// A path-scoped naming rule a configuration ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).
+const manifestNamingRule = z.strictObject({
+    paths: z.array(z.string().min(1)).min(1),
+    languages: z.array(z.string()).optional(),
+    categories: z.array(z.string()).optional(),
+    names: z.array(z.string()).optional(),
+    structural_prefix: z.string().optional(),
+    allow_digits: z.boolean().optional(),
+    allow_duplicate_words: z.boolean().optional(),
+    exclude: z.boolean().optional(),
+    case: z.array(z.string()).optional(),
+    reason: z.string().min(1),
+});
+
 const settingSchema = z.strictObject({
     name: z.string(),
     kind: z.enum(['number', 'string', 'boolean', 'list', 'table']),
@@ -259,6 +282,7 @@ const settingSchema = z.strictObject({
     categories: z.array(z.string()).optional(),
     // The architecture role the folder a setting names plays, so a template finds it without naming the setting.
     role: z.enum(['harness']).optional(),
+    detect: settingDetectSchema.optional(),
 });
 
 export const manifestSchema = z.strictObject({
@@ -318,6 +342,8 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
+    // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
+    naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
     entry_files: stringList,
     coverage: stringListTable.default({}),

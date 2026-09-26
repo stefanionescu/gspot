@@ -18,9 +18,11 @@ export const singleFileFolder: Analysis = (context) => {
     const { input } = context;
     const selection = input.selection;
     const extensions = sourceConfigurations(selection.selected).flatMap((manifest) => manifest.claims.extensions);
-    const isAllowed = pathMatcher(
-        input.policyFiles.policy.structure.single_file_folder_allowed.flatMap((entry) => entry.paths),
-    );
+    // The merged setting: what the repository allows and what a selected framework allows for its own layout.
+    const allowed = (input.selection.view.settings['structure.single_file_folder_allowed'] ?? []) as {
+        paths: string[];
+    }[];
+    const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const tree = directoryTree(input.files);
     const checked = new Set(context.files.map((file) => directoryOf(file.path)));
     return [...checked].flatMap((directory) => {

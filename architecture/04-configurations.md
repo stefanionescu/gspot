@@ -251,7 +251,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   editor to the generated file: `{ path, body }` with `{target}` for the relative path, `copy =
 true` for a copy, `merge` for keys set in a file the developer keeps, or `template` for a
   rendered file. `directories` writes one pointer per matching folder.
-- A setting takes `detect`, a small table `init` reads to fill it from the repository.
+- A setting takes `detect`, a table `init` fills from the repository. `dependency` turns it on,
+  `dependencies` maps dependencies to values, `folders` takes the first folder that exists, and
+  `folder_values` maps folders to values. The owning declaration of a shared setting carries the
+  table.
 - `[detect] project_files` names the files that mark a project: a file name, a folder name such
   as `*.xcodeproj`, or a short path such as `supabase/config.toml`. `init` proposes the
   configuration from such a file and a scope for the folder that holds it.

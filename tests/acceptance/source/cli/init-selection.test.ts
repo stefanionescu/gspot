@@ -70,3 +70,41 @@ test(
     },
     PLANTED_TIMEOUT_MS,
 );
+
+test(
+    'init fills a setting from the dependency or folder its manifest names',
+    async () => {
+        await using sandbox = await testdir();
+        const nest = { '@nestjs/core': '11.1.6', '@nestjs/common': '11.1.6' };
+        const files = {
+            'nest-cli.json': '{"collection":"@nestjs/schematics","sourceRoot":"src"}\n',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
+            'src/main.ts': 'export const port = 3000;\n',
+        };
+        const settings = async (dependencies: Record<string, string>, extra: Record<string, string>) => {
+            await createFileTree(sandbox.path, {
+                ...files,
+                ...extra,
+                'package.json': JSON.stringify({ name: 'api', private: true, type: 'module', dependencies }),
+            });
+            commitAll(sandbox.path);
+            const result = await run(sandbox.path, [...INIT, ...QUIET]);
+            expect(result.code, result.stdout + result.stderr).toBe(0);
+            const output = JSON.parse(result.stdout) as { policy: string };
+            return parse(output.policy) as {
+                tools?: { nestjs?: { swagger?: boolean } };
+                architecture?: { types_directory?: string };
+            };
+        };
+        const plain = await settings(nest, {});
+        expect(plain.tools?.nestjs?.swagger).toBeUndefined();
+        expect(plain.architecture?.types_directory).toBeUndefined();
+        const documented = await settings(
+            { ...nest, '@nestjs/swagger': '11.2.0' },
+            { 'src/types/user.ts': 'export type User = { id: string };\n' },
+        );
+        expect(documented.tools?.nestjs?.swagger).toBe(true);
+        expect(documented.architecture?.types_directory).toBe('src/types');
+    },
+    PLANTED_TIMEOUT_MS,
+);

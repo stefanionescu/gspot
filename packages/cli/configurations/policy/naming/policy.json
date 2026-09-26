@@ -599,32 +599,6 @@
             "allowDigits": true
         },
         {
-            "paths": ["**/app/**", "**/pages/**"],
-            "categories": ["files"],
-            "names": [
-                "page",
-                "layout",
-                "loading",
-                "error",
-                "global-error",
-                "not-found",
-                "route",
-                "template",
-                "default",
-                "middleware",
-                "instrumentation",
-                "proxy",
-                "sitemap",
-                "robots",
-                "manifest",
-                "opengraph-image",
-                "icon",
-                "apple-icon"
-            ],
-            "exclude": true,
-            "reason": "Next.js names these files."
-        },
-        {
             "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
             "categories": ["files"],
             "structuralPrefix": "^\\d{2}-"

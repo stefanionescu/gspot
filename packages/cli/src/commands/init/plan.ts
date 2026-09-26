@@ -10,6 +10,7 @@ import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 import type { RunnerTaskNames } from '#cli/policy/runner.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import type { DetectedSetting } from '#cli/commands/init/settings.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
@@ -100,6 +101,7 @@ export function buildProposal(
     selection: InitSelection,
     answers: InitAnswers,
     carried: CarriedConfiguration,
+    detected: DetectedSetting[] = [],
 ): Proposal {
     if (selection.selectedIds.has('dependencies')) {
         const files = openConfinedRoot(root);
@@ -156,6 +158,7 @@ export function buildProposal(
         ...(answers.formatter === undefined ? {} : { formatter: answers.formatter }),
         ...(commitScopes ? { commitScopes } : {}),
         ...(xcode ? { xcode } : {}),
+        ...(detected.length === 0 ? {} : { detected }),
     };
 }
 

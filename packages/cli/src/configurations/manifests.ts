@@ -173,6 +173,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         checks: raw.checks.map(toCheck),
         settings: raw.settings.map((setting) => compact(setting)),
         entry_files: raw.entry_files,
+        naming: raw.naming,
         coverage: raw.coverage,
         rule_files: raw.rule_files,
         required_rules: raw.required_rules,

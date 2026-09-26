@@ -105,6 +105,13 @@ direction = "neutral"
 default = ["**/*.test.*", "**/*.spec.*", "**/tests/**"]
 summary = "The files that count as tests of a route."
 
+[[naming.rules]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+structural_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
+
 [rule_files]
 framework = ["framework/express/EXPRESS.md", "framework/express/API.md", "framework/express/OPENAPI.md"]
 shared = ["shared/http/HTTP.md"]

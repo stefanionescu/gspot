@@ -5,6 +5,7 @@ import { detectionText } from '#cli/commands/init/detection.ts';
 import { initPlanText } from '#cli/commands/init/plan-text.ts';
 import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
+import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
@@ -134,15 +135,16 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
     );
     const answers = await askInitQuestions(root, options, tooling, carried.formatter);
     const tasks = proposedRunnerTasks(root, answers.runner);
-    const proposal = { ...buildProposal(root, selection, answers, carried), runnerTasks: tasks.names };
+    const everySelected = [...selection.selectedIds]
+        .map((id) => manifests.get(id))
+        .filter((manifest) => manifest !== undefined);
+    const settings = detectedSettings(everySelected, facts, repo.files);
+    const proposal = { ...buildProposal(root, selection, answers, carried, settings), runnerTasks: tasks.names };
     const profileTables = options.profile?.tables as TomlTable | undefined;
     const policyText = proposeText(profileTables ? { ...proposal, profileTables } : proposal);
     // The proposal is read the way every later command reads it, before anything is written.
     const policy = parsePolicyText(policyText, 'gspot.toml', root);
     assertPolicyComplete({ policy, text: policyText, path: 'gspot.toml' });
-    const everySelected = [...selection.selectedIds]
-        .map((id) => manifests.get(id))
-        .filter((manifest) => manifest !== undefined);
     const plan = buildInitPlan({
         root,
         tooling,

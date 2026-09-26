@@ -502,9 +502,11 @@ generated file holding merge conflict markers is a drift finding that names `gsp
 K-217, K-182, K-53, K-64, K-126, K-128, K-62, K-95, K-284, K-287, K-291, K-290, K-66, K-111,
 K-114, K-234, A-5, K-296, D-100, D-129, K-308, K-259.
 
-Open under step 5.3: a setting takes no `detect` table yet (K-93, K-40). The types folder,
-the build command, and the Xcode destination are proposed by code in `commands/init/`, not by a
-table of the manifest. No text exists in the architecture folder for K-41, K-239, K-270, K-214,
+Done 2026-09-26, K-93 and K-40: a setting takes `detect`, and `init` fills it from the tree.
+`tools.nestjs.swagger` comes from the `@nestjs/swagger` dependency, `architecture.types_directory`
+from the first of `types` and `src/types` that exists, and `tools.sqlfluff.dialect` (K-160) from
+the database driver or a `supabase` folder. The build command and the Xcode destination stay
+proposed by code in `commands/init/`. No text exists in the architecture folder for K-41, K-239, K-270, K-214,
 K-247, K-127, K-63, K-98, K-285, K-288, K-289, K-115, K-110, or K-47.
 
 Exit: supported carryover is lossless, unsupported originals remain active, and command,
@@ -674,6 +676,11 @@ Done 2026-09-26, steps 6.1 to 6.12. The repairs:
 The other clauses with text were checked without change: their named tests exist in the unit,
 integration, tools, and acceptance lanes.
 
+Done 2026-09-26, K-50: a framework manifest carries `[[naming.rules]]` for its own files. The
+react, nextjs, express, and nestjs manifests declare theirs, and the Next.js rule left the shipped
+policy. The svelte manifest's default for `structure.single_file_folder_allowed` exempts
+`src/routes/**`, and react-native recommends jest.
+
 Open under section 6:
 
 - `[[rules_off]]` in a manifest (K-208); a framework turns a shared rule off inside its own
@@ -682,7 +689,6 @@ Open under section 6:
 - `glab ci lint` over the GitLab file (K-277).
 - The three plan lines for `bitbucket-pipelines.yml` (K-278).
 - The `[tool.ruff.lint.pydocstyle]` mapping (K-152).
-- The `tools.sqlfluff.dialect` detection (K-160), which needs the setting `detect` table.
 
 No text exists in the architecture folder for these names:
 

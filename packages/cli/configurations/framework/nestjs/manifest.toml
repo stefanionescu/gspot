@@ -51,6 +51,14 @@ kind = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."
+detect = {dependency = "@nestjs/swagger"}
+
+[[naming.rules]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+structural_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
 
 [rule_files]
 framework = ["framework/nestjs/NESTJS.md"]
