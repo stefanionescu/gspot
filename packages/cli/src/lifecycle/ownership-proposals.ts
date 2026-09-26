@@ -86,6 +86,22 @@ function insertedBlock(text: string, span: Span, style: BlockStyle, body: string
     return { nextText, block: { style, installed: prefix + applyBlock('', body, style), original, prefix } };
 }
 
+// The record of a file whose managed block was installed, keeping the original the record already holds.
+function blockEntry(
+    path: string,
+    next: FileSnapshot,
+    planned: PlannedBlock,
+    existing: OwnershipEntry | undefined,
+): OwnershipEntry {
+    return {
+        path,
+        kind: 'block',
+        installed: identity(next),
+        block: planned.block,
+        ...(existing?.original === undefined ? {} : { original: existing.original }),
+    };
+}
+
 // The proposal a planned block yields: unchanged when the bytes already stand, otherwise the new record.
 function blockProposal(
     path: string,
@@ -97,13 +113,7 @@ function blockProposal(
     const next = { bytes: Buffer.from(planned.nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
     if (existing?.block !== undefined && matches(current, identity(next)))
         return { path, current, previous: existing, status: 'unchanged' };
-    const entry: OwnershipEntry = {
-        path,
-        kind: 'block',
-        installed: identity(next),
-        block: planned.block,
-        ...(existing?.original === undefined ? {} : { original: existing.original }),
-    };
+    const entry = blockEntry(path, next, planned, existing);
     const status = planned.nextText === text ? 'unchanged' : 'changed';
     return {
         path,
@@ -145,6 +155,11 @@ function retirementProposal(path: string, current: FileSnapshot, existing: Owner
     return { path, current, previous: existing, entry, saveOriginal: existing === undefined, status: 'changed' };
 }
 
+// Whether a record installed or saved a link.
+function involvesLink(existing: OwnershipEntry | undefined): boolean {
+    return existing?.installed?.isLink === true || existing?.original?.isLink === true;
+}
+
 /**
  * The file as it is now, read as a link entry when the proposal or the record involves a link.
  * @param journal the open journal
@@ -159,9 +174,8 @@ export function currentSnapshot(
     existing: OwnershipEntry | undefined,
     next?: FileSnapshot,
 ): FileSnapshot | undefined {
-    const isLink = next?.isLink === true || existing?.installed?.isLink === true || existing?.original?.isLink === true;
-    if (isLink) return journal.confined.readEntry(path);
-    return journal.confined.read(path);
+    const isLink = next?.isLink === true || involvesLink(existing);
+    return isLink ? journal.confined.readEntry(path) : journal.confined.read(path);
 }
 
 /**
@@ -184,7 +198,7 @@ export function proposeReplacement(
     expected?: FileSnapshot,
     proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
 ): FileProposal {
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     journal.confined.validate(path, next, proposed);
     const current = currentSnapshot(journal, path, existing, next);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
@@ -207,7 +221,7 @@ export function proposeReplacement(
  * @returns the proposal
  */
 export function proposeBlock(journal: Journal, path: string, body: string, style: BlockStyle): FileProposal {
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     const text = blockText(path, current);
     const span = blockSpan(text, style);
@@ -238,7 +252,7 @@ export function proposeConfiguration(
     changes: { path: (string | number)[]; value: unknown }[],
     takeover = false,
 ): FileProposal {
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     const isInstalled = matches(current, existing?.installed);
     const plan = planConfiguration(path, format, changes, current, existing, isInstalled, takeover);
@@ -256,7 +270,7 @@ export function proposeConfiguration(
  * @returns the proposal
  */
 export function proposeRetirement(journal: Journal, path: string, expected: FileSnapshot): FileProposal {
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     if (!isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after takeover was planned: ${path}. Retry the command.`);

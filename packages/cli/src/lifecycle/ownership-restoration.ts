@@ -106,7 +106,7 @@ function restorationFor(
  * @returns the proposal
  */
 export function proposeRestoration(journal: Journal, path: string, original?: FileSnapshot): FileProposal {
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     const current = currentSnapshot(journal, path, existing);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };

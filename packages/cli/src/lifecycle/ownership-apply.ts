@@ -33,7 +33,7 @@ function assertProposalCurrent(
     proposed: ReadonlyMap<string, FileSnapshot | undefined>,
 ): void {
     const { path, current, previous, next } = proposal;
-    const existing = journal.find(path);
+    const existing = journal.entryFor(path);
     if (next !== undefined) journal.confined.validate(path, next, proposed);
     const found = foundSnapshot(journal, path, current, next);
     if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
