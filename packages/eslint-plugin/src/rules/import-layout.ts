@@ -11,11 +11,16 @@ function isOwnLineComment(text: string, comment: TSESTree.Comment, before: numbe
     return BLANK.test(text.slice(lineStart, comment.range[0]));
 }
 
+// A comment that opens the file describes the file, not the import under it, so it stays where it is.
+function isFileHeader(text: string, comment: TSESTree.Comment): boolean {
+    return BLANK.test(text.slice(0, comment.range[0]));
+}
+
 function segmentStart(source: TSESLint.SourceCode, node: TSESTree.Statement): number {
     const text = source.getText();
     let start = node.range[0];
     for (const comment of source.getCommentsBefore(node).toReversed()) {
-        if (!isOwnLineComment(text, comment, start)) break;
+        if (!isOwnLineComment(text, comment, start) || isFileHeader(text, comment)) break;
         start = comment.range[0];
     }
     return start;

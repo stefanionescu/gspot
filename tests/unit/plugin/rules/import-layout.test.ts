@@ -26,8 +26,14 @@ tester().run('import-layout', importLayout, {
             errors: [{ messageId: 'layout' }],
         },
         {
-            code: "// keep me with b\nimport { bbb } from 'bbb';\nimport a from 'a';",
-            output: "import a from 'a';\n// keep me with b\nimport { bbb } from 'bbb';",
+            code: "import { z } from 'z';\n// keep me with b\nimport { bbb } from 'bbb';\nimport a from 'a';",
+            output: "import a from 'a';\nimport { z } from 'z';\n// keep me with b\nimport { bbb } from 'bbb';",
+            errors: [{ messageId: 'layout' }],
+        },
+        {
+            // A comment that opens the file is its header, not a note on the import under it.
+            code: "// The file header stays above the block (T-22).\nimport { bbb } from 'bbb';\nimport a from 'a';",
+            output: "// The file header stays above the block (T-22).\nimport a from 'a';\nimport { bbb } from 'bbb';",
             errors: [{ messageId: 'layout' }],
         },
     ],
