@@ -4,3 +4,6 @@ exact = true
 
 [install.security]
 scanner = "@socketsecurity/bun-security-scanner"
+
+[test]
+preload = ["./tests/support/runtime.ts"]

@@ -17,6 +17,10 @@ Astro content types the documentation build reads.
 
 Run these before a commit, in this order. Each lane is independent and stops on its own failures.
 
+Run the tasks from the repository root so mise selects the pinned runtimes. Test startup checks
+the Bun version against `package.json`; a plain `bun test` can select an older executable from
+the shell's `PATH`.
+
 | Task                       | What it verifies                                                              |
 | -------------------------- | ----------------------------------------------------------------------------- |
 | `mise run check:types`     | TypeScript in the workspace and the documentation site.                       |
