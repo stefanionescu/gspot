@@ -391,6 +391,14 @@ Owner: `configurations/ and tools/`. Dependencies: normal pinned acquisition. Co
 
 Acceptance: K-251, K-207, K-249, K-206, K-250, K-213.
 
+Done 2026-09-26, step 4.4. `tests/acceptance/release/pins.test.ts` asks npm, PyPI, crates.io, and
+GitHub for every pin, holds each pin at or above the floor its manifest names, and holds the
+ESLint pin inside the peer range of every plugin (K-206, K-249, K-207). A tool the repository
+supplies carries a floor and no pin. `tests/integration/tools/flags.test.ts` runs the help of
+every pinned tool a command names and holds each flag it passes (K-251); a tool absent from the
+machine is a visible skip. K-250 holds through the licenses and readme-shape tests. K-213 has no
+text in the architecture folder.
+
 ### NestJS integration
 
 Step 4.5. Missing implementation.
