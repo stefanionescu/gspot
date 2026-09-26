@@ -35,7 +35,7 @@ export function orderTotal(lines: OrderLine[], currency: string): Total {
 const RECEIPT = `// The receipt currency format.
 
 /** Formats the euro amounts on receipts. */
-export const receiptOptions = { style: 'currency', currency: 'EUR' } as const;
+export const receiptOptions: Intl.NumberFormatOptions = { style: 'currency', currency: 'EUR' };
 `;
 const MAIN = `// The receipt of one order.
 import { orderTotal } from './orders/total.js';
