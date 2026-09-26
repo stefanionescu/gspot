@@ -15,7 +15,7 @@ import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 
 /**
  * Register immutable installation for a clone.
- * @param program
+ * @param program the command-line program
  */
 export function registerInstall(program: Command): void {
     program
@@ -39,7 +39,8 @@ type InstallOptions = { cwd: string; isDryRun: boolean };
 
 /**
  * Preview or install this clone's locked tools without regenerating tracked configuration.
- * @param options
+ * @param options the working directory and whether this is a dry run
+ * @returns the text to print and the exit code
  */
 export async function installCommand(options: InstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);

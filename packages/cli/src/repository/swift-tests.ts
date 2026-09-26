@@ -2,7 +2,8 @@ import { parserFor } from '#cli/parsers/tree-sitter.ts';
 
 /**
  * Identify Swift test declarations and package targets without matching comment or string text.
- * @param text
+ * @param text the Swift source
+ * @returns the test frameworks and target kinds the source declares
  */
 export async function swiftTestTags(text: string): Promise<string[]> {
     const parser = await parserFor('swift');

@@ -19,7 +19,8 @@ const CONNECTION_KEYS = new Set([
 
 /**
  * Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory.
- * @param root
+ * @param root the repository root
+ * @returns the environment variables that carry the registry settings
  */
 export async function packageEnvironment(root: string): Promise<Record<string, string>> {
     const inherited = environmentVariables();

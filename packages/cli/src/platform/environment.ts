@@ -55,12 +55,18 @@ export function environmentVariables(): Record<string, string> {
     return variables;
 }
 
-/** The supported Git hook that invoked this process. */
+/**
+ * The supported Git hook that invoked this process.
+ * @returns the hook name, or undefined outside a hook
+ */
 export function invokingHook(): (typeof HOOK_FILES)[number] | undefined {
     return HOOK_FILES.find((name) => name === process.env['GSPOT_HOOK']);
 }
 
-/** The platform cache directory; relative environment overrides are invalid. */
+/**
+ * The platform cache directory; relative environment overrides are invalid.
+ * @returns the absolute cache directory
+ */
 export function cacheHome(): string {
     if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
     const name = process.platform === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';

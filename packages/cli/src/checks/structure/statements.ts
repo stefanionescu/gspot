@@ -16,8 +16,9 @@ const FUNCTIONS = new Set([
 
 /**
  * Count executable statements, excluding nested function bodies and type-only declarations.
- * @param nodes
- * @param language
+ * @param nodes the body nodes
+ * @param language the language the nodes were parsed as
+ * @returns the count
  */
 export function executableStatements(nodes: Node[], language: 'python' | 'swift' | 'bash'): number {
     let count = 0;
@@ -53,9 +54,10 @@ export function executableStatements(nodes: Node[], language: 'python' | 'swift'
 
 /**
  * Whether every declaration is an import, alias, forwarding statement, or trivial function.
- * @param root
- * @param language
- * @param threshold
+ * @param root the file's syntax tree
+ * @param language the language the file was parsed as
+ * @param threshold the statement count at or under which a function is trivial
+ * @returns whether the file holds nothing substantial
  */
 export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', threshold: number): boolean {
     const substantial = (node: Node): boolean => {

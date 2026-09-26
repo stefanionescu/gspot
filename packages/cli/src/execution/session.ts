@@ -9,7 +9,7 @@ import packageManifest from '#package' with { type: 'json' };
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import { toolPackageManager } from '#cli/tools/packages/manager.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
-import { readPolicy, assertPolicyComplete  } from '#cli/policy/read.ts';
+import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
 
@@ -18,7 +18,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 /**
  * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
  * @param root the repository root
- * @param policyFiles
+ * @param policyFiles the policy as read, read here by default
  * @returns the session
  */
 export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {

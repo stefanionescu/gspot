@@ -70,7 +70,10 @@ export function referencePages(): Map<string, ReferencePage> {
     return pages;
 }
 
-/** Load authored documentation and definition-owned references into one Astro collection. */
+/**
+ * Load authored documentation and definition-owned references into one Astro collection.
+ * @returns the Astro loader
+ */
 export function referenceLoader(): Loader {
     return {
         name: 'gspot-reference',

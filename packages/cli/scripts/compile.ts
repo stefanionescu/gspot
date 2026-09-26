@@ -11,6 +11,11 @@ const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));
 
+/**
+ * Compiles the CLI for the selected targets, with its notices and embedded assets.
+ * @param targets the release targets to build
+ * @param out the folder the binaries are written to
+ */
 export async function build(targets: string[], out: string): Promise<void> {
     await prepareInput(join(here, '.build/swift.wasm'), SWIFT_GRAMMAR);
     const grammarSources = [...grammarAssets.keys()].filter((path) => path !== grammarPath('swift.wasm'));

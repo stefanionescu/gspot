@@ -182,7 +182,8 @@ const workspacePackages = z.object({ packages: stringList });
 
 /**
  * Normalize a Python distribution name for package identity comparisons.
- * @param name
+ * @param name the name as written
+ * @returns the name in lower case with one hyphen between words
  */
 export function normalizedPythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(/[._-]+/gu, '-');

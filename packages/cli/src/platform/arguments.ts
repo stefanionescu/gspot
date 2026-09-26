@@ -1,7 +1,8 @@
 import { parseShell } from '@yarnpkg/parsers';
 /**
  * Quote one argument for a POSIX shell command shown to the reader.
- * @param value
+ * @param value the argument
+ * @returns the argument, quoted when it needs to be
  */
 export function quoteArgument(value: string): string {
     if (/^[a-zA-Z0-9_./-]+$/u.test(value)) return value;
@@ -10,7 +11,8 @@ export function quoteArgument(value: string): string {
 
 /**
  * Read a configured executable and literal arguments, preserving shell quoting.
- * @param source
+ * @param source the command line as written
+ * @returns the executable and its arguments
  */
 export function commandArguments(source: string): string[] {
     const lines = parseShell(source, { isGlobPattern: () => false });

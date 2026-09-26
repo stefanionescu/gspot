@@ -134,8 +134,9 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
 
 /**
  * Yarn Classic accepts registry-relative tarball references; retain its own serialization and validate each edit.
- * @param content
- * @param registry
+ * @param content the lock text Yarn wrote
+ * @param registry the registry URL its resolved references start with
+ * @returns the lock text with registry-relative references
  */
 function relativeYarnLock(content: string, registry: string): string {
     const schema = z.record(z.string(), z.object({ resolved: z.string().optional() }).passthrough());
@@ -160,8 +161,9 @@ function relativeYarnLock(content: string, registry: string): string {
 
 /**
  * Keep native npm package identities and integrity while resolving standard tarballs through local registry settings.
- * @param content
- * @param env
+ * @param content the lock text Bun wrote
+ * @param env the registry settings the resolution ran with
+ * @returns the lock text without the registry's tarball URLs
  */
 function portableBunLock(content: string, env: Record<string, string>): string {
     const schema = z.object({ packages: z.record(z.string(), z.array(z.unknown())) }).passthrough();
@@ -275,9 +277,9 @@ function writeProject(work: string, manifest: string, yarn: string | undefined):
 
 /**
  * Resolve only a missing or mismatched tool lock, before apply publishes generated files.
- * @param root
- * @param files
- * @param owner
+ * @param root the repository root
+ * @param files the generated files, among them the tool project
+ * @param owner the lifecycle owner that records the lock
  */
 export async function resolvePackageProject(
     root: string,
@@ -318,8 +320,9 @@ export async function resolvePackageProject(
 
 /**
  * Compare generated package requirements to the recorded native lock without resolving or writing.
- * @param root
- * @param generated
+ * @param root the repository root
+ * @param generated the generated files, among them the tool project
+ * @returns the lock path with what is wrong with it, or undefined when there is no tool project
  */
 export function packageLockDrift(
     root: string,
@@ -344,7 +347,8 @@ export function packageLockDrift(
 
 /**
  * Validate the recorded inputs and preview native immutable commands without creating ownership state.
- * @param root
+ * @param root the repository root
+ * @returns the commands an install runs, or none without a tool project
  */
 export function packageInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
@@ -367,8 +371,9 @@ export function packageInstallSteps(root: string): string[][] {
 
 /**
  * Install locked packages outside the repository, then publish each owned entry through native confinement.
- * @param root
- * @param tools
+ * @param root the repository root
+ * @param tools the pinned tools whose native wrappers the installation prepares
+ * @returns the line that says what was installed, or '' without a tool project
  */
 export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {

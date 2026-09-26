@@ -18,7 +18,8 @@ const reportSchema = z.object({
 
 /**
  * Validate carried rule names and options with the repository's installed Stylelint before retirement.
- * @param request
+ * @param request the repository root and the rules to validate
+ * @returns true once every rule is accepted
  */
 export async function evaluateStylelint(request: z.infer<typeof stylelintRequest>): Promise<true> {
     const require = createRequire(join(request.root, 'package.json'));

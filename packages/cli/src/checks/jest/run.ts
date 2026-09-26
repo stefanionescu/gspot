@@ -39,7 +39,8 @@ const coverageSchema = z.object({
 
 /**
  * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
- * @param input
+ * @param input the engine input
+ * @returns the findings
  */
 export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));

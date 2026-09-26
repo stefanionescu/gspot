@@ -24,7 +24,8 @@ function platformHint(installers: ToolPin['installers']): string | undefined {
 
 /**
  * The installation command for managed tools, or platform guidance for a host tool.
- * @param tool
+ * @param tool the pin
+ * @returns the hint
  */
 export function installHint(tool: ToolPin): string {
     if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;

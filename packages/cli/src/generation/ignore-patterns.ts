@@ -67,8 +67,9 @@ function suffixes(pattern: string, scope: string): string[] {
 
 /**
  * Preserve ordered gitignore patterns when native discovery moves their base into a scope directory.
- * @param patterns
- * @param scope
+ * @param patterns the gitignore patterns, relative to the root
+ * @param scope the scope path the tool discovers from
+ * @returns the patterns relative to the scope
  */
 export function scopeIgnorePatterns(patterns: string[], scope: string): string[] {
     if (scope === '') return patterns;

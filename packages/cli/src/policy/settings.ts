@@ -211,8 +211,9 @@ function applyLayers(
 
 /**
  * The root policy and applicable scope tables, ordered from outermost to innermost.
- * @param policy
- * @param scope
+ * @param policy the repository policy
+ * @param scope the scope path, '' or undefined for the root alone
+ * @returns the tables with the name each is reported under
  */
 export function policyTables(policy: Policy, scope: string | undefined): PolicyLayer[] {
     return [

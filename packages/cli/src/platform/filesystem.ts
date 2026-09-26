@@ -31,8 +31,9 @@ export const LIFECYCLE_PRIVATE_PATH =
 
 /**
  * Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag.
- * @param file
- * @param platform
+ * @param file the snapshot's mode and whether it is a link
+ * @param platform the platform whose permission model applies
+ * @returns the mode the platform can represent
  */
 export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
@@ -49,7 +50,8 @@ function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot |
 
 /**
  * Reject path spellings that have different meanings on supported operating systems.
- * @param path
+ * @param path a repository-relative path with forward slashes
+ * @returns the path's segments
  */
 export function mutationPath(path: string): string[] {
     const parts = path.split('/');
@@ -71,7 +73,8 @@ export function mutationPath(path: string): string[] {
 
 /**
  * Snapshot names reject path traversal and null bytes.
- * @param path
+ * @param path a repository-relative path in the platform's own spelling
+ * @returns the path's segments
  */
 function nativePath(path: string): string[] {
     if (process.platform === 'win32') return mutationPath(path);
@@ -89,7 +92,7 @@ function privateTarget(path: string): void {
 
 /**
  * Public mutation proposals cannot target the owner's journal, lock, or recovery files.
- * @param path
+ * @param path the proposed path
  */
 export function mutationTarget(path: string): void {
     mutationPath(path);
@@ -98,8 +101,9 @@ export function mutationTarget(path: string): void {
 
 /**
  * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
- * @param root
- * @param pathFormat
+ * @param root the directory every path is confined to
+ * @param pathFormat whether paths use forward slashes or the platform's own spelling
+ * @returns the confined reader and writer, which the caller closes
  */
 export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native' = 'portable'): ConfinedRoot {
     const canonical = realpathSync(root);

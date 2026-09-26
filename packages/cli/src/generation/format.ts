@@ -13,9 +13,10 @@ type NativeOverride<Options> = {
 
 /**
  * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
- * @param entries
- * @param base
- * @param prefix
+ * @param entries the authored overrides
+ * @param base the folder the authored file lived in, relative to the root
+ * @param prefix the path from the generated file's folder back to the root
+ * @returns the overrides with their selectors moved
  */
 export function relocatedOverrides<Options>(
     entries: NativeOverride<Options>[],
@@ -99,8 +100,9 @@ function formatEntries(policy: Policy): ScopedFormat[] {
 }
 
 /**
- *
- * @param format
+ * The Prettier options for the format settings a policy states.
+ * @param format the format settings, each optional
+ * @returns the options Prettier reads, only for the settings given
  */
 export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
@@ -115,8 +117,9 @@ export function prettierOptions(format: Partial<FormatSettings>): Record<string,
 }
 
 /**
- *
- * @param path
+ * A path as a glob that matches only itself.
+ * @param path the literal path
+ * @returns the path with every glob character escaped
  */
 export function literalGlob(path: string): string {
     return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
@@ -133,10 +136,11 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
 
 /**
  * Generate each Prettier configuration relative to its own output path.
- * @param policy
- * @param targetPath
- * @param extra
- * @param plugins
+ * @param policy the repository policy
+ * @param targetPath the path of the generated file
+ * @param extra the authored Prettier settings the policy carries
+ * @param plugins the Prettier plugins the selected manifests ship
+ * @returns the Prettier configuration
  */
 export function prettierConfig(
     policy: Policy,
@@ -201,7 +205,8 @@ export type PrettierPlugin = {
 
 /**
  * Emit representable EditorConfig selectors without expanding the current file inventory.
- * @param policy
+ * @param policy the repository policy
+ * @returns one override per selector with the settings EditorConfig can express
  */
 export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
     return formatEntries(policy).flatMap(({ scope, paths, format }) => {

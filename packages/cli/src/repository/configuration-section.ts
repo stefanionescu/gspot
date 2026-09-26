@@ -16,11 +16,12 @@ const PARSERS: Record<string, (text: string) => unknown> = {
 
 /**
  * Select an owned key or table while keeping the shared document available for exact recovery.
- * @param text
- * @param path
- * @param selector
- * @param selector.key
- * @param selector.table
+ * @param text the file text
+ * @param path the file path, whose extension names the format
+ * @param selector the key or table the tool owns
+ * @param selector.key the top-level key
+ * @param selector.table the table
+ * @returns the section's text and parsed value, or undefined when the file has none
  */
 export function configurationSection(
     text: string,

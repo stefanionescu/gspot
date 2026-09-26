@@ -13,8 +13,9 @@ import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 /**
  * Supply selected changed blobs and commit metadata to TruffleHog's native JSON enumerator.
- * @param session
- * @param planned
+ * @param session the open session
+ * @param planned the planned check
+ * @returns the check result
  */
 export async function checkVerifiedSecrets(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();

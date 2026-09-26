@@ -4,8 +4,9 @@ import { trivialFile } from '#cli/checks/structure/statements.ts';
 
 /**
  * Report shell functions and files at or below the executable statement threshold.
- * @param context
- * @param scripts
+ * @param context the check context
+ * @param scripts reads the parsed shell scripts once
+ * @returns the findings
  */
 export const trivialFunction: Analysis = async (context, scripts) => {
     const threshold = context.limit('trivial_statements', 'bash') ?? 2;

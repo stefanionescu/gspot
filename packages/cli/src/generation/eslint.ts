@@ -7,7 +7,8 @@ import type { FragmentSelector } from '#cli/configurations/schema.ts';
 
 /**
  * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
- * @param policy
+ * @param policy the repository policy
+ * @returns one rule block per scope and path override, in the order ESLint applies them
  */
 export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     const tables = [

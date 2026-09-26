@@ -225,7 +225,8 @@ function scanJob(jobs: string[]): string[] {
 
 /**
  * Generate independent check and manual jobs with retained reports and restricted scanning permissions.
- * @param shape
+ * @param shape what the workflow covers: platforms, the Swift scope, and the runner
+ * @returns the GitHub workflow file
  */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
@@ -252,7 +253,8 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
 
 /**
  * Generate a GitLab include without changing the authored pipeline.
- * @param shape
+ * @param shape what the pipeline covers: platforms, the Swift scope, and the runner
+ * @returns the GitLab include file
  */
 export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';

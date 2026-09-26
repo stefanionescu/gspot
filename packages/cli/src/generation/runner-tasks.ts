@@ -15,7 +15,7 @@ function tomlKey(name: string): string {
  * @param manifests the selected manifests
  * @param version the gspot version
  * @param isPackagePinned whether npm tools are pinned in .gspot/package.json instead
- * @param tasks
+ * @param tasks the task names the policy maps to gspot commands
  * @returns the generated file
  */
 export function miseTasks(

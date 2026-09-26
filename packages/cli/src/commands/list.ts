@@ -86,7 +86,7 @@ function configurationsResult(session: Session): CommandResult {
 
 /**
  * List configurations and effective settings without executing checks or mutating the project.
- * @param program
+ * @param program the command-line program
  */
 export function registerList(program: Command): void {
     program

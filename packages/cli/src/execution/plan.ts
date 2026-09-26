@@ -297,7 +297,8 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 
 /**
  * Whether a planned check has source input, a deleted trigger, or a commit message to inspect.
- * @param check
+ * @param check the planned check
+ * @returns whether the check has something to run over
  */
 export function isActive(check: PlannedCheck): boolean {
     return (
@@ -310,7 +311,8 @@ export function isActive(check: PlannedCheck): boolean {
 
 /**
  * Checks enabled by persistent policy, before evaluating executable tool configurations.
- * @param session
+ * @param session the open session
+ * @returns every check the policy turns on, in each scope it applies to
  */
 export function configuredChecks(session: Session): PlannedCheck[] {
     const only = [
@@ -326,8 +328,9 @@ export function configuredChecks(session: Session): PlannedCheck[] {
 
 /**
  * Source claims of a planned check, separate from inputs supplied to project-wide analysis.
- * @param session
- * @param check
+ * @param session the open session
+ * @param check the planned check
+ * @returns the files the check's claims select
  */
 export function claimedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
     const claims = check.spec.claims ?? check.manifest?.claims;

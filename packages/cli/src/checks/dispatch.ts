@@ -184,7 +184,8 @@ const checks: Record<string, Engine> = {
 
 /**
  * Resolve the declared integrity analysis before executing any checks.
- * @param spec
+ * @param spec the check
+ * @returns the engine that runs the analysis
  */
 export function resolveIntegrity(spec: CheckSpec): Engine {
     const name = spec.analysis ?? spec.name.slice(spec.name.indexOf('/') + 1);

@@ -13,7 +13,8 @@ function content(line: string): string {
 
 /**
  * Read the unfiltered rule lists emitted in SwiftFormat configuration.
- * @param text
+ * @param text the configuration text
+ * @returns the rule names under each list option
  */
 export function swiftformatRules(text: string): Record<string, string[]> {
     const rules: Record<string, string[]> = { enable: [], disable: [], rules: [], 'lint-only': [] };

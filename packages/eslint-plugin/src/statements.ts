@@ -5,8 +5,9 @@ const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', '
 
 /**
  * Count executable statements without entering nested functions or type declarations.
- * @param node
- * @param visitorKeys
+ * @param node the node to count under
+ * @param visitorKeys the child keys of each node type, from the parser
+ * @returns the count
  */
 export function statementCount(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
     if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;

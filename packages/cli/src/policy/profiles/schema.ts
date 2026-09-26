@@ -29,8 +29,9 @@ const PATH_KEYS = new Set([
 
 /**
  * Identify repository selectors and local executable registrations that cannot travel in a profile.
- * @param key
- * @param value
+ * @param key the policy key
+ * @param value the key's value
+ * @returns whether the key stays with the repository
  */
 export function isRepositoryPath(key: string, value: unknown): boolean {
     return (

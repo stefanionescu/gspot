@@ -6,7 +6,8 @@ const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 const MILLISECONDS = 1000;
 /**
  * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
- * @param view
+ * @param view the policy view whose limits apply, or undefined for the default
+ * @returns the deadline in seconds
  */
 export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
     return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;

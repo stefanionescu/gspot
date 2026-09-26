@@ -38,7 +38,7 @@ export function cacheKey(input: CacheKeyInput): string {
  * The content hash of a required file.
  * @param root the repository root
  * @param path the file, relative to the root
- * @param observations
+ * @param observations the source bytes observed during the run, when there are any
  * @returns the digest
  */
 export function fileHash(root: string, path: string, observations?: SourceObservations): string {
@@ -47,8 +47,9 @@ export function fileHash(root: string, path: string, observations?: SourceObserv
 
 /**
  * Expand declared cache inputs without traversing directories outside the repository.
- * @param root
- * @param patterns
+ * @param root the repository root
+ * @param patterns the input selectors
+ * @returns the files the selectors name, relative to the root
  */
 export function cacheInputs(root: string, patterns: string[]): string[] {
     const files = openConfinedRoot(root, 'native');

@@ -23,7 +23,8 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
 
 /**
  * Render located findings using GitLab's Code Quality format.
- * @param report
+ * @param report the run report, or the push report with one run per revision
+ * @returns the Code Quality JSON text
  */
 function codeQualityText(report: RunReport | PushReport): string {
     const reports = 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report];
@@ -131,7 +132,8 @@ function sarifRun(report: RunReport): SarifRunBuilder {
 
 /**
  * Render each pushed revision as a separate SARIF run, retaining every verdict.
- * @param report
+ * @param report the run report, or the push report with one run per revision
+ * @returns the SARIF JSON text
  */
 export function sarifText(report: RunReport | PushReport): string {
     const builder = new SarifBuilder();

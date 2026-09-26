@@ -26,8 +26,9 @@ function issueText(issue: z.core.$ZodIssue): string {
 
 /**
  * Parse TOML and retain the parser location in policy errors.
- * @param text
- * @param path
+ * @param text the policy text
+ * @param path the policy file, for the error
+ * @returns the parsed table
  */
 export function parseTomlText(text: string, path: string): Record<string, unknown> {
     try {

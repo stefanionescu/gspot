@@ -23,9 +23,10 @@ const KEYS = new Set([
 
 /**
  * Read Yarn-owned connection settings and give its isolated project environment references.
- * @param root
- * @param work
- * @param env
+ * @param root the repository root
+ * @param work the directory the isolated project runs in
+ * @param env the environment the install runs with, which receives the settings
+ * @returns the credential values the lock must not contain
  */
 export async function yarnSettings(root: string, work: string, env: Record<string, string>): Promise<string[]> {
     delete env['YARN_REGISTRY'];

@@ -3,9 +3,10 @@ import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 /**
  * Retire explicitly replaced files after saving recoverable originals; retain directories.
- * @param root
- * @param removed
- * @param observed
+ * @param root the repository root
+ * @param removed the files takeover replaces, a trailing slash for a directory
+ * @param observed the reviewed originals, by path
+ * @returns the paths removed and the paths kept
  */
 export function retireReplaced(
     root: string,

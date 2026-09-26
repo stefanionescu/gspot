@@ -112,7 +112,7 @@ async function fetchedObjects(root: string, remote: string | undefined, cancelSi
 /**
  * Staged paths include deletions and both sides of renames. Count paths with unstaged changes.
  * @param root the repository root
- * @param cancelSignal
+ * @param cancelSignal cancellation for the Git commands
  * @returns the staged paths, sorted, and the unstaged count
  */
 export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Promise<StagedSet> {
@@ -127,7 +127,7 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
  * Files changed relative to a ref, for the pull-request form.
  * @param root the repository root
  * @param reference the git ref to compare against
- * @param cancelSignal
+ * @param cancelSignal cancellation for the Git commands
  * @returns the selected reference and sorted paths
  */
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
@@ -159,7 +159,7 @@ export async function changedFiles(root: string, reference: string, cancelSignal
 /**
  * Where a push starts: the merge base with the upstream branch, or the root commit when the branch has none.
  * @param root the repository root
- * @param cancelSignal
+ * @param cancelSignal cancellation for the Git commands
  * @returns the commit the pushed range starts after
  */
 export async function pushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
@@ -176,10 +176,11 @@ export async function pushBase(root: string, cancelSignal?: AbortSignal): Promis
 
 /**
  * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
- * @param root
- * @param input
- * @param remote
- * @param cancelSignal
+ * @param root the repository root
+ * @param input the lines Git hands the pre-push hook on standard input
+ * @param remote the remote name, when Git gave one
+ * @param cancelSignal cancellation for the Git commands
+ * @returns the pushed revisions with their commits, and the updates no check applies to
  */
 export async function pushedRevisions(
     root: string,

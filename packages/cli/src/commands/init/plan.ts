@@ -94,7 +94,7 @@ function runnerRows(
  * @param selection what init selected
  * @param answers the answers to the init questions
  * @param carried the lists carried from old configuration files
- * @param detected
+ * @param detected the settings init filled from the repository
  * @returns the proposal
  */
 export function buildProposal(

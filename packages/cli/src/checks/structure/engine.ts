@@ -82,7 +82,8 @@ function contextFor(input: EngineInput): StructureContext {
 
 /**
  * Resolve the structure analysis while retaining source indexing at execution time.
- * @param spec
+ * @param spec the check
+ * @returns the engine that runs the analysis
  */
 export function resolveStructure(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';

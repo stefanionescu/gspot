@@ -36,10 +36,11 @@ function commentOf(line: string, style: string): string | undefined {
 
 /**
  * Observe comments once through the selected tool definitions for each file scope.
- * @param root
- * @param selections
- * @param observations
- * @param files
+ * @param root the repository root
+ * @param selections the resolved scopes
+ * @param observations the source observations shared across checks
+ * @param files the tracked files
+ * @returns every suppression comment with its tool, reason, and whether it is forbidden
  */
 export function suppressionComments(
     root: string,
@@ -104,7 +105,8 @@ export function suppressionComments(
 
 /**
  * Report forbidden suppressions and missing or invalid required reasons.
- * @param input
+ * @param input the engine input with the observed suppression comments
+ * @returns the findings
  */
 export function suppressions(input: EngineInput): Finding[] {
     if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');

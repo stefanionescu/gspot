@@ -7,9 +7,9 @@ import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platf
 
 /**
  * Publish an isolated native installation through the shared ownership journal.
- * @param owner
- * @param directory
- * @param kind
+ * @param owner the lifecycle owner of the repository
+ * @param directory the isolated installation to publish
+ * @param kind whether the installation is the npm project or the Python environment
  */
 export function publishInstalledFiles(owner: LifecycleOwner, directory: string, kind: 'npm' | 'python'): void {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;

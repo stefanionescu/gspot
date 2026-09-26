@@ -167,7 +167,8 @@ export function indexedPaths(root: string): string[] {
 
 /**
  * List gitlinks without opening submodule directories or reading their configuration.
- * @param root
+ * @param root the repository root
+ * @returns the submodule paths
  */
 export function submodulePaths(root: string): string[] {
     const listed = runBlocking(['git', 'ls-files', '--stage', '-z'], { cwd: root });
@@ -187,7 +188,7 @@ export function submodulePaths(root: string): string[] {
 /**
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
- * @param exclude
+ * @param exclude the paths to leave out
  * @returns the entries with size, executable bit and symlink flag
  */
 export async function trackedEntries(root: string, exclude: string[] = []): Promise<RawEntry[]> {
@@ -255,6 +256,7 @@ export function head(root: string, path: string, bytes = HEAD_BYTES): string {
  * @param root the directory being read
  * @param path the source path relative to that directory
  * @param observations optional run-owned bytes; isolated generated output remains fresh
+ * @returns the file bytes
  */
 export function readSource(root: string, path: string, observations?: SourceObservations): Buffer {
     const observed = observations?.root === root ? observations.sources : undefined;

@@ -10,9 +10,10 @@ import type { configurationRequest } from '#cli/evaluation/protocol.ts';
 
 /**
  * Evaluate authored configuration with captured logs and a separate structured result.
- * @param request
- * @param view
- * @param cancelSignal
+ * @param request what to evaluate, in the configuration process
+ * @param view the merged view whose deadline applies
+ * @param cancelSignal cancellation for the process
+ * @returns the structured result the process reported
  */
 export async function evaluateConfiguration(
     request: z.infer<typeof configurationRequest>,

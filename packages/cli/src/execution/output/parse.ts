@@ -300,7 +300,7 @@ function parseLines(check: string, text: string, help: string): Finding[] {
  * @param stdout what the tool printed
  * @param stderr what the tool printed on its error stream
  * @param root the repository root, to make the absolute paths ESLint prints relative
- * @param cwd
+ * @param cwd the directory the tool ran in, which its relative paths start from
  * @returns the findings
  */
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {

@@ -146,7 +146,8 @@ const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => 
 
 /**
  * Resolve the naming analysis while retaining policy preparation at execution time.
- * @param spec
+ * @param spec the check
+ * @returns the engine that runs the analysis
  */
 export function resolveNaming(spec: CheckSpec): Engine {
     const analysis = ANALYSES[spec.analysis ?? ''];

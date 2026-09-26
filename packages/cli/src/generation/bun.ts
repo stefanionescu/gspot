@@ -4,8 +4,9 @@ import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.
- * @param root
- * @param scopes
+ * @param root the repository root
+ * @param scopes every resolved scope
+ * @returns the shared configuration keys to install in each Bun configuration file
  */
 export function bunConfiguration(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
     const files = openConfinedRoot(root);

@@ -2,7 +2,8 @@ import type { CoverageReport } from '#cli/execution/coverage.ts';
 
 /**
  * Shared source-ending coverage rows for doctor and the configuration listing.
- * @param report
+ * @param report the coverage report
+ * @returns one line per file ending, or none when nothing is unchecked
  */
 export function coverageLines(report: CoverageReport): string[] {
     if (report.endings.length === 0) return [];

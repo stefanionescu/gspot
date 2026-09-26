@@ -7,10 +7,10 @@ import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 
 /**
  * Convert ESLint selectors and module registrations from observed configuration.
- * @param root
- * @param configs
- * @param paths
- * @param lists
+ * @param root the repository root
+ * @param configs the ESLint configuration files found
+ * @param paths the tracked source paths
+ * @param lists the carried configuration the selectors and registrations are added to
  */
 export async function collectEslint(
     root: string,

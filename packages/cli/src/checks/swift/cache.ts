@@ -8,7 +8,8 @@ import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
 
 /**
  * Prepare and lock one compiler directory without following existing output links.
- * @param folder
+ * @param folder the compiler directory
+ * @returns the confined directory, which the caller closes
  */
 export function openBuildCache(folder: string): ConfinedRoot {
     const home = cacheHome();
@@ -40,10 +41,11 @@ export function openBuildCache(folder: string): ConfinedRoot {
 
 /**
  * Restore selected sources in a stable compiler directory while retaining unchanged timestamps.
- * @param root
- * @param paths
- * @param folder
- * @param files
+ * @param root the repository root
+ * @param paths the source files to build
+ * @param folder the compiler directory
+ * @param files the confined compiler directory
+ * @returns the source directory inside the compiler directory
  */
 export function prepareBuildSources(root: string, paths: string[], folder: string, files: ConfinedRoot): string {
     const source = openConfinedRoot(root, 'native');

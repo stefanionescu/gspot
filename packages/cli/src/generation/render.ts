@@ -378,10 +378,10 @@ function validateProposal(proposal: GeneratedProposal): void {
 
 /**
  * Renders proposed files in memory while retaining observations at the caller’s lifecycle lock boundary.
- * @param policy
- * @param repository
- * @param scopes
- * @param options
+ * @param policy the repository policy
+ * @param repository the repository with its tracked files
+ * @param scopes every resolved scope
+ * @param options the version, the package manager, and the takeover originals
  * @returns the files, blocks, merges and package edits
  */
 export function emitAll(

@@ -41,8 +41,9 @@ function readRunnerTasks(
 
 /**
  * Propose existing check and format names and retain the exact input reviewed during init.
- * @param root
- * @param runner
+ * @param root the repository root
+ * @param runner the task runner
+ * @returns the task names found and the runner file as it was read
  */
 export function proposedRunnerTasks(
     root: string,
@@ -60,9 +61,10 @@ export function proposedRunnerTasks(
 
 /**
  * Plan accepted task bodies without replacing unaccepted names or package lifecycle scripts.
- * @param root
- * @param runner
- * @param names
+ * @param root the repository root
+ * @param runner the task runner
+ * @param names the task names the policy maps to gspot commands
+ * @returns the tasks to write, the shared configuration they go into, and notes about what stays
  */
 export function runnerTaskPlan(
     root: string,

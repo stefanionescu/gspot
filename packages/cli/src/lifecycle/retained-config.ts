@@ -7,10 +7,11 @@ import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 
 /**
  * Identify authored tool configuration using recorded bytes and permissions.
- * @param root
- * @param sourcePaths
- * @param tools
- * @param takeover
+ * @param root the repository root
+ * @param sourcePaths the tracked file paths
+ * @param tools the tools whose configuration counts
+ * @param takeover the reviewed originals a takeover replaces, when one was authorized
+ * @returns the authored configuration files that stay
  */
 export function retainedConfigurationPaths(
     root: string,

@@ -24,9 +24,10 @@ export function requirePackageConfiguration(files: ConfinedRoot): void {
 
 /**
  * Verify the invocation without claiming ownership of authored Husky commands.
- * @param root
- * @param runner
- * @param binaryPath
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @returns whether every Husky script carries the current gspot line
  */
 export function huskyReady(root: string, runner: string | undefined, binaryPath?: string): boolean {
     const files = openConfinedRoot(root);
@@ -44,9 +45,10 @@ export function huskyReady(root: string, runner: string | undefined, binaryPath?
 
 /**
  * Verify executable integration, including clones without local ownership records.
- * @param root
- * @param runner
- * @param binary
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param binary the pinned executable when no runner resolves gspot
+ * @returns whether the package commands and the integration scripts are the current ones
  */
 export function simpleGitHooksReady(root: string, runner: string | undefined, binary: string | undefined): boolean {
     const prefix = hookPrefix(root);

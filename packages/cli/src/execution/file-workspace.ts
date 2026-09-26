@@ -19,8 +19,9 @@ import {
 
 /**
  * Copy selected files and declared configurations without native discovery inputs.
- * @param root
- * @param paths
+ * @param root the repository root
+ * @param paths the files to copy
+ * @returns the workspace root, the original bytes by path, and its disposal
  */
 export function createFileWorkspace(
     root: string,

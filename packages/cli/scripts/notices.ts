@@ -138,7 +138,11 @@ export async function dependencyNotices(
         .join('\n');
 }
 
-/** Adds runtime and grammar attribution to the bundled dependency notices. */
+/**
+ * Adds runtime and grammar attribution to the bundled dependency notices.
+ * @param dependencies the notices of the bundled dependencies
+ * @returns the complete notices text
+ */
 export async function binaryNotices(dependencies: string): Promise<string> {
     const runtime = UPSTREAM_NOTICES[`bun@${Bun.version}`];
     if (runtime === undefined) throw new Error(`No runtime notice is recorded for Bun ${Bun.version}.`);

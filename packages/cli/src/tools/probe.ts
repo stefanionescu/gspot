@@ -145,10 +145,11 @@ function readVersion(root: string, cwd: string, path: string, tool: ToolPin): Ve
 
 /**
  * Interpret an executable version response for both installation and later probes.
- * @param tool
- * @param result
- * @param installedPackage
- * @param installedMiseVersion
+ * @param tool the pin
+ * @param result what the version command printed and how it exited
+ * @param installedPackage the version the private npm package declares, when the tool is one
+ * @param installedMiseVersion the version mise installed, when the tool is a mise tool
+ * @returns the version, or the state and note of a tool that gave none
  */
 export function observeToolVersion(
     tool: ToolPin,
@@ -173,9 +174,10 @@ export function observeToolVersion(
 
 /**
  * Classify a native version against its selected pin and accepted floor.
- * @param found
- * @param want
- * @param floor
+ * @param found the version the tool reported
+ * @param want the pinned version
+ * @param floor the lowest version the configuration accepts
+ * @returns ok, outdated below the floor, newer above the pin, or error for no version
  */
 export function toolVersionState(found: string, want: string, floor: string): ToolProbe['state'] {
     const version = semver.coerce(found);
@@ -286,8 +288,9 @@ export function probeTool(context: ToolContext, tool: ToolPin): ToolProbe {
 
 /**
  * Resolve a declared executable pin, or a repository-owned host command.
- * @param manifests
- * @param name
+ * @param manifests the manifests that may declare the tool
+ * @param name the tool name
+ * @returns the declared pin, or a host command pin when no manifest declares it
  */
 export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
     for (const manifest of manifests) {

@@ -20,10 +20,11 @@ const manifestSchema = z.object({
 
 /**
  * Run only gspot when native initialization exits before the package command.
- * @param root
- * @param name
- * @param runner
- * @param binary
+ * @param root the repository root
+ * @param name the hook
+ * @param runner the task runner the policy names, or undefined
+ * @param binary the pinned executable when no runner resolves gspot
+ * @returns the hook script
  */
 export function simpleGitHookFallback(
     root: string,
@@ -36,10 +37,10 @@ export function simpleGitHookFallback(
 
 /**
  * Preserve each authored command in a subprocess before running the gspot check.
- * @param root
- * @param runner
- * @param out
- * @param binary
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param out the generated proposal the integration scripts and package keys are added to
+ * @param binary the pinned executable when no runner resolves gspot
  */
 export function simpleGitHookOutputs(
     root: string,

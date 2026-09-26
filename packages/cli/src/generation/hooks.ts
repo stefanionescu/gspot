@@ -21,7 +21,8 @@ const RUNNER_EXEC: Record<string, string> = {
 
 /**
  * Locate policy-owned hook configuration relative to the working directory Git uses for hooks.
- * @param root
+ * @param root the repository root
+ * @returns the path prefix from the Git top level to the root, '' at the top level or outside Git
  */
 export function hookPrefix(root: string): string {
     if (!isGitRepository(root)) return '';
@@ -32,8 +33,9 @@ export function hookPrefix(root: string): string {
 
 /**
  * Resolve gspot locally, without downloading a missing launcher.
- * @param runner
- * @param binaryPath
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @returns the shell text that runs gspot
  */
 export function runnerExec(runner: string | undefined, binaryPath?: string): string {
     return (
@@ -43,10 +45,11 @@ export function runnerExec(runner: string | undefined, binaryPath?: string): str
 
 /**
  * The check invocation for one Git hook.
- * @param name
- * @param runner
- * @param binaryPath
- * @param directory
+ * @param name the hook
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @param directory the directory to enter first, '' for the working directory
+ * @returns the shell text that runs the hook's check, or explains an unavailable executable
  */
 export function hookCommand(name: HookName, runner: string | undefined, binaryPath?: string, directory = ''): string {
     const at = directory === '' ? '' : `cd '${directory.replaceAll("'", "'\"'\"'")}' && `;
@@ -57,11 +60,12 @@ export function hookCommand(name: HookName, runner: string | undefined, binaryPa
 
 /**
  * Execute an existing hook as a subprocess before checking the same Git input.
- * @param name
- * @param runner
- * @param binaryPath
- * @param original
- * @param commands
+ * @param name the hook
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @param original whether a preserved original hook runs first
+ * @param commands the check commands to run, one gspot invocation by default
+ * @returns the hook script
  */
 export function hookBody(
     name: HookName,
@@ -109,9 +113,10 @@ export function hookBody(
 
 /**
  * The managed invocation in each authored Husky script.
- * @param root
- * @param runner
- * @param binaryPath
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @returns the Husky script path and the one line gspot owns in it, per hook
  */
 export function huskyLines(
     root: string,
@@ -142,9 +147,10 @@ export function huskyLines(
 
 /**
  * Preserve the gspot verdict before the native manager combines job results.
- * @param name
- * @param runner
- * @param binaryPath
+ * @param name the hook
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @returns the Lefthook command text
  */
 export function lefthookCommand(name: HookName, runner: string | undefined, binaryPath?: string): string {
     const args =
@@ -164,8 +170,9 @@ export function lefthookCommand(name: HookName, runner: string | undefined, bina
 
 /**
  * The owned command in each supported Lefthook hook.
- * @param runner
- * @param binaryPath
+ * @param runner the task runner the policy names, or undefined
+ * @param binaryPath the pinned executable when no runner resolves gspot
+ * @returns the hooks table Lefthook reads, keyed by hook
  */
 export function lefthookBlock(runner: string | undefined, binaryPath?: string): LefthookBlock {
     return Object.fromEntries(
@@ -185,9 +192,10 @@ export function lefthookBlock(runner: string | undefined, binaryPath?: string): 
 
 /**
  * Select the authored Lefthook file and own only the gspot commands.
- * @param root
- * @param runner
- * @param binary
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param binary the pinned executable when no runner resolves gspot
+ * @returns the shared configuration output with the keys gspot installs
  */
 export function lefthookConfiguration(
     root: string,
@@ -221,8 +229,9 @@ export type LefthookBlock = Record<string, { commands: Record<string, unknown> }
 
 /**
  * Invoke the generated integration from the Git working directory.
- * @param prefix
- * @param name
+ * @param prefix the path prefix from the Git top level to the repository root
+ * @param name the hook
+ * @returns the simple-git-hooks command text
  */
 export function simpleGitHookCommand(prefix: string, name: string): string {
     return `bash '${`${prefix}${DIRECTORY}/${name}`.replaceAll("'", "'\"'\"'")}' "$@"`;

@@ -167,18 +167,18 @@ function resultFor(
 
 /**
  * Runs check and returns what to print.
- * @param root
+ * @param root the tree to check: the repository, or a snapshot of a revision
  * @param options the parsed flags
- * @param signal
- * @param revision
- * @param revision.commits
- * @param revision.historyComplete
- * @param revision.content
- * @param revision.cacheRoot
- * @param revision.reference
- * @param revision.reportRoot
- * @param revision.staged
- * @param revision.changed
+ * @param signal cancellation for the run
+ * @param revision what the snapshot stands for, when the root is one
+ * @param revision.commits the commits under review
+ * @param revision.historyComplete whether every commit under review is present
+ * @param revision.content the staged index or a commit
+ * @param revision.cacheRoot the repository whose cache the run reads and writes
+ * @param revision.reference the revision named in the report
+ * @param revision.reportRoot the repository the report is published to
+ * @param revision.staged the staged files, for the commit stage
+ * @param revision.changed the changed files, for a range under review
  * @returns the text, the run report and the exit code
  */
 async function checkContent(
@@ -240,8 +240,9 @@ async function checkContent(
 }
 /**
  * Check the working tree or an isolated, exact snapshot of the staged index.
- * @param options
- * @param signal
+ * @param options the parsed flags
+ * @param signal cancellation for the run
+ * @returns the text to print and the exit code
  */
 export async function checkCommand(options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     const root = findRoot(options.cwd);

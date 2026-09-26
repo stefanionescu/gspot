@@ -28,10 +28,11 @@ import {
 
 /**
  * Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner.
- * @param options
- * @param options.policy
- * @param options.repository
- * @param options.tools
+ * @param options the policy, the repository, and the tools the manager runs with
+ * @param options.policy the repository policy
+ * @param options.repository the repository root and whether Git is present
+ * @param options.tools the tool context that finds the manager's executable
+ * @returns the line that says what was installed, or '' when no native manager owns the hooks
  */
 export async function installHookManager({
     policy,

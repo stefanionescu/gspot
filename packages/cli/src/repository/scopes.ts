@@ -267,8 +267,9 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
 
 /**
  * Declared ancestors of a scope, ordered from the outermost to the exact scope.
- * @param entries
- * @param path
+ * @param entries the declared scopes
+ * @param path the scope path
+ * @returns the scopes on the way down to the path, the path itself last
  */
 export function scopeAncestors(
     entries: Pick<ScopeEntry, 'path' | 'configurations'>[],

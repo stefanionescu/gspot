@@ -38,7 +38,8 @@ function rejectDifferingNativeHook(
 
 /**
  * Ask Git for the actual clone-local destination, including worktrees and core.hooksPath.
- * @param root
+ * @param root the repository root
+ * @returns the hooks directory with the roots that confine and record it
  */
 export function hookLocation(root: string): HookLocation {
     const repository = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: root });
@@ -82,10 +83,11 @@ export function hookLocation(root: string): HookLocation {
 
 /**
  * Plan the dispatcher and original sibling before applying any hook mutation.
- * @param options
- * @param options.policy
- * @param options.repository
- * @param manager
+ * @param options the policy and the repository the hooks belong to
+ * @param options.policy the repository policy
+ * @param options.repository the repository root and whether Git is present
+ * @param manager the hooks a native manager prepared, when one owns the hooks
+ * @returns the line that says what was installed, or '' when nothing was
  */
 export function installHooks(
     { policy, repository }: { policy: Policy; repository: Pick<Repository, 'root' | 'hasGit'> },
@@ -241,8 +243,9 @@ export function installHooks(
 
 /**
  * Plan hook restoration while both the repository and Git hook boundaries remain locked.
- * @param owner
- * @param location
+ * @param owner the lifecycle owner of the hooks directory
+ * @param location the hooks directory with its roots
+ * @returns the restorations to apply and the edited hooks that are kept
  */
 export function proposeHookRestorations(
     owner: LifecycleOwner,
@@ -296,9 +299,10 @@ export function proposeHookRestorations(
 
 /**
  * Compare Git's executable hook files with their recorded installed identities.
- * @param options
- * @param options.policy
- * @param options.repository
+ * @param options the policy and the repository the hooks belong to
+ * @param options.policy the repository policy
+ * @param options.repository the repository root and whether Git is present
+ * @returns whether the hooks are ready, with the line that says so
  */
 export function hookStatus({
     policy,

@@ -8,8 +8,9 @@ function problem(fn: SwiftFunction, rule: string, text: string): StructureProble
 
 /**
  * Report every implemented function at or below the configured statement threshold.
- * @param functions
- * @param threshold
+ * @param functions the functions of a file
+ * @param threshold the statement count at or under which a function is trivial
+ * @returns one problem per trivial function
  */
 export function trivialFunctions(functions: SwiftFunction[], threshold: number): StructureProblem[] {
     return functions.flatMap((fn) => {

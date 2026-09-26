@@ -8,7 +8,8 @@ function value(text: string): unknown {
 
 /**
  * Read SQLFluff's case-sensitive INI sections without loading paths or templaters.
- * @param text
+ * @param text the configuration text
+ * @returns the keys and values of each section, by section name
  */
 export function sqlfluffConfiguration(text: string): Map<string, Map<string, string>> {
     const sections = new Map<string, Map<string, string>>();
@@ -48,7 +49,8 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
 
 /**
  * Extract rule collections from the parsed SQLFluff configuration.
- * @param text
+ * @param text the configuration text
+ * @returns the rule lists and per-rule tables the configuration declares
  */
 export function sqlfluffRules(text: string): Record<string, unknown> {
     const sections = sqlfluffConfiguration(text);

@@ -4,9 +4,10 @@ import type { Policy, RepositoryCheck } from '#cli/policy/normalize.ts';
 
 /**
  * Describe the persistent policy selection independently of files or tool availability.
- * @param policy
- * @param scope
- * @param spec
+ * @param policy the repository policy
+ * @param scope the resolved scope the check runs in
+ * @param spec the check
+ * @returns on, off with its reason, or the setting the check waits for
  */
 export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpec): string {
     if (policy.level !== 'all' && spec.level !== 'recommended' && !policy.extraChecks.includes(spec.name))
@@ -23,8 +24,9 @@ export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpe
 
 /**
  * The unmet setting declared by a check, if any.
- * @param scope
- * @param spec
+ * @param scope the resolved scope the check runs in
+ * @param spec the check
+ * @returns the setting the check waits for, or undefined when it can run
  */
 export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
     const setting = spec.waits_for;
@@ -37,7 +39,8 @@ export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string |
 
 /**
  * Normalize a repository command into the check definition used by planning and explanations.
- * @param entry
+ * @param entry the check the policy declares
+ * @returns the check as a manifest would declare it
  */
 export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;

@@ -78,9 +78,10 @@ function pointerPath(name: string, scope: string): string {
 }
 /**
  * Configuration paths named by a check command or its environment.
- * @param session
- * @param planned
- * @param command
+ * @param session the open session
+ * @param planned the planned check
+ * @param command the command to read, the check's own by default
+ * @returns the configuration paths, relative to the root
  */
 export function commandConfigurations(
     session: Session,

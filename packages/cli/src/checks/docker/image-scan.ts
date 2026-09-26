@@ -38,7 +38,8 @@ const composeSchema = z.object({
 
 /**
  * Scan each literal service image once per Compose file.
- * @param input
+ * @param input the engine input
+ * @returns the findings
  */
 export async function trivyImage(input: EngineInput): Promise<Finding[]> {
     const isCompose = pathMatcher(COMPOSE_FILES);

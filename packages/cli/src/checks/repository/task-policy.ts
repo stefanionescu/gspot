@@ -6,7 +6,8 @@ import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
 /**
  * Report missing or changed task bodies through the same field owner used by generation.
- * @param input
+ * @param input the engine input
+ * @returns the findings
  */
 export function taskPolicy(input: EngineInput): Finding[] {
     const runner = input.policyFiles.policy.runner;

@@ -12,8 +12,8 @@ export class MissingToolError extends Error {
 /** An installer could not make the already validated, locked tools available. */
 export class InstallationError extends Error {
     /**
-     *
-     * @param message
+     * Names the installation that failed.
+     * @param message what the installer reported
      */
     constructor(message: string) {
         super(message);

@@ -179,10 +179,11 @@ function placeOf(
 
 /**
  * Validate a CodeQL report and apply accepted results to repository-relative source locations.
- * @param log
- * @param check
- * @param accepted
- * @param source
+ * @param log the parsed SARIF log
+ * @param check the check name the findings carry
+ * @param accepted the results the policy accepts
+ * @param source the copy of the repository the analysis ran in
+ * @returns the findings the policy does not accept
  */
 export function sarifFindings(log: unknown, check: string, accepted: AcceptedResult[], source: string): Finding[] {
     const parsed = sarifLog.parse(log);

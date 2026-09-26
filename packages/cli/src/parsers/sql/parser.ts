@@ -52,7 +52,8 @@ export async function parseSql(text: string): Promise<SqlParse> {
 
 /**
  * Parse procedural bodies using the same embedded PostgreSQL parser as SQL statements.
- * @param text
+ * @param text the PL/pgSQL body
+ * @returns the parse tree as the parser reports it
  */
 export async function parsePlpgsql(text: string): Promise<unknown> {
     const module = await pgModule();

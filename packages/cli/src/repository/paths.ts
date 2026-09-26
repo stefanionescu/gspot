@@ -22,7 +22,8 @@ export function pathMatcher(patterns: string[]): (path: string) => boolean {
 
 /**
  * Compile the same directory, inclusion, and exclusion selectors for CLI and generated tool configurations.
- * @param patterns
+ * @param patterns the selectors, a leading ! for an exclusion
+ * @returns the inclusions and exclusions, directories expanded
  */
 export function pathExpressions(patterns: string[]): PathExpressions {
     const expanded = expandedPaths(patterns);
@@ -48,7 +49,8 @@ export function isInScope(path: string, scope: string): boolean {
 
 /**
  * Expand literal directory selectors while retaining their inclusion or exclusion polarity.
- * @param patterns
+ * @param patterns the selectors, a leading ! for an exclusion
+ * @returns the selectors, each literal path followed by everything under it
  */
 export function expandedPaths(patterns: string[]): string[] {
     return patterns.flatMap((pattern) => {

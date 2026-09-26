@@ -6,8 +6,9 @@ const HASH_BLOCK_END = '# <<< gspot managed <<<';
 
 /**
  * Locate one complete block, refusing ambiguous or malformed markers.
- * @param text
- * @param style
+ * @param text the file text
+ * @param style the marker style of the file format
+ * @returns the block's character range, or undefined when the file holds none
  */
 export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
     const markersForStyle =
@@ -33,9 +34,10 @@ export function blockSpan(text: string, style: BlockStyle): { start: number; end
 
 /**
  * Replace a complete block or append it, preserving authored bytes around it.
- * @param existing
- * @param block
- * @param style
+ * @param existing the file text
+ * @param block the block body to install
+ * @param style the marker style of the file format
+ * @returns the file text with the block in place
  */
 export function applyBlock(existing: string, block: string, style: BlockStyle): string {
     const { start, end } =

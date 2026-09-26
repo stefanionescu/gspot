@@ -11,9 +11,9 @@ import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoptio
 
 /**
  * Convert observed formatter and EditorConfig settings before proposing retirement.
- * @param root
- * @param configs
- * @param lists
+ * @param root the repository root
+ * @param configs the formatter and EditorConfig files found
+ * @param lists the carried configuration the settings are added to
  */
 export async function collectFormatting(
     root: string,

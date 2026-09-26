@@ -106,12 +106,12 @@ function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
 
 /**
  * The inputs every template sees.
- * @param root
- * @param policy
- * @param sourceFiles
- * @param scopes
- * @param version
+ * @param root the repository root
+ * @param policy the repository policy
+ * @param sourceFiles the tracked files
+ * @param scopes every resolved scope
  * @param selection the scope being rendered
+ * @param version the gspot version the header names
  * @param fragments the fragment text other configurations contribute
  * @param fragmentImports the import lines those fragments declare
  * @param fragmentFiles the code file globs those fragments add

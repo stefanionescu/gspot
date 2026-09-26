@@ -5,7 +5,8 @@ import type { Manifest } from '#cli/configurations/manifests.ts';
 
 /**
  * Keep Python lint dependencies in a private project owned by gspot.
- * @param manifests
+ * @param manifests the selected manifests
+ * @returns the private Python project files, or none without Python tools
  */
 export function toolEnvironment(manifests: Manifest[]): GeneratedFile[] {
     const dependencies = pythonPins(manifests);

@@ -13,10 +13,11 @@ import { carriedTool, reasonFor, type CarriedConfiguration } from '#cli/policy/a
 
 /**
  * Resolve static inheritance from observed files, retaining every input for publication-time validation.
- * @param root
- * @param path
- * @param source
- * @param lists
+ * @param root the repository root
+ * @param path the authored Stylelint file
+ * @param source the file, read and parsed
+ * @param lists the carried configuration that records every file read
+ * @returns the complete rule table after inheritance
  */
 function stylelintRules(
     root: string,
@@ -48,11 +49,11 @@ function stylelintRules(
 
 /**
  * Validate the complete rule table before recording settings or authorizing retirement.
- * @param source
- * @param path
- * @param lists
- * @param root
- * @param check
+ * @param source the file, read and parsed
+ * @param path the authored Stylelint file
+ * @param lists the carried configuration
+ * @param root the repository root
+ * @param check the check the carried ignores belong to
  */
 async function carryStylelint(
     source: CarrySource,

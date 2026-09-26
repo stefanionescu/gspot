@@ -1,6 +1,7 @@
 /**
  * Read Vale rule overrides and selected styles separately for each file-pattern section.
- * @param text
+ * @param text the vale.ini text
+ * @returns the styles and rule levels of each section
  */
 export function valeRules(text: string): Record<string, unknown> {
     const sections = new Map<string, Map<string, string[]>>();

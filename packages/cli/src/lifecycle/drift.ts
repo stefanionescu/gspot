@@ -116,7 +116,7 @@ function knownPaths(rendered: GeneratedProposal): Set<string> {
  * @param root the repository root
  * @param policy the repository policy
  * @param hasPackageManager whether generated tools use a package manager
- * @param rendered
+ * @param rendered the generated files as rendered now
  * @returns the drift entries in path order
  */
 export function computeDrift(

@@ -115,7 +115,7 @@ export function shippedPolicy(): ShippedPolicy {
  * @param surface the scope's settings surface
  * @param policy the repository policy
  * @param scope the scope path, '' for the root
- * @param manifests
+ * @param manifests the selected manifests, whose naming rules follow the shipped ones
  * @returns the effective policy
  */
 export function effectivePolicy(

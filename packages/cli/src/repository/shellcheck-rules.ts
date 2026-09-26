@@ -1,6 +1,7 @@
 /**
  * Read ShellCheck rule directives without executing configuration or resolving source paths.
- * @param text
+ * @param text the configuration text
+ * @returns the enabled and disabled rule codes
  */
 export function shellcheckRules(text: string): { enable: string[]; disable: string[] } {
     const rules = { enable: [] as string[], disable: [] as string[] };

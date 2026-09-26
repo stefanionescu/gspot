@@ -6,9 +6,10 @@ import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.
- * @param manifests
- * @param manager
- * @param runner
+ * @param manifests the selected manifests
+ * @param manager the package manager the repository uses, or undefined without one
+ * @param runner the task runner the policy names, or undefined
+ * @returns the private project's files, or none without a package manager
  */
 export function toolPackages(
     manifests: Manifest[],

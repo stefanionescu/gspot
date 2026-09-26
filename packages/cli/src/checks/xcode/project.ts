@@ -19,7 +19,8 @@ function folderOf(projectFile: string): string {
 
 /**
  * Report Swift sources outside targets and project references missing from the tree.
- * @param input
+ * @param input the engine input
+ * @returns the findings
  */
 export function orphanSources(input: EngineInput): Finding[] {
     const projects = trackedEnding(input, [PROJECT_FILE]).map((path) => ({

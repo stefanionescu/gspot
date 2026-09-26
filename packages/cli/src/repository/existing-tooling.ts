@@ -89,9 +89,10 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
 
 /**
  * Discover configuration sections declared by the tools that own them.
- * @param root
- * @param paths
- * @param selected
+ * @param root the repository root
+ * @param paths the tracked file paths
+ * @param selected the selected configurations, when only their tools count
+ * @returns the tool configurations found, with the file and section each lives in
  */
 export function declaredConfigurations(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
@@ -192,8 +193,9 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
 
 /**
  * Identify authored lint jobs before proposing another CI job.
- * @param root
- * @param paths
+ * @param root the repository root
+ * @param paths the CI files to read
+ * @returns the names of the jobs that already run a linter
  */
 export function ciLintJobs(root: string, paths: string[]): string[] {
     const files = openConfinedRoot(root);

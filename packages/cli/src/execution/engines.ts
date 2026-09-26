@@ -43,8 +43,9 @@ function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | '
 
 /**
  * Supply execution services and selected files without exposing the repository session.
- * @param session
- * @param planned
+ * @param session the open session
+ * @param planned the planned check with its scope and files
+ * @returns the engine input
  */
 export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'spec' | 'files'>): EngineInput {
     const input: EngineInput = {
@@ -142,6 +143,7 @@ export async function runEngineCheck(
 /**
  * Select an implementation before execution starts.
  * @param spec the selected check definition
+ * @returns the function that runs the check
  */
 export function resolveCheck(
     spec: CheckSpec,

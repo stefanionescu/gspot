@@ -54,9 +54,9 @@ const nativeImporters: Record<
  * @param tool the tool the file configures
  * @param path the file, relative to the root
  * @param lists the lists the entries are added to
- * @param root
- * @param reader
- * @param check
+ * @param root the repository root
+ * @param reader the kind of reading the tool's manifest declares for the file
+ * @param check the check the carried ignores belong to
  */
 async function carryFrom(
     source: CarrySource,
@@ -124,7 +124,7 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * @param root the repository root
  * @param tooling the configuration files, hooks and lint folders found
  * @param selected the ids of the selected configurations
- * @param paths
+ * @param paths the tracked source paths
  * @returns the lists to write into gspot.toml and the files takeover replaces
  */
 export async function collectCarried(

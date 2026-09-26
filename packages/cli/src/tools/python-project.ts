@@ -87,9 +87,10 @@ const INDEX_SETTINGS = new Set([
 
 /**
  * Preserve repository index settings while uv owns user configuration and environment precedence.
- * @param root
- * @param owner
- * @param work
+ * @param root the repository root
+ * @param owner the lifecycle owner that reads the authored uv settings
+ * @param work the directory the resolution runs in
+ * @returns the uv arguments that carry the repository's index settings
  */
 function pythonSettings(root: string, owner: LifecycleOwner, work: string): string[] {
     const configuration = owner.read('uv.toml');
@@ -152,9 +153,9 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
 
 /**
  * Resolve Python tool requirements outside the repository before publishing generated files.
- * @param root
- * @param files
- * @param owner
+ * @param root the repository root
+ * @param files the generated files, among them the Python project
+ * @param owner the lifecycle owner that records the lock
  */
 export async function resolvePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
     const project = files.find((file) => file.path === PROJECT);
@@ -185,8 +186,9 @@ export async function resolvePythonProject(root: string, files: GeneratedFile[],
 
 /**
  * Observe Python lock drift without resolving dependencies or creating ownership state.
- * @param root
- * @param generated
+ * @param root the repository root
+ * @param generated the generated files, among them the Python project
+ * @returns the lock path with what is wrong with it, or undefined when there is no Python project
  */
 export function pythonLockDrift(
     root: string,
@@ -206,7 +208,8 @@ export function pythonLockDrift(
 
 /**
  * Validate immutable Python inputs for a read-only installation preview.
- * @param root
+ * @param root the repository root
+ * @returns the commands an install runs, or none without a Python project
  */
 export function pythonInstallSteps(root: string): string[][] {
     const files = openConfinedRoot(root);
@@ -225,8 +228,9 @@ export function pythonInstallSteps(root: string): string[][] {
 
 /**
  * Install Python tools immutably and publish the relocatable environment through lifecycle ownership.
- * @param root
- * @param executable
+ * @param root the repository root
+ * @param executable the uv executable to run
+ * @returns the line that says what was installed, or '' without a Python project
  */
 export async function installPythonProject(root: string, executable = 'uv'): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {

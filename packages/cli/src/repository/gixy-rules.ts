@@ -1,6 +1,7 @@
 /**
  * Read Gixy's root check selectors without flattening plugin-specific sections.
- * @param text
+ * @param text the configuration text
+ * @returns the values of each list option, by option
  */
 export function gixyRules(text: string): Record<string, string[]> {
     const result: Record<string, string[]> = {};

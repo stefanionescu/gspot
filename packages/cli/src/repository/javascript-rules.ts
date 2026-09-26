@@ -3,8 +3,9 @@ import ts from 'typescript';
 
 /**
  * Read a single static JavaScript configuration export without executing any code.
- * @param path
- * @param text
+ * @param path the file path, for diagnostics
+ * @param text the file text
+ * @returns the exported value as data
  */
 export function javascriptRules(path: string, text: string): unknown {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);

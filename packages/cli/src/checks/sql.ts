@@ -118,7 +118,8 @@ function sqlStatements(value: unknown): number {
 
 /**
  * Check implemented PostgreSQL functions and their declared input parameters.
- * @param input
+ * @param input the engine input
+ * @returns the findings
  */
 export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];

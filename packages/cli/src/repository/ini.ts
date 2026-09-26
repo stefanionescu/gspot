@@ -1,7 +1,8 @@
 /**
  * Select one INI section and its colon-delimited subsections without changing their text.
- * @param text
- * @param section
+ * @param text the INI text
+ * @param section the section name
+ * @returns the section text, or undefined when the file has no such section
  */
 export function iniSection(text: string, section: string): string | undefined {
     const selected: string[] = [];

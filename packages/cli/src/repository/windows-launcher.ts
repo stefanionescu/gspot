@@ -7,9 +7,10 @@ const SECTION_SIZE = 40;
 
 /**
  * Relocate uv interpreter metadata without changing its native code or embedded Python ZIP.
- * @param bytes
- * @param interpreters
- * @param hosts
+ * @param bytes the launcher executable
+ * @param interpreters the interpreter path each installed path moves to
+ * @param hosts the installed directories the launcher may point into
+ * @returns the relocated launcher, or undefined when the bytes are not a Windows executable
  */
 export function relocateWindowsLauncher(
     bytes: Buffer,

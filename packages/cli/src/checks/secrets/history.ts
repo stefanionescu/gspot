@@ -7,8 +7,9 @@ import { pushBase } from '#cli/repository/revisions/selection.ts';
 
 /**
  * Scan the exact selected commits, including secrets removed before the final pushed tree.
- * @param session
- * @param planned
+ * @param session the open session
+ * @param planned the planned check
+ * @returns the check result
  */
 export async function checkSecretHistory(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();

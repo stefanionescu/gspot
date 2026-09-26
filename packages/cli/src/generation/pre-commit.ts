@@ -19,9 +19,10 @@ const configurationSchema = z.object({
 
 /**
  * Own one local pre-commit entry while preserving every unrelated repository node.
- * @param root
- * @param runner
- * @param binary
+ * @param root the repository root
+ * @param runner the task runner the policy names, or undefined
+ * @param binary the pinned executable when no runner resolves gspot
+ * @returns the shared configuration output with the entry gspot installs
  */
 export function preCommitConfiguration(
     root: string,

@@ -9,6 +9,7 @@ import { readPackageManifest } from '#cli/repository/manifests.ts';
 /**
  * Validate an exact package-manager identity at the manifest boundary.
  * @param value the packageManager declaration
+ * @returns the manager name and exact version
  */
 export function parsePackageManager(value: string): z.infer<typeof packageManagerSchema> {
     const [name, version, ...extra] = value.split('@');
@@ -18,8 +19,9 @@ export function parsePackageManager(value: string): z.infer<typeof packageManage
 
 /**
  * Observe the repository manager and retain the version recorded for its isolated tool project.
- * @param root
- * @param projectPaths
+ * @param root the repository root
+ * @param projectPaths the package manifests of the repository
+ * @returns the package manager name and exact version
  */
 export async function toolPackageManager(
     root: string,

@@ -64,7 +64,8 @@ export function extensionOf(path: string): string {
 
 /**
  * The private build cache for the canonical repository path.
- * @param root
+ * @param root the repository root
+ * @returns the cache folder for this repository
  */
 export function buildFolder(root: string): string {
     const identity = new Bun.CryptoHasher('sha256').update(realpathSync(root)).digest('hex');

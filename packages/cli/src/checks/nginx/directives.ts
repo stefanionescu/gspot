@@ -4,7 +4,8 @@ const ESCAPES: Record<string, string> = { t: '\t', r: '\r', n: '\n', '"': '"', "
 
 /**
  * Read directive arguments without changing quoted whitespace or treating comments as configuration.
- * @param text
+ * @param text the nginx configuration text
+ * @returns each directive as its name followed by its arguments
  */
 export function nginxDirectives(text: string): string[][] {
     const directives: string[][] = [];

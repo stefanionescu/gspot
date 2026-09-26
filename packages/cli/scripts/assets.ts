@@ -23,7 +23,10 @@ function assetKey(file: string): string {
     return key.replaceAll('\\', '/');
 }
 
-// Writes the entry module that embeds every asset and starts the CLI.
+/**
+ * Writes the entry module that embeds every asset and starts the CLI.
+ * @returns the path of the written module
+ */
 export function writeEntry(): string {
     const assets = [
         ...globbySync(

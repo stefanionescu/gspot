@@ -187,7 +187,8 @@ async function legacyEntries(
 
 /**
  * Import native ESLint configuration while preserving selectors and repository-owned executable modules.
- * @param request
+ * @param request the repository root, the configuration to read, and whether it is a flat configuration
+ * @returns the rules, selectors, and module registrations the configuration holds
  */
 export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Promise<z.infer<typeof eslintResponse>> {
     if (!request.flat && request.from === undefined)
@@ -347,7 +348,8 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
 }
 /**
  * Resolve every selected file with one native ESLint instance in an isolated configuration process.
- * @param request
+ * @param request the repository root, the configuration, and the files whose rules to resolve
+ * @returns the rules in force for each file
  */
 export async function evaluateRuleCoverage(
     request: z.infer<typeof eslintCoverageRequest>,

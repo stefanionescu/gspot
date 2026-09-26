@@ -6,11 +6,11 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
  * @param checkName the check name
  * @param scope the scope path, '' for the root
  * @param options the stage, message file, or exact push input
- * @param options.stage
- * @param options.push
- * @param options.push.input
- * @param options.push.remote
- * @param options.messageFile
+ * @param options.stage the stage the check ran in
+ * @param options.push the pre-push input the check read
+ * @param options.push.input the lines Git handed the hook
+ * @param options.push.remote the remote name, when Git gave one
+ * @param options.messageFile the commit message file, for the message stage
  * @returns the command line
  */
 export function reproduceLine(

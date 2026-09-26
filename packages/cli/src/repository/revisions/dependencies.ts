@@ -58,9 +58,9 @@ const PYTHON_PATH_SPANS = z.array(
 
 /**
  * Copy verified journal-owned Vale packages matching the selected configuration.
- * @param root
- * @param snapshot
- * @param paths
+ * @param root the repository root
+ * @param snapshot the snapshot directory the packages are copied into
+ * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
 export function copyProsePackages(root: string, snapshot: string, paths: string[]): void {
     for (const config of paths.filter(
@@ -131,10 +131,10 @@ async function validateCopiedLinks(
 
 /**
  * Copy matching installed dependencies and relocate their revision-specific loader paths.
- * @param root
- * @param snapshot
- * @param paths
- * @param cancelSignal
+ * @param root the repository root
+ * @param snapshot the snapshot directory the dependencies are copied into
+ * @param paths the snapshot's files, among them the project manifests that own dependencies
+ * @param cancelSignal cancellation for the copy
  */
 export async function copyDependencies(
     root: string,

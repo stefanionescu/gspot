@@ -7,8 +7,9 @@ import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 /**
  * Resolve native ignore patterns before either the checker or its fixer receives file arguments.
- * @param session
- * @param check
+ * @param session the open session
+ * @param check the planned Prettier check
+ * @returns the check with the ignored files left out
  */
 export async function prettierInputs(session: Session, check: PlannedCheck): Promise<PlannedCheck> {
     if (

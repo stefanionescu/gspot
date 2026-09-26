@@ -18,11 +18,12 @@ function jsonDocument(text: string) {
 
 /**
  * Inspect shared fields through the same parser used by lifecycle proposals.
- * @param root
- * @param output
- * @param output.path
- * @param output.format
- * @param output.changes
+ * @param root the repository root
+ * @param output the shared configuration gspot installs keys into
+ * @param output.path the file path
+ * @param output.format the document format
+ * @param output.changes the keys and the values they must hold
+ * @returns whether the file exists and holds every installed value
  */
 export function hasConfiguration(
     root: string,
@@ -45,9 +46,10 @@ export function hasConfiguration(
 
 /**
  * Read and edit declared keys through the parser that owns their file format.
- * @param source
- * @param format
- * @param created
+ * @param source the file text
+ * @param format the document format
+ * @param created whether the file is new, so an empty document gets no leading blank line
+ * @returns a document that reads, sets, and prints values by key path
  */
 export function configurationDocument(source: string, format: 'json' | 'yaml' | 'toml', created = false) {
     if (format === 'toml') {
@@ -136,9 +138,10 @@ export function configurationDocument(source: string, format: 'json' | 'yaml' | 
 
 /**
  * Remove empty containers only when this owner created them for managed fields.
- * @param document
- * @param parents
- * @param protectedFields
+ * @param document the parsed document
+ * @param parents the container paths this owner created, deepest last
+ * @param protectedFields the key paths whose containers stay whatever they hold
+ * @returns the created containers that still exist
  */
 export function pruneConfigurationParents(
     document: ReturnType<typeof configurationDocument>,

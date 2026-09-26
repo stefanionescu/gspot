@@ -51,7 +51,8 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
 }
 /**
  * Preserve native formatting defaults and nested overrides as policy data.
- * @param request
+ * @param request the repository root, the formatter configuration to read, and its ignore files
+ * @returns the carried formatter settings
  */
 export async function evaluateFormat(request: z.infer<typeof formatRequest>): Promise<CarriedFormatter> {
     const { root, from, ignorePaths = [] } = request;
@@ -175,7 +176,8 @@ export async function evaluateFormat(request: z.infer<typeof formatRequest>): Pr
 }
 /**
  * Resolve the pinned formatter's exclusions without loading executable formatting configuration.
- * @param request
+ * @param request the repository root and the ignore file to read
+ * @returns the ignored paths
  */
 export async function evaluateIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
     if (openConfinedRoot(request.root).read(request.ignorePath) === undefined)

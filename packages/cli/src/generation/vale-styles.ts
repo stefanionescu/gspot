@@ -17,7 +17,10 @@ function renderedRule(stem: string, text: string, view: MergedView): string {
         .replace(LONGER_THAN, () => `longer than ${String(limit)}`);
 }
 
-/** Names of the bundled Vale styles, shared by configuration and asset generation. */
+/**
+ * Names of the bundled Vale styles, shared by configuration and asset generation.
+ * @returns the style names
+ */
 export function styleNames(): string[] {
     return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
 }

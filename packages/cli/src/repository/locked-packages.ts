@@ -10,8 +10,9 @@ const VERSION = z.object({ version: z.string().optional(), name: z.string().opti
 
 /**
  * Read resolved package identities from supported textual dependency lockfiles.
- * @param filename
- * @param text
+ * @param filename the lockfile name, which names its format
+ * @param text the lockfile text
+ * @returns the package names the lock resolves
  */
 export function lockedPackages(filename: string, text: string): Set<string> {
     if (['uv.lock', 'poetry.lock', 'pdm.lock'].includes(filename)) {

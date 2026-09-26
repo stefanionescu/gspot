@@ -4,7 +4,7 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.
- * @param manifests
+ * @param manifests the manifests whose untracked paths count, every one by default
  * @returns the block body
  */
 export function gitignoreBlock(

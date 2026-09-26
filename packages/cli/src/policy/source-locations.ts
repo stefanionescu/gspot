@@ -41,7 +41,8 @@ function expandedTable(parts: string[], arrays: Map<string, number>): PathSegmen
 
 /**
  * Map policy paths to authored values, including repeated and nested TOML tables.
- * @param text
+ * @param text the policy text
+ * @returns the position of every key path, the root at line 1
  */
 export function sourceLocations(text: string): Map<string, Position> {
     const locations = new Map<string, Position>([['[]', { line: 1, column: 0 }]]);
@@ -70,8 +71,9 @@ export function sourceLocations(text: string): Map<string, Position> {
 
 /**
  * Locate a value or, for an absent required value, its nearest authored container.
- * @param locations
- * @param path
+ * @param locations the positions of every key path
+ * @param path the key path
+ * @returns the position as line:column
  */
 export function policyLocation(locations: Map<string, Position>, path: PathSegment[]): string {
     const { line, column } = policyPosition(locations, path);

@@ -12,8 +12,9 @@ export const MISE_BACKENDS: { installer: string; prefix: string }[] = [
 
 /**
  * Select the private installation used by both generated projects and tool resolution.
- * @param tool
- * @param runner
+ * @param tool the pin
+ * @param runner the task runner; under mise, tools mise can pin stay out
+ * @returns the package to install privately, or undefined for a host tool or one mise pins
  */
 export function privateToolInstallation(
     tool: ToolPin,
@@ -59,7 +60,8 @@ export function npmPins(manifests: Manifest[], runner = 'npm'): Record<string, s
 
 /**
  * Select exact Python tool requirements from their implementation owners.
- * @param manifests
+ * @param manifests the selected manifests
+ * @returns one pinned requirement per Python tool
  */
 export function pythonPins(manifests: Manifest[]): string[] {
     return collectPins(manifests).flatMap((tool) => {

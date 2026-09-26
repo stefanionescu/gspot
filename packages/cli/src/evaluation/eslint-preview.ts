@@ -67,8 +67,9 @@ function ruleData(value: unknown): z.infer<typeof eslintPreviewResponse>[number]
 
 /**
  * Resolve rule declarations in the configuration process without replacing either configuration on disk.
- * @param request
- * @param work
+ * @param request the repository root, the configuration path, and the sources to compare
+ * @param work the directory the configuration process runs in
+ * @returns the rules each source resolves to
  */
 export async function evaluateEslintPreview(
     request: z.infer<typeof eslintPreviewRequest>,

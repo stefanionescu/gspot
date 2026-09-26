@@ -4,7 +4,7 @@ import type { Policy } from '#cli/policy/normalize.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { assertPolicyComplete, parsePolicyText, parseTomlText, PolicyError  } from '#cli/policy/read.ts';
+import { assertPolicyComplete, parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -46,8 +46,8 @@ export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): Tom
 /**
  * Propose a policy mutation in memory and validate its resulting document.
  * @param root the repository root
- * @param mutate the change to apply to the parsed document
  * @param text the original policy text
+ * @param mutate the change to apply to the parsed document
  * @returns the new text, the parsed policy and whether the text changed
  */
 export function proposePolicy(root: string, text: string, mutate: Mutation): WriteResult {

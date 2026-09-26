@@ -183,7 +183,7 @@ export function parseManifest(text: string, dir: string): Manifest {
 
 /**
  * Validate required configurations, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
- * @param manifests
+ * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {
     const owners = new Map<string, string>();

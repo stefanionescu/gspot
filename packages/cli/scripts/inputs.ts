@@ -30,6 +30,9 @@ if (import.meta.main) {
  * Prepare verified build input without downloading anything at CLI runtime.
  * @param path the ignored build-cache file
  * @param input the pinned download URL and expected checksum
+ * @param input.url where the input is downloaded from
+ * @param input.sha256 the checksum the download must have
+ * @returns the verified bytes
  */
 export async function prepareInput(path: string, input: { url: string; sha256: string }): Promise<Uint8Array> {
     const isCached = existsSync(path);

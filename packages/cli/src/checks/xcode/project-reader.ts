@@ -99,8 +99,9 @@ function parse(text: string): Plist {
 
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
- * @param text
- * @param directory
+ * @param text the project file text
+ * @param directory the folder the project file lives in, relative to the repository root
+ * @returns the source paths and the synchronized folders with their exclusions
  */
 export function readProject(
     text: string,
@@ -195,7 +196,8 @@ export function readProject(
 
 /**
  * Read test-target names without requiring source paths to resolve build settings.
- * @param text
+ * @param text the project file text
+ * @returns the names of the test targets
  */
 export function projectTestTargets(text: string): string[] {
     const project = projectSchema.parse(parse(text));

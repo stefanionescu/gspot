@@ -58,9 +58,10 @@ function rulesAt(parsed: unknown, path: string): Map<string, unknown> {
 
 /**
  * Compare resolved rule collections using their declared paths.
- * @param paths
- * @param previous
- * @param proposed
+ * @param paths the key paths that hold rules
+ * @param previous the document as it was
+ * @param proposed the document as generated
+ * @returns the rules added, removed, and changed under each path that differs
  */
 export function compareRules(paths: string[], previous: unknown, proposed: unknown): NonNullable<DriftEntry['rules']> {
     return paths.flatMap((path) => {
@@ -77,8 +78,9 @@ export function compareRules(paths: string[], previous: unknown, proposed: unkno
 
 /**
  * Compare declared rule lists and tables as data, retaining malformed-file diagnostics beside the byte diff.
- * @param file
- * @param before
+ * @param file the generated file
+ * @param before the file's text as it is now, or undefined when it does not exist
+ * @returns the rule differences, or the reason they could not be read
  */
 export function ruleDiff(file: GeneratedFile, before: string | undefined): Pick<DriftEntry, 'rules' | 'ruleError'> {
     if (file.rulesPath === undefined) return {};

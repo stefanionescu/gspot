@@ -8,11 +8,11 @@ import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 /**
  * Enrich an explicit apply preview with imported and computed ESLint rule data.
- * @param root
- * @param view
- * @param signal
- * @param proposal
- * @param drift
+ * @param root the repository root
+ * @param view the merged view whose ESLint settings the evaluation reads
+ * @param signal cancellation for the evaluation
+ * @param proposal the generated files
+ * @param drift the drift entries the rule differences are added to
  */
 export async function eslintRuleDiff(
     root: string,

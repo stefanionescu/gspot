@@ -36,8 +36,9 @@ function parseSource(tool: string, path: string, text: string): unknown {
 
 /**
  * Capture original UTF-8 configuration bytes and permissions through the confined reader.
- * @param root
- * @param path
+ * @param root the repository root
+ * @param path the authored configuration file
+ * @returns the file text with the snapshot of its bytes and mode
  */
 export function observeConfiguration(root: string, path: string): Omit<CarrySource, 'parsed'> {
     const files = openConfinedRoot(root);
@@ -54,12 +55,13 @@ export function observeConfiguration(root: string, path: string): Omit<CarrySour
 
 /**
  * Parse static settings from the same bytes used for mutation authorization.
- * @param original
- * @param tool
- * @param path
- * @param selector
- * @param selector.table
- * @param selector.key
+ * @param original the snapshot of the authored file
+ * @param tool the tool whose format the file is in
+ * @param path the authored file's path
+ * @param selector the section of a shared file that holds the tool's settings, when it is one
+ * @param selector.table the table the settings live under
+ * @param selector.key the key that holds them
+ * @returns the text, the parsed settings table, and the snapshot
  */
 export function parseCarrySource(
     original: FileSnapshot,
