@@ -811,6 +811,24 @@ statements or fewer, so the rule's treatment of inline callbacks is decided here
 repairs. 131 test callbacks are over 60 lines; 52 files are over 300 lines, 14 of them under
 `packages/cli/src`.
 
+Record 2026-09-26. The ESLint count fell from 9,314 to 6,002 in eighteen commits on main, `579b18fb` to
+`3efef435`. Every rule outside the complexity family is clear. The cleared rules cover unsafe values, nullable
+conditions, template expressions, magic numbers, callback references, nested templates, import layout, floating
+promises, non-null assertions, unsafe regular expressions, and trivial files. Commands export the types of their
+JSON output, and tests parse reports through the report schema. Bun types every asymmetric matcher as any, so
+typed matcher wrappers in `tests/support/expectations.ts` stand in for them. Nine trivial modules folded into their
+owners. The nginx, SQL, and Xcode tokenizers read one lexeme kind per function.
+
+Remaining: 4,791 `gspot/no-trivial-functions`, of which about 3,800 are inline callbacks of one or two statements.
+The owner decides whether the rule keeps counting anonymous callbacks passed as call arguments before those
+repairs start. The complexity family stands at 277 `no-await-expression-member`, 254 `complexity`, 198
+`cognitive-complexity`, 185 `max-lines-per-function`, and 104 `max-depth`. It also holds 90
+`no-nested-conditional`, 84 `max-statements`, and 19 `max-lines`. The densest files are
+`revisions/dependencies.ts`, `lifecycle/ownership.ts`, and `evaluation/eslint.ts`. Open: `gspot install` cannot
+fetch the unpublished plugin, so the private plugin copy is refreshed by hand after plugin changes (D-158). The
+`@npmcli/config` definitions import keeps its index path with a reason, because the package defines the values
+there.
+
 ### Step 8.2
 
 Repair naming, placement, structure, and trivial-function/file findings in their behavior owners.
