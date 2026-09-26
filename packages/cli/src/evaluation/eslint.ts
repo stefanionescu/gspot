@@ -1,198 +1,154 @@
 import { z } from 'zod';
-import ts from 'typescript';
 import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
-import { createRequire, isBuiltin } from 'node:module';
+import { createRequire } from 'node:module';
+import { dirname, join, relative, resolve } from 'node:path';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import type { EslintRegistration } from '#cli/policy/schema.ts';
+import { legacyEntries } from '#cli/evaluation/eslint-legacy.ts';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
+import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
+
+type Request = z.infer<typeof eslintRequest>;
+type Adoption = { request: Request; configPath: string; references: Map<unknown, EslintRegistration> };
 
 // The ESLint severities that switch a rule on.
 const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
 
-// A directory name with every glob character escaped, for a files pattern that names it literally.
-function literalDirectory(directory: string): string {
-    return directory.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
+// The values TOML cannot hold, which a configuration may carry only through a registered module.
+function isUnrepresentable(value: unknown): boolean {
+    if (value === null || value === undefined || value instanceof RegExp) return true;
+    if (typeof value === 'number') return !Number.isFinite(value);
+    return typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint';
 }
 
-
-async function registerEslintModule(
-    root: string,
-    configPath: string,
-    name: string,
-    references: Map<unknown, EslintRegistration>,
-): Promise<void> {
-    const resolved = createRequire(configPath).resolve(name);
-    const specifier =
-        name.startsWith('.') || isAbsolute(name) ? `./${relative(root, resolved).replaceAll('\\', '/')}` : name;
-    if (specifier.startsWith('./../'))
-        throw new Error(`ESLint conversion cannot register a module outside the repository: ${name}`);
-    const imported = (await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href)) as Record<
-        string,
-        unknown
-    >;
-    references.set(imported, { module: specifier, export: '*' });
-    // Prefer the default export before runtime-specific CommonJS named exports.
-    const pending = Object.entries(imported)
-        .toSorted(([left], [right]) => Number(left === 'default') - Number(right === 'default'))
-        .map(([key, value]) => ({ value, exported: key, members: [] as string[] }));
-    for (let entry = pending.pop(); entry !== undefined; entry = pending.pop()) {
-        const { value, exported, members } = entry;
-        if (value === null || (typeof value !== 'object' && typeof value !== 'function') || references.has(value))
-            continue;
-        references.set(value, {
-            module: specifier,
-            export: exported,
-            ...(members.length === 0 ? {} : { members }),
-        });
-        if (typeof value === 'object')
-            for (const [member, entry] of Object.entries(value))
-                pending.push({ value: entry, exported, members: [...members, member] });
-    }
+// The configuration file ESLint reads for the repository, or the one the request names.
+async function activeConfigPath(request: Request, eslint: Eslint.ESLint): Promise<string> {
+    if (request.from !== undefined) return join(request.root, request.from);
+    const found = await eslint.findConfigFile();
+    if (found === undefined) throw new Error('ESLint conversion could not find the active configuration.');
+    return found;
 }
 
-function legacyCriteria(root: string, criteria: LegacyEslintCriteria): NonNullable<EslintAdoption['legacyCriteria']> {
-    const basePath = relative(root, criteria.basePath).replaceAll('\\', '/') || '.';
-    if (basePath !== '.') mutationPath(basePath);
-    return {
-        basePath,
-        patterns: criteria.patterns.map(({ includes, excludes }) => {
-            const encode = (matchers: NonNullable<typeof includes>) =>
-                matchers.map(
-                    (matcher) =>
-                        `${matcher.options.matchBase === false ? './' : ''}${matcher.negate ? '!' : ''}${matcher.pattern}`,
-                );
-            return {
-                ...(includes === null ? {} : { includes: encode(includes) }),
-                ...(excludes === null ? {} : { excludes: encode(excludes) }),
-            };
-        }),
-    };
-}
-
-async function legacyEntries(
-    root: string,
-    configPath: string,
-    references: Map<unknown, EslintRegistration>,
-    configPaths: string[],
-): Promise<Record<string, unknown>[]> {
-    const require = createRequire(createRequire(configPath).resolve('eslint'));
-    const api = (await import(pathToFileURL(require.resolve('@eslint/eslintrc')).href)) as LegacyEslintApi;
-    const js = (
-        (await import(pathToFileURL(require.resolve('@eslint/js')).href)) as {
-            default: { configs: { recommended: Record<string, unknown>; all: Record<string, unknown> } };
-        }
-    ).default;
-    const factory = new api.Legacy.ConfigArrayFactory({
-        cwd: root,
-        resolvePluginsRelativeTo: root,
-        getEslintRecommendedConfig: () => js.configs.recommended,
-        getEslintAllConfig: () => js.configs.all,
-    });
-    const files = openConfinedRoot(root);
+// The observed configuration's bytes, after every observed file is confirmed present.
+function readConfiguration(request: Request, configPath: string): string {
+    const files = openConfinedRoot(request.root);
     try {
-        files.read('.eslintignore');
-        files.read('package.json');
+        for (const path of request.configs ?? []) {
+            if (files.read(path) === undefined)
+                throw new Error(`The observed ESLint configuration is missing: ${path}`);
+        }
+        const configuration = files.read(relative(request.root, configPath).replaceAll('\\', '/'));
+        if (configuration === undefined)
+            throw new Error('The observed ESLint configuration is missing. Retry adoption.');
+        return configuration.bytes.toString('utf8');
     } finally {
         files.close();
     }
-    const directories = [...new Set(['.', ...configPaths.map((path) => dirname(path))])].toSorted(
-        (left, right) => left.length - right.length,
-    );
-    const configurations = new Map(
-        directories.map((directory) => [directory, factory.loadInDirectory(resolve(root, directory))]),
-    );
-    const result: Record<string, unknown>[] = [];
-    for (const directory of directories) {
-        let source: LegacyEslintEntry[] = [];
-        for (const ancestor of directories) {
-            if (ancestor !== '.' && ancestor !== directory && !directory.startsWith(`${ancestor}/`)) continue;
-            const entries = configurations.get(ancestor) ?? [];
-            if (entries.some((entry) => entry['root'] === true)) source = [];
-            source.push(...entries);
-        }
-        source.push(...factory.loadDefaultESLintIgnore());
-        const scope = {
-            basePath: '.',
-            patterns: [
-                {
-                    includes: [directory === '.' ? '**/*' : `${literalDirectory(directory)}/**/*`],
-                    excludes: directories
-                        .filter(
-                            (child) =>
-                                child !== directory &&
-                                child !== '.' &&
-                                (directory === '.' || child.startsWith(`${directory}/`)),
-                        )
-                        .map((child) => `${literalDirectory(child)}/**/*`),
-                },
-            ],
-        };
-        const compat = new api.FlatCompat({
-            baseDirectory: root,
-            resolvePluginsRelativeTo: root,
-            recommendedConfig: js.configs.recommended,
-            allConfig: js.configs.all,
-        });
-        const adopted: Record<string, unknown>[] = [{ languageOptions: { ecmaVersion: 5, sourceType: 'script' } }];
-        const ignores: NonNullable<EslintAdoption['legacyIgnores']> = [
-            { basePath: '.', patterns: api.Legacy.IgnorePattern.DefaultPatterns, loose: false },
-        ];
-        const plugins = Object.assign({}, ...source.map((entry) => entry.plugins ?? {})) as NonNullable<
-            (typeof source)[number]['plugins']
-        >;
-        for (const entry of source) {
-            const criteria = entry.criteria === null ? undefined : legacyCriteria(root, entry.criteria);
-            if (entry.ignorePattern !== undefined) {
-                const basePath = relative(root, entry.ignorePattern.basePath).replaceAll('\\', '/') || '.';
-                if (basePath !== '.') mutationPath(basePath);
-                ignores.push({ ...entry.ignorePattern, basePath, ...(criteria === undefined ? {} : { criteria }) });
-            }
-            if (entry.type !== 'config') continue;
-            const config: Record<string, unknown> = {};
-            for (const key of [
-                'env',
-                'globals',
-                'noInlineConfig',
-                'parserOptions',
-                'reportUnusedDisableDirectives',
-                'rules',
-                'settings',
-                'processor',
-            ])
-                if (entry[key] !== undefined) config[key] = entry[key];
-            if (entry.parser !== undefined) {
-                if (entry.parser.error) throw entry.parser.error;
-                config['parser'] = entry.parser.filePath;
-                await registerEslintModule(
-                    root,
-                    configPath,
-                    entry.parser.id.startsWith('.') ? entry.parser.filePath : entry.parser.id,
-                    references,
-                );
-            }
-            const activePlugins = entry['env'] === undefined ? entry.plugins : plugins;
-            if (activePlugins !== undefined) {
-                config['plugins'] = Object.keys(activePlugins);
-                for (const dependency of Object.values(activePlugins)) {
-                    if (dependency.error) throw dependency.error;
-                    await registerEslintModule(
-                        root,
-                        configPath,
-                        api.Legacy.naming.normalizePackageName(dependency.id, 'eslint-plugin'),
-                        references,
-                    );
-                }
-            }
-            for (const translated of compat.config(config))
-                adopted.push({ ...translated, ...(criteria === undefined ? {} : { legacyCriteria: criteria }) });
-        }
-        adopted.unshift({ legacyIgnores: ignores });
-        result.push(...adopted.map((entry) => ({ ...entry, legacyScope: scope })));
+}
+
+// The entries of a flat configuration, with every module it imports registered first.
+async function flatEntries(adoption: Adoption, text: string): Promise<unknown[]> {
+    const { request, configPath, references } = adoption;
+    for (const name of importedModules(configPath, text))
+        await registerEslintModule(request.root, configPath, name, references);
+    const loaded = (await import(pathToFileURL(configPath).href)) as { default: unknown };
+    const entries: unknown = loaded.default;
+    if (!Array.isArray(entries)) throw new Error('ESLint conversion requires a flat configuration array.');
+    return entries as unknown[];
+}
+
+// Replaces a processor value with the registration of the module that exported it.
+function resolveProcessor(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+    if (entry['processor'] === undefined || typeof entry['processor'] === 'string') return;
+    const reference = adoption.references.get(entry['processor']);
+    if (reference === undefined)
+        throw new Error(`ESLint configuration ${String(index)}: processor has no imported module owner.`);
+    entry['processor'] = reference;
+}
+
+// Refuses a base path that exists and is not a directory.
+function assertDirectory(root: string, base: string, index: number): void {
+    mutationPath(base);
+    const files = openConfinedRoot(root);
+    try {
+        const directory = files.stat(base);
+        if (directory !== undefined && !directory.isDirectory())
+            throw new Error(`ESLint configuration ${String(index)}: basePath is not a directory.`);
+    } finally {
+        files.close();
     }
-    return result;
+}
+
+// The base path of an entry relative to the repository root, or undefined when the entry needs none.
+function relativeBasePath(adoption: Adoption, entry: Record<string, unknown>, index: number): string | undefined {
+    const { request, configPath } = adoption;
+    if (!request.flat || (entry['basePath'] === undefined && dirname(configPath) === request.root)) return undefined;
+    if (entry['basePath'] !== undefined && typeof entry['basePath'] !== 'string')
+        throw new Error(`ESLint configuration ${String(index)}: basePath must be a directory path.`);
+    return relative(request.root, resolve(dirname(configPath), entry['basePath'] ?? '.')).replaceAll('\\', '/');
+}
+
+// Rewrites a base path relative to the repository root, checking that it names a directory.
+function resolveBasePath(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+    const base = relativeBasePath(adoption, entry, index);
+    if (base === undefined) return;
+    if (base === '') {
+        delete entry['basePath'];
+        return;
+    }
+    assertDirectory(adoption.request.root, base, index);
+    entry['basePath'] = base;
+}
+
+// Replaces each plugin value with the registration of the module that exported it.
+function resolvePlugins(adoption: Adoption, entry: Record<string, unknown>): void {
+    const plugins = entry['plugins'] as Record<string, unknown> | undefined;
+    if (plugins === undefined) return;
+    entry['plugins'] = Object.fromEntries(
+        Object.entries(plugins).map(([name, value]) => {
+            const reference = adoption.references.get(value);
+            if (reference === undefined)
+                throw new Error(
+                    `ESLint plugin ${name} has no imported module owner. Export the custom plugin from repository-owned code and import it before adopting configuration.`,
+                );
+            return [name, reference];
+        }),
+    );
+}
+
+// Replaces a parser value with the registration of the module that exported it.
+function resolveParser(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+    const language = entry['languageOptions'] as Record<string, unknown> | undefined;
+    if (language?.['parser'] === undefined) return;
+    const reference = adoption.references.get(language['parser']);
+    if (reference === undefined)
+        throw new Error(`ESLint configuration ${String(index)}: parser has no imported module owner.`);
+    entry['languageOptions'] = { ...language, parser: reference };
+}
+
+// The entry as plain data, refused when it still carries a value TOML cannot hold.
+function serializable(entry: Record<string, unknown>, index: number): Record<string, unknown> {
+    const message = `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`;
+    if (!z.json().safeParse(entry).success) throw new Error(message);
+    const serialized = JSON.stringify(entry, (_key, value: unknown) => {
+        if (isUnrepresentable(value)) throw new Error(message);
+        return value;
+    });
+    return JSON.parse(serialized) as Record<string, unknown>;
+}
+
+// One configuration entry with its module-valued fields named by their owners.
+function adoptEntry(adoption: Adoption, raw: unknown, index: number): Record<string, unknown> {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw))
+        throw new Error(`ESLint configuration ${String(index)} is not a flat configuration object.`);
+    const entry = { ...raw } as Record<string, unknown>;
+    resolveProcessor(adoption, entry, index);
+    resolveBasePath(adoption, entry, index);
+    resolvePlugins(adoption, entry);
+    resolveParser(adoption, entry, index);
+    return serializable(entry, index);
 }
 
 /**
@@ -200,7 +156,7 @@ async function legacyEntries(
  * @param request the repository root, the configuration to read, and whether it is a flat configuration
  * @returns the rules, selectors, and module registrations the configuration holds
  */
-export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Promise<z.infer<typeof eslintResponse>> {
+export async function evaluateEslint(request: Request): Promise<z.infer<typeof eslintResponse>> {
     if (!request.flat && request.from === undefined)
         throw new Error('Legacy ESLint adoption requires a configuration path.');
     const require = createRequire(join(request.root, 'package.json'));
@@ -212,150 +168,23 @@ export async function evaluateEslint(request: z.infer<typeof eslintRequest>): Pr
             ? {}
             : { overrideConfigFile: join(request.root, request.from) }),
     });
-    const configPath =
-        request.from === undefined
-            ? await (eslint as Eslint.ESLint).findConfigFile()
-            : join(request.root, request.from);
-    if (configPath === undefined) throw new Error('ESLint conversion could not find the active configuration.');
-    const files = openConfinedRoot(request.root);
-    for (const path of request.configs ?? []) {
-        if (files.read(path) === undefined) throw new Error(`The observed ESLint configuration is missing: ${path}`);
-    }
-    const configuration = files.read(relative(request.root, configPath).replaceAll('\\', '/'));
-    files.close();
-    if (configuration === undefined) throw new Error('The observed ESLint configuration is missing. Retry adoption.');
-    const references = new Map<unknown, EslintRegistration>();
-    let entries: unknown[];
-    if (request.flat) {
-        const syntax = ts.createSourceFile(
-            configPath,
-            configuration.bytes.toString('utf8'),
-            ts.ScriptTarget.Latest,
-            true,
-        );
-        const imports = new Set<string>();
-        const collectImport = (expression: ts.Expression): void => {
-            if (ts.isAwaitExpression(expression) || ts.isParenthesizedExpression(expression)) {
-                collectImport(expression.expression);
-                return;
-            }
-            if (ts.isPropertyAccessExpression(expression)) {
-                collectImport(expression.expression);
-                return;
-            }
-            if (!ts.isCallExpression(expression)) return;
-            const [specifier] = expression.arguments;
-            if (
-                expression.arguments.length === 1 &&
-                specifier !== undefined &&
-                ts.isStringLiteral(specifier) &&
-                (expression.expression.kind === ts.SyntaxKind.ImportKeyword ||
-                    (ts.isIdentifier(expression.expression) && expression.expression.text === 'require'))
-            )
-                imports.add(specifier.text);
-        };
-        for (const statement of syntax.statements) {
-            if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier))
-                imports.add(statement.moduleSpecifier.text);
-            else if (ts.isVariableStatement(statement)) {
-                for (const declaration of statement.declarationList.declarations)
-                    if (declaration.initializer !== undefined) collectImport(declaration.initializer);
-            } else if (ts.isExportAssignment(statement)) collectImport(statement.expression);
-            else if (
-                ts.isExpressionStatement(statement) &&
-                ts.isBinaryExpression(statement.expression) &&
-                statement.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken
-            )
-                collectImport(statement.expression.right);
-        }
-        for (const name of imports) await registerEslintModule(request.root, configPath, name, references);
-        const loaded = (await import(pathToFileURL(configPath).href)) as { default: unknown };
-        if (!Array.isArray(loaded.default)) throw new Error('ESLint conversion requires a flat configuration array.');
-        entries = loaded.default;
-    } else
-        entries = await legacyEntries(
-            request.root,
-            configPath,
-            references,
-            request.configs ?? [relative(request.root, configPath)],
-        );
-    const adopted = [];
-    for (const [index, raw] of entries.entries()) {
-        if (raw === null || typeof raw !== 'object' || Array.isArray(raw))
-            throw new Error(`ESLint configuration ${String(index)} is not a flat configuration object.`);
-        const entry = { ...raw } as Record<string, unknown>;
-        if (entry['processor'] !== undefined && typeof entry['processor'] !== 'string') {
-            const reference = references.get(entry['processor']);
-            if (reference === undefined)
-                throw new Error(`ESLint configuration ${String(index)}: processor has no imported module owner.`);
-            entry['processor'] = reference;
-        }
-        if (request.flat && (entry['basePath'] !== undefined || dirname(configPath) !== request.root)) {
-            if (entry['basePath'] !== undefined && typeof entry['basePath'] !== 'string')
-                throw new Error(`ESLint configuration ${String(index)}: basePath must be a directory path.`);
-            const base = relative(request.root, resolve(dirname(configPath), entry['basePath'] ?? '.')).replaceAll(
-                '\\',
-                '/',
-            );
-            if (base === '') delete entry['basePath'];
-            else {
-                mutationPath(base);
-                const files = openConfinedRoot(request.root);
-                try {
-                    const directory = files.stat(base);
-                    if (directory !== undefined && !directory.isDirectory())
-                        throw new Error(`ESLint configuration ${String(index)}: basePath is not a directory.`);
-                } finally {
-                    files.close();
-                }
-                entry['basePath'] = base;
-            }
-        }
-        const plugins = entry['plugins'] as Record<string, unknown> | undefined;
-        if (plugins !== undefined) {
-            entry['plugins'] = Object.fromEntries(
-                Object.entries(plugins).map(([name, value]) => {
-                    const reference = references.get(value);
-                    if (reference === undefined)
-                        throw new Error(
-                            `ESLint plugin ${name} has no imported module owner. Export the custom plugin from repository-owned code and import it before adopting configuration.`,
-                        );
-                    return [name, reference];
-                }),
-            );
-        }
-        const language = entry['languageOptions'] as Record<string, unknown> | undefined;
-        if (language?.['parser'] !== undefined) {
-            const reference = references.get(language['parser']);
-            if (reference === undefined)
-                throw new Error(`ESLint configuration ${String(index)}: parser has no imported module owner.`);
-            entry['languageOptions'] = { ...language, parser: reference };
-        }
-        if (!z.json().safeParse(entry).success)
-            throw new Error(
-                `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
-            );
-        const serialized = JSON.stringify(entry, (_key, value: unknown) => {
-            if (
-                value === null ||
-                value === undefined ||
-                (typeof value === 'number' && !Number.isFinite(value)) ||
-                typeof value === 'function' ||
-                typeof value === 'symbol' ||
-                typeof value === 'bigint' ||
-                value instanceof RegExp
-            )
-                throw new Error(
-                    `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`,
-                );
-            return value;
-        });
-        adopted.push(JSON.parse(serialized) as Record<string, unknown>);
-    }
+    const configPath = await activeConfigPath(request, eslint as Eslint.ESLint);
+    const text = readConfiguration(request, configPath);
+    const adoption: Adoption = { request, configPath, references: new Map<unknown, EslintRegistration>() };
+    const entries = request.flat
+        ? await flatEntries(adoption, text)
+        : await legacyEntries(
+              request.root,
+              configPath,
+              adoption.references,
+              request.configs ?? [relative(request.root, configPath)],
+          );
+    const adopted = entries.map((raw, index) => adoptEntry(adoption, raw, index));
     const result = eslintResponse.parse({ adopted });
     for (const path of request.paths) await eslint.calculateConfigForFile(join(request.root, path));
     return result;
 }
+
 /**
  * Resolve every selected file with one native ESLint instance in an isolated configuration process.
  * @param request the repository root, the configuration, and the files whose rules to resolve
@@ -384,47 +213,3 @@ export async function evaluateRuleCoverage(
     }
     return result;
 }
-
-export type LegacyEslintMatcher = {
-    pattern: string;
-    negate: boolean;
-    options: { matchBase?: boolean };
-};
-
-export type LegacyEslintCriteria = {
-    basePath: string;
-    patterns: { includes: LegacyEslintMatcher[] | null; excludes: LegacyEslintMatcher[] | null }[];
-};
-
-export type LegacyEslintDependency = {
-    id: string;
-    filePath: string;
-    definition: unknown;
-    original?: unknown;
-    error?: Error | null;
-};
-
-export type LegacyEslintEntry = {
-    type: string;
-    name: string;
-    criteria: LegacyEslintCriteria | null;
-    ignorePattern?: { basePath: string; patterns: string[]; loose: boolean };
-    parser?: LegacyEslintDependency;
-    plugins?: Record<string, LegacyEslintDependency>;
-    [key: string]: unknown;
-};
-
-export type LegacyEslintApi = {
-    Legacy: {
-        ConfigArrayFactory: new (options: Record<string, unknown>) => {
-            loadFile(path: string): LegacyEslintEntry[];
-            loadInDirectory(path: string): LegacyEslintEntry[];
-            loadDefaultESLintIgnore(): LegacyEslintEntry[];
-        };
-        IgnorePattern: { DefaultPatterns: string[] };
-        naming: { normalizePackageName(name: string, prefix: string): string };
-    };
-    FlatCompat: new (options: Record<string, unknown>) => {
-        config(configuration: Record<string, unknown>): Record<string, unknown>[];
-    };
-};
