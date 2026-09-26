@@ -1,7 +1,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner-light.svg">
-  <img src="docs/public/brand/readme/banner.png" alt="gspot" width="1200" height="360">
+  <img src="docs/public/brand/readme/banner.png" alt="gspot" width="1200">
 </picture>
 
 [![npm: unreleased](docs/public/brand/badges/badge-npm.svg)](docs/src/content/docs/guides/install.md)

@@ -4,15 +4,18 @@ This is the single implementation and verification backlog. Durable behavior bel
 linked architecture contracts. An open acceptance clause is not proof of missing code.
 Where older records conflict or lack current evidence, the item remains a verification task.
 
-Feature implementation remains: framework accessibility, test integrations, component type
-checking, and component formatting have concrete gaps below. Other work includes confirmed
-repairs, verification, lint remediation, and deferred external acceptance. These classifications
-come from static source and test inspection; they do not certify runtime behavior.
+React, React Native, Vue, Svelte, and NestJS integrations are implemented. Their native-tool
+and platform acceptance remains separate from source inspection and deterministic tests.
+Confirmed implementation gaps include manifest-driven `rules_off`, Ruff-to-pydoclint style
+mapping, and long TOML inline-table formatting. Rule-guide instructions still need a full
+comparison against enforcement. Repository-wide lint remediation follows the cleanup.
 
 ## Constraints
 
 Preserve public commands, configuration semantics, findings, exit codes, package exports,
-all seven targets, the direct npm launcher, the independent plugin, and existing dependencies.
+all seven targets, the direct npm launcher, and the independent plugin.
+The cleanup adds the pinned syntax parser as a direct plugin dependency and moves TypeScript
+into plugin runtime dependencies.
 Keep strict coverage and both structural rules at every level. Do not add compatibility
 aliases, forwarding modules, private packages, or a test framework. Work alone.
 No push, public publication, deployment, DNS change, or external repository mutation is
@@ -90,9 +93,8 @@ Complete 1.1 before 1.2.
 
 ### Step 1.1
 
-Enumerate the missing React, React Native, Vue, and Svelte integrations in phase 4.
-Resolve their pin compatibility and dependency scope before changing manifests or lockfiles.
-Preserve the existing-dependencies constraint until that feature work is authorized.
+Verify the implemented React, React Native, Vue, and Svelte integrations in phase 4.
+Their declared pins and generated configurations need native compatibility evidence.
 
 Decision, 2026-09-25. The manifests pin these packages, and each ESLint plugin accepts ESLint 9:
 
@@ -134,7 +136,7 @@ contracts before changing their consumers. Complete the following substeps in or
 Step 2.1. Confirmed defect.
 
 Test moves changed paths inside fixture source strings. In
-[scoped execution](../tests/integration/cli/execution/scoped-engines.test.ts), imports point to
+[scoped execution](../tests/integration/cli/execution/scoped-engines/trpc.test.ts), imports point to
 `../run/private/router.js` although the fixture creates local `private/router.ts`.
 [Flat ESLint adoption](../tests/integration/cli/policy/adoption/eslint-flat.test.ts) imports
 `../../adoption/rules.mjs` although the module is created at the fixture root. The same pattern
@@ -268,7 +270,7 @@ Step 2.6. Verification and confirmed repairs.
 
 Verify common ownership routing, proposal publication, pruning, and interrupted recovery across init, apply, remove, and uninstall. Preserve unowned files, later edits, original bytes and modes, and fresh-clone files.
 
-Owner: `lifecycle/ownership.ts`. Dependencies: confinement. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
+Owner: `lifecycle/ownership/owner.ts`. Dependencies: confinement. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
 
 Acceptance: K-257, K-252, K-118, K-299.
 
@@ -320,27 +322,24 @@ K-264 through K-268, K-283, K-297.
 Exit: native tools can be acquired through supported paths. Provider failures remain failures
 and block dependent journeys; the full source/installed manager matrix belongs to phase 9.
 
-## 4. Implement the agreed framework capabilities
+## 4. Verify the implemented framework capabilities
 
 <a id="missing-implementation"></a>
 
-Implement the confirmed missing capabilities using the contracts and dependency decisions from
-phase 1 and installation from phase 3. For each substep, change feature definitions before
-consumers, regenerate through the owning generation path, and verify focused defect/correction
-cases before moving to the next framework.
+The framework manifests and fragments implement the agreed capabilities. Verify their generated
+configuration and native behavior using the contracts and dependency decisions from phase 1.
+A test definition or package pin does not establish native acceptance.
 
 ### React accessibility and test integration
 
-Step 4.1. Missing implementation.
+Step 4.1. Implemented; native acceptance remains.
 
-The [React contract](06-enforcement-ledger.md#configuration-react) includes React recommended
-and JSX-runtime sets, JSX accessibility, refresh rules, and Testing Library. The current
-[manifest](../packages/cli/configurations/framework/react/manifest.toml) and
-[fragment](../packages/cli/configurations/framework/react/eslint.fragment.js.tmpl) provide
-React and Hooks rules but omit those integrations. Reconcile the Hooks pin with the ledger
-as part of compatibility verification; a version difference alone does not prove incompatibility.
+The [React manifest](../packages/cli/configurations/framework/react/manifest.toml) pins Hooks,
+JSX accessibility, refresh, and Testing Library. Its
+[fragment](../packages/cli/configurations/framework/react/eslint.fragment.js.tmpl) supplies the
+React recommended and JSX-runtime rules and scopes Testing Library to tests.
 
-Owner: React configuration and ESLint generation. Task: supply the agreed rule sets with their
+Owner: React configuration and ESLint generation. Task: verify the agreed rule sets with their
 scope and level behavior. Dependencies: authorized dependency changes and compatible pins.
 Completion evidence: generated configurations at both levels reject planted defects and accept
 corrections, including test-file scoping and native exclusion of DOM accessibility rules.
@@ -348,34 +347,31 @@ Acceptance: K-211, K-248, K-251.
 
 ### React Native tooling
 
-Step 4.2. Missing implementation.
+Step 4.2. Implemented; native acceptance remains.
 
-The [React Native contract](06-enforcement-ledger.md#configuration-react-native) requires native
-ESLint plugins and Expo Doctor. The current
-[manifest](../packages/cli/configurations/framework/react-native/manifest.toml) supplies the Expo
-ESLint plugin, but omits the native plugins and Doctor check. Existing JavaScript template
-selectors already cover Touchable, list keys, scrolling, and AsyncStorage; retain and verify them.
+The [React Native manifest](../packages/cli/configurations/framework/react-native/manifest.toml)
+pins both native ESLint plugins and Expo Doctor. Its fragment installs native rules and disables
+DOM accessibility rules. The Doctor check has an Expo precondition and runs at the push stage.
+Existing selectors cover Touchable, list keys, scrolling, and AsyncStorage.
 
-Owner: React Native configuration and check execution. Task: add the agreed native plugin rules
+Owner: React Native configuration and check execution. Task: verify the agreed native plugin rules
 and Expo-only push-stage Doctor behavior. Dependencies: compatible pins and native acceptance.
 Completion evidence: native rule defects/corrections, Expo/non-Expo scope selection, and truthful
 Doctor failures without commit-stage network activity. Acceptance: K-211, K-248, K-251.
 
 ### Vue and Svelte component support
 
-Step 4.3. Missing implementation.
+Step 4.3. Implemented; native acceptance remains.
 
-The [Vue](06-enforcement-ledger.md#configuration-vue) and
-[Svelte](06-enforcement-ledger.md#configuration-svelte) contracts exceed the current ESLint
-integrations. Their [Vue manifest](../packages/cli/configurations/framework/vue/manifest.toml)
-and [Svelte manifest](../packages/cli/configurations/framework/svelte/manifest.toml) omit
-`vue-tsc`, `svelte-check`, Vue accessibility, and Testing Library integrations. Component
-formatting also lacks `prettier-plugin-svelte` and component CSS lacks `postcss-html` integration.
-Svelte fragments mention runes-module filenames, but the Svelte check claims only `.svelte`;
-verify which selected check actually receives `.svelte.js` and `.svelte.ts` before repairing claims.
+The [Vue manifest](../packages/cli/configurations/framework/vue/manifest.toml) pins `vue-tsc`,
+Vue accessibility, and Testing Library. The
+[Svelte manifest](../packages/cli/configurations/framework/svelte/manifest.toml) pins
+`svelte-check`, `prettier-plugin-svelte`, and Testing Library. Component CSS selects
+`postcss-html`. Verify component and runes-module file selection, type-check takeover, and
+native defect/correction cases before closing their acceptance clauses.
 
 Owner: Vue/Svelte definitions, ESLint/formatter generation, and component check selection.
-Task: implement the contracted type checking and takeover, accessibility, test-file rules,
+Task: verify the contracted type checking and takeover, accessibility, test-file rules,
 formatting, and component style checks. Dependencies: authorized pins, parser compatibility,
 and scope selection. Completion evidence: native defect/correction cases for each component
 language, warning failures, type-check takeover without duplicate checks, scoped test rules,
@@ -402,22 +398,20 @@ through the licenses and readme-shape tests. K-213 has no text in the architectu
 
 ### NestJS integration
 
-Step 4.5. Missing implementation.
+Step 4.5. Implemented; native acceptance remains.
 
-The [NestJS contract](06-enforcement-ledger.md#configuration-nestjs) requires the recommended
-set of `@darraghor/eslint-plugin-nestjs-typed`, the `tools.nestjs.swagger` setting, and both
-decorator options in a NestJS scope. The current
-[manifest](../packages/cli/configurations/framework/nestjs/manifest.toml) supplies the selectors
-and two turned-off rules alone.
+The [NestJS manifest](../packages/cli/configurations/framework/nestjs/manifest.toml) pins
+`@darraghor/eslint-plugin-nestjs-typed` and declares `tools.nestjs.swagger`. The fragment selects
+its recommended rules and applies the Swagger setting. The TypeScript option check requires
+both decorator options for NestJS scopes. Native defect/correction evidence remains required.
 
 Owner: NestJS configuration, ESLint generation, and `typescript/tsconfig-options`.
 Dependencies: the pin decision of step 1.1. Completion evidence: planted route, Swagger, and
 decorator defects with their corrections. Setting detection at `init` stays with K-93.
 Acceptance: K-211, K-248.
 
-Within 4.3, complete Vue first, then Svelte. For each, order the changes as tool definitions
-and pins, parser/check selection and type-check takeover, ESLint accessibility/test rules,
-formatter/style integration, then generated outputs and focused acceptance.
+Within 4.3, verify Vue and Svelte tool definitions, parser/check selection, type-check takeover,
+accessibility, test rules, formatting, and component styles.
 
 Exit: the agreed framework capabilities and generated configurations run with compatible pins
 at both levels. Remaining native-platform evidence is explicitly deferred to phase 10.
@@ -825,7 +819,7 @@ The owner decides whether the rule keeps counting anonymous callbacks passed as 
 repairs start. The complexity family stands at 277 `no-await-expression-member`, 254 `complexity`, 198
 `cognitive-complexity`, 185 `max-lines-per-function`, and 104 `max-depth`. It also holds 90
 `no-nested-conditional`, 84 `max-statements`, and 19 `max-lines`. The densest files are
-`revisions/dependencies.ts`, `lifecycle/ownership.ts`, and `evaluation/eslint.ts`.
+`revisions/dependencies.ts`, `lifecycle/ownership/owner.ts`, and `evaluation/eslint.ts`.
 
 Open: `gspot install` cannot
 fetch the unpublished plugin, so the private plugin copy is refreshed by hand after plugin changes (D-158). The
@@ -1069,8 +1063,38 @@ external adoption each have their required evidence. Deferred items remain open 
 
 ## Evidence limits
 
-This reconciliation used static source, manifest, template, and retained-test inspection.
-No tests, lint, builds, installation, or apply were run for this documentation task. No runtime
-pass is inferred from a test file existing, and no interrupted run closes an acceptance clause.
-Phase 4 records confirmed framework gaps found in this audit; remaining grouped
-clauses require verification before claiming that all other features are complete.
+Source inspection confirms the framework integrations above. It does not close native-tool,
+platform, remote CI, or release acceptance. Manifest-driven `rules_off` (K-208), the Ruff
+pydocstyle mapping (K-152), long inline-table formatting (K-51), and the guide/enforcement
+comparison remain open. No remote CI, public publication, deployment, or external repository
+change is part of this cleanup.
+
+The earlier deterministic failures were reproduced with Bun 1.3.11, selected by the shell when
+running directly from `tests/`, instead of the repository-pinned Bun 1.4.2. The focused reruns
+used the newer runtime. Test startup now checks the version against `package.json`; run
+`mise run test` from the repository root to select the pinned toolchain.
+
+Cleanup verification on 2026-09-26:
+
+- Workspace and documentation type checks pass. The configured Knip scan reports no issues.
+- The CLI build and both host-binary acceptance cases pass. Installed plugin tarball checks
+  pass for ESM, CommonJS, declarations, README examples, and recursive export parsing.
+- The import scan covers 999 TypeScript files with zero runtime cycles and zero unresolved
+  local imports. Seven type-inclusive cycles retain schema-derived types. Function-derived
+  dependencies for execution callbacks, carriers, block spans, SQL parses, and package managers
+  are removed.
+- The complete deterministic lane passes all 1,908 tests across 249 files with `mise run test`
+  on Bun 1.4.2. The 22 failures reproduced under Bun 1.3.11 do not occur with the pinned runtime.
+  No adoption tests or assertions were removed to obtain this result. The startup check rejects
+  the unsupported runtime before executing tests and accepts the pinned runtime from both
+  the repository root and `tests/`.
+- The staged gate fails on structure, naming, integrity, prose, and ESLint findings. The gate
+  uses a temporary Git index, leaving the developer index unchanged. Repository-wide lint
+  remediation remains in phase 8; the cleanup does not establish a passing lint baseline.
+- Windows replacement regressions use simulated Windows semantics on the development host.
+  Native Windows acceptance remains deferred to phase 10.
+
+README browser verification remains unresolved. Chrome capture fails with a capture-service
+error, and the in-app browser is unavailable. The fixed height is removed, and both theme
+sources and the artwork are retained. Rendering at 320, 390, 768, and 1200 pixels in both themes
+still needs browser evidence.
