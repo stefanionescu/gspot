@@ -1,6 +1,7 @@
 // A recommended configuration joins the selection only when the repository holds what it detects (K-182).
 import { expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -40,6 +41,32 @@ test(
         expect(typed).toContain('typescript');
         expect(typed).toContain('css');
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).exists()).toBe(false);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test(
+    'init proposes a scope for every folder that holds a project file, with no --scope flag',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'package.json': '{"name":"app","private":true,"type":"module"}\n',
+            'supabase/config.toml': 'project_id = "planted"\n',
+            'api/package.json': '{"name":"api","private":true,"type":"module","dependencies":{"express":"5.1.0"}}\n',
+            'api/src/server.js': 'export const port = 3000;\n',
+            'ios/Package.swift':
+                '// swift-tools-version:6.0\nimport PackageDescription\nlet package = Package(name: "App")\n',
+            'ios/Sources/App/App.swift': 'let answer = 42\n',
+            'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
+        });
+        commitAll(sandbox.path);
+        const result = await run(sandbox.path, [...INIT, ...QUIET]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const output = JSON.parse(result.stdout) as { policy: string; plan: { noLongerRuns: { path: string }[] } };
+        const proposed = parse(output.policy) as { scope?: { path: string; configurations: string[] }[] };
+        expect(proposed.scope?.map((scope) => scope.path)).toStrictEqual(['api', 'ios']);
+        expect(proposed.scope?.find((scope) => scope.path === 'ios')?.configurations).toContain('swift');
+        expect(output.plan.noLongerRuns.map((entry) => entry.path)).toStrictEqual(['tools/lint/package.json']);
     },
     PLANTED_TIMEOUT_MS,
 );

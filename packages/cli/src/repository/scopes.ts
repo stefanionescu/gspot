@@ -7,20 +7,59 @@ import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import picomatch from 'picomatch';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
-function workspaceEntry(path: string): ScopeEntry {
+function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
     return {
         name: trimmed.slice(trimmed.lastIndexOf('/') + 1),
         path: trimmed,
         configurations: [],
-        source: 'workspace',
+        source,
     };
+}
+
+function segmentMatches(pattern: string, segment: string): boolean {
+    return picomatch.scan(pattern).isGlob ? picomatch.isMatch(segment, pattern, { dot: true }) : pattern === segment;
+}
+
+/**
+ * The folder a project file marks: the path before the segments the pattern names, when the file carries them.
+ * @param path the tracked file, root-relative
+ * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`
+ * @returns the project folder, '' for the root, or undefined when the file is no such project file
+ */
+export function projectFolder(path: string, pattern: string): string | undefined {
+    const segments = path.split('/');
+    const wanted = pattern.split('/');
+    for (let start = 0; start + wanted.length <= segments.length; start += 1) {
+        if (wanted.every((part, index) => segmentMatches(part, segments[start + index]!)))
+            return segments.slice(0, start).join('/');
+    }
+    return undefined;
+}
+
+// A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
+function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: Iterable<Manifest>): ScopeEntry[] {
+    const patterns = [...manifests].flatMap((manifest) => manifest.detect.project_files);
+    const lintOnly = new Set(facts.filter(isLintOnlyManifest).map((fact) => fact.path));
+    const folders = new Set<string>();
+    for (const file of files) {
+        if (file.nature !== 'source' || lintOnly.has(file.path)) continue;
+        if (file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules')) continue;
+        for (const pattern of patterns) {
+            const folder = projectFolder(file.path, pattern);
+            if (folder !== undefined && folder !== '') folders.add(folder);
+        }
+    }
+    return [...folders].map((folder) => workspaceEntry(folder, 'project'));
 }
 
 // Validate filesystem access before the workspace resolver reads package manifests.
@@ -120,7 +159,7 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
     try {
         return members
             .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory())
-            .map(workspaceEntry);
+            .map((member) => workspaceEntry(member));
     } finally {
         files.close();
     }
@@ -162,6 +201,30 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
             .toArray()
             .toSorted((a, b) => a.path.localeCompare(b.path)),
         lintOnly,
+    };
+}
+
+/**
+ * The scopes init proposes: every folder that holds a project file of a configuration, and every workspace member.
+ * @param root the repository root
+ * @param files the tracked files
+ * @param facts the manifests read from the tree
+ * @param manifests every configuration manifest
+ * @returns the scopes in path order, and the lint-only manifests left out
+ */
+export function proposedScopes(
+    root: string,
+    files: TrackedFile[],
+    facts: ManifestFacts[],
+    manifests: Iterable<Manifest>,
+): { scopes: ScopeEntry[]; lintOnly: string[] } {
+    const workspace = workspaceScopes(root, facts);
+    const unique = new Map<string, ScopeEntry>();
+    for (const scope of [...projectScopes(files, facts, manifests), ...workspace.scopes])
+        if (!unique.has(scope.path)) unique.set(scope.path, scope);
+    return {
+        scopes: [...unique.values()].toSorted((a, b) => a.path.localeCompare(b.path)),
+        lintOnly: workspace.lintOnly,
     };
 }
 
@@ -220,7 +283,7 @@ export type ScopeEntry = {
     name: string;
     path: string;
     configurations: string[];
-    source: 'root' | 'gspot.toml' | 'workspace';
+    source: 'root' | 'gspot.toml' | 'workspace' | 'project';
 };
 
 /**

@@ -11,6 +11,7 @@ description = "ESLint with the shipped rule set over every JavaScript file, type
 
 [detect]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
+project_files = ["package.json"]
 shebangs = ["node"]
 
 [claims]

@@ -9,6 +9,7 @@ description = "Swift sources: SwiftLint with the opt-in and analyzer rules, Swif
 [detect]
 extensions = [".swift"]
 filenames = ["Package.swift"]
+project_files = ["Package.swift"]
 
 [claims]
 extensions = [".swift"]

@@ -43,8 +43,16 @@ function kindRows(summary: DetectionSummary): (string | undefined)[] {
 function scopesRow(summary: DetectionSummary): string | undefined {
     const paths = summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.path);
     if (summary.scopes.length <= 1) return row('scopes', paths);
-    const isWorkspace = summary.scopes.some((scope) => scope.source === 'workspace');
-    return row('scopes', [...paths, `from ${isWorkspace ? 'workspace declarations' : 'gspot.toml'}`]);
+    const sources = new Set(summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.source));
+    const note =
+        sources.has('project') && sources.has('workspace')
+            ? 'a project file or a workspace declaration in each'
+            : sources.has('project')
+              ? 'a project file in each'
+              : sources.has('workspace')
+                ? 'from workspace declarations'
+                : 'from gspot.toml';
+    return row('scopes', [...paths, note]);
 }
 
 function toolingRows(summary: DetectionSummary): (string | undefined)[] {

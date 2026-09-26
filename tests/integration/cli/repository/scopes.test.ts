@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { workspaceScopes } from '#cli/repository/scopes.ts';
+import { proposedScopes, workspaceScopes } from '#cli/repository/scopes.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { mkdirSync, rmSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
 
@@ -98,4 +99,28 @@ test('workspace selection does not parse an inactive lower-priority configuratio
         'packages/app/package.json': '{"name":"inside"}',
     });
     expect(workspaceScopes(directory.path, []).scopes.map((scope) => scope.path)).toStrictEqual(['packages/app']);
+});
+
+test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"private":true}',
+        'supabase/config.toml': 'project_id = "planted"\n',
+        'api/package.json': '{"dependencies":{"express":"5.0.0"}}',
+        'api/src/index.js': 'export {};\n',
+        'ios/App.xcodeproj/project.pbxproj': '// !$*UTF8*$!\n',
+        'ios/Sources/App.swift': 'import Foundation\n',
+        'services/billing/pyproject.toml': '[project]\nname = "billing"\n',
+        'tools/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
+        'apps/web/supabase/config.toml': 'project_id = "web"\n',
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const facts = readManifests(sandbox.path, repository.files);
+    const found = proposedScopes(sandbox.path, repository.files, facts, configurationManifests().values());
+    expect(found.scopes.map((scope) => [scope.path, scope.source])).toStrictEqual([
+        ['api', 'project'],
+        ['apps/web', 'project'],
+        ['ios', 'project'],
+        ['services/billing', 'project'],
+    ]);
 });

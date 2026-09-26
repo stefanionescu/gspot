@@ -34,7 +34,7 @@ import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { workspaceScopes } from '#cli/repository/scopes.ts';
+import { proposedScopes } from '#cli/repository/scopes.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
@@ -107,7 +107,7 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
     );
     if (repo.hasGit) assertCleanTree(root, options);
     const facts = readManifests(root, repo.files);
-    const workspace = workspaceScopes(root, facts);
+    const workspace = proposedScopes(root, repo.files, facts, manifests.values());
     const inputs = { root, repo, facts, workspace: workspace.scopes, manifests };
     const detected = selectForInit({ ...inputs, options });
     const tooling = existingTooling(root, repo.files, facts);

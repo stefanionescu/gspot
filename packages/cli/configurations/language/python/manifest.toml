@@ -9,6 +9,7 @@ description = "Python sources: Ruff for lint and layout, basedpyright for types,
 [detect]
 extensions = [".py"]
 filenames = ["pyproject.toml", "requirements*.txt", "Pipfile"]
+project_files = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 shebangs = ["python", "python3"]
 
 [claims]

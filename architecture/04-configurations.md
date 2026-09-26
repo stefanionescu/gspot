@@ -244,6 +244,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - An installer name is a string, or a table with `name` and `version` for an installer that
   numbers by itself.
 - A setting takes `detect`, a small table `init` reads to fill it from the repository.
+- `[detect] project_files` names the files that mark a project: a file name, a folder name such
+  as `*.xcodeproj`, or a short path such as `supabase/config.toml`. `init` proposes the
+  configuration from such a file and a scope for the folder that holds it.
 - `[[rules_off]]` lists the shared rules a framework turns off, each with a reason.
 - A `[rule_files]` entry may carry `when`, a detection table, so a file installs where its
   subject is found.

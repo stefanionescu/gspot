@@ -1,3 +1,4 @@
+import { scopeFile } from '#cli/configurations/targets.ts';
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { join } from 'node:path';
@@ -65,7 +66,7 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
                     'image',
                     '--quiet',
                     '--config',
-                    join(input.root, '.gspot/config', input.scope, 'trivy.yaml'),
+                    join(input.root, scopeFile(input.scope, 'trivy.yaml')),
                     '--exit-code',
                     String(FINDINGS_EXIT),
                     '--format',

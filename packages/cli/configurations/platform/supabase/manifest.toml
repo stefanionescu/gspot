@@ -9,6 +9,7 @@ description = "A Supabase project: a project file that parses, edge functions un
 [detect]
 filenames = ["supabase/config.toml"]
 paths = ["supabase/config.toml", "**/supabase/config.toml"]
+project_files = ["supabase/config.toml"]
 
 [claims]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]

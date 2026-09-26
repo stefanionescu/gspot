@@ -4,6 +4,7 @@ import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import { projectFolder } from '#cli/repository/scopes.ts';
 import type { TreeFacts } from '#cli/repository/tree.ts';
 import * as linguistLanguages from 'linguist-languages';
 
@@ -92,6 +93,15 @@ function filenameEvidence(manifest: Manifest, tree: TreeFacts): string | undefin
     return found?.path ?? filename;
 }
 
+// A project file names the project it marks, so the file is the evidence and its folder is a scope (K-48).
+function projectEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    for (const pattern of manifest.detect.project_files) {
+        const found = tree.candidates.find((file) => projectFolder(file.path, pattern) !== undefined);
+        if (found !== undefined) return found.path;
+    }
+    return undefined;
+}
+
 function dependencyEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
     const dependency = manifest.detect.dependencies.find((name) => tree.dependencies.has(name));
     return dependency === undefined ? undefined : `${dependency} in ${tree.dependencies.get(dependency) ?? ''}`;
@@ -116,7 +126,15 @@ function tagEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
     return tree.candidates.find((file) => manifest.detect.tags.some((tag) => file.tags.includes(tag)))?.path;
 }
 
-const EVIDENCE = [filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence, defaultEvidence];
+const EVIDENCE = [
+    projectEvidence,
+    filenameEvidence,
+    dependencyEvidence,
+    shebangEvidence,
+    tagEvidence,
+    pathEvidence,
+    defaultEvidence,
+];
 
 function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined {
     const { configuration } = manifest;

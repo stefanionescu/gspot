@@ -8,6 +8,7 @@ description = "An Xcode project: property lists that parse, build settings files
 
 [detect]
 paths = ["**/*.xcodeproj/project.pbxproj", "*.xcodeproj/project.pbxproj"]
+project_files = ["*.xcodeproj"]
 
 [claims]
 paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcassets/**/Contents.json"]

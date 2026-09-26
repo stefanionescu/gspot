@@ -290,8 +290,18 @@ export const manifestSchema = z.strictObject({
             shebangs: stringList,
             tags: stringList,
             paths: stringList,
+            // A file, or a folder such as *.xcodeproj, whose folder is a project: init proposes a scope there.
+            project_files: stringList,
         })
-        .default({ extensions: [], filenames: [], dependencies: [], shebangs: [], tags: [], paths: [] }),
+        .default({
+            extensions: [],
+            filenames: [],
+            dependencies: [],
+            shebangs: [],
+            tags: [],
+            paths: [],
+            project_files: [],
+        }),
     claims: claimsSchema.default({
         extensions: [],
         filenames: [],

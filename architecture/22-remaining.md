@@ -223,6 +223,12 @@ line, because TOML allows no line break inside an inline table. This repository'
 such items, each a reason sentence with its paths. Writing such a list as `[[tools.<name>.<key>]]`
 blocks is the remaining step.
 
+Done 2026-09-26, K-48: `[detect] project_files` names the files that mark a project, and `init`
+proposes a scope for every folder that holds one, workspace members included. The project file
+names live in the javascript, python, swift, xcode, and supabase manifests. `scopeFile(scope,
+name)` in `configurations/targets.ts` is the one function that spells the path of a scope's
+generated file.
+
 ### CSS claims contradict the contract
 
 Step 2.4. Confirmed defect.
