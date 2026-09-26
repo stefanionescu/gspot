@@ -4,7 +4,15 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { appendEntry, appendList, deleteKey, removeEntries, setKey } from '#cli/policy/write.ts';
+import {
+    appendEntry,
+    appendIgnore,
+    appendList,
+    deleteKey,
+    removeEntries,
+    scopeHolder,
+    setKey,
+} from '#cli/policy/write.ts';
 
 const text =
     '#:schema x\n\n# Comment on version.\nversion = 1\nconfigurations = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
@@ -119,6 +127,60 @@ describe('writePolicy', () => {
         );
         expect(counter.removed).toBe(1);
         expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('[[ignore]]');
+    });
+
+    test('an ignore joins the entry with the same check, rule, and reason, and a new reason adds an entry', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
+        const reason = 'Generated fixtures repeat on purpose.';
+        const same = (paths: string[]) => ({ check: 'bash/shellcheck', rule: 'SC2312', paths, reason });
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, appendIgnore(same(['fixtures/a.sh']))));
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, appendIgnore(same(['fixtures/b.sh', 'fixtures/a.sh']))));
+        const merged = preparePolicy(
+            sandbox.path,
+            appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' }),
+        );
+        writePolicy(sandbox.path, merged);
+        expect(merged.policy.ignores).toStrictEqual([
+            { check: 'bash/shellcheck', rule: 'SC2312', paths: ['fixtures/a.sh', 'fixtures/b.sh'], reason },
+            { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
+        ]);
+        expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8').match(/\[\[ignore\]\]/g)).toHaveLength(2);
+        const everywhere = preparePolicy(
+            sandbox.path,
+            appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', reason }),
+        );
+        expect(everywhere.policy.ignores[0]).toStrictEqual({ check: 'bash/shellcheck', rule: 'SC2312', reason });
+    });
+
+    test.each([
+        ['a sub-table', '[[scope]]\npath = "api"\n[scope.limits]\nfile_lines = 100\n'],
+        ['an inline table', '[[scope]]\npath = "api"\nlimits = { file_lines = 100 }\n'],
+    ])('a scope setting written into %s loads with the ones already there', async (_form, scope) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': `${text}\n${scope}`, 'api/run.sh': '' });
+        const result = preparePolicy(sandbox.path, (raw) =>
+            setKey('limits.function_lines', 20)(scopeHolder(raw, 'api')),
+        );
+        writePolicy(sandbox.path, result);
+        expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({
+            file_lines: { value: 100 },
+            function_lines: { value: 20 },
+        });
+        expect(preparePolicy(sandbox.path, () => undefined).policy.scopeTables['api']?.limits?.root).toMatchObject({
+            function_lines: { value: 20 },
+        });
+    });
+
+    test('a list that runs past 120 characters is written one item per line', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
+        const terms = Array.from({ length: 16 }, (_, index) => `forbidden-term-${String(index)}`);
+        writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned_terms', terms)));
+        const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
+        expect(written.split('\n').every((line) => line.length <= 120)).toBe(true);
+        expect(written).toContain('banned_terms = [\n    "forbidden-term-0",\n');
+        expect(preparePolicy(sandbox.path, () => undefined).policy.naming.banned_terms).toHaveLength(16);
     });
 
     test('a dry run writes nothing', async () => {

@@ -1,6 +1,7 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import type { CarriedFormatter, CarriedConfiguration } from '#cli/policy/adoption/results.ts';
@@ -119,8 +120,9 @@ function bodyText(document: TomlTable): string {
     // Arrays take the layout the TOML formatter keeps, so the first format check of the policy passes.
     const tight = plain.replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
     const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
-    if (scopes.every((scope) => scope['tools'] === undefined)) return seed;
-    return patch(seed, document, { inlineTableStart: 2, bracketSpacing: false });
+    const indent = policyIndent(document);
+    if (scopes.every((scope) => scope['tools'] === undefined)) return wrapLongArrays(seed, indent);
+    return wrapLongArrays(patch(seed, document, { inlineTableStart: 2, bracketSpacing: false }), indent);
 }
 
 /**

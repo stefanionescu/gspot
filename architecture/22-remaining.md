@@ -212,6 +212,17 @@ dropped with its line recorded, and `check` reports each one as a finding of `in
 while the other checks run. `apply` and the edit commands still refuse such a policy. A syntax
 error, an unknown key, or a wrong shape still stops every command.
 
+Done 2026-09-26, K-51: both policy writers wrap an array whose line passes 120 characters. Each
+item stands on its own line as written, with the indentation the format table asks for. `gspot ignore`
+adds its paths to the entry with the same check, rule, and reason, and only a new reason adds an
+entry. A scope setting written into a sub-table or an inline table loads with the ones there.
+This repository's own policy is rewrapped.
+
+Open under K-51: a list item that is one inline table longer than 120 characters stays on one
+line, because TOML allows no line break inside an inline table. This repository's policy holds 50
+such items, each a reason sentence with its paths. Writing such a list as `[[tools.<name>.<key>]]`
+blocks is the remaining step.
+
 ### CSS claims contradict the contract
 
 Step 2.4. Confirmed defect.

@@ -2,6 +2,7 @@ import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
 import { assertPolicyComplete } from '#cli/policy/read.ts';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { patch } from '@decimalturn/toml-patch';
 import { stringify as stringifyToml } from 'smol-toml';
@@ -60,7 +61,7 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
         if (!before.has(key) && Array.isArray(value) && value.length > 0 && typeof value[0] === 'object')
             seed = `${seed.trimEnd()}\n\n${stringifyToml({ [key]: value })}`;
     // No padding inside array brackets: the style taplo formats to, so a hand edit and a written entry agree.
-    const next = patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false });
+    const next = wrapLongArrays(patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false }), policyIndent(raw));
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete({ policy, text: next, path: 'gspot.toml' });
     return { text: next, policy, changed: next !== text };
@@ -77,6 +78,32 @@ export function appendEntry(table: string, entry: TomlTable): Mutation {
         const list = (raw[table] as TomlTable[] | undefined) ?? [];
         list.push(entry);
         raw[table] = list;
+    };
+}
+
+function isSameIgnore(existing: TomlTable, entry: TomlTable): boolean {
+    return ['check', 'rule', 'reason'].every((field) => (existing[field] ?? undefined) === (entry[field] ?? undefined));
+}
+
+/**
+ * Adds an ignore: its paths join the entry with the same check, rule, and reason, and only a new reason adds an entry.
+ * An ignore with no paths covers the whole scope, so it leaves the merged entry without paths.
+ * @param entry the ignore as the command built it
+ * @returns the mutation
+ */
+export function appendIgnore(entry: TomlTable): Mutation {
+    return (raw) => {
+        const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
+        const same = list.find((existing) => isSameIgnore(existing, entry));
+        if (same === undefined) {
+            list.push(entry);
+            raw['ignore'] = list;
+            return;
+        }
+        const added = entry['paths'];
+        const existing = same['paths'];
+        if (!Array.isArray(added) || !Array.isArray(existing)) Reflect.deleteProperty(same, 'paths');
+        else same['paths'] = [...new Set([...(existing as string[]), ...(added as string[])])];
     };
 }
 

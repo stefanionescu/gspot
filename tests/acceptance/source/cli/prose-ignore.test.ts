@@ -57,7 +57,11 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     const obsoletePolicy = `${policy}\n[tools.vale]\nenabled = false\n`;
     writeFileSync(join(directory.path, 'gspot.toml'), obsoletePolicy);
     const obsolete = await run(directory.path, command, environment);
-    expect(obsolete.code, obsolete.stdout + obsolete.stderr).toBe(2);
-    expect(obsolete.stdout + obsolete.stderr).toContain('tools.vale.enabled');
+    expect(obsolete.code, obsolete.stdout + obsolete.stderr).toBe(1);
+    const obsoleteChecks = reportSchema.parse(JSON.parse(obsolete.stdout)).checks;
+    expect(obsoleteChecks.map((check) => check.check)).toStrictEqual(['prose/vale', 'integrity/policy']);
+    expect(obsoleteChecks[1]?.findings).toMatchObject([
+        { file: 'gspot.toml', line: 7, message: expect.stringContaining('tools.vale.enabled') },
+    ]);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(obsoletePolicy);
 });

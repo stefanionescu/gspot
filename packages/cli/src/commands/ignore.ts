@@ -8,7 +8,7 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { PolicyError, readPolicy } from '#cli/policy/read.ts';
-import { appendEntry, removeEntries } from '#cli/policy/write.ts';
+import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import type { Command } from 'commander';
@@ -87,7 +87,7 @@ export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     if (o.remove) return removeIgnore(root, o);
     if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
     const { entry, lines } = ignoreEntry(o);
-    return commitPolicy(root, appendEntry('ignore', entry), false, lines.join('\n'));
+    return commitPolicy(root, appendIgnore(entry), false, lines.join('\n'));
 }
 
 /**
