@@ -91,7 +91,13 @@ export async function checkPushed(
         const result = await checkRevision(root, options, signal, revision);
         if (result === undefined) break;
         if (result.report === undefined) return result;
-        revisions.push({ ...revision, report: result.report });
+        revisions.push({
+            object: revision.object,
+            refs: revision.refs,
+            commits: revision.commits,
+            historyComplete: revision.historyComplete,
+            report: result.report,
+        });
         rendered.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
     }
     const report = pushReport(selected, revisions, signal);
