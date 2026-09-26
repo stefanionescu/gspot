@@ -127,7 +127,11 @@ export function scopeMissing(path: string): string {
  * @returns the message
  */
 export function settingNotExposed(key: string, known: string[]): string {
-    return `No selected configuration exposes \`${key}\`. The settings that exist under that table are ${list(known)}. Run \`gspot list settings\` to see every one.`;
+    const table =
+        known.length === 0
+            ? 'No setting exists under that table.'
+            : `The settings that exist under that table are ${list(known)}.`;
+    return `No selected configuration exposes \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
 }
 
 /**

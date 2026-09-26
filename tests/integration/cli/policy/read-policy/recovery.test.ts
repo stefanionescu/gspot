@@ -51,6 +51,16 @@ describe('readPolicyText', () => {
         expect(() => readPolicyText(`${MINIMAL_POLICY.replace('bash', 'bas')}`, 'gspot.toml')).toThrow('bash');
     });
 
+    test('a table no selected configuration exposes says so without listing settings that do not exist', () => {
+        const { problems } = readPolicyText(
+            `${MINIMAL_POLICY}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`,
+            'gspot.toml',
+        );
+        expect(problems).toMatchObject([
+            { line: 4, message: expect.stringContaining('No setting exists under that table.') },
+        ]);
+    });
+
     test('a syntax error still stops reading, because no rest exists', () => {
         expect(() => readPolicyText(`${MINIMAL_POLICY}level = \n`, 'gspot.toml')).toThrow('is not valid TOML');
         expect(() => readPolicyText(`${MINIMAL_POLICY}colour = "red"\n`, 'gspot.toml')).toThrow('`colour`');
