@@ -1,6 +1,7 @@
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
