@@ -1,3 +1,4 @@
+// The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
@@ -5,11 +6,15 @@ import { shippedFormat } from '#cli/configurations/listing.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
 import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
 
-type NativeOverride<Options> = {
-    files: string | string[];
-    excludeFiles?: string | string[] | undefined;
-    options: Options;
-};
+import {
+    listedOverride,
+    literalGlob,
+    type NativeOverride,
+    relocatedOverrides,
+} from '#cli/generation/relocated-overrides.ts';
+
+// Line breaks and extglob groups, which EditorConfig sections cannot express.
+const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 
 function formatEntries(policy: Policy): ScopedFormat[] {
     const tables = [
@@ -34,89 +39,54 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
     };
 }
 
-// A negation keeps its mark in front of the moved selector.
-function relocated(pattern: string, place: (selector: string) => string): string {
-    return pattern.startsWith('!') ? `!${place(pattern.slice(1))}` : place(pattern);
+type Override = { files: string[]; excludeFiles: string[]; options: Record<string, unknown> };
+
+// The overrides the policy's scoped and path-specific format settings become, relative to the generated file.
+function policyOverrides(policy: Policy, fromConfig: (pattern: string) => string): Override[] {
+    return formatEntries(policy).map(({ scope, paths, format }) => {
+        const expanded = expandedPaths(paths);
+        const files = expanded.filter((path) => !path.startsWith('!')).map((path) => fromConfig(path));
+        const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => fromConfig(path.slice(1)));
+        if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
+        return { files, excludeFiles, options: prettierOptions(format) };
+    });
 }
 
-/**
- * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
- * @param entries the authored overrides
- * @param base the folder the authored file lived in, relative to the root
- * @param prefix the path from the generated file's folder back to the root
- * @returns the overrides with their selectors moved
- */
-export function relocatedOverrides<Options>(
-    entries: NativeOverride<Options>[],
-    base: string,
+// The plugins Prettier loads: the authored ones, then each shipped plugin by a path relative to the configuration file.
+function pluginEntries(
+    plugins: PrettierPlugin[],
     prefix: string,
-): NativeOverride<Options>[] {
-    const fromConfig = (pattern: string): string =>
-        [prefix, literalGlob(base), pattern].filter((part) => part !== '' && part !== '.').join('/');
-    return entries.flatMap((entry) => {
-        const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
-        const excluded =
-            entry.excludeFiles === undefined
-                ? []
-                : typeof entry.excludeFiles === 'string'
-                  ? [entry.excludeFiles]
-                  : entry.excludeFiles;
-        return [false, true].flatMap((hasSlash) => {
-            const patterns = files.filter((pattern) => pattern.includes('/') === hasSlash);
-            if (patterns.length === 0) return [];
-            if (!hasSlash && base === '') return [{ files: patterns, excludeFiles: excluded, options: entry.options }];
-            // Prettier matches every exclusion of a basename group against the basename, where a slash never occurs.
-            const basenames = excluded.map((pattern) => ({
-                isNegated: pattern.startsWith('!'),
-                basename: (pattern.startsWith('!') ? pattern.slice(1) : pattern).replace(/^(?:\*\*\/)+/u, ''),
-            }));
-            if (!hasSlash && basenames.some(({ basename }) => basename.includes('/') && /[{}()]/u.test(basename)))
-                throw new Error(
-                    'Prettier cannot relocate this basename exclusion without changing its meaning. Keep the original configuration active.',
-                );
-            // A negated exclusion that no basename matches excludes every file of the group.
-            if (!hasSlash && basenames.some(({ isNegated, basename }) => isNegated && basename.includes('/')))
-                return [];
-            const exclusions = hasSlash
-                ? excluded.map((pattern) => relocated(pattern, fromConfig))
-                : basenames
-                      .filter(({ basename }) => !basename.includes('/'))
-                      .map(({ isNegated, basename }) => {
-                          const moved = fromConfig(`**/${basename}`);
-                          return `${isNegated ? '!' : ''}${moved}`;
-                      });
-            const place = (selector: string): string => fromConfig(hasSlash ? selector : `**/${selector}`);
-            if (base === '')
-                return [
-                    {
-                        files: patterns.map((pattern) => relocated(pattern, place)),
-                        excludeFiles: exclusions,
-                        options: entry.options,
-                    },
-                ];
-            // Below a folder, a negated selector becomes the folder less that selector, so it reaches no file outside.
-            const included = patterns.filter((pattern) => !pattern.startsWith('!'));
-            const complements = patterns
-                .filter((pattern) => pattern.startsWith('!'))
-                .map((pattern) => ({
-                    files: [fromConfig('**/*')],
-                    excludeFiles: [place(pattern.slice(1)), ...exclusions],
-                    options: entry.options,
-                }));
-            return [
-                ...(included.length === 0
-                    ? []
-                    : [
-                          {
-                              files: included.map((selector) => place(selector)),
-                              excludeFiles: exclusions,
-                              options: entry.options,
-                          },
-                      ]),
-                ...complements,
-            ];
-        });
-    });
+    extras: Record<string, unknown>,
+): { plugins?: string[] } {
+    if (plugins.length === 0) return {};
+    const base = prefix === '' ? '.' : prefix;
+    const shipped = plugins.map((plugin) => `${base}/${NODE_MODULES_DIRECTORY}/${plugin.name}/${plugin.entry}`);
+    return { plugins: [...((extras['plugins'] as string[] | undefined) ?? []), ...shipped] };
+}
+
+// The authored settings the policy carries, split into their overrides and the rest.
+// The reason explains the override to a reader of the policy; Prettier does not read it.
+function carriedExtras(extra: Record<string, unknown> | undefined): {
+    nativeOverrides: NativeOverride<Record<string, unknown>>[];
+    extras: Record<string, unknown>;
+} {
+    const { overrides = [], ...carried } = extra ?? {};
+    const extras = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
+    return { nativeOverrides: overrides as NativeOverride<Record<string, unknown>>[], extras };
+}
+
+// A Prettier selector as an EditorConfig section path, placed under its scope when it has one.
+function editorconfigSelector(pattern: string, scope: string): string {
+    if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
+        throw new Error(
+            `EditorConfig cannot represent selector ${JSON.stringify(pattern)}. Keep this override in tools.prettier.extra.overrides or a native EditorConfig section.`,
+        );
+    if (scope === '' || pattern.startsWith(`${scope}/`)) return pattern;
+    if (!pattern.startsWith('**/') || pattern.slice('**/'.length).includes('/'))
+        throw new Error(
+            `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
+        );
+    return `${literalGlob(scope)}/${pattern}`;
 }
 
 /**
@@ -137,15 +107,6 @@ export function prettierOptions(format: Partial<FormatSettings>): Record<string,
 }
 
 /**
- * A path as a glob that matches only itself.
- * @param path the literal path
- * @returns the path with every glob character escaped
- */
-export function literalGlob(path: string): string {
-    return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
-}
-
-/**
  * Generate each Prettier configuration relative to its own output path.
  * @param policy the repository policy
  * @param targetPath the path of the generated file
@@ -161,51 +122,20 @@ export function prettierConfig(
 ): Record<string, unknown> {
     const prefix = relative(dirname(targetPath), '.').replaceAll('\\', '/');
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
-    // Prettier loads a plugin path that starts with a dot relative to the configuration file.
-    const pluginPaths = plugins.map(
-        (plugin) => `${prefix === '' ? '.' : prefix}/${NODE_MODULES_DIRECTORY}/${plugin.name}/${plugin.entry}`,
-    );
-    const pluginOverrides = plugins.flatMap((plugin) => plugin.overrides);
-    const overrides = formatEntries(policy).map(({ scope, paths, format }) => {
-        const expanded = expandedPaths(paths);
-        const files = expanded.filter((path) => !path.startsWith('!')).map((path) => fromConfig(path));
-        const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => fromConfig(path.slice(1)));
-        if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
-        return { files, excludeFiles, options: prettierOptions(format) };
-    });
-    const { overrides: nativeOverrides = [], ...carried } = extra ?? {};
-    // The reason explains the override to a reader of the policy; Prettier does not read it.
-    const extras = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
-    for (const entry of relocatedOverrides(
-        nativeOverrides as {
-            files: string | string[];
-            excludeFiles?: string | string[];
-            options: Record<string, unknown>;
-        }[],
-        '',
-        prefix,
-    )) {
-        const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
-        const excluded =
-            entry.excludeFiles === undefined
-                ? []
-                : typeof entry.excludeFiles === 'string'
-                  ? [entry.excludeFiles]
-                  : entry.excludeFiles;
-        overrides.push({ files, excludeFiles: excluded, options: entry.options });
-    }
+    const { nativeOverrides, extras } = carriedExtras(extra);
+    const overrides = [
+        ...plugins.flatMap((plugin) => plugin.overrides),
+        ...policyOverrides(policy, fromConfig),
+        ...relocatedOverrides(nativeOverrides, '', prefix).map((entry) => listedOverride(entry)),
+    ];
     const nativeDefaults = policy.tools['prettier']?.['native_defaults'] === true;
     const format = { ...(nativeDefaults ? {} : shippedFormat()), ...policy.format };
     return {
         ...prettierOptions(format),
         ...(nativeDefaults ? {} : { arrowParens: 'always', embeddedLanguageFormatting: 'off' }),
         ...extras,
-        ...(pluginPaths.length === 0
-            ? {}
-            : { plugins: [...((extras['plugins'] as string[] | undefined) ?? []), ...pluginPaths] }),
-        ...(pluginOverrides.length === 0 && overrides.length === 0
-            ? {}
-            : { overrides: [...pluginOverrides, ...overrides] }),
+        ...pluginEntries(plugins, prefix, extras),
+        ...(overrides.length === 0 ? {} : { overrides }),
     };
 }
 
@@ -225,21 +155,7 @@ export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
     return formatEntries(policy).flatMap(({ scope, paths, format }) => {
         const options = editorconfigOptions(format);
         if (Object.keys(options).length === 0) return [];
-        return expandedPaths(paths).map((pattern) => {
-            if (pattern.startsWith('!') || /[\r\n]|[!+?*@]\(/u.test(pattern))
-                throw new Error(
-                    `EditorConfig cannot represent selector ${JSON.stringify(pattern)}. Keep this override in tools.prettier.extra.overrides or a native EditorConfig section.`,
-                );
-            let path = pattern;
-            if (scope !== '' && !path.startsWith(`${scope}/`)) {
-                if (!path.startsWith('**/') || path.slice('**/'.length).includes('/'))
-                    throw new Error(
-                        `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
-                    );
-                path = `${literalGlob(scope)}/${path}`;
-            }
-            return { path: `/${path}`, options };
-        });
+        return expandedPaths(paths).map((pattern) => ({ path: `/${editorconfigSelector(pattern, scope)}`, options }));
     });
 }
 

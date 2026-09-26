@@ -7,10 +7,11 @@ import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import { prettierOptions } from '#cli/generation/format.ts';
 import type { CarriedFormatter } from '#cli/policy/adoption/results.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { literalGlob, prettierOptions, relocatedOverrides } from '#cli/generation/format.ts';
+import { literalGlob, relocatedOverrides  } from '#cli/generation/relocated-overrides.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
 
 // Git precedence: a nested ignore line is relative to its folder and follows the lines of every ancestor file.
