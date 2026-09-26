@@ -1,4 +1,4 @@
-import { isAbsolute, join } from 'node:path';
+import { join } from 'node:path';
 import type { EngineInput } from '#cli/checks/input.ts';
 import type { Session } from '#cli/execution/session.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
@@ -11,10 +11,11 @@ import type { CheckResult, Finding } from '#cli/checks/result.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
+import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
 import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
-import { checkedFindings, executionFailure, toolOutputDetail } from '#cli/execution/broken-tool.ts';
+import { collect, missingNote, type ToolRunState } from '#cli/execution/tool-findings.ts';
+import { MissingToolError, probeTool, type ToolProbe, toolPin } from '#cli/tools/probe.ts';
 
 import {
     commandConfigurations,
@@ -23,97 +24,11 @@ import {
     substituteValue,
 } from '#cli/execution/command-expansion.ts';
 
-/** What one tool run accumulates across its spawns. */
-type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
-
 const FILES_PLACEHOLDER = '{files}';
-function firstLine(result: SpawnResult, placeholder: string): string {
-    const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
-    return (
-        text
-            .split('\n')
-            .find((line) => !(line.trim() === '' || line.startsWith('Oops!') || line.startsWith('ESLint: '))) ??
-        placeholder
-    );
-}
-
-function missingNote(
-    tool: ToolPin,
-    probe: {
-        found?: string;
-        floor?: string;
-        hint?: string;
-    },
-    state: string,
-): string {
-    const hint = probe.hint ?? 'Install the configured tool.';
-    const version = tool.version === undefined ? '' : ` ${tool.version}`;
-    return state === 'outdated'
-        ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. ${hint}`
-        : `${tool.name}${version} is not installed. ${hint}`;
-}
-
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
     const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
-}
-
-function prefixScope(findings: Finding[], scopePath: string): void {
-    for (const finding of findings)
-        if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
-            finding.file = `${scopePath}/${finding.file}`;
-}
-
-function countMatches(spec: CheckSpec, result: SpawnResult): number {
-    if (spec.count_regex === undefined) return 0;
-    const pattern = new RegExp(spec.count_regex, 'gu');
-    return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
-}
-
-function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
-    const placeholder = `${tool.name} exited ${String(result.code)}`;
-    const text = file === undefined ? toolOutputDetail(result, placeholder) : firstLine(result, placeholder);
-    const { name, help } = spec;
-    return { check: name, file: file?.replaceAll('\\', '/') ?? '', message: text, help, fixable: false };
-}
-
-function markFailure(
-    spec: CheckSpec,
-    tool: ToolPin,
-    result: SpawnResult,
-    parsed: Finding[],
-    state: ToolRunState,
-): void {
-    if (spec.count_regex !== undefined) {
-        if (countMatches(spec, result) > 0) state.isFailed = true;
-        return;
-    }
-    if (result.code === 0) return;
-    state.isFailed = true;
-    if (parsed.length === 0) state.findings.push(unexplainedFailure(spec, tool, result, undefined));
-}
-
-function collect(
-    planned: PlannedCheck,
-    invocation: ToolInvocation,
-    result: SpawnResult,
-    state: ToolRunState,
-    parsed: Finding[],
-): void {
-    const { spec, scope } = planned;
-    const tool = planned.tool;
-    if (tool === undefined) throw new Error('Cannot collect tool output without a selected tool.');
-    if (parsed.length === 0 && result.code !== 0 && invocation.file !== undefined)
-        parsed.push(unexplainedFailure(spec, tool, result, invocation.file));
-    if (
-        invocation.file !== undefined &&
-        (spec.output?.format !== 'regex' || (spec.output.file_is ?? 'path') === 'path')
-    )
-        for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
-    if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
-    state.findings.push(...parsed);
-    markFailure(spec, tool, result, parsed, state);
 }
 
 function batchedCommands(
@@ -203,6 +118,88 @@ function adapterTool(
     }
     return { path: probe.path, env };
 }
+
+// The result of a nested-configuration check whose configuration is not generated yet, or undefined.
+function missingConfiguration(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+    base: CheckResult,
+): CheckResult | undefined {
+    if (planned.spec.nested_config === undefined) return undefined;
+    const files = openConfinedRoot(session.root);
+    try {
+        const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
+        if (missing === undefined) return undefined;
+        return {
+            ...base,
+            status: 'error',
+            note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
+        };
+    } finally {
+        files.close();
+    }
+}
+
+type Run = {
+    session: Session;
+    planned: PlannedCheck;
+    tool: ToolPin;
+    command: string[];
+    probe: ToolProbe;
+    base: CheckResult;
+};
+
+// Runs the command in the workspace it was given, or in a copy of its files when the check isolates them, and
+// reports the repository's command rather than the copy's.
+async function runInWorkspace(run: Run, workspace: string | undefined): Promise<CheckResult> {
+    const { session, planned, tool, command, probe, base } = run;
+    using created = isolatedWorkspace(session, planned, command, workspace);
+    const root = workspace ?? created?.root;
+    const execution = root === undefined ? session : { ...session, root };
+    const prepared = prepareCommand(execution, planned, command, probe.path);
+    const result = await runCommands(execution, planned, tool, prepared, base);
+    if (root === undefined) return result;
+    const reported = prepareCommand(session, planned, command, probe.path);
+    return { ...result, command: reported.argv.filter((part) => typeof part === 'string') };
+}
+
+// The result of a check that cannot run: its configuration is not generated, or its tool cannot be used.
+function unrunnableResult(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+    base: CheckResult,
+    probe: ToolProbe,
+): CheckResult | undefined {
+    const tool = planned.tool;
+    if (tool === undefined) return undefined;
+    return missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, probe);
+}
+
+// The tool as found from the directory the command runs in, with the command's environment.
+function probeFor(session: Session, planned: PlannedCheck, command: string[], tool: ToolPin): ToolProbe {
+    const { env, cwd } = prepareCommand(session, planned, command);
+    return probeTool({ ...session, cwd }, { ...tool, env });
+}
+
+// The result of a check whose tool cannot run: the probe failed, or the tool is missing or too old.
+function unavailableTool(base: CheckResult, tool: ToolPin, probe: ToolProbe): CheckResult | undefined {
+    if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
+    if (probe.state === 'missing' || probe.state === 'outdated')
+        return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
+    return undefined;
+}
+
+// A workspace of the selected files and configurations, when the check isolates its files and none was given.
+function isolatedWorkspace(session: Session, planned: PlannedCheck, command: string[], workspace: string | undefined) {
+    if (workspace !== undefined || planned.spec.isolated_files !== true) return undefined;
+    return createFileWorkspace(session.root, [
+        ...planned.files.map(({ path }) => path),
+        ...commandConfigurations(session, planned, command),
+    ]);
+}
+
 /**
  * Prepares scoped commands with bounded file batches for checks and corrections.
  * @param session the session rooted at the working copy
@@ -267,42 +264,12 @@ export async function runToolCheck(
     };
     if (tool === undefined || command === undefined)
         return { ...base, status: 'error', note: 'this check has no command to run' };
-    if (spec.nested_config !== undefined) {
-        const files = openConfinedRoot(session.root);
-        try {
-            for (const path of commandConfigurations(session, planned, command))
-                if (files.read(path) === undefined)
-                    return {
-                        ...base,
-                        status: 'error',
-                        note: `Required configuration ${path} is missing. Run gspot apply before checking.`,
-                    };
-        } finally {
-            files.close();
-        }
-    }
-    const { env, cwd } = prepareCommand(session, planned, command);
-    const probe = probeTool({ ...session, cwd }, { ...tool, env });
-    if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
-    if (probe.state === 'missing' || probe.state === 'outdated')
-        return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
-    using created =
-        workspace === undefined && spec.isolated_files === true
-            ? createFileWorkspace(session.root, [
-                  ...planned.files.map(({ path }) => path),
-                  ...commandConfigurations(session, planned, command),
-              ])
-            : undefined;
-    const executionRoot = workspace ?? created?.root;
-    const execution = executionRoot === undefined ? session : { ...session, root: executionRoot };
-    const prepared = prepareCommand(execution, planned, command, probe.path);
-    const result = await runCommands(execution, planned, tool, prepared, base);
-    if (executionRoot !== undefined)
-        result.command = prepareCommand(session, planned, command, probe.path).argv.filter(
-            (part) => typeof part === 'string',
-        );
-    return result;
+    const probe = probeFor(session, planned, command, tool);
+    const unrunnable = unrunnableResult(session, planned, command, base, probe);
+    if (unrunnable !== undefined) return unrunnable;
+    return runInWorkspace({ session, planned, tool, command, probe, base }, workspace);
 }
+
 /**
  * Run an adapter command through the shared execution boundaries.
  * @param input the check and its command session

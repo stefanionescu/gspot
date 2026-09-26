@@ -7,8 +7,8 @@ import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
-import type { ExposedSettings, WrittenValue } from '#cli/policy/settings.ts';
 import { asRecord, policyTables, policyValue, specFor } from '#cli/policy/settings.ts';
+import type { ExposedSettings, SpecMatch, WrittenValue } from '#cli/policy/settings.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
@@ -76,6 +76,35 @@ function looseningProblem(
     );
 }
 
+// The problems of a written list: bad items, and loosening entries that carry no reason when reasons are required.
+function listProblems(key: string, written: WrittenValue, match: SpecMatch, requireReasons: boolean): PolicyProblem[] {
+    const problems = listItemProblems(key, written.value, requireReasons);
+    if (!requireReasons || match.spec.direction !== 'loosening' || !Array.isArray(written.value)) return problems;
+    for (const [index, item] of (written.value as unknown[]).entries()) {
+        const record = asRecord(item);
+        if (record !== undefined && record['reason'] === undefined)
+            problems.push({
+                path: [...key.split('.'), index],
+                message: messages.missingReason(key, `gspot set ${quoteArgument(key)} <entry> --reason "..."`),
+            });
+    }
+    return problems;
+}
+
+// The problem of a written scalar that loosens the shipped default without an accepted reason.
+function scalarProblems(
+    surface: ExposedSettings,
+    key: string,
+    written: WrittenValue,
+    match: SpecMatch,
+    scope: string | undefined,
+): PolicyProblem[] {
+    const shipped = surface.defaults.get(match.spec.name)?.value;
+    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    const problem = looseningProblem(key, written, shipped, scope);
+    return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
+}
+
 function keyProblems(
     surface: ExposedSettings,
     table: Partial<Policy>,
@@ -89,25 +118,8 @@ function keyProblems(
     if (!written) return [];
     if (!settingValueSchemas[match.spec.kind].safeParse(written.value).success)
         return [{ path: key.split('.'), message: `The setting ${key} requires a ${match.spec.kind} value.` }];
-    if (match.spec.kind === 'list') {
-        const problems = listItemProblems(key, written.value, requireReasons);
-        if (requireReasons && match.spec.direction === 'loosening' && Array.isArray(written.value)) {
-            for (const [index, item] of (written.value as unknown[]).entries()) {
-                const record = asRecord(item);
-                if (record !== undefined && record['reason'] === undefined)
-                    problems.push({
-                        path: [...key.split('.'), index],
-                        message: messages.missingReason(key, `gspot set ${quoteArgument(key)} <entry> --reason "..."`),
-                    });
-            }
-        }
-        return problems;
-    }
-    const shipped = surface.defaults.get(match.spec.name)?.value;
-    if (!requireReasons) return [];
-    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
-    const problem = looseningProblem(key, written, shipped, scope);
-    return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
+    if (match.spec.kind === 'list') return listProblems(key, written, match, requireReasons);
+    return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
 }
 
 function extraProblems(surface: ExposedSettings, table: Partial<Policy>): PolicyProblem[] {
@@ -143,6 +155,40 @@ function tableProblems(
     return [...keys, ...extraProblems(surface, table)];
 }
 
+// The surface problems no written table settles, for the root selection and for each scope.
+function unwrittenSurfaceProblems(
+    surface: ExposedSettings,
+    policy: Policy,
+    scopeSurfaces: Map<string, ExposedSettings>,
+): PolicyProblem[] {
+    const problems: PolicyProblem[] = [];
+    const surfaces = [
+        { settings: surface, scope: undefined, path: ['configurations'] as PathSegment[] },
+        ...policy.scopes.map((scope, index) => ({
+            settings: scopeSurfaces.get(scope.path) ?? surface,
+            scope: scope.path,
+            path: ['scope', index, 'configurations'] as PathSegment[],
+        })),
+    ];
+    for (const { settings, scope, path } of surfaces) {
+        const layers = policyTables(policy, scope);
+        for (const { key, message } of settings.problems)
+            if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
+    }
+    return problems;
+}
+
+// The root table and each scope table that exists, with where each one sits in the document.
+function policyLayersOf(policy: Policy): { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] {
+    return [
+        { table: policy, path: [] },
+        ...policy.scopes.flatMap((scope, index) => {
+            const table = policy.scopeTables[scope.path];
+            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
+        }),
+    ];
+}
+
 /**
  * Validates every written key against the surface and the loosening rule.
  * @param surface the surface of the selection
@@ -155,40 +201,14 @@ export function validateAgainstSurface(
     policy: Policy,
     scopeSurfaces = new Map<string, ExposedSettings>(),
 ): PolicyProblem[] {
-    const problems: PolicyProblem[] = [];
-    for (const { settings, scope, path } of [
-        { settings: surface, scope: undefined, path: ['configurations'] },
-        ...policy.scopes.map((scope, index) => ({
-            settings: scopeSurfaces.get(scope.path) ?? surface,
-            scope: scope.path,
-            path: ['scope', index, 'configurations'],
-        })),
-    ]) {
-        const layers = policyTables(policy, scope);
-        for (const { key, message } of settings.problems)
-            if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
-    }
+    const problems = unwrittenSurfaceProblems(surface, policy, scopeSurfaces);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
-    const tables: { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] = [
-        { table: policy, path: [] },
-        ...policy.scopes.flatMap((scope, index) => {
-            const table = policy.scopeTables[scope.path];
-            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
-        }),
-    ];
-    for (const { table, scope, path } of tables)
-        problems.push(
-            ...tableProblems(
-                scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface),
-                table,
-                scope,
-                policy.requireReasons,
-            ).map((problem) => ({
-                ...problem,
-                path: [...path, ...problem.path],
-            })),
-        );
+    for (const { table, scope, path } of policyLayersOf(policy)) {
+        const settings = scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
+        const found = tableProblems(settings, table, scope, policy.requireReasons);
+        problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
+    }
     for (const [index, { group }] of policy.naming.remove_groups.entries())
         if (shippedPolicy().groups[group]?.removable === false)
             problems.push({
