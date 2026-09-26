@@ -1,6 +1,5 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
@@ -9,14 +8,7 @@ import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { INVALID_INPUT_EXIT } from '#cli/constants/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
 import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/constants/repository/repository.ts';
-
-function stagedEnvironmentFiles(staged: string[]): string[] {
-    const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
-    return staged.filter(
-        (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
-    );
-}
+import { isEnvironmentFile } from '#cli/repository/file-classification.ts';
 
 function isReadable(path: string): boolean {
     try {
@@ -51,7 +43,7 @@ export function refusalFor(
     stage: StageFilter,
     staged: string[] | undefined,
 ): CommandResult | undefined {
-    const environmentStaged = staged === undefined ? [] : stagedEnvironmentFiles(staged);
+    const environmentStaged = staged === undefined ? [] : staged.filter(isEnvironmentFile);
     if (environmentStaged.length > 0)
         return {
             text: `An environment file is staged: ${environmentStaged.join(', ')}. Unstage it (git restore --staged <file>); only templates like .env.example belong in git.\n`,

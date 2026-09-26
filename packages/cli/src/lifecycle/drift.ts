@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from 'diff';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';

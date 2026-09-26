@@ -6,3 +6,6 @@ export const CODE_SPAN = /`[^`]*`/gu;
 export const SQL_BLOCK_COMMENT = '/*';
 export const MARKDOWN = new Set(['.md', '.mdx']);
 export const SQL = new Set(['.sql', '.pgsql', '.psql']);
+
+/** A script with no extension reads through stdin as Python, whose comments start the same way. */
+export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;

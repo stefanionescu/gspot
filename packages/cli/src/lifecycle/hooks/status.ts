@@ -5,7 +5,7 @@ import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';

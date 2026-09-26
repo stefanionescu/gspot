@@ -17,7 +17,7 @@ import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
 import { checkCommitMessages } from '#cli/checks/commit-messages.ts';
 import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Executable, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import type { CheckResult, Engine, EngineInput } from '#cli/types/checks/checks.ts';
 
@@ -31,11 +31,6 @@ const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Eng
         throw new Error(`No prose analysis is called ${spec.analysis ?? ''}.`);
     },
 };
-
-// The engine of a check that runs its declared command.
-function toolEngine(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    return runToolCheck(session, planned);
-}
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
@@ -148,9 +143,7 @@ export async function runEngineCheck(
  * @param spec the selected check definition
  * @returns the function that runs the check
  */
-export function resolveCheck(
-    spec: CheckSpec,
-): (session: Session, planned: PlannedCheck, staged?: Set<string>) => Promise<CheckResult> {
+export function resolveCheck(spec: CheckSpec): Executable['run'] {
     if (spec.engine !== undefined) {
         const engine = engines[spec.engine](spec);
         return (session, planned, staged) => runEngineCheck(session, engine, planned, staged);
@@ -173,5 +166,5 @@ export function resolveCheck(
                 duration: 0,
                 findings: [],
             });
-    return toolEngine;
+    return (session, planned) => runToolCheck(session, planned);
 }

@@ -7,7 +7,7 @@ import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
 import { jobsWanted } from '#cli/platform/environment.ts';
-import { isActive, planRun } from '#cli/execution/plan.ts';
+import { isActive, planRun } from '#cli/execution/planning/plan.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';

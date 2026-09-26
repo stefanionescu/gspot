@@ -31,7 +31,7 @@ import {
     SOURCE_STATEMENT,
     STRICT_MODE,
     TOP_LEVEL_ASSIGNMENT,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/constants/checks/script.ts';
 
 function shebangProblem(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))

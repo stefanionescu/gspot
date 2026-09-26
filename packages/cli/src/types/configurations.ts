@@ -37,8 +37,6 @@ export type SelectionWalk = {
 };
 /** The output fields accepted by both configuration and repository checks. */
 export type OutputFormat = z.infer<typeof outputSchema>;
-/** A script with no extension reads through stdin as Python, whose comments start the same way. */
-export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
 export type ListingRow = {
     name: string;
     kind: string;

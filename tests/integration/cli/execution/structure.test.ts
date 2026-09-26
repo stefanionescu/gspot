@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';

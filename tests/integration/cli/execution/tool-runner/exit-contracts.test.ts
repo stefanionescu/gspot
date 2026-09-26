@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';

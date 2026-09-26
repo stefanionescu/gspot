@@ -4,7 +4,7 @@ import { readdir, realpath, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join, posix } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
+import { relocateWindowsLauncher } from '#cli/repository/revisions/windows-launcher.ts';
 import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 
 // The local file header signature that opens a ZIP archive.

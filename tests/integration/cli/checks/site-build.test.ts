@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';

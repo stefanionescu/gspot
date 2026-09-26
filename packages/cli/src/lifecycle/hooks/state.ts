@@ -1,6 +1,6 @@
 import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';

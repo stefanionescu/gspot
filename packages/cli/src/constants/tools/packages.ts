@@ -37,3 +37,6 @@ export const KEYS = new Set([
 export const CONFLICT_MARKER = /^(?:<{7}|={7}|>{7})/mu;
 export const HTTP_URL = /^https?:\/\//u;
 export const INTEGRITY = /^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u;
+
+/** The lock file each package manager writes. */
+export const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;

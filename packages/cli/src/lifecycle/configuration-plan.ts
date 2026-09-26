@@ -1,26 +1,18 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
 
 import type {
     ConfigurationDocument,
-    ConfigurationFormat,
-    OwnershipEntry,
     ConfigurationWriteRequest,
     Field,
     KeyPath,
-    Planned,
-    Recorded,
+    ConfigurationPlan,
+    ConfigurationOwnership,
 } from '#cli/types/lifecycle/lifecycle.ts';
-
-// Whether two key paths name the same key.
-function samePath(left: KeyPath, right: KeyPath): boolean {
-    return isDeepStrictEqual(left, right);
-}
 
 // Whether a key path lies under, or is, a protected field's path.
 function isProtected(parent: KeyPath, protectedFields: KeyPath[]): boolean {
@@ -55,7 +47,9 @@ function isUnplannable(request: ConfigurationWriteRequest): boolean {
 
 // Puts back the original value of each key no longer requested, as long as the developer left it as installed.
 function retireFields(document: ConfigurationDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
-    const retired = recorded.filter((previous) => !requested.some((field) => samePath(field.path, previous.path)));
+    const retired = recorded.filter(
+        (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
+    );
     for (const previous of retired) {
         if (!isDeepStrictEqual(document.value(previous.path), previous.installed)) return undefined;
         document.set(previous.path, previous.original);
@@ -84,7 +78,7 @@ function plannedField(
 function recordParents(document: ConfigurationDocument, path: KeyPath, parents: KeyPath[]): void {
     for (let length = 1; length < path.length; length++) {
         const parent = path.slice(0, length);
-        if (document.value(parent) === undefined && !parents.some((known) => samePath(known, parent)))
+        if (document.value(parent) === undefined && !parents.some((known) => isDeepStrictEqual(known, parent)))
             parents.push(parent);
     }
 }
@@ -98,7 +92,7 @@ function installFields(
     parents: KeyPath[],
 ): Field[] | undefined {
     for (const field of requested) {
-        const index = fields.findIndex((entry) => samePath(entry.path, field.path));
+        const index = fields.findIndex((entry) => isDeepStrictEqual(entry.path, field.path));
         const entry = plannedField(document, request, field, fields[index]);
         if (entry === undefined) return undefined;
         if (index === -1) fields.push(entry);
@@ -129,7 +123,7 @@ function replaceFields(
 }
 
 // The ownership record of a plan that changed the fields or the text.
-function nextRecord(request: ConfigurationWriteRequest, fields: Field[], parents: KeyPath[]): Recorded {
+function nextRecord(request: ConfigurationWriteRequest, fields: Field[], parents: KeyPath[]): ConfigurationOwnership {
     const recorded = request.existing?.configuration;
     return {
         format: request.format,
@@ -147,7 +141,7 @@ function planned(
     nextText: string,
     fields: Field[],
     parents: KeyPath[],
-): Planned {
+): ConfigurationPlan {
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
@@ -183,25 +177,11 @@ export function pruneConfigurationParents(
 
 /**
  * Plans the merge of owned keys into a shared configuration file the developer keeps.
- * @param path the file path
- * @param format the document format
- * @param changes the keys to install with their values
- * @param current the file as it is now, or undefined when it does not exist
- * @param existing the recorded ownership of the file
- * @param matchesInstalled whether the file still holds what was installed last time
- * @param takeover whether authored values under owned keys may be replaced
+ * @param request the destination, requested fields, and observed ownership
  * @returns the next snapshot with its ownership, or undefined when the recorded format differs
  */
-export function planConfiguration(
-    path: string,
-    format: ConfigurationFormat,
-    changes: { path: KeyPath; value: unknown }[],
-    current: FileSnapshot | undefined,
-    existing: OwnershipEntry | undefined,
-    matchesInstalled: boolean,
-    takeover: boolean,
-): Planned | undefined {
-    const request: ConfigurationWriteRequest = { path, format, current, existing, matchesInstalled, takeover };
+export function planConfiguration(request: ConfigurationWriteRequest): ConfigurationPlan | undefined {
+    const { format, changes, current, existing } = request;
     const text = sourceText(request);
     const document = configurationDocument(text, format, current === undefined);
     if (isUnplannable(request)) return undefined;

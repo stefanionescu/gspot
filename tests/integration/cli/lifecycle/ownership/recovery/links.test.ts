@@ -3,10 +3,10 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { readFileSync, readlinkSync, symlinkSync } from 'node:fs';
 
-const implementation = cliSource('lifecycle/ownership.ts');
+const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
 if (process.platform !== 'win32')

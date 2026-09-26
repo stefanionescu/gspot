@@ -1,7 +1,6 @@
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/constants/repository/repository.ts';
+import { isEnvironmentFile } from '#cli/repository/file-classification.ts';
 
 /**
  * One finding for each tracked environment file that is not a template.
@@ -9,18 +8,13 @@ import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/constants/repository
  * @returns the findings
  */
 export function envFiles(input: EngineInput): Finding[] {
-    const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
     const tracked = indexedPaths(input.root);
-    return tracked
-        .filter(
-            (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
-        )
-        .map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'tracked-environment-file',
-            message: `${path} is tracked; an environment file holds the values of one machine.`,
-            fixable: false,
-        }));
+    return tracked.filter(isEnvironmentFile).map((path) => ({
+        check: input.spec.name,
+        file: path,
+        line: 1,
+        rule: 'tracked-environment-file',
+        message: `${path} is tracked; an environment file holds the values of one machine.`,
+        fixable: false,
+    }));
 }

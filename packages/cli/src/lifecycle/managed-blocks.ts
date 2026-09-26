@@ -1,4 +1,4 @@
-import type { BlockStyle } from '#cli/types/lifecycle/lifecycle.ts';
+import type { BlockStyle, BlockSpan } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     HASH_BLOCK_END,
@@ -13,7 +13,7 @@ import {
  * @param style the marker style of the file format
  * @returns the block's character range, or undefined when the file holds none
  */
-export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
+export function blockSpan(text: string, style: BlockStyle): BlockSpan | undefined {
     const markersForStyle =
         style === 'markdown'
             ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }

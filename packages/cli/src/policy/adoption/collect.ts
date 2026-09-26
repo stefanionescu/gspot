@@ -14,9 +14,9 @@ import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { IGNORE_PATH_KEYS, SEPARATE_TOOLS } from '#cli/constants/policy/adoption.ts';
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
-import type { Carrier, Owned, CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import type { CarryRequest, Carrier, Owned, CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 
@@ -55,22 +55,10 @@ function assertImportable(source: CarrySource, tool: string, path: string): void
 /**
  * Reads what one old configuration file holds that gspot keeps: exception lists for the four list tools, disabled rules for the rest.
  * @param source the input already read and parsed
- * @param tool the tool the file configures
- * @param path the file, relative to the root
- * @param lists the lists the entries are added to
- * @param root the repository root
- * @param reader the kind of reading the tool's manifest declares for the file
- * @param check the check the carried ignores belong to
+ * @param request the importer, destination lists, and configuration context
  */
-async function carryFrom(
-    source: CarrySource,
-    tool: string,
-    path: string,
-    lists: CarriedConfiguration,
-    root: string,
-    reader: ExistingTool['carries'],
-    check?: string,
-): Promise<void> {
+async function carryFrom(source: CarrySource, request: CarryRequest): Promise<void> {
+    const { tool, path, lists, root, reader, check } = request;
     if (reader === 'ignore-paths' && tool !== 'basedpyright') {
         const key = IGNORE_PATH_KEYS[tool];
         if (key === undefined) throw new Error(`${path}: no complete ${tool} ignore-path importer is available.`);
@@ -140,7 +128,7 @@ async function carryOwned(root: string, entry: Owned, lists: CarriedConfiguratio
         const observed = lists.observed.get(path);
         if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
         const source = parseCarrySource(observed, tool, path, selectorOf(entry));
-        await carryFrom(source, tool, path, lists, root, carries, check);
+        await carryFrom(source, { tool, path, lists, root, reader: carries, check });
     } catch (error) {
         lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
         return;
@@ -161,13 +149,7 @@ export const nativeImporters: Record<
     string,
     {
         schema: z.ZodType;
-        carry?: (
-            source: CarrySource,
-            path: string,
-            lists: CarriedConfiguration,
-            root: string,
-            check?: string,
-        ) => void | Promise<void>;
+        carry?: Carrier;
     }
 > = {
     typos: typosImporter,

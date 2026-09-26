@@ -9,7 +9,7 @@ import { readGitSetting } from '#cli/repository/git-config.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
+import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/constants/repository/patterns.ts';
 import type { ManifestFacts, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 

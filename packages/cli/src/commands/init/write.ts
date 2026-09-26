@@ -13,7 +13,7 @@ import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/constants/commands/init.ts';
 import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';

@@ -6,9 +6,9 @@ import { parseJsonc } from '#cli/repository/jsonc.ts';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { CarrySource } from '#cli/types/policy/adoption.ts';
-import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
+import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
+import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,

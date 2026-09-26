@@ -1,9 +1,6 @@
 // The types of support/cli in this package.
-import type { TestdirResult } from 'testdirs';
 import type { Finding } from '#cli/types/checks/checks.ts';
 
-/** The disposable directory a test plants its files in. */
-export type TestDirectory = TestdirResult;
 /** The fields the tests read from the SARIF report gspot writes. */
 export type SarifReport = {
     runs: {

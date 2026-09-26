@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';

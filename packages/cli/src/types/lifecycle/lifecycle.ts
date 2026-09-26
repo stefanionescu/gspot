@@ -1,7 +1,6 @@
 // The types of lifecycle in this package.
 import type { z } from 'zod';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 
 import type {
@@ -13,6 +12,7 @@ import type {
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 export type ConfigurationWriteRequest = {
+    changes: { path: KeyPath; value: unknown }[];
     path: string;
     format: ConfigurationFormat;
     current: FileSnapshot | undefined;
@@ -32,10 +32,14 @@ export type ApplyReport = {
 };
 export type KeyPath = (string | number)[];
 export type Field = z.infer<typeof configurationFieldsSchema>[number];
-export type Recorded = NonNullable<OwnershipEntry['configuration']>;
-export type Planned = { next: FileSnapshot; configuration: Recorded; status: 'changed' | 'unchanged' };
+export type ConfigurationOwnership = NonNullable<OwnershipEntry['configuration']>;
+export type ConfigurationPlan = {
+    next: FileSnapshot;
+    configuration: ConfigurationOwnership;
+    status: 'changed' | 'unchanged';
+};
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
-export type Prepared = {
+export type PreparedWrite = {
     path: string;
     current: FileSnapshot | undefined;
     next: FileSnapshot | undefined;
@@ -50,10 +54,9 @@ export type DriftEntry = {
     rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
     ruleError?: string;
 };
-export type Configuration = NonNullable<OwnershipEntry['configuration']>;
 export type Restoration = { next?: FileSnapshot };
 export type BlockStyle = 'markdown' | 'hash';
-export type Span = ReturnType<typeof blockSpan>;
+export type BlockSpan = { start: number; end: number };
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
 export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };
 export type OwnershipState = z.infer<typeof ownershipSchema>;
@@ -121,4 +124,13 @@ export type ConfigurationDocument = {
     value(path: KeyPath): unknown;
     set(path: KeyPath, value: unknown): void;
     text(): string;
+};
+
+export type ReplacementRequest = {
+    path: string;
+    next: FileSnapshot;
+    kind: OwnershipEntry['kind'];
+    takeover?: boolean | undefined;
+    expected?: FileSnapshot | undefined;
+    proposed?: ReadonlyMap<string, FileSnapshot | undefined> | undefined;
 };

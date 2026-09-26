@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();

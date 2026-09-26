@@ -2,7 +2,7 @@ import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { constants, readFileSync, statSync } from 'node:fs';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';

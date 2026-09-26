@@ -8,7 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';

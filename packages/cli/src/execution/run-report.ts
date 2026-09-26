@@ -1,6 +1,6 @@
 // The report a run ends with: every result, the ignores that matched, the skips, coverage, and the exit code.
 import { writeReport } from '#cli/output/report.ts';
-import { claimedInputs } from '#cli/execution/plan.ts';
+import { claimedInputs } from '#cli/execution/planning/plan.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';

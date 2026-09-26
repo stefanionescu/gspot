@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { PATH } from '#cli/constants/generation.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';

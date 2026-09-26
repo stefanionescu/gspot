@@ -1,16 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 
-import type {
-    EngineInput,
-    Finding,
-    FunctionOption,
-    ParsedSql,
-    SqlAnalysis,
-    SqlSource,
-} from '#cli/types/checks/checks.ts';
+import type { EngineInput, Finding, FunctionOption, SqlAnalysis, SqlSource } from '#cli/types/checks/checks.ts';
 import {
     BLOCK_COMMENT,
     LINE_COMMENT,
@@ -73,7 +66,7 @@ function functionOption(statement: SqlStatementView, name: string): FunctionOpti
 }
 
 // The executable statements of a PL/pgSQL function, parsed from its definition text.
-async function plpgsqlStatements(parsed: ParsedSql, statement: SqlStatementView, index: number): Promise<number> {
+async function plpgsqlStatements(parsed: SqlFile, statement: SqlStatementView, index: number): Promise<number> {
     const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
     return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
 }
@@ -89,7 +82,7 @@ async function sqlBodyStatements(statement: SqlStatementView): Promise<number> {
 
 // The executable statements of a function body, or undefined for a language this check does not read.
 async function bodyStatements(
-    parsed: ParsedSql,
+    parsed: SqlFile,
     statement: SqlStatementView,
     index: number,
 ): Promise<number | undefined> {

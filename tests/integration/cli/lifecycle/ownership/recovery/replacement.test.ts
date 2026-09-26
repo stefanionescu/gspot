@@ -4,10 +4,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
 
-const implementation = cliSource('lifecycle/ownership.ts');
+const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
 // Publishes a read-only file through a child whose rename fails at the chosen point, with Windows semantics.

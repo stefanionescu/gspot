@@ -10,7 +10,7 @@ import { hookBody, hookCommand } from '#cli/generation/hooks.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/constants/platform.ts';
 import { hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { HookLocation, Repository } from '#cli/types/repository/repository.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/constants/repository/repository.ts';

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { chmodSync, lstatSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 

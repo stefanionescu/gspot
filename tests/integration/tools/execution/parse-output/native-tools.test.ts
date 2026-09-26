@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { engineInput } from '#cli/execution/engines.ts';

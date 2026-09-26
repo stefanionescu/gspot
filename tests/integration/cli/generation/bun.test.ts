@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
     await using repository = await testdir();

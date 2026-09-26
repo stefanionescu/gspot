@@ -2,7 +2,7 @@
 import { npmPins } from '#cli/tools/pins.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#package' with { type: 'json' };
 import type { Manifest } from '#cli/types/configurations.ts';
 import { selectForScope } from '#cli/configurations/select.ts';

@@ -5,7 +5,7 @@ import type { FileSnapshot } from '#cli/types/platform.ts';
 import { publishGenerated } from '#cli/lifecycle/apply.ts';
 import { hasConflictMarkers } from '#cli/lifecycle/drift.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { resolvePythonProject } from '#cli/tools/python-project.ts';
@@ -64,20 +64,19 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed during tool resolution. Retry the command.');
         report.notes.push(...rendered.notes);
-        publishGenerated(
-            owner,
-            session.root,
+        publishGenerated(owner, {
+            root: session.root,
             rendered,
             report,
-            {
+            retained: {
                 prose: session.scopes.some((scope) =>
                     scope.selected.some((manifest) => manifest.configuration.name === 'prose'),
                 ),
                 packages: session.packageManager !== undefined,
             },
             takeover,
-            conflictedOutputs(owner, rendered),
-        );
+            regenerate: conflictedOutputs(owner, rendered),
+        });
         await installProsePackages(session, report);
         const toolInputs = new Set(
             rendered.files

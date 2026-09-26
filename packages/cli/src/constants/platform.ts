@@ -63,3 +63,10 @@ export const PRIVATE_PATHS = [
     `${CACHE_DIRECTORY}/`,
     `${REPORT_DIRECTORY}/`,
 ];
+
+/** The pinned upstream Swift parser: the build downloads it and verifies this checksum before embedding it. */
+export const SWIFT_GRAMMAR = {
+    version: '0.7.3',
+    url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
+    sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
+} as const;

@@ -7,7 +7,7 @@ import { containing } from '#tests/support/expectations.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
 // A ZIP containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(

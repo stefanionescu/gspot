@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { Node } from 'web-tree-sitter';
 import type { ToolContext } from '#cli/types/tools/tools.ts';
-import type { sqlFile } from '#cli/parsers/sql/statements.ts';
+import type { SqlFile } from '#cli/types/parsers/sql.ts';
 import type { configurationSchema } from '#cli/checks/licenses.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
@@ -10,7 +10,6 @@ import type { checkResultSchema, findingSchema } from '#cli/checks/result.ts';
 import type { Defined, MergedView, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Repository, ScopeEntry, SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
 
-export type ParsedSql = Awaited<ReturnType<typeof sqlFile>>;
 export type SqlSource = { path: string; text: string };
 export type FunctionOption = {
     DefElem: { defname: string; arg: { String?: { sval: string }; List?: { items: { String: { sval: string } }[] } } };
@@ -18,7 +17,7 @@ export type FunctionOption = {
 export type SqlAnalysis = {
     input: EngineInput;
     source: SqlSource;
-    parsed: ParsedSql;
+    parsed: SqlFile;
     threshold: number;
     maximum: number;
 };

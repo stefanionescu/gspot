@@ -9,7 +9,7 @@ import {
     FORWARDING_INTERPRETER,
     FORWARDING_MAX_LINES,
     INLINE_NODE,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/constants/checks/script.ts';
 
 /**
  * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.

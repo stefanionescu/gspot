@@ -2,7 +2,7 @@ import * as messages from '#cli/policy/messages.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 // .gspot/version against the running binary; the exit-2 refusal with its two remedies.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

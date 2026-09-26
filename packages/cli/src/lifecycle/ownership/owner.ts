@@ -3,10 +3,10 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { openJournal } from '#cli/lifecycle/ownership-journal.ts';
+import { openJournal } from '#cli/lifecycle/ownership/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
-import { proposeRestoration } from '#cli/lifecycle/ownership-restoration.ts';
-import { applyProposal, applyProposals } from '#cli/lifecycle/ownership-apply.ts';
+import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyProposal, applyProposals } from '#cli/lifecycle/ownership/apply.ts';
 import type { LifecycleOwner, Journal, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNER_WRITABLE_FILE, READ_ONLY_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
 
@@ -15,7 +15,7 @@ import {
     proposeConfiguration,
     proposeReplacement,
     proposeRetirement,
-} from '#cli/lifecycle/ownership-proposals.ts';
+} from '#cli/lifecycle/ownership/proposals.ts';
 
 const activeMutation = new AsyncLocalStorage<Map<string, LifecycleOwner>>();
 // The owner's operations over an open journal.
@@ -45,9 +45,9 @@ function lifecycleOwner(journal: Journal): LifecycleOwner {
         },
         paths: () => state.files.map((entry) => entry.path),
         proposeReplacement: (path, next, kind, takeover, expected, proposed) =>
-            proposeReplacement(journal, path, next, kind, takeover, expected, proposed),
+            proposeReplacement(journal, { path, next, kind, takeover, expected, proposed }),
         replace: (path, next, kind, takeover, expected) =>
-            applyProposal(journal, proposeReplacement(journal, path, next, kind, takeover, expected)),
+            applyProposal(journal, proposeReplacement(journal, { path, next, kind, takeover, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(journal, path, expected),
         proposeRestoration: (path, original) => proposeRestoration(journal, path, original),

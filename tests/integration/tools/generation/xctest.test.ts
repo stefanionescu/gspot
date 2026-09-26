@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';

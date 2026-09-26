@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { cacheInputs, cacheKey, fileHash, pruneCache, writeCached } from '#cli/execution/cache.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs';
 

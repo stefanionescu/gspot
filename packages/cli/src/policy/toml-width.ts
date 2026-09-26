@@ -1,12 +1,9 @@
+import { isTomlValue } from '#cli/policy/toml-nodes.ts';
 // Keeping every line of gspot.toml readable: an array that runs past the width goes one item per line.
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import type { Edit, KeyValue, TomlBlock, Value } from '#cli/types/policy/policy.ts';
+import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
 import { DEFAULT_INDENT_WIDTH, POLICY_LINE_WIDTH } from '#cli/constants/policy/policy.ts';
-
-function isValue(node: { type: string }): node is Value {
-    return ['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable'].includes(node.type);
-}
 
 function keyValues(blocks: TomlBlock[]): KeyValue[] {
     return blocks.flatMap((block) => {
@@ -25,7 +22,7 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
     if (value.type !== 'InlineArray' || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
     const items = value.items.map((entry) => entry.item);
-    const ranges = items.flatMap((item) => (item.range === undefined || !isValue(item) ? [] : [item.range]));
+    const ranges = items.flatMap((item) => (item.range === undefined || !isTomlValue(item) ? [] : [item.range]));
     if (items.length === 0 || ranges.length !== items.length) return undefined;
     const pad = ' '.repeat(pair.loc.start.column);
     const body = ranges.map(([start, end]) => `${pad}${indent}${text.slice(start, end)},`).join('\n');

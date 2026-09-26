@@ -8,7 +8,7 @@ import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallOptions, UninstallPlan } from '#cli/types/commands/commands.ts';
 
 function planText(plan: UninstallPlan): string {

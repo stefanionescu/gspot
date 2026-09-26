@@ -3,8 +3,8 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import type { originalSchema } from '#cli/lifecycle/journal.ts';
-import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
-import type { Outcome, Prepared, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
+import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
+import type { Outcome, PreparedWrite, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the proposal is a link.
 function foundSnapshot(
@@ -56,7 +56,7 @@ function backupFor(journal: Journal, proposal: FileProposal): z.infer<typeof ori
 }
 
 // The record a changed proposal writes, with the original its entry keeps.
-function prepareRecord(journal: Journal, proposal: FileProposal): Prepared | undefined {
+function prepareRecord(journal: Journal, proposal: FileProposal): PreparedWrite | undefined {
     const { path, current, next, entry } = proposal;
     if (entry === undefined && proposal.status !== 'changed') return undefined;
     const recovery = backupFor(journal, proposal);
@@ -67,7 +67,7 @@ function prepareRecord(journal: Journal, proposal: FileProposal): Prepared | und
 }
 
 // Writes the pending records, publishes every file, and settles the journal.
-function publish(journal: Journal, prepared: Prepared[]): void {
+function publish(journal: Journal, prepared: PreparedWrite[]): void {
     journal.state.pending = prepared.map(({ path, current, next, entry, recovery }) => ({
         path,
         ...(current === undefined ? {} : { before: identity(current) }),

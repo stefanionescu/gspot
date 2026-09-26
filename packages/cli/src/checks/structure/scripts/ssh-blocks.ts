@@ -1,12 +1,7 @@
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
-import {
-    CLOSING_QUOTE_LINE,
-    RUN_SSH_START,
-    SSH_BLOCK_MIN_LINES,
-    SSH_HEREDOC,
-} from '#cli/constants/checks/structure.ts';
+import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#cli/constants/checks/script.ts';
 
 function unescapedQuotes(text: string, quote: string): number {
     let count = 0;

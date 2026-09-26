@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
-import { planRun } from '#cli/execution/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import prettier, { type Options } from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';

@@ -4,7 +4,7 @@ import packageManifest from '#package' with { type: 'json' };
 import { REPORT_DIRECTORY } from '#cli/constants/platform.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
 import type { PushReport, RunReport } from '#cli/types/execution/execution.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';

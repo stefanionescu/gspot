@@ -1,7 +1,7 @@
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
 import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -64,24 +64,10 @@ function pruningProposals(
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
  * @param owner the lifecycle owner of the repository
- * @param root the repository root
- * @param rendered the generated files to publish
- * @param report receives what changed
- * @param retained what stays out of pruning
- * @param retained.prose whether the prose rule files are kept
- * @param retained.packages whether the package project is kept
- * @param takeover the reviewed originals a takeover replaces, when one was authorized
- * @param regenerate the files a merge broke, replaced whatever their bytes are
+ * @param request generated outputs, pruning policy, and reviewed originals
  */
-export function publishGenerated(
-    owner: LifecycleOwner,
-    root: string,
-    rendered: GeneratedProposal,
-    report: ApplyReport,
-    retained: { prose: boolean; packages: boolean },
-    takeover?: ReadonlyMap<string, FileSnapshot>,
-    regenerate: ReadonlyMap<string, FileSnapshot> = new Map(),
-): void {
+export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
+    const { root, rendered, report, retained, takeover, regenerate = new Map() } = request;
     const configurations = configurationProposals(owner, rendered, takeover !== undefined);
     const replacements = rendered.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';

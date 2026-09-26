@@ -1,7 +1,7 @@
 // Running the package manager over the tool project in a scratch directory, with credentials kept out of its lock.
 import semver from 'semver';
 import { join } from 'node:path';
-import { LOCKS } from '#cli/types/tools/packages.ts';
+import { LOCKS } from '#cli/constants/tools/packages.ts';
 import { SETUP } from '#cli/constants/tools/tools.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
@@ -12,13 +12,13 @@ import type { ToolPin } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import type { PackageManager, Resolution } from '#cli/types/tools/packages.ts';
+import type { ToolPackageManager, Resolution } from '#cli/types/tools/packages.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import { CREDENTIAL_KEY, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
 import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/inspect.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
-const COMMANDS: Record<Exclude<PackageManager['name'], 'yarn'>, (frozen: boolean) => string[]> = {
+const COMMANDS: Record<Exclude<ToolPackageManager['name'], 'yarn'>, (frozen: boolean) => string[]> = {
     npm: (frozen) => [
         'npm',
         ...(frozen ? ['ci'] : ['install', '--package-lock-only']),
@@ -37,13 +37,13 @@ const COMMANDS: Record<Exclude<PackageManager['name'], 'yarn'>, (frozen: boolean
 };
 
 // Yarn's install command: Classic and Berry spell the frozen and lock-only modes differently.
-function yarnCommand(manager: PackageManager, frozen: boolean): string[] {
+function yarnCommand(manager: ToolPackageManager, frozen: boolean): string[] {
     if (semver.major(manager.version) === 1) return ['yarn', 'install', ...(frozen ? ['--frozen-lockfile'] : [])];
     return ['yarn', 'install', ...(frozen ? ['--immutable'] : ['--mode=update-lockfile'])];
 }
 
 // Whether a package manager is Yarn Berry, which reads its own settings file instead of npm's.
-function isYarnBerry(manager: PackageManager): boolean {
+function isYarnBerry(manager: ToolPackageManager): boolean {
     return manager.name === 'yarn' && semver.major(manager.version) >= 2;
 }
 
@@ -149,7 +149,7 @@ async function assertWrapperVersion(work: string, executable: string, tool: Tool
 export async function packageCommand(
     root: string,
     work: string,
-    manager: PackageManager,
+    manager: ToolPackageManager,
     frozen: boolean,
 ): Promise<void> {
     const env = await packageEnvironment(root);
@@ -194,7 +194,7 @@ export async function prepareNativeWrappers(
  * @param frozen whether the recorded lock must be installed as is
  * @returns the command
  */
-export function packageManagerCommand(manager: PackageManager, frozen: boolean): string[] {
+export function packageManagerCommand(manager: ToolPackageManager, frozen: boolean): string[] {
     if (manager.name === 'yarn') return yarnCommand(manager, frozen);
     return COMMANDS[manager.name](frozen);
 }

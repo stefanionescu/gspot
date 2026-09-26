@@ -1,9 +1,6 @@
+import { isTomlValue } from '#cli/policy/toml-nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { PathSegment, KeyValue, Position, Value } from '#cli/types/policy/policy.ts';
-
-function isValue(node: { type: string; loc: Value['loc'] }): node is Value {
-    return ['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable'].includes(node.type);
-}
 
 function valueLocations(value: Value, path: PathSegment[], locations: Map<string, Position>): void {
     locations.set(JSON.stringify(path), value.loc.start);
@@ -14,7 +11,7 @@ function valueLocations(value: Value, path: PathSegment[], locations: Map<string
     } else if (value.type === 'InlineArray') {
         let index = 0;
         for (const entry of value.items) {
-            if (!isValue(entry.item)) continue;
+            if (!isTomlValue(entry.item)) continue;
             valueLocations(entry.item, [...path, index], locations);
             index += 1;
         }

@@ -10,7 +10,7 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
 
 /**

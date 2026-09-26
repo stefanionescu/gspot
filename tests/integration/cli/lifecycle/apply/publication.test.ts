@@ -6,7 +6,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

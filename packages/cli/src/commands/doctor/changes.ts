@@ -5,7 +5,7 @@ import { head } from '#cli/repository/tracked.ts';
 import { emitAll } from '#cli/generation/render.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import { isOwned } from '#cli/policy/adoption/collect.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';

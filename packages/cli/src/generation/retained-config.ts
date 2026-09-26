@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 

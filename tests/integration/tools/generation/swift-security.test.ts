@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { IDS, PLIST, SCRIPTS } from '#tests/constants/integration/tools/generation.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';

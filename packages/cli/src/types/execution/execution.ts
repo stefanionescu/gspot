@@ -1,7 +1,6 @@
 // The types of execution in this package.
 import type { z } from 'zod';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { resolveCheck } from '#cli/execution/engines.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
 import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
@@ -88,7 +87,10 @@ export type CacheKeyInput = {
     files: { path: string; hash: string }[];
     extra?: string;
 };
-export type Executable = { check: PlannedCheck; run: ReturnType<typeof resolveCheck> };
+export type Executable = {
+    check: PlannedCheck;
+    run: (session: Session, planned: PlannedCheck, staged?: Set<string>) => Promise<CheckResult>;
+};
 export type Pass = {
     session: Session;
     options: RunOptions;

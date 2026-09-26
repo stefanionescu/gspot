@@ -26,12 +26,6 @@ export type AsyncSpawnOptions = SpawnOptions & {
 };
 export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };
 export type EmbeddedIndex = Record<string, string>;
-/** The pinned upstream Swift parser: the build downloads it and verifies this checksum before embedding it. */
-export const SWIFT_GRAMMAR = {
-    version: '0.7.3',
-    url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
-    sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
-} as const;
 export type Proposed = ReadonlyMap<string, FileSnapshot | undefined>;
 export type PathFormat = 'portable' | 'native';
 export type Confinement = {

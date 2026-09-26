@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 test('a prepared configuration does not write and cannot overwrite a subsequent edit', async () => {

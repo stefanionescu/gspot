@@ -5,7 +5,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';

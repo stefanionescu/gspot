@@ -3,7 +3,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { claimants } from '#cli/configurations/claims.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
+import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {

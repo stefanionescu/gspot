@@ -2,14 +2,15 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
-import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
+import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration-plan.ts';
 
 import type {
+    ReplacementRequest,
     OwnedBlock,
     PlannedBlock,
-    Span,
+    BlockSpan,
     BlockStyle,
     ConfigurationFormat,
     FileProposal,
@@ -69,7 +70,7 @@ function blockText(path: string, current: FileSnapshot | undefined): string {
 // The next text and record when the recorded block is still in place, or undefined when it was edited away.
 function updatedBlock(
     text: string,
-    span: Span,
+    span: BlockSpan | undefined,
     recorded: OwnedBlock,
     style: BlockStyle,
     body: string,
@@ -82,7 +83,7 @@ function updatedBlock(
 }
 
 // The next text and record for a file whose block is not recorded yet.
-function insertedBlock(text: string, span: Span, style: BlockStyle, body: string): PlannedBlock {
+function insertedBlock(text: string, span: BlockSpan | undefined, style: BlockStyle, body: string): PlannedBlock {
     const nextText = applyBlock(text, body, style);
     let prefix = '';
     if (span === undefined && text !== '') prefix = text.endsWith('\n') ? '\n' : '\n\n';
@@ -185,23 +186,11 @@ export function currentSnapshot(
 /**
  * Proposes the next bytes of a file, preserving an edited or unowned file unless the caller takes it over.
  * @param journal the open journal
- * @param path the file
- * @param next the bytes to install
- * @param kind what the file is to gspot
- * @param takeover whether an unowned or reviewed file may be replaced
- * @param expected the bytes the caller reviewed, which must still be the file's
- * @param proposed the other destinations of the same batch
+ * @param request the replacement and reviewed file state
  * @returns the proposal
  */
-export function proposeReplacement(
-    journal: Journal,
-    path: string,
-    next: FileSnapshot,
-    kind: OwnershipEntry['kind'],
-    takeover = false,
-    expected?: FileSnapshot,
-    proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
-): FileProposal {
+export function proposeReplacement(journal: Journal, request: ReplacementRequest): FileProposal {
+    const { path, next, kind, takeover = false, expected, proposed } = request;
     const existing = journal.entryFor(path);
     journal.confined.validate(path, next, proposed);
     const current = currentSnapshot(journal, path, existing, next);
@@ -259,7 +248,15 @@ export function proposeConfiguration(
     const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     const isInstalled = matches(current, existing?.installed);
-    const plan = planConfiguration(path, format, changes, current, existing, isInstalled, takeover);
+    const plan = planConfiguration({
+        path,
+        format,
+        changes,
+        current,
+        existing,
+        matchesInstalled: isInstalled,
+        takeover,
+    });
     if (plan === undefined) return { path, current, previous: existing, status: 'preserved' };
     if (plan.status === 'unchanged' && existing?.configuration !== undefined)
         return { path, current, previous: existing, status: 'unchanged' };

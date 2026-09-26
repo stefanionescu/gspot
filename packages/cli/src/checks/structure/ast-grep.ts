@@ -6,7 +6,7 @@ import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { AstGrepMatch } from '#cli/types/checks/structure.ts';
 
 const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;

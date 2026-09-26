@@ -7,7 +7,7 @@ import { readRepository } from '#cli/repository/tree.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';

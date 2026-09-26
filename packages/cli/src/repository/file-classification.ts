@@ -6,6 +6,8 @@ import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.
 
 import {
     BANNER_BYTES,
+    ENV_FILE_PATTERNS,
+    ENV_TEMPLATE_NAMES,
     BINARY_ATTRIBUTES,
     GENERATED_ATTRIBUTES,
     VENDORED_ATTRIBUTES,
@@ -18,6 +20,8 @@ import {
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
 } from '#cli/constants/repository/patterns.ts';
+
+const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
 
 function attributeRule(line: string): Attribute | undefined {
     const trimmed = line.trim();
@@ -139,3 +143,8 @@ export function readAttributes(root: string): Attribute[] {
 }
 
 // What is in the tree: files, natures, tags, scopes, and the tooling init finds.
+
+/** Identify environment files that contain machine values rather than templates. */
+export function isEnvironmentFile(path: string): boolean {
+    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1));
+}

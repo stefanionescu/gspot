@@ -5,7 +5,7 @@ import { parse as parseToml } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {

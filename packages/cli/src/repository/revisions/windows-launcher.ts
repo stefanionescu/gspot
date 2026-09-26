@@ -38,7 +38,7 @@ import {
     SIZE_OF_HEADERS_FIELD,
     SIZE_OF_IMAGE_FIELD,
     WORD_SIZE,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/constants/repository/windows-launcher.ts';
 
 function fail(): never {
     throw new SelectionError([

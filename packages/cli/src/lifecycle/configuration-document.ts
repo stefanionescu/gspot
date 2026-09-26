@@ -1,4 +1,4 @@
-import { isMap, parseDocument } from 'yaml';
+import { isAlias, isCollection, isNode, isMap, parseDocument } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
@@ -79,7 +79,16 @@ function yamlDocument(source: string, created: boolean): ConfigurationDocument {
         throw new Error('Shared configuration must be a valid YAML mapping.');
     if (created) document.contents.flow = false;
     return {
-        value: (path) => valueAt(document.toJS(), path),
+        value(path) {
+            let node: unknown = document.contents;
+            for (const [index, key] of path.entries()) {
+                // Alias expansion needs the document anchors, but only the selected subtree is converted.
+                if (isAlias(node)) return valueAt(node.toJS(document), path.slice(index));
+                if (!isCollection(node)) return undefined;
+                node = node.get(key, true);
+            }
+            return isNode(node) ? node.toJS(document) : node;
+        },
         set(path, value) {
             if (value === undefined) document.deleteIn(path);
             else document.setIn(path, value);

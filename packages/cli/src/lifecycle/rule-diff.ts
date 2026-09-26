@@ -1,16 +1,16 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { gixyRules } from '#cli/repository/gixy-rules.ts';
-import { valeRules } from '#cli/repository/vale-rules.ts';
-import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
+import { gixyRules } from '#cli/repository/configuration/gixy-rules.ts';
+import { valeRules } from '#cli/repository/configuration/vale-rules.ts';
+import { sqlfluffRules } from '#cli/repository/configuration/sqlfluff.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { GENERATED_JSON_KEY } from '#cli/constants/generation.ts';
 import { parse as parseJson, type ParseError } from 'jsonc-parser';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { javascriptRules } from '#cli/repository/javascript-rules.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
-import { swiftformatRules } from '#cli/repository/swiftformat-rules.ts';
+import { javascriptRules } from '#cli/repository/configuration/javascript-rules.ts';
+import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
+import { swiftformatRules } from '#cli/repository/configuration/swiftformat-rules.ts';
 
 function document(path: string, text: string): unknown {
     if (baseName(path) === 'gixy.cfg') return gixyRules(text);

@@ -4,7 +4,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { CORE_KINDS } from '#cli/constants/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
+import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 // Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
 import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';

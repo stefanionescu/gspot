@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
 import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
 import { appendSetting, carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import type { CarriedConfiguration, CarryPush, CarrySource } from '#cli/types/policy/adoption.ts';

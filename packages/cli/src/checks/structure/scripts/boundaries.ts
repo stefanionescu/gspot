@@ -14,7 +14,7 @@ import {
     BOUNDARY_MIN_WORDS,
     SOURCE_ANNOTATION,
     SOURCE_STATEMENT,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/constants/checks/script.ts';
 
 function hasBoundary(file: ScriptFile): boolean {
     return file.lines.slice(0, BOUNDARY_HEADER_WINDOW).some((line) => {

@@ -5,7 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { INTERPRETERS } from '#tests/constants/integration/cli/repository.ts';
-import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
+import { relocateWindowsLauncher } from '#cli/repository/revisions/windows-launcher.ts';
 
 function launcher(
     is64: boolean,

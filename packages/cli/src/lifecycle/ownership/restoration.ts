@@ -2,13 +2,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { FileSnapshot } from '#cli/types/platform.ts';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import { currentSnapshot } from '#cli/lifecycle/ownership-proposals.ts';
-import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
+import { currentSnapshot } from '#cli/lifecycle/ownership/proposals.ts';
+import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration-plan.ts';
 
 import type {
-    Configuration,
+    ConfigurationOwnership,
     Restoration,
     FileProposal,
     Journal,
@@ -19,7 +19,7 @@ import type {
 function fieldRestoration(
     existing: OwnershipEntry,
     current: FileSnapshot | undefined,
-): { current: FileSnapshot; configuration: Configuration } | undefined {
+): { current: FileSnapshot; configuration: ConfigurationOwnership } | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
     const applies =
@@ -30,7 +30,7 @@ function fieldRestoration(
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreConfiguration(current: FileSnapshot, configuration: Configuration): FileSnapshot | undefined {
+function restoreConfiguration(current: FileSnapshot, configuration: ConfigurationOwnership): FileSnapshot | undefined {
     const text = current.bytes.toString('utf8');
     if (!Buffer.from(text).equals(current.bytes)) return undefined;
     const document = configurationDocument(text, configuration.format);

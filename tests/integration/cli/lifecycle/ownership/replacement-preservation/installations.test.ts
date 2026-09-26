@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
-const implementation = cliSource('lifecycle/ownership.ts');
+const implementation = cliSource('lifecycle/ownership/owner.ts');
 
 test.each([false, true])(
     'TOML task ownership restores originals while retaining unrelated edits (%s)',

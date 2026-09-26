@@ -3,11 +3,11 @@ import type { Mock } from 'bun:test';
 import type { inspectTool } from '#cli/tools/inspect.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { TestDirectory } from '#tests/types/support/cli.ts';
+import type { TestdirResult } from 'testdirs';
 
 /** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked inspection. */
 export type CloudflarePlanted = {
-    directory: TestDirectory;
+    directory: TestdirResult;
     path: (name: string) => string;
     target: string;
     edited: string;
@@ -18,7 +18,7 @@ export type CloudflarePlanted = {
 };
 /** What the Drizzle migrations test plants: the manual and the initial migration. */
 export type DrizzlePlanted = {
-    directory: TestDirectory;
+    directory: TestdirResult;
     path: (file: string) => string;
     manual: string;
     mode: number;
@@ -28,7 +28,7 @@ export type DrizzlePlanted = {
 };
 /** What the OpenAPI freshness test plants: the document and its developer edit. */
 export type OpenapiPlanted = {
-    directory: TestDirectory;
+    directory: TestdirResult;
     document: string;
     edited: string;
     mode: number;

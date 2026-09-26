@@ -2,7 +2,7 @@ import JSON5 from 'json5';
 import { extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
-import { iniSection } from '#cli/repository/ini.ts';
+import { iniSection } from '#cli/repository/configuration/ini.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {

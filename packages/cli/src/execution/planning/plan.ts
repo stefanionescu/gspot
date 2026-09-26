@@ -6,10 +6,10 @@ import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import { restrictIgnoredPaths, skipFor } from '#cli/execution/plan-skips.ts';
+import { restrictIgnoredPaths, skipFor } from '#cli/execution/planning/skips.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
 import { HISTORY_ANALYSES, PLATFORM_NAMES } from '#cli/constants/execution/execution.ts';
-import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/plan-files.ts';
+import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
 
 import type {
     Session,

@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from 'node:util';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { installHint } from '#cli/tools/install-hints.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';

@@ -11,7 +11,7 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { expectUninstallRemovesHooks } from '#tests/support/cli/hooks.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external'] as const)(

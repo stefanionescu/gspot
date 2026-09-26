@@ -8,7 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { claimedInputs, planRun } from '#cli/execution/plan.ts';
+import { claimedInputs, planRun } from '#cli/execution/planning/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
 
