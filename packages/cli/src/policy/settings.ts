@@ -1,16 +1,8 @@
-import * as messages from '#cli/policy/messages.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/configurations/settings.ts';
-import { integrationSettingSchemas, rootSettingSchemas } from '#cli/policy/schema.ts';
-import type { NamingCategoryTable, NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
+import type { NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
-
-const NAMING_SCALARS = ['max_chars', 'max_words', 'case'] as const;
-
-const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library', 'database']);
 
 function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (
@@ -39,70 +31,6 @@ function walk(start: unknown, parts: string[]): unknown {
         current = record[part];
     }
     return current;
-}
-
-function limitKeys(policy: Partial<Policy>): string[] {
-    if (!policy.limits) return [];
-    const keys = Object.keys(policy.limits.root).map((key) => `limits.${key}`);
-    for (const [group, table] of Object.entries(policy.limits.groups))
-        for (const key of Object.keys(table)) keys.push(`limits.${group}.${key}`);
-    return keys;
-}
-
-function scalarKeys(prefix: string, table: NamingCategoryTable): string[] {
-    return NAMING_SCALARS.filter((key) => table[key] !== undefined).map((key) => `${prefix}.${key}`);
-}
-
-function namingKeys(policy: Partial<Policy>): string[] {
-    if (!policy.naming) return [];
-    const keys: string[] = [];
-    for (const [language, table] of Object.entries(policy.naming.languages)) {
-        keys.push(...scalarKeys(`naming.${language}`, table));
-        for (const [category, inner] of Object.entries(table.categories))
-            keys.push(...scalarKeys(`naming.${language}.${category}`, inner));
-    }
-    return keys;
-}
-
-function toolKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
-    const keys: string[] = [];
-    const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
-        Object.entries(table)
-            .filter(([slot]) => slot !== 'extra')
-            .map(([slot, value]) => ({ key: `tools.${tool}.${slot}`, value })),
-    );
-    for (const { key, value } of pending) {
-        const children = Array.isArray(value) ? undefined : asRecord(value);
-        if (
-            !surface.specs.has(key) &&
-            children !== undefined &&
-            [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`))
-        ) {
-            pending.push(...Object.entries(children).map(([slot, child]) => ({ key: `${key}.${slot}`, value: child })));
-        } else keys.push(key);
-    }
-    return keys;
-}
-
-function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingSpec): void {
-    if (spec.default === undefined) return;
-    const previous = surface.defaults.get(spec.name);
-    const isConflict =
-        previous !== undefined &&
-        previous.configuration !== manifest.configuration.name &&
-        JSON.stringify(previous.value) !== JSON.stringify(spec.default);
-    const isList = surface.specs.get(spec.name)?.kind === 'list';
-    if (!isList && isConflict && !OVERRIDING_KINDS.has(manifest.configuration.kind)) {
-        surface.problems.push({
-            key: spec.name,
-            message: messages.conflictingScalars(spec.name, previous.configuration, manifest.configuration.name),
-        });
-        return;
-    }
-    surface.defaults.set(spec.name, {
-        value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
-        configuration: manifest.configuration.name,
-    });
 }
 
 function languageSpec(
@@ -170,13 +98,6 @@ function namingValue(policy: Partial<Policy>, rest: string[]): WrittenValue | un
     return language ? languageValue(language, slot, categorySlot) : undefined;
 }
 
-function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
-    if (spec.kind === 'list' && Array.isArray(current) && Array.isArray(found))
-        return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
-    if (spec.kind === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
-    return found;
-}
-
 function applyLayer(
     spec: SettingSpec,
     key: string,
@@ -209,6 +130,35 @@ function applyLayers(
     return result;
 }
 
+// The declarations of one nature, without the nature field each carries.
+function declarationsOf(policy: Partial<Policy>, nature: string): unknown {
+    return policy.declarations
+        ?.filter((entry) => entry.nature === nature)
+        .map(({ nature: _nature, ...entry }) => entry);
+}
+
+// The keys that live at the top of the policy, read from their normalized fields.
+const TOP_LEVEL_VALUES: Record<string, (policy: Partial<Policy>) => unknown> = {
+    generated: (policy) => declarationsOf(policy, 'generated'),
+    vendored: (policy) => declarationsOf(policy, 'vendored'),
+    require_reasons: (policy) => policy.requireReasons,
+    extra_checks: (policy) => policy.extraChecks,
+};
+
+/**
+ * A list setting appends and deduplicates; a scalar setting takes the later value.
+ * @param spec the setting
+ * @param current the value so far
+ * @param found the value the next layer writes
+ * @returns the merged value
+ */
+export function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
+    if (spec.kind === 'list' && Array.isArray(current) && Array.isArray(found))
+        return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
+    if (spec.kind === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
+    return found;
+}
+
 /**
  * The root policy and applicable scope tables, ordered from outermost to innermost.
  * @param policy the repository policy
@@ -235,52 +185,6 @@ export function asRecord(value: unknown): Record<string, unknown> | undefined {
 }
 
 /**
- * Every setting key a policy table writes, in dotted form.
- * @param policy the root table or one scope table
- * @param surface the selected manifest settings, including nested tool keys
- * @returns the keys under limits, naming, tools and format
- */
-export function writtenKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
-    const format = Object.keys(policy.format ?? {}).map((key) => `format.${key}`);
-    return [...limitKeys(policy), ...namingKeys(policy), ...toolKeys(policy, surface), ...format];
-}
-
-/**
- * Builds the surface in selection order; framework, platform, library, and database configurations override scalar defaults.
- * @param selected the manifests of the selection, in order
- * @returns the specs, their defaults and the conflicts found on the way
- */
-export function exposedSettings(selected: Manifest[]): ExposedSettings {
-    const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
-    for (const spec of [TOOL_DEADLINE, COVERAGE_STRICT]) {
-        surface.specs.set(spec.name, spec);
-        surface.defaults.set(spec.name, { value: spec.default, configuration: 'gspot' });
-    }
-    for (const [name, schema] of Object.entries({
-        ...rootSettingSchemas,
-        ...integrationSettingSchemas,
-    })) {
-        const value = schema.parse(undefined);
-        const spec: SettingSpec = {
-            name,
-            kind: Array.isArray(value) ? 'list' : typeof value === 'boolean' ? 'boolean' : 'string',
-            direction: 'neutral',
-            default: value,
-            summary: schema.description ?? '',
-        };
-        surface.specs.set(name, spec);
-        surface.defaults.set(name, { value: spec.default, configuration: 'gspot' });
-    }
-    for (const manifest of selected) {
-        for (const spec of manifest.settings) {
-            if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
-            addDefault(surface, manifest, spec);
-        }
-    }
-    return surface;
-}
-
-/**
  * Matches a written key to the spec it belongs to: per-language and per-category variants map back to their base spec.
  * @param surface the surface of the selection
  * @param key the dotted key as written
@@ -302,12 +206,8 @@ export function specFor(surface: ExposedSettings, key: string): SpecMatch | unde
  */
 export function policyValue(policy: Partial<Policy>, key: string): WrittenValue | undefined {
     const [table, ...rest] = key.split('.');
-    if (key === 'generated' || key === 'vendored')
-        return plainIfPresent(
-            policy.declarations?.filter((entry) => entry.nature === key).map(({ nature, ...entry }) => entry),
-        );
-    if (key === 'require_reasons') return plainIfPresent(policy.requireReasons);
-    if (key === 'extra_checks') return plainIfPresent(policy.extraChecks);
+    const topLevel = TOP_LEVEL_VALUES[key];
+    if (topLevel !== undefined) return plainIfPresent(topLevel(policy));
     if (table === 'limits') return limitValue(policy, rest);
     if (table === 'naming') return namingValue(policy, rest);
     if (table === undefined) return undefined;

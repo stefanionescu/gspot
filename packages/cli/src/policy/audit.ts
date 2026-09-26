@@ -1,13 +1,14 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
+import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import type { ExposedSettings, WrittenValue } from '#cli/policy/settings.ts';
-import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
+import { asRecord, policyTables, policyValue, specFor } from '#cli/policy/settings.ts';
 
 const LIMITS_PREFIX = 'limits.';
 

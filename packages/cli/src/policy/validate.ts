@@ -1,10 +1,10 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
-import { exposedSettings } from '#cli/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { unknownConfiguration } from '#cli/policy/messages.ts';
+import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
