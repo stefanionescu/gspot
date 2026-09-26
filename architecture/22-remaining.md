@@ -296,6 +296,16 @@ Owner: `tools/`. Dependencies: publication and package locks. Completion evidenc
 
 Acceptance: K-237, K-264, K-265, K-266, K-283, K-267, K-268, K-297, K-180, K-240.
 
+Checked 2026-09-26, steps 3.1 and 3.2. The tools lane holds the package-manager matrix: npm,
+Bun, pnpm, Yarn, a workspace, and an authenticated registry. It holds the installer failures too.
+The release lane installs from the built binary.
+
+A cold `gspot install` of the formatting tools with no `GITHUB_TOKEN` succeeded on 2026-09-26.
+The boundary is GitHub's anonymous limit of 60 requests an hour. The editorconfig-checker npm
+wrapper 7.0.0 meets it when it fetches v3.4.0 at install time. A failed package installation
+whose output shows that refusal now names `GITHUB_TOKEN` as the fix. K-265, K-266, K-283, and
+K-240 have no text in the architecture folder.
+
 ### Resolve acquisition failures
 
 Step 3.2. Acquisition repair.

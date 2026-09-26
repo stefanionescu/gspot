@@ -5,6 +5,7 @@ import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
+import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { parsePackageManager } from '#cli/tools/packages/manager.ts';
@@ -251,7 +252,8 @@ async function packageCommand(
         credentials.push(...(await yarnSettings(root, work, env)));
     const result = await runToolCommand(undefined, commands(manager, frozen), { cwd: work, env });
     if (result.code !== 0) {
-        const message = `${manager.name} ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit ${String(result.code)}). ${SETUP}. Registry credentials and package-manager output are not included.`;
+        const cause = acquisitionNote(`${result.stdout}\n${result.stderr}`);
+        const message = `${manager.name} ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit ${String(result.code)}). ${SETUP}. Registry credentials and package-manager output are not included.${cause === undefined ? '' : ` ${cause}`}`;
         if (frozen) throw new InstallationError(message);
         throw new Error(message);
     }

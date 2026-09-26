@@ -16,9 +16,10 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
     'SQLFluff write failures remain execution errors when its exit code also means findings',
     async () => {
         await using sandbox = await testdir();
-        const spec = configurationManifests()
-            .get('sql')!
-            .checks.find((check) => check.name === 'sql/sqlfluff')!;
+        const sql = configurationManifests().get('sql')!;
+        const spec = sql.checks.find((check) => check.name === 'sql/sqlfluff')!;
+        // A repository command declares the crash pattern itself; the manifest keeps it on the sqlfluff tool.
+        const crashPattern = sql.tools.find((tool) => tool.name === 'sqlfluff')!.crash_pattern!;
         const executable = Bun.which('sqlfluff');
         if (executable === null) throw new Error('The native fixer test requires SQLFluff.');
         const args = ['--dialect', 'postgres', '--ignore-local-config', '--disable-progress-bar'];
@@ -33,7 +34,7 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
                         fix_command: [executable, 'fix', ...args, '{files}'],
                         fix_order: spec.fix_order!,
                         fix_findings_exit_codes: spec.fix_findings_exit_codes!,
-                        tool_errors: spec.tool_errors!,
+                        tool_errors: crashPattern,
                         output: spec.output!,
                         paths: ['source/*.sql'],
                         stage: 'commit',
