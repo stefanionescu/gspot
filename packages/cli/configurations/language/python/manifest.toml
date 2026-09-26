@@ -179,13 +179,13 @@ title = "Pydoclint"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
 level = "all"
 stage = "commit"
-command = ["pydoclint", "--style", "google", "--allow-init-docstring", "true", "--quiet", "{files}"]
+command = ["pydoclint", "--allow-init-docstring", "true", "--quiet", "{files}"]
 claims = {extensions = [".py"]}
 coverage = ["prose"]
 output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}
 summary = "Checks that every docstring names the arguments, the return, and the exceptions its function really has."
 why = "A docstring that disagrees with the signature is worse than none, because people trust it."
-help = "Bring the docstring in line with the signature."
+help = "Bring the docstring in line with the signature. Name the docstring style under [tool.pydoclint] in pyproject.toml; without it pydoclint reads NumPy style."
 
 [[checks]]
 name = "python/deptry"

@@ -1,5 +1,5 @@
 import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
+import { BLOCK_IGNORES, PROSE_FORMATS, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
 import type { EslintRuleBlock, SelectorGroup } from '#cli/generation/eslint.ts';
 import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
 import type { EditorconfigOverride, PrettierPlugin } from '#cli/generation/format.ts';
@@ -149,6 +149,7 @@ export function templateInputs(
             styles: styleNames(),
             blockIgnores: BLOCK_IGNORES,
             tokenIgnores: TOKEN_IGNORES,
+            formats: PROSE_FORMATS,
         },
         version: version,
         scope: selection.scope.path,
@@ -237,7 +238,7 @@ export type TemplateInputs = {
     eslintPolicy: EslintRuleBlock[];
     isAll: boolean;
     typescriptOptions: Record<string, boolean>;
-    prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[] };
+    prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[]; formats: [string, string][] };
     version: string;
     scope: string;
     scopes: { path: string; configurations: string[] }[];

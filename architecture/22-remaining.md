@@ -659,6 +659,39 @@ Owner: `generation/workflow.ts`. Dependencies: workflow ownership and report sch
 
 Acceptance: K-253, K-96, K-276, K-277, K-278.
 
+Done 2026-09-26, steps 6.1 to 6.12. The repairs:
+
+- A check takes `needs_git`. `secrets/gitleaks-files` scans the files of a folder with no git,
+  the git scans wait for a repository, and `init` leaves the commits configuration out without
+  git (K-271, K-182).
+- Vale reads every language by path: Python and CSS by their own extension, and shell and SQL
+  through `[formats]` (K-176).
+- The naming extractor skips a binding from `require` or `await import` alone (K-137).
+- pydoclint reads its docstring style from `[tool.pydoclint]` (K-152).
+- A unit test holds that every check needing a setting with an empty default waits for it
+  (K-157).
+
+The other clauses with text were checked without change: their named tests exist in the unit,
+integration, tools, and acceptance lanes.
+
+Open under section 6:
+
+- `[[rules_off]]` in a manifest (K-208); a framework turns a shared rule off inside its own
+  fragment today.
+- A static-site case that tracks `dist` (K-154).
+- `glab ci lint` over the GitLab file (K-277).
+- The three plan lines for `bitbucket-pipelines.yml` (K-278).
+- The `[tool.ruff.lint.pydocstyle]` mapping (K-152).
+- The `tools.sqlfluff.dialect` detection (K-160), which needs the setting `detect` table.
+
+No text exists in the architecture folder for these names:
+
+- K-294, K-148, K-139, K-171, K-190, K-158, K-44, K-71, K-159
+- K-188, K-209, K-210, K-133, K-136, K-235, K-86, K-187
+- K-155, K-163, K-90, K-150, K-52, K-221, K-141, K-142, K-123, K-227
+- K-161, K-167, K-112, K-200, T-33, K-91, K-151, K-212, K-80
+- K-78, K-57, K-84, K-117, K-83, S-6, K-132, K-130, K-185, K-243
+
 Exit: local execution, enforcement, hooks, reports, and generated consumer workflows satisfy
 their contracts. Step 6.4 establishes cache correctness; final cold/warm performance measurement
 uses the unchanged candidate in phase 9. Remote CI remains paused.

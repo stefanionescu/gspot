@@ -19,7 +19,7 @@ requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
 
 [claims]
-extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
+extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".css", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
 tags = ["shebang:shell"]
 
 [[tools]]

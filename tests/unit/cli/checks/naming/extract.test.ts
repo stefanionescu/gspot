@@ -43,6 +43,17 @@ describe('identifiersOf', () => {
         expect(found.find((entry) => entry.name === 'send')?.line).toBe(9);
     });
 
+    test('skips a name bound from another module through require or await import, and nothing else', async () => {
+        const source = [
+            "const { existsSync } = require('node:fs');",
+            "const { default: lazyWidget } = await import('./widget.js');",
+            'const loadedRecord = await loadRecord();',
+            'const eagerTotal = computeTotal();',
+        ].join('\n');
+        const found = await identifiersOf('src/bind.ts', source, 'typescript');
+        expect(found.map((entry) => entry.name)).toStrictEqual(['loadedRecord', 'eagerTotal']);
+    });
+
     test('collects shell functions and variables', async () => {
         const found = await identifiersOf(
             'scripts/run.sh',

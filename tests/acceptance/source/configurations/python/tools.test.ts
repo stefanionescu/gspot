@@ -24,7 +24,9 @@ const INIT = [
     '--no-rules',
     '--no-install',
 ];
-const PROJECT = '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
+// The docstrings are Google style, and pydoclint reads that from the project, not from gspot (K-152).
+const PROJECT =
+    '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
 const CLEAN =
     '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value (int): The number.\n\n    Returns:\n        int: Twice the number.\n\n    """\n    return value * 2\n';
 const MODULE = 'planted/math.py';

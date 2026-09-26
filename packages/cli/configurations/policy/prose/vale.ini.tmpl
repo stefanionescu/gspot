@@ -5,6 +5,9 @@ SkippedScopes = script, style, pre, figure, table
 <% } %>
 Vocab = gspot
 
+[formats]
+<% for (const [extension, format] of prose.formats) { %><%= extension %> = <%= format %>
+<% } %>
 [*]
 BasedOnStyles = <%= isAll ? "Vale, gspot, Google, Microsoft, write-good, proselint, alex, RedHat, Harper" : "gspot" %>
 BlockIgnores = <%= prose.blockIgnores.join(', ') %>

@@ -45,17 +45,13 @@ for (const extension of ['md', 'sh']) {
                 probe.mockReturnValue({ name: 'vale', state: 'ok', path: process.execPath });
                 spawn.mockImplementation(async (command, options) => {
                     expect(options.timeoutMs).toBe(1000);
-                    if (extension === 'sh') {
-                        expect(command).toContain('--ext=.rb');
-                        expect(options.stdin).toBe(source);
-                    } else {
-                        expect(command).toContain(path);
-                        expect(options.stdin).toBeUndefined();
-                    }
+                    // A shell script goes by path like Markdown: vale.ini maps sh to the Python format (K-176).
+                    expect(command).toContain(path);
+                    expect(options.stdin).toBeUndefined();
                     return {
                         code: 0,
                         stdout: JSON.stringify({
-                            [extension === 'sh' ? 'stdin.rb' : join(directory.path, path)]: [
+                            [join(directory.path, path)]: [
                                 {
                                     Line: 1,
                                     Span: [3, 5],

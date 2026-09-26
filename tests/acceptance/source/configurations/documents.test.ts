@@ -80,6 +80,15 @@ const CASES: FindingCase[] = [
         expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
     },
     {
+        // Vale reads the comments of a stylesheet by path, so marketing prose in CSS is a finding too (K-176).
+        check: 'prose/vale',
+        files: {
+            'src/site.css':
+                '/* This powerful cache easily makes the site much faster. */\n.site {\n    color: #333;\n}\n',
+        },
+        expected: { file: 'src/site.css', rule: 'gspot.marketing', line: 1, column: 9 },
+    },
+    {
         check: 'prose/source-bans',
         files: { 'docs/silenced.md': '# A page\n\n<!-- vale off -->\n\nText the prose check no longer reads.\n' },
         expected: { file: 'docs/silenced.md', rule: 'vale-directive', line: 3 },

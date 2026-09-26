@@ -1,6 +1,6 @@
 // Which grammar Vale reads each file with: by path where Vale has one, through stdin under a look-alike where it does not.
 import { extensionOf } from '#cli/platform/paths.ts';
-import { PROSE_GRAMMARS, SCRIPT_TAG } from '#cli/configurations/vale.ts';
+import { PROSE_GRAMMARS, SCRIPT_GRAMMAR, SCRIPT_TAG } from '#cli/configurations/vale.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 /**
@@ -11,9 +11,8 @@ import type { TrackedFile } from '#cli/repository/file-classification.ts';
 export function routeFor(file: TrackedFile): ProseRoute | undefined {
     const extension = extensionOf(file.path);
     const grammar =
-        PROSE_GRAMMARS[extension] ??
-        (extension === '' && file.tags.includes(SCRIPT_TAG) ? PROSE_GRAMMARS['.sh'] : undefined);
-    return grammar === undefined ? undefined : { path: file.path, ...grammar };
+        PROSE_GRAMMARS[extension] ?? (extension === '' && file.tags.includes(SCRIPT_TAG) ? SCRIPT_GRAMMAR : undefined);
+    return grammar === undefined ? undefined : { path: file.path, mode: grammar.mode, extension: grammar.extension };
 }
 
 /**

@@ -85,12 +85,15 @@ function isContractSignature(node: Node): boolean {
     );
 }
 
-// `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module declared.
+// `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
+// declared. Any other awaited value is a binding of this module, and its name is checked (K-137).
 function isImportBinding(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;
-    if (value.type === 'await_expression') return true;
-    return value.type === 'call_expression' && value.text.startsWith('require(');
+    const awaited = value.type === 'await_expression' ? value.namedChildren[0] : value;
+    if (awaited === undefined || awaited === null || awaited.type !== 'call_expression') return false;
+    const callee = awaited.childForFieldName('function');
+    return callee?.type === 'import' || callee?.text === 'require';
 }
 
 function addNamed(sink: ExtractSink, root: Node): void {

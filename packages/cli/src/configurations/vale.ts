@@ -1,5 +1,7 @@
 /** File extension to how Vale reads it: by path with its own grammar, or through stdin under a grammar with the same comment marker. */
-export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension: string }> = {
+// Vale reads Markdown and the comments of the languages it knows by path. A language it does not know borrows the
+// format of one with the same comment style through the [formats] section, so it is read by path too (K-176).
+export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension: string; format?: string }> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },
     '.ts': { mode: 'path', extension: '.ts' },
@@ -11,14 +13,23 @@ export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension:
     '.cjs': { mode: 'path', extension: '.js' },
     '.jsx': { mode: 'path', extension: '.js' },
     '.swift': { mode: 'path', extension: '.swift' },
-    '.sh': { mode: 'stdin', extension: '.rb' },
-    '.bash': { mode: 'stdin', extension: '.rb' },
-    '.zsh': { mode: 'stdin', extension: '.rb' },
-    '.py': { mode: 'stdin', extension: '.rb' },
-    '.sql': { mode: 'stdin', extension: '.lua' },
-    '.pgsql': { mode: 'stdin', extension: '.lua' },
-    '.psql': { mode: 'stdin', extension: '.lua' },
+    '.py': { mode: 'path', extension: '.py' },
+    '.css': { mode: 'path', extension: '.css' },
+    '.sh': { mode: 'path', extension: '.sh', format: 'py' },
+    '.bash': { mode: 'path', extension: '.bash', format: 'py' },
+    '.zsh': { mode: 'path', extension: '.zsh', format: 'py' },
+    '.sql': { mode: 'path', extension: '.sql', format: 'lua' },
+    '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
+    '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
 };
+
+/** The [formats] lines of vale.ini: each borrowed extension, without its dot, and the format Vale reads it as. */
+export const PROSE_FORMATS: [string, string][] = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
+    grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
+);
+
+/** A script with no extension reads through stdin as Python, whose comments start the same way. */
+export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
 
 /** A file with no extension and a shell shebang reads as shell. */
 export const SCRIPT_TAG = 'shell';
