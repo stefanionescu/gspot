@@ -7,10 +7,10 @@ recommends = ["spelling"]
 description = "Stylesheets and the style blocks of Vue and Svelte components: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
 
 [detect]
-extensions = [".css", ".scss", ".pcss"]
+extensions = [".css"]
 
 [claims]
-extensions = [".css", ".scss", ".pcss"]
+extensions = [".css"]
 natures = ["source"]
 
 [[tools]]
@@ -96,7 +96,7 @@ fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir"
 fix_order = "codemod"
 findings_exit_codes = [2]
 fix_findings_exit_codes = [2]
-claims = {extensions = [".css", ".scss", ".pcss", ".vue", ".svelte"]}
+claims = {extensions = [".css", ".vue", ".svelte"]}
 coverage = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
@@ -112,7 +112,7 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "css-module-usage"
-claims = {extensions = [".css", ".scss", ".pcss", ".ts", ".tsx", ".js", ".jsx"]}
+claims = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 coverage = ["consistency"]
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
@@ -134,8 +134,6 @@ summary = "Enabled Stylelint rules and their native options. Disable a rule with
 
 [coverage]
 ".css" = ["format", "syntax", "style", "spelling"]
-".scss" = ["format", "syntax", "style", "spelling"]
-".pcss" = ["format", "syntax", "style", "spelling"]
 
 [rule_files]
 language = ["language/CSS.md", "language/naming/CSS.md"]

@@ -75,6 +75,15 @@ describe('detection', () => {
         expect(unknown[0]).toStrictEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
     });
 
+    test('Sass is a language without a configuration, and a stylesheet proposes css alone', () => {
+        const files = [file('theme.scss'), file('site.css')];
+        const proposals = detectConfigurations(files, manifests, []);
+        expect(proposals.find((proposal) => proposal.configuration === 'css')?.evidence).toBe('1 .css file');
+        expect(unknownLanguages(files, manifests)).toStrictEqual([
+            { language: 'SCSS', extensions: ['.scss'], count: 1 },
+        ]);
+    });
+
     test('names unsupported source languages and disambiguates a module filename', () => {
         const module = file('go.mod');
         const proposals = detectConfigurations([module], manifests, []);

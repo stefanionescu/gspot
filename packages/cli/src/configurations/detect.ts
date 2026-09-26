@@ -27,7 +27,8 @@ function languageByExtension(): Map<string, string> {
     const map = new Map<string, string>();
     for (const [name, value] of Object.entries(linguistLanguages)) {
         const entry = value as LinguistEntry;
-        if (entry.type !== 'programming') continue;
+        // Markup covers the stylesheet and template languages, such as Sass, that a repository writes by hand.
+        if (entry.type !== 'programming' && entry.type !== 'markup') continue;
         const extensions = entry.extensions ?? [];
         for (const extension of extensions) {
             const normalized = extension.toLowerCase();
@@ -176,14 +177,18 @@ export function detectConfigurations(
 }
 
 /**
- * Languages in the tree that no configuration detects, named through GitHub Linguist's data.
+ * Languages in the tree that no configuration detects, named through GitHub Linguist's data. A policy such as
+ * formatting claims files of many languages without supporting any, so only the other kinds make a language known.
  * @param files the tracked files
  * @param manifests every configuration manifest
  * @returns the languages with their extensions and file counts, most files first
  */
 export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Manifest>): UnknownLanguage[] {
     const known = new Set(
-        manifests.values().flatMap((manifest) => [...manifest.detect.extensions, ...manifest.claims.extensions]),
+        manifests
+            .values()
+            .filter((manifest) => manifest.configuration.kind !== 'policy')
+            .flatMap((manifest) => [...manifest.detect.extensions, ...manifest.claims.extensions]),
     );
     const byExtension = languageByExtension();
     const counts = new Map<string, { extensions: Set<string>; count: number }>();

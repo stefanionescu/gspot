@@ -1,13 +1,12 @@
 import { parse } from 'postcss';
 import ts from 'typescript';
 import { posix } from 'node:path';
-import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 
-const MODULE_SUFFIX = /\.module\.(?:css|scss|pcss)$/u;
+const MODULE_SUFFIX = /\.module\.css$/u;
 const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;
 
 type Importer = { path: string; read: string[] };
@@ -106,7 +105,7 @@ function sheetFindings(input: EngineInput, sheet: string, defined: string[], imp
 }
 
 function definedClasses(text: string, path: string): string[] {
-    const sheet = path.endsWith('.scss') ? parseScss(text, { from: path }) : parse(text, { from: path });
+    const sheet = parse(text, { from: path });
     const found = new Set<string>();
     sheet.walkRules((rule) => {
         selectorParser()

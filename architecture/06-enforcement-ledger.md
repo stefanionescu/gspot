@@ -1348,11 +1348,11 @@ Kind: language. Requires: formatting. Recommends: spelling.
 
 Detects and claims:
 
-|                         |                                                     |
-| ----------------------- | --------------------------------------------------- |
-| Detect                  | `.css`, `.scss`, `.pcss`, `.module.css` in the tree |
-| Claims                  | the same                                            |
-| Required check coverage | format, syntax, style, spelling                     |
+|                         |                                                                       |
+| ----------------------- | --------------------------------------------------------------------- |
+| Detect                  | `.css` and `.module.css` in the tree; Sass is reported as unsupported |
+| Claims                  | the same                                                              |
+| Required check coverage | format, syntax, style, spelling                                       |
 
 Tools:
 

@@ -237,9 +237,8 @@ describe('the css configuration', () => {
                             '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
                         'src/card.js':
                             "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
-                        'src/panel.module.scss': '// .fake {}\n.panel { $label: ".unused"; color: red; }\n',
-                        'src/panel.js':
-                            "import styles from './panel.module.scss';\nexport const name = styles.panel;\n",
+                        // Sass is no CSS: a mixin the css checks would misread stays outside every claim (K-233).
+                        'src/theme.scss': '@mixin card { .unused { color: red; } }\n.panel { @include card; }\n',
                     },
                 },
                 environment,

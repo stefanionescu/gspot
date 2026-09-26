@@ -13,20 +13,26 @@ const options = {
     noCache: true,
 };
 
-test.each(['css', 'scss', 'pcss'])(
-    'CSS module imports and literal access bind to the selected %s stylesheet',
-    async (extension) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["css"]\n',
-            [`styles.module.${extension}`]: '.card-title { color: red; }\n',
-            'view.tsx': `import styles from './styles.module.${extension}';\nexport const card = [styles.cardTitle, styles['card-title']];\n`,
-        });
-        const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
-        expect(result.report.exitCode).toBe(0);
-        expect(result.report.checks).toMatchObject([{ check: 'integrity/css-usage', status: 'ok', findings: [] }]);
-    },
-);
+test('CSS module imports and literal access bind to the selected stylesheet, and a Sass module is not read', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["css"]\n',
+        'styles.module.css': '.card-title { color: red; }\n',
+        'view.tsx':
+            "import styles from './styles.module.css';\nexport const card = [styles.cardTitle, styles['card-title']];\n",
+        'theme.module.scss': '.panel { color: red; }\n',
+        'panel.tsx': "import styles from './theme.module.scss';\nexport const panel = styles.missing;\n",
+    });
+    const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    expect(result.report.exitCode).toBe(0);
+    expect(result.report.checks).toMatchObject([{ check: 'integrity/css-usage', status: 'ok', findings: [] }]);
+    await Bun.write(
+        join(sandbox.path, 'panel.tsx'),
+        "import styles from './styles.module.css';\nexport const panel = styles.missing;\n",
+    );
+    const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    expect(failed.report.checks[0]?.findings).toMatchObject([{ file: 'panel.tsx', rule: 'undefined-class' }]);
+});
 
 test.each([
     { name: 'comment', extra: '// styles.missing\n/* styles["absent"] */\n' },
