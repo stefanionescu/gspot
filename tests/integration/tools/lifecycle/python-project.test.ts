@@ -3,13 +3,13 @@ import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
 
 import {

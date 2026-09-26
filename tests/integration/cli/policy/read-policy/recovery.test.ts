@@ -1,7 +1,7 @@
-import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
-import { MINIMAL_POLICY } from '#tests/support/cli/policy-problems.ts';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
+import { MINIMAL_POLICY } from '#tests/support/cli/policy-problems.ts';
 
 const GOOD_IGNORE = '[[ignore]]\ncheck = "bash/shellcheck"\nreason = "The launcher script checks its own arguments."\n';
 
@@ -48,7 +48,7 @@ describe('readPolicyText', () => {
     });
 
     test('an unknown configuration and a default two configurations disagree on still stop reading', () => {
-        expect(() => readPolicyText(`${MINIMAL_POLICY.replace('bash', 'bas')}`, 'gspot.toml')).toThrow('bash');
+        expect(() => readPolicyText(MINIMAL_POLICY.replace('bash', 'bas'), 'gspot.toml')).toThrow('bash');
     });
 
     test('a table no selected configuration has says so without listing settings that do not exist', () => {

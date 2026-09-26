@@ -1,15 +1,15 @@
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { pathToFileURL } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+import { createFileTree, testdir } from 'testdirs';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { emitAll } from '#cli/generation/render.ts';
+import { readFileSync, symlinkSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { expect, test } from 'bun:test';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { readFileSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import { parse as parseYaml } from 'yaml';
 
 test('JSON option keys and YAML values keep their literal structure', async () => {
     const key = 'custom"key\\name\ncafé';

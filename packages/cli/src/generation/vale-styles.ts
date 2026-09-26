@@ -1,8 +1,8 @@
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/configurations/vale.ts';
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import type { MergedView } from '#cli/policy/merge.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/configurations/vale.ts';
 
 const STYLE_ASSETS = 'packages/cli/configurations/policy/prose/styles/gspot/';
 const MAX_LINE = /^max: \d+$/mu;

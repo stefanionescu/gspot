@@ -1,14 +1,14 @@
-import type { EngineInput } from '#cli/checks/input.ts';
+import { createHash } from 'node:crypto';
+import { join, relative } from 'node:path';
+import { rmSync, statSync } from 'node:fs';
 import type { Finding } from '#cli/checks/result.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
+import { commandArguments } from '#cli/platform/arguments.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { commandArguments } from '#cli/platform/arguments.ts';
 import { mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { createHash } from 'node:crypto';
-import { rmSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
 
 /** The output of one isolated static-site build. */
 export type SiteBuild = {

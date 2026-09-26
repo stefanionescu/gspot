@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { afterEach, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { rmSync, chmodSync, existsSync, writeFileSync, readFileSync, mkdirSync, symlinkSync } from 'node:fs';
 
 const caches = new Set<string>();

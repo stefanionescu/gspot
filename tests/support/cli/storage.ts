@@ -1,7 +1,7 @@
 // A session whose one planted check passes or prints a finding, for tests of cache and report storage.
-import type { Stage } from '#cli/configurations/schema.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/execution/session.ts';
+import type { Stage } from '#cli/configurations/schema.ts';
 
 /**
  * Opens the sandbox and replaces its selection with one command check that exits with the status.

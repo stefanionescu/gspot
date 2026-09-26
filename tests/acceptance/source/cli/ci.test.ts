@@ -3,9 +3,8 @@ import { createHash } from 'node:crypto';
 import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { gspot, run } from '#tests/support/cli/command.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { gspot, run, runProcess  } from '#tests/support/cli/command.ts';
 
 test.each(['gitlab', 'github'] as const)(
     'the generated %s job verifies its download, checks exact changed objects, retains reports, and accepts corrections',

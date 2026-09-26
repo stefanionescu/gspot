@@ -1,8 +1,8 @@
-import { runToolCommand } from '#cli/tools/command.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { z } from 'zod';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import { z } from 'zod';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { runToolCommand } from '#cli/tools/command.ts';
 
 const KEYS = new Set([
     'npmRegistryServer',

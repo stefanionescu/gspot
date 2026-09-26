@@ -1,8 +1,8 @@
-import type { EngineInput } from '#cli/checks/input.ts';
 import type { Finding } from '#cli/checks/result.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
 import { scopeImports } from '#cli/checks/structure/imports.ts';
 import type { ArchitectureElement } from '#cli/policy/normalize.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };

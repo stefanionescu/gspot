@@ -1,6 +1,12 @@
 // The built packages published into an isolated registry, and a fresh consumer that installed them from it.
+import prettier from 'prettier';
+import { expect } from 'bun:test';
+import { dirname, join } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
+import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { copyFileSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+
 import {
     BINARY,
     RELEASE_TIMEOUT_MS,
@@ -10,11 +16,6 @@ import {
     requireCli,
     root,
 } from '#tests/support/release/packages.ts';
-import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { expect } from 'bun:test';
-import { copyFileSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import prettier from 'prettier';
 
 /** The registry holding the published release, its version, and the npmrc private tool installs read. */
 export type PublishedRelease = {

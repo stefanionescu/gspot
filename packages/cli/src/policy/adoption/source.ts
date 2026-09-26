@@ -1,13 +1,13 @@
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { configurationSection } from '#cli/repository/configuration-section.ts';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
 import JSON5 from 'json5';
+import { parse as parseYaml } from 'yaml';
 import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { parse as parseYaml } from 'yaml';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import { configurationSection } from '#cli/repository/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
@@ -81,18 +81,38 @@ export function parseCarrySource(
 
 export type CarrySource = { text: string; parsed: TomlTable; original: FileSnapshot };
 
+/**
+ * A parsed value as a table.
+ * @param value the parsed value
+ * @returns the table, or undefined when the value is not one
+ */
 export function asRaw(value: unknown): TomlTable | undefined {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : undefined;
 }
 
+/**
+ * A parsed value as a list.
+ * @param value the parsed value
+ * @returns the list, or an empty one when the value is not a list
+ */
 export function asList(value: unknown): unknown[] {
     return Array.isArray(value) ? (value as unknown[]) : [];
 }
 
+/**
+ * A parsed value as a list of strings.
+ * @param value the parsed value
+ * @returns the items as strings, or an empty list when the value is not a list
+ */
 export function asStrings(value: unknown): string[] {
     return Array.isArray(value) ? value.map(String) : [];
 }
 
+/**
+ * A parsed value as text.
+ * @param value the parsed value
+ * @returns the string, or undefined when the value is not one
+ */
 export function asText(value: unknown): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }

@@ -1,12 +1,12 @@
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const ENTRY = String.raw`
 [[check]]

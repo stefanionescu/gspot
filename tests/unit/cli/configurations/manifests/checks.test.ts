@@ -1,5 +1,5 @@
-import { parseManifest } from '#cli/configurations/manifests.ts';
 import { describe, expect, test } from 'bun:test';
+import { parseManifest } from '#cli/configurations/manifests.ts';
 
 describe('parseManifest', () => {
     test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(

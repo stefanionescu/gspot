@@ -1,11 +1,11 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { reportSchema } from '#cli/execution/report.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { sarifText } from '#cli/output/report.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;

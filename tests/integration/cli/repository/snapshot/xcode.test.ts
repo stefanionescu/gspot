@@ -1,12 +1,12 @@
-import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { gitOutput } from '#tests/support/cli/git.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
+import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const sourceProject = (path: string): string => `{
     rootObject = P;

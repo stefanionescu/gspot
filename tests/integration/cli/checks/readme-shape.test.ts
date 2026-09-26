@@ -1,9 +1,7 @@
-import { checkInput } from '#tests/support/cli/input.ts';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-
+import { checkInput } from '#tests/support/cli/input.ts';
 import { docsHeadings } from '#cli/checks/docs/headings.ts';
-
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 
 describe('readme shape', () => {

@@ -1,13 +1,13 @@
 // Carried Prettier ignore files and negated override selectors keep their meaning for files created after adoption.
-import { expect, test } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { evaluateFormat } from '#cli/evaluation/format.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 

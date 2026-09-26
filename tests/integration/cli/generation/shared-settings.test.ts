@@ -1,6 +1,6 @@
-import { generatedFile } from '#tests/support/cli/generated-files.ts';
 import { expect, test } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { generatedFile } from '#tests/support/cli/generated-files.ts';
 
 const TAILWIND_AT_RULES = [
     'tailwind',

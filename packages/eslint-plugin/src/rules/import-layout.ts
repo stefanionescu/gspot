@@ -1,6 +1,6 @@
 import { isImportLike } from '#plugin/imports.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 const BLANK = /^\s*$/u;
 const SPACES = /\s+/gu;

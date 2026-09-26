@@ -1,10 +1,9 @@
-import { DEFAULT_EXPANSION } from '#cli/checks/structure/patterns.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import { CONFIG_GUARD } from '#cli/checks/structure/patterns.ts';
 import type { ScriptFile } from '#cli/checks/structure/parser.ts';
 import type { CodeLine } from '#cli/checks/structure/code-lines.ts';
 import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
+import { CONFIG_GUARD, DEFAULT_EXPANSION  } from '#cli/checks/structure/patterns.ts';
 
 /**
  * One finding per `${name:-value}` default outside the configuration owners, unless an allowed fragment is on the line.

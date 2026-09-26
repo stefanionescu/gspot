@@ -1,14 +1,14 @@
 // Planted repository for the secrets configuration: a staged key, a tracked environment file and a baseline with no reason.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
-import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { initArgs } from '#tests/support/cli/init.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
 
 const INIT = initArgs(['secrets']);
 const BASELINE = JSON.stringify([

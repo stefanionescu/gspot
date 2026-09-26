@@ -5,11 +5,11 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { applyCommand } from '#cli/commands/apply/command.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { initCommand } from '#cli/commands/init/command.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

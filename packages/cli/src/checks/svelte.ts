@@ -1,9 +1,9 @@
-import { join } from 'node:path';
 import { z } from 'zod';
+import { join } from 'node:path';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { selectedTarget, targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { selectedTarget, targetInScope } from '#cli/configurations/targets.ts';
 
 // svelte-check writes each diagnostic on a line of its own: a timestamp, then the diagnostic as JSON.
 const DIAGNOSTIC_LINE = /^\d+ (?<diagnostic>\{.*\})$/u;

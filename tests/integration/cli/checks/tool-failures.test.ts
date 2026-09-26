@@ -1,9 +1,9 @@
 import { chmodSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 

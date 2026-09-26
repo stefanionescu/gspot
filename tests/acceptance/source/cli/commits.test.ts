@@ -5,8 +5,8 @@ import { chmodSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
+import { pushReportSchema } from '#cli/execution/report.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

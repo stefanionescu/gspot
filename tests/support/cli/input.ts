@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { openSession } from '#cli/execution/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 /** Construct a check input from validated policy and the observed fixture inventory. */
 export async function checkInput(

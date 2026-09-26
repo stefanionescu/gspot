@@ -1,11 +1,11 @@
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { locateTool, probeTool } from '#cli/tools/probe.ts';
-import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { locateTool, probeTool } from '#cli/tools/probe.ts';
+import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('managed executable discovery refuses an external link before probing and accepts an internal replacement', async () => {
     await using directory = await testdir();

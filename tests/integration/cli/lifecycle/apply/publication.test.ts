@@ -1,10 +1,10 @@
-import { applyCommand } from '#cli/commands/apply/command.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { applyCommand } from '#cli/commands/apply/command.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import packageManifest from '../../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;

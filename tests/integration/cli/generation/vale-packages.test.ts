@@ -1,10 +1,7 @@
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
-
-import { createFileTree, testdir } from 'testdirs';
-
+import { expect, test } from 'bun:test';
 import { hasPackages } from '#cli/tools/vale.ts';
-
+import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test.each(['configuration', 'package', 'nested directory'])(

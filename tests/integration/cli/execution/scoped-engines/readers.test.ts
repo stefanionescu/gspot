@@ -1,6 +1,6 @@
-import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 
 const HEADERS =
     '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n';

@@ -1,7 +1,7 @@
+import { z } from 'zod';
+import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { parse as parseToml } from 'smol-toml';
-import { z } from 'zod';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 const NAMED_REQUIREMENT = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(?=$|[\s<>=!~;[@])/u;

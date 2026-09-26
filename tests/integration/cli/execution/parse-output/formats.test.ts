@@ -1,10 +1,10 @@
+import { join, win32 } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput, ToolOutputError } from '#cli/execution/output/parse.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('invalid Markdown records remain execution errors and valid records parse', async () => {
     await using sandbox = await testdir();
@@ -180,7 +180,8 @@ test.each([
 test.each([
     ['/repo', '/repo/a.js', 'a.js'],
     ['/repo', '/repository/a.js', '/repository/a.js'],
-    ['C:\\repo', 'C:\\repo\\café file.js', 'café file.js'],
+    // Bun escapes a non-ASCII character inside String.raw, so the Windows path is normalized from slashes.
+    [win32.normalize('C:/repo'), win32.normalize('C:/repo/café file.js'), 'café file.js'],
 ])('ESLint locations respect the root boundary %s for %s', (root, path, expected) => {
     const spec = configurationManifests()
         .get('javascript')!

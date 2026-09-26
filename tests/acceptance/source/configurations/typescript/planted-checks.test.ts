@@ -1,16 +1,16 @@
 // Source CLI journeys: every check of the typescript configuration reports its planted defect and accepts the correction.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { describe, expect, test } from 'bun:test';
-import { symlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const ORDERS_TYPES =
     '// Type aliases of the orders module.\n\n/** One line of an order. */\nexport type OrderLine = { price: number; quantity: number };\n';
@@ -212,39 +212,47 @@ describe('the typescript configuration', () => {
                 '// A value owned by this module.\n\n/** The number of orders. */\nexport const orderCount = 1;\n';
             const files: Record<string, string> = {};
             switch (planted.check) {
-                case 'typescript/tsc':
+                case 'typescript/tsc': {
                     files['src/orders/wrong.ts'] = planted.files['src/orders/wrong.ts']!.replace("'three'", '3');
                     break;
+                }
                 case 'typescript/eslint':
                 case 'naming/identifiers':
                 case 'formatting/prettier':
-                case 'formatting/editorconfig-checker':
+                case 'formatting/editorconfig-checker': {
                     files[planted.expected.file] = value;
                     break;
-                case 'javascript/knip':
+                }
+                case 'javascript/knip': {
                     files['src/orders/unused.ts'] = planted.files['src/orders/unused.ts']!;
                     files['src/main.ts'] =
                         MAIN + "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n";
                     break;
-                case 'naming/paths':
+                }
+                case 'naming/paths': {
                     files['src/orders/count.ts'] = value;
                     break;
-                case 'naming/policy-schema':
+                }
+                case 'naming/policy-schema': {
                     files['src/orders/allowed.ts'] = value.replace('orderCount', 'neverUsedName');
                     break;
-                case 'spelling/typos':
+                }
+                case 'spelling/typos': {
                     files[planted.expected.file] = planted.files[planted.expected.file]!.replace(MISSPELLED, 'The');
                     break;
-                case 'integrity/config-purity':
+                }
+                case 'integrity/config-purity': {
                     files['config/limits.ts'] = planted.files['config/limits.ts']!;
                     files['config/logic.ts'] = value;
                     break;
-                case 'javascript/checkjs':
+                }
+                case 'javascript/checkjs': {
                     files['src/orders/legacy.js'] = planted.files['src/orders/legacy.js']!.replace(
                         'twice("x")',
                         'twice(3)',
                     );
                     break;
+                }
             }
             const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

@@ -1,12 +1,12 @@
+import { z } from 'zod';
+import { isDeepStrictEqual } from 'node:util';
 import type { HookName } from '#cli/generation/hooks.ts';
-import { hookBody, hookCommand, hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks.ts';
-import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
-import { requirePackageConfiguration, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
-import { isDeepStrictEqual } from 'node:util';
-import { z } from 'zod';
+import { requirePackageConfiguration, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { hookBody, hookCommand, hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks.ts';
 
 const manifestSchema = z.object({
     'simple-git-hooks': z

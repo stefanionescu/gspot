@@ -1,20 +1,18 @@
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
-
+import { parse as parseToml } from 'smol-toml';
+import { chmodSync, readFileSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
+import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { chmodSync, readFileSync } from 'node:fs';
-import { parse as parseToml } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
-
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
-import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

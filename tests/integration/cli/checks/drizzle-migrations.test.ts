@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/execution/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';

@@ -1,13 +1,13 @@
 // Source CLI journeys for the TypeScript ESLint rules the generated configuration enables.
-import type { RunReport } from '#cli/execution/report.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test(
     'generated TypeScript configuration reports an interface once through the pinned replacement rule',

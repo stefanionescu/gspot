@@ -1,11 +1,11 @@
 // A framework turns a shared rule off only in its manifest: the generated ESLint configuration of a React Native scope has no accessibility rule for DOM elements, and a React scope keeps it.
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
 

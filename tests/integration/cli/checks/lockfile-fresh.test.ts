@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/execution/plan.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';

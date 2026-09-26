@@ -1,9 +1,8 @@
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
-import { parsePolicyText } from '#cli/policy/read.ts';
-import { assertPolicyComplete } from '#cli/policy/read.ts';
-import { Ajv2020 } from 'ajv/dist/2020.js';
-import { expect, test } from 'bun:test';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import { policyJsonSchema } from '#cli/policy/json-schema.ts';
+import { parsePolicyText, assertPolicyComplete  } from '#cli/policy/read.ts';
 
 test.each([
     {
@@ -72,8 +71,8 @@ test.each([
                 const text = stringify(input);
                 const path = 'gspot.toml';
                 const policy = parsePolicyText(text, path);
-                if (key === previous) expect(() => assertPolicyComplete({ text, path, policy })).toThrow(previous);
-                else expect(() => assertPolicyComplete({ text, path, policy })).not.toThrow();
+                if (key === previous) expect(() => { assertPolicyComplete({ text, path, policy }); }).toThrow(previous);
+                else expect(() => { assertPolicyComplete({ text, path, policy }); }).not.toThrow();
                 expect(validate(input)).toBe(key === current);
             }
         }
@@ -91,7 +90,7 @@ test.each([{ xcode: { orphan_assets: false } }, { docs: { readme_shape: false } 
             const text = stringify(input);
             const path = 'gspot.toml';
             const policy = parsePolicyText(text, path);
-            expect(() => assertPolicyComplete({ text, path, policy })).toThrow(/gspot.toml:\d+:/);
+            expect(() => { assertPolicyComplete({ text, path, policy }); }).toThrow(/gspot.toml:\d+:/);
             expect(validate(input)).toBe(false);
         }
         const corrected = {
@@ -107,7 +106,7 @@ test.each([{ xcode: { orphan_assets: false } }, { docs: { readme_shape: false } 
         const text = stringify(corrected);
         const path = 'gspot.toml';
         const policy = parsePolicyText(text, path);
-        expect(() => assertPolicyComplete({ text, path, policy })).not.toThrow();
+        expect(() => { assertPolicyComplete({ text, path, policy }); }).not.toThrow();
         expect(validate(corrected)).toBe(true);
     },
 );

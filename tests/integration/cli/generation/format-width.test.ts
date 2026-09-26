@@ -1,14 +1,14 @@
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { prepareCommand } from '#cli/execution/tool-runner.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { expect, test } from 'bun:test';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { join } from 'node:path';
 import prettier from 'prettier';
-import { parse as parseToml, stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
+import { planRun } from '#cli/execution/plan.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { parse as parseJsonc } from 'jsonc-parser';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { parse as parseToml, stringify } from 'smol-toml';
+import { prepareCommand } from '#cli/execution/tool-runner.ts';
 
 test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {
     await using directory = await testdir();

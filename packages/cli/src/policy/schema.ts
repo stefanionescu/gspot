@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { outputSchema } from '#cli/configurations/output-format.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
+import { outputSchema } from '#cli/configurations/output-format.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
 
 const INDENT_MAX = 8;

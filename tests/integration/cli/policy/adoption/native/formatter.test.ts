@@ -1,10 +1,10 @@
-import { askInitQuestions } from '#cli/commands/init/questions.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { expect, test } from 'bun:test';
-import { symlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { askInitQuestions } from '#cli/commands/init/questions.ts';
 
 test('formatter choices use the captured observation and a fresh failed observation is retained', async () => {
     await using sandbox = await testdir();

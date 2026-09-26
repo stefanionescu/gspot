@@ -1,5 +1,4 @@
 import type { StageFilter } from '#cli/execution/plan.ts';
-
 import { quoteArgument } from '#cli/platform/arguments.ts';
 
 /**
@@ -7,6 +6,11 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
  * @param checkName the check name
  * @param scope the scope path, '' for the root
  * @param options the stage, message file, or exact push input
+ * @param options.stage
+ * @param options.push
+ * @param options.push.input
+ * @param options.push.remote
+ * @param options.messageFile
  * @returns the command line
  */
 export function reproduceLine(

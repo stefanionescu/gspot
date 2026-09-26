@@ -1,8 +1,8 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { PythonFunction, PythonModule } from '#cli/checks/python/types.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 import type { Node } from 'web-tree-sitter';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { PythonFunction, PythonModule } from '#cli/checks/python/types.ts';
 
 function isDocstring(statement: Node | undefined): boolean {
     return statement?.type === 'expression_statement' && statement.namedChildren[0]?.type === 'string';

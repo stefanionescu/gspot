@@ -1,7 +1,7 @@
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
-import { policySchema } from '#cli/policy/schema.ts';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, test } from 'bun:test';
+import { policySchema } from '#cli/policy/schema.ts';
+import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
 describe('the JSON schema of gspot.toml', () => {
     test('the zod schema accepts the documented example shapes and rejects unknown keys', () => {

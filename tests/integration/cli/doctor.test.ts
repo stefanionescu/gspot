@@ -1,14 +1,14 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { doctorCommand } from '#cli/commands/doctor/command.ts';
+import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();

@@ -1,9 +1,9 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 
 const POLICY = `version = 1
 configurations = ["formatting"]

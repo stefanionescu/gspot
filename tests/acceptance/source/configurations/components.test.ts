@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
-import { reportSchema, type RunReport } from '#cli/execution/report.ts';
+import { describe, expect, test } from 'bun:test';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
+import { reportSchema, type RunReport } from '#cli/execution/report.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 
 /** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
 type ComponentShape = {

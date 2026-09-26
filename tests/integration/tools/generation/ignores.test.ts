@@ -1,11 +1,9 @@
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
-
-import { emitAll } from '#cli/generation/render.ts';
 import { stringify } from 'smol-toml';
-
-import { openSession } from '#cli/execution/session.ts';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 test.each([
     ['nested/src/**'],

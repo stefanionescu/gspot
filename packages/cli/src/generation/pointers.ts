@@ -1,11 +1,10 @@
-import type { PointerSpec } from '#cli/configurations/schema.ts';
-import { headerFor } from '#cli/generation/headers.ts';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { dirname, relative } from 'node:path';
-
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { toPosix } from '#cli/platform/paths.ts';
+import { headerFor } from '#cli/generation/headers.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { PointerSpec } from '#cli/configurations/schema.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/lifecycle/apply.ts';
 
 const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 

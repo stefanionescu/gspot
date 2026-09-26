@@ -22,7 +22,7 @@ const CHECK_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
 
 function denoFileArguments(root: string, folder: string): string[] {
     const path = join(root, folder, 'deno.json');
-    return statSync(path, { throwIfNoEntry: false }) !== undefined ? ['--config', path] : [];
+    return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : ['--config', path];
 }
 
 function relative(root: string, locator: string): string {

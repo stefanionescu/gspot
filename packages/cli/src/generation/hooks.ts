@@ -1,8 +1,8 @@
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
 
 const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
 

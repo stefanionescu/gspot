@@ -1,8 +1,8 @@
-import { describe, expect, test } from 'bun:test';
-import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';

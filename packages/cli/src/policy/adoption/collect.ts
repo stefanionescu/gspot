@@ -1,40 +1,21 @@
-import { stylelintImporter } from '#cli/policy/adoption/stylelint.ts';
-
-import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
-
-import { ruffImporter } from '#cli/policy/adoption/ruff.ts';
-
-import { licensesImporter } from '#cli/policy/adoption/licenses.ts';
-
-import { osvImporter } from '#cli/policy/adoption/osv.ts';
-
-import { gitleaksImporter } from '#cli/policy/adoption/gitleaks.ts';
-
-import { typosImporter } from '#cli/policy/adoption/typos.ts';
-
 import { z } from 'zod';
-
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-
-import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
-
-import type { ExistingTool } from '#cli/repository/existing-tooling.ts';
-
-import { appendSetting, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
-
-import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
-
 import { dirname } from 'node:path';
-
+import { osvImporter } from '#cli/policy/adoption/osv.ts';
+import { ruffImporter } from '#cli/policy/adoption/ruff.ts';
+import { typosImporter } from '#cli/policy/adoption/typos.ts';
 import { collectEslint } from '#cli/policy/adoption/eslint.ts';
-
+import type { CarrySource } from '#cli/policy/adoption/source.ts';
+import { gitleaksImporter } from '#cli/policy/adoption/gitleaks.ts';
+import { licensesImporter } from '#cli/policy/adoption/licenses.ts';
+import { stylelintImporter } from '#cli/policy/adoption/stylelint.ts';
 import { collectFormatting } from '#cli/policy/adoption/formatting.ts';
-
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-
+import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
+import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import { appendSetting, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
 
 const strings = z.array(z.string());
 

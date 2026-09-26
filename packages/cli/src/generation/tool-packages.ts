@@ -1,8 +1,8 @@
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
-import { npmPins } from '#cli/tools/pins.ts';
 import semver from 'semver';
+import { npmPins } from '#cli/tools/pins.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.

@@ -1,17 +1,17 @@
+import type { Command } from 'commander';
 import { directoryOf } from '#cli/commands/flags.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { toolEnvironment } from '#cli/generation/tool-environment.ts';
-import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
-import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
 import { installTools } from '#cli/tools/install.ts';
 import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
-import { packageInstallSteps } from '#cli/tools/packages/project.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
-import type { Command } from 'commander';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import { packageInstallSteps } from '#cli/tools/packages/project.ts';
+import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 
 /**
  * Register immutable installation for a clone.

@@ -1,11 +1,11 @@
 // The pre-push hook checks exactly the pushed objects and leaves the working tree alone.
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { git } from '#tests/support/cli/git.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test(
     'pre-push checks exact supplied objects, tags, force pushes, and new refs while preserving the working tree',

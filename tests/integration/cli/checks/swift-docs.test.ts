@@ -1,13 +1,13 @@
-import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import * as processes from '#cli/platform/spawn.ts';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 
 test('Swift documentation adapter rejects malformed native output and removes its selected workspace', async () => {
     await using sandbox = await testdir();

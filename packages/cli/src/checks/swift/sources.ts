@@ -1,8 +1,8 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { SwiftFunction, SwiftSource } from '#cli/checks/swift/types.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 import type { Node } from 'web-tree-sitter';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { SwiftFunction, SwiftSource } from '#cli/checks/swift/types.ts';
 
 function modifiersOf(node: Node): Node[] {
     return node.namedChildren.filter((child) => child.type === 'modifiers').flatMap((child) => child.namedChildren);

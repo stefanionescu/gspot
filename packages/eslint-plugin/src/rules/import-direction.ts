@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
+import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
-import { importFile } from '#plugin/imports.ts';
 
 const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
     types: ['**/types/**'],

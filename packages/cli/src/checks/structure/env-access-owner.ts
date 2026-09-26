@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 
 function ownerPaths(roles: Record<string, string | string[]>): string[] {

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';

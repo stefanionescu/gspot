@@ -1,6 +1,6 @@
+import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
 
 const FORMAT_PREFIX = 'format.';
 

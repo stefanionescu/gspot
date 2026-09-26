@@ -1,11 +1,11 @@
-import { initCommand } from '#cli/commands/init/command.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { parse, stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
@@ -83,7 +83,7 @@ test('profile spelling values use the same TOML emission path', async () => {
 });
 
 test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
-    const text = 'café "quoted" \\value # comment';
+    const text = String.raw`café "quoted" \value # comment`;
     const path = 'docs/"draft"/**';
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
     const option = 'custom."option"';

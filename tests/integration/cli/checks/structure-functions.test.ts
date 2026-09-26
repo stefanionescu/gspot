@@ -1,8 +1,8 @@
 import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { pythonModules } from '#cli/checks/python/modules.ts';
@@ -13,7 +13,7 @@ for (const threshold of [1, 2, 3]) {
         await createFileTree(sandbox.path, {
             'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${threshold}\n`,
             'functions.sql': [
-                "\\set account '前言'",
+                String.raw`\set account '前言'`,
                 'SELECT :account::int;',
                 'CREATE FUNCTION one() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;',
                 'CREATE FUNCTION two() RETURNS void LANGUAGE plpgsql AS $$ BEGIN PERFORM 1; PERFORM 2; END $$;',

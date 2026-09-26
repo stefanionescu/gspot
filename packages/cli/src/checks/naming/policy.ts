@@ -1,13 +1,13 @@
-import { compileTerms } from '#cli/checks/naming/match.ts';
+import { compact } from '#cli/policy/normalize.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import type { Identifier } from '#cli/checks/naming/extract.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { CATEGORY_PARENTS } from '#cli/checks/naming/categories.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import { compileTerms } from '#cli/checks/naming/match.ts';
 import type { ExposedSettings } from '#cli/policy/settings.ts';
+import type { Identifier } from '#cli/checks/naming/extract.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { CATEGORY_PARENTS } from '#cli/checks/naming/categories.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
 import type { NamingSettings, NamingRule, Policy } from '#cli/policy/normalize.ts';
-import { compact } from '#cli/policy/normalize.ts';
 
 const POLICY_ASSET = 'packages/cli/configurations/policy/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
@@ -115,6 +115,7 @@ export function shippedPolicy(): ShippedPolicy {
  * @param surface the scope's settings surface
  * @param policy the repository policy
  * @param scope the scope path, '' for the root
+ * @param manifests
  * @returns the effective policy
  */
 export function effectivePolicy(

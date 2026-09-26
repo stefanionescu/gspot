@@ -1,9 +1,9 @@
 // Declared cache inputs decide when a cached verdict is reused.
-import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { renameSync, symlinkSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { renameSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test('declared cache inputs include ignored files and invalidate for changed, added, renamed, and deleted inputs', async () => {
     await using sandbox = await testdir();

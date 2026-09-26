@@ -1,16 +1,16 @@
-import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
-import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
-import type { Proposal } from '#cli/configurations/detect.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import type { Profile } from '#cli/policy/profiles/read.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import type { Repository } from '#cli/repository/tree.ts';
+import type { Profile } from '#cli/policy/profiles/read.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import type { Proposal } from '#cli/configurations/detect.ts';
+import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
 
 export type InitOptions = {
     cwd: string;

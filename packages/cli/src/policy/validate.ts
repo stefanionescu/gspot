@@ -1,12 +1,12 @@
-import { excludeProblems } from '#cli/agents/assemble.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
+import { excludeProblems } from '#cli/agents/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
+import { validateAgainstSurface } from '#cli/policy/audit.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
+import { unknownConfiguration } from '#cli/policy/messages.ts';
+import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**
  * The configuration names a policy selects that no manifest defines, each at its declaration.

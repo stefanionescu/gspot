@@ -1,10 +1,10 @@
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each(['setup.cfg', 'tox.ini'])(
     'SQLFluff adoption carries only its section and preserves shared %s',

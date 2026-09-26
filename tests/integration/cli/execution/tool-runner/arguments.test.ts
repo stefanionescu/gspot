@@ -1,14 +1,14 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { fileBatches } from '#cli/execution/file-batches.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { prepareCommand, runToolCheck } from '#cli/execution/tool-runner.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { writeFileSync } from 'node:fs';
+import { run } from '#cli/platform/spawn.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { fileBatches } from '#cli/execution/file-batches.ts';
+import { prepareCommand, runToolCheck } from '#cli/execution/tool-runner.ts';
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
     await using sandbox = await testdir();

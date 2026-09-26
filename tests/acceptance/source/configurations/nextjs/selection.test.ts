@@ -1,14 +1,14 @@
 // Policy choices the nextjs configuration follows: the re-export mode, the compiler replacement, and locale checking.
-import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
-import type { RunReport } from '#cli/execution/report.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import { expect, test } from 'bun:test';
-import { symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test.each(['none', 'index-only'])(
     'Next.js entry files preserve the re-export policy in %s mode',

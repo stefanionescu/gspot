@@ -1,21 +1,20 @@
-import type { Session } from '#cli/execution/session.ts';
-import { hasHeader } from '#cli/generation/headers.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-import { head } from '#cli/repository/tracked.ts';
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-
-import type { ChangeReport, ChangeRow } from '#cli/commands/doctor/report.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
+import { head } from '#cli/repository/tracked.ts';
+import { emitAll } from '#cli/generation/render.ts';
+import { hasHeader } from '#cli/generation/headers.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { isOwned } from '#cli/policy/adoption/collect.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { isOwned } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
 import { MISE_CONFIG_PATH, pinnedTwice } from '#cli/tools/mise.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import type { ChangeReport, ChangeRow } from '#cli/commands/doctor/report.ts';
+import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const HEAD_BYTES = 600;
 
@@ -134,15 +133,15 @@ export function changeReport(session: Session): ChangeReport {
         configurationNotOwned: [
             ...configurationNotOwned(session, tooling, selected, rendered.files),
             ...unownedGeneratedFiles(session),
-            ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) !== undefined
-                ? [
+            ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) === undefined
+                ? []
+                : [
                       {
                           path: 'gspot.local.toml',
                           note: 'No command reads this file. Use --skip for one run.',
                           command: 'gspot check --skip <checks>',
                       },
-                  ]
-                : []),
+                  ]),
         ],
         changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling, rendered.files)],
         pinnedTwice: pinnedTwice(session.root, everyManifest(session.scopes)).map((pin) => ({

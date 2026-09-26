@@ -1,17 +1,17 @@
-import { explain } from '#cli/commands/explain/subjects.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
-import { runEngineCheck } from '#cli/execution/engines.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { sarifText } from '#cli/output/report.ts';
-import { runText } from '#cli/output/reporter.ts';
-import { settingRows } from '#cli/policy/settings-list.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
+import { runText } from '#cli/output/reporter.ts';
+import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { runEngineCheck } from '#cli/execution/engines.ts';
+import { settingRows } from '#cli/policy/settings-list.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
+import { explain } from '#cli/commands/explain/subjects.ts';
 
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();

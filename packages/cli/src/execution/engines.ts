@@ -1,27 +1,27 @@
-import { checkActions } from '#cli/checks/actions.ts';
-import { resolveIntegrity } from '#cli/checks/dispatch.ts';
-import type { Engine, EngineInput } from '#cli/checks/input.ts';
-import { resolveNaming } from '#cli/checks/naming/engine.ts';
-import { sourceBans } from '#cli/checks/prose/source-bans.ts';
-import { valeFindings } from '#cli/checks/prose/vale.ts';
-import { resolveStructure } from '#cli/checks/structure/engine.ts';
-import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { join } from 'node:path';
 import { emitAll } from '#cli/generation/render.ts';
+import { checkActions } from '#cli/checks/actions.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { MissingToolError } from '#cli/tools/errors.ts';
-import { join } from 'node:path';
+import type { CheckResult } from '#cli/checks/result.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { valeFindings } from '#cli/checks/prose/vale.ts';
+import { SkippedCheckError } from '#cli/checks/result.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
+import { resolveIntegrity } from '#cli/checks/dispatch.ts';
+import { resolveNaming } from '#cli/checks/naming/engine.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { sourceBans } from '#cli/checks/prose/source-bans.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Engine, EngineInput } from '#cli/checks/input.ts';
+import { resolveStructure } from '#cli/checks/structure/engine.ts';
+import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import { checkCommitMessages } from '#cli/checks/commit-messages.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
-import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
 import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
+import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
-import type { Session } from '#cli/execution/session.ts';
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
     integrity: resolveIntegrity,

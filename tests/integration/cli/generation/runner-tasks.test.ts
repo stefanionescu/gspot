@@ -1,19 +1,15 @@
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { createFileTree, testdir } from 'testdirs';
-
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
-
-import { readFileSync, writeFileSync } from 'node:fs';
-
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { run } from '#cli/platform/spawn.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 

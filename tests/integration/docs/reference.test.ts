@@ -1,10 +1,10 @@
-import * as programDefinition from '#cli/commands/program.ts';
-import * as manifestDefinitions from '#cli/configurations/manifests.ts';
-import { parsePolicyText } from '#cli/policy/read.ts';
-import plugin from '#plugin/plugin.ts';
-import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import plugin from '#plugin/plugin.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { parsePolicyText } from '#cli/policy/read.ts';
+import * as programDefinition from '#cli/commands/program.ts';
+import * as manifestDefinitions from '#cli/configurations/manifests.ts';
 import { referencePages } from '../../../docs/src/content/reference/loader.ts';
 import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 

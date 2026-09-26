@@ -1,9 +1,9 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readdirSync, symlinkSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Adding a configuration changes the next explicit check through its ESLint fragment.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

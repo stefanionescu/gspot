@@ -1,14 +1,14 @@
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import JSON5 from 'json5';
+import picomatch from 'picomatch';
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { globbySync } from 'globby';
-import { relative, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import { relative, join } from 'node:path';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import picomatch from 'picomatch';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {

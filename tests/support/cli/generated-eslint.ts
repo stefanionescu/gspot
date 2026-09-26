@@ -1,10 +1,10 @@
 // The ESLint instance a planted repository's generated configuration produces, for tests of the emitted rules.
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { ESLint } from 'eslint';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 /**
  * Links the installed packages into the sandbox, writes its generated ESLint configuration, and loads it.

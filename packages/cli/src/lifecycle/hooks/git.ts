@@ -1,22 +1,22 @@
-import { hookBody, hookCommand, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
-import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
-import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import type { PreparedHook } from '#cli/lifecycle/hooks/managers.ts';
-import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { binaryPath } from '#cli/platform/assets.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import type { Repository } from '#cli/repository/tree.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import type { PreparedHook } from '#cli/lifecycle/hooks/managers.ts';
+import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
+import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
+import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { basename, dirname, isAbsolute, posix, relative, resolve } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
+import { hookBody, hookCommand, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
 
 function rejectDifferingNativeHook(
     path: string,
@@ -83,6 +83,8 @@ export function hookLocation(root: string): HookLocation {
 /**
  * Plan the dispatcher and original sibling before applying any hook mutation.
  * @param options
+ * @param options.policy
+ * @param options.repository
  * @param manager
  */
 export function installHooks(
@@ -295,6 +297,8 @@ export function proposeHookRestorations(
 /**
  * Compare Git's executable hook files with their recorded installed identities.
  * @param options
+ * @param options.policy
+ * @param options.repository
  */
 export function hookStatus({
     policy,

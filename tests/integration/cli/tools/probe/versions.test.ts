@@ -1,10 +1,10 @@
-import { openSession } from '#cli/execution/session.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
+import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
+import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
+import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],

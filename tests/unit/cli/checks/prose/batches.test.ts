@@ -1,8 +1,8 @@
 // Vale runs once for each extension over paths: ten Python files are one route group and one command line (K-176).
+import { expect, test } from 'bun:test';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { expect, test } from 'bun:test';
 
 const file = (path: string): TrackedFile => ({
     path,

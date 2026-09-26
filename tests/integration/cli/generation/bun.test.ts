@@ -1,10 +1,10 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
     await using repository = await testdir();

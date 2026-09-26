@@ -1,11 +1,11 @@
 // The configuration root confines every write: a linked managed directory is refused and a nested policy owns only its project.
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { expect, test } from 'bun:test';
 import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const INIT = initArgs(['bash']);
 

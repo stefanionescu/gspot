@@ -1,12 +1,12 @@
-import { resolveCheck } from '#cli/execution/engines.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
+import { resolveCheck } from '#cli/execution/engines.ts';
+import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 
 test.each(['{file}', '{files}'])(
     'declared findings exits distinguish partial reports from fatal %s execution',
@@ -24,7 +24,7 @@ test.each(['{file}', '{files}'])(
                         paths: [source],
                         stage: 'commit',
                         findings_exit_codes: [1],
-                        output: { format: 'regex', pattern: '^(?<file>.+):(?<line>\\d+): (?<message>.+)$' },
+                        output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
                     },
                 ],
             }),

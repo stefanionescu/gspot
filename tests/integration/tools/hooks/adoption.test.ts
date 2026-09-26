@@ -1,12 +1,12 @@
-import { applyCommand } from '#cli/commands/apply/command.ts';
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { hookLocation } from '#cli/lifecycle/hooks/git.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 

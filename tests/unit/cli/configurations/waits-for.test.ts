@@ -1,7 +1,7 @@
 // A check that reads a setting nobody has filled in yet waits for it instead of running with nothing (K-157).
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
 import { expect, test } from 'bun:test';
+import type { SettingSpec } from '#cli/configurations/schema.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 // A {setting:...} value is needed where it stands; an {each:...} list repeats a flag and an empty list adds nothing.
 const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z0-9_.]+)\}/gu;

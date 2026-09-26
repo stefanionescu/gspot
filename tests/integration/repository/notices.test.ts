@@ -1,5 +1,5 @@
-import { expect, spyOn, test } from 'bun:test';
 import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { dependencyNotices } from '../../../packages/cli/build/notices.ts';
 

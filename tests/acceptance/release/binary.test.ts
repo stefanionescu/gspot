@@ -1,17 +1,17 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded configurations, rules and grammars, not the source tree.
-import { PLANTED_TIMEOUT_MS, runProcess } from '#tests/support/cli/command.ts';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
-import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
-import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
 // The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { PLANTED_TIMEOUT_MS, runProcess } from '#tests/support/cli/command.ts';
+import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
+import packageManifest from '../../../packages/cli/package.json' with { type: 'json' };
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

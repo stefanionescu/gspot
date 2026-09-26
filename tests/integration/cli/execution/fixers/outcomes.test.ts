@@ -1,11 +1,11 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { runFixer } from '#cli/execution/fixers.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { runFixer } from '#cli/execution/fixers.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 
 test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', async (code) => {
     await using sandbox = await testdir();

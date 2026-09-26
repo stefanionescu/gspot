@@ -1,16 +1,16 @@
-import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { gixyRules } from '#cli/repository/gixy-rules.ts';
-import { javascriptRules } from '#cli/repository/javascript-rules.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
-import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
-import { swiftformatRules } from '#cli/repository/swiftformat-rules.ts';
-import { valeRules } from '#cli/repository/vale-rules.ts';
-import { parse as parseJson, type ParseError } from 'jsonc-parser';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
+import { gixyRules } from '#cli/repository/gixy-rules.ts';
+import { valeRules } from '#cli/repository/vale-rules.ts';
+import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { parse as parseJson, type ParseError } from 'jsonc-parser';
+import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
+import { javascriptRules } from '#cli/repository/javascript-rules.ts';
+import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import { swiftformatRules } from '#cli/repository/swiftformat-rules.ts';
 
 function document(path: string, text: string): unknown {
     if (baseName(path) === 'gixy.cfg') return gixyRules(text);

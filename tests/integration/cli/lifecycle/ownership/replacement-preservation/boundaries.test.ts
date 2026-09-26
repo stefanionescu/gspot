@@ -1,8 +1,8 @@
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'project/.automation/hooks'])(
     'hook destination %s restores current ownership under the shared writer boundary',

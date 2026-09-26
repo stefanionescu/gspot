@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 

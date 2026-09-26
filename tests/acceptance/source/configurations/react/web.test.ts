@@ -1,7 +1,7 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
+import { describe, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.

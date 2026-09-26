@@ -1,5 +1,5 @@
-import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { describe, expect, test } from 'bun:test';
+import { identifiersOf } from '#cli/checks/naming/extract.ts';
 
 const SOURCE = String.raw`import Foundation
 

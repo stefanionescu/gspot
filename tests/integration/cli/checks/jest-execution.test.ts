@@ -1,11 +1,11 @@
 import { dirname, join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
 import * as processes from '#cli/platform/spawn.ts';
 import { jestCoverage } from '#cli/checks/jest/run.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 const failures = [
     'missing tests',

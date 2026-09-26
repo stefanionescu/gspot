@@ -1,14 +1,14 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { statSync } from 'node:fs';
+import { z } from 'zod';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { z } from 'zod';
+import { statSync } from 'node:fs';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/checks/result.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { SkippedCheckError } from '#cli/checks/result.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 
 const MANIFEST = 'pyproject.toml';
 const importConfiguration = z.object({

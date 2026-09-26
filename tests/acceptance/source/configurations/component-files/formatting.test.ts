@@ -1,7 +1,7 @@
 // A planted Svelte component with loose markup: Prettier reads it through prettier-plugin-svelte, reports it, and corrects it.
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';

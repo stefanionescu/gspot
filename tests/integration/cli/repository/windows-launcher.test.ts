@@ -1,10 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 function launcher(
     is64: boolean,

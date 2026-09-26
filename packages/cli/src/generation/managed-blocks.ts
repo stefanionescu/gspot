@@ -1,6 +1,5 @@
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
-
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**

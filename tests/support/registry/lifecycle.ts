@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-// An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
-import { environmentVariables } from '#cli/platform/environment.ts';
-import type { SpawnOutcome } from '#tests/support/cli/command.ts';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+// An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 /** A local npm registry the release tests publish into. */
 export type Registry = {

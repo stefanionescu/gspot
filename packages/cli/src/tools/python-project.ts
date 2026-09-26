@@ -1,16 +1,16 @@
-import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
-import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import { tmpdir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
-import { parse, stringify } from 'smol-toml';
 import { z } from 'zod';
+import { tmpdir } from 'node:os';
+import { parse, stringify } from 'smol-toml';
+import { isDeepStrictEqual } from 'node:util';
+import { isAbsolute, join, resolve } from 'node:path';
+import { runToolCommand } from '#cli/tools/command.ts';
+import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import { InstallationError, MissingToolError } from '#cli/tools/errors.ts';
 
 import {
     chmodSync,

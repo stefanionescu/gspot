@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 

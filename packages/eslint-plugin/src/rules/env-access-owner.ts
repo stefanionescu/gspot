@@ -1,8 +1,8 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { isGlobalEnvironmentHost, memberName } from '#plugin/environment.ts';
 import { isAnyGlobMatch, lintedFile, lintedRoot, relativeToRoot } from '#plugin/files.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isEnvironmentRead(
     context: Readonly<TSESLint.RuleContext<string, unknown[]>>,

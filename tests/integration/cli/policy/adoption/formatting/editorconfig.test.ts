@@ -1,12 +1,12 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { expect, test } from 'bun:test';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('shared EditorConfig selectors govern files created after generation', async () => {
     await using directory = await testdir();

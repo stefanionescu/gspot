@@ -1,10 +1,10 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { expect, test } from 'bun:test';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['integrity/generated-drift'], fix: false, isDryRun: false };
 const GENERATED = '.gspot/config/shellcheckrc';

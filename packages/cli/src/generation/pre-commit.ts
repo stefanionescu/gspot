@@ -1,10 +1,10 @@
-import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import { z } from 'zod';
+import { parse as parseYaml } from 'yaml';
+import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { isDeepStrictEqual } from 'node:util';
-import { parse as parseYaml } from 'yaml';
-import { z } from 'zod';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
 
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({

@@ -1,11 +1,11 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { hasPackages } from '#cli/tools/vale.ts';
-import { expect, test } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { hasPackages } from '#cli/tools/vale.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();

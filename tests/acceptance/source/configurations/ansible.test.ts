@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { reportSchema } from '#cli/execution/report.ts';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the ansible configuration: a task that shells out to systemctl.

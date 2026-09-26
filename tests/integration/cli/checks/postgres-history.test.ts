@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 

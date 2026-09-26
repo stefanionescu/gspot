@@ -1,9 +1,9 @@
 import type { EngineInput } from '#cli/checks/input.ts';
+import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/checks/naming/extractors/bash.ts';
 import { swiftIdentifiers } from '#cli/checks/naming/extractors/swift.ts';
 import { pythonIdentifiers } from '#cli/checks/naming/extractors/python.ts';
-import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { typescriptIdentifiers } from '#cli/checks/naming/extractors/typescript.ts';
 
 /**

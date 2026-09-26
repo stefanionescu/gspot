@@ -1,5 +1,5 @@
-import type { Defined } from '#cli/policy/schema.ts';
 import { z } from 'zod';
+import type { Defined } from '#cli/policy/schema.ts';
 
 export const findingSchema = z.strictObject({
     check: z.string(),

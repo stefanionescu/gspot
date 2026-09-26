@@ -1,6 +1,6 @@
-import { parseAlerts } from '#cli/checks/prose/vale.ts';
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { parseAlerts } from '#cli/checks/prose/vale.ts';
 
 describe('vale output', () => {
     test('JSON output parses native source and stdin locations into alerts', () => {

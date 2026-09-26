@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { denoLint } from '#cli/checks/supabase/deno.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import type { Session } from '#cli/execution/session.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;

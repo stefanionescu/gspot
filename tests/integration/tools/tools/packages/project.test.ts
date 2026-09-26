@@ -1,19 +1,19 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { expect, spyOn, test } from 'bun:test';
+import * as spawn from '#cli/platform/spawn.ts';
+import { probeTool } from '#cli/tools/probe.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import * as spawn from '#cli/platform/spawn.ts';
-import { run } from '#cli/platform/spawn.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { createHash } from 'node:crypto';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
 
 const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', import.meta.url));
 

@@ -1,15 +1,15 @@
+import * as fs from 'node:fs';
+import { join } from 'node:path';
+import { throws } from 'node:assert/strict';
+import { expect, spyOn, test } from 'bun:test';
 import * as cache from '#cli/execution/cache.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { readCached } from '#cli/execution/cache.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { throws } from 'node:assert/strict';
-import * as fs from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
     'an edited cached result %s is preserved and the check runs again',

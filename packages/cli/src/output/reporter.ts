@@ -1,8 +1,8 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { invokingHook } from '#cli/platform/environment.ts';
 import type { RunReport } from '#cli/execution/report.ts';
+import { invokingHook } from '#cli/platform/environment.ts';
 import type { CheckResult, Finding } from '#cli/checks/result.ts';
 
 const MS_PER_SECOND = 1000;

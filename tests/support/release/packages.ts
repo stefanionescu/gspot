@@ -1,8 +1,8 @@
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import releaseTargets from '../../../packages/npm/targets.json' with { type: 'json' };
 
 export const root = fileURLToPath(new URL('../../..', import.meta.url));

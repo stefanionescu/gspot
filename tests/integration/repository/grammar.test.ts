@@ -1,8 +1,8 @@
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
+import { fileURLToPath } from 'node:url';
 import { expect, spyOn, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { testdir } from 'testdirs';
 import { prepareInput, SWIFT_GRAMMAR } from '../../../packages/cli/build/inputs.ts';
 
 const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
 import type { Session } from '#cli/execution/session.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
+import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 
 const COMMAND = ['actionlint', '-no-color', '{files}'];
 
@@ -53,7 +53,12 @@ function actionlintSource(text: string): string {
     return prepared;
 }
 
-/** Validate current GitHub reference syntax through the supervised native parser without editing authored files. */
+/**
+ * Validate current GitHub reference syntax through the supervised native parser without editing authored files.
+ * @param session the open session
+ * @param planned the planned check
+ * @returns the check result
+ */
 export async function checkActions(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     for (const file of session.repository.files) {

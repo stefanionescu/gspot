@@ -1,16 +1,12 @@
-import type { RunReport } from '#cli/execution/report.ts';
-
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-
-import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
-
-import { emitAll } from '#cli/generation/render.ts';
-
-import { openSession } from '#cli/execution/session.ts';
-import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 test('framework security packs stay within inherited scopes and preserve sibling input', async () => {
     await using sandbox = await testdir();

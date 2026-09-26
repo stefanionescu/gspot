@@ -1,9 +1,9 @@
 // Policy errors name their gspot.toml location and accept the suggested correction.
-import { run } from '#tests/support/cli/command.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 
 test.each([
     { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },

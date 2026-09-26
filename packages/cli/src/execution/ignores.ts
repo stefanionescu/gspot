@@ -1,12 +1,13 @@
+// The comment forms of an inline ignore. `marker` finds the comment and captures the check id; the
+
 import type { Finding } from '#cli/checks/result.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
 import type { IgnoreEntry } from '#cli/policy/normalize.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 
-// The comment forms of an inline ignore. `marker` finds the comment and captures the check id; the
 // reason is what follows `--` in the rest of the comment.
 const INLINE_IGNORE: Record<string, RegExp> = {
     slash: /\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,

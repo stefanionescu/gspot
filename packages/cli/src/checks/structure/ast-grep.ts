@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/platform/assets.ts';
+import { isAbsolute, join, relative } from 'node:path';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
-import { isAbsolute, join, relative } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { toPosix, CACHE_DIRECTORY } from '#cli/platform/paths.ts';

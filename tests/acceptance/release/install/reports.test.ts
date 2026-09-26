@@ -1,10 +1,12 @@
 // Installs built packages from an isolated registry: syntax findings reach every report format and naming is opt-in.
+import { join } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
+import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import type { PublishedRelease } from '#tests/support/release/published.ts';
 import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
-import { afterAll, beforeAll, expect, test } from 'bun:test';
 
 let release: PublishedRelease;
 beforeAll(async () => {
@@ -13,8 +15,6 @@ beforeAll(async () => {
 afterAll(async () => {
     await release?.registry.stop();
 });
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 test(
     'installed syntax diagnostics and naming accept corrected input',

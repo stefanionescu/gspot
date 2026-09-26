@@ -1,19 +1,19 @@
-import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { miseHome } from '#cli/platform/environment.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
-import { installHint } from '#cli/tools/install-hints.ts';
-import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
+import semver from 'semver';
 import { homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
+import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
-import semver from 'semver';
+import { miseHome } from '#cli/platform/environment.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
+import { installHint } from '#cli/tools/install-hints.ts';
+import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
+import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
 
 /** The two facts of a package.json that say which package it is. */
 type PackageFacts = { name?: string; version?: string };
@@ -81,9 +81,9 @@ function packageVersion(root: string, path: string, name: string | undefined): s
             if (managed && !local.startsWith('.gspot/')) return undefined;
             const text =
                 files === undefined
-                    ? statSync(manifest, { throwIfNoEntry: false }) !== undefined
-                        ? readFileSync(manifest, 'utf8')
-                        : undefined
+                    ? statSync(manifest, { throwIfNoEntry: false }) === undefined
+                        ? undefined
+                        : readFileSync(manifest, 'utf8')
                     : files.read(local)?.bytes.toString('utf8');
             const parsed = text === undefined ? undefined : (JSON.parse(text) as PackageFacts);
             if (parsed?.name === name) return parsed.version;
@@ -102,7 +102,7 @@ function miseVersion(path: string, tool: ToolPin): string | undefined {
     const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
     if (!path.startsWith(join(home, 'shims'))) return undefined;
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
-    return statSync(installed, { throwIfNoEntry: false }) !== undefined ? npm.version : undefined;
+    return statSync(installed, { throwIfNoEntry: false }) === undefined ? undefined : npm.version;
 }
 
 // What the tool prints about its version, with no color codes: their numbers read as a version.

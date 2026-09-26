@@ -11,12 +11,11 @@ describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {
         const linter = new Linter({ configType: 'flat' });
         const config: object[] = [{ plugins: { gspot: plugin }, rules: { 'gspot/no-client-environment': 'error' } }];
-        expect<unknown>(linter.verify(clientExample.broken, config, { filename: 'search.js' })).toStrictEqual(
-            clientExample.findings,
-        );
-        expect(linter.verify(clientExample.corrected, config, { filename: 'search.js' })).toStrictEqual(
-            clientExample.clean,
-        );
+        // The captured example is plain JSON, so the comparison is structural.
+        const broken: unknown = linter.verify(clientExample.broken, config, { filename: 'search.js' });
+        expect(broken).toStrictEqual(clientExample.findings);
+        const corrected: unknown = linter.verify(clientExample.corrected, config, { filename: 'search.js' });
+        expect(corrected).toStrictEqual(clientExample.clean);
     });
 
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {

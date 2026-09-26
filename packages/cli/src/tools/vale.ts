@@ -1,14 +1,14 @@
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { basename, dirname, join, relative } from 'node:path';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { locateTool } from '#cli/tools/probe.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+import { basename, dirname, join, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { STYLES_DIRECTORY, VALE_CONFIG } from '#cli/configurations/vale.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 
 /**
  * True when every upstream package is present under the styles directory.

@@ -1,9 +1,9 @@
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/lifecycle/apply.ts';
-
+import type { Manifest } from '#cli/configurations/manifests.ts';
 import { RUNNER_TASKS, type RunnerTask } from '#cli/policy/runner.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION, misePins } from '#cli/tools/mise.ts';
+
 const BARE_KEY = /^[\w-]+$/u;
 
 function tomlKey(name: string): string {

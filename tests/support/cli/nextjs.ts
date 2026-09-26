@@ -1,14 +1,14 @@
 // A planted Next.js project with next-intl, installed with its private tools at the all level.
+import { expect } from 'bun:test';
+import { symlinkSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { expect } from 'bun:test';
-import { randomUUID } from 'node:crypto';
-import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
 export const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']);

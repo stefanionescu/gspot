@@ -1,12 +1,12 @@
-import { valeFindings } from '#cli/checks/prose/vale.ts';
-import { runEngineCheck } from '#cli/execution/engines.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import * as processes from '#cli/platform/spawn.ts';
+import { join } from 'node:path';
 import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
-import { join } from 'node:path';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { valeFindings } from '#cli/checks/prose/vale.ts';
+import { runEngineCheck } from '#cli/execution/engines.ts';
 
 for (const extension of ['md', 'sh']) {
     test.each(['outdated', 'deadline', 'cancellation'])(

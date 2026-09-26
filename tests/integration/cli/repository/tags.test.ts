@@ -1,10 +1,10 @@
-import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync } from 'node:fs';
 import { join } from 'node:path';
+import { chmodSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { readRepository } from '#cli/repository/tree.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';
 
 describe('tags', () => {
     test('tags come from extension, filename, shebang and content', async () => {

@@ -1,14 +1,14 @@
-import { proposeText } from '#cli/commands/init/propose.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import { unlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { proposeText } from '#cli/commands/init/propose.ts';
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { expect, test } from 'bun:test';
-import { unlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('directory-local Markdown adoption preserves sibling rules and descendant editor configurations', async () => {
     await using sandbox = await testdir();

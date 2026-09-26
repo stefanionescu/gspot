@@ -1,12 +1,12 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { projectFolder } from '#cli/repository/scopes.ts';
-import type { TreeFacts } from '#cli/repository/tree.ts';
 import * as linguistLanguages from 'linguist-languages';
+import type { TreeFacts } from '#cli/repository/tree.ts';
+import { projectFolder } from '#cli/repository/scopes.ts';
+import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { ManifestFacts } from '#cli/repository/manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 type LinguistEntry = {
     extensions?: readonly string[];

@@ -1,10 +1,10 @@
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
+import { z } from 'zod';
+import semver from 'semver';
 import { dirname, join } from 'node:path';
 import { detectPackageManager } from 'nypm';
-import semver from 'semver';
-import { z } from 'zod';
+import { runToolCommand } from '#cli/tools/command.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 /**
  * Validate an exact package-manager identity at the manifest boundary.

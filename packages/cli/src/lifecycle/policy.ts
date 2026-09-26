@@ -1,13 +1,18 @@
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { fileMissing } from '#cli/policy/messages.ts';
-import { PolicyError } from '#cli/policy/read.ts';
-import type { Mutation, WriteResult } from '#cli/policy/write.ts';
-import { proposePolicy } from '#cli/policy/write.ts';
 import { isDeepStrictEqual } from 'node:util';
+import { PolicyError } from '#cli/policy/read.ts';
+import { proposePolicy } from '#cli/policy/write.ts';
+import { fileMissing } from '#cli/policy/messages.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { Mutation, WriteResult } from '#cli/policy/write.ts';
 
-/** Capture the input bytes and mode before evaluating and validating a policy mutation. */
+/**
+ * Capture the input bytes and mode before evaluating and validating a policy mutation.
+ * @param root the repository root
+ * @param mutate the change to apply to the policy text
+ * @returns the validated proposal with the original file
+ */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     const original = openConfinedRoot(root).read('gspot.toml');
     if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
@@ -16,7 +21,12 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     return { ...proposePolicy(root, text, mutate), original };
 }
 
-/** Publish exactly the validated proposal while refusing changed input bytes or permissions. */
+/**
+ * Publish exactly the validated proposal while refusing changed input bytes or permissions.
+ * @param root the repository root
+ * @param proposal the prepared policy
+ * @returns what was written
+ */
 export function writePolicy(root: string, proposal: PreparedPolicy): WriteResult {
     if (proposal.changed)
         withLifecycleOwner(root, (owner) => {

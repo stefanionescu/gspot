@@ -1,9 +1,9 @@
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();

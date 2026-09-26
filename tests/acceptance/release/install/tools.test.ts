@@ -1,10 +1,13 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
+import { fileURLToPath } from 'node:url';
 import { reportSchema } from '#cli/execution/report.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
-import type { PublishedRelease } from '#tests/support/release/published.ts';
-import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 import { afterAll, beforeAll, expect, test } from 'bun:test';
+import { delimiter, dirname, join, relative } from 'node:path';
+import { runProcess as run } from '#tests/support/cli/command.ts';
+import type { PublishedRelease } from '#tests/support/release/published.ts';
+import { environment, RELEASE_TIMEOUT_MS  } from '#tests/support/release/packages.ts';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 
 let release: PublishedRelease;
 beforeAll(async () => {
@@ -13,10 +16,6 @@ beforeAll(async () => {
 afterAll(async () => {
     await release?.registry.stop();
 });
-import { environment } from '#tests/support/release/packages.ts';
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { delimiter, dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 test(
     'private installation preserves authored metadata when the host runner is outdated',

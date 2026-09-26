@@ -1,15 +1,15 @@
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { applyFixers } from '#cli/execution/fixers.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import type { Session } from '#cli/execution/session.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { applyFixers } from '#cli/execution/fixers.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1

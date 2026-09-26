@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
 import { symlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { readRepository } from '#cli/repository/tree.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],

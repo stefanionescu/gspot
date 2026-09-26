@@ -1,6 +1,6 @@
+import { z } from 'zod';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
-import { z } from 'zod';
 
 const JSON_INDENT = 4;
 

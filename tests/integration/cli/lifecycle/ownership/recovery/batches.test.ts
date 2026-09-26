@@ -1,9 +1,9 @@
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { cliSource } from '#tests/support/cli/sources.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { cliSource } from '#tests/support/cli/sources.ts';
+import { chmodSync, readFileSync, statSync } from 'node:fs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership.ts');
 const boundary = cliSource('platform/filesystem.ts');

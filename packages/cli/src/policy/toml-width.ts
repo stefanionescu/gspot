@@ -1,6 +1,6 @@
 // Keeping every line of gspot.toml readable: an array that runs past the width goes one item per line.
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
 
 /** The most characters one line of gspot.toml holds. */
 export const POLICY_LINE_WIDTH = 120;

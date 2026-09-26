@@ -1,7 +1,7 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
+import { describe, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 // Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.

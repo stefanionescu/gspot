@@ -1,7 +1,7 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 import type { Node } from 'web-tree-sitter';
+import type { Finding } from '#cli/checks/result.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 
 const BLOCKING_NAMES = new Set([

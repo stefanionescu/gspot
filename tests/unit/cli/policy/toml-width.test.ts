@@ -1,6 +1,6 @@
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
-import { expect, test } from 'bun:test';
 import { parse } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 
 const WORDS = Array.from(
     { length: 6 },
@@ -35,5 +35,5 @@ test('an array under a scope entry keeps the indentation of its key', () => {
 test('the indentation follows the format table of the policy', () => {
     expect(policyIndent({ format: { indent_width: 2 } })).toBe('  ');
     expect(policyIndent({ format: { indent_style: 'tab' } })).toBe('\t');
-    expect(policyIndent({})).toBe('    ');
+    expect(policyIndent({})).toBe(' '.repeat(4));
 });

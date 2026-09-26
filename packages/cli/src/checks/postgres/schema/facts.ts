@@ -1,8 +1,8 @@
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
-// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
-export const DEFAULT_SCHEMA = 'public';
 import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
+// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
+export const DEFAULT_SCHEMA = 'public';
 
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;

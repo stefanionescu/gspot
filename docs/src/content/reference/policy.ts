@@ -1,11 +1,11 @@
+import type { ReferencePage } from './page';
+import type { JSONSchema } from 'zod/v4/core';
+import { isDeepStrictEqual } from 'node:util';
+import { cell, referencePage, table } from './page';
+import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
+import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
 import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
 import type { SettingSpec } from '@gspot/cli/src/configurations/schema.ts';
-import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
-import { exposedSettings } from '@gspot/cli/src/policy/settings.ts';
-import { isDeepStrictEqual } from 'node:util';
-import type { JSONSchema } from 'zod/v4/core';
-import type { ReferencePage } from './page';
-import { cell, referencePage, table } from './page';
 
 function schemaCell(value: string): string {
     return value
@@ -65,6 +65,11 @@ function comparable(setting: SettingSpec): Omit<SettingSpec, 'default' | 'detect
     return rest;
 }
 
+/**
+ * The settings page: every exposed setting with its owners and the default each owner gives it.
+ * @param manifests every configuration manifest
+ * @returns the page
+ */
 export function settingsPage(manifests: Manifest[]): ReferencePage {
     const seen = new Map<string, { setting: SettingSpec; owners: string[] }[]>();
     const definitions = [

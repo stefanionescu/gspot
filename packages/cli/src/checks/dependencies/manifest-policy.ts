@@ -1,9 +1,9 @@
 import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { LOCKFILES } from '#cli/repository/locked-packages.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/repository/manifests.ts';
-import { LOCKFILES } from '#cli/repository/locked-packages.ts';
 
 type Reporter = (file: string, rule: string, text: string) => Finding;
 

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 
 const SHOWN_LINES = 3;

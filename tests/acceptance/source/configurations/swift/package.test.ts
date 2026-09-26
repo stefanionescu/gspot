@@ -1,14 +1,14 @@
 // The swift configuration over a package: the build, the analyzer, and Periphery report their planted defects.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const PACKAGE =
     '// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "App",\n    products: [.library(name: "App", targets: ["App"])],\n    targets: [.target(name: "App")]\n)\n';

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import * as tools from '#cli/tools/probe.ts';
 import { rejects } from 'node:assert/strict';
 import { expect, spyOn, test } from 'bun:test';
-import * as tools from '#cli/tools/probe.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

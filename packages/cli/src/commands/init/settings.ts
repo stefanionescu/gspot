@@ -1,8 +1,8 @@
 // What init fills in from the repository: every setting whose manifest says where to look (K-93).
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 type Detect = NonNullable<SettingSpec['detect']>;
 

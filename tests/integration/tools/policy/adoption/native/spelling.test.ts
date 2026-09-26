@@ -1,12 +1,12 @@
-import { proposeText } from '#cli/commands/init/propose.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each([false, true])(
     'nested spelling adoption writes a local policy table with an existing scope of %s',

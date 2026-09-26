@@ -1,9 +1,9 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

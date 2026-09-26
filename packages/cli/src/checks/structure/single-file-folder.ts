@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { IGNORED_FOLDERS } from '#cli/checks/structure/patterns.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';

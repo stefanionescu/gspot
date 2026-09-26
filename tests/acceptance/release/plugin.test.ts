@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import { describe, expect, test } from 'bun:test';
+import { runProcess as run } from '#tests/support/cli/command.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import pluginPackage from '../../../packages/eslint-plugin/package.json' with { type: 'json' };

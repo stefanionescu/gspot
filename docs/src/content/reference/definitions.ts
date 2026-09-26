@@ -1,8 +1,8 @@
 import plugin from '#plugin/plugin.ts';
-import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
-import type { CheckSpec } from '@gspot/cli/src/configurations/schema.ts';
 import type { ReferencePage } from './page';
 import { bullets, cell, referencePage, section, table } from './page';
+import type { CheckSpec } from '@gspot/cli/src/configurations/schema.ts';
+import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
 
 /**
  * Read standalone plugin documentation from the rule definitions and actual configurations.
@@ -31,6 +31,11 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
     );
 }
 
+/**
+ * The reference page of one configuration: its tools, targets, rule files, settings, and relations.
+ * @param manifest the configuration's manifest
+ * @returns the page
+ */
 export function configurationPage(manifest: Manifest): ReferencePage {
     const { configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
@@ -72,6 +77,12 @@ export function configurationPage(manifest: Manifest): ReferencePage {
     return referencePage(configuration.title, configuration.description, body, `${manifest.dir}/manifest.toml`);
 }
 
+/**
+ * The reference page of one check: why it runs, what to do, and where it runs.
+ * @param check the check's manifest entry
+ * @param configuration the manifest that declares the check
+ * @returns the page
+ */
 export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
@@ -113,6 +124,11 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
     );
 }
 
+/**
+ * The page that lists every engine with the checks it runs.
+ * @param checks every check with the configuration that declares it, by name
+ * @returns the page
+ */
 export function enginesPage(checks: Map<string, { check: CheckSpec; configuration: Manifest }>): ReferencePage {
     const byEngine = new Map<string, CheckSpec[]>();
     for (const { check } of checks.values()) {

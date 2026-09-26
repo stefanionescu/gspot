@@ -1,14 +1,14 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
-import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { gitignoreBlock } from '#cli/generation/managed-blocks.ts';
+import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
 
 const CONFIGURATION =
     '\n[configuration]\nname = "local"\nkind = "policy"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';

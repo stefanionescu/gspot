@@ -1,12 +1,12 @@
-import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
-import type { Session } from '#cli/execution/session.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { extensionOf } from '#cli/platform/paths.ts';
+import type { Session } from '#cli/execution/session.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 // Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 const CORE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 

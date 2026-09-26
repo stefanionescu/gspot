@@ -4,9 +4,9 @@ import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '../../../../docs/src/components/home/bash-syntax.json';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

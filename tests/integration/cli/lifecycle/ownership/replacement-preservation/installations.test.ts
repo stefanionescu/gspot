@@ -1,11 +1,11 @@
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import { cliSource } from '#tests/support/cli/sources.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { cliSource } from '#tests/support/cli/sources.ts';
+import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership.ts');
 

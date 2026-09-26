@@ -1,14 +1,26 @@
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { asList } from '#cli/policy/adoption/source.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
+import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import { asList } from '#cli/policy/adoption/source.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 
+/**
+ * The reason written on every entry carried from one authored file.
+ * @param file the authored file
+ * @returns the reason
+ */
 export function reasonFor(file: string): string {
     return CARRIED_REASON.replaceAll('{{file}}', () => file);
 }
 
+/**
+ * Appends entries to a list setting of a carried tool; nothing is written for an empty list.
+ * @param lists the carried configuration
+ * @param tool the tool name
+ * @param key the setting key under the tool
+ * @param entries the entries to append
+ */
 export function appendSetting(lists: CarriedConfiguration, tool: string, key: string, entries: unknown[]): void {
     if (entries.length === 0) return;
     const settings = carriedTool(lists, tool).settings;
@@ -17,8 +29,9 @@ export function appendSetting(lists: CarriedConfiguration, tool: string, key: st
 
 /**
  * The entries owned by one adopted tool, shared by readers, policy emission, and the plan.
- * @param lists
- * @param tool
+ * @param lists the carried configuration
+ * @param tool the tool name
+ * @returns the tool's settings and ignores, created on first use
  */
 export function carriedTool(
     lists: CarriedConfiguration,

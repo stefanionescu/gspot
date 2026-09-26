@@ -1,7 +1,7 @@
-import { SelectionError } from '#cli/configurations/select.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { run } from '#cli/platform/spawn.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import type { PushSelection } from '#cli/repository/revisions/snapshot.ts';
 

@@ -1,14 +1,14 @@
 import ts from 'typescript';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import type { CheckResult } from '#cli/checks/result.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import { targetInScope } from '#cli/configurations/targets.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { targetInScope } from '#cli/configurations/targets.ts';
 import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 

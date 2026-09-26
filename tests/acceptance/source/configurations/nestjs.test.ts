@@ -1,10 +1,10 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
+import { describe, expect, test } from 'bun:test';
+import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
 // Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 

@@ -1,6 +1,6 @@
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.

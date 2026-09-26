@@ -1,12 +1,12 @@
-import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { patch as patchToml } from '@decimalturn/toml-patch';
-import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
+import { z } from 'zod';
+import { isMap, parseDocument } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { isMap, parseDocument } from 'yaml';
-import { z } from 'zod';
+import { patch as patchToml } from '@decimalturn/toml-patch';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 
 function jsonDocument(text: string) {
     const errors: ParseError[] = [];
@@ -165,6 +165,17 @@ export function pruneConfigurationParents(
     return parents.filter((parent) => document.value(parent) !== undefined);
 }
 
+/**
+ * Plans the merge of owned keys into a shared configuration file the developer keeps.
+ * @param path the file path
+ * @param format the document format
+ * @param changes the keys to install with their values
+ * @param current the file as it is now, or undefined when it does not exist
+ * @param existing the recorded ownership of the file
+ * @param matchesInstalled whether the file still holds what was installed last time
+ * @param takeover whether authored values under owned keys may be replaced
+ * @returns the next snapshot with its ownership, or undefined when the recorded format differs
+ */
 export function planConfiguration(
     path: string,
     format: 'json' | 'yaml' | 'toml',
@@ -190,16 +201,19 @@ export function planConfiguration(
         installed: z.json().parse(change.value),
     }));
     configurationFieldsSchema.parse(requested);
-    const fields = [...(existing?.configuration?.fields ?? [])];
+    const recorded = existing?.configuration?.fields ?? [];
     let parents = [...(existing?.configuration?.parents ?? [])];
     if (existing !== undefined && existing.configuration === undefined && current !== undefined && !matchesInstalled)
         return undefined;
-    for (const previous of [...fields]) {
-        if (requested.some((field) => isDeepStrictEqual(field.path, previous.path))) continue;
+    // A key no longer requested goes back to its original value, as long as the developer left it as installed.
+    const retired = recorded.filter(
+        (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
+    );
+    for (const previous of retired) {
         if (!isDeepStrictEqual(document.value(previous.path), previous.installed)) return undefined;
         document.set(previous.path, previous.original);
-        fields.splice(fields.indexOf(previous), 1);
     }
+    const fields = recorded.filter((previous) => !retired.includes(previous));
     for (const field of requested) {
         const value = document.value(field.path);
         const previous = fields.find((entry) => isDeepStrictEqual(entry.path, field.path));

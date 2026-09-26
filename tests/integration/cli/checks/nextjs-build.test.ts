@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';

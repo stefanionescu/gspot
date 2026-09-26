@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;

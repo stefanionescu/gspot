@@ -1,12 +1,12 @@
 // The hook gspot installs runs the staged checks on commit, in the repository and in a fresh clone.
-import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { git } from '#tests/support/cli/git.ts';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 describe('the gspot hook', () => {
     test(

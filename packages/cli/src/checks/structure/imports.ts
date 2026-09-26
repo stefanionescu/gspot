@@ -1,8 +1,8 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
+import { isInScope } from '#cli/repository/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { isInScope } from '#cli/repository/paths.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;

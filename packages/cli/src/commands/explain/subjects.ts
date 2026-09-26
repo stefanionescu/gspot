@@ -1,19 +1,19 @@
 // Explain a check, tool rule, configuration, setting, or file path.
-import { explainPath } from '#cli/commands/explain/file.ts';
-import type { ListingRow } from '#cli/configurations/listing.ts';
-import { allChecks, toRow } from '#cli/configurations/listing.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { CheckSpec, SettingSpec } from '#cli/configurations/schema.ts';
+import { probeTool } from '#cli/tools/probe.ts';
+import { nearMatches } from '#cli/policy/near.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { nearMatches } from '#cli/policy/near.ts';
+import { explainPath } from '#cli/commands/explain/file.ts';
 import type { ResolvedSetting } from '#cli/policy/settings.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
-import { probeTool } from '#cli/tools/probe.ts';
+import type { ListingRow } from '#cli/configurations/listing.ts';
+import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
+import { allChecks, toRow } from '#cli/configurations/listing.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { CheckSpec, SettingSpec } from '#cli/configurations/schema.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;

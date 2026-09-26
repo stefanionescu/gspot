@@ -1,7 +1,7 @@
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import { Ajv2020 } from 'ajv/dist/2020.js';
 import { expect, test } from 'bun:test';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import { policySchema } from '#cli/policy/schema.ts';
+import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
 test.each([
     { value: false, valid: true },

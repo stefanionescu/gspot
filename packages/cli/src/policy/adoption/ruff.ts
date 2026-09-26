@@ -1,10 +1,10 @@
-import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
-import { carriedTool, reasonFor, type CarriedConfiguration, type CarryPush } from '#cli/policy/adoption/results.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-import { asRaw, asStrings, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { posix } from 'node:path';
 import { z } from 'zod';
+import { posix } from 'node:path';
+import type { CarrySource } from '#cli/policy/adoption/source.ts';
+import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import { asRaw, asStrings, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
+import { carriedTool, reasonFor, type CarriedConfiguration, type CarryPush } from '#cli/policy/adoption/results.ts';
 
 const RUFF_LINT = z.strictObject({
     ignore: z.array(z.string()).optional(),

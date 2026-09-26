@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the nginx configuration: a proxy target the request chooses.
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

@@ -1,12 +1,12 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { rmSync } from 'node:fs';
-import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
-import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import type { Finding } from '#cli/checks/result.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { join, relative as relativePath } from 'node:path';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
-import { join, relative as relativePath } from 'node:path';
+import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 
 /** The observed build status and its compiler output. */
 type SwiftBuildOutput = { code: number; output: string };

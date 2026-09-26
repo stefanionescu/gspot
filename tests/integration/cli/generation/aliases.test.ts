@@ -1,10 +1,10 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { templateInputs } from '#cli/generation/templates.ts';
-import { expect, test } from 'bun:test';
-import { mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { templateInputs } from '#cli/generation/templates.ts';
+import { mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
 test.each(['package.json', 'tsconfig.json'])(
     'generation reports malformed %s instead of dropping aliases',

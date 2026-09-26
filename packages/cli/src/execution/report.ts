@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import type { Defined } from '#cli/policy/schema.ts';
-
-import { findingSchema, checkResultSchema } from '#cli/checks/result.ts';
 import type { Finding, CheckResult } from '#cli/checks/result.ts';
+import { findingSchema, checkResultSchema } from '#cli/checks/result.ts';
 
 const ignoreUse = z.strictObject({
     check: z.string(),

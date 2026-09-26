@@ -1,5 +1,5 @@
-import { parse } from 'postcss';
 import ts from 'typescript';
+import { parse } from 'postcss';
 import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
 import type { Finding } from '#cli/checks/result.ts';

@@ -1,7 +1,7 @@
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
-import { expect, test } from 'bun:test';
 import type { ESLint } from 'eslint';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
 
 const FILES = {
     'package.json': '{"private":true,"type":"module"}\n',

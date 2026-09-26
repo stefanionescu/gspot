@@ -1,7 +1,7 @@
+import { describe, expect, test } from 'bun:test';
 import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
 import { routeFor, routeGroups } from '#cli/checks/prose/grammars.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { describe, expect, test } from 'bun:test';
 
 function tracked(path: string, tags: string[] = ['text']): TrackedFile {
     return { path, prefix: Buffer.alloc(0), nature: 'source', tags, executable: false, size: 1 };

@@ -1,11 +1,11 @@
 // Without git the secrets configuration scans the files themselves, and the git scans wait for a repository (K-271).
-import type { RunOptions } from '#cli/execution/execute.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import type { RunOptions } from '#cli/execution/execute.ts';
 
 // A token shaped like a GitHub personal access token, with the entropy the rule asks for; it is not a real token.
 const SECRET = 'const token = "ghp_Xk92lM3nPq7RsT1vWy4ZaB6cDe8FgH0iJkLmN";\n';
@@ -34,7 +34,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
     const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true };
-    const planned = (await executeRun(await openSession(sandbox.path), options)).planned;
+    const {planned} = await executeRun(await openSession(sandbox.path), options);
     expect(planned.find((check) => check.check === 'secrets/gitleaks-staged')?.skip).toMatchObject({
         source: 'rules',
         note: expect.stringContaining('no git repository'),

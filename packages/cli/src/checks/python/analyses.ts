@@ -1,9 +1,10 @@
+import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { trivialFile } from '#cli/checks/structure/statements.ts';
+import type { StructureReader } from '#cli/checks/python/types.ts';
 import { importCycles, singletons } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
-import type { StructureReader } from '#cli/checks/python/types.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import { trivialFile } from '#cli/checks/structure/statements.ts';
+import { longFunctions, longModules, placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';
 
 import {
     exportsAtBottom,
@@ -12,7 +13,6 @@ import {
     privateBeforePublic,
     privatePrefixes,
 } from '#cli/checks/python/exports.ts';
-import { longFunctions, longModules, placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';
 
 const DEFAULT_FILE_LINES = 300;
 const DEFAULT_FUNCTION_LINES = 60;

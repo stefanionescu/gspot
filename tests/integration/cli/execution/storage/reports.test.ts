@@ -1,11 +1,11 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { runText } from '#cli/output/reporter.ts';
-import { storageSession } from '#tests/support/cli/storage.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { rejects } from 'node:assert/strict';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
+import { expect, spyOn, test } from 'bun:test';
+import { runText } from '#cli/output/reporter.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { storageSession } from '#tests/support/cli/storage.ts';
 
 for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequality.json']) {
     test.each([0, 1])(`${target} write failure preserves check status %s and findings`, async (status) => {

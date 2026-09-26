@@ -1,14 +1,14 @@
-import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
+import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
+import * as spawn from '#cli/platform/spawn.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import * as spawn from '#cli/platform/spawn.ts';
-import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
 import { afterEach, expect, spyOn, test } from 'bun:test';
-import { rejects } from 'node:assert/strict';
+import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
 
 afterEach(() => {
     removeBuildFolders();

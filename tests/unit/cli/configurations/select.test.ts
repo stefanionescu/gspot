@@ -1,7 +1,7 @@
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { testManifest } from '#tests/support/cli/manifests.ts';
 import { describe, expect, test } from 'bun:test';
+import { testManifest } from '#tests/support/cli/manifests.ts';
+import { selectConfigurations } from '#cli/configurations/select.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 describe('selectConfigurations', () => {
     test('pulls required configurations in, dependencies first, in order of first mention', () => {

@@ -1,16 +1,16 @@
 // Every template of every configuration renders at both levels into a file its reader parses (S-1).
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { expect, test } from 'bun:test';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import { symlinkSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import ts from 'typescript';
-import { parse as parseYaml } from 'yaml';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
 const PLANTED = {

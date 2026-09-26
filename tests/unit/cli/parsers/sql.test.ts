@@ -1,8 +1,8 @@
-import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
-import { parseSql } from '#cli/parsers/sql/parser.ts';
-import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { describe, expect, test } from 'bun:test';
+import { parseSql } from '#cli/parsers/sql/parser.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
+import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
@@ -75,7 +75,7 @@ test('concurrent SQL parsing returns independent results in a fresh process', ()
 
 test('psql commands and variables preserve diagnostic positions and PostgreSQL casts', async () => {
     const text = [
-        "\\set account '前言'",
+        String.raw`\set account '前言'`,
         'SELECT :account::int, :\'label\', :"column" FROM :table;',
         'SELECT 1+:value, account$tag$ FROM user_accounts;',
         'SELEC 2;',

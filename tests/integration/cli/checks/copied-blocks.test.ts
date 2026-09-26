@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/execution/plan.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
 import * as probes from '#cli/tools/probe.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { existsSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 

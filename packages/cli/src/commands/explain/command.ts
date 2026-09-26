@@ -1,11 +1,11 @@
-import { explain } from '#cli/commands/explain/subjects.ts';
-import { directoryOf } from '#cli/commands/flags.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hasPolicy } from '#cli/policy/read.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
 import type { Command } from 'commander';
+import { hasPolicy } from '#cli/policy/read.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { explain } from '#cli/commands/explain/subjects.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 
 async function explainResult(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);

@@ -1,6 +1,6 @@
+import type { Node, Tree } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/checks/input.ts';
 import type { StructureProblem } from '#cli/checks/structure/engine.ts';
-import type { Node, Tree } from 'web-tree-sitter';
 
 /** One parsed Python module. */
 export type PythonModule = {

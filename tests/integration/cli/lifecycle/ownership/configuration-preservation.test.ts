@@ -1,12 +1,11 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { parse as parseYaml } from 'yaml';
+import { parse as parseToml } from 'smol-toml';
+import { createFileTree, testdir } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import { parse as parseYaml } from 'yaml';
-
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {

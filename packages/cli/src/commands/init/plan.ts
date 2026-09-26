@@ -1,19 +1,19 @@
-import type { Proposal } from '#cli/commands/init/propose.ts';
-import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
-import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
-import { xcodeProposal } from '#cli/commands/init/xcode.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
-import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
-import type { RunnerTaskNames } from '#cli/policy/runner.ts';
-import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { ScopeEntry } from '#cli/repository/scopes.ts';
-import type { DetectedSetting } from '#cli/commands/init/settings.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
-import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
+import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
+import { xcodeProposal } from '#cli/commands/init/xcode.ts';
+import type { RunnerTaskNames } from '#cli/policy/runner.ts';
+import type { Proposal } from '#cli/commands/init/propose.ts';
+import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { runnerTaskPlan } from '#cli/lifecycle/runner-tasks.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import type { DetectedSetting } from '#cli/commands/init/settings.ts';
+import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
+import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
+import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
 
 function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
     const rows = [...carried.tools].flatMap(([tool, entries]) => {
@@ -94,6 +94,7 @@ function runnerRows(
  * @param selection what init selected
  * @param answers the answers to the init questions
  * @param carried the lists carried from old configuration files
+ * @param detected
  * @returns the proposal
  */
 export function buildProposal(

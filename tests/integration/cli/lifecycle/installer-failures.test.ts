@@ -1,13 +1,13 @@
-import { initCommand } from '#cli/commands/init/command.ts';
-import { installCommand } from '#cli/commands/install.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { delimiter, join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { MISE_MIN_VERSION } from '#cli/tools/mise.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { openSession } from '#cli/execution/session.ts';
+import { installCommand } from '#cli/commands/install.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { hookLocation, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;

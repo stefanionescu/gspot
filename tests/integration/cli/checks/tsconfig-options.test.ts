@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import type { EngineInput } from '#cli/checks/input.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 
 const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';

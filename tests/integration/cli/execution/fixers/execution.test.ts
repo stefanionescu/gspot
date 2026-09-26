@@ -1,13 +1,13 @@
-import { executeRun } from '#cli/execution/execute.ts';
+import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { existsSync, readFileSync } from 'node:fs';
 import { runFixer } from '#cli/execution/fixers.ts';
+import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { waitForExit } from '#tests/support/cli/process.ts';
 import { prepareCommand, runToolCheck } from '#cli/execution/tool-runner.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-import { waitForExit } from '#tests/support/cli/process.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('splits 20,000 correction paths without losing or reordering arguments', async () => {
     await using sandbox = await testdir();

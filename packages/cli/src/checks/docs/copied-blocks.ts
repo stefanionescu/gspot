@@ -4,8 +4,8 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 

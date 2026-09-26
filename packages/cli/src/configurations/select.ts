@@ -1,9 +1,9 @@
-import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
+// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
+import type { Manifest } from '#cli/configurations/manifests.ts';
 
 type SelectionWalk = {
     manifests: Map<string, Manifest>;

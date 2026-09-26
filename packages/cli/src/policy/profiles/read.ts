@@ -1,12 +1,12 @@
 // Read a profile from a path, an https URL or github:owner/repo, validate it, and name every problem in one pass.
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import * as messages from '#cli/policy/messages.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import type { ProfileTables } from '#cli/policy/profiles/schema.ts';
-import { isRepositoryPath, profileSchema } from '#cli/policy/profiles/schema.ts';
-import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import { readFileSync, statSync } from 'node:fs';
+import { nearMatches } from '#cli/policy/near.ts';
+import * as messages from '#cli/policy/messages.ts';
+import type { ProfileTables } from '#cli/policy/profiles/schema.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { isRepositoryPath, profileSchema } from '#cli/policy/profiles/schema.ts';
 
 const GITHUB_PREFIX = 'github:';
 const RAW_HOST = 'https://raw.githubusercontent.com';

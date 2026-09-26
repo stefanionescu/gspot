@@ -1,10 +1,10 @@
+import * as messages from '#cli/policy/messages.ts';
+import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { SettingSpec } from '#cli/configurations/schema.ts';
 import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/configurations/settings.ts';
-import * as messages from '#cli/policy/messages.ts';
-import type { NamingCategoryTable, NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
 import { integrationSettingSchemas, rootSettingSchemas } from '#cli/policy/schema.ts';
-import { scopeAncestors } from '#cli/repository/scopes.ts';
+import type { NamingCategoryTable, NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 

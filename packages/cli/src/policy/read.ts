@@ -1,17 +1,17 @@
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { knownKeysAt } from '#cli/policy/json-schema.ts';
-import * as messages from '#cli/policy/messages.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import { normalize } from '#cli/policy/normalize.ts';
-import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
-import { pathProblems, reasonProblems } from '#cli/policy/problems.ts';
-import type { RawPolicy } from '#cli/policy/schema.ts';
-import { policySchema } from '#cli/policy/schema.ts';
-import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
-import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
-import { join } from 'node:path';
-import { parse as parseToml, TomlError } from 'smol-toml';
 import type { z } from 'zod';
+import { join } from 'node:path';
+import * as messages from '#cli/policy/messages.ts';
+import { normalize } from '#cli/policy/normalize.ts';
+import { policySchema } from '#cli/policy/schema.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { RawPolicy } from '#cli/policy/schema.ts';
+import { knownKeysAt } from '#cli/policy/json-schema.ts';
+import { parse as parseToml, TomlError } from 'smol-toml';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { pathProblems, reasonProblems } from '#cli/policy/problems.ts';
+import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
+import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
+import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');

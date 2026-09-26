@@ -1,3 +1,9 @@
+import { posix } from 'node:path';
+import type { CarrySource } from '#cli/policy/adoption/source.ts';
+import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
+import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
+
 import {
     appendSetting,
     carriedTool,
@@ -5,16 +11,17 @@ import {
     type CarriedConfiguration,
     type CarryPush,
 } from '#cli/policy/adoption/results.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';
-import { posix } from 'node:path';
 
 function pushCodes(push: CarryPush, codes: string): void {
     for (const code of codes.split(',')) if (code.trim() !== '') push(code.trim());
 }
 
+/**
+ * The value of a `key = value` line.
+ * @param line one line of an authored file
+ * @param key the key the line must start with
+ * @returns the value, or undefined when the line is not that assignment
+ */
 export function valueOfKeyLine(line: string, key: string): string | undefined {
     const trimmed = line.trim();
     if (!trimmed.startsWith(key)) return undefined;
@@ -22,6 +29,12 @@ export function valueOfKeyLine(line: string, key: string): string | undefined {
     return rest.startsWith('=') ? rest.slice(1).trim() : undefined;
 }
 
+/**
+ * Carries every rule named in a list key of a parsed file.
+ * @param parsed the parsed file
+ * @param key the key that holds the disabled rules
+ * @param push receives each rule
+ */
 export function disabledFromList(parsed: TomlTable, key: string, push: CarryPush): void {
     const rules = asStrings(parsed[key]);
     for (const rule of rules) push(rule);
@@ -46,6 +59,14 @@ const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush, pa
     },
 };
 
+/**
+ * Carries the rules an authored tool configuration disables as ignores of the tool's check.
+ * @param source the authored file, read and parsed
+ * @param tool the tool name
+ * @param path the authored file's path
+ * @param lists the carried configuration
+ * @param check the check the ignores belong to
+ */
 export function carryDisabled(
     source: CarrySource,
     tool: string,
@@ -69,6 +90,12 @@ export function carryDisabled(
     reader(source, push, path);
 }
 
+/**
+ * Carries a root Pyright exclude list as a basedpyright setting.
+ * @param source the authored file, read and parsed
+ * @param path the authored file's path
+ * @param lists the carried configuration
+ */
 export function carryPyright(source: CarrySource, path: string, lists: CarriedConfiguration): void {
     if (path.includes('/')) throw new Error(`Scoped Pyright configuration ${path} requires explicit conversion.`);
     const parsed = source.parsed;

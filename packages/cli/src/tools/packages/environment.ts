@@ -1,8 +1,8 @@
-import { environmentVariables } from '#cli/platform/environment.ts';
 import Config from '@npmcli/config';
-import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
 import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
 
 const CONNECTION_KEYS = new Set([
     'registry',

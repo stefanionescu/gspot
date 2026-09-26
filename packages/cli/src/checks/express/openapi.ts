@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
-import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 
 const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
 

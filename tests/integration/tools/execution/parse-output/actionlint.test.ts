@@ -1,11 +1,11 @@
-import { resolveCheck } from '#cli/execution/engines.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
+import { resolveCheck } from '#cli/execution/engines.ts';
 
-test.each(['$/', '"$/', '"\\u0024/', '|- # $comment\n            $/'])(
+test.each(['$/', '"$/', String.raw`"\u0024/`, '|- # $comment\n            $/'])(
     'Actionlint accepts self-repository scalar %s while retaining expression errors and source bytes',
     async (prefix) => {
         await using sandbox = await testdir();
@@ -43,7 +43,7 @@ test.each(['$/', '"$/', '"\\u0024/', '|- # $comment\n            $/'])(
     },
 );
 
-test.each(['$/', '"$/', "'$/", '"\\x24/', '"\\u0024/', '"\\U00000024/', '|-\n          $/', '>-\n          $/'])(
+test.each(['$/', '"$/', "'$/", String.raw`"\x24/`, String.raw`"\u0024/`, String.raw`"\U00000024/`, '|-\n          $/', '>-\n          $/'])(
     'Actionlint validates reusable inputs for scalar %s and preserves authored files',
     async (prefix) => {
         await using sandbox = await testdir();

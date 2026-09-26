@@ -1,5 +1,5 @@
-import { parseJson } from '#cli/execution/output/json.ts';
 import { describe, expect, test } from 'bun:test';
+import { parseJson } from '#cli/execution/output/json.ts';
 
 describe('parseJson', () => {
     test('a flat list maps its fields to a finding', () => {

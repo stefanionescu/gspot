@@ -1,8 +1,8 @@
 // File arguments, stages, and scope paths select the checks a run executes.
-import type { RunReport } from '#cli/execution/report.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 
 test('file and folder arguments intersect check lists and respect -C', async () => {
     const command = [

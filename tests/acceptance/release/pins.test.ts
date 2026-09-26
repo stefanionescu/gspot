@@ -1,7 +1,7 @@
 // Every pin a manifest names exists in its registry, sits at or above its floor, and fits the ESLint the plugins support.
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { expect, test } from 'bun:test';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const REGISTRY_TIMEOUT_MS = 30_000;
 
@@ -36,14 +36,18 @@ async function registryJson(url: string): Promise<Record<string, unknown> | unde
 
 function registryUrl(pin: Pin): string {
     switch (pin.installer) {
-        case 'npm':
+        case 'npm': {
             return `https://registry.npmjs.org/${pin.name}/${pin.version}`;
-        case 'pypi':
+        }
+        case 'pypi': {
             return `https://pypi.org/pypi/${pin.name}/${pin.version}/json`;
-        case 'cargo':
+        }
+        case 'cargo': {
             return `https://crates.io/api/v1/crates/${pin.name}/${pin.version}`;
-        default:
+        }
+        default: {
             return `https://api.github.com/repos/${pin.name}/releases/tags/${pin.version}`;
+        }
     }
 }
 

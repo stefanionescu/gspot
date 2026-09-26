@@ -1,17 +1,17 @@
-import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { changeReport } from '#cli/commands/doctor/changes.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import type { CoverageReport } from '#cli/execution/coverage.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
+import type { Colors } from 'picocolors/types';
+import { probeTool } from '#cli/tools/probe.ts';
+import { collectPins } from '#cli/tools/pins.ts';
+import { colors } from '#cli/output/messages.ts';
+import type { ToolProbe } from '#cli/tools/probe.ts';
+import { coverageLines } from '#cli/output/coverage.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
-import { coverageLines } from '#cli/output/coverage.ts';
-import { colors } from '#cli/output/messages.ts';
+import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { coverageReport } from '#cli/execution/coverage.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { collectPins } from '#cli/tools/pins.ts';
-import type { ToolProbe } from '#cli/tools/probe.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import type { Colors } from 'picocolors/types';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { changeReport } from '#cli/commands/doctor/changes.ts';
+import type { CoverageReport } from '#cli/execution/coverage.ts';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;

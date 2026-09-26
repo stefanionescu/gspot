@@ -1,6 +1,6 @@
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
 
 test.each([
     ['recommended', 'client.js'],

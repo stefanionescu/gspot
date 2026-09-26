@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
-import { createServer } from 'node:net';
 import { readFileSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { randomUUID } from 'node:crypto';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 // This compatibility fixture uses the installed CLI release and its database image selection.
 const CLI_VERSION = '2.72.7';
@@ -34,7 +34,7 @@ test('Supabase CLI 2.72.7 generates local database types and production freshnes
     if (typeof db !== 'object' || db === null || Array.isArray(db) || db instanceof Date)
         throw new Error('Supabase init did not declare database settings.');
     db['port'] = address.port;
-    await new Promise<void>((resolve, reject) => listener.close((error) => (error ? reject(error) : resolve())));
+    await new Promise<void>((resolve, reject) => listener.close((error) => { error ? reject(error) : resolve(); }));
     await Bun.write(configPath, stringify(config));
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["supabase"]\n[tools.supabase]\ntypes_file = "database.ts"\n',

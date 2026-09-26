@@ -1,13 +1,13 @@
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('legacy ESLint adoption preserves inherited overrides and ignores for future files', async () => {
     await using directory = await testdir();

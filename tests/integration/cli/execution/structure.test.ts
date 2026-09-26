@@ -1,15 +1,15 @@
-import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import * as processes from '#cli/platform/spawn.ts';
-import * as probes from '#cli/tools/probe.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { renameSync } from 'node:fs';
 import { join } from 'node:path';
+import { renameSync } from 'node:fs';
+import * as probes from '#cli/tools/probe.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();

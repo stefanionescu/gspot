@@ -1,12 +1,13 @@
-import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { RunnerTaskNames } from '#cli/policy/runner.ts';
-import { PACKAGE_LIFECYCLE, RUNNER_TASKS, type RunnerTask } from '#cli/policy/runner.ts';
+import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import { z } from 'zod';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationOutput } from '#cli/lifecycle/apply.ts';
+import type { RunnerTask, RunnerTaskNames } from '#cli/policy/runner.ts';
+import { PACKAGE_LIFECYCLE, RUNNER_TASKS } from '#cli/policy/runner.ts';
+
 function readRunnerTasks(
     root: string,
     runner: string,

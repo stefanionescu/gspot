@@ -1,12 +1,15 @@
 // Saves a reusable policy profile.
+import type { Command } from 'commander';
+import { readPolicy } from '#cli/policy/read.ts';
+import { relative, resolve, sep } from 'node:path';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { mutationTarget } from '#cli/platform/filesystem.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { mutationTarget } from '#cli/platform/filesystem.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { readPolicy } from '#cli/policy/read.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { relative, resolve, sep } from 'node:path';
 
 /**
  * Writes a profile from the policy of this repository.
@@ -39,10 +42,6 @@ export async function exportCommand(cwd: string, file: string): Promise<CommandR
     const lines = [`wrote ${file}`, ...saved.leftOut.map((entry) => `left out  ${entry}`)];
     return { text: `${lines.join('\n')}\n`, json: { file, leftOut: saved.leftOut }, exitCode: 0 };
 }
-
-import { directoryOf } from '#cli/commands/flags.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import type { Command } from 'commander';
 
 /**
  * Registers export.

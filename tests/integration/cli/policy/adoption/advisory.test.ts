@@ -1,12 +1,12 @@
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { parse, stringify, TomlDate } from 'smol-toml';
+import { openSession } from '#cli/execution/session.ts';
+import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { parse, stringify, TomlDate } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
     'advisory adoption preserves expiration %s through generated native configuration',

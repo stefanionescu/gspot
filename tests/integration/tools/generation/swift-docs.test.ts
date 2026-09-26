@@ -1,13 +1,11 @@
 import { join } from 'node:path';
-
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { chmodSync, statSync } from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
 
 const SOURCE =
     '/** Parses a fixture value. */\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n\n/// The literal /** example */ is documentation syntax.\npublic let example = "/** not documentation */"\n\n/* Ordinary comment with a nested /** comment */ inside. */\n';

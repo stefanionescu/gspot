@@ -1,5 +1,5 @@
-import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule } from '#plugin/definition.ts';
+import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 

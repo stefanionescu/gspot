@@ -1,6 +1,6 @@
-import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
     await using sandbox = await testdir();

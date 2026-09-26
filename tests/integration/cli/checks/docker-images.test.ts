@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import * as tools from '#cli/execution/tool-runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 
 const sources = [

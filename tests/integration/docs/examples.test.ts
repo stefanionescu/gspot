@@ -1,10 +1,10 @@
-import { parsePolicyText } from '#cli/policy/read.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const guides = join(root, 'docs/src/content/docs/guides');

@@ -1,13 +1,13 @@
-import type { EngineInput } from '#cli/checks/input.ts';
-import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import type { EngineInput } from '#cli/checks/input.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
+import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();

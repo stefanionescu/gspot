@@ -59,7 +59,7 @@ export async function runProcess(
             }
         };
         const deadline = setTimeout(
-            () => terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`),
+            () => { terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`); },
             options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2,
         );
         for (const [name, stream] of [

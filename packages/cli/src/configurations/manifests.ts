@@ -1,10 +1,10 @@
-import type { CheckSpec, RawCheck, RawManifest, RawTool, SettingSpec } from '#cli/configurations/schema.ts';
-import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
-import { configurationName } from '#cli/configurations/targets.ts';
-import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { compact } from '#cli/policy/normalize.ts';
-import { parse as parseToml } from 'smol-toml';
 import type { z } from 'zod';
+import { parse as parseToml } from 'smol-toml';
+import { compact } from '#cli/policy/normalize.ts';
+import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { configurationName } from '#cli/configurations/targets.ts';
+import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
+import type { CheckSpec, RawCheck, RawManifest, RawTool, SettingSpec } from '#cli/configurations/schema.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 

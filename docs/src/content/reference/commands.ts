@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
-import { buildProgram } from '@gspot/cli/src/commands/program.ts';
-import { referencePage, section, table, cell } from './page';
 import type { ReferencePage } from './page';
+import { referencePage, section, table, cell } from './page';
+import { buildProgram } from '@gspot/cli/src/commands/program.ts';
 
 function commandPage(command: Command, name: string): ReferencePage {
     const rootCommand = name.split(' ', 1)[0]!;
@@ -61,6 +61,10 @@ function commandPage(command: Command, name: string): ReferencePage {
     return referencePage(command.summary(), command.description(), sections.join(''), `packages/cli/src/${owner}`);
 }
 
+/**
+ * One reference page per visible command, keyed by its Markdown path under commands/.
+ * @returns the pages by identity
+ */
 export function commandPages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     const commands = (parent: Command, ancestors: string[]): void => {

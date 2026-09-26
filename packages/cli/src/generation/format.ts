@@ -1,9 +1,9 @@
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
-import { compact } from '#cli/policy/normalize.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
-import { expandedPaths } from '#cli/repository/paths.ts';
 import { dirname, relative } from 'node:path';
+import { compact } from '#cli/policy/normalize.ts';
+import { expandedPaths } from '#cli/repository/paths.ts';
+import { shippedFormat } from '#cli/configurations/listing.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
+import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
 
 type NativeOverride<Options> = {
     files: string | string[];
@@ -136,6 +136,7 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
  * @param policy
  * @param targetPath
  * @param extra
+ * @param plugins
  */
 export function prettierConfig(
     policy: Policy,

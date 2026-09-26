@@ -1,6 +1,6 @@
+import type { Node } from 'web-tree-sitter';
 import type { PythonModule } from '#cli/checks/python/types.ts';
 import type { StructureProblem } from '#cli/checks/structure/engine.ts';
-import type { Node } from 'web-tree-sitter';
 
 const SINGLETONS_ALLOWED = new Set(['app', 'router', 'logger', 'log', 'settings']);
 const CLASS_CALL = /^[A-Z][A-Za-z\d]*\(/u;

@@ -1,9 +1,10 @@
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { dirname, join, relative, resolve } from 'node:path';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
+
 const TRAILING_STAR = /\*$/u;
 
 function importTarget(target: unknown): string | undefined {
@@ -49,6 +50,12 @@ function tsconfigAliases(root: string, prefix: string): Record<string, string> {
     return aliases;
 }
 
+/**
+ * The import aliases a scope declares, from its package.json imports and its tsconfig paths.
+ * @param root the repository root
+ * @param scope the scope path, '' for the root
+ * @returns alias to target path
+ */
 export function aliasesFor(root: string, scope: string): Record<string, string> {
     const prefix = scope === '' ? '' : `${scope}/`;
     return { ...packageAliases(root, prefix), ...tsconfigAliases(root, prefix) };
@@ -56,6 +63,14 @@ export function aliasesFor(root: string, scope: string): Record<string, string> 
 
 // Inherit authored resolution and file selection. A default input glob belongs to the repository,
 // not the generated configuration directory.
+/**
+ * The generated jsconfig: type-checks JavaScript with the scope's own resolution when it has one.
+ * @param root the repository root
+ * @param policy the repository policy
+ * @param target the path of the generated file
+ * @param scope the scope path, '' for the root
+ * @returns the jsconfig contents
+ */
 export function javascriptConfig(root: string, policy: Policy, target: string, scope: string): Record<string, unknown> {
     const config = getTsconfig(root, join(root, scope, 'jsconfig.json'));
     const prefix = toPosix(relative(dirname(target), scope || '.')) + '/';

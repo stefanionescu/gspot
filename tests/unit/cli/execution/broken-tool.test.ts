@@ -1,6 +1,6 @@
+import { describe, expect, test } from 'bun:test';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { hasToolError, isToolBroken, toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import { describe, expect, test } from 'bun:test';
 
 const base = {
     name: 'sandbox/diagnostic',

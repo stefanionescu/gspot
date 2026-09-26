@@ -1,9 +1,9 @@
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import { z } from 'zod';
+import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { parse as parseToml } from 'smol-toml';
-import { parse as parseYaml } from 'yaml';
-import { z } from 'zod';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });

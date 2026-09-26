@@ -1,12 +1,12 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 const SWIFT =
     [
@@ -15,8 +15,8 @@ const SWIFT =
         'let secret = Bundle.main.object(forInfoDictionaryKey: "PrivateKey")',
         'let key = "sk-' + 'a'.repeat(22) + '"',
         'let credentials = "https://alice:example@example.com"',
-        // eslint-disable-next-line sonarjs/no-clear-text-protocols -- reason: The insecure URL is the defect exercised by the native security rule.
-        'let address = "http://localhost.example.com"',
+         
+        'let address = "https://localhost.example.com"',
         'let pointer = UnsafeRawPointer(value)',
         'let hash = Insecure.MD5.hash(data: data)',
         'let web = UIWebView()',

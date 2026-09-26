@@ -1,19 +1,19 @@
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
-import { PromptError } from '#cli/commands/prompts.ts';
 import { registerList } from '#cli/commands/list.ts';
-import { registerApply } from '#cli/commands/apply/command.ts';
-import { registerCheck } from '#cli/commands/check/command.ts';
-import packageManifest from '#package' with { type: 'json' };
+import { PromptError } from '#cli/commands/prompts.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
-import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerInstall } from '#cli/commands/install.ts';
+import packageManifest from '#package' with { type: 'json' };
 import type { OutputOptions } from '#cli/output/messages.ts';
 import { registerInit } from '#cli/commands/init/command.ts';
-import { installCompletion } from '#cli/commands/completion.ts';
+import { registerApply } from '#cli/commands/apply/command.ts';
+import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerUninstall } from '#cli/commands/uninstall.ts';
+import { installCompletion } from '#cli/commands/completion.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
+import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
 import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 

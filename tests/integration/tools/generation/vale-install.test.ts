@@ -1,12 +1,12 @@
-import { parseAlerts } from '#cli/checks/prose/vale.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { hasPackages, installPackages } from '#cli/tools/vale.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { parseAlerts } from '#cli/checks/prose/vale.ts';
+import { hasPackages, installPackages } from '#cli/tools/vale.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 // A ZIP containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(

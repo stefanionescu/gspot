@@ -1,10 +1,10 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 
 const OPTIONS = { stage: 'all' as const, skips: [], only: ['swift/trivial-function'], fix: false, isDryRun: false };
 const BROKEN =

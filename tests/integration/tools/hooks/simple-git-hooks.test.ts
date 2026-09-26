@@ -1,13 +1,13 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
+import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 

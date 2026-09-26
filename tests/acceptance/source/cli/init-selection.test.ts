@@ -1,10 +1,10 @@
 // A recommended configuration joins the selection only when the repository holds what it detects (K-182).
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const INIT = ['init', '--yes', '--dry-run', '--json', '--without', 'naming', 'spelling'];
 const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];

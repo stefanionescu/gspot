@@ -1,11 +1,11 @@
 // The framework rules stay enforced, and type checking delegates to the Next.js check only when that check runs.
-import type { RunReport } from '#cli/execution/report.ts';
+import { join } from 'node:path';
+import { chmodSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installedNextProject, NEXT_LAYOUT } from '#tests/support/cli/nextjs.ts';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync } from 'node:fs';
-import { join } from 'node:path';
 
 const OWNER_WRITES = 0o644;
 

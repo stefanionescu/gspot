@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { globSync, statSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
-import { policyJsonSchema } from '../../packages/cli/src/policy/json-schema';
+import { policyJsonSchema } from '#cli/policy/json-schema';
 
 type PageLinks = { path: string; ids: Set<string>; links: string[] };
 

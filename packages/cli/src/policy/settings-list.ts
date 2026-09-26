@@ -1,6 +1,6 @@
 import type { Policy } from '#cli/policy/normalize.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { listSettings } from '#cli/policy/settings.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
 
 function rowsFor(policy: Policy, scopes: ScopeSelection[]): SettingRow[] {
     return scopes.flatMap((selection) => {

@@ -1,9 +1,9 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['typos.toml', 'nested/typos.toml'])(
     'invalid spelling locale in %s refuses adoption before retirement',

@@ -1,5 +1,5 @@
-import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import { describe, expect, test } from 'bun:test';
+import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 
 const SOURCE = `-- Accounts.
 CREATE SCHEMA app;

@@ -2,12 +2,12 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import { readProfile } from '#cli/policy/profiles/read.ts';
-import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { readProfile } from '#cli/policy/profiles/read.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
 

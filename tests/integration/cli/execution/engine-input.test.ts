@@ -1,15 +1,15 @@
-import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
-import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import * as fs from 'node:fs';
+import { join } from 'node:path';
+import { existsSync, rmSync } from 'node:fs';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { claimedInputs, planRun } from '#cli/execution/plan.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { expect, spyOn, test } from 'bun:test';
-import * as fs from 'node:fs';
-import { existsSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { claimedInputs, planRun } from '#cli/execution/plan.ts';
+import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
+import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
 
 test.each([
     {
@@ -250,7 +250,7 @@ format = "none"
         'query.sql': 'select from;\n',
         'notes.txt': 'Authored notes.\n',
         'correct.cjs':
-            'const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\\n");',
+            String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
     });
     const session = await openSession(sandbox.path);
     const options = {

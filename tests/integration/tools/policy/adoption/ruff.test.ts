@@ -1,13 +1,11 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { expect, test } from 'bun:test';
-import { realpathSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import { stringify } from 'smol-toml';
+import { realpathSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { join, relative } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 
 const tooling: ExistingTooling = {

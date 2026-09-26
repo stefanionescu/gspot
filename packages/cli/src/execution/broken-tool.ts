@@ -1,13 +1,13 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
-import type { Finding } from '#cli/checks/result.ts';
-import type { OutputFormat } from '#cli/configurations/output-format.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import { ToolOutputError, parseOutput } from '#cli/execution/output/parse.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
+import type { Finding } from '#cli/checks/result.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
+import type { PlannedCheck } from '#cli/execution/plan.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { ToolPin } from '#cli/configurations/manifests.ts';
+import type { OutputFormat } from '#cli/configurations/output-format.ts';
+import { ToolOutputError, parseOutput } from '#cli/execution/output/parse.ts';
 
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
 const FILELESS_FORMATS = new Set(['lines', 'none']);

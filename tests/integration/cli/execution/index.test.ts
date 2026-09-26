@@ -1,11 +1,11 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { indexedPaths } from '#cli/repository/tracked.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { indexedPaths } from '#cli/repository/tracked.ts';
 
 function git(root: string, ...args: string[]): void {
     const result = runBlocking(['git', ...args], { cwd: root });

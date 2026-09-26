@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { planRun } from '#cli/execution/plan.ts';
 import { expect, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 
 test.each([
     [process.execPath, 'bun.lock', 'recommended'],

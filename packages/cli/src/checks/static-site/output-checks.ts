@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
 import type { Finding } from '#cli/checks/result.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mutationPath } from '#cli/platform/filesystem.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { SiteBuild } from '#cli/checks/static-site/build.ts';
 import { isAbsolute, join, relative as relativePath } from 'node:path';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';

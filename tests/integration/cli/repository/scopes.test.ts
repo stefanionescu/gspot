@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { proposedScopes, workspaceScopes } from '#cli/repository/scopes.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { proposedScopes, workspaceScopes } from '#cli/repository/scopes.ts';
 import { mkdirSync, rmSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
 
 test.each([

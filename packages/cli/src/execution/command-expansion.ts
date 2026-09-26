@@ -1,12 +1,12 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import type { Session } from '#cli/execution/session.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { isWorkspace } from '#cli/repository/scopes.ts';
+import type { Session } from '#cli/execution/session.ts';
 import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
 import { configurationName, targetInScope } from '#cli/configurations/targets.ts';
-import { isWorkspace } from '#cli/repository/scopes.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
@@ -53,7 +53,7 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const path = join(root, groups['path'] ?? '');
-    return statSync(path, { throwIfNoEntry: false }) !== undefined ? [groups['flag'] ?? '', toPlatform(path)] : [];
+    return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : [groups['flag'] ?? '', toPlatform(path)];
 }
 
 function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {

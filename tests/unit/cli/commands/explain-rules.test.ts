@@ -1,5 +1,5 @@
-import { explain } from '#cli/commands/explain/subjects.ts';
 import { expect, test } from 'bun:test';
+import { explain } from '#cli/commands/explain/subjects.ts';
 
 test('a tool rule is explained with the page its manifest declares', () => {
     expect(explain(undefined, 'shellcheck/SC2086')).toMatchObject({

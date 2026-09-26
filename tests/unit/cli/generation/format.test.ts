@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { prettierConfig } from '#cli/generation/format.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import { prettierConfig } from '#cli/generation/format.ts';
 
 const policy = parsePolicyText(
     'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n',

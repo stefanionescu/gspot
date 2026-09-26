@@ -1,16 +1,16 @@
-import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { installCommand } from '#cli/commands/install.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks/git.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import * as processes from '#cli/platform/spawn.ts';
 import { expect, test } from 'bun:test';
-import { rejects } from 'node:assert/strict';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { installCommand } from '#cli/commands/install.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import { hookLocation, hookStatus, installHooks } from '#cli/lifecycle/hooks/git.ts';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

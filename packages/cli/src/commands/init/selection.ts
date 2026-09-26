@@ -1,14 +1,14 @@
-import type { InitContext, InitInputs, InitSelection } from '#cli/commands/init/types.ts';
-import type { Proposal, UnknownLanguage } from '#cli/configurations/detect.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import * as messages from '#cli/policy/messages.ts';
 import type { ScopeEntry } from '#cli/repository/scopes.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Manifest } from '#cli/configurations/manifests.ts';
+import { detectConfigurations } from '#cli/configurations/detect.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { Proposal, UnknownLanguage } from '#cli/configurations/detect.ts';
+import type { InitContext, InitInputs, InitSelection } from '#cli/commands/init/types.ts';
+import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
 
 const NO_CONFIGURATIONS = 'none';
 

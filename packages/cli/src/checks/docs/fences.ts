@@ -6,8 +6,8 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import type { GrammarName } from '#cli/parsers/tree-sitter.ts';
+import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 
 type FencedBlock = { line: number; language: string; body: string };
 

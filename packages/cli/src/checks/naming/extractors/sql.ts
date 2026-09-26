@@ -1,6 +1,6 @@
 import type { Identifier } from '#cli/checks/naming/extract.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 

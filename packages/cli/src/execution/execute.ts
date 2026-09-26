@@ -1,30 +1,31 @@
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
+import { probeTool } from '#cli/tools/probe.ts';
+import { writeReport } from '#cli/output/report.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import type { Session } from '#cli/execution/session.ts';
+import { readRepository } from '#cli/repository/tree.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
 import type { FixReport } from '#cli/execution/fixers.ts';
-import { writeReport } from '#cli/output/report.ts';
+import type { RunReport } from '#cli/execution/report.ts';
+import { jobsWanted } from '#cli/platform/environment.ts';
 import type { IgnoreUse } from '#cli/execution/ignores.ts';
-import { probeTool } from '#cli/tools/probe.ts';
+import type { IgnoreEntry } from '#cli/policy/normalize.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { jobsWanted } from '#cli/platform/environment.ts';
-import type { IgnoreEntry } from '#cli/policy/normalize.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
-import type { PlanOptions, PlannedCheck } from '#cli/execution/plan.ts';
+import type { CheckResult, Finding } from '#cli/checks/result.ts';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { PlanOptions, PlannedCheck } from '#cli/execution/plan.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { claimedInputs, isActive, planRun } from '#cli/execution/plan.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { CheckResult, Finding } from '#cli/checks/result.ts';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
+
 import {
     cacheInputs,
     cacheKey,

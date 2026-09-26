@@ -1,8 +1,9 @@
-import type { InstallerPin, Manifest, ToolPin } from '#cli/configurations/manifests.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
-import { parse as parseToml } from 'smol-toml';
 import { z } from 'zod';
+import { parse as parseToml } from 'smol-toml';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { InstallerPin, Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
+
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';

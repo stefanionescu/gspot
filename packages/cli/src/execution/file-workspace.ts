@@ -1,4 +1,7 @@
+import { tmpdir } from 'node:os';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+
 import {
     constants,
     cpSync,
@@ -13,8 +16,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 /**
  * Copy selected files and declared configurations without native discovery inputs.

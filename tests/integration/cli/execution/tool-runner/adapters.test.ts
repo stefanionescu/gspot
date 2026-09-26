@@ -1,9 +1,9 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['outdated', 'timeout', 'canceled'] as const)(
     'Ansible adapter reports %s through the shared runner and accepts corrected execution',

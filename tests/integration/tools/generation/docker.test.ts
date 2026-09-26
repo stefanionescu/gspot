@@ -1,13 +1,10 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-
-import { expect, test } from 'bun:test';
 import { join } from 'node:path';
-
-import { emitAll } from '#cli/generation/render.ts';
-
-import { openSession } from '#cli/execution/session.ts';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();

@@ -5,13 +5,13 @@ import { functionAt } from '#cli/checks/structure/parser.ts';
 import type { CodeLine } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptFile, ScriptReport } from '#cli/checks/structure/parser.ts';
 import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
+
 import {
     codeLines,
     isDirectoryConstant,
     withoutComment,
     withoutDeclaration,
 } from '#cli/checks/structure/code-lines.ts';
-
 import {
     BASH_FEATURES,
     INHERITED_ERREXIT,

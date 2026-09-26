@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 

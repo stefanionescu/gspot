@@ -1,14 +1,14 @@
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { delimiter, dirname, join } from 'node:path';
-import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
+import { openSession } from '#cli/execution/session.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
 

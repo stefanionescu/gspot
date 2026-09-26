@@ -1,11 +1,11 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
+import type { DetectedSetting } from '#cli/commands/init/settings.ts';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import type { CarriedFormatter, CarriedConfiguration } from '#cli/policy/adoption/results.ts';
-import type { DetectedSetting } from '#cli/commands/init/settings.ts';
 
 const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 

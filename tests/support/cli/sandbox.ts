@@ -1,13 +1,13 @@
 // A planted repository with its private tools installed: the files, the selected configurations, and the level each framework test starts from.
 import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { delimiter, join } from 'node:path';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { QUIET_INIT } from '#tests/support/cli/init.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
-import { QUIET_INIT } from '#tests/support/cli/init.ts';
 
 /** The strict compiler options a planted TypeScript repository reads. */
 export const COMPONENT_TSCONFIG =

@@ -1,10 +1,10 @@
-import type { Identifier } from '#cli/checks/naming/extract.ts';
-import { compileTerms } from '#cli/checks/naming/match.ts';
-import type { EffectivePolicy } from '#cli/checks/naming/policy.ts';
-import { shippedPolicy } from '#cli/checks/naming/policy.ts';
-import { nameProblems } from '#cli/checks/naming/validate-name.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { describe, expect, test } from 'bun:test';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { compileTerms } from '#cli/checks/naming/match.ts';
+import { shippedPolicy } from '#cli/checks/naming/policy.ts';
+import type { Identifier } from '#cli/checks/naming/extract.ts';
+import { nameProblems } from '#cli/checks/naming/validate-name.ts';
+import type { EffectivePolicy } from '#cli/checks/naming/policy.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];

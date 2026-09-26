@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
 
 test('profile tool settings survive adoption of another setting for the same tool', async () => {

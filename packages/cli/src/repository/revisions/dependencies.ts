@@ -1,15 +1,15 @@
-import { SelectionError } from '#cli/configurations/select.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
-import { createHash } from 'node:crypto';
-import { constants, readFileSync, statSync } from 'node:fs';
-import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
-import pLimit from 'p-limit';
 import { z } from 'zod';
+import pLimit from 'p-limit';
+import { createHash } from 'node:crypto';
+import { run } from '#cli/platform/spawn.ts';
+import { constants, readFileSync, statSync } from 'node:fs';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { SelectionError } from '#cli/configurations/select.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { isValePackageFile } from '#cli/repository/file-classification.ts';
+import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
+import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
+import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 
 const COPY_CONCURRENCY = 8;
 const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];

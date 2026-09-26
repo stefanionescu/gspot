@@ -1,10 +1,10 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { planRun } from '#cli/execution/plan.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { ToolOutputError } from '#cli/execution/output/parse.ts';
-import { planRun } from '#cli/execution/plan.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { expect, test } from 'bun:test';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {
     await using sandbox = await testdir();

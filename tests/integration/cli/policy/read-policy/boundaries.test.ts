@@ -1,10 +1,10 @@
-import { parsePolicyText, PolicyError } from '#cli/policy/read.ts';
-import { policyProblems } from '#tests/support/cli/policy-problems.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { readFileSync, symlinkSync } from 'node:fs';
+import { parsePolicyText, PolicyError } from '#cli/policy/read.ts';
+import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
 describe('configuration directory boundaries', () => {
     test.each([

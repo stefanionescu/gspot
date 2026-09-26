@@ -1,13 +1,17 @@
-import { docsLoader } from '@astrojs/starlight/loaders';
-import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
-import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
-import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands';
-import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions';
+import type { Loader } from 'astro/loaders';
 import type { ReferencePage } from './page';
+import { docsLoader } from '@astrojs/starlight/loaders';
 import { bullets, referencePage, section } from './page';
 import { configurationReference, settingsPage } from './policy';
+import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
+import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
+import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions';
 
+/**
+ * Every generated reference page, keyed by its Markdown path: commands, configurations, rules, settings, and engines.
+ * @returns the pages by identity
+ */
 export function referencePages(): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     const add = (path: string, content: ReferencePage): void => {

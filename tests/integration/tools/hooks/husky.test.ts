@@ -1,13 +1,13 @@
+import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { expect, test } from 'bun:test';
+import { hookLocation, hookStatus } from '#cli/lifecycle/hooks/git.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each(['default', 'native', 'nested'])(
     'Husky preserves authored hooks and exact Git input in a %s installation',

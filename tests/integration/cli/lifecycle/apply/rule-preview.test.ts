@@ -1,11 +1,11 @@
-import { applyCommand } from '#cli/commands/apply/command.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
+import { applyCommand } from '#cli/commands/apply/command.ts';
 
 test('apply rejects injected SQLFluff dialect directives with exit 2 before changing configuration', async () => {
     await using sandbox = await testdir();

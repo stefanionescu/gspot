@@ -1,13 +1,13 @@
 // The swift configuration inside a scope: the tools read the scope's configuration and findings carry its path.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/support/cli/swift-fixtures.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/support/cli/swift-fixtures.ts';
 
 describe('the swift configuration inside a scope', () => {
     test(

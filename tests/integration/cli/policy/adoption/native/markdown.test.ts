@@ -1,11 +1,11 @@
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { symlinkSync, unlinkSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { readRepository } from '#cli/repository/tree.ts';
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test('overlapping Markdown sources remain intact before any policy is carried', async () => {
     await using sandbox = await testdir();

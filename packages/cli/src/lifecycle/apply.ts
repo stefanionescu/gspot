@@ -1,7 +1,7 @@
-import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
+import type { FileProposal, LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
@@ -32,7 +32,18 @@ function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
 }
 
 // Every proposal is prepared before the owner publishes the batch.
-/** Publish and prune generated files using recorded ownership and current snapshots. */
+/**
+ * Publish and prune generated files using recorded ownership and current snapshots.
+ * @param owner the lifecycle owner of the repository
+ * @param root the repository root
+ * @param rendered the generated files to publish
+ * @param report receives what changed
+ * @param retained what stays out of pruning
+ * @param retained.prose whether the prose rule files are kept
+ * @param retained.packages whether the package project is kept
+ * @param takeover the reviewed originals a takeover replaces, when one was authorized
+ * @param regenerate the files a merge broke, replaced whatever their bytes are
+ */
 export function publishGenerated(
     owner: LifecycleOwner,
     root: string,

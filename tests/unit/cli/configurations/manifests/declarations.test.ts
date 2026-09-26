@@ -1,5 +1,5 @@
-import { parseManifest } from '#cli/configurations/manifests.ts';
 import { expect, test } from 'bun:test';
+import { parseManifest } from '#cli/configurations/manifests.ts';
 
 test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
     'a template pointer rejects the conflicting emission mode %s',

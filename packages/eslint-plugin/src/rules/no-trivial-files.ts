@@ -1,5 +1,5 @@
-import type { TSESTree } from '@typescript-eslint/utils';
 import { statementCount } from '#plugin/statements.ts';
+import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'>({

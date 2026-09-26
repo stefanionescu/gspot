@@ -1,11 +1,11 @@
 // Takeover at init: adopted Prettier and EditorConfig settings format later files the way the originals did.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
 import prettier from 'prettier';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 
 test(
     'EditorConfig adoption preserves native selectors and restores original bytes and mode',

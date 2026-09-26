@@ -1,15 +1,13 @@
-import { explain } from '#cli/commands/explain/subjects.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
-import { stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-
+import { emitAll } from '#cli/generation/render.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import type { RunOptions } from '#cli/execution/execute.ts';
+import { explain } from '#cli/commands/explain/subjects.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(

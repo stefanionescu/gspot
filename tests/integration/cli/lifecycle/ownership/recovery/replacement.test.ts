@@ -1,10 +1,10 @@
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { cliSource } from '#tests/support/cli/sources.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { cliSource } from '#tests/support/cli/sources.ts';
+import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership.ts');
 const boundary = cliSource('platform/filesystem.ts');

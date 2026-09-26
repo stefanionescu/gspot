@@ -1,18 +1,17 @@
+import { npmPins } from '#cli/tools/pins.ts';
+import type { PolicyFiles } from '#cli/policy/read.ts';
+import type { ToolContext } from '#cli/tools/probe.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import type { Repository } from '#cli/repository/tree.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
 import packageManifest from '#package' with { type: 'json' };
 // One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
 import type { Manifest } from '#cli/configurations/manifests.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { PolicyFiles } from '#cli/policy/read.ts';
-import { readPolicy } from '#cli/policy/read.ts';
-import { assertPolicyComplete } from '#cli/policy/read.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
-import type { Repository } from '#cli/repository/tree.ts';
-import { readRepository } from '#cli/repository/tree.ts';
 import { toolPackageManager } from '#cli/tools/packages/manager.ts';
-import { npmPins } from '#cli/tools/pins.ts';
-import type { ToolContext } from '#cli/tools/probe.ts';
+import type { SourceObservations } from '#cli/repository/tracked.ts';
+import { readPolicy, assertPolicyComplete  } from '#cli/policy/read.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

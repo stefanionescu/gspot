@@ -1,12 +1,12 @@
+import * as os from 'node:os';
+import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-import { expect, spyOn, test } from 'bun:test';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import * as os from 'node:os';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ preview, isolated }))))(
     'corrections reject a replaced external source before execution (preview $preview, isolated $isolated)',

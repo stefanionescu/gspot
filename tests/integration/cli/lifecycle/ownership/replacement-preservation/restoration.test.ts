@@ -1,5 +1,8 @@
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+
 import {
     chmodSync,
     lchmodSync,
@@ -11,8 +14,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
     test('two replacements restore the first original bytes and mode and preserve unowned files', async () => {

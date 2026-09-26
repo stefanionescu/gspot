@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

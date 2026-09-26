@@ -1,13 +1,13 @@
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

@@ -1,9 +1,9 @@
-import { describe, expect, test } from 'bun:test';
-import { openSession } from '#cli/execution/session.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { managedBlock } from '#cli/agents/instructions.ts';
 import { format } from 'prettier';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
+import { managedBlock } from '#cli/agents/instructions.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
 
 describe('the managed block', () => {
     test('with no check selected it says nothing about gspot check', async () => {

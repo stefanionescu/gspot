@@ -1,9 +1,9 @@
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],

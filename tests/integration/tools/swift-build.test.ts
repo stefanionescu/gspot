@@ -1,13 +1,12 @@
 import { join } from 'node:path';
-
-import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { afterEach, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { afterEach, expect, test } from 'bun:test';
-import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { engineInput } from '#cli/execution/engines.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { swiftBuild } from '#cli/checks/swift/build.ts';
+import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { rmSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const caches = new Set<string>();

@@ -1,14 +1,14 @@
-import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { pushedRevisions } from '#cli/repository/revisions/selection.ts';
-import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
-import { submodulePaths } from '#cli/repository/tracked.ts';
-import { gitOutput } from '#tests/support/cli/git.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { gitOutput } from '#tests/support/cli/git.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
+import { pushedRevisions } from '#cli/repository/revisions/selection.ts';
+import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
+import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s snapshot retains gitlinks without reading submodule contents',

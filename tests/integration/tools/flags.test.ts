@@ -1,14 +1,14 @@
 // Every flag a manifest command passes exists in the pinned tool: the tool's own help text says so (K-251).
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { expect, test } from 'bun:test';
+import { fileURLToPath } from 'node:url';
+import { probeTool } from '#cli/tools/probe.ts';
+import { readPolicy } from '#cli/policy/read.ts';
+import { runProcess } from '#tests/support/cli/command.ts';
 import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
-import { readPolicy } from '#cli/policy/read.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
-import { expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const HELP_TIMEOUT_MS = 30_000;
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -95,7 +95,7 @@ test('every pinned tool a manifest command names is defined in that manifest', (
     const undefinedTools = manifests.flatMap((manifest) =>
         manifest.checks
             .filter((check) => check.command !== undefined)
-            .map((check) => check.tool ?? check.command![0]!)
+            .map((check) => check.tool ?? check.command[0]!)
             .filter((name) => !manifests.some((other) => other.tools.some((tool) => tool.name === name))),
     );
     expect([...new Set(undefinedTools)]).toStrictEqual([]);

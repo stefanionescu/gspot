@@ -1,15 +1,15 @@
-import { initCommand } from '#cli/commands/init/command.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
+import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('legacy adoption proposes retirement only after native configuration validation', async () => {
     await using directory = await testdir();

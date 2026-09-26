@@ -1,6 +1,6 @@
+import type { SwiftFunction } from '#cli/checks/swift/types.ts';
 import type { StructureProblem } from '#cli/checks/structure/engine.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
-import type { SwiftFunction } from '#cli/checks/swift/types.ts';
 
 function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };

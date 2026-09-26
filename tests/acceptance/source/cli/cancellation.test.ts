@@ -1,4 +1,3 @@
-import { waitForExit } from '#tests/support/cli/process.ts';
 import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
@@ -6,6 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { RunReport } from '#cli/execution/report.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
+import { waitForExit } from '#tests/support/cli/process.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');

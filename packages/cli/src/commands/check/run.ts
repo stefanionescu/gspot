@@ -1,28 +1,28 @@
-import type { RunOptions } from '#cli/execution/execute.ts';
-import { executeRun } from '#cli/execution/execute.ts';
-import type { FixReport } from '#cli/execution/fixers.ts';
-import type { StageFilter } from '#cli/execution/plan.ts';
-import { reproduceLine } from '#cli/execution/reproduce.ts';
-import type { Session } from '#cli/execution/session.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
-import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { note, warn } from '#cli/output/messages.ts';
-import { writeReport } from '#cli/output/report.ts';
-import { runText } from '#cli/output/reporter.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { readFileSync } from 'node:fs';
+import { runText } from '#cli/output/reporter.ts';
+import { writeReport } from '#cli/output/report.ts';
+import { note, warn } from '#cli/output/messages.ts';
+import { executeRun } from '#cli/execution/execute.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { openSession } from '#cli/execution/session.ts';
 // check: open the session, honor the pin, run, render, decide the exit code.
 import type { CheckResult } from '#cli/checks/result.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { hookStatus } from '#cli/lifecycle/hooks/git.ts';
+import type { FixReport } from '#cli/execution/fixers.ts';
+import type { StageFilter } from '#cli/execution/plan.ts';
+import type { RunOptions } from '#cli/execution/execute.ts';
+import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { PushReport, RunReport } from '#cli/execution/report.ts';
-import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
-import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
-import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/revisions/selection.ts';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { PushReport, RunReport } from '#cli/execution/report.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
+import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
+import { changedFiles, pushedRevisions, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 const CHANGED_SHOWN = 8;
 function stagedEnvironmentFiles(staged: string[]): string[] {
@@ -174,6 +174,7 @@ function resultFor(
  * @param revision.commits
  * @param revision.historyComplete
  * @param revision.content
+ * @param revision.cacheRoot
  * @param revision.reference
  * @param revision.reportRoot
  * @param revision.staged

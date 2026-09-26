@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
-
-import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-
+import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { readdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 

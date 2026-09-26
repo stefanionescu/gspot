@@ -1,15 +1,15 @@
 // Planted repository for the swift configuration: a force cast, doubled spaces, a snake case function, and the structural defects.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { CAST_SWIFT, CLEAN_SWIFT, SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { CAST_SWIFT, CLEAN_SWIFT, SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
 const SNAKE = CLEAN_SWIFT.replace('func greeting', () => 'func make_greeting');

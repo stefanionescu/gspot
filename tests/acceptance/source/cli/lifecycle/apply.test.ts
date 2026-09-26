@@ -1,11 +1,11 @@
 // apply preserves later edits and refuses before it writes when authored input is malformed.
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { expect, test } from 'bun:test';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 const INIT = initArgs(['bash']);
 

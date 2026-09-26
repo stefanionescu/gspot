@@ -1,13 +1,13 @@
 // Pushed history is scanned for secrets that a later commit removed, through Gitleaks and pinned TruffleHog.
-import { pushReportSchema } from '#cli/execution/report.ts';
-import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
-import { git } from '#tests/support/cli/git.ts';
-import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
 import { expect, test } from 'bun:test';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { pushReportSchema } from '#cli/execution/report.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
+import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test(
     'pushed secret history includes removed secrets and excludes unrelated refs despite identical final trees',

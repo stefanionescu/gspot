@@ -1,9 +1,9 @@
-import type { Session } from '#cli/execution/session.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import type { Session } from '#cli/execution/session.ts';
+import { claimants } from '#cli/configurations/claims.ts';
 import type { Explanation } from '#cli/commands/explain/subjects.ts';
 import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
-import { claimants } from '#cli/configurations/claims.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {

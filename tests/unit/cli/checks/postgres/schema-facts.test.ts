@@ -1,7 +1,7 @@
-import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
-import type { Migration } from '#cli/checks/postgres/types.ts';
-import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import { describe, expect, test } from 'bun:test';
+import { sqlFile } from '#cli/parsers/sql/statements.ts';
+import type { Migration } from '#cli/checks/postgres/types.ts';
+import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 
 async function migration(name: string, text: string): Promise<Migration> {
     const parsed = await sqlFile(text);

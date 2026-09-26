@@ -1,11 +1,11 @@
-import { openSession } from '#cli/execution/session.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
+import { emitAll } from '#cli/generation/render.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test.each([
     ['bash', 'bash'],

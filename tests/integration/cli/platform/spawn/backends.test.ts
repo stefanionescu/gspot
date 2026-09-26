@@ -1,8 +1,8 @@
 // Exercise the shared process contract through real child processes.
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 
 const backends = [

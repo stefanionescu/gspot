@@ -1,6 +1,6 @@
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
+import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 
 const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',

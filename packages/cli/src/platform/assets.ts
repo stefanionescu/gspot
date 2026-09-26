@@ -1,9 +1,9 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
-import { toPosix } from '#cli/platform/paths.ts';
 import { globbySync } from 'globby';
-import { readFileSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { readFileSync, statSync } from 'node:fs';
+import { toPosix } from '#cli/platform/paths.ts';
 
 const GRAMMAR_SOURCES: Record<string, string> = {
     'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',

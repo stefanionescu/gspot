@@ -1,15 +1,15 @@
 // Source CLI journey: the javascript configuration lints a repository with no TypeScript.
-import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { expect, test } from 'bun:test';
-import { symlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 test(
     'javascript/eslint lints a project that has no TypeScript',

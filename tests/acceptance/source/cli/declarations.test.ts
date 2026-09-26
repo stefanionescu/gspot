@@ -1,9 +1,9 @@
-import { reportSchema } from '#cli/execution/report.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { reportSchema } from '#cli/execution/report.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();

@@ -1,6 +1,6 @@
+import { isImportLike } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 const DIRECTIVE_PREFIXES = [

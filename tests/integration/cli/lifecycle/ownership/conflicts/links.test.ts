@@ -1,10 +1,10 @@
+import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import { describe, expect, test } from 'bun:test';
 import { chmodSync, lstatSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 test('installation refuses a linked output root before publication and accepts a real directory', async () => {
     await using repository = await testdir();

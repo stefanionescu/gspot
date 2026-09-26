@@ -1,10 +1,10 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { expect, test } from 'bun:test';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import packageManifest from '../../../../packages/cli/package.json' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;

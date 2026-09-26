@@ -1,14 +1,14 @@
-import { directoryOf } from '#cli/commands/flags.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import { printCommand } from '#cli/commands/print-result.ts';
-import { askConfirmation } from '#cli/commands/prompts.ts';
-import { hookLocation, proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
-import type { OwnershipState } from '#cli/lifecycle/journal.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/platform/paths.ts';
-import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { Command } from 'commander';
 import { relative, resolve } from 'node:path';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { askConfirmation } from '#cli/commands/prompts.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import type { OwnershipState } from '#cli/lifecycle/journal.ts';
+import type { CommandResult } from '#cli/commands/print-result.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/platform/paths.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { hookLocation, proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 
 function planText(plan: UninstallPlan): string {
     return [

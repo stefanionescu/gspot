@@ -1,12 +1,12 @@
 // Planted style blocks of component files: stylelint reads them through postcss-html and knows the scoping pseudo-classes of each framework.
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import vueManifest from 'vue/package.json' with { type: 'json' };
+import { describe, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import vueManifest from 'vue/package.json' with { type: 'json' };
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const STYLES = [
     {

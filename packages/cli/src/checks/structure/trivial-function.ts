@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 
 /**

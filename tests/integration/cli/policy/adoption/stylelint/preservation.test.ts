@@ -1,13 +1,13 @@
-import { openSession } from '#cli/execution/session.ts';
+import { join } from 'node:path';
+import stylelint from 'stylelint';
+import { stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { readFileSync, symlinkSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES, STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
-import { expect, test } from 'bun:test';
-import { readFileSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
-import { stringify } from 'smol-toml';
-import stylelint from 'stylelint';
-import { createFileTree, testdir } from 'testdirs';
 
 test.each([false, true])(
     'Stylelint adoption preserves enabled options, zero limits, and disabled rules for future files (inherited: %s)',

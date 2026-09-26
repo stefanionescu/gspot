@@ -1,13 +1,13 @@
-import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-import { xcodeProposal } from '#cli/commands/init/xcode.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { join } from 'node:path';
 import { planRun } from '#cli/execution/plan.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import { describe, expect, test } from 'bun:test';
+import { xcodeProposal } from '#cli/commands/init/xcode.ts';
+import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 
 describe.skipIf(process.platform === 'win32')('confined discovery', () => {
     test.each(['project', 'configuration', 'schemes'] as const)(

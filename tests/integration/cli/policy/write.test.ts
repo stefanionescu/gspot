@@ -1,9 +1,10 @@
-import { commitPolicy } from '#cli/commands/policy.ts';
-import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { commitPolicy } from '#cli/commands/policy.ts';
+import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+
 import {
     appendEntry,
     appendIgnore,
@@ -159,8 +160,7 @@ describe('writePolicy', () => {
     ])('a scope setting written into %s loads with the ones already there', async (_form, scope) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': `${text}\n${scope}`, 'api/run.sh': '' });
-        const result = preparePolicy(sandbox.path, (raw) =>
-            setKey('limits.function_lines', 20)(scopeHolder(raw, 'api')),
+        const result = preparePolicy(sandbox.path, (raw) => { setKey('limits.function_lines', 20)(scopeHolder(raw, 'api')); },
         );
         writePolicy(sandbox.path, result);
         expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({

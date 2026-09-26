@@ -1,30 +1,30 @@
-import type { Engine, EngineInput } from '#cli/checks/input.ts';
 import type { Finding } from '#cli/checks/result.ts';
+import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Engine, EngineInput } from '#cli/checks/input.ts';
 import { countFindings } from '#cli/checks/structure/counts.ts';
-import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
-import { deadParameters } from '#cli/checks/structure/dead-parameters.ts';
 import { docComment } from '#cli/checks/structure/doc-comment.ts';
-import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts';
-import { envAccessOwner } from '#cli/checks/structure/env-access-owner.ts';
-import { fileDirectoryCollision, fileLength } from '#cli/checks/structure/file-layout.ts';
-import { folderNames } from '#cli/checks/structure/folder-names.ts';
-import { functionLength } from '#cli/checks/structure/function-length.ts';
 import type { ScriptIndex } from '#cli/checks/structure/parser.ts';
-import { DOCUMENT_EXTENSIONS } from '#cli/checks/structure/patterns.ts';
-import { prefixCollisions } from '#cli/checks/structure/prefix-collisions.ts';
-import { scriptBoundaries } from '#cli/checks/structure/scripts/boundaries.ts';
-import { scriptConfigDefaults, scriptConfigGuards } from '#cli/checks/structure/scripts/configuration.ts';
+import { folderNames } from '#cli/checks/structure/folder-names.ts';
 import { scriptEmbeds } from '#cli/checks/structure/scripts/embeds.ts';
-import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
 import { scriptPolicy } from '#cli/checks/structure/scripts/policy.ts';
 import { scriptSafety } from '#cli/checks/structure/scripts/safety.ts';
-import { scriptSshBlocks } from '#cli/checks/structure/scripts/ssh-blocks.ts';
-import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
+import { DOCUMENT_EXTENSIONS } from '#cli/checks/structure/patterns.ts';
+import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
+import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import { deadParameters } from '#cli/checks/structure/dead-parameters.ts';
+import { functionLength } from '#cli/checks/structure/function-length.ts';
+import { envAccessOwner } from '#cli/checks/structure/env-access-owner.ts';
 import { trivialFunction } from '#cli/checks/structure/trivial-function.ts';
 import { unusedFunctions } from '#cli/checks/structure/unused-functions.ts';
+import { prefixCollisions } from '#cli/checks/structure/prefix-collisions.ts';
+import { scriptSshBlocks } from '#cli/checks/structure/scripts/ssh-blocks.ts';
+import { scriptBoundaries } from '#cli/checks/structure/scripts/boundaries.ts';
+import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
+import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
+import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts';
 import { privateBeforePublic, privatePrefix } from '#cli/checks/structure/visibility.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import { fileDirectoryCollision, fileLength } from '#cli/checks/structure/file-layout.ts';
+import { scriptConfigDefaults, scriptConfigGuards } from '#cli/checks/structure/scripts/configuration.ts';
 
 const ANALYSES: Record<string, Analysis> = {
     'single-file-folder': singleFileFolder,

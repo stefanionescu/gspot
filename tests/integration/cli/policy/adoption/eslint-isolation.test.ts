@@ -1,8 +1,8 @@
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
-import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 

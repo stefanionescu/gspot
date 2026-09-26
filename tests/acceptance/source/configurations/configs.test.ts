@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = ['init', '--yes', '--configurations', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 

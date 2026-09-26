@@ -1,3 +1,23 @@
+import { z } from 'zod';
+import semver from 'semver';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { probeTool } from '#cli/tools/probe.ts';
+import { binaryPath } from '#cli/platform/assets.ts';
+import type { Policy } from '#cli/policy/normalize.ts';
+import type { ToolContext } from '#cli/tools/probe.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
+import type { Repository } from '#cli/repository/tree.ts';
+import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
+import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
+import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+
 import {
     hookPrefix,
     huskyLines,
@@ -5,29 +25,13 @@ import {
     lefthookConfiguration,
     simpleGitHookCommand,
 } from '#cli/generation/hooks.ts';
-import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
-import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { installHooks } from '#cli/lifecycle/hooks/git.ts';
-import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
-import type { Repository } from '#cli/repository/tree.ts';
-import { runToolCommand } from '#cli/tools/command.ts';
-import type { ToolContext } from '#cli/tools/probe.ts';
-import { probeTool } from '#cli/tools/probe.ts';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import semver from 'semver';
-import { z } from 'zod';
 
 /**
  * Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner.
  * @param options
+ * @param options.policy
+ * @param options.repository
+ * @param options.tools
  */
 export async function installHookManager({
     policy,

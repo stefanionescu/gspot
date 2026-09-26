@@ -1,12 +1,15 @@
-import { hookBody, hookCommand, hookPrefix, huskyLines, simpleGitHookCommand } from '#cli/generation/hooks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
+import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
+import { hookBody, hookCommand, hookPrefix, huskyLines, simpleGitHookCommand } from '#cli/generation/hooks.ts';
 
-/** Refuse alternate native configuration before publishing or verifying package-owned commands. */
+/**
+ * Refuse alternate native configuration before publishing or verifying package-owned commands.
+ * @param files the confined repository root
+ */
 export function requirePackageConfiguration(files: ConfinedRoot): void {
     for (const prefix of ['', '.']) {
         for (const extension of ['cjs', 'js', 'mjs', 'json']) {

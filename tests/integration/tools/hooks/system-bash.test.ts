@@ -3,8 +3,8 @@ import { chmodSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { hookBody } from '#cli/generation/hooks.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
 
 const SYSTEM_BASH = '/bin/bash';
 

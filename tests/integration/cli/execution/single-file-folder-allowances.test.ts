@@ -1,8 +1,8 @@
 // A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 
 const PAGE = '<script>\n    let count = 0;\n</script>\n<p>{count}</p>\n';
 

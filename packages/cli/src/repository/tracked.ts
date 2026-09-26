@@ -2,8 +2,8 @@
 import ignore, { type Ignore } from 'ignore';
 import { dirname, join, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { SpawnResult } from '#cli/platform/spawn.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
 import { openConfinedRoot, LIFECYCLE_PRIVATE_PATH } from '#cli/platform/filesystem.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';

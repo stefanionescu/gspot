@@ -1,9 +1,9 @@
-import type { FragmentSelector } from '#cli/configurations/schema.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { EslintSettings } from '#cli/policy/schema.ts';
-import type { PathExpressions } from '#cli/repository/paths.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
+import type { EslintSettings } from '#cli/policy/schema.ts';
+import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import type { PathExpressions } from '#cli/repository/paths.ts';
+import type { FragmentSelector } from '#cli/configurations/schema.ts';
 
 /**
  * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
@@ -40,6 +40,11 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
 
+/**
+ * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
+ * @param scopes the resolved scopes, in any order
+ * @returns one block per scope and language, shallowest scope first
+ */
 export function structuralRuleBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     const blocks: EslintRuleBlock[] = [];
     for (const selection of scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {

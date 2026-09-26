@@ -1,9 +1,9 @@
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
-import { checkResultSchema } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { CheckResult } from '#cli/checks/result.ts';
 import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
+import { checkResultSchema } from '#cli/checks/result.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -38,6 +38,7 @@ export function cacheKey(input: CacheKeyInput): string {
  * The content hash of a required file.
  * @param root the repository root
  * @param path the file, relative to the root
+ * @param observations
  * @returns the digest
  */
 export function fileHash(root: string, path: string, observations?: SourceObservations): string {

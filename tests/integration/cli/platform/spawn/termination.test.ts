@@ -1,10 +1,10 @@
-import { waitForExit } from '#tests/support/cli/process.ts';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { expect, spyOn, test } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { createFileTree, testdir } from 'testdirs';
-import { expect, spyOn, test } from 'bun:test';
 import { run, runBinary } from '#cli/platform/spawn.ts';
+import { waitForExit } from '#tests/support/cli/process.ts';
 
 test.each(['text', 'binary'] as const)('a failed %s stream read terminates the owned child', async (capture) => {
     await using sandbox = await testdir();
@@ -103,7 +103,7 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     const child = Bun.spawn([process.execPath, '-e', script], { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
-    const timer = setTimeout(() => child.kill('SIGKILL'), 5000);
+    const timer = setTimeout(() => { child.kill('SIGKILL'); }, 5000);
     try {
         expect(await child.exited, await errors).toBe(19);
         const pid = Number((await output).trim());

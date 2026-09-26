@@ -7,9 +7,9 @@ import parseExpression from 'spdx-expression-parse';
 import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { statSync, mkdtempSync, rmSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 
 export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];
