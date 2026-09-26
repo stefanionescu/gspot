@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
 
 export async function createConsumer(registry: { url: string; npmrc: string }, version: string) {
     const workspace = await testdir();

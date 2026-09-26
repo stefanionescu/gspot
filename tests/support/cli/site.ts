@@ -22,10 +22,3 @@ export async function siteInput(root: string, paths: string[], resources: Dispos
         files: session.repository.files,
     });
 }
-
-export const SITE_BUILD = `import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-const hadOutput = existsSync('dist/index.html');
-rmSync('dist', { recursive: true, force: true });
-mkdirSync('dist');
-writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
-`;

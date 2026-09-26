@@ -4,7 +4,7 @@ import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import type { SarifReport } from '#tests/support/cli/reports.ts';
+import type { SarifReport } from '#tests/types/support/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';

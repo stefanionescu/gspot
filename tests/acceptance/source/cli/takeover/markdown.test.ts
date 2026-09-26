@@ -5,9 +5,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test.each(['', 'guide[1]', 'native-defaults'])(
     'Markdown adoption retains native defaults through checks, fixes, and uninstall (scope %s)',

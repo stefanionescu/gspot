@@ -2,16 +2,14 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+import type { SpawnOutcome } from '#tests/types/support/cli.ts';
+import type { Registry } from '#tests/types/support/registry.ts';
 // An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { REQUEST_MS, SHUTDOWN_MS, STARTUP_MS } from '#tests/constants/support/registry.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const serverEntry = fileURLToPath(new URL('server.ts', import.meta.url));
-const STARTUP_MS = 30_000;
-const REQUEST_MS = 1000;
-const SHUTDOWN_MS = 5000;
-
 async function bounded<T>(operation: Promise<T>, milliseconds: number, errorText: string): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const timeout = new Promise<never>((_, reject) => {
@@ -88,15 +86,6 @@ async function configure(work: string): Promise<string> {
     );
     return config;
 }
-
-/** A local npm registry the release tests publish into. */
-export type Registry = {
-    url: string;
-    npmrc: string;
-    work: string;
-    assertRunning: () => void;
-    stop: () => Promise<void>;
-};
 
 /** Starts an owned registry and cleans failed setup before rejecting. */
 export async function startRegistry(

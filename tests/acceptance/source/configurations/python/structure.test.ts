@@ -5,29 +5,17 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the Python structure checks: one module shaped wrong for each check.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'python',
-    '--without',
-    'naming',
-    'spelling',
-    'dependencies',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PROJECT = '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
-const CLEAN =
-    '"""Prices."""\n\n\ndef _rounded(amount: float) -> float:\n    """Round to cents, half up."""\n    shifted = amount * 100\n    whole = int(shifted + 0.5)\n    return whole / 100\n\n\ndef total(prices: list[float]) -> float:\n    """Add prices and round the sum."""\n    summed = sum(prices)\n    checked = max(summed, 0.0)\n    return _rounded(checked) + _rounded(0.0)\n\n\n__all__ = ["total"]\n';
+import {
+    STRUCTURE_CLEAN,
+    STRUCTURE_INIT,
+    STRUCTURE_PROJECT,
+} from '#tests/constants/acceptance/source/configurations/python.ts';
+
 const module = (body: string): string => `"""A planted module."""\n\n\n${body}`;
 const LONG_BODY = Array.from({ length: 61 }, (_, index) => `    step_${String(index)} = ${String(index)}`).join('\n');
 const LONG_FILE = Array.from({ length: 301 }, (_, index) => `VALUE_${String(index)} = ${String(index)}`).join('\n');
@@ -133,13 +121,13 @@ describe('the Python structure checks', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'pyproject.toml': PROJECT,
+                'pyproject.toml': STRUCTURE_PROJECT,
                 'planted/__init__.py': '"""The planted package."""\n',
-                'planted/prices.py': CLEAN,
+                'planted/prices.py': STRUCTURE_CLEAN,
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, STRUCTURE_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
@@ -149,7 +137,7 @@ describe('the Python structure checks', () => {
                 sandbox.path,
                 {
                     ...planted,
-                    files: Object.fromEntries(Object.keys(planted.files).map((path) => [path, CLEAN])),
+                    files: Object.fromEntries(Object.keys(planted.files).map((path) => [path, STRUCTURE_CLEAN])),
                 },
                 environment,
             );

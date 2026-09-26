@@ -8,15 +8,13 @@ import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
-
-const SOURCE =
-    '/** Parses a fixture value. */\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n\n/// The literal /** example */ is documentation syntax.\npublic let example = "/** not documentation */"\n\n/* Ordinary comment with a nested /** comment */ inside. */\n';
+import { SWIFT_DOCS_SOURCE } from '#tests/constants/integration/tools/generation.ts';
 
 test.each(['recommended', 'all'])('Swift documentation comment style has native diagnostics at %s', async (level) => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n`;
-    await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SOURCE });
+    await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
     const generate = async (): Promise<void> => {
         const renderSession1 = await openSession(root);
         for (const file of emitAll(
@@ -48,12 +46,12 @@ test.each(['recommended', 'all'])('Swift documentation comment style has native 
     expect(findings).toStrictEqual(level === 'all' ? [docComment] : []);
     await Bun.write(
         join(root, 'Value.swift'),
-        SOURCE.replace('/** Parses a fixture value. */', '/// Parses a fixture value.'),
+        SWIFT_DOCS_SOURCE.replace('/** Parses a fixture value. */', '/// Parses a fixture value.'),
     );
     const corrected = await native();
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
-    await Bun.write(join(root, 'Value.swift'), SOURCE);
+    await Bun.write(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
     await Bun.write(
         join(root, 'gspot.toml'),
         `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "doc_comment_style"\nreason = "The fixture preserves an external documentation format."\n`,

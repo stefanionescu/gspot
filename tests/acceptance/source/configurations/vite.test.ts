@@ -3,30 +3,17 @@ import { dirname, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runProcess, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { runProcess, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { START, VITE_POLICY } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));
 const VITE = dirname(Bun.resolveSync('vite/package.json', VITEST));
-const POLICY = `version = 1
-level = "all"
-configurations = ["javascript"]
-[rules]
-install = false
-[tools.knip]
-entry = []
-[[scope]]
-path = "api"
-configurations = ["javascript"]
-[scope.tools.knip]
-entry = []
-`;
-const START = "import { start } from './start.js';\nstart();\n";
-
 async function trivialFiles(root: string): Promise<string[]> {
     const outcome = await run(root, ['check', '--only', 'javascript/eslint', '--json', '--no-cache']);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
@@ -51,7 +38,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             node_modules: {},
-            'gspot.toml': POLICY,
+            'gspot.toml': VITE_POLICY,
             '.gitignore': 'node_modules\n.gspot/\ndist/\n',
             'package.json':
                 '{"name":"entry-sandbox","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
@@ -83,7 +70,10 @@ test(
             'src/main.js',
             'src/task.js',
         ]);
-        writeFileSync(join(sandbox.path, 'gspot.toml'), POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'));
+        writeFileSync(
+            join(sandbox.path, 'gspot.toml'),
+            VITE_POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'),
+        );
         const inherited = await run(sandbox.path, ['apply']);
         expect(inherited.code, inherited.stdout + inherited.stderr).toBe(0);
         expect(await trivialFiles(sandbox.path)).toStrictEqual([
@@ -94,7 +84,7 @@ test(
         ]);
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            POLICY.replaceAll('entry = []', 'entry = ["src/*.js", "!src/task.js"]'),
+            VITE_POLICY.replaceAll('entry = []', 'entry = ["src/*.js", "!src/task.js"]'),
         );
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -111,10 +101,10 @@ test(
         for (const level of ['recommended', 'all']) {
             writeFileSync(
                 join(sandbox.path, 'gspot.toml'),
-                POLICY.replace('level = "all"', `level = "${level}"\nextra_checks = ["javascript/eslint"]`).replaceAll(
-                    'entry = []',
-                    'entry = ["src/main.js"]',
-                ),
+                VITE_POLICY.replace(
+                    'level = "all"',
+                    `level = "${level}"\nextra_checks = ["javascript/eslint"]`,
+                ).replaceAll('entry = []', 'entry = ["src/main.js"]'),
             );
             const configured = await run(sandbox.path, ['apply']);
             expect(configured.code, configured.stdout + configured.stderr).toBe(0);

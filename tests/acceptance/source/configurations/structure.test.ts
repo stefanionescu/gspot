@@ -2,19 +2,18 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 // Planted repository for the structure configuration: each repository-shape check fires on its planted defect.
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
+import { STRUCTURE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { KILOBYTE, OVER_LIMIT_KB } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = ['init', '--yes', '--configurations', 'bash', '--runner', 'npm', '--no-ci', '--no-rules', '--no-install'];
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
-const KILOBYTE = 1024;
-const OVER_LIMIT_KB = 1100;
-
 const CASES: FindingCase[] = [
     {
         check: 'structure/single-file-folder',
@@ -76,7 +75,7 @@ describe('the structure configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            const initialized = await run(sandbox.path, [...INIT, '--hooks', 'gspot'], environment);
+            const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--hooks', 'gspot'], environment);
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
             const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
@@ -109,7 +108,7 @@ describe('the structure configuration', () => {
             await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            const initialized = await run(sandbox.path, [...INIT, '--no-hooks'], environment);
+            const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--no-hooks'], environment);
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
             const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
             expect(clean.code).toBe(0);

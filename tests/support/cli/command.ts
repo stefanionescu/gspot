@@ -1,15 +1,11 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import type { SpawnOutcome } from '#tests/types/support/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
-
-/** What a spawned command left behind, for tests. */
-export type SpawnOutcome = { code: number; stdout: string; stderr: string };
-
-/** How long a planted-repository test may take: it spawns real tools. */
-export const PLANTED_TIMEOUT_MS = 60_000;
 
 /** The development entry point, run with bun. */
 export const gspot = join(root, 'packages', 'cli', 'src', 'main.ts');

@@ -1,9 +1,6 @@
 // Tool pins for probe tests: a binary found on a path and a library found in the private installation.
 import type { ToolPin } from '#cli/types/configurations.ts';
 
-/** The mode of an executable fixture. */
-export const RUNS = 0o755;
-
 /**
  * A library pin installed through npm.
  * @param name the package name

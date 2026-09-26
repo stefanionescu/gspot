@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { INTERPRETERS } from '#tests/constants/integration/cli/repository.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
 
 function launcher(
@@ -59,13 +60,6 @@ function launcher(
     }
     return bytes;
 }
-
-const INTERPRETERS = new Map([
-    [
-        String.raw`C:\working project\.venv\Scripts\python.exe`,
-        String.raw`C:\selected revision\.venv\Scripts\python.exe`,
-    ],
-]);
 
 test.each([false, true])('uv launcher relocation preserves resource payloads in PE64=%s', (is64) => {
     const original = launcher(is64);

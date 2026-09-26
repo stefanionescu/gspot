@@ -3,9 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { delimiter, dirname, join, relative } from 'node:path';
+import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
-import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
 import { installedConsumer, publishRelease } from '#tests/support/release/published.ts';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 

@@ -4,12 +4,13 @@ import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
+import { siteInput } from '#tests/support/cli/site.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
 import * as toolRunner from '#cli/execution/tool-runner.ts';
-import { siteInput, SITE_BUILD } from '#tests/support/cli/site.ts';
+import { SITE_BUILD } from '#tests/constants/support/cli.ts';
 import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';
 import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
 

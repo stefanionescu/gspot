@@ -6,9 +6,11 @@ import { run } from '#tests/support/cli/command.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
-const POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';
-const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
-const EXPECTED = 'const greeting = "hello"\nif (greeting) {\n        console.log(greeting)\n}\n';
+import {
+    EXPECTED,
+    FORMAT_PRESERVATION_POLICY,
+    PRETTIER_CARRY_SOURCE,
+} from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test.each([
     ['.prettierrc.json5', '{semi: false, tabWidth: 8,}\n'],
@@ -21,15 +23,15 @@ test.each([
 ])('apply preserves active authored %s despite source exclusions and keeps future formatting', async (path, text) => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': POLICY.replace('[rules]', `exclude = ${JSON.stringify([path])}\n[rules]`),
+        'gspot.toml': FORMAT_PRESERVATION_POLICY.replace('[rules]', `exclude = ${JSON.stringify([path])}\n[rules]`),
         [path]: text,
-        'source.js': SOURCE,
+        'source.js': PRETTIER_CARRY_SOURCE,
     });
     const original = join(repository.path, path);
     chmodSync(original, 0o640);
     const filepath = join(repository.path, 'source.js');
     const before = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
-    expect(await prettier.format(SOURCE, { ...before, filepath })).toBe(EXPECTED);
+    expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...before, filepath })).toBe(EXPECTED);
     const preview = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect((JSON.parse(preview.stdout) as ApplyPreviewJson).notes.join('\n')).toContain(
@@ -42,10 +44,10 @@ test.each([
     expect(statSync(original).mode & 0o777).toBe(0o640);
     for (const file of ['source.js', 'future.js']) {
         const filePath = join(repository.path, file);
-        if (file === 'future.js') writeFileSync(filePath, SOURCE);
+        if (file === 'future.js') writeFileSync(filePath, PRETTIER_CARRY_SOURCE);
         const options = await prettier.resolveConfig(filePath, { editorconfig: true, useCache: false });
-        expect(await prettier.format(SOURCE, { ...options, filepath: filePath })).toBe(EXPECTED);
-        expect(readFileSync(filePath, 'utf8')).toBe(SOURCE);
+        expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...options, filepath: filePath })).toBe(EXPECTED);
+        expect(readFileSync(filePath, 'utf8')).toBe(PRETTIER_CARRY_SOURCE);
     }
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
@@ -54,18 +56,21 @@ test.each([
 
 test('apply removes its owned pointers when an authored formatter configuration is introduced', async () => {
     await using repository = await testdir();
-    await createFileTree(repository.path, { 'gspot.toml': POLICY, 'source.js': SOURCE });
+    await createFileTree(repository.path, {
+        'gspot.toml': FORMAT_PRESERVATION_POLICY,
+        'source.js': PRETTIER_CARRY_SOURCE,
+    });
     const initial = await run(repository.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     const filepath = join(repository.path, 'source.js');
     const text = 'export default { semi: false, tabWidth: 8 };\n';
     writeFileSync(join(repository.path, 'prettier.config.mjs'), text);
     const masked = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
-    expect(await prettier.format(SOURCE, { ...masked, filepath })).not.toBe(EXPECTED);
+    expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...masked, filepath })).not.toBe(EXPECTED);
     const applied = await run(repository.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const options = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
-    expect(await prettier.format(SOURCE, { ...options, filepath })).toBe(EXPECTED);
+    expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...options, filepath })).toBe(EXPECTED);
     expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(text);
     const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);

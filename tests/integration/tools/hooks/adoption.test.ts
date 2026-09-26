@@ -7,9 +7,8 @@ import { installManager } from '#tests/support/cli/hooks.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { VERSIONS } from '#tests/constants/integration/tools/hooks.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-
-const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 
 // An edited Lefthook helper is kept and refuses the installation without leaving manager files behind.
 async function expectLefthookRefusesEditedHelper(

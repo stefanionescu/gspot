@@ -10,9 +10,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-
-const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
-const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n';
+import { CORRECT, DEFECT } from '#tests/constants/integration/tools/generation.ts';
 
 test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules in scope %s', async (scope) => {
     await using sandbox = await testdir();

@@ -2,11 +2,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { IDS, PLIST, SCRIPTS } from '#tests/constants/integration/tools/generation.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 const SWIFT =
@@ -24,26 +26,6 @@ const SWIFT =
         'configuration.preferences.javaScriptEnabled = true',
         'print(password)',
     ].join('\n') + '\n';
-const SCRIPTS = 'eval(code);\nexecSync(`build ${input}`);\n';
-const PLIST =
-    '<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict></dict></plist>\n';
-const IDS = [
-    'ios-keychain-accessible-always',
-    'ios-no-secrets-in-userdefaults',
-    'ios-no-secrets-in-plist',
-    'ios-hardcoded-api-key',
-    'ios-hardcoded-url-with-credentials',
-    'ios-insecure-http-url',
-    'ios-unsafe-pointer-cast',
-    'ios-weak-hash-algorithm',
-    'ios-no-uiwebview',
-    'ios-wkwebview-javascript-enabled',
-    'ios-log-sensitive-data',
-    'ios-no-ats-exception-in-plist',
-    'ios-scripts-no-eval',
-    'ios-scripts-no-unquoted-shell-var-in-exec',
-];
-
 test.each(['recommended', 'all'])(
     'Swift security rules report native and CLI diagnostics at %s',
     async (level) => {

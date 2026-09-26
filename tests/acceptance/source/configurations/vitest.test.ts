@@ -5,35 +5,21 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import type { PlantedCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the vitest configuration: a function no test calls, and a focused test.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { VITEST_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+
+import {
+    TEST,
+    UNTESTED,
+    VITEST_PACKAGE,
+    VITEST_SOURCE,
+} from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'vitest',
-    '--without',
-    'naming',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PACKAGE =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
-const SOURCE =
-    '// Arithmetic the planted tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
-const UNTESTED = `${SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;
-const TEST =
-    "import { expect, test } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";
 const FOCUSED = TEST.replace("test('adds", () => "test.only('adds");
 
 const CASES: PlantedCase[] = [
@@ -51,11 +37,11 @@ describe('the vitest configuration', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'package.json': PACKAGE,
+                'package.json': VITEST_PACKAGE,
                 '.gitignore': 'node_modules\ncoverage\n',
                 'tsconfig.json':
                     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
-                'src/public.ts': SOURCE,
+                'src/public.ts': VITEST_SOURCE,
                 'src/math.test.ts': TEST,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
@@ -63,7 +49,7 @@ describe('the vitest configuration', () => {
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, VITEST_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());

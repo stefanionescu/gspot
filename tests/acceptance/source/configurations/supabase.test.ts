@@ -4,40 +4,20 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the supabase configuration: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { SUPABASE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { GREET, MIGRATION, SUPABASE_CONFIG } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'supabase',
-    '--without',
-    'naming',
-    'spelling',
-    'typescript',
-    'security',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const CONFIG =
-    'project_id = "planted"\n\n[storage.buckets.avatars]\npublic = false\n\n[functions.greet]\nverify_jwt = true\n';
-const MIGRATION = `-- The avatars bucket and who reads it.
-CREATE POLICY avatars_read ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
-`;
-const GREET = 'Deno.serve(() => new Response("hello"));\n';
 const KEY = ['SUPABASE_SERVICE', 'ROLE_KEY'].join('_');
 
 const CASES: FindingCase[] = [
     {
         check: 'supabase/config',
-        files: { 'supabase/config.toml': `${CONFIG}\n[functions.missing]\nverify_jwt = true\n` },
+        files: { 'supabase/config.toml': `${SUPABASE_CONFIG}\n[functions.missing]\nverify_jwt = true\n` },
         expected: { file: 'supabase/config.toml', rule: 'function', line: 1 },
     },
     {
@@ -47,7 +27,7 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'supabase/storage-policies',
-        files: { 'supabase/config.toml': `${CONFIG}\n[storage.buckets.receipts]\npublic = false\n` },
+        files: { 'supabase/config.toml': `${SUPABASE_CONFIG}\n[storage.buckets.receipts]\npublic = false\n` },
         expected: { file: 'supabase/config.toml', rule: 'bucket-policy', line: 1 },
     },
     {
@@ -83,13 +63,13 @@ describe('the supabase configuration', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'supabase/config.toml': CONFIG,
+                'supabase/config.toml': SUPABASE_CONFIG,
                 'supabase/migrations/20240101000000_create_avatars.sql': MIGRATION,
                 'supabase/functions/greet/index.ts': GREET,
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['deno', 'squawk', 'sqlfluff', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, SUPABASE_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
             const failedReport = reportSchema.parse(

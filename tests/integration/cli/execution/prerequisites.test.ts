@@ -7,23 +7,14 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-
-const POLICY =
-    'version = 1\nlevel = "all"\nconfigurations = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
-const WAITING = new Map([
-    ['nextjs/build', 'tools.next.build_in_gate'],
-    ['postgres/migration-docs', 'tools.postgres.migration_docs'],
-    ['xctest/coverage', 'tools.xctest.coverage'],
-    ['xcode/entitlements-policy', 'tools.xcode.entitlements_allowed'],
-    ['static-site/size', 'tools.site.size_limits'],
-]);
+import { PREREQUISITES_POLICY, WAITING } from '#tests/constants/integration/cli/execution/execution.ts';
 
 const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': PREREQUISITES_POLICY,
         'Tests/ExampleTests.swift': 'import XCTest\nfinal class ExampleTests: XCTestCase {}\n',
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
@@ -47,7 +38,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     }
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
-        POLICY + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
+        PREREQUISITES_POLICY + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
     const enabled = await executeRun(await openSession(sandbox.path), {
         ...options,

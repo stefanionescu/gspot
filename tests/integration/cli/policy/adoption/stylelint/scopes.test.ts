@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
+import { STYLELINT_TOOLING } from '#tests/constants/support/cli.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 

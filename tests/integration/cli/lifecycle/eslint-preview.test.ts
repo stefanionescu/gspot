@@ -9,8 +9,7 @@ import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-
-type ResolvedRules = { rules: Record<string, [number, ...unknown[]]> };
+import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {
     await using directory = await testdir();

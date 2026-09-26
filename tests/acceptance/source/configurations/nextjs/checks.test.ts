@@ -4,9 +4,9 @@ import { expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
-import { installedNextProject, nextManifest, NEXT_PAGE, NEXT_TRANSLATIONS } from '#tests/support/cli/nextjs.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { installedNextProject, nextManifest } from '#tests/support/cli/nextjs.ts';
+import { NEXT_PAGE, NEXT_TRANSLATIONS, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 const CASES: FindingCase[] = [
     {

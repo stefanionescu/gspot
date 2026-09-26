@@ -7,8 +7,8 @@ import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { hookStatusText } from '#tests/support/cli/hooks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import type { HookCapture } from '#tests/types/support/cli.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import type { HookCapture } from '#tests/support/cli/reports.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 

@@ -2,14 +2,14 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { expectCorrected } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installedNextProject } from '#tests/support/cli/nextjs.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { installedNextProject, NEXT_LAYOUT } from '#tests/support/cli/nextjs.ts';
-
-const OWNER_WRITES = 0o644;
+import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { OWNER_WRITES } from '#tests/constants/acceptance/source/configurations/nextjs.ts';
 
 describe('the nextjs and i18n configurations', () => {
     test(

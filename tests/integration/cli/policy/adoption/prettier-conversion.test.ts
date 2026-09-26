@@ -9,18 +9,7 @@ import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-
-const TOOLING: Omit<ExistingTooling, 'configs'> = {
-    hooks: [],
-    ci: [],
-    agentFiles: [],
-    rulesDirectories: [],
-    lintFolders: [],
-    lintOnlyManifests: [],
-    runner: 'none',
-};
-const TEXT = 'function example() { return { first: "one", second: "two", third: "three" }; }';
+import { TEXT, TOOLING } from '#tests/constants/integration/cli/policy/adoption.ts';
 
 test('nested Prettier ignore files convert with Git precedence for files created later', async () => {
     await using directory = await testdir();

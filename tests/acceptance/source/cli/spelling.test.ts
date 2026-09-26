@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 

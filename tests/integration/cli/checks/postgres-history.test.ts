@@ -10,10 +10,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-
-const POLICY = 'version = 1\nconfigurations = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
-const ORIGINAL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
-const PATH = 'migrations/20240201_teams.sql';
+import { ORIGINAL, PATH, POSTGRES_HISTORY_POLICY } from '#tests/constants/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
@@ -23,7 +20,7 @@ function git(root: string, args: string[]): string {
 
 test('migration history reports changed committed SQL and an earlier new version, then accepts corrections', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': POLICY, [PATH]: ORIGINAL });
+    await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: ORIGINAL });
     git(sandbox.path, ['init']);
     git(sandbox.path, ['add', '.']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([]);
@@ -89,7 +86,7 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
 
 test('migration analysis rejects unreadable SQL and accepts its correction in a new run', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': POLICY, [PATH]: 'CREATE TABLE ;' });
+    await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: 'CREATE TABLE ;' });
     expect(await rejection(migrationsOf(await sessionInput(sandbox.path, 'postgres/migrations-frozen')))).toContain(
         'SQL parse failed',
     );

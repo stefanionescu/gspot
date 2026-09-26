@@ -1,31 +1,21 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
-// Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { SECURITY_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'security',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const CLEAN = 'export function double(value: number): number {\n    return value * 2;\n}\n';
-const EVALUATED =
-    'export function run(code: string): unknown {\n    // eslint-disable-next-line no-eval -- planted\n    return eval(code);\n}\n';
-const OWN_RULE =
-    'rules:\n    - id: planted-no-double\n      pattern: double(...)\n      message: The planted rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
+import {
+    EVALUATED,
+    OWN_RULE,
+    SECURITY_CLEAN,
+} from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 describe('the security configuration', () => {
     test(
@@ -33,12 +23,12 @@ describe('the security configuration', () => {
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'src/index.ts': CLEAN,
+                'src/index.ts': SECURITY_CLEAN,
                 'package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, SECURITY_INIT, environment);
             const clean = await run(
                 sandbox.path,
                 ['check', '--only', 'security/semgrep', '--no-cache', '--json'],
@@ -85,7 +75,7 @@ describe('the security configuration', () => {
             const planted: Finding = containing({ rule: 'planted-no-double', file: 'src/use.ts', line: 3 });
             const withPlanted: Finding[] = containingAll([planted]);
             expect(report.checks[0]!.findings).toStrictEqual(isWindows ? [] : withPlanted);
-            await Bun.write(join(sandbox.path, 'src/run.ts'), CLEAN);
+            await Bun.write(join(sandbox.path, 'src/run.ts'), SECURITY_CLEAN);
             await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
             const corrected = await run(
                 sandbox.path,

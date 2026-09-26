@@ -4,29 +4,11 @@ import { expect } from 'bun:test';
 import { dirname, join } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
 import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { copyFileSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-
-import {
-    RELEASE_TIMEOUT_MS,
-    environment,
-    host,
-    preparePackages,
-    requireCli,
-    root,
-} from '#tests/support/release/packages.ts';
-
-type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };
-
-/** The registry holding the published release, its version, and the npmrc private tool installs read. */
-export type PublishedRelease = {
-    registry: Awaited<ReturnType<typeof startRegistry>>;
-    version: string;
-    toolNpmrc: string;
-};
-
-/** A consumer that installed the release, with the command that runs it. */
-export type InstalledConsumer = Awaited<ReturnType<typeof createConsumer>>;
+import { environment, host, preparePackages, requireCli, root } from '#tests/support/release/packages.ts';
+import type { InstalledConsumer, PublishedManifest, PublishedRelease } from '#tests/types/support/release.ts';
 
 /**
  * Starts a registry, refuses a publish with a missing binary, then publishes the built packages and their dependency.

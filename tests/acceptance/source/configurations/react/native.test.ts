@@ -1,18 +1,21 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+// Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-// Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const REPORT = '.gspot/reports/report.json';
-const DEPENDENCIES = { expo: '54.0.0', react: '19.1.1', 'react-native': '0.81.4' };
-const TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx"\n    },\n    "include": ["src"]\n}\n';
-const CLEAN = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
+import {
+    NATIVE_DEPENDENCIES,
+    NATIVE_TSCONFIG,
+    REPORT,
+} from '#tests/constants/acceptance/source/configurations/react.ts';
+
 const head = (text: string): string => `// A planted file.\n\n${text}`;
 
 const LINT: { rule: string; path: string; text: string; line: number }[] = [
@@ -73,8 +76,8 @@ describe('the react-native configuration', () => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
                 configurations: ['typescript', 'react-native'],
-                dependencies: DEPENDENCIES,
-                files: { 'tsconfig.json': TSCONFIG, 'src/answer.ts': CLEAN },
+                dependencies: NATIVE_DEPENDENCIES,
+                files: { 'tsconfig.json': NATIVE_TSCONFIG, 'src/answer.ts': LIBRARIES_CLEAN },
             });
             const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
@@ -87,7 +90,7 @@ describe('the react-native configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
             expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
-            await Bun.write(join(sandbox.path, path), CLEAN);
+            await Bun.write(join(sandbox.path, path), LIBRARIES_CLEAN);
             await expectCorrected(sandbox.path, 'typescript/eslint', environment);
             const required = await run(
                 sandbox.path,

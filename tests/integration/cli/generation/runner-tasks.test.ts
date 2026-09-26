@@ -10,8 +10,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-
-type PackageScripts = { scripts: Record<string, string> };
+import type { PackageScripts } from '#tests/types/integration/cli/generation.ts';
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 

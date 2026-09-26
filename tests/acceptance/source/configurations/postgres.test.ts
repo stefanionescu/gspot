@@ -5,42 +5,20 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the postgres configuration: a locking migration, a repeated version, an edited migration, and a schema with holes.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { POSTGRES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'postgres',
-    '--without',
-    'naming',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const FOLDER = 'supabase/migrations';
-const FIRST = `${FOLDER}/20240101000000_create_teams.sql`;
-const TEAMS = `-- The teams of the application.
-BEGIN;
-SET LOCAL lock_timeout = '5s';
-SET LOCAL statement_timeout = '30s';
-CREATE TABLE IF NOT EXISTS public.teams (
-    id UUID PRIMARY KEY,
-    title TEXT NOT NULL
-);
-ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
-CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
-COMMIT;
-`;
+import {
+    FIRST,
+    FOLDER,
+    FROZEN_POLICY,
+    TEAMS,
+} from '#tests/constants/acceptance/source/configurations/configurations.ts';
+
 const later = (name: string): string => `${FOLDER}/20240201000000_${name}.sql`;
-const FROZEN_POLICY = '[tools.squawk]\nfrozen_through = "20240101000000"\n';
-
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
         check: 'postgres/squawk',
@@ -146,7 +124,7 @@ describe('the postgres configuration', () => {
             await createFileTree(sandbox.path, { [FIRST]: TEAMS });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['squawk', 'sqlfluff', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, POSTGRES_INIT, environment);
             commitAll(sandbox.path);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);

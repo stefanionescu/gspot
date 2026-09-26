@@ -4,7 +4,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 

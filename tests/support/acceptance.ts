@@ -1,13 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { realpathSync, writeFileSync } from 'node:fs';
+import { SETUP_MS } from '#tests/constants/support/support.ts';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
 const ACCEPTANCE = join(TESTS, 'acceptance/source');
-const SETUP_MS = 60_000;
 const TEST_MS = 30 * 60_000;
 
 /** Build and serve the local plugin while exercising source CLI consumers. */

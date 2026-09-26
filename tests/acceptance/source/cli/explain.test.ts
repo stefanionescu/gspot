@@ -6,20 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { containingAll } from '#tests/support/expectations.ts';
-
-const POLICY = `version = 1
-configurations = []
-
-[[scope]]
-path = "api"
-configurations = ["bash"]
-
-[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-paths = ["api/build.sh"]
-reason = "The script deliberately splits a list of arguments."
-`;
+import { EXPLAIN_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 describe('explain', () => {
     test('setting explanations include nested-only settings and each inherited value', async () => {
@@ -110,7 +97,7 @@ stage = "manual"
     });
     test('a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
+        await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, bash: script, 'api/build.sh': script });
         commitAll(sandbox.path);
         const configuration = await run(sandbox.path, ['explain', 'bash', '--json']);
         expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
@@ -123,7 +110,7 @@ stage = "manual"
     test('a file path reports its scope, checks, and recorded ignores', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': POLICY,
+            'gspot.toml': EXPLAIN_POLICY,
             'api/build.sh': script,
         });
         commitAll(sandbox.path);
@@ -154,7 +141,7 @@ stage = "manual"
 
     test('a missing explicit path fails', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': POLICY, 'api/build.sh': script });
+        await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_POLICY, 'api/build.sh': script });
         commitAll(sandbox.path);
         const missing = await run(sandbox.path, ['explain', './missing.sh']);
         expect(missing.code).toBe(2);

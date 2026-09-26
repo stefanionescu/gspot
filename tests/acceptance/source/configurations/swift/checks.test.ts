@@ -3,28 +3,21 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { CAST_SWIFT, CLEAN_SWIFT, SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
+import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { BELOW, COPIES, FORWARD, STRUCTURAL, TINY } from '#tests/constants/acceptance/source/configurations/swift.ts';
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
 const SNAKE = CLEAN_SWIFT.replace('func greeting', () => 'func make_greeting');
 
-const FORWARD =
-    'import Foundation\n\n/// Builds the greeting for a person.\nfunc welcome(for name: String) -> String {\n    return greeting(for: name)\n}\n';
-const TINY =
-    'import Foundation\n\nprivate func doubled(_ count: Int) -> Int {\n    count * 2\n}\n\n/// The size of a pair.\nfunc pairSize(of count: Int) -> Int {\n    let size = doubled(count)\n    return size + 1\n}\n';
-const BODY =
-    '    let first = name.uppercased()\n    let second = first.lowercased()\n    let third = second + first\n    return third\n';
-const COPIES = `import Foundation\n\n/// One way to mix a name.\nfunc mixed(_ name: String) -> String {\n${BODY}}\n\n/// The same way again.\nfunc blended(_ name: String) -> String {\n${BODY}}\n`;
-const BELOW =
-    'import Foundation\n\n/// The limit other files read.\nlet sharedLimit = 3\n\nprivate let localLimit = 2\n\n/// Adds the two limits.\nfunc bothLimits() -> Int {\n    sharedLimit + localLimit\n}\n';
 const reader = (name: string): string =>
     `import Foundation\n\n/// Reads one variable.\nfunc ${name}() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`;
 
@@ -74,24 +67,6 @@ const CASES: FindingCase[] = [
         files: { 'Sources/App/Home.swift': reader('homeFolder') },
         policy: '[architecture]\nroles = { env = "Sources/App/Environment.swift" }\n',
         expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
-    },
-];
-
-const SWITCHED =
-    'import Foundation\n\nprivate func label(_ count: Int) -> String {\n    switch count {\n    case 0:\n        "none"\n    case 1:\n        "one"\n    default:\n        "many"\n    }\n}\n\n/// The label of a pair.\nfunc pairLabel() -> String {\n    let text = label(2)\n    return text + "!"\n}\n';
-const NEGATED =
-    'import Foundation\n\n/// Whether a name is new.\nfunc isNew(_ name: String) -> Bool {\n    !["a", "b"].contains(name)\n}\n';
-
-const STRUCTURAL: FindingCase[] = [
-    {
-        check: 'swift/trivial-function',
-        files: { 'Sources/App/Label.swift': SWITCHED },
-        expected: { file: 'Sources/App/Label.swift', rule: 'trivial-function', line: 15 },
-    },
-    {
-        check: 'swift/trivial-function',
-        files: { 'Sources/App/Fresh.swift': NEGATED },
-        expected: { file: 'Sources/App/Fresh.swift', rule: 'trivial-function', line: 4 },
     },
 ];
 

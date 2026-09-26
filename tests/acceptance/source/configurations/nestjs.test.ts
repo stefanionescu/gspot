@@ -1,28 +1,24 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+// Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
-const DEPENDENCIES = {
-    '@nestjs/common': '11.2.3',
-    '@nestjs/core': '11.2.3',
-    'reflect-metadata': '0.2.2',
-    rxjs: '7.8.2',
-};
-const TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "experimentalDecorators": true,\n        "emitDecoratorMetadata": true\n    },\n    "include": ["src"]\n}\n';
-const GREETER =
-    "// The greetings the service knows.\nimport { Injectable } from '@nestjs/common';\n\n/** Builds greetings. */\n@Injectable()\nexport class GreetingService {\n    /**\n     * Greets one person.\n     * @param name the person\n     * @returns the greeting\n     */\n    greet(name: string): string {\n        if (name.trim() === '') {\n            throw new Error('A greeting requires a name.');\n        }\n        return `hello ${name.trim()}`;\n    }\n}\n";
-const CONTROLLER =
-    "// The routes that greet.\n// eslint-disable-next-line gspot/no-trivial-files -- reason: Nest requires the controller class that binds these routes.\nimport { Controller, Get, Param } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\n\n/** Answers greeting requests. */\n@Controller('greetings')\nexport class GreetingController {\n    /**\n     * Takes the service that builds greetings.\n     * @param greetings the service\n     */\n    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Nest injects this constructor dependency.\n    constructor(private readonly greetings: GreetingService) {}\n\n    /**\n     * Greets the person the route names.\n     * @param name the person\n     * @returns the greeting\n     */\n    @Get(':name')\n    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Nest invokes this decorated route method.\n    greet(@Param('name') name: string): string {\n        return this.greetings.greet(name);\n    }\n}\n";
-const MODULE =
-    "// The greeting feature.\n// eslint-disable-next-line gspot/no-trivial-files -- reason: Nest requires this module class to register its providers and controllers.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
+import {
+    CONTROLLER,
+    GREETER,
+    NESTJS_DEPENDENCIES,
+    NESTJS_MODULE,
+    NESTJS_TSCONFIG,
+    REPOSITORY,
+} from '#tests/constants/acceptance/source/configurations/configurations.ts';
+
 const REACHES_ROWS = CONTROLLER.replace(
     'constructor(private readonly greetings: GreetingService) {}',
     () =>
@@ -32,9 +28,7 @@ const REACHES_ROWS = CONTROLLER.replace(
     () =>
         "import { GreetingService } from './greeting.service.js';\nimport { GreetingRepository } from './greeting.repository.js';",
 );
-const REPOSITORY =
-    "// Where greetings are kept.\nimport { Injectable } from '@nestjs/common';\n\n/** Keeps greetings. */\n@Injectable()\nexport class GreetingRepository {\n    /**\n     * Counts the greetings kept.\n     * @returns the count\n     */\n    count(): number {\n        return 0;\n    }\n}\n";
-const CIRCULAR = MODULE.replace(
+const CIRCULAR = NESTJS_MODULE.replace(
     "import { Module } from '@nestjs/common';",
     () => "import { forwardRef, Module } from '@nestjs/common';",
 ).replace('@Module({ controllers', () => '@Module({ imports: [forwardRef(() => GreetingModule)], controllers');
@@ -53,7 +47,7 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'integrity/tsconfig-options',
-        files: { 'tsconfig.json': TSCONFIG.replace('"strict": true', '"strict": false') },
+        files: { 'tsconfig.json': NESTJS_TSCONFIG.replace('"strict": true', '"strict": false') },
         expected: { file: 'tsconfig.json', rule: 'strict' },
     },
     {
@@ -67,7 +61,7 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'integrity/tsconfig-options',
-        files: { 'tsconfig.json': TSCONFIG.replace(',\n        "emitDecoratorMetadata": true', '') },
+        files: { 'tsconfig.json': NESTJS_TSCONFIG.replace(',\n        "emitDecoratorMetadata": true', '') },
         expected: { file: 'tsconfig.json', rule: 'emitDecoratorMetadata' },
     },
 ];
@@ -75,12 +69,12 @@ const CASES: FindingCase[] = [
 const installNest = (root: string): Promise<Record<string, string>> =>
     installSandbox(root, {
         configurations: ['typescript', 'nestjs'],
-        dependencies: DEPENDENCIES,
+        dependencies: NESTJS_DEPENDENCIES,
         files: {
-            'tsconfig.json': TSCONFIG,
+            'tsconfig.json': NESTJS_TSCONFIG,
             'src/greeting.service.ts': GREETER,
             'src/greeting.controller.ts': CONTROLLER,
-            'src/greeting.module.ts': MODULE,
+            'src/greeting.module.ts': NESTJS_MODULE,
         },
         without: ['security', 'dependencies'],
     });

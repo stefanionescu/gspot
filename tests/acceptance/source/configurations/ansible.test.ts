@@ -1,28 +1,17 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the ansible configuration: a task that shells out to systemctl.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-// Planted repository for the ansible configuration: a task that shells out to systemctl.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { ANSIBLE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'ansible',
-    '--without',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const play = (task: string): string => `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n${task}`;
 const CLEAN = play(
     '    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n',
@@ -42,7 +31,7 @@ describe('the ansible configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ansible-lint', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, ANSIBLE_INIT, environment);
             const outcome = await runPlanted(
                 sandbox.path,
                 {

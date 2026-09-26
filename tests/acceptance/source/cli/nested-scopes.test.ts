@@ -4,33 +4,12 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-
-const POLICY = `version = 1
-configurations = ["formatting"]
-[limits]
-file_lines = 250
-[format]
-indent_width = 4
-[rules]
-install = false
-[[scope]]
-path = "api"
-configurations = ["bash"]
-[scope.limits]
-file_lines = 200
-[scope.format]
-indent_width = 2
-[[scope]]
-path = "api/worker"
-configurations = ["sql"]
-[scope.limits]
-function_lines = 30
-`;
+import { NESTED_SCOPES_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': NESTED_SCOPES_POLICY,
         'api/entry.sh': 'if then\n',
         'api/worker/entry.sh': 'if then\n',
         'api/worker/query.sql': 'SELECT 1;\n',

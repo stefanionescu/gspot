@@ -1,16 +1,8 @@
 import { expect } from 'bun:test';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
-import { run, type SpawnOutcome } from '#tests/support/cli/command.ts';
-import { plant, type PlantedInput } from '#tests/support/cli/preservation.ts';
-
-/** A planted case that checks a diagnostic substring. */
-export type PlantedCase = PlantedInput & { expected: string };
-
-/** A planted case that checks a finding at its source location. */
-export type FindingCase = PlantedInput & {
-    expected: Pick<Finding, 'file'> & Partial<Pick<Finding, 'rule' | 'line' | 'column' | 'message'>>;
-};
+import { plant } from '#tests/support/cli/preservation.ts';
+import type { PlantedInput, SpawnOutcome } from '#tests/types/support/cli.ts';
 
 /** A clean bash script every planted repository starts from. */
 export const script =

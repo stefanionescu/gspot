@@ -4,8 +4,8 @@ import { afterAll, expect, test } from 'bun:test';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
-import type { CodeQualityReport, SarifReport } from '#tests/support/cli/reports.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
+import type { CodeQualityReport, SarifReport } from '#tests/types/support/cli.ts';
 import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
 
 // The release publishes once for this file, and its registry stops when the file's tests end.

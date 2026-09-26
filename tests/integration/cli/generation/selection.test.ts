@@ -6,8 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-
-type LicensesConfiguration = { licenses_allowed: string[]; packages_allowed: unknown[] };
+import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 
 test.each([
     ['bash', 'bash'],

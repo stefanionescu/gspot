@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 

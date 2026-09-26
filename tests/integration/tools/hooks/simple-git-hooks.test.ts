@@ -6,10 +6,9 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { SIMPLE_GIT_HOOKS_POLICY } from '#tests/constants/integration/tools/hooks.ts';
 import { hookReadiness, hookStatusText, installManager } from '#tests/support/cli/hooks.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
-
-const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
 const captured = (root: string, name: string) =>
     existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
@@ -20,7 +19,7 @@ test.each(['', "apps/worker's tools"])(
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
         await createFileTree(root, {
-            'gspot.toml': POLICY,
+            'gspot.toml': SIMPLE_GIT_HOOKS_POLICY,
             'package.json':
                 JSON.stringify(
                     {

@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { testManifest } from '#tests/support/cli/tooling.ts';
+import { PINNED_HEADER } from '#tests/constants/unit/cli/configurations.ts';
 import { validateManifests } from '#cli/configurations/manifest-problems.ts';
 import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
 
@@ -124,9 +125,6 @@ test('check references require one standalone built-in owner and preserve its de
         validateManifests(manifests);
     }).toThrow('standalone built-in');
 });
-
-const PINNED_HEADER =
-    '[configuration]\nname = "pinned"\nkind = "tool"\ntitle = "Pinned"\ndescription = "Pins one tool for the tests."\n';
 
 test.each([
     ['[[tools]]\nname = "unpinned"\nnpm = "unpinned"\n', 'has no version and no floor'],

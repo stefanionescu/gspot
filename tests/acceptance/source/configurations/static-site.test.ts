@@ -1,42 +1,26 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { STATIC_SITE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { BUILD, STATIC_SITE_HEADERS, SVG } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'static-site',
-    '--without',
-    'spelling',
-    'naming',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const page = (body: string): string =>
     `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n${body}    </body>\n</html>\n`;
 const HOME = page(
     '        <h1 class="title">Planted</h1>\n        <a href="/about.html">About</a>\n        <img src="/assets/logo.svg" alt="The logo" />\n',
 );
 const ABOUT = page('        <h1 class="title">About</h1>\n        <a href="/">Home</a>\n');
-const BUILD =
-    "// Copies the pages, the stylesheet, the sitemap and the assets into dist.\nimport { cpSync, mkdirSync, rmSync } from 'node:fs';\n\nrmSync('dist', { recursive: true, force: true });\nmkdirSync('dist', { recursive: true });\nfor (const name of ['index.html', 'about.html', 'site.css', 'sitemap.xml']) cpSync(name, `dist/${name}`);\ncpSync('assets', 'dist/assets', { recursive: true });\n";
 const SITEMAP = (extra: string): string =>
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n${extra}</urlset>\n`;
-const HEADERS =
-    '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: strict-origin-when-cross-origin\n    X-Frame-Options: DENY\n';
-const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>';
 const FILES = {
     '.gitignore': 'node_modules\ndist\n',
     'package.json':
@@ -46,7 +30,7 @@ const FILES = {
     'about.html': ABOUT,
     'site.css': '.title {\n    color: #333;\n}\n',
     'sitemap.xml': SITEMAP(''),
-    _headers: HEADERS,
+    _headers: STATIC_SITE_HEADERS,
     'site.webmanifest': '{\n    "name": "Planted",\n    "icons": [{ "src": "/assets/logo.svg" }]\n}\n',
     'assets/logo.svg': SVG,
 };
@@ -123,7 +107,7 @@ describe('the static-site configuration', () => {
             const environment = {
                 PATH: toolsPath(['typos', 'ec', 'ast-grep']),
             };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);
             {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
@@ -169,7 +153,7 @@ test(
         await createFileTree(sandbox.path, FILES);
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
-        await installAtLevel(sandbox.path, INIT, environment);
+        await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);
         const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(checked.stdout));

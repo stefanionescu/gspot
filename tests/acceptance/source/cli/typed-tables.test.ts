@@ -1,25 +1,12 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-// gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'markdown',
-    'docs',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const REASON = 'The report names the folders the move deleted, which is what it is for.';
-const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { TABLE, TYPED_TABLES_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 describe('gspot set', () => {
     test(
@@ -29,7 +16,7 @@ describe('gspot set', () => {
             await createFileTree(sandbox.path, { 'README.md': '# planted\n', LICENSE: 'MIT\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
+            await install(sandbox.path, TYPED_TABLES_INIT, environment);
             const written = await run(sandbox.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
             expect(written.code, written.stdout + written.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();

@@ -2,36 +2,21 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import type { AuthoredState } from '#tests/types/acceptance/source/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
-const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
-const FILES = [
-    'source.js',
-    'src/nested/source.js',
-    'tests/[draft].js',
-    'tests/café note.js',
-    'server/source.js',
-    'components/source.js',
-];
-const CONFIG = {
-    tabWidth: 2,
-    singleQuote: false,
-    overrides: [
-        { files: 'tests/**', options: { tabWidth: 8, singleQuote: true } },
-        { files: '**/*.js', excludeFiles: 'server/**', options: { semi: false } },
-    ],
-};
-type AuthoredState = { state: 'kept' | 'rewritten'; mode: number } | { state: 'removed' };
-
-const AUTHORED: Record<AuthoredState['state'], Partial<AuthoredState>> = {
-    kept: { state: 'kept', mode: 0o640 },
-    rewritten: { state: 'rewritten' },
-    removed: { state: 'removed' },
-};
+import {
+    AUTHORED,
+    PRETTIER_CARRY_CONFIG,
+    PRETTIER_CARRY_FILES,
+    PRETTIER_CARRY_SOURCE,
+    YAML,
+} from '#tests/constants/acceptance/source/cli/cli.ts';
 
 // What became of the authored file after init: its text and mode as they were, another text, or nothing.
 function authoredState(path: string, text: string): AuthoredState {
@@ -39,20 +24,17 @@ function authoredState(path: string, text: string): AuthoredState {
     return { state: readFileSync(path, 'utf8') === text ? 'kept' : 'rewritten', mode: statSync(path).mode & 0o777 };
 }
 
-const YAML =
-    'tabWidth: 2\nsingleQuote: false\noverrides:\n  - files: "tests/**"\n    options:\n      tabWidth: 8\n      singleQuote: true\n  - files: "**/*.js"\n    excludeFiles: "server/**"\n    options:\n      semi: false\n';
-
 // Each row says what init leaves of the authored file: a package manifest is kept, the JSON file is rewritten as a
 // pointer, and every other native file is removed.
 test.each([
-    ['.prettierrc.json', JSON.stringify(CONFIG) + '\n', 'rewritten'],
+    ['.prettierrc.json', JSON.stringify(PRETTIER_CARRY_CONFIG) + '\n', 'rewritten'],
     [
         'package.json',
         JSON.stringify({
             name: 'authored-project',
             private: true,
             scripts: { authored: 'echo keep' },
-            prettier: CONFIG,
+            prettier: PRETTIER_CARRY_CONFIG,
         }) + '\n',
         'kept',
     ],
@@ -73,23 +55,23 @@ test.each([
     ],
     [
         'prettier.config.mjs',
-        `const testDirectory = 'tests';\nconst config = ${JSON.stringify(CONFIG)};\nconfig.overrides[0].files = testDirectory + '/**';\nexport default config;\n`,
+        `const testDirectory = 'tests';\nconst config = ${JSON.stringify(PRETTIER_CARRY_CONFIG)};\nconfig.overrides[0].files = testDirectory + '/**';\nexport default config;\n`,
         'removed',
     ],
-    ['prettier.config.cjs', `module.exports = ${JSON.stringify(CONFIG)};\n`, 'removed'],
+    ['prettier.config.cjs', `module.exports = ${JSON.stringify(PRETTIER_CARRY_CONFIG)};\n`, 'removed'],
     [
         'prettier.config.ts',
-        `export default ${JSON.stringify(CONFIG)} satisfies import('prettier').Config;\n`,
+        `export default ${JSON.stringify(PRETTIER_CARRY_CONFIG)} satisfies import('prettier').Config;\n`,
         'removed',
     ],
     [
         'prettier.config.mts',
-        `export default ${JSON.stringify(CONFIG)} satisfies import('prettier').Config;\n`,
+        `export default ${JSON.stringify(PRETTIER_CARRY_CONFIG)} satisfies import('prettier').Config;\n`,
         'removed',
     ],
     [
         'prettier.config.cts',
-        `module.exports = ${JSON.stringify(CONFIG)} satisfies import('prettier').Config;\n`,
+        `module.exports = ${JSON.stringify(PRETTIER_CARRY_CONFIG)} satisfies import('prettier').Config;\n`,
         'removed',
     ],
     ['.prettierrc.yaml', YAML, 'removed'],
@@ -99,15 +81,15 @@ test.each([
         await using repository = await testdir();
         await createFileTree(repository.path, {
             [path]: text,
-            ...Object.fromEntries(FILES.map((file) => [file, SOURCE])),
+            ...Object.fromEntries(PRETTIER_CARRY_FILES.map((file) => [file, PRETTIER_CARRY_SOURCE])),
         });
         const original = join(repository.path, path);
         chmodSync(original, 0o640);
         const expected = new Map<string, string>();
-        for (const file of [...FILES, 'tests/future.js']) {
+        for (const file of [...PRETTIER_CARRY_FILES, 'tests/future.js']) {
             const filepath = join(repository.path, file);
             const options = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
-            expected.set(file, await prettier.format(SOURCE, { ...options, filepath }));
+            expected.set(file, await prettier.format(PRETTIER_CARRY_SOURCE, { ...options, filepath }));
         }
         expect(expected.get('tests/[draft].js')).toBe(
             "const greeting = 'hello'\nif (greeting) {\n        console.log(greeting)\n}\n",
@@ -129,15 +111,17 @@ test.each([
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(initialized.stdout).toContain('selectors are represented in gspot configuration');
         expect(authoredState(original, text)).toMatchObject(AUTHORED[outcome]);
-        for (const file of FILES) {
+        for (const file of PRETTIER_CARRY_FILES) {
             const filepath = join(repository.path, file);
             const carried = await prettier.resolveConfig(filepath, {
                 config: join(repository.path, '.gspot/config/prettier.json'),
                 editorconfig: false,
                 useCache: false,
             });
-            expect(await prettier.format(SOURCE, { ...carried, filepath }), file).toBe(expected.get(file)!);
-            expect(readFileSync(filepath, 'utf8')).toBe(SOURCE);
+            expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...carried, filepath }), file).toBe(
+                expected.get(file)!,
+            );
+            expect(readFileSync(filepath, 'utf8')).toBe(PRETTIER_CARRY_SOURCE);
         }
         await installPrivateTools(repository.path);
         const level = await run(repository.path, ['set', 'level', 'all']);
@@ -150,7 +134,7 @@ test.each([
             '--no-cache',
             '--json',
             '--',
-            ...FILES,
+            ...PRETTIER_CARRY_FILES,
         ]);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const report = JSON.parse(corrected.stdout) as RunReport;
@@ -158,18 +142,21 @@ test.each([
         expect(report.checks[0]).toMatchObject({
             check: 'formatting/prettier',
             status: 'ok',
-            files: FILES.length,
+            files: PRETTIER_CARRY_FILES.length,
             findings: [],
         });
-        for (const file of FILES) expect(readFileSync(join(repository.path, file), 'utf8')).toBe(expected.get(file)!);
+        for (const file of PRETTIER_CARRY_FILES)
+            expect(readFileSync(join(repository.path, file), 'utf8')).toBe(expected.get(file)!);
         const future = join(repository.path, 'tests/future.js');
-        writeFileSync(future, SOURCE);
+        writeFileSync(future, PRETTIER_CARRY_SOURCE);
         const options = await prettier.resolveConfig(future, {
             config: join(repository.path, '.gspot/config/prettier.json'),
             editorconfig: false,
             useCache: false,
         });
-        expect(await prettier.format(SOURCE, { ...options, filepath: future })).toBe(expected.get('tests/future.js')!);
+        expect(await prettier.format(PRETTIER_CARRY_SOURCE, { ...options, filepath: future })).toBe(
+            expected.get('tests/future.js')!,
+        );
         expect(authoredState(original, text)).toMatchObject(AUTHORED[outcome]);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
@@ -185,7 +172,10 @@ test.each([false, true])(
         const configuration =
             'console.log("formatter stdout"); console.error("formatter stderr");\n' +
             (fails ? 'throw new Error("authored formatter failure");\n' : 'export default { semi: false };\n');
-        await createFileTree(repository.path, { 'prettier.config.mjs': configuration, 'source.js': SOURCE });
+        await createFileTree(repository.path, {
+            'prettier.config.mjs': configuration,
+            'source.js': PRETTIER_CARRY_SOURCE,
+        });
         const result = await run(repository.path, [
             'init',
             '--yes',
@@ -236,7 +226,7 @@ test(
         const files = ['source.js', 'src/source.js', 'src/nested/source.js'];
         await createFileTree(repository.path, {
             ...configs,
-            ...Object.fromEntries(files.map((file) => [file, SOURCE])),
+            ...Object.fromEntries(files.map((file) => [file, PRETTIER_CARRY_SOURCE])),
         });
         for (const path of Object.keys(configs)) chmodSync(join(repository.path, path), 0o640);
         const expected = new Map<string, string>();
@@ -244,7 +234,7 @@ test(
             const filepath = join(repository.path, file);
             expected.set(
                 file,
-                await prettier.format(SOURCE, {
+                await prettier.format(PRETTIER_CARRY_SOURCE, {
                     ...(await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false })),
                     filepath,
                 }),
@@ -273,10 +263,11 @@ test(
                 editorconfig: true,
                 useCache: false,
             });
-            expect(await prettier.format(SOURCE, { ...options, filepath }), `${file}: ${JSON.stringify(options)}`).toBe(
-                expected.get(file)!,
-            );
-            expect(readFileSync(filepath, 'utf8')).toBe(SOURCE);
+            expect(
+                await prettier.format(PRETTIER_CARRY_SOURCE, { ...options, filepath }),
+                `${file}: ${JSON.stringify(options)}`,
+            ).toBe(expected.get(file)!);
+            expect(readFileSync(filepath, 'utf8')).toBe(PRETTIER_CARRY_SOURCE);
         }
         const restored = await run(repository.path, ['uninstall', '--yes']);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
@@ -297,8 +288,8 @@ test(
         await createFileTree(repository.path, {
             'prettier.config.mjs': authored,
             'src/.prettierrc.json': '{"semi":false}\n',
-            'source.js': SOURCE,
-            'src/source.js': SOURCE,
+            'source.js': PRETTIER_CARRY_SOURCE,
+            'src/source.js': PRETTIER_CARRY_SOURCE,
         });
         const result = await run(repository.path, [
             'init',

@@ -2,28 +2,28 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
-const POLICY = 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
-const SOURCE = 'alert(left == right);\n';
-const CONFIG = [
-    { files: ['**/*.js'], rules: { eqeqeq: 'error' } },
-    { files: ['tests/**'], rules: { eqeqeq: 'off', 'no-alert': 'warn' } },
-];
+import {
+    ESLINT_PRESERVATION_CONFIG,
+    ESLINT_PRESERVATION_POLICY,
+    ESLINT_PRESERVATION_SOURCE,
+} from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
     'apply preserves authored %s and native ESLint path behavior',
     async (path) => {
         await using repository = await testdir();
-        const text = `module.exports = ${JSON.stringify(CONFIG)};\n`;
+        const text = `module.exports = ${JSON.stringify(ESLINT_PRESERVATION_CONFIG)};\n`;
         const original = path.endsWith('.mjs') ? text.replace('module.exports =', 'export default') : text;
         await createFileTree(repository.path, {
-            'gspot.toml': POLICY.replace('[rules]', `exclude = [${JSON.stringify(path)}]\n[rules]`),
+            'gspot.toml': ESLINT_PRESERVATION_POLICY.replace('[rules]', `exclude = [${JSON.stringify(path)}]\n[rules]`),
             [path]: original,
-            'source.js': SOURCE,
-            'tests/source.js': SOURCE,
+            'source.js': ESLINT_PRESERVATION_SOURCE,
+            'tests/source.js': ESLINT_PRESERVATION_SOURCE,
         });
         chmodSync(join(repository.path, path), 0o640);
         const preview = await run(repository.path, ['apply', '--dry-run', '--json']);
@@ -34,7 +34,7 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         for (const file of ['source.js', 'tests/source.js', 'future.js']) {
-            writeFileSync(join(repository.path, file), SOURCE);
+            writeFileSync(join(repository.path, file), ESLINT_PRESERVATION_SOURCE);
             const eslint = new ESLint({ cwd: repository.path });
             const [defective] = await eslint.lintFiles([file]);
             expect(
@@ -61,10 +61,13 @@ test(
     'apply retires its owned ESLint pointer when a later authored config is introduced',
     async () => {
         await using repository = await testdir();
-        await createFileTree(repository.path, { 'gspot.toml': POLICY, 'source.js': SOURCE });
+        await createFileTree(repository.path, {
+            'gspot.toml': ESLINT_PRESERVATION_POLICY,
+            'source.js': ESLINT_PRESERVATION_SOURCE,
+        });
         const initial = await run(repository.path, ['apply']);
         expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-        const original = `module.exports = ${JSON.stringify(CONFIG)};\n`;
+        const original = `module.exports = ${JSON.stringify(ESLINT_PRESERVATION_CONFIG)};\n`;
         writeFileSync(join(repository.path, 'eslint.config.cjs'), original);
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);

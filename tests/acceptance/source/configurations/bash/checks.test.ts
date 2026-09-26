@@ -3,14 +3,15 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { BASH_CASES } from '#tests/support/cli/bash-cases.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
-import { BASH_CASES, MAIN } from '#tests/support/cli/bash-cases.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { BASH_CASES_MAIN as MAIN, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 describe('the bash configuration', () => {
     test.each(BASH_CASES)(

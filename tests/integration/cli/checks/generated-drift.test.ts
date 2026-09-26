@@ -6,9 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-
-const OPTIONS = { stage: 'all' as const, skips: [], only: ['integrity/generated-drift'], fix: false, isDryRun: false };
-const GENERATED = '.gspot/config/shellcheckrc';
+import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/constants/integration/cli/checks.ts';
 
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();
@@ -18,13 +16,13 @@ test('an edited generated file and one holding merge markers are drift findings,
         '.gitignore': '.gspot/cache/\n',
     });
     await applyAll(await openSession(sandbox.path));
-    const clean = await executeRun(await openSession(sandbox.path), OPTIONS);
+    const clean = await executeRun(await openSession(sandbox.path), GENERATED_DRIFT_OPTIONS);
     expect(clean.report.checks).toMatchObject([{ check: 'integrity/generated-drift', status: 'ok', findings: [] }]);
     const rendered = readFileSync(join(sandbox.path, GENERATED), 'utf8');
     // Generated files are read-only; the edits below stand for a developer who forced one through.
     chmodSync(join(sandbox.path, GENERATED), 0o644);
     writeFileSync(join(sandbox.path, GENERATED), `${rendered}disable=SC2034\n`);
-    const edited = await executeRun(await openSession(sandbox.path), OPTIONS);
+    const edited = await executeRun(await openSession(sandbox.path), GENERATED_DRIFT_OPTIONS);
     expect(edited.report.exitCode).toBe(1);
     expect(edited.report.checks[0]?.findings).toMatchObject([
         { file: GENERATED, rule: 'changed', help: textContaining('gspot apply') },
@@ -33,7 +31,7 @@ test('an edited generated file and one holding merge markers are drift findings,
         join(sandbox.path, GENERATED),
         `<<<<<<< HEAD\n${rendered}=======\n${rendered}disable=SC2034\n>>>>>>> feature\n`,
     );
-    const conflicted = await executeRun(await openSession(sandbox.path), OPTIONS);
+    const conflicted = await executeRun(await openSession(sandbox.path), GENERATED_DRIFT_OPTIONS);
     expect(conflicted.report.checks[0]?.findings).toMatchObject([
         {
             file: GENERATED,
@@ -43,6 +41,6 @@ test('an edited generated file and one holding merge markers are drift findings,
         },
     ]);
     await applyAll(await openSession(sandbox.path));
-    const repaired = await executeRun(await openSession(sandbox.path), OPTIONS);
+    const repaired = await executeRun(await openSession(sandbox.path), GENERATED_DRIFT_OPTIONS);
     expect(repaired.report.checks[0]).toMatchObject({ status: 'ok', findings: [] });
 });

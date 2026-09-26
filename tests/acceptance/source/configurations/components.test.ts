@@ -1,27 +1,18 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { run } from '#tests/support/cli/command.ts';
 // Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { ComponentShape } from '#tests/types/acceptance/source/configurations/configurations.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { SVELTE_CLEAN, VUE_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-/** One framework of component files in the planted components test: its check, its configurations, its files and its planted cases. */
-type ComponentShape = {
-    check: string;
-    configurations: string[];
-    dependencies: Record<string, string>;
-    files: Record<string, string>;
-    planted: string;
-    cases: [string, string][];
-};
-
-const VUE_CLEAN =
-    '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
 const VUE_CASES: [string, string][] = [
     [
         'vue/no-v-html',
@@ -33,8 +24,6 @@ const VUE_CASES: [string, string][] = [
     ],
 ];
 
-const SVELTE_CLEAN =
-    '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p>{name}</p>\n';
 const SVELTE_CASES: [string, string][] = [
     [
         'svelte/no-at-html-tags',

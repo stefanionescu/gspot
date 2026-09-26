@@ -8,9 +8,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-
-// This compatibility fixture uses the installed CLI release and its database image selection.
-const CLI_VERSION = '2.72.7';
+import { CLI_VERSION } from '#tests/constants/integration/tools/checks.ts';
 
 test('Supabase CLI 2.72.7 generates local database types and production freshness rejects drift', async () => {
     await using sandbox = await testdir();

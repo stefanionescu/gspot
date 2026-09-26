@@ -3,28 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
+import { ASSETS_CONFIGURATION, CHECKOUT, PROBE, SOURCES } from '#tests/constants/integration/cli/platform.ts';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
-const CHECKOUT = 'workspace % café';
-const SOURCES = [
-    'packages/cli/package.json',
-    'packages/cli/src/platform/assets.ts',
-    'packages/cli/src/platform/paths.ts',
-    'packages/cli/src/platform/environment.ts',
-    'packages/cli/src/repository/hooks.ts',
-    'packages/cli/src/constants/platform.ts',
-    'packages/cli/src/constants/repository/repository.ts',
-];
-const CONFIGURATION = '[configuration]\nname = "bash"\n';
-const PROBE = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
-for (const name of GRAMMAR_NAMES) {
-    if (!WebAssembly.validate(await Bun.file(grammarPath(name)).arrayBuffer())) throw new Error(name);
-}
-try { grammarPath('undeclared.wasm'); throw new Error('Undeclared asset was accepted.'); }
-catch (error) { if (!String(error).includes('No grammar is called')) throw error; }
-console.log(JSON.stringify({ text: readAsset('packages/cli/configurations/language/bash/manifest.toml'), files: listAssets('packages/cli/configurations') }));
-`;
-
 describe('development assets', () => {
     test('resolve a checkout containing spaces, percent signs, and Unicode', async () => {
         const sources = Object.fromEntries(
@@ -33,7 +14,7 @@ describe('development assets', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...sources,
-            [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: CONFIGURATION,
+            [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
             [`${CHECKOUT}/probe.ts`]: PROBE,
             [`${CHECKOUT}/packages/cli/.build/undeclared.wasm`]: 'not a declared asset',
         });
@@ -52,7 +33,7 @@ describe('development assets', () => {
         const result = execute();
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toStrictEqual({
-            text: CONFIGURATION,
+            text: ASSETS_CONFIGURATION,
             files: ['packages/cli/configurations/language/bash/manifest.toml'],
         });
     });

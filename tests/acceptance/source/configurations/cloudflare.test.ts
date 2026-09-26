@@ -4,30 +4,13 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the cloudflare configuration: a configuration with no date, a header under no path, and a redirect with a status Cloudflare does not know.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
-
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'cloudflare',
-    '--without',
-    'spelling',
-    'naming',
-    'security',
-    'configs',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const WRANGLER =
-    '{\n    // The worker of the planted site.\n    "name": "planted",\n    "compatibility_date": "2026-01-15"\n}\n';
+import { WRANGLER } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { CLOUDFLARE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 const CASES: FindingCase[] = [
     {
@@ -61,7 +44,7 @@ describe('the cloudflare configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, CLOUDFLARE_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(

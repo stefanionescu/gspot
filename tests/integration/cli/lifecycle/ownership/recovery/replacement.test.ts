@@ -5,14 +5,13 @@ import { cliSource } from '#tests/support/cli/process.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
+import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
-type Point = 'success' | 'error' | 'interruption' | 'edited' | 'damaged backup';
-
 // Publishes a read-only file through a child whose rename fails at the chosen point, with Windows semantics.
-async function publish(point: Point) {
+async function publish(point: Point): Promise<Published> {
     const directory = await testdir();
     const original = Buffer.from([0, 255, 10, 13]);
     const destination = join(directory.path, 'config.txt');
@@ -62,8 +61,6 @@ try {
     );
     return { directory, original, destination, backup: state.pending?.[0]?.beforeBackup?.backup };
 }
-
-type Published = Awaited<ReturnType<typeof publish>>;
 
 // What recovery leaves behind: the file's bytes and mode, and what the owner still records as installed.
 function recovered(owner: ReturnType<typeof openLifecycleOwner>, { destination }: Published) {

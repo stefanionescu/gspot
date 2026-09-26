@@ -3,15 +3,13 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-
-const INIT = ['init', '--yes', '--dry-run', '--json', '--without', 'naming', 'spelling'];
-const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
-const COMPONENT = '<script setup>\nconst name = 1;\n</script>\n<template><p>{{ name }}</p></template>\n';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { COMPONENT, INIT_SELECTION_QUIET, SELECTION_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 async function selected(root: string): Promise<string[]> {
-    const result = await run(root, [...INIT, ...QUIET]);
+    const result = await run(root, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as { plan: { configurations: { configuration: string }[] } };
     return plan.plan.configurations.map((entry) => entry.configuration);
@@ -60,7 +58,7 @@ test(
             'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
         });
         commitAll(sandbox.path);
-        const result = await run(sandbox.path, [...INIT, ...QUIET]);
+        const result = await run(sandbox.path, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as { policy: string; plan: { noLongerRuns: { path: string }[] } };
         const proposed = parse(output.policy) as { scope?: { path: string; configurations: string[] }[] };
@@ -88,7 +86,7 @@ test(
                 'package.json': JSON.stringify({ name: 'api', private: true, type: 'module', dependencies }),
             });
             commitAll(sandbox.path);
-            const result = await run(sandbox.path, [...INIT, ...QUIET]);
+            const result = await run(sandbox.path, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
             expect(result.code, result.stdout + result.stderr).toBe(0);
             const output = JSON.parse(result.stdout) as { policy: string };
             return parse(output.policy) as {

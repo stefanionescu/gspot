@@ -4,28 +4,14 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the sql configuration: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { SQL_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { PSQL, SQL_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'sql',
-    'naming',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const CLEAN =
-    '-- The accounts of the application.\nCREATE TABLE user_accounts (\n    id UUID PRIMARY KEY,\n    display_name TEXT NOT NULL\n);\n';
-// A script for psql: a meta-command and two kinds of variable, which the server never sees.
-const PSQL = "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
 const LONG = Array.from({ length: 401 }, (_, index) => `SELECT ${String(index)};\n`).join('');
 
 // The keyword arrives in two halves, because the spelling fixer corrects it when it is whole.
@@ -65,13 +51,13 @@ describe('the sql configuration', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'db/accounts.sql': CLEAN,
+                'db/accounts.sql': SQL_CLEAN,
                 'db/report.sql': PSQL,
                 'db/.sqlfluffignore': '# Scripts for psql, which the linter cannot read\nreport.sql\n',
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, SQL_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(
@@ -83,7 +69,7 @@ describe('the sql configuration', () => {
             );
             await createFileTree(
                 sandbox.path,
-                Object.fromEntries(Object.keys(planted.files).map((file) => [file, CLEAN])),
+                Object.fromEntries(Object.keys(planted.files).map((file) => [file, SQL_CLEAN])),
             );
             await expectCorrected(sandbox.path, planted.check, environment);
         },

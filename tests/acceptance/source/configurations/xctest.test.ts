@@ -1,52 +1,39 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { XCTEST_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { XCTEST_TESTS } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'xctest',
-    '--without',
-    'spelling',
-    'naming',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const suite = (body: string): string =>
     `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n${body}    }\n}\n`;
 const CLEAN = suite('        XCTAssertEqual("Home", "Home")\n');
-const TESTS = 'AppTests/HomeTests.swift';
-
 const CASES: (FindingCase & { correction: Record<string, string> })[] = [
     {
         check: 'xctest/disabled',
-        files: { [TESTS]: suite('        throw XCTSkip()\n') },
-        expected: { file: TESTS, rule: 'disabled', line: 7 },
-        correction: { [TESTS]: suite('        throw XCTSkip("Requires a physical device")\n') },
+        files: { [XCTEST_TESTS]: suite('        throw XCTSkip()\n') },
+        expected: { file: XCTEST_TESTS, rule: 'disabled', line: 7 },
+        correction: { [XCTEST_TESTS]: suite('        throw XCTSkip("Requires a physical device")\n') },
     },
     {
         check: 'xctest/no-sleep',
-        files: { [TESTS]: suite('        Thread.sleep(forTimeInterval: 2)\n') },
-        expected: { file: TESTS, rule: 'sleep', line: 7 },
-        correction: { [TESTS]: CLEAN },
+        files: { [XCTEST_TESTS]: suite('        Thread.sleep(forTimeInterval: 2)\n') },
+        expected: { file: XCTEST_TESTS, rule: 'sleep', line: 7 },
+        correction: { [XCTEST_TESTS]: CLEAN },
     },
     {
         check: 'xctest/recording',
-        files: { [TESTS]: suite('        isRecording = true\n') },
-        expected: { file: TESTS, rule: 'recording', line: 7 },
-        correction: { [TESTS]: suite('        isRecording = false\n') },
+        files: { [XCTEST_TESTS]: suite('        isRecording = true\n') },
+        expected: { file: XCTEST_TESTS, rule: 'recording', line: 7 },
+        correction: { [XCTEST_TESTS]: suite('        isRecording = false\n') },
     },
     {
         check: 'xctest/reference-images',
@@ -62,7 +49,7 @@ describe('the xctest configuration', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                [TESTS]: CLEAN,
+                [XCTEST_TESTS]: CLEAN,
                 'AppTests/__Snapshots__/HomeTests/testTitle.1.png': 'png',
                 'AppTests/SkippedTests.swift': suite(
                     '        throw XCTSkip("Waits for the new design of the header, issue 12.")\n',
@@ -70,7 +57,7 @@ describe('the xctest configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, XCTEST_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());

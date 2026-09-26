@@ -3,15 +3,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
-
-const FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'tests/fixtures/helpers.js': 'export const value = 1;\n',
-    'tests/fixtures/example.test.js': '',
-    'tests/unit/helpers.js': 'export const value = 1;\n',
-    'tests/unit/example.test.js': '',
-    'src/runtime.js': 'import { value } from "../tests/fixtures/helpers.js"; export const result = value + 1;\n',
-};
+import { VITEST_FILES } from '#tests/constants/integration/cli/generation/plugin-levels.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<{ message: string }[]> {
     const results = await eslint.lintFiles([file]);
@@ -24,7 +16,7 @@ async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<
 test('the Vitest harness folder places test support and closes it to runtime code', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        ...FILES,
+        ...VITEST_FILES,
         'gspot.toml':
             'version = 1\nlevel = "all"\nconfigurations = ["vitest"]\n[rules]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
     });
@@ -41,7 +33,7 @@ test('the Vitest harness folder places test support and closes it to runtime cod
 test('without a test runner no folder is the harness, so support files are placed nowhere', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        ...FILES,
+        ...VITEST_FILES,
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n',
     });
     const eslint = await generatedEslint(sandbox.path);

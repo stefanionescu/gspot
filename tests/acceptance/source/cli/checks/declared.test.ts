@@ -2,25 +2,13 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-
-const ENTRY = String.raw`
-[[check]]
-name = "notes/no-fixme"
-command = ["grep", "-n", "-H", "FIXME", "{files}"]
-paths = ["notes/**"]
-stage = "commit"
-count_regex = "FIXME"
-summary = "Finds FIXME notes left in the notes folder."
-
-[check.output]
-format = "regex"
-pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
-`;
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { ENTRY } from '#tests/constants/acceptance/source/cli/checks.ts';
 
 describe('a [[check]] entry', () => {
     test('reruns a repository check when an input outside its selected paths changes', async () => {

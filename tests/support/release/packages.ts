@@ -25,8 +25,6 @@ export const requireCli = createRequire(join(root, 'packages/cli/package.json'))
 export const host = releaseTargets.find(
     (target) => target.os === process.platform && target.cpu === process.arch && target.libc === hostLibc(),
 )!;
-export const RELEASE_TIMEOUT_MS = 180_000;
-
 export const environment: Record<string, string | undefined> = {
     ...inherited,
     NODE_PATH: undefined,

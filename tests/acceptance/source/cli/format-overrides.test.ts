@@ -7,37 +7,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { FORMAT_OVERRIDES_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
 
-const POLICY = `version = 1
-level = "all"
-configurations = ["formatting"]
-[rules]
-install = false
-[format]
-indent_width = 2
-quotes = "double"
-semicolons = false
-[[format.overrides]]
-paths = ["tests"]
-quotes = "single"
-semicolons = true
-[[scope]]
-path = "apps/web"
-[scope.format]
-indent_width = 4
-[[scope.format.overrides]]
-paths = ["**/*", "!apps/web/exempt.js"]
-quotes = "single"
-[[scope]]
-path = "apps/web/admin"
-[scope.format]
-indent_width = 8
-[[scope.format.overrides]]
-paths = ["**/*"]
-quotes = "double"
-semicolons = true
-line_ending = "crlf"
-`;
 const CASES = [
     { file: 'source.js', tabWidth: 2, singleQuote: false, semi: false, endOfLine: 'lf' },
     { file: 'tests/unit.js', tabWidth: 2, singleQuote: true, semi: true, endOfLine: 'lf' },
@@ -50,7 +21,7 @@ const CASES = [
 test('formatter overrides agree between direct tool configuration, editor discovery, and gspot correction', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': FORMAT_OVERRIDES_POLICY,
         'package.json': '{"private":true}\n',
         ...Object.fromEntries(
             CASES.map(({ file }) => [file, 'const greeting="hello";if(greeting){console.log(greeting);}']),
@@ -111,7 +82,7 @@ test('formatter overrides agree between direct tool configuration, editor discov
             useCache: false,
         }),
     ).toMatchObject({ singleQuote: true, semi: true });
-    const exported = exportedProfile(POLICY, 'format.profile.toml');
+    const exported = exportedProfile(FORMAT_OVERRIDES_POLICY, 'format.profile.toml');
     expect(exported.text).not.toContain('overrides');
     expect(exported.leftOut).toContain('format.overrides[0]: names a repository path');
 }, 30_000);

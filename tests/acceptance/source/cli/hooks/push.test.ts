@@ -5,9 +5,10 @@ import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import type { SarifReport } from '#tests/support/cli/reports.ts';
+import type { SarifReport } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
-import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test(
     'pre-push checks exact supplied objects, tags, force pushes, and new refs while preserving the working tree',

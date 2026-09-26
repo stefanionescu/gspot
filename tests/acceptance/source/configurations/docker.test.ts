@@ -1,30 +1,17 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
-
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'docker',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const CLEAN =
-    'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nCOPY package.json ./\nUSER node\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
-const CARELESS = 'FROM node:latest\nCOPY . .\nCMD ["node", "index.js"]\n';
-const IGNORES = '.git\nnode_modules\n.env*\n';
+import { DOCKER_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { CARELESS, DOCKER_CLEAN, IGNORES } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const CASES: FindingCase[] = [
     {
@@ -39,7 +26,7 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'docker/dockerignore',
-        files: { 'worker/Dockerfile': CLEAN },
+        files: { 'worker/Dockerfile': DOCKER_CLEAN },
         expected: { file: 'worker/Dockerfile', rule: 'missing', line: 1 },
     },
     {
@@ -60,21 +47,24 @@ describe('the docker configuration', () => {
         async (planted) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'api/Dockerfile': CLEAN,
+                'api/Dockerfile': DOCKER_CLEAN,
                 'api/.dockerignore': IGNORES,
                 'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
                 'api/package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['hadolint', 'trivy', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, DOCKER_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             if (planted.expected.file === 'worker/Dockerfile')
-                await createFileTree(sandbox.path, { 'worker/Dockerfile': CLEAN, 'worker/.dockerignore': IGNORES });
+                await createFileTree(sandbox.path, {
+                    'worker/Dockerfile': DOCKER_CLEAN,
+                    'worker/.dockerignore': IGNORES,
+                });
             await expectCorrected(sandbox.path, planted.check, environment);
             const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {

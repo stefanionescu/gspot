@@ -1,7 +1,5 @@
 // The init command line a planted repository runs: named configurations, nothing installed, nothing generated beyond policy and configuration.
-
-/** The flags that keep init from touching the runner, hooks, CI, agent rules, and tool installation. */
-export const QUIET_INIT = ['--no-runner', '--no-hooks', '--no-ci', '--no-rules', '--no-install'];
+import { QUIET_INIT } from '#tests/constants/support/cli.ts';
 
 /**
  * The init arguments that select the named configurations and leave the named recommendations out.

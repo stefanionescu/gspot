@@ -2,19 +2,17 @@ import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
-const SOURCE = 'export const isEmpty = (value) => value == null;\n';
-const FILES = ['source.js', 'tests/[draft].js', 'tests/café note.js', 'server/source.js', 'components/source.js'];
-const CONFIG = [
-    { files: ['**/*.js'], rules: { eqeqeq: ['error', 'smart'] } },
-    { files: ['tests/**'], rules: { eqeqeq: ['error', 'always'] } },
-    { files: ['server/**'], rules: { eqeqeq: ['warn', 'always'] } },
-    { files: ['components/**'], rules: { eqeqeq: 'off' } },
-];
+import {
+    ESLINT_CARRY_CONFIG,
+    ESLINT_CARRY_FILES,
+    ESLINT_CARRY_SOURCE,
+} from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
     'init carries resolved ESLint core and disabled rules from %s for every governed path',
@@ -23,12 +21,12 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         const legacy = {
             root: true,
             parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
-            rules: CONFIG[0]!.rules,
-            overrides: CONFIG.slice(1),
+            rules: ESLINT_CARRY_CONFIG[0]!.rules,
+            overrides: ESLINT_CARRY_CONFIG.slice(1),
         };
         const original =
             path === 'eslint.config.mjs'
-                ? `export default ${JSON.stringify(CONFIG)};\n`
+                ? `export default ${JSON.stringify(ESLINT_CARRY_CONFIG)};\n`
                 : JSON.stringify(
                       path === 'package.json' ? { private: true, type: 'module', eslintConfig: legacy } : legacy,
                   ) + '\n';
@@ -36,11 +34,11 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         await createFileTree(repository.path, {
             'package.json': '{"private":true,"type":"module"}\n',
             [path]: original,
-            ...Object.fromEntries(FILES.map((file) => [file, SOURCE])),
+            ...Object.fromEntries(ESLINT_CARRY_FILES.map((file) => [file, ESLINT_CARRY_SOURCE])),
         });
         chmodSync(join(repository.path, path), 0o640);
         symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(repository.path, 'node_modules'));
-        const before = await new Constructor({ cwd: repository.path }).lintFiles(FILES);
+        const before = await new Constructor({ cwd: repository.path }).lintFiles(ESLINT_CARRY_FILES);
         const expected = before.flatMap(({ filePath, messages }) =>
             messages
                 .filter(({ ruleId }) => ruleId === 'eqeqeq')
@@ -76,7 +74,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
             cwd: repository.path,
             overrideConfigFile: join(repository.path, '.gspot/config/eslint.config.mjs'),
         });
-        const checked = await eslint.lintFiles(FILES);
+        const checked = await eslint.lintFiles(ESLINT_CARRY_FILES);
         expect(
             checked.flatMap(({ filePath, messages }) =>
                 messages
@@ -89,12 +87,13 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
                     })),
             ),
         ).toStrictEqual(expected);
-        for (const file of FILES) writeFileSync(join(repository.path, file), SOURCE.replace('==', '==='));
-        const corrected = await eslint.lintFiles(FILES);
+        for (const file of ESLINT_CARRY_FILES)
+            writeFileSync(join(repository.path, file), ESLINT_CARRY_SOURCE.replace('==', '==='));
+        const corrected = await eslint.lintFiles(ESLINT_CARRY_FILES);
         expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toStrictEqual(
             [],
         );
-        writeFileSync(join(repository.path, 'tests/future.js'), SOURCE);
+        writeFileSync(join(repository.path, 'tests/future.js'), ESLINT_CARRY_SOURCE);
         const [future] = await eslint.lintFiles(['tests/future.js']);
         expect(
             future!.messages
@@ -122,7 +121,7 @@ test(
     async () => {
         await using repository = await testdir();
         const original = 'export default [{ rules: { eqeqeq: "error" } }];\n';
-        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': SOURCE });
+        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': ESLINT_CARRY_SOURCE });
         const result = await run(repository.path, [
             'init',
             '--yes',
@@ -142,7 +141,7 @@ test(
         );
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
-        expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe(SOURCE);
+        expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe(ESLINT_CARRY_SOURCE);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -156,7 +155,7 @@ test(
         await createFileTree(repository.path, {
             'prettier.config.mjs': formatter,
             'eslint.config.mjs': 'export default [{ rules: { eqeqeq: "error" } }];\n',
-            'source.js': SOURCE,
+            'source.js': ESLINT_CARRY_SOURCE,
         });
         symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(repository.path, 'node_modules'));
         const result = await run(repository.path, [
@@ -186,7 +185,7 @@ test(
     async () => {
         await using repository = await testdir();
         const original = 'console.log("authored linter log"); export default [{ rules: { eqeqeq: "invalid" } }];\n';
-        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': SOURCE });
+        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': ESLINT_CARRY_SOURCE });
         symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(repository.path, 'node_modules'));
         const args = [
             'init',
@@ -228,7 +227,7 @@ test(
         await using repository = await testdir();
         const original =
             'export default [{ files: ["**/*.js"], processor: { preprocess(text) { return [text]; }, postprocess(messages) { return messages.flat(); } }, rules: { eqeqeq: "error" } }];\n';
-        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': SOURCE });
+        await createFileTree(repository.path, { 'eslint.config.mjs': original, 'source.js': ESLINT_CARRY_SOURCE });
         symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(repository.path, 'node_modules'));
         const result = await run(repository.path, [
             'init',
@@ -252,7 +251,7 @@ test(
         expect(defective!.messages.map(({ ruleId, line, column }) => ({ ruleId, line, column }))).toStrictEqual([
             { ruleId: 'eqeqeq', line: 1, column: 41 },
         ]);
-        writeFileSync(join(repository.path, 'source.js'), SOURCE.replace('==', '==='));
+        writeFileSync(join(repository.path, 'source.js'), ESLINT_CARRY_SOURCE.replace('==', '==='));
         const [corrected] = await eslint.lintFiles(['source.js']);
         expect(corrected!.messages).toStrictEqual([]);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);

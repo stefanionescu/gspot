@@ -6,16 +6,13 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
 import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { LIBRARY, SWIFT_PACKAGE } from '#tests/constants/acceptance/source/configurations/swift.ts';
 
-const PACKAGE =
-    '// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "App",\n    products: [.library(name: "App", targets: ["App"])],\n    targets: [.target(name: "App")]\n)\n';
-const LIBRARY =
-    '/// Builds the greeting for a person.\npublic func greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
 const BUILD_CASES: FindingCase[] = [
     {
         check: 'swift/build',
@@ -47,7 +44,7 @@ describe('the swift configuration over a package', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 '.gitignore': '.build\n',
-                'Package.swift': PACKAGE,
+                'Package.swift': SWIFT_PACKAGE,
                 'Sources/App/Greeting.swift': LIBRARY,
             });
             commitAll(sandbox.path);

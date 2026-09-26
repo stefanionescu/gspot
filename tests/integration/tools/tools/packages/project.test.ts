@@ -13,14 +13,13 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
+import { LOCKS } from '#tests/constants/integration/tools/tools.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 
 const CLI = fileURLToPath(new URL('../../../../../packages/cli/src/main.ts', import.meta.url));
-
-const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;
 
 // A fresh clone installs the locked project twice without tracked changes and runs the formatter.
 async function expectFreshCloneInstalls(

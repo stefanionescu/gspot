@@ -10,18 +10,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
+import type { Parser } from '#tests/types/integration/cli/generation.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { PLANTED } from '#tests/constants/integration/cli/generation/generation.ts';
 
 const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
-const PLANTED = {
-    'package.json': '{"name":"planted","private":true,"type":"module"}\n',
-    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
-    'pyproject.toml': '[project]\nname = "planted"\nversion = "1.0.0"\n',
-    'src/index.ts': 'export const answer = 42;\n',
-};
-
-type Parser = (text: string, path: string) => void;
-
 const PARSERS: Record<string, Parser> = {
     '.json': parseJson,
     '.jsonc': parseJson,

@@ -4,28 +4,16 @@ import { expect, test } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
-
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'bash',
-    'javascript',
-    'spelling',
-    'markdown',
-    '--no-runner',
-    '--no-ci',
-    '--no-rules',
-    '--no-install',
-];
+import { PLAN_INIT } from '#tests/constants/acceptance/source/cli/takeover.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',
@@ -38,7 +26,7 @@ test.each(['', 'hooks', '.husky'])(
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const configured = hooksPath === '' ? { code: 0 } : git(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         expect(configured.code).toBe(0);
-        const result = await run(sandbox.path, [...INIT, '--dry-run']);
+        const result = await run(sandbox.path, [...PLAN_INIT, '--dry-run']);
         expect(result.code).toBe(0);
         const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
         // No configured hooks reads "none"; a configured folder is named with its one hand-written hook.
@@ -68,11 +56,11 @@ test.each([
             'notes.md': '# Notes\n',
         });
         const before = treeContents(sandbox.path);
-        const preview = await run(sandbox.path, [...INIT, '--no-hooks', '--dry-run']);
+        const preview = await run(sandbox.path, [...PLAN_INIT, '--no-hooks', '--dry-run']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect(preview.stdout).toContain('not read and not deleted');
         expect(treeContents(sandbox.path)).toStrictEqual(before);
-        const result = await run(sandbox.path, [...INIT, '--no-hooks']);
+        const result = await run(sandbox.path, [...PLAN_INIT, '--no-hooks']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(result.stdout).toContain('Cannot apply takeover');
         expect(treeContents(sandbox.path)).toStrictEqual(before);
@@ -97,7 +85,7 @@ test(
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
-        const init = await run(sandbox.path, INIT, { PATH: toolsPath(['ast-grep']) });
+        const init = await run(sandbox.path, PLAN_INIT, { PATH: toolsPath(['ast-grep']) });
         expect(init.code, init.stdout + init.stderr).toBe(0);
         expect(init.stdout).toContain('carried into gspot.toml');
         expect(init.stdout).toContain('quality/');

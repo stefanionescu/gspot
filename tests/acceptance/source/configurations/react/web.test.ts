@@ -1,17 +1,22 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+// Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-// Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import type { LintCase } from '#tests/types/acceptance/source/configurations/react.ts';
 
-const REPORT = '.gspot/reports/report.json';
-const DEPENDENCIES = { react: '19.1.1', 'react-dom': '19.1.1' };
-const TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "ES2022"]\n    },\n    "include": ["src"]\n}\n';
+import {
+    REPORT,
+    TESTED,
+    WEB_DEPENDENCIES,
+    WEB_TSCONFIG,
+} from '#tests/constants/acceptance/source/configurations/react.ts';
+
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;
 const CLEAN = head(
     '/**\n * Greets one person.\n * @param props the person\n * @param props.name the name\n * @returns the greeting\n */\n// eslint-disable-next-line gspot/no-trivial-functions -- reason: React calls this component through its rendering API.\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n',
@@ -19,15 +24,10 @@ const CLEAN = head(
     'import type { ReactNode }',
     '// eslint-disable-next-line gspot/no-trivial-files -- reason: React requires this component module.\nimport type { ReactNode }',
 );
-const TESTED =
-    "// A planted test.\nimport { render, screen } from '@testing-library/react';\n\nrender(<p>hello</p>);\nscreen.getByText('hello');\n";
 const DEBUGGED = TESTED.replace("screen.getByText('hello');", () => 'screen.debug();');
 const GAP = head(
     '/**\n * Leaves a gap.\n * @returns the gap\n */\nexport function Gap(): ReactNode {\n    return <div></div>;\n}\n',
 );
-
-/** One planted defect: the check that reads it, where it is, and the file that corrects it. */
-type LintCase = { check: string; rule: string; path: string; text: string; line: number; corrected: string };
 
 const LINT: LintCase[] = [
     {
@@ -91,8 +91,8 @@ const LINT: LintCase[] = [
 const installReact = (root: string, level: 'recommended' | 'all'): Promise<Record<string, string>> =>
     installSandbox(root, {
         configurations: ['typescript', 'react'],
-        dependencies: DEPENDENCIES,
-        files: { 'tsconfig.json': TSCONFIG, 'src/Greeting.tsx': CLEAN },
+        dependencies: WEB_DEPENDENCIES,
+        files: { 'tsconfig.json': WEB_TSCONFIG, 'src/Greeting.tsx': CLEAN },
         level,
     });
 

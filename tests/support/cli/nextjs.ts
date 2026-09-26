@@ -9,30 +9,15 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { NEXT_CONFIG, NEXT_LAYOUT, NEXT_PAGE } from '#tests/constants/support/cli.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
 const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']);
 
-/**
- * The package manifest of the planted project.
- * @param reactDom the react-dom version, aligned with React or not
- * @returns the manifest text
- */
-const NEXT_CONFIG =
-    '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
 /** The home page. */
 
 export const nextManifest = (reactDom: string): string =>
     `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "${reactDom}"\n    }\n}\n`;
-/** The framework configuration with the build check on. */
-export const NEXT_PAGE =
-    '// The home page.\n\n/**\n * Renders the home page.\n * @returns the page\n */\nexport default function Page(): string {\n    return "home";\n}\n';
-/** The root layout. */
-export const NEXT_LAYOUT =
-    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\n * Wraps every page.\n * @param props the children\n * @param props.children the page\n * @returns the document\n */\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
-/** The i18n settings naming the message directory and base locale. */
-export const NEXT_TRANSLATIONS = '[tools.i18n]\ntranslations = {directory = "messages", base = "en"}\n';
-
 /**
  * Plants the project beside this repository's node_modules, initializes it, and sets the all level.
  * @returns the sandbox and the environment its commands run with

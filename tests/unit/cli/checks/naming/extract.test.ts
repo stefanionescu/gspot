@@ -1,21 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
-
-const TS = `
-export function parseHttpUrl(rawInput: string, { retries = 3, ...rest }: Options, [first, second]: string[]): void {}
-const enhancedHandler = (event) => {};
-let { data: payload } = source;
-class HttpClient extends Base {
-    #secret = 1;
-    static readonly DEFAULT_PORT = 80;
-    constructor(private readonly baseUrl: string) {}
-    async send(body: Body): Promise<void> {}
-}
-interface Options { retries?: number; 'Content-Type': string }
-type Verdict = 'ok';
-enum Mode { Fast, Slow = 2 }
-const table = { keyOne: 1 };
-`;
+import { TS } from '#tests/constants/unit/cli/checks/naming.ts';
 
 describe('identifiersOf', () => {
     test('collects TypeScript declarations by category and skips object literal keys', async () => {

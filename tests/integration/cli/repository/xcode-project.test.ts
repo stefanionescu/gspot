@@ -6,34 +6,13 @@ import { git, commitAll } from '#tests/support/cli/git.ts';
 import { symlink, readlink, unlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project-reader.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-
-const PROJECT = `// !$*UTF8*$!
-{
-    rootObject = P;
-    objects = {
-        P = {isa = PBXProject; mainGroup = MAIN; targets = (T,); };
-        MAIN = {isa = PBXGroup; children = (FIRST, SECOND, ROOT, SYNC,); sourceTree = "<group>"; };
-        FIRST = {isa = PBXGroup; name = "Display name"; path = "First Group"; children = (VIRTUAL,); sourceTree = "<group>"; };
-        VIRTUAL = {isa = PBXGroup; name = "Virtual display"; children = (F1,); sourceTree = "<group>"; };
-        SECOND = {isa = PBXGroup; path = Second; children = (F2,); sourceTree = "<group>"; };
-        ROOT = {isa = PBXFileReference; path = Root.swift; sourceTree = SOURCE_ROOT; };
-        F1 /* duplicate name */ = {isa = PBXFileReference; path = Shared.swift; sourceTree = "<group>"; };
-        F2 = {isa = PBXFileReference; path = Shared.swift; sourceTree = "<group>"; };
-        B1 = {isa = PBXBuildFile; fileRef = F1; };
-        B2 = {isa = PBXBuildFile; fileRef = ROOT; };
-        SOURCES = {isa = PBXSourcesBuildPhase; files = (B1, B2,); };
-        T = {isa = PBXNativeTarget; buildPhases = (SOURCES,); fileSystemSynchronizedGroups = (SYNC,); };
-        SYNC = {isa = PBXFileSystemSynchronizedRootGroup; path = Synced; sourceTree = "<group>"; exceptions = (EXCEPT,); };
-        EXCEPT = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; target = T; membershipExceptions = (Excluded.swift,); };
-    };
-}
-`;
+import { PBXPROJ_PROJECT } from '#tests/constants/integration/cli/repository.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n',
-        'App.xcodeproj/project.pbxproj': PROJECT,
+        'App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
         'First Group/Shared.swift': 'let first = 1\n',
         'Second/Shared.swift': 'let second = 2\n',
         'Root.swift': 'let root = 1\n',
@@ -47,7 +26,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         containing({ file: 'Second/Shared.swift', rule: 'no-target' }),
         containing({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
     ]);
-    const included = PROJECT.replace('files = (B1, B2,);', 'files = (B1, B2, B3,);')
+    const included = PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B1, B2, B3,);')
         .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
         .replace('membershipExceptions = (Excluded.swift,);', 'membershipExceptions = ();');
     await Bun.write(`${sandbox.path}/App.xcodeproj/project.pbxproj`, included);
@@ -65,7 +44,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 });
 
 test('project directory offsets and source roots resolve separately', () => {
-    const source = PROJECT.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
+    const source = PBXPROJ_PROJECT.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
     const project = readProject(source, '/repo/project');
     expect([...project.sources]).toStrictEqual(['/repo/Code/First Group/Shared.swift', '/repo/project/Root.swift']);
     expect(project.folders).toStrictEqual([
@@ -74,32 +53,34 @@ test('project directory offsets and source roots resolve separately', () => {
 });
 
 test('quoted project strings preserve escapes and ignore comment-like text', () => {
-    const source = PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 \"Group\"";`).replace(
-        'path = Shared.swift;',
-        'path = "//Shared.swift";',
-    );
+    const source = PBXPROJ_PROJECT.replace(
+        'path = "First Group";',
+        String.raw`path = "First \U00e9 \"Group\"";`,
+    ).replace('path = Shared.swift;', 'path = "//Shared.swift";');
     expect([...readProject(source, '/repo').sources]).toStrictEqual(['/Shared.swift', '/repo/Root.swift']);
     expect(
         [
-            ...readProject(PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 Group";`), '/repo')
-                .sources,
+            ...readProject(
+                PBXPROJ_PROJECT.replace('path = "First Group";', String.raw`path = "First \U00e9 Group";`),
+                '/repo',
+            ).sources,
         ][0],
     ).toBe('/repo/First é Group/Shared.swift');
 });
 
 const smallProject = (source: string): string =>
-    PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+    PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
         .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
         .replace('path = Root.swift;', `path = ${source};`);
 
 test.each([
-    PROJECT.slice(0, -3),
-    PROJECT.replace('B1, B2,', 'MISSING, B2,'),
-    PROJECT.replace('children = (F1,);', 'children = (FIRST, F1,);').replace(
+    PBXPROJ_PROJECT.slice(0, -3),
+    PBXPROJ_PROJECT.replace('B1, B2,', 'MISSING, B2,'),
+    PBXPROJ_PROJECT.replace('children = (F1,);', 'children = (FIRST, F1,);').replace(
         'children = (FIRST, SECOND, ROOT, SYNC,);',
         'children = (SECOND, ROOT, SYNC,);',
     ),
-    PROJECT.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
+    PBXPROJ_PROJECT.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
 ])('an unreadable project returns execution status 2', async (source) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -146,10 +127,10 @@ test('Xcode symlinks use the deepest scope and the immutable staged target', asy
         'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
-        'App.xcodeproj/project.pbxproj': PROJECT,
-        'app/App.xcodeproj/project.pbxproj': PROJECT,
-        'app/child/App.xcodeproj/project.pbxproj': PROJECT,
-        'sibling/App.xcodeproj/project.pbxproj': PROJECT,
+        'App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
+        'app/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
+        'app/child/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
+        'sibling/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
         'app/child/Source.swift': 'let value = 1\n',
     });
     commitAll(sandbox.path);

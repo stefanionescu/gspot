@@ -6,7 +6,8 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { gspot, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 describe('the gspot hook', () => {
     test(

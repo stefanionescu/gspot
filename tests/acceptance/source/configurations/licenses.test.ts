@@ -5,25 +5,15 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { expectCorrected } from '#tests/support/cli/planted.ts';
-import { containingAll, textContaining } from '#tests/support/expectations.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
+import { run, runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { containingAll, textContaining } from '#tests/support/expectations.ts';
+import { ROOT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { LICENSES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'licenses',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const ROOT = '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true\n}\n';
-
 function installed(name: string, license: string): string {
     return `{\n    "name": "${name}",\n    "version": "1.0.0",\n    "license": "${license}"\n}\n`;
 }
@@ -42,7 +32,7 @@ describe('the licenses configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, LICENSES_INIT, environment);
             await expectCorrected(sandbox.path, 'licenses/packages', environment);
             await Bun.write(
                 join(sandbox.path, 'node_modules/strict/package.json'),

@@ -2,9 +2,10 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { RUNS } from '#tests/constants/support/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
-import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
+import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],

@@ -2,19 +2,13 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-
-const POLICY = `version = 1
-level = "all"
-configurations = ["typescript"]
-[rules]
-install = false
-`;
-const PROJECT = '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
+import { PROJECTS_POLICY, TSCONFIG_PROJECT } from '#tests/constants/acceptance/source/configurations/typescript.ts';
 
 for (const scope of ['', 'api/']) {
     test(
@@ -25,13 +19,15 @@ for (const scope of ['', 'api/']) {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 'gspot.toml':
-                    scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\nconfigurations = ["typescript"]\n',
+                    scope === ''
+                        ? PROJECTS_POLICY
+                        : PROJECTS_POLICY + '\n[[scope]]\npath = "api"\nconfigurations = ["typescript"]\n',
                 '.gitignore': 'node_modules/\n.gspot/\n',
                 'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
                 'root.ts': 'export const root = 1;',
                 [`${scope}tsconfig.json`]: solution,
-                [`${scope}orders/tsconfig.json`]: PROJECT,
-                [`${scope}users/tsconfig.json`]: PROJECT.replace(
+                [`${scope}orders/tsconfig.json`]: TSCONFIG_PROJECT,
+                [`${scope}users/tsconfig.json`]: TSCONFIG_PROJECT.replace(
                     '"include"',
                     '"references":[{"path":"../orders"}],"include"',
                 ),
@@ -164,7 +160,7 @@ test.each(['absolute', 'symlink'])(
         symlinkSync(join(INSTALLED_MODULES, 'typescript'), join(outside.path, 'typescript'), 'dir');
         symlinkSync('../typescript/bin/tsc', join(outside.path, '.bin/tsc'));
         await createFileTree(sandbox.path, {
-            'gspot.toml': POLICY,
+            'gspot.toml': PROJECTS_POLICY,
             '.gitignore': 'node_modules\n.gspot\n',
             'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
             'app/tsconfig.json': project(kind === 'absolute' ? outside.path : '../node_modules'),

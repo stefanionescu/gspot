@@ -5,8 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { hookBody } from '#cli/generation/hooks.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-
-const SYSTEM_BASH = '/bin/bash';
+import { SYSTEM_BASH } from '#tests/constants/integration/tools/hooks.ts';
 
 if (process.platform !== 'win32')
     test('every hook body runs under the system Bash', async () => {

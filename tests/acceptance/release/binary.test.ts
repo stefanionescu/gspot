@@ -7,10 +7,11 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { runProcess } from '#tests/support/cli/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 // The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { PLANTED_TIMEOUT_MS, runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 

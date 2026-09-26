@@ -1,36 +1,7 @@
 import { expect, test } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
-
-const CONFIGURATIONS = [
-    'typescript',
-    'javascript',
-    'react',
-    'nextjs',
-    'css',
-    'html',
-    'markdown',
-    'prose',
-    'spelling',
-    'commits',
-    'configs',
-    'naming',
-    'formatting',
-    'docs',
-    'secrets',
-    'dependencies',
-    'licenses',
-];
-
-const NOTHING_CARRIED: CarriedConfiguration = {
-    tools: new Map(),
-    scopes: new Map(),
-    observed: new Map(),
-    removed: [],
-    unread: [],
-    retained: [],
-};
+import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/constants/unit/cli/commands.ts';
 
 test('a proposed policy holds no line over 120 characters and reads back as written', () => {
     const text = proposeText({

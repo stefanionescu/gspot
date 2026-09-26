@@ -2,13 +2,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { expect, test } from 'bun:test';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { FORMATTED } from '#tests/constants/acceptance/source/configurations/component-files.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
-const FORMATTED =
-    '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p class="greeting">{name}</p>\n';
 const LOOSE = FORMATTED.replace('<p class=', () => '<p     class=');
 
 test(

@@ -6,11 +6,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-
-type PreCommitConfiguration = { repos?: { hooks: { id: string }[] }[]; fail_fast?: boolean };
-type PackageManifest = { scripts: Record<string, string>; 'simple-git-hooks': Record<string, string> };
-
-const PRE_COMMIT_POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
+import { PRE_COMMIT_POLICY, SIMPLE_HOOKS_POLICY } from '#tests/constants/integration/cli/lifecycle.ts';
+import type { PackageManifest, PreCommitConfiguration } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test.each([
     '',
@@ -40,9 +37,6 @@ test.each([
     // Uninstall removes the gspot hook alone: an authored repository stays, and an empty list is dropped.
     expect(restored.repos?.map((repo) => repo.hooks[0]?.id)).toStrictEqual(original === '' ? undefined : ['authored']);
 });
-
-const SIMPLE_HOOKS_POLICY =
-    'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "simple-git-hooks"\n';
 
 test('simple-git-hooks configuration coexists with generated npm scripts', async () => {
     await using sandbox = await testdir();

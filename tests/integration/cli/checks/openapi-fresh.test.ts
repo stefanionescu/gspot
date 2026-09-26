@@ -7,28 +7,18 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-
-const POLICY =
-    'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n';
-const GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
-if (process.argv[2] !== '' || process.argv[3] !== 'two words') throw new Error('Lost command arguments');
-writeFileSync('openapi.json', readFileSync('schema.json'));
-writeFileSync('side-effect.txt', 'Generator output');
-if (readFileSync('schema.json', 'utf8').includes('fail')) {
-    console.error('Generation failed');
-    process.exitCode = 1;
-}
-`;
+import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
+import { OPENAPI_FRESH_GENERATOR, OPENAPI_FRESH_POLICY } from '#tests/constants/integration/cli/checks.ts';
 
 // A planted Express project whose generator writes the document from schema.json and fails when the schema says so.
-async function plant(schema: string) {
+async function plant(schema: string): Promise<Planted> {
     const directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': OPENAPI_FRESH_POLICY,
         'package.json': '{"private":true}\n',
         'openapi.json': '{"version":1}\n',
         'schema.json': schema,
-        'generate.ts': GENERATOR,
+        'generate.ts': OPENAPI_FRESH_GENERATOR,
     });
     commitAll(directory.path);
     const document = join(directory.path, 'openapi.json');
@@ -45,8 +35,6 @@ async function plant(schema: string) {
     });
     return { directory, document, edited, mode: statSync(document).mode, spec, input };
 }
-
-type Planted = Awaited<ReturnType<typeof plant>>;
 
 // The dirty document, the untracked file, and the absence of generator side effects, whatever the generator did.
 function expectPreserved({ directory, document, edited, mode }: Planted): void {

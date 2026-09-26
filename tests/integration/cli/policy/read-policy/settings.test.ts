@@ -2,8 +2,9 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { MINIMAL_POLICY } from '#tests/constants/support/cli.ts';
 import { parsePolicyText, readPolicy } from '#cli/policy/read.ts';
-import { MINIMAL_POLICY, policyProblems } from '#tests/support/cli/policy-problems.ts';
+import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
 describe('parsePolicyText', () => {
     test('normalizes reasoned limits into value and reason', () => {

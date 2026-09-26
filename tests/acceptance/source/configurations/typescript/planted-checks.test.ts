@@ -3,51 +3,24 @@ import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
-const ORDERS_TYPES =
-    '// Type aliases of the orders module.\n\n/** One line of an order. */\nexport type OrderLine = { price: number; quantity: number };\n';
-const TOTALS_TYPES =
-    '// Type aliases of the totals.\n\n/** A total with its currency. */\nexport type Total = { amount: number; currency: string };\n';
-const TOTAL = `// The total of an order.
-import type { Total } from '#types/totals.js';
-import type { OrderLine } from '#types/orders.js';
-
-/**
- * Adds up the lines of an order.
- * @param lines the lines
- * @param currency the currency of every line
- * @returns the total price
- */
-export function orderTotal(lines: OrderLine[], currency: string): Total {
-    let amount = 0;
-    for (const line of lines) amount += line.price * line.quantity;
-    return { amount, currency };
-}
-`;
-const RECEIPT = `// The receipt currency format.
-
-/** Formats the euro amounts on receipts. */
-export const receiptOptions: Intl.NumberFormatOptions = { style: 'currency', currency: 'EUR' };
-`;
-const MAIN = `// The receipt of one order.
-import { orderTotal } from './orders/total.js';
-import { receiptOptions } from './orders/receipt.js';
-
-const formatter = new Intl.NumberFormat('en-US', receiptOptions);
-const total = orderTotal([{ price: 2, quantity: 3 }], 'EUR');
-
-/** The receipt line of the sample order. */
-export const receipt = formatter.format(total.amount);
-`;
+import {
+    ORDERS_TYPES,
+    PLANTED_CHECKS_MAIN,
+    RECEIPT,
+    TOTAL,
+    TOTALS_TYPES,
+} from '#tests/constants/acceptance/source/configurations/typescript.ts';
 
 // Built from two halves, so the spelling fixer of this repository never corrects the planted typo.
 const MISSPELLED = ['Te', 'h'].join('');
@@ -179,7 +152,7 @@ describe('the typescript configuration', () => {
                 'types/totals.ts': TOTALS_TYPES,
                 'src/orders/total.ts': TOTAL,
                 'src/orders/receipt.ts': RECEIPT,
-                'src/main.ts': MAIN,
+                'src/main.ts': PLANTED_CHECKS_MAIN,
             });
             symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
             commitAll(sandbox.path);
@@ -228,7 +201,8 @@ describe('the typescript configuration', () => {
                 case 'javascript/knip': {
                     files['src/orders/unused.ts'] = planted.files['src/orders/unused.ts']!;
                     files['src/main.ts'] =
-                        MAIN + "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n";
+                        PLANTED_CHECKS_MAIN +
+                        "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n";
                     break;
                 }
                 case 'naming/paths': {

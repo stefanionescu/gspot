@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { RUNS } from '#tests/constants/support/cli.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
-import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
+import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 
 describe('the tool probe', () => {

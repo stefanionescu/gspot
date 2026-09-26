@@ -1,6 +1,7 @@
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
@@ -9,13 +10,11 @@ import { reportSchema } from '#cli/execution/report.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { SCOPES_SOURCE } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const SOURCE =
-    '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
-
 describe('typescript in a scope', () => {
     test(
         'the shared ESLint configuration reads TypeScript although the root selects none',
@@ -30,7 +29,7 @@ describe('typescript in a scope', () => {
                     '{\n    "name": "api",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n',
                 'api/tsconfig.json':
                     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
-                'api/src/port.ts': SOURCE,
+                'api/src/port.ts': SCOPES_SOURCE,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
@@ -70,7 +69,7 @@ describe('typescript in a scope', () => {
                     line: 4,
                 }),
             );
-            await Bun.write(join(sandbox.path, 'api/src/port.ts'), SOURCE.replace(' as number', ''));
+            await Bun.write(join(sandbox.path, 'api/src/port.ts'), SCOPES_SOURCE.replace(' as number', ''));
             const corrected = await run(
                 sandbox.path,
                 ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],

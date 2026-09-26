@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([

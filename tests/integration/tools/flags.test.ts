@@ -8,14 +8,13 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
+import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { HELP_TIMEOUT_MS } from '#tests/constants/integration/tools/tools.ts';
 
-const HELP_TIMEOUT_MS = 30_000;
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...configurationManifests().values()];
 const context = { root, probes: new Map(), policyFiles: readPolicy(root) };
-
-type Command = { tool: ToolPin; argv: string[]; subcommands: string[]; flags: string[] };
 
 function isWord(part: string): boolean {
     return !part.startsWith('-') && !part.startsWith('{') && part !== '.' && !part.includes('/');
@@ -71,7 +70,7 @@ async function helpText(executable: string, subcommands: string[], flags: string
     return plain(pages.map((page) => `${page.stdout}\n${page.stderr}`).join('\n'));
 }
 
-const commands: Command[] = manifests.flatMap((manifest) =>
+const commands: ToolCommand[] = manifests.flatMap((manifest) =>
     manifest.checks.flatMap((check) =>
         [check.command, check.fix_command]
             .filter((argv): argv is string[] => argv !== undefined)

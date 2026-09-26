@@ -5,8 +5,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
+import { TSCONFIG_OPTIONS_POLICY } from '#tests/constants/integration/cli/checks.ts';
 
-const POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
 const VALID = JSON.stringify({
     compilerOptions: {
         strict: true,
@@ -21,7 +21,7 @@ test.each(['{', 'null', '[]', '{"extends":7}', '{"compilerOptions":[]}'])(
     'malformed TypeScript configuration %s reports its path instead of missing options',
     async (content) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': POLICY, 'tsconfig.json': content });
+        await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY, 'tsconfig.json': content });
         const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
         expect(() => tsconfigOptions(input)).toThrow(
             `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
@@ -33,7 +33,7 @@ test.each(['{', 'null', '[]', '{"extends":7}', '{"compilerOptions":[]}'])(
 
 test('a denied TypeScript configuration read retains its error', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': POLICY, 'tsconfig.json': '{}' });
+    await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY, 'tsconfig.json': '{}' });
     const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
     const denied = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
         throw Object.assign(new Error('Permission denied'), { code: 'EACCES' });
@@ -50,7 +50,7 @@ test('a denied TypeScript configuration read retains its error', async () => {
 test('a missing inherited configuration cannot be replaced by empty compiler options', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': TSCONFIG_OPTIONS_POLICY,
         'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
     });
     const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
@@ -62,7 +62,7 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
 test('circular configuration inheritance reports the cycle', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': TSCONFIG_OPTIONS_POLICY,
         'tsconfig.json': '{"extends":"./base.json"}',
         'base.json': '{"extends":"./tsconfig.json"}',
     });
@@ -78,7 +78,7 @@ test.each([
 ])('inheritance through %s then %s applies the later branch last', async (first, second) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': POLICY,
+        'gspot.toml': TSCONFIG_OPTIONS_POLICY,
         'tsconfig.json': JSON.stringify({ extends: [`./${first}.json`, `./${second}.json`] }),
         'left.json': '{"extends":"./base.json","compilerOptions":{"strict":false}}',
         'right.json': '{"extends":"./base.json"}',
@@ -90,7 +90,7 @@ test.each([
 
 test('a scope without tsconfig.json reports the missing configuration', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': POLICY });
+    await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY });
     const findings = tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'));
     expect(findings).toMatchObject([
         {
@@ -108,7 +108,7 @@ test.each(['tsconfig.json', 'strict.json'])(
     async (filename) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': POLICY,
+            'gspot.toml': TSCONFIG_OPTIONS_POLICY,
             'tsconfig.json': '{"extends":"./apps/web/tsconfig.json"}',
             'apps/web/tsconfig.json': '{"extends":"@example/config"}',
             'node_modules/@example/config/package.json': JSON.stringify({

@@ -4,16 +4,14 @@ import { createFileTree, testdir } from 'testdirs';
 // The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { run, runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
-
-const INIT = ['init', '--yes', '--configurations', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
-
-const WORKFLOW_HEAD =
-    'name: planted\non: [push]\npermissions:\n    contents: read\njobs:\n    build:\n        runs-on: ubuntu-24.04\n        steps:\n';
+import { CONFIGS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { WORKFLOW_HEAD } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
@@ -65,7 +63,7 @@ describe('the configs configuration', () => {
             await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['actionlint']) };
-            await install(sandbox.path, [...INIT, '--ci', 'github', '--no-hooks'], environment);
+            await install(sandbox.path, [...CONFIGS_INIT, '--ci', 'github', '--no-hooks'], environment);
             const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
@@ -87,7 +85,7 @@ describe('the configs configuration', () => {
             const environment = {
                 PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
             };
-            await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+            await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
             const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const outcome = await runPlanted(sandbox.path, planted, environment);
@@ -119,7 +117,7 @@ describe('the configs configuration', () => {
                 await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
                 commitAll(sandbox.path);
                 const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-                await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+                await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
                 const outcome = await runPlanted(
                     sandbox.path,
                     {
@@ -176,7 +174,7 @@ describe('the configs configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, CONFIGS_INIT, environment);
             await createFileTree(sandbox.path, {
                 [scenario.path]: scenario.broken,
                 'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
@@ -212,7 +210,7 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['v8r']) };
-        await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
@@ -258,7 +256,7 @@ test(
         await createFileTree(sandbox.path, { '.env.example': 'lowercase=value\n' });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['dotenv-linter']) };
-        await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const fixed = await run(

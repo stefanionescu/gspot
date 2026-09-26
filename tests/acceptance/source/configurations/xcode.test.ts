@@ -2,57 +2,23 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, unlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { XCODE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { HOME, IMAGES, PLAN, XCODE_PROJECT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'xcode',
-    '--without',
-    'spelling',
-    'swift',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const plist = (body: string): string =>
     `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n${body}</dict>\n</plist>\n`;
-const PROJECT = `// !$*UTF8*$!
-{
-    rootObject = P1;
-    objects = {
-        P1 = {isa = PBXProject; mainGroup = G1; targets = (T1,); };
-        G1 = {isa = PBXGroup; children = (G2,); sourceTree = "<group>"; };
-        G2 = {isa = PBXGroup; path = App; children = (A1,); sourceTree = "<group>"; };
-        B1 = {isa = PBXBuildFile; fileRef = A1; };
-        S1 = {isa = PBXSourcesBuildPhase; files = (B1,); };
-        A1 = {isa = PBXFileReference; path = Home.swift; sourceTree = "<group>"; };
-        T1 = {
-            isa = PBXNativeTarget;
-            name = AppTests;
-            buildPhases = (S1,);
-            productType = "com.apple.product-type.bundle.unit-test";
-        };
-    };
-}
-`;
-const PLAN = '{\n    "testTargets": [{ "target": { "name": "AppTests" } }]\n}\n';
 const STRINGS_FILE = (german: string): string =>
     `{\n    "sourceLanguage": "en",\n    "strings": {\n        "hello": { "localizations": { "de": {}, "en": {} } },\n        "bye": { "localizations": { ${german}"en": {} } }\n    },\n    "version": "1.0"\n}\n`;
-const HOME = 'import SwiftUI\n\nlet logo = Image("Logo")\n';
-const IMAGES =
-    '{\n    "images": [{ "filename": "logo.png", "idiom": "universal" }],\n    "info": { "author": "xcode", "version": 1 }\n}\n';
 const ENTITLED = plist('    <key>com.apple.developer.healthkit</key>\n    <true/>\n');
 
 const CASES: FindingCase[] = [
@@ -84,7 +50,9 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'xcode/test-plan',
-        files: { 'App.xcodeproj/project.pbxproj': PROJECT.replace('name = AppTests;', () => 'name = OtherTests;') },
+        files: {
+            'App.xcodeproj/project.pbxproj': XCODE_PROJECT.replace('name = AppTests;', () => 'name = OtherTests;'),
+        },
         expected: { file: 'App.xcodeproj/project.pbxproj', rule: 'target-plan', line: 1 },
     },
     {
@@ -119,7 +87,7 @@ async function installedXcodeProject() {
     const sandbox = await testdir();
     try {
         await createFileTree(sandbox.path, {
-            'App.xcodeproj/project.pbxproj': PROJECT,
+            'App.xcodeproj/project.pbxproj': XCODE_PROJECT,
             'App.xcodeproj/xcshareddata/xcschemes/App.xcscheme':
                 '<Scheme>\n    <TestAction>\n        <TestPlans><TestPlanReference reference="container:App.xctestplan"/></TestPlans>\n    </TestAction>\n</Scheme>\n',
             'App.xctestplan': PLAN,
@@ -134,7 +102,7 @@ async function installedXcodeProject() {
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'taplo', 'yamllint']) };
-        await installAtLevel(sandbox.path, INIT, environment);
+        await installAtLevel(sandbox.path, XCODE_INIT, environment);
         commitAll(sandbox.path);
         return { sandbox, environment };
     } catch (error) {
@@ -165,7 +133,10 @@ describe('the xcode configuration', () => {
             }
             if (planted.expected.rule === 'no-target') {
                 Object.assign(files, planted.files);
-                files['App.xcodeproj/project.pbxproj'] = PROJECT.replace('children = (A1,);', 'children = (A1, A2,);')
+                files['App.xcodeproj/project.pbxproj'] = XCODE_PROJECT.replace(
+                    'children = (A1,);',
+                    'children = (A1, A2,);',
+                )
                     .replace('files = (B1,);', 'files = (B1, B2,);')
                     .replace(
                         'objects = {',
@@ -231,7 +202,7 @@ describe('init in a repository with an Xcode project', () => {
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'ios/App.xcodeproj/project.pbxproj': PROJECT,
+                'ios/App.xcodeproj/project.pbxproj': XCODE_PROJECT,
                 'ios/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme': '<Scheme/>\n',
                 'ios/App/Home.swift': HOME,
             });

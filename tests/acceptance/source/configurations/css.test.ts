@@ -4,30 +4,17 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/execution/report.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { run, runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
+import { CSS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { CODE, SHEET } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { install, installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'css',
-    '--without',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const SHEET = '.card {\n    color: #333;\n}\n\n.card-title {\n    font-weight: 700;\n}\n';
-const CODE = "import styles from './card.module.css';\n\nexport const names = [styles.card, styles.cardTitle];\n";
-
 // A property no browser knows, in two halves because the spelling fixer corrects it when it is whole.
 const UNKNOWN_PROPERTY = ['col', 'our'].join('');
 
@@ -107,7 +94,7 @@ test.each([
         const environment = { PATH: toolsPath([]) };
         await install(
             sandbox.path,
-            [...INIT.filter((argument) => argument !== '--no-runner'), '--runner', 'mise'],
+            [...CSS_INIT.filter((argument) => argument !== '--no-runner'), '--runner', 'mise'],
             environment,
         );
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
@@ -201,7 +188,7 @@ describe('the css configuration', () => {
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, CSS_INIT, environment);
             {
                 const clean = await run(
                     sandbox.path,

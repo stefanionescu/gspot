@@ -2,15 +2,15 @@ import { existsSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repositories: what init refuses before it writes.
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-
-const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { INIT_REFUSALS_QUIET } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 describe('init refusals', () => {
     test(
@@ -19,7 +19,7 @@ describe('init refusals', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
-            const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...QUIET];
+            const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...INIT_REFUSALS_QUIET];
             const result = await run(sandbox.path, flags);
             expect(result.code, result.stdout + result.stderr).toBe(0);
             expect(result.stdout + result.stderr).toMatch(
@@ -56,7 +56,13 @@ describe('init refusals', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
-            const unknown = await run(sandbox.path, ['init', '--yes', '--configurations', 'bassh', ...QUIET]);
+            const unknown = await run(sandbox.path, [
+                'init',
+                '--yes',
+                '--configurations',
+                'bassh',
+                ...INIT_REFUSALS_QUIET,
+            ]);
             expect(unknown.code).toBe(2);
             expect(unknown.stderr).toContain('Did you mean `bash`');
             const required = await run(sandbox.path, [
@@ -66,7 +72,7 @@ describe('init refusals', () => {
                 'bash',
                 '--without',
                 'structure',
-                ...QUIET,
+                ...INIT_REFUSALS_QUIET,
             ]);
             expect(required.code).toBe(2);
             expect(required.stderr).toContain('bash requires structure');
@@ -82,13 +88,19 @@ describe('init refusals', () => {
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-            const refused = await run(sandbox.path, ['init', '--yes', '--configurations', 'bash', ...QUIET]);
+            const refused = await run(sandbox.path, [
+                'init',
+                '--yes',
+                '--configurations',
+                'bash',
+                ...INIT_REFUSALS_QUIET,
+            ]);
             expect(refused.code).toBe(2);
             expect(refused.stderr).toContain('--allow-dirty');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
             const allowed = await run(
                 sandbox.path,
-                ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...QUIET],
+                ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...INIT_REFUSALS_QUIET],
                 {
                     PATH: `${join(import.meta.dir, '../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
                 },
@@ -107,7 +119,7 @@ describe('init refusals', () => {
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
                 sandbox.path,
-                ['init', '--yes', '--configurations', 'bash', '--without', 'naming', ...QUIET],
+                ['init', '--yes', '--configurations', 'bash', '--without', 'naming', ...INIT_REFUSALS_QUIET],
                 environment,
             );
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
@@ -126,7 +138,7 @@ describe('init refusals', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'tools/a.sh': script, 'jobs/b.sh': script });
             commitAll(sandbox.path);
-            const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
+            const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...INIT_REFUSALS_QUIET];
             const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
             expect(init.code, init.stdout + init.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
@@ -185,7 +197,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const before = treeContents(sandbox.path);
-    const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...QUIET]);
+    const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...INIT_REFUSALS_QUIET]);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain(path);
     expect(treeContents(sandbox.path)).toStrictEqual(before);

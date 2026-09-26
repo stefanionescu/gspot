@@ -1,10 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
+import { MINIMAL_POLICY } from '#tests/constants/support/cli.ts';
 import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
-import { MINIMAL_POLICY } from '#tests/support/cli/policy-problems.ts';
-
-const GOOD_IGNORE = '[[ignore]]\ncheck = "bash/shellcheck"\nreason = "The launcher script checks its own arguments."\n';
+import { GOOD_IGNORE } from '#tests/constants/integration/cli/policy/read-policy.ts';
 
 describe('readPolicyText', () => {
     test('an ignore without a reason is a finding on its line, and the other ignore stands', () => {

@@ -3,24 +3,16 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+// Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
+import { run, runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
-import type { PlantedCase, FindingCase } from '#tests/support/cli/planted.ts';
-// Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
-import { PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
+import { INVALID } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { DEPENDENCIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'dependencies',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
 const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
 const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
@@ -29,19 +21,6 @@ const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "pa
 function lockfileFrom(scheme: string): string {
     return `{\n    "packages": { "node_modules/a": { "resolved": "${scheme}://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`;
 }
-
-const INVALID: PlantedCase[] = [
-    {
-        check: 'integrity/manifest-policy',
-        files: { 'package.json': '{' },
-        expected: 'Cannot read package manifest package.json',
-    },
-    {
-        check: 'integrity/manifest-policy',
-        files: { 'package.json': '{"dependencies":{"example":false}}' },
-        expected: 'Cannot read package manifest package.json',
-    },
-];
 
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
@@ -111,7 +90,7 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
             expect(outcome.stdout + outcome.stderr).toContain(planted.expected);
@@ -127,7 +106,7 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
@@ -150,7 +129,7 @@ describe('the dependencies configuration', () => {
             await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
             await createFileTree(sandbox.path, {
                 'package.json': JSON.stringify({
                     ...JSON.parse(CLEAN),

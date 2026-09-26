@@ -10,26 +10,12 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
+import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-
-const GENERATOR = String.raw`import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-const schema = readFileSync('schema.txt', 'utf8');
-if (schema !== 'current') {
-    mkdirSync('migrations/meta', { recursive: true });
-    writeFileSync('migrations/0001_change.sql', 'ALTER TABLE records ADD name text;\n');
-    writeFileSync('migrations/meta/journal.json', '{"version":2}\n');
-}
-
-if (schema === 'failure') {
-    console.error('Migration generation failed');
-    process.exitCode = 1;
-}
-`;
-
-const SCOPES = ['', 'packages/db'];
+import { DRIZZLE_MIGRATIONS_GENERATOR, DRIZZLE_MIGRATIONS_SCOPES } from '#tests/constants/integration/cli/checks.ts';
 
 // A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
-async function plant(scope: string, schema: 'changed' | 'failure') {
+async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Planted> {
     const directory = await testdir();
     const path = (file: string) => join(scope, file);
     await createFileTree(directory.path, {
@@ -39,7 +25,7 @@ async function plant(scope: string, schema: 'changed' | 'failure') {
         [path('package.json')]: '{"private":true}\n',
         [path('drizzle.config.ts')]: 'export default {};\n',
         [path('schema.txt')]: schema,
-        [path('generate')]: GENERATOR,
+        [path('generate')]: DRIZZLE_MIGRATIONS_GENERATOR,
         [path('migrations/0000_initial.sql')]: 'CREATE TABLE records (id int);\n',
         [path('migrations/meta/journal.json')]: '{"version":1}\n',
         'unrelated/keep.sql': '-- Keep another scope\n',
@@ -60,8 +46,6 @@ async function plant(scope: string, schema: 'changed' | 'failure') {
     return { directory, path, manual, mode: statSync(manual).mode, initial, spec, input };
 }
 
-type Planted = Awaited<ReturnType<typeof plant>>;
-
 // Whatever the generator did, the tracked edits, the untracked migration, and the other scope are untouched.
 function expectPreserved({ directory, path, manual, mode, initial }: Planted): void {
     expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
@@ -71,21 +55,24 @@ function expectPreserved({ directory, path, manual, mode, initial }: Planted): v
     expect(readFileSync(join(directory.path, 'unrelated/keep.sql'), 'utf8')).toBe('-- Keep another scope\n');
 }
 
-test.each(SCOPES)('a failed generation in %s reports the failure and preserves every file', async (scope) => {
-    const planted = await plant(scope, 'failure');
-    await using directory = planted.directory;
-    const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-    try {
-        expect(await rejection(drizzleMigrations(planted.input))).toContain('Migration generation failed');
-        writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
-        expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
-        expectPreserved(planted);
-    } finally {
-        locate.mockRestore();
-    }
-});
+test.each(DRIZZLE_MIGRATIONS_SCOPES)(
+    'a failed generation in %s reports the failure and preserves every file',
+    async (scope) => {
+        const planted = await plant(scope, 'failure');
+        await using directory = planted.directory;
+        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+        try {
+            expect(await rejection(drizzleMigrations(planted.input))).toContain('Migration generation failed');
+            writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
+            expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
+            expectPreserved(planted);
+        } finally {
+            locate.mockRestore();
+        }
+    },
+);
 
-test.each(SCOPES)(
+test.each(DRIZZLE_MIGRATIONS_SCOPES)(
     'a stale schema in %s reports the missing migration files and preserves every file',
     async (scope) => {
         const planted = await plant(scope, 'changed');

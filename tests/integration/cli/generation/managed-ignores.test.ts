@@ -8,9 +8,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { configurationManifests, gitignoreBlock, parseManifest } from '#cli/configurations/manifests.ts';
-
-const CONFIGURATION =
-    '\n[configuration]\nname = "local"\nkind = "policy"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
+import { MANAGED_IGNORES_CONFIGURATION } from '#tests/constants/integration/cli/generation/generation.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -51,7 +49,10 @@ test.each([true, false])(
 
 test('manifest-owned tool directories are ignored while generated rules and authored sources remain visible', async () => {
     await using repository = await testdir();
-    const manifest = parseManifest('untracked = [".gspot/local/downloads/"]\n' + CONFIGURATION, 'configurations/local');
+    const manifest = parseManifest(
+        'untracked = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
+        'configurations/local',
+    );
     const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, 'hash');
@@ -91,9 +92,12 @@ test.each([
     '.gspot\\downloads\\',
 ])('a manifest cannot hide authored paths through %s', (path) => {
     expect(() =>
-        parseManifest(`untracked = [${JSON.stringify(path)}]\n` + CONFIGURATION, 'configurations/local'),
+        parseManifest(
+            `untracked = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
+            'configurations/local',
+        ),
     ).toThrow();
     expect(() =>
-        parseManifest('untracked = [".gspot/downloads/"]\n' + CONFIGURATION, 'configurations/local'),
+        parseManifest('untracked = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION, 'configurations/local'),
     ).not.toThrow();
 });

@@ -8,18 +8,11 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
 import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-
-const GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
-const content = readFileSync('bindings.txt', 'utf8');
-writeFileSync(process.argv[2], content);
-writeFileSync('generated-note.txt', 'Generator output');
-if (content === 'failure') { console.error('Types generation failed'); process.exitCode = 1; }
-`;
-
-const SCOPES = ['', 'workers/api'];
+import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
+import { CLOUDFLARE_TYPES_GENERATOR, CLOUDFLARE_TYPES_SCOPES } from '#tests/constants/integration/cli/checks.ts';
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
-async function plant(scope: string, bindings: string) {
+async function plant(scope: string, bindings: string): Promise<Planted> {
     const directory = await testdir();
     const path = (name: string) => join(scope, name);
     await createFileTree(directory.path, {
@@ -27,7 +20,7 @@ async function plant(scope: string, bindings: string) {
         [path('package.json')]: '{"private":true}\n',
         [path('cloudflare-env.d.ts')]: '// Committed types\n',
         [path('bindings.txt')]: bindings,
-        [path('types')]: GENERATOR,
+        [path('types')]: CLOUDFLARE_TYPES_GENERATOR,
     });
     commitAll(directory.path);
     const target = join(directory.path, path('cloudflare-env.d.ts'));
@@ -51,8 +44,6 @@ async function plant(scope: string, bindings: string) {
     return { directory, path, target, edited, mode: statSync(target).mode, spec, input, locate };
 }
 
-type Planted = Awaited<ReturnType<typeof plant>>;
-
 // The developer's edit, its mode, and the absence of generator side effects, whatever the generator did.
 function expectPreserved({ directory, path, target, edited, mode }: Planted): void {
     expect(readFileSync(target, 'utf8')).toBe(edited);
@@ -60,19 +51,22 @@ function expectPreserved({ directory, path, target, edited, mode }: Planted): vo
     expect(existsSync(join(directory.path, path('generated-note.txt')))).toBe(false);
 }
 
-test.each(SCOPES)('Cloudflare types in %s report a failed generation and preserve source', async (scope) => {
-    const planted = await plant(scope, 'failure');
-    await using directory = planted.directory;
-    try {
-        expect(await rejection(envTypesFresh(planted.input))).toContain('Types generation failed');
-        expectPreserved(planted);
-        expect(directory.path).toBe(planted.directory.path);
-    } finally {
-        planted.locate.mockRestore();
-    }
-});
+test.each(CLOUDFLARE_TYPES_SCOPES)(
+    'Cloudflare types in %s report a failed generation and preserve source',
+    async (scope) => {
+        const planted = await plant(scope, 'failure');
+        await using directory = planted.directory;
+        try {
+            expect(await rejection(envTypesFresh(planted.input))).toContain('Types generation failed');
+            expectPreserved(planted);
+            expect(directory.path).toBe(planted.directory.path);
+        } finally {
+            planted.locate.mockRestore();
+        }
+    },
+);
 
-test.each(SCOPES)(
+test.each(CLOUDFLARE_TYPES_SCOPES)(
     'Cloudflare types in %s report stale types, accept regenerated ones, and preserve source',
     async (scope) => {
         const planted = await plant(scope, '// Generated types\n');

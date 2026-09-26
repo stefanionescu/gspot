@@ -3,29 +3,17 @@ import { parse as parseToml } from 'smol-toml';
 import { containingAll } from '#tests/support/expectations.ts';
 import { generatedFile } from '#tests/support/cli/generated-files.ts';
 
-const TAILWIND_AT_RULES = [
-    'tailwind',
-    'apply',
-    'layer',
-    'theme',
-    'utility',
-    'variant',
-    'custom-variant',
-    'source',
-    'plugin',
-    'config',
-    'reference',
-];
-
-const PYTHON = 'version = 1\nconfigurations = ["python"]\n';
-
-const PACKAGE = '{"private":true,"type":"module"}\n';
+import {
+    PYTHON,
+    SHARED_SETTINGS_PACKAGE,
+    TAILWIND_AT_RULES,
+} from '#tests/constants/integration/cli/generation/generation.ts';
 
 async function knipConfiguration(
     policy: string,
 ): Promise<{ entry: string[]; workspaces: Record<string, { entry: string[] }> }> {
     const content = await generatedFile(policy, '.gspot/config/knip.json', {
-        'package.json': PACKAGE,
+        'package.json': SHARED_SETTINGS_PACKAGE,
         'api/serve.js': '',
     });
     return JSON.parse(content) as { entry: string[]; workspaces: Record<string, { entry: string[] }> };

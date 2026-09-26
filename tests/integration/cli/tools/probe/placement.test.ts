@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { RUNS } from '#tests/constants/support/cli.ts';
 import { locateTool, probeTool } from '#cli/tools/probe.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { commandPin, libraryPin, RUNS } from '#tests/support/cli/pins.ts';
+import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 

@@ -7,19 +7,8 @@ import { pushReportSchema } from '#cli/execution/report.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
-
-type Step = { run?: string; uses?: string; if?: string; with?: Record<string, string> };
-type Generated = {
-    gspot: { script: string[]; artifacts: { paths: string[]; when: string; reports: { codequality: string } } };
-    jobs: Record<string, { steps: Step[] }>;
-};
-type Retention = { always: boolean; keepsCodequality: boolean; manualStage?: 'manual job only' | 'every job' };
-
-const CODEQUALITY_REPORT = '.gspot/reports/report.codequality.json';
-const RETENTION: Record<'gitlab' | 'github', Retention> = {
-    gitlab: { always: true, keepsCodequality: true },
-    github: { always: true, keepsCodequality: true, manualStage: 'manual job only' },
-};
+import type { Generated, Retention, Step } from '#tests/types/acceptance/source/cli.ts';
+import { CODEQUALITY_REPORT, RETENTION } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 function runsManual(steps: Step[]): boolean {
     return steps.some((step) => step.run?.includes('--stage manual') === true);

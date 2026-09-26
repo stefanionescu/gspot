@@ -3,41 +3,27 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 // Copy the installed Vale packages so the fixture has private offline styles.
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 
+import {
+    GUIDE,
+    LICENSE,
+    OWN_STYLES,
+    README,
+    REPORTED_ELSEWHERE,
+} from '#tests/constants/acceptance/source/configurations/configurations.ts';
+
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'config', 'vale', 'styles');
-const OWN_STYLES = new Set(['gspot', 'config']);
-
-const README = `# Planted
-
-A planted repository that holds documents and nothing else.
-
-## Requirements
-
-- git
-
-## Setup
-
-\`\`\`bash
-git clone https://example.com/planted.git
-\`\`\`
-
-## Usage
-
-Open the guide and read it from the top.
-`;
-const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
-const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
-
 const CASES: FindingCase[] = [
     {
         check: 'markdown/markdownlint',
@@ -95,8 +81,6 @@ const CASES: FindingCase[] = [
         expected: { file: 'docs/silenced.md', rule: 'vale-directive', line: 3 },
     },
 ];
-
-const REPORTED_ELSEWHERE = ['markdown/prettier', 'prose/messages', 'prose/doc-tags'];
 
 function copyValePackages(target: string): void {
     const styles = join(target, '.gspot', 'config', 'vale', 'styles');

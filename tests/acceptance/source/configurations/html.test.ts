@@ -6,32 +6,19 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the html configuration: an image with no text alternative, an inline handler, and copy written into a template.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { HTML_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { TEMPLATES } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'html',
-    '--without',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const page = (body: string): string =>
     `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n${body}    </body>\n</html>\n`;
 const CLEAN = page(
     '        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" alt="{{ logo_alt }}" />\n        <script type="application/ld+json">{"@type": "Thing"}</script>\n        <script src="/app.js"></script>\n',
 );
-const TEMPLATES = '[tools.html]\ntemplate_files = ["pages/**/*.html"]\n';
-
 const CASES: FindingCase[] = [
     {
         check: 'html/html-validate',
@@ -69,7 +56,7 @@ describe('the html configuration', () => {
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, HTML_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(

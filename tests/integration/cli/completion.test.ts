@@ -3,12 +3,9 @@ import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { buildProgram } from '#cli/commands/program.ts';
-
-type Command = ReturnType<typeof buildProgram>;
+import { COMPLETION_TIMEOUT_MS } from '#tests/constants/integration/cli/cli.ts';
 
 const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.meta.url));
-const COMPLETION_TIMEOUT_MS = 30_000;
-
 async function candidates(words: string[]): Promise<string[]> {
     // The script hands the program the words after its own name, and an empty word asks for every command.
     const result = await run([process.execPath, CLI, 'complete', '--', ...words], {
@@ -23,7 +20,7 @@ async function candidates(words: string[]): Promise<string[]> {
 }
 
 // The flags a shell offers: the command's own, visible ones. A hidden flag such as the hook's --push is not offered.
-function longFlags(command: Command): string[] {
+function longFlags(command: ReturnType<typeof buildProgram>): string[] {
     return command.options
         .filter((option) => !option.hidden)
         .map((option) => option.long)

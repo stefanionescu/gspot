@@ -2,39 +2,21 @@ import { chmodSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { expectCorrected } from '#tests/support/cli/planted.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-
-const POLICY =
-    'version = 1\nlevel = "all"\nconfigurations = ["configs"]\n[runner]\ntool = "mise"\n[rules]\ninstall = false\n';
-const WORKFLOW_HEAD =
-    'name: planted\non: [push]\npermissions:\n    contents: read\njobs:\n    build:\n        runs-on: ubuntu-24.04\n        steps:\n';
-
-const PINACT_STUB = `#!/usr/bin/env bun
-const args = process.argv.slice(2);
-if (args.includes('--version')) {
-    console.log('pinact 5.0.0');
-    process.exit(0);
-}
-if (!args.includes('--verify')) process.exit(0);
-const file = Bun.file(args.at(-1));
-const content = await file.text();
-if (!args.includes('--check')) await Bun.write(file, 'rewritten by pinact');
-if (content.includes('actions/checkout@0000000000000000000000000000000000000000')) {
-    console.error('invalid action pin: broken.yml');
-    process.exit(3);
-}
-`;
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { WORKFLOW_HEAD } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 test(
     'the Taplo adapter reports both output streams and its exit code',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': POLICY,
+            'gspot.toml': TOOL_FAILURES_POLICY,
             'settings/layout.toml': 'a = 1\n',
             'bin/taplo': `#!/usr/bin/env bun
 if (process.argv.includes('--version')) {
@@ -71,7 +53,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': POLICY,
+            'gspot.toml': TOOL_FAILURES_POLICY,
             'README.md': '# Action pins\n',
             'bin/pinact': PINACT_STUB,
             'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',

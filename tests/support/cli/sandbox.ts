@@ -4,32 +4,11 @@ import { createFileTree } from 'testdirs';
 import { delimiter, join } from 'node:path';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { QUIET_INIT } from '#tests/support/cli/init.ts';
+import type { Sandbox } from '#tests/types/support/cli.ts';
+import { QUIET_INIT } from '#tests/constants/support/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
-
-/** The strict compiler options a planted TypeScript repository reads. */
-export const COMPONENT_TSCONFIG =
-    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n';
-
-/** A TypeScript module a planted repository holds, so the compiler has an input. */
-export const COMPONENT_SOURCE =
-    '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
-
-/** What a planted repository holds and selects. */
-export type Sandbox = {
-    /** The configurations init selects by name. */
-    configurations: string[];
-    /** The packages the planted manifest depends on; no manifest is written without them. */
-    dependencies?: Record<string, string>;
-    /** The source files of the repository. */
-    files: Record<string, string>;
-    /** Recommended configurations left out; naming and spelling always are. */
-    without?: string[];
-    /** The level set after init; all unless a test says otherwise. */
-    level?: 'recommended' | 'all';
-};
 
 /**
  * Plants a repository, installs its configurations and private tools, and returns the command environment.

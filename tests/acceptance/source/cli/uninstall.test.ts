@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
+// Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-// Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 describe('uninstall', () => {
     test(

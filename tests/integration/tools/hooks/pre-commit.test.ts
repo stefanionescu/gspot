@@ -8,9 +8,8 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { PRE_COMMIT_POLICY } from '#tests/constants/integration/tools/hooks.ts';
 import { chmodSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
-
-const POLICY = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 
 test.each(['', "apps/worker's tools"])(
     'native pre-commit hooks run from policy directory %s and preserve Git inputs',
@@ -18,7 +17,7 @@ test.each(['', "apps/worker's tools"])(
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
         await createFileTree(root, {
-            'gspot.toml': POLICY,
+            'gspot.toml': PRE_COMMIT_POLICY,
             '.gitignore': '.venv/\nbin/\npre-commit-cache/\nobserved\nfailed\n',
             'source.txt': 'input',
             'bin/gspot': `#!${process.execPath}\nconst {appendFileSync} = await import('node:fs'); appendFileSync('observed', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,

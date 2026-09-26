@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, symlinkSync } from 'node:fs';
-import { MINIMAL_POLICY, policyProblems } from '#tests/support/cli/policy-problems.ts';
+import { MINIMAL_POLICY } from '#tests/constants/support/cli.ts';
+import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
 describe('parsePolicyText', () => {
     test('missing adopted executables identify the module value and accept a repository file', async () => {

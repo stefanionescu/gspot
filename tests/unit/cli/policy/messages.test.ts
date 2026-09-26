@@ -1,14 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as messages from '#cli/policy/messages.ts';
-
-// A message speaks of a setting, a configuration, a scope, and a default; these are names of the code, not of the reader.
-const INTERNAL_WORDS = /\b(?:expose[sd]?|surface|layer|spec|schema)\b/iu;
-
-const SAMPLE_ARGUMENTS: Record<string, unknown[]> = {
-    conflictingScalars: ['tools.sqlfluff.dialect', 'sql', 'postgres'],
-    settingNotExposed: ['tools.shellcheck.severity', ['tools.shellcheck.rules']],
-    settingInScope: ['tools.jest.coverage_lines', 'api'],
-};
+import type { Exported, Message } from '#tests/types/unit.ts';
+import { INTERNAL_WORDS, SAMPLE_ARGUMENTS } from '#tests/constants/unit/cli/policy.ts';
 
 // A message takes names and lists; the first shape that the function accepts is the sample.
 function sampleText(name: string, message: Message): string | undefined {
@@ -26,11 +19,6 @@ function sampleText(name: string, message: Message): string | undefined {
     }
     return undefined;
 }
-
-// Every message function accepts a `never` parameter list, so the sample call goes through Reflect.apply.
-type Message = (...arguments_: never[]) => unknown;
-
-type Exported = (typeof messages)[keyof typeof messages];
 
 const functions = Object.entries(messages).filter(
     (entry): entry is [string, Exported & Message] => typeof entry[1] === 'function',

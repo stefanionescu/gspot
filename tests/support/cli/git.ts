@@ -1,4 +1,4 @@
-import type { SpawnOutcome } from '#tests/support/cli/command.ts';
+import type { SpawnOutcome } from '#tests/types/support/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**

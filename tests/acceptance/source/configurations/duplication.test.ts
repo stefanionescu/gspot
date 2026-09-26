@@ -1,29 +1,17 @@
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the duplication configuration: one block copied into a second file.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { expectCorrected } from '#tests/support/cli/planted.ts';
-// Planted repository for the duplication configuration: one block copied into a second file.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
+import { DUPLICATION_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'bash',
-    'duplication',
-    '--without',
-    'naming',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
 const STEPS = Array.from(
     { length: 30 },
     (_, index) => `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
@@ -39,7 +27,7 @@ describe('the duplication configuration', () => {
             await createFileTree(sandbox.path, { 'scripts/first.sh': copied('count_first') });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, DUPLICATION_INIT, environment);
             const clean = await run(
                 sandbox.path,
                 ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],

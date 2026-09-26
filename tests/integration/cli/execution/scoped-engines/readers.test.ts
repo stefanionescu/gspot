@@ -4,16 +4,14 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { containing } from '#tests/support/expectations.ts';
-
-const HEADERS =
-    '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n';
+import { READERS_HEADERS } from '#tests/constants/integration/cli/execution/scoped-engines.ts';
 
 test('scoped readers receive their own files and preserve binary asset inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
             'version = 1\nconfigurations = ["static-site", "supabase", "i18n"]\n[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
-        _headers: HEADERS,
+        _headers: READERS_HEADERS,
         'messages/en.json': '{"title":"Home"}',
         'messages/de.json': '{"title":"Start"}',
         'supabase/config.toml': '[functions.root]\nverify_jwt = true\n',
@@ -70,7 +68,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
             { scope: 'apps/backend', findings: entry.nested },
         ]);
     }
-    await Bun.write(`${sandbox.path}/apps/backend/_headers`, HEADERS);
+    await Bun.write(`${sandbox.path}/apps/backend/_headers`, READERS_HEADERS);
     await Bun.write(`${sandbox.path}/apps/backend/messages/de.json`, '{"heading":"Backend"}');
     await Bun.write(
         `${sandbox.path}/apps/backend/supabase/functions/missing/index.ts`,

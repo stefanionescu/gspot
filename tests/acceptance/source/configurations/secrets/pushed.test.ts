@@ -6,9 +6,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { PLANTED_KEY_ID, PLANTED_SETTINGS } from '#tests/support/cli/secrets.ts';
-import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test(
     'pushed secret history includes removed secrets and excludes unrelated refs despite identical final trees',

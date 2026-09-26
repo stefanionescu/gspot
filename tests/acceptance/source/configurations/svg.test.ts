@@ -4,7 +4,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { install } from '#tests/support/cli/tools.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { runProcess, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { runProcess, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 test(
     'native SVG byte savings use the selected level and exact file inputs',

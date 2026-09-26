@@ -5,35 +5,16 @@ import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 // Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
-import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { LIBRARIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
+import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    'zod',
-    'trpc',
-    'tanstack-query',
-    'zustand',
-    'react-hook-form',
-    'drizzle',
-    '--without',
-    'naming',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PACKAGE = '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n';
-const CLEAN = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 const head = (text: string): string => `// A planted file.\n\n${text}`;
 
 const LINT: [string, string, string][] = [
@@ -101,17 +82,17 @@ describe('the library configurations', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
-                'package.json': PACKAGE,
+                'package.json': CONFIGURATION_ARRIVAL_PACKAGE,
                 'tsconfig.json':
                     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
-                'src/answer.ts': CLEAN,
+                'src/answer.ts': LIBRARIES_CLEAN,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, LIBRARIES_INIT, environment);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
@@ -130,7 +111,7 @@ describe('the library configurations', () => {
                         '\nimport { relations } from "drizzle-orm";\nexport const memberRelations = relations(members, ({one}) => ({ team: one(teams, {fields: [members.teamId], references: [teams.id]}) }));\n',
                 });
             } else {
-                await createFileTree(sandbox.path, { [planted.expected.file]: CLEAN });
+                await createFileTree(sandbox.path, { [planted.expected.file]: LIBRARIES_CLEAN });
             }
             await expectCorrected(sandbox.path, planted.check, environment);
         },

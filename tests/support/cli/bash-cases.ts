@@ -1,5 +1,6 @@
 // The planted Bash scripts of the bash configuration tests: one defect per check, each with a corrected script.
-import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { FindingCase } from '#tests/types/support/cli.ts';
+import { BASH_CASES_MAIN, HEAD, NESTED } from '#tests/constants/support/cli.ts';
 
 function file(body: string): string {
     return `${HEAD}${body}`;
@@ -9,13 +10,8 @@ const BRANCHES = Array.from(
     { length: 12 },
     (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo ${String(index)}; fi`,
 ).join('\n');
-const NESTED =
-    '    if [[ -n "$1" ]]; then\n        for item in "$@"; do\n            while true; do\n                if [[ -n "${item}" ]]; then\n                    case "${item}" in\n                        a) echo a ;;\n                    esac\n                fi\n                break\n            done\n        done\n    fi';
 const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
 
-export const HEAD =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
-export const MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 export const LONG_BODY = Array.from({ length: 70 }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
 export const LONG_FILE = Array.from(
     { length: 320 },
@@ -50,7 +46,7 @@ export const BASH_CASES: FindingCase[] = [
         check: 'structure/doc-comment',
         files: {
             'scripts/silent.sh': file(
-                `_quiet() {\n    echo one\n    echo "$1"\n    echo three\n}\n\n${MAIN.replace('echo "hello $1"', () => '_quiet "$1"\n    _quiet "$1"')}`,
+                `_quiet() {\n    echo one\n    echo "$1"\n    echo three\n}\n\n${BASH_CASES_MAIN.replace('echo "hello $1"', () => '_quiet "$1"\n    _quiet "$1"')}`,
             ),
         },
         expected: { file: 'scripts/silent.sh', rule: 'missing', line: 8 },
@@ -59,7 +55,7 @@ export const BASH_CASES: FindingCase[] = [
         check: 'structure/duplicate-functions',
         files: {
             'scripts/twice.sh': file(
-                `# _first: prints three lines.\n_first() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n# _second: prints three lines again.\n_second() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n${MAIN}`,
+                `# _first: prints three lines.\n_first() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n# _second: prints three lines again.\n_second() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n${BASH_CASES_MAIN}`,
             ),
         },
         expected: { file: 'scripts/twice.sh', rule: 'same-body', line: 9 },
@@ -68,7 +64,7 @@ export const BASH_CASES: FindingCase[] = [
         check: 'structure/unused-functions',
         files: {
             'scripts/orphan.sh': file(
-                `# _orphan: nobody calls this.\n_orphan() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n${MAIN}`,
+                `# _orphan: nobody calls this.\n_orphan() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n${BASH_CASES_MAIN}`,
             ),
         },
         expected: { file: 'scripts/orphan.sh', rule: 'never-called', line: 9 },
@@ -121,7 +117,7 @@ export const BASH_CASES: FindingCase[] = [
     },
     {
         check: 'structure/file-length',
-        files: { 'scripts/long.sh': file(`${LONG_FILE}\n\n${MAIN}`) },
+        files: { 'scripts/long.sh': file(`${LONG_FILE}\n\n${BASH_CASES_MAIN}`) },
         expected: { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },
     },
     {
@@ -180,7 +176,7 @@ export const BASH_CASES: FindingCase[] = [
     },
     {
         check: 'structure/bash-boundaries',
-        files: { 'deploy/step.sh': file(MAIN) },
+        files: { 'deploy/step.sh': file(BASH_CASES_MAIN) },
         policy: '[tools.bash]\narchitecture_roots = ["deploy"]\n',
         expected: { file: 'deploy/step.sh', rule: 'boundary-header', line: 1 },
         executable: ['deploy/step.sh'],

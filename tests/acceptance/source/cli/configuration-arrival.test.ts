@@ -2,33 +2,22 @@ import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readdirSync, symlinkSync } from 'node:fs';
+// Adding a configuration changes the next explicit check through its ESLint fragment.
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { expectCorrected } from '#tests/support/cli/planted.ts';
-// Adding a configuration changes the next explicit check through its ESLint fragment.
-import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
-const MODULES = join(import.meta.dir, '../../../../node_modules');
-const INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'typescript',
-    '--without',
-    'naming',
-    'spelling',
-    '--no-runner',
-    '--no-ci',
-    '--no-hooks',
-    '--no-rules',
-    '--no-install',
-];
-const PACKAGE = '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n';
-const LOOSE =
-    "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
+import {
+    CONFIGURATION_ARRIVAL_INIT,
+    CONFIGURATION_ARRIVAL_PACKAGE,
+    LOOSE,
+} from '#tests/constants/acceptance/source/cli/cli.ts';
 
+const MODULES = join(import.meta.dir, '../../../../node_modules');
 describe('gspot add', () => {
     test(
         'adding an ESLint fragment exposes its defect on the next explicit check',
@@ -36,7 +25,7 @@ describe('gspot add', () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
-                'package.json': PACKAGE,
+                'package.json': CONFIGURATION_ARRIVAL_PACKAGE,
                 'tsconfig.json':
                     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["*.ts"]\n}\n',
                 'schema.ts': LOOSE,
@@ -49,7 +38,7 @@ describe('gspot add', () => {
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await installAtLevel(sandbox.path, INIT, environment);
+            await installAtLevel(sandbox.path, CONFIGURATION_ARRIVAL_INIT, environment);
             const before = await run(
                 sandbox.path,
                 ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
