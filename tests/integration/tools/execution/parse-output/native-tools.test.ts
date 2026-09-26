@@ -7,12 +7,13 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { parseOutput } from '#cli/execution/output/parse.ts';
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { checkedFindings, isToolBroken } from '#cli/execution/broken-tool.ts';
-import { parseOutput, ToolOutputError } from '#cli/execution/output/parse.ts';
 
 test('native image reports distinguish a generated test key, invalid configuration, and a clean image', async () => {
     await using sandbox = await testdir();

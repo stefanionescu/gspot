@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { basename, dirname } from 'node:path';
+import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { evaluateLicenses } from '#cli/evaluation/license.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';
@@ -18,6 +19,35 @@ import {
     ignoredPathsResponse,
 } from '#cli/evaluation/protocol.ts';
 
+type Request = z.infer<typeof configurationRequest>;
+
+// Evaluates the operation the request names and checks the answer against its response shape.
+async function evaluate(request: Request, output: string): Promise<unknown> {
+    switch (request.operation) {
+        case 'preview-rules': {
+            return eslintPreviewResponse.parse(await evaluateEslintPreview(request, dirname(output)));
+        }
+        case 'stylelint': {
+            return stylelintResponse.parse(await evaluateStylelint(request));
+        }
+        case 'licenses': {
+            return licenseResponse.parse(await evaluateLicenses(request));
+        }
+        case 'coverage': {
+            return eslintCoverageResponse.parse(await evaluateRuleCoverage(request));
+        }
+        case 'ignore': {
+            return ignoredPathsResponse.parse(await evaluateIgnoredPaths(request));
+        }
+        case 'format': {
+            return formatResponse.parse(await evaluateFormat(request));
+        }
+        default: {
+            return eslintResponse.parse(await evaluateEslint(request));
+        }
+    }
+}
+
 try {
     const request = configurationRequest.parse(
         (globalThis as { gspotConfigurationRequest?: unknown }).gspotConfigurationRequest,
@@ -26,23 +56,10 @@ try {
         .string()
         .min(1)
         .parse((globalThis as { gspotConfigurationOutput?: unknown }).gspotConfigurationOutput);
-    const result =
-        request.operation === 'preview-rules'
-            ? eslintPreviewResponse.parse(await evaluateEslintPreview(request, dirname(output)))
-            : request.operation === 'stylelint'
-              ? stylelintResponse.parse(await evaluateStylelint(request))
-              : request.operation === 'licenses'
-                ? licenseResponse.parse(await evaluateLicenses(request))
-                : request.operation === 'coverage'
-                  ? eslintCoverageResponse.parse(await evaluateRuleCoverage(request))
-                  : request.operation === 'ignore'
-                    ? ignoredPathsResponse.parse(await evaluateIgnoredPaths(request))
-                    : request.operation === 'format'
-                      ? formatResponse.parse(await evaluateFormat(request))
-                      : eslintResponse.parse(await evaluateEslint(request));
+    const result = await evaluate(request, output);
     const files = openConfinedRoot(dirname(output));
     try {
-        files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: 0o600 }, undefined);
+        files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: PRIVATE_FILE }, undefined);
     } finally {
         files.close();
     }

@@ -1,16 +1,19 @@
 import { z } from 'zod';
+import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import type { Finding } from '#cli/checks/result.ts';
-import { readSource } from '#cli/repository/tracked.ts';
-import { codePoints } from '#cli/platform/code-points.ts';
-import { isAbsolute, relative, resolve } from 'node:path';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import type { OutputFormat } from '#cli/configurations/output-format.ts';
 
-const LINE_FEED = 10;
+import {
+    markdownlintFindings,
+    ToolOutputError,
+    trufflehogFindings,
+    typosFindings,
+} from '#cli/execution/output/tool-formats.ts';
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
@@ -30,142 +33,6 @@ const eslintEntry = z.object({
     severity: z.union([z.literal(1), z.literal(2)]),
 });
 const eslintFiles = z.array(z.object({ filePath: z.string().min(1), messages: z.array(eslintEntry) }));
-
-const markdownlintEntries = z.array(
-    z.object({
-        fileName: z.string().min(1),
-        lineNumber: z.number().int().positive(),
-        ruleNames: z.tuple([z.string().min(1)]).rest(z.string().min(1)),
-        ruleDescription: z.string().min(1),
-        errorDetail: z.string().nullable(),
-        errorContext: z.string().nullable(),
-        errorRange: z.tuple([z.number().int().positive(), z.number().int().nonnegative()]).nullable(),
-        fixInfo: z.record(z.string(), z.unknown()).nullable(),
-        severity: z.enum(['error', 'warning']),
-    }),
-);
-
-function markdownlintFindings(check: string, stdout: string, help: string, root: string, cwd: string): Finding[] {
-    const sources = new Map<string, string[]>();
-    try {
-        return markdownlintEntries.parse(JSON.parse(stdout)).map((entry) => {
-            const file = toPosix(relative(root, resolve(cwd, entry.fileName)));
-            let lines = sources.get(file);
-            if (lines === undefined) {
-                lines = readSource(root, file).toString('utf8').split('\n');
-                sources.set(file, lines);
-            }
-            const line = lines[entry.lineNumber - 1];
-            if (line === undefined || (entry.errorRange !== null && entry.errorRange[0] > line.length + 1))
-                throw new Error(`The reported position is outside the source: ${file}`);
-            return {
-                check,
-                file,
-                line: entry.lineNumber,
-                ...(entry.errorRange === null ? {} : { column: entry.errorRange[0] }),
-                rule: entry.ruleNames[0],
-                message: [entry.ruleDescription, entry.errorDetail, entry.errorContext]
-                    .filter((part) => part !== null)
-                    .join(': '),
-                help,
-                fixable: entry.fixInfo !== null,
-            };
-        });
-    } catch (error) {
-        throw new ToolOutputError('Markdownlint returned invalid structured findings or unavailable source.', {
-            cause: error,
-        });
-    }
-}
-
-const trufflehogFinding = z.object({
-    DetectorName: z.string().min(1),
-    Verified: z.literal(true),
-    SourceMetadata: z.object({ Data: z.object({ JsonEnumerator: z.object({ metadata: z.string() }) }) }),
-});
-const historyMetadata = z.object({ commit: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u), file: z.string() });
-
-const typosEntry = z.object({
-    type: z.literal('typo'),
-    path: z.string().min(1),
-    line_num: z.number().int().positive().optional(),
-    byte_offset: z.number().int().nonnegative(),
-    typo: z.string().min(1),
-    corrections: z.array(z.string()).nullable(),
-});
-
-// JSON preserves filename delimiters. Native offsets count UTF-8 bytes, while report columns count characters.
-function typosFindings(check: string, stdout: string, help: string, root: string, cwd: string): Finding[] {
-    const linesByPath = new Map<string, Buffer[]>();
-    try {
-        return stdout
-            .split('\n')
-            .filter((line) => line.trim() !== '')
-            .map((line) => {
-                const entry = typosEntry.parse(JSON.parse(line));
-                const path = toPosix(relative(root, resolve(cwd, entry.path)));
-                const corrections = entry.corrections ?? [];
-                const replacement = corrections.map((word) => `\`${word}\``).join(', ');
-                const message =
-                    corrections.length === 0
-                        ? `\`${entry.typo}\` is not allowed`
-                        : `\`${entry.typo}\` should be ${replacement}`;
-                const finding: Finding = {
-                    check,
-                    file: path,
-                    help,
-                    message: entry.line_num === undefined ? `Filename: ${message}` : message,
-                    fixable: entry.line_num !== undefined && corrections.length === 1,
-                };
-                if (entry.line_num !== undefined) {
-                    let lines = linesByPath.get(path);
-                    if (lines === undefined) {
-                        const source = readSource(root, path);
-                        lines = [];
-                        let start = 0;
-                        for (let index = 0; index < source.length; index += 1)
-                            if (source[index] === LINE_FEED) {
-                                lines.push(source.subarray(start, index));
-                                start = index + 1;
-                            }
-                        lines.push(source.subarray(start));
-                        linesByPath.set(path, lines);
-                    }
-                    const sourceLine = lines[entry.line_num - 1];
-                    if (sourceLine === undefined || entry.byte_offset > sourceLine.length)
-                        throw new Error(`The reported position is outside the source: ${path}`);
-                    finding.line = entry.line_num;
-                    finding.column = codePoints(sourceLine.subarray(0, entry.byte_offset).toString('utf8')).length + 1;
-                }
-                return finding;
-            });
-    } catch (error) {
-        throw new ToolOutputError('The typos output holds invalid structured findings or an unavailable source.', {
-            cause: error,
-        });
-    }
-}
-
-function trufflehogFindings(check: string, stdout: string, help: string): Finding[] {
-    const findings: Finding[] = [];
-    for (const line of stdout.split('\n').filter((line) => line.trim() !== '')) {
-        try {
-            const result = trufflehogFinding.parse(JSON.parse(line));
-            const metadata = historyMetadata.parse(JSON.parse(result.SourceMetadata.Data.JsonEnumerator.metadata));
-            findings.push({
-                check,
-                file: metadata.file,
-                rule: result.DetectorName,
-                message: `Verified ${result.DetectorName} credential in commit ${metadata.commit}.`,
-                help,
-                fixable: false,
-            });
-        } catch {
-            throw new ToolOutputError('TruffleHog returned invalid structured findings; raw output was withheld.');
-        }
-    }
-    return findings;
-}
 
 const DEFAULT_OUTPUT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
 
@@ -297,52 +164,36 @@ function parseLines(check: string, text: string, help: string): Finding[] {
         .map((line) => ({ check, file: '', message: line, help, fixable: false }));
 }
 
-/**
- * Findings from a tool's output, per the check's output format.
- * @param spec the check
- * @param stdout what the tool printed
- * @param stderr what the tool printed on its error stream
- * @param root the repository root, to make the absolute paths ESLint prints relative
- * @param cwd the directory the tool ran in, which its relative paths start from
- * @returns the findings
- */
+type Parsing = { spec: CheckSpec; stdout: string; text: string; root: string; cwd: string };
+
+// The findings of a JSON report, or the error that says the report could not be read.
+function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
+    try {
+        return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
+    } catch (error) {
+        throw new ToolOutputError('The tool returned an invalid JSON report.', { cause: error });
+    }
+}
+
+// The reader of each output format a manifest can declare.
+const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: OutputFormat) => Finding[]> = {
+    none: () => [],
+    json: jsonFindings,
+    'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
+    'typos-json': ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
+    'markdownlint-json': ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
+    'eslint-json': ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
+    lines: ({ spec, text }) => parseLines(spec.name, text, spec.help),
+    regex: ({ spec, text }, output) => parseRegex(spec.name, output, text, spec.help),
+    grouped: ({ spec, text }, output) => parseGrouped(spec.name, output, text, spec.help),
+};
+
+// Findings from a tool's output, per the check's output format.
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = Bun.stripANSI(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
-    switch (output.format) {
-        case 'none': {
-            return [];
-        }
-        case 'json': {
-            try {
-                return parseJson(spec.name, output, stdout, spec.help);
-            } catch (error) {
-                throw new ToolOutputError('The tool returned an invalid JSON report.', { cause: error });
-            }
-        }
-        case 'trufflehog-json': {
-            return trufflehogFindings(spec.name, stdout, spec.help);
-        }
-        case 'typos-json': {
-            return typosFindings(spec.name, stdout, spec.help, root, cwd);
-        }
-        case 'markdownlint-json': {
-            return markdownlintFindings(spec.name, stdout, spec.help, root, cwd);
-        }
-        case 'eslint-json': {
-            return parseEslintJson(spec.name, stdout, spec.help, root);
-        }
-        case 'lines': {
-            return parseLines(spec.name, text, spec.help);
-        }
-        case 'regex': {
-            return parseRegex(spec.name, output, text, spec.help);
-        }
-        case 'grouped': {
-            return parseGrouped(spec.name, output, text, spec.help);
-        }
-    }
+    return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output);
 }
 
 function relativeTo(root: string, file: string): string {
@@ -374,9 +225,4 @@ export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, roo
         fixable: spec.fix_command !== undefined && finding.fixable,
         file: relativeTo(toPosix(root), toPosix(finding.file)),
     }));
-}
-
-/** A tool response that cannot be interpreted safely as findings. */
-export class ToolOutputError extends Error {
-    override name = 'ToolOutputError';
 }

@@ -6,11 +6,11 @@ import { fileBatches } from '#cli/execution/file-batches.ts';
 import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin } from '#cli/configurations/manifests.ts';
-import { ToolOutputError } from '#cli/execution/output/parse.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import type { CheckResult, Finding } from '#cli/checks/result.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
+import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
