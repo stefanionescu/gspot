@@ -70,6 +70,7 @@ level = "all"
 stage = "message"
 runs = "per-file-list"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
+cached = false
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 coverage = []
 summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."

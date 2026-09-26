@@ -53,6 +53,16 @@ const CHECK_RULES: CheckRule[] = [
         problem: (check) => `check ${check.name} has fix_findings_exit_codes and no fix_command.`,
     },
     {
+        applies: (check) => check.cached === true && check.engine === undefined && check.analysis === undefined,
+        problem: (check) =>
+            `check ${check.name} runs a command, which is cached unless cached = false; drop cached = true.`,
+    },
+    {
+        applies: (check) => check.cached === false && (check.engine !== undefined || check.analysis !== undefined),
+        problem: (check) =>
+            `check ${check.name} is an analysis, which is not cached unless cached = true; drop cached = false.`,
+    },
+    {
         applies: (check) => check.requires !== undefined && check.stage === 'commit',
         problem: (check) => `check ${check.name} requires ${check.requires ?? ''} and cannot run at the commit stage.`,
     },

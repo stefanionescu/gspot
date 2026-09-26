@@ -177,6 +177,8 @@ const checkFields = z.strictObject({
     runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
     command: commandSchema.optional(),
     isolated_files: z.boolean().optional(),
+    // true: an analysis reads only its files, so its result may be cached; false: a command's verdict depends on more.
+    cached: z.boolean().optional(),
     file_prefix: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
     fix_command: commandSchema.optional(),

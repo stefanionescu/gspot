@@ -104,6 +104,7 @@ level = "all"
 stage = "commit"
 tool = "swiftlint"
 analysis = "swiftlint"
+cached = true
 fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"

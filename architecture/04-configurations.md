@@ -210,7 +210,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   `skipped` and names it.
 - A check takes `needs`, the configuration whose generated files it reads. Where the scope does
   not select it, the check is skipped with that note.
-- A check takes `cached = false` when its verdict depends on more than its files.
+- A command check is cached unless it takes `cached = false`, for a verdict that depends on more than its files.
+- An analysis is not cached unless it takes `cached = true`, for one that reads only its files.
 - A check takes `needs_git`. With `true` it reads git and is skipped, with a note, in a folder
   that has no `.git`; with `false` it stands in for such a check and runs only there. A
   configuration takes `needs_git = true` when every check of it reads git, and `init` leaves it

@@ -24,6 +24,27 @@ describe('parseManifest', () => {
         ).not.toThrow();
     });
 
+    test('a command is cached unless it says otherwise, and an analysis only when it says so', () => {
+        const header =
+            '[configuration]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[checks]]\nexample = "A rejected input is corrected before rerunning the parser."\nlevel = "recommended"\nname = "x/y"\nstage = "commit"\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n';
+        expect(() => parseManifest(`${header}command = ["x"]\ncached = true\n`, 'configurations/x')).toThrow(
+            'drop cached = true',
+        );
+        expect(() =>
+            parseManifest(
+                `${header}engine = "integrity"\nanalysis = "generated-drift"\ncached = false\n`,
+                'configurations/x',
+            ),
+        ).toThrow('drop cached = false');
+        expect(() => parseManifest(`${header}command = ["x"]\ncached = false\n`, 'configurations/x')).not.toThrow();
+        expect(() =>
+            parseManifest(
+                `${header}engine = "integrity"\nanalysis = "generated-drift"\ncached = true\n`,
+                'configurations/x',
+            ),
+        ).not.toThrow();
+    });
+
     test('refuses a check without an enforcement level', () => {
         const text =
             '[configuration]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for checking input."\n[[checks]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "x/parse"\nstage = "commit"\ncommand = ["x"]\nsummary = "Parses the project input."\nwhy = "Invalid input cannot run."\nhelp = "Correct the invalid input."\n';

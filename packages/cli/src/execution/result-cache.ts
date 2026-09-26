@@ -9,8 +9,6 @@ import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
 
-// Checks whose answer depends on state outside their inputs, so no stored result is ever right.
-const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 
 // The path a tool is recorded under: inside the cache root when it lies inside the repository.
@@ -71,12 +69,14 @@ function declaredInputs(session: Session, planned: PlannedCheck): string[] | und
     return session.policyFiles.policy.checks.find((entry) => entry.name === planned.check)?.inputs;
 }
 
-// Whether a check reads only what its key records. SwiftLint's syntax supplement reads only selected sources
-// and the same native configurations; other analyses can read undeclared files and run several tools.
+// Whether a check reads only what its key records: a command unless its manifest says cached = false, an
+// analysis only when its manifest says cached = true, and never a check that needs a build, a daemon, or the network.
 function isCacheable(planned: PlannedCheck): boolean {
     const { spec } = planned;
-    if (spec.engine !== undefined || (spec.analysis !== undefined && spec.analysis !== 'swiftlint')) return false;
-    if (NEVER_CACHED.has(planned.check) || spec.requires !== undefined) return false;
+    const isAnalysis = spec.engine !== undefined || spec.analysis !== undefined;
+    const isCached = isAnalysis ? spec.cached === true : spec.cached !== false;
+    if (!isCached) return false;
+    if (spec.requires !== undefined) return false;
     return spec.runs === 'per-file-list' || planned.files.length > 0;
 }
 
