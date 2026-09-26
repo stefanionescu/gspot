@@ -1,3 +1,4 @@
+// The check command's flags, its pre-push input, and the cancellation the termination signals cause.
 import { progress } from '#cli/output/reporter.ts';
 import type { StageFilter } from '#cli/execution/plan.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
@@ -5,6 +6,7 @@ import type { Stage } from '#cli/configurations/schema.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { CheckOptions } from '#cli/commands/check/run.ts';
 import { Command, InvalidArgumentError, Option } from 'commander';
+import type { CommandResult } from '#cli/commands/print-result.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 
 class CheckCommand extends Command {
@@ -21,6 +23,7 @@ class CheckCommand extends Command {
     }
 }
 const PUBLIC_STAGES: Stage[] = ['commit', 'push', 'manual'];
+const CANCELED_EXIT = 2;
 function stageArgument(value: string): Stage {
     if (value === 'message') return value;
     const stage = PUBLIC_STAGES.find((entry) => entry === value);
@@ -47,6 +50,83 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
         ...textEntry(flags, 'messageFile', 'messageFile'),
     };
 }
+
+// Reads the pre-push protocol from standard input, stopping when the run is canceled.
+async function readPushInput(signal: AbortSignal): Promise<string> {
+    const reader = Bun.stdin.stream().getReader();
+    let cancellation: Promise<void> | undefined;
+    const stopReading = (): void => {
+        cancellation = reader.cancel();
+    };
+    signal.addEventListener('abort', stopReading, { once: true });
+    const decoder = new TextDecoder('utf-8', { fatal: true });
+    let input = '';
+    try {
+        signal.throwIfAborted();
+        for (;;) {
+            const chunk = await reader.read();
+            signal.throwIfAborted();
+            if (chunk.done) break;
+            input += decoder.decode(chunk.value, { stream: true });
+        }
+        return input + decoder.decode();
+    } finally {
+        signal.removeEventListener('abort', stopReading);
+        await cancellation;
+        reader.releaseLock();
+    }
+}
+
+// Turns the pre-push invocation into check options: Git's remote name and the object updates on standard input.
+async function pushOptions(options: CheckOptions, paths: string[], signal: AbortSignal): Promise<CheckOptions> {
+    if (paths.length > 0 && paths.length !== 2)
+        throw new InvalidArgumentError('Pre-push expects the remote name and URL supplied by Git.');
+    const input = await readPushInput(signal);
+    return { ...options, paths: [], push: { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
+}
+
+// Runs check, or reports the cancellation when the signal fired before every selected content was checked.
+async function runOrCancel(
+    options: CheckOptions,
+    paths: string[],
+    isPush: boolean,
+    signal: AbortSignal,
+): Promise<CommandResult> {
+    try {
+        const selected = isPush ? await pushOptions(options, paths, signal) : options;
+        return await checkCommand(selected, signal);
+    } catch (error) {
+        if (!signal.aborted) throw error;
+        return {
+            text: 'Check canceled before all selected content was checked.\n',
+            json: { error: 'canceled', exitCode: CANCELED_EXIT },
+            exitCode: CANCELED_EXIT,
+        };
+    }
+}
+
+// Runs check with an abort signal wired to the termination signals for the duration of the run.
+async function runCheck(
+    paths: string[],
+    flags: Record<string, unknown>,
+    global: Record<string, unknown>,
+): Promise<void> {
+    const options = optionsFrom(paths, flags, global);
+    if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
+    const controller = new AbortController();
+    const cancel = (): void => {
+        controller.abort();
+    };
+    process.on('SIGINT', cancel);
+    process.on('SIGTERM', cancel);
+    try {
+        await printCommand(() => runOrCancel(options, paths, flags['push'] === true, controller.signal), global);
+    } finally {
+        process.removeListener('SIGINT', cancel);
+        process.removeListener('SIGTERM', cancel);
+    }
+}
+
 /**
  * Registers check.
  * @param program the commander program
@@ -76,61 +156,6 @@ export function registerCheck(program: Command): void {
         .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
         .option('--no-cache', 'Run every check even when its inputs are unchanged')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals();
-            const options = optionsFrom(paths, flags, global);
-            if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
-            const controller = new AbortController();
-            const cancel = (): void => {
-                controller.abort();
-            };
-            process.on('SIGINT', cancel);
-            process.on('SIGTERM', cancel);
-            try {
-                await printCommand(async () => {
-                    try {
-                        if (flags['push'] === true) {
-                            if (paths.length > 0 && paths.length !== 2)
-                                throw new InvalidArgumentError(
-                                    'Pre-push expects the remote name and URL supplied by Git.',
-                                );
-                            const reader = Bun.stdin.stream().getReader();
-                            let cancellation: Promise<void> | undefined;
-                            const stopReading = (): void => {
-                                cancellation = reader.cancel();
-                            };
-                            controller.signal.addEventListener('abort', stopReading, { once: true });
-                            const decoder = new TextDecoder('utf-8', { fatal: true });
-                            let input = '';
-                            try {
-                                controller.signal.throwIfAborted();
-                                for (;;) {
-                                    const chunk = await reader.read();
-                                    controller.signal.throwIfAborted();
-                                    if (chunk.done) break;
-                                    input += decoder.decode(chunk.value, { stream: true });
-                                }
-                                input += decoder.decode();
-                            } finally {
-                                controller.signal.removeEventListener('abort', stopReading);
-                                await cancellation;
-                                reader.releaseLock();
-                            }
-                            options.paths = [];
-                            options.push = { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) };
-                        }
-                        return await checkCommand(options, controller.signal);
-                    } catch (error) {
-                        if (!controller.signal.aborted) throw error;
-                        return {
-                            text: 'Check canceled before all selected content was checked.\n',
-                            json: { error: 'canceled', exitCode: 2 },
-                            exitCode: 2,
-                        };
-                    }
-                }, global);
-            } finally {
-                process.removeListener('SIGINT', cancel);
-                process.removeListener('SIGTERM', cancel);
-            }
+            await runCheck(paths, flags, command.optsWithGlobals());
         });
 }
