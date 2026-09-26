@@ -4,7 +4,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import { basename, posix, relative, resolve } from 'node:path';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';

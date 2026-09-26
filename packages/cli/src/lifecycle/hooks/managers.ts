@@ -11,7 +11,7 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { Repository } from '#cli/repository/tree.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';

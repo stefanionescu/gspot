@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
 
 /**

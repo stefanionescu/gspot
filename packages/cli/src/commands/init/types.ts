@@ -5,7 +5,7 @@ import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import type { RunnerTaskNames } from '#cli/policy/runner.ts';
 import type { Proposal } from '#cli/configurations/detect.ts';
 import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { Manifest } from '#cli/configurations/manifests.ts';
 import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import type { TrackedFile } from '#cli/repository/file-classification.ts';

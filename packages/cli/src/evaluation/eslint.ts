@@ -2,11 +2,12 @@ import { z } from 'zod';
 import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintRegistration } from '#cli/policy/schema.ts';
 import { legacyEntries } from '#cli/evaluation/eslint-legacy.ts';
-import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
 import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
 

@@ -5,7 +5,7 @@ import { relative, resolve, sep } from 'node:path';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { mutationTarget } from '#cli/platform/filesystem.ts';
+import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';

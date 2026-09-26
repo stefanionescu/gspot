@@ -3,9 +3,10 @@
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/policy/normalize.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
+import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import type { EditorconfigAdoption, EslintAdoption } from '#cli/policy/schema.ts';
-import { type ConfinedRoot, mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 type Located<T> = { value: T; path: PathSegment[] };
 type ModuleReference = { module: string };

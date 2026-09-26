@@ -5,10 +5,11 @@ import type { Finding } from '#cli/checks/result.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
+import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const DEFAULT_OUTPUT = 'dist';
 const DEFAULT_BUILD = 'npm run build';

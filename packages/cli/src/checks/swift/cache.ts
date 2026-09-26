@@ -3,9 +3,10 @@ import { isDeepStrictEqual } from 'node:util';
 import { readSource } from '#cli/repository/tracked.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
 
 /**
  * Prepare and lock one compiler directory without following existing output links.

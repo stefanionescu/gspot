@@ -3,8 +3,9 @@
 import type { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { fileMode, mutationTarget } from '#cli/platform/filesystem.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import type { OwnershipEntry, OwnershipState, identitySchema, originalSchema } from '#cli/lifecycle/journal.ts';
 

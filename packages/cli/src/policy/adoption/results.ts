@@ -2,7 +2,7 @@ import type { Policy } from '#cli/policy/normalize.ts';
 import type { RawPolicy } from '#cli/policy/schema.ts';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import { asList } from '#cli/policy/adoption/source.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 
 /**

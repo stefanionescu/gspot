@@ -3,7 +3,7 @@ import ts from 'typescript';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { join, resolve } from 'node:path';
-import { mutationPath } from '#cli/platform/filesystem.ts';
+import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
 
 function moduleSource(path: string, text: string): string {

@@ -2,7 +2,8 @@ import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { dirname, relative, sep } from 'node:path';
-import { openConfinedRoot, mutationPath } from '#cli/platform/filesystem.ts';
+import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 const EMPTY_FILES = 18_002;

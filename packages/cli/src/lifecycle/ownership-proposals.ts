@@ -1,6 +1,6 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';

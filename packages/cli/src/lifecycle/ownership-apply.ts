@@ -1,7 +1,7 @@
 // Applying proposals: each batch is journaled before a byte moves, so an interruption can be recovered.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { OwnershipEntry, originalSchema } from '#cli/lifecycle/journal.ts';
 import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';
 

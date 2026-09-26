@@ -1,4 +1,4 @@
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';

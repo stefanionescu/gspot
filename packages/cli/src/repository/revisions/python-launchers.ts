@@ -3,7 +3,8 @@ import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join, posix } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
 
 // The local file header signature that opens a ZIP archive.

@@ -3,7 +3,7 @@ import { PolicyError } from '#cli/policy/read.ts';
 import { proposePolicy } from '#cli/policy/write.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { Mutation, WriteResult } from '#cli/policy/write.ts';
 

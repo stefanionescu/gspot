@@ -1,7 +1,7 @@
 // Restoring a file the owner changed: merged fields go back, a managed block is removed, or the original returns.
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { currentSnapshot } from '#cli/lifecycle/ownership-proposals.ts';
 import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';

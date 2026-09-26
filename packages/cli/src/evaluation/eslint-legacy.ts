@@ -2,8 +2,9 @@
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { dirname, relative, resolve } from 'node:path';
+import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
-import { mutationPath, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
 
 type Ignores = NonNullable<EslintAdoption['legacyIgnores']>;

@@ -9,7 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
-import { mutationTarget } from '#cli/platform/filesystem.ts';
+import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 

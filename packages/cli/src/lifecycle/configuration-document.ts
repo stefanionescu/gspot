@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';

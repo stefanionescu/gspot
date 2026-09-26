@@ -4,7 +4,7 @@ import type { Session } from '#cli/execution/session.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
 import { publishGenerated } from '#cli/lifecycle/apply.ts';
 import { hasConflictMarkers } from '#cli/lifecycle/drift.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';

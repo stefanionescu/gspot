@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/checks/input.ts';
-import { mutationTarget } from '#cli/platform/filesystem.ts';
+import { mutationTarget } from '#cli/platform/safe-paths.ts';
 
 const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
 const WORKSPACE_SUFFIX = '.xcworkspace';

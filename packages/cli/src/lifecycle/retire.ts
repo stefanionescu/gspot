@@ -1,4 +1,4 @@
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 /**

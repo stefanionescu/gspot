@@ -6,14 +6,15 @@ import type { Repository } from '#cli/repository/tree.ts';
 import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import { type FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { HOOK_ARTIFACTS, HOOK_FILES } from '#cli/repository/hooks.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { type HookLocation, hookLocation } from '#cli/lifecycle/hooks/location.ts';
 import { type HookName, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-import { type ConfinedRoot, type FileSnapshot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;
 type Status = {

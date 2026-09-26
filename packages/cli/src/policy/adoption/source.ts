@@ -4,7 +4,7 @@ import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/filesystem.ts';
+import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
