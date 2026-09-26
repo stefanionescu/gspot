@@ -1,14 +1,14 @@
 // Stamps the platform packages from the template, copies the binaries in, writes checksums, publishes everything at one version.
 
 import packageManifest from '#package' with { type: 'json' };
-import { Command,CommanderError,InvalidArgumentError } from 'commander';
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
 import { execaSync } from 'execa';
-import { dirname,join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { valid } from 'semver';
 import { releaseTargets } from './targets.ts';
-// Usage: bun packages/cli/build/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
-import { chmodSync,copyFileSync,mkdirSync,readFileSync,statSync,writeFileSync } from 'node:fs';
+// Usage: bun packages/cli/scripts/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const JSON_INDENT = 4;
 const EXECUTABLE_MODE = 0o755;
@@ -119,7 +119,7 @@ function registryUrl(value: string): string {
 
 if (import.meta.main)
     try {
-        const script = new Command('bun packages/cli/build/publish.ts')
+        const script = new Command('bun packages/cli/scripts/publish.ts')
             .description('Prepare and publish the gspot release packages')
             .version(packageManifest.version)
             .requiredOption('--tag <tag>', 'Release tag matching the package version', releaseVersion)
@@ -129,7 +129,7 @@ if (import.meta.main)
             .showHelpAfterError()
             .addHelpText(
                 'after',
-                `\nExample: bun packages/cli/build/publish.ts --tag v${packageManifest.version} --dry-run`,
+                `\nExample: bun packages/cli/scripts/publish.ts --tag v${packageManifest.version} --dry-run`,
             )
             .exitOverride()
             .parse();

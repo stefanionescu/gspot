@@ -24,7 +24,7 @@ run = "gspot doctor"
 
 [tasks."repo:setup"]
 description = "Install frozen dependencies, prepare the Swift parser, and synchronize Astro types."
-run = ["bun install --frozen-lockfile", "bun packages/cli/build/inputs.ts"]
+run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]
 depends_post = ["docs:sync"]
 
 [tasks."repo:install-checks"]
@@ -33,7 +33,7 @@ run = "gspot install"
 
 [tasks.build]
 description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
-run = "bun packages/cli/build/command.ts"
+run = "bun packages/cli/scripts/command.ts"
 
 [tasks."build:plugin"]
 description = "Build the standalone ESLint plugin and stage its license."
@@ -113,11 +113,11 @@ run = "bun docs/scripts/verify-release.ts"
 
 [tasks."release:publish"]
 description = "Validate and publish packages to the selected registry."
-run = "bun packages/cli/build/publish.ts"
+run = "bun packages/cli/scripts/publish.ts"
 
 [tasks."prepare:grammar"]
 description = "Download and verify the pinned upstream Swift parser for source development."
-run = "bun packages/cli/build/inputs.ts"
+run = "bun packages/cli/scripts/inputs.ts"
 
 [tasks."ci:affected"]
 description = "Check committed changes against GSPOT_CI_BASE, or all inputs for a first push."

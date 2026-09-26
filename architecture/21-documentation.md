@@ -10,7 +10,7 @@ Introductory examples must work without access to Yap or another reference repos
 separate documentation fixture system or root examples inventory is required.
 
 Documentation references use current source owners and authored build commands. The build guide
-uses `bun packages/cli/build/command.ts`; generated caches are separate from authored build
+uses `bun packages/cli/scripts/command.ts`; generated caches are separate from authored build
 modules. Test moves update source links and executable examples in the same change. The
 [remaining-work record](22-remaining.md) owns verification results and external release gates.
 

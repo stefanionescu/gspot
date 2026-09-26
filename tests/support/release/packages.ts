@@ -35,8 +35,8 @@ export function preparePackages(work: string): string {
         'dist',
         'packages/npm',
         'packages/cli/package.json',
-        'packages/cli/build/publish.ts',
-        'packages/cli/build/targets.ts',
+        'packages/cli/scripts/publish.ts',
+        'packages/cli/scripts/targets.ts',
         'tsconfig.json',
     ]) {
         const target = join(checkout, path);

@@ -20,7 +20,7 @@ export async function evaluateConfiguration(
     cancelSignal?: AbortSignal,
 ): Promise<unknown> {
     const program = isEmbedded()
-        ? readAsset('packages/cli/build/configuration-process.js')
+        ? readAsset('packages/cli/scripts/configuration-process.js')
         : `await import(${JSON.stringify(new URL('process.ts', import.meta.url).href)});`;
     const work = mkdtempSync(join(tmpdir(), 'gspot-configuration-'));
     const files = openConfinedRoot(work);

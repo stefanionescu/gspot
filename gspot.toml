@@ -125,7 +125,7 @@ roles = {env = "packages/cli/src/platform/environment.ts"}
 import_style = {"**/*" = "ts"}
 script_files = [
     "packages/npm/**",
-    "packages/cli/build/**",
+    "packages/cli/scripts/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**",
 ]
@@ -135,8 +135,8 @@ node_version = ">=24.2.0"
 [tools.knip]
 entry = [
     "**/build.ts",
-    "packages/cli/build/command.ts",
-    "packages/cli/build/inputs.ts",
+    "packages/cli/scripts/command.ts",
+    "packages/cli/scripts/inputs.ts",
     "**/publish.ts",
     "packages/cli/src/agents/lint.ts",
     "packages/npm/gspot.js",

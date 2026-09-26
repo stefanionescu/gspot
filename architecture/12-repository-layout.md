@@ -103,8 +103,8 @@ owns file classification. The suppression check owns its directive constant.
 
 Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool probes own shared tool observations; doctor consumes those observations in its report.
 
-The CLI build command is `bun packages/cli/build/command.ts`. Authored build modules live in
-`packages/cli/build/`: command parsing and orchestration, compilation, embedded assets, shared
+The CLI build command is `bun packages/cli/scripts/command.ts`. Authored build modules live in
+`packages/cli/scripts/`: command parsing and orchestration, compilation, embedded assets, shared
 target validation, pinned inputs, notices, and publication each have a behavioral owner.
 Compilation and publication both consume validated npm target definitions. Compilation does not
 import the publication command. The plugin retains its independent build entry.
@@ -112,7 +112,7 @@ import the publication command. The plugin retains its independent build entry.
 Generated inputs, entries, evaluator bundles, and notice caches live in `packages/cli/.build/`.
 Release artifacts live in root `dist/`. Authored build modules participate in TypeScript, lint,
 and coverage inputs. Embedded asset identities are explicit where physical paths differ:
-the evaluator retains `packages/cli/build/configuration-process.js`; parser keys remain under
+the evaluator retains `packages/cli/scripts/configuration-process.js`; parser keys remain under
 `grammars/`. Keep evaluator embedding, EditorConfig WASM integration, and macOS signing.
 Swift preparation is independent of notices. Every downloaded or cached input must match its
 pinned SHA-256; atomic cache publication preserves failed-download behavior.

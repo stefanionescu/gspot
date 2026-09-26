@@ -1,6 +1,6 @@
-import { Command,CommanderError } from 'commander';
+import { Command, CommanderError } from 'commander';
 import { randomUUID } from 'node:crypto';
-import { existsSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,7 +14,7 @@ const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 if (import.meta.main) {
     try {
-        new Command('bun packages/cli/build/inputs.ts')
+        new Command('bun packages/cli/scripts/inputs.ts')
             .description('Download and verify the pinned upstream Swift parser into ignored build output')
             .allowExcessArguments(false)
             .exitOverride()

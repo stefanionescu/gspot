@@ -75,7 +75,7 @@ deferred, not passed. Local workflow work remains in the future backlog. Agree e
 before restoring remote gates.
 
 Implementation-owner paths are relative to `packages/cli/src/`, except explicit repository
-paths. Build ownership is `packages/cli/build/`; configuration and rule ownership is under
+paths. Build ownership is `packages/cli/scripts/`; configuration and rule ownership is under
 `packages/cli/`. Each retained task below names its owner, dependencies, acceptance clauses,
 and required completion evidence. Those requirements are not claims of completed execution.
 

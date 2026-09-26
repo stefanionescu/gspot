@@ -90,7 +90,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const options = { cwd: checkout, timeoutMs: 180_000 };
     const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const built = await runProcess([process.execPath, 'packages/cli/build/command.ts'], options);
+    const built = await runProcess([process.execPath, 'packages/cli/scripts/command.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
     copyFileSync(join(checkout, 'dist', host.binary), executable);

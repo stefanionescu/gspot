@@ -1,5 +1,5 @@
 import packageManifest from '#package' with { type: 'json' };
-import { Command,CommanderError,InvalidArgumentError } from 'commander';
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
 import { familySync } from 'detect-libc';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,14 +21,14 @@ function outputDirectory(value: string): string {
 }
 
 try {
-    const script = new Command('bun packages/cli/build/command.ts')
+    const script = new Command('bun packages/cli/scripts/command.ts')
         .description('Build the gspot executable for selected platforms')
         .version(packageManifest.version)
         .option('--target <targets...>', 'Bun compile targets', collectTargets, [])
         .option('--out <directory>', 'Directory for the executables', outputDirectory, join(root, 'dist'))
         .allowExcessArguments(false)
         .showHelpAfterError()
-        .addHelpText('after', '\nExample: bun packages/cli/build/command.ts --target bun-linux-arm64 --out dist')
+        .addHelpText('after', '\nExample: bun packages/cli/scripts/command.ts --target bun-linux-arm64 --out dist')
         .exitOverride()
         .parse();
     const options = script.opts<{ target: string[]; out: string }>();

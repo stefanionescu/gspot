@@ -11,4 +11,3 @@ const targetSchema = z.object({
 });
 
 export const releaseTargets = z.array(targetSchema).parse(definitions);
-
