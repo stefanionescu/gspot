@@ -858,6 +858,12 @@ push report writes only the fields its schema names. Left for the trivial-functi
 single-return functions and the rule now reads them as trivial files. Seventeen `import-path-style` findings on the
 package JSON aliases appeared when `gspot apply` refreshed the ESLint configuration; they belong to step 8.6.
 
+The acceptance lane after the layout work: 505 tests pass and four fail, all four already failing before the
+layout commits. The static-site planted checks read the `<img>` finding at line 10 where the test says 11 and the
+broken link at `about.html` where the test says `./about.html`. A table typed inside quotes in `gspot.toml` is a
+`check` finding with exit 1 where the test wants the policy refused with exit 2. The typescript planted checks pass
+alone; under a loaded machine their version inspections time out.
+
 ### Step 8.2
 
 Repair naming, placement, structure, and trivial-function/file findings in their behavior owners.
