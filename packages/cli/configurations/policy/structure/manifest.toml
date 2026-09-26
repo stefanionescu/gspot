@@ -109,6 +109,20 @@ why = "The suppression census makes hidden findings visible for review."
 help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
+name = "integrity/generated-drift"
+title = "Generated files match the policy"
+example = "A file under `.gspot/config/` edited by hand differs from what gspot.toml renders and reports drift. Change the policy in gspot.toml and run gspot apply, or move the edited file aside so apply writes it again."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "generated-drift"
+coverage = ["consistency"]
+summary = "Compares every generated file with what the policy renders: a changed, missing, or stray file, or one with merge conflict markers, is a finding."
+why = "A generated file that no longer matches the policy runs a tool with settings nobody chose."
+help = "Change the policy in gspot.toml, then run gspot apply. After a merge, run gspot apply and then gspot install."
+
+[[checks]]
 name = "integrity/allowlists-match"
 title = "Allowlists match"
 example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."

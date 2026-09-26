@@ -158,12 +158,13 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
             if (expected !== undefined && !isDeepStrictEqual(current, expected))
                 throw new Error(`Configuration changed after takeover was planned: ${path}. Retry the command.`);
             const installed = identity(next);
+            // An edited owned file is preserved unless the caller reviewed those very bytes and authorizes the replacement.
             if (
                 existing !== undefined &&
                 !matches(current, existing.installed) &&
                 current !== undefined &&
                 kind !== 'policy' &&
-                !(kind === 'lock' && takeover && expected !== undefined)
+                !(takeover && expected !== undefined)
             )
                 return { path, current, previous: existing, status: 'preserved' };
             if (existing === undefined && current !== undefined && !matches(current, installed) && !takeover)

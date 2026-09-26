@@ -37,6 +37,17 @@ function patch(path: string, before: string, after: string, beforeName: string):
     });
 }
 
+const CONFLICT_MARKERS = /^(?:<{7}|={7}|>{7})(?: |$)/mu;
+
+/**
+ * Whether a text holds the markers a merge leaves behind, so no tool can read it.
+ * @param text the file's text
+ * @returns true when a marker line is present
+ */
+export function hasConflictMarkers(text: string): boolean {
+    return CONFLICT_MARKERS.test(text);
+}
+
 function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
     const confined = openConfinedRoot(root);
@@ -47,7 +58,9 @@ function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
             continue;
         }
         const disk = current.bytes.toString('utf8');
-        if (disk !== file.content)
+        // A merge left its markers in the file: no tool can read it, and regeneration is the one repair (K-274).
+        if (hasConflictMarkers(disk)) entries.push({ path: file.path, kind: 'conflict' });
+        else if (disk !== file.content)
             entries.push({
                 path: file.path,
                 kind: 'changed',
@@ -143,7 +156,7 @@ export function computeDrift(
 
 export type DriftEntry = {
     path: string;
-    kind: 'changed' | 'missing' | 'stray';
+    kind: 'changed' | 'missing' | 'stray' | 'conflict';
     diff?: string;
     rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
     ruleError?: string;

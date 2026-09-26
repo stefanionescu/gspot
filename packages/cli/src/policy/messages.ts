@@ -121,7 +121,7 @@ export function scopeMissing(path: string): string {
 }
 
 /**
- * A setting key no selected configuration exposes.
+ * A setting key no selected configuration has.
  * @param key the key as written
  * @param known the keys that exist under the same table
  * @returns the message
@@ -131,7 +131,7 @@ export function settingNotExposed(key: string, known: string[]): string {
         known.length === 0
             ? 'No setting exists under that table.'
             : `The settings that exist under that table are ${list(known)}.`;
-    return `No selected configuration exposes \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
+    return `No selected configuration has the setting \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
 }
 
 /**
@@ -258,7 +258,7 @@ export function limitUnknown(key: string, known: string[]): string {
 export function settingInScope(key: string, scope: string): string {
     const place =
         scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${quoteArgument(scope)}`;
-    return `A configuration exposes \`${key}\` in ${place}.`;
+    return `A configuration has the setting \`${key}\` in ${place}.`;
 }
 
 /**

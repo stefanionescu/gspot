@@ -1,9 +1,11 @@
 import { assertNoProblems } from '#cli/policy/read.ts';
 import type { Session } from '#cli/execution/session.ts';
 import { emitAll } from '#cli/generation/render.ts';
-import type { ApplyReport } from '#cli/lifecycle/apply.ts';
+import type { ApplyReport, GeneratedProposal } from '#cli/lifecycle/apply.ts';
 import { publishGenerated } from '#cli/lifecycle/apply.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { hasConflictMarkers } from '#cli/lifecycle/drift.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
 import type { FileSnapshot } from '#cli/platform/filesystem.ts';
 import { resolvePackageProject } from '#cli/tools/packages/project.ts';
@@ -18,6 +20,17 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
     const problem = await installPackages(session.root);
     if (problem === undefined) report.notes.push('synced the Vale packages into .gspot/config/vale/styles');
     else report.notes.push(`the Vale packages are not synced (${problem}); run gspot apply with the network on`);
+}
+
+// A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
+function conflictedOutputs(owner: LifecycleOwner, rendered: GeneratedProposal): Map<string, FileSnapshot> {
+    const conflicted = new Map<string, FileSnapshot>();
+    for (const file of rendered.files) {
+        const current = owner.read(file.path);
+        if (current !== undefined && hasConflictMarkers(current.bytes.toString('utf8')))
+            conflicted.set(file.path, current);
+    }
+    return conflicted;
 }
 
 /**
@@ -63,6 +76,7 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
                 packages: session.packageManager !== undefined,
             },
             takeover,
+            conflictedOutputs(owner, rendered),
         );
         await installProsePackages(session, report);
         const toolInputs = new Set(

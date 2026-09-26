@@ -205,13 +205,13 @@ describe('the settings surface', () => {
         expect(validateAgainstSurface(surface, policy)).toStrictEqual([]);
     });
 
-    test('a setting no configuration exposes is refused with the keys that exist', () => {
+    test('a setting no configuration has is refused with the keys that exist', () => {
         const policy = parsePolicyText(
             'version = 1\nconfigurations = ["bash"]\n[tools.shellcheck]\nseverity = "style"\n',
             'gspot.toml',
         );
         expect(validateAgainstSurface(surface, policy)[0]?.message).toContain(
-            'No selected configuration exposes `tools.shellcheck.severity`',
+            'No selected configuration has the setting `tools.shellcheck.severity`',
         );
     });
 

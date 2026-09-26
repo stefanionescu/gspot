@@ -6,7 +6,9 @@ const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
     missing: 'This generated file is missing.',
     stray: 'This file carries the gspot header but nothing in the selection renders it.',
+    conflict: 'This generated file holds merge conflict markers, so no tool can read it.',
 };
+const CONFLICT_HELP = 'Run gspot apply to write the file again, then gspot install to install what it records.';
 const MOVE_HELP =
     'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
 const STRAY_HELP = 'Delete the file, or add the configuration that renders it.';
@@ -23,7 +25,7 @@ export function generatedDrift(input: EngineInput): Finding[] {
         file: entry.path,
         rule: entry.kind,
         message: MESSAGES[entry.kind],
-        help: entry.kind === 'stray' ? STRAY_HELP : MOVE_HELP,
+        help: entry.kind === 'stray' ? STRAY_HELP : entry.kind === 'conflict' ? CONFLICT_HELP : MOVE_HELP,
         fixable: true,
     }));
 }

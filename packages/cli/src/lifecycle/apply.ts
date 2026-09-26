@@ -40,10 +40,13 @@ export function publishGenerated(
     report: ApplyReport,
     retained: { prose: boolean; packages: boolean },
     takeover?: ReadonlyMap<string, FileSnapshot>,
+    regenerate: ReadonlyMap<string, FileSnapshot> = new Map(),
 ): void {
     const configurations = configurationProposals(owner, rendered, takeover !== undefined);
     const replacements = rendered.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
+        // A reviewed original (takeover) or a file a merge broke (regenerate) is replaced whatever its bytes are.
+        const authorized = takeover?.get(file.path) ?? regenerate.get(file.path);
         return owner.proposeReplacement(
             file.path,
             publicationSnapshot(
@@ -54,8 +57,8 @@ export function publishGenerated(
                 owner.read(file.path),
             ),
             kind,
-            file.kind === 'lock' ? file.observed !== undefined : (takeover?.has(file.path) ?? false),
-            file.kind === 'lock' ? file.observed : takeover?.get(file.path),
+            file.kind === 'lock' ? file.observed !== undefined : authorized !== undefined,
+            file.kind === 'lock' ? file.observed : authorized,
         );
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
@@ -127,7 +130,7 @@ export type GeneratedFile = {
     readOnly: boolean;
     executable?: boolean;
     observed?: FileSnapshot;
-    kind: 'lock' | 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
+    kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
     configuration?: string;
 };
 

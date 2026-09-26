@@ -51,7 +51,7 @@ describe('readPolicyText', () => {
         expect(() => readPolicyText(`${MINIMAL_POLICY.replace('bash', 'bas')}`, 'gspot.toml')).toThrow('bash');
     });
 
-    test('a table no selected configuration exposes says so without listing settings that do not exist', () => {
+    test('a table no selected configuration has says so without listing settings that do not exist', () => {
         const { problems } = readPolicyText(
             `${MINIMAL_POLICY}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`,
             'gspot.toml',
