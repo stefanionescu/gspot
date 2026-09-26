@@ -846,6 +846,18 @@ reads an empty setting fails to load. The duplication check passes on the tests 
 engine-input, and hook-status helpers. The hooks directory, the proposal types, the retained paths, and the runner
 task plan moved to their owners, and the `cached` field the contract names now exists in the schema.
 
+Record 2026-09-26, layout. Every type alias of the CLI, the plugin, the tests, and the docs lives under a `types/`
+folder, and every literal constant under a `constants/` folder, in eight commits from `8ea9df87` to `189e2572`.
+Each folder holds one file per source folder and one per subfolder; a folder with both has a file named after it.
+Colliding names carry deliberate names, identical duplicates are one declaration, and the few types inferred from a
+test helper are declared. `[architecture] constants_directory` is a new setting; this repository sets both
+folders, and the types placement rule reports nothing.
+
+The same day the naming policy gained the term probe, and tool inspection replaced tool probing everywhere. The
+push report writes only the fields its schema names. Left for the trivial-function decision: nine files hold only
+single-return functions and the rule now reads them as trivial files. Seventeen `import-path-style` findings on the
+package JSON aliases appeared when `gspot apply` refreshed the ESLint configuration; they belong to step 8.6.
+
 ### Step 8.2
 
 Repair naming, placement, structure, and trivial-function/file findings in their behavior owners.
