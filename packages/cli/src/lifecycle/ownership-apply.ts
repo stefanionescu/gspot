@@ -15,7 +15,7 @@ type Prepared = {
 };
 
 // The file as it is now, read as a link entry when either side of the proposal is a link.
-function actualSnapshot(
+function foundSnapshot(
     journal: Journal,
     path: string,
     current: FileSnapshot | undefined,
@@ -35,8 +35,8 @@ function assertProposalCurrent(
     const { path, current, previous, next } = proposal;
     const existing = journal.find(path);
     if (next !== undefined) journal.confined.validate(path, next, proposed);
-    const actual = actualSnapshot(journal, path, current, next);
-    if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(actual, current))
+    const found = foundSnapshot(journal, path, current, next);
+    if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
         throw new Error(`File changed after its proposal: ${path}`);
 }
 

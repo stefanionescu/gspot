@@ -75,10 +75,10 @@ async function prepareNativeWrappers(
 function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Record<string, string>): boolean {
     if (/^(?:<{7}|={7}|>{7})/mu.test(content)) return false;
     try {
-        let actual: unknown;
+        let declared: unknown;
         switch (name) {
             case 'npm': {
-                actual = z
+                declared = z
                     .object({
                         packages: z.record(
                             z.string(),
@@ -89,7 +89,7 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
                 break;
             }
             case 'bun': {
-                actual = z
+                declared = z
                     .object({
                         workspaces: z.record(
                             z.string(),
@@ -104,7 +104,7 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
                     .object({ importers: z.record(z.string(), z.object({ devDependencies: z.unknown() })) })
                     .parse(parseYaml(content)).importers['.']?.devDependencies;
                 const entries = z.record(z.string(), z.object({ specifier: z.string() })).parse(pinned);
-                actual = Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));
+                declared = Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));
 
                 break;
             }
@@ -126,7 +126,7 @@ function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Re
                 );
             }
         }
-        return isDeepStrictEqual(actual ?? {}, dependencies);
+        return isDeepStrictEqual(declared ?? {}, dependencies);
     } catch {
         return false;
     }

@@ -27,9 +27,9 @@ import {
 
 const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 
-function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
-    if (actual === undefined || expected === undefined) return actual === expected;
-    const observed = { ...actual, mode: fileMode(actual) };
+function sameSnapshot(found: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
+    if (found === undefined || expected === undefined) return found === expected;
+    const observed = { ...found, mode: fileMode(found) };
     const requested = { ...expected, mode: fileMode(expected) };
     return isDeepStrictEqual(observed, requested);
 }

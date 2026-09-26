@@ -69,8 +69,8 @@ export function identity(file: FileSnapshot): Identity {
 export function matches(file: FileSnapshot | undefined, expected: Identity | undefined): boolean {
     if (file === undefined) return expected === undefined;
     if (expected === undefined) return false;
-    const actual = identity(file);
-    return actual.hash === expected.hash && actual.mode === expected.mode && actual.isLink === expected.isLink;
+    const found = identity(file);
+    return found.hash === expected.hash && found.mode === expected.mode && found.isLink === expected.isLink;
 }
 
 /**

@@ -66,10 +66,10 @@ function matches(project: string, lock: string): boolean {
                 return `${normalizedPythonPackage(name)}==${version}`;
             })
             .toSorted((left, right) => left.localeCompare(right));
-        const actual = (root.metadata?.['requires-dist'] ?? [])
+        const declared = (root.metadata?.['requires-dist'] ?? [])
             .map((entry) => `${normalizedPythonPackage(entry.name)}${entry.specifier}`)
             .toSorted((left, right) => left.localeCompare(right));
-        return isDeepStrictEqual(actual, expected);
+        return isDeepStrictEqual(declared, expected);
     } catch {
         return false;
     }
