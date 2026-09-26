@@ -3,9 +3,9 @@ import type { ToolPin } from '#cli/types/configurations.ts';
 import type { PolicyFiles } from '#cli/types/policy/policy.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
-export type Probed = { root: string; cwd: string; tool: ToolPin; path: string; hint: string };
+export type Inspected = { root: string; cwd: string; tool: ToolPin; path: string; hint: string };
 export type VersionObservation = { version: string } | { state: 'missing' | 'error'; note: string };
-export type ToolProbe = {
+export type ToolInspection = {
     name: string;
     state: ToolState;
     want?: string;
@@ -18,7 +18,7 @@ export type ToolProbe = {
 export type ToolContext = {
     root: string;
     cwd?: string;
-    probes: Map<string, ToolProbe>;
+    inspections: Map<string, ToolInspection>;
     policyFiles?: PolicyFiles;
 };
 /** The two facts of a package.json that say which package it is. */

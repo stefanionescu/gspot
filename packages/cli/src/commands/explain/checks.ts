@@ -1,5 +1,5 @@
 // Explain a check, or one rule of the tool a check runs.
-import { probeTool } from '#cli/tools/probe.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { allChecks } from '#cli/configurations/listing.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
@@ -157,8 +157,8 @@ function toolSummary(session: Session | undefined, tool: string, rule: string): 
     const source = TOOL_RULE_SOURCES[tool];
     if (!source) return undefined;
     const pin = pinNamed(tool);
-    const probe = session && pin ? probeTool(session, pin) : undefined;
-    return source(rule, probe?.path ?? tool);
+    const inspection = session && pin ? inspectTool(session, pin) : undefined;
+    return source(rule, inspection?.path ?? tool);
 }
 
 // The nested explanation of what a tool rule means: the tool's own words, its page, or where to look.

@@ -1,5 +1,5 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
-import { probeTool } from '#cli/tools/probe.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
@@ -29,14 +29,14 @@ function toolIdentity(session: Session, path: string, hashes: RunHashes): string
     return identity;
 }
 
-// The version fact of the tool a check runs, or the probe that found none.
+// The version fact of the tool a check runs, or the inspection that found none.
 function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
     if (!planned.tool) return 'engine';
     const { env, cwd } = prepareCommand(session, planned, planned.spec.command ?? []);
-    const probe = probeTool({ ...session, cwd }, { ...planned.tool, env });
-    if (probe.path === undefined) return JSON.stringify(probe);
-    const identity = toolIdentity(session, realpathSync(probe.path), hashes);
-    return JSON.stringify([planned.tool.name, probe.state, probe.found, identity]);
+    const inspection = inspectTool({ ...session, cwd }, { ...planned.tool, env });
+    if (inspection.path === undefined) return JSON.stringify(inspection);
+    const identity = toolIdentity(session, realpathSync(inspection.path), hashes);
+    return JSON.stringify([planned.tool.name, inspection.state, inspection.found, identity]);
 }
 
 // The hash of a repository file, read once per run.

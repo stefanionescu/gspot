@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { delimiter, dirname, join } from 'node:path';
-import { probeTool, toolPin } from '#cli/tools/probe.ts';
+import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -16,11 +16,11 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
  */
 export function toolsPath(names: string[]): string {
     const manifests = [...configurationManifests().values()];
-    const context = { root, probes: new Map(), policyFiles: readPolicy(root) };
+    const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
-        const found = probeTool(context, tool);
+        const found = inspectTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
             throw new Error(`Required tool ${name} is ${found.state}. ${found.hint ?? ''} ${found.note ?? ''}`);
         return [dirname(found.path)];

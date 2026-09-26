@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { stripVTControlCharacters } from 'node:util';
-import { MissingToolError } from '#cli/tools/probe.ts';
+import { MissingToolError } from '#cli/tools/inspect.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { FAILED_CHECK } from '#cli/constants/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';

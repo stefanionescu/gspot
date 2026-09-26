@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { existsSync, writeFileSync } from 'node:fs';
+import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
@@ -22,7 +22,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
         const [planned] = await planRun(session, { stage: 'push', skips: [], only: ['duplication/jscpd'] });
         const directories: string[] = [];
         let corrected = false;
-        const probe = spyOn(probes, 'probeTool').mockReturnValue({
+        const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'jscpd',
             state: 'ok',
             path: process.execPath,
@@ -63,7 +63,7 @@ test.each(['missing statistics', 'invalid percentage', 'invalid clone', 'fatal e
             expect(directories.every((path) => !existsSync(path))).toBe(true);
         } finally {
             spawn.mockRestore();
-            probe.mockRestore();
+            inspection.mockRestore();
         }
     },
 );

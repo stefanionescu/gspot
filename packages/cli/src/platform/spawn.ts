@@ -154,7 +154,7 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
 }
 
 /**
- * Synchronous process execution for Git plumbing and version probes.
+ * Synchronous process execution for Git plumbing and version inspections.
  * @param command executable and literal arguments
  * @param options working directory, environment, and process controls
  * @returns captured output and termination status

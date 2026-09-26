@@ -42,10 +42,12 @@ test('the Bash retry example preserves the final failure status', async () => {
         .find((block) => block.includes('retry_retryable()'));
     expect(snippet?.trim()).toBeTruthy();
     const cwd = fileURLToPath(new URL('../../../..', import.meta.url));
-    const failed = await runCommand(['bash', '-c', `${snippet!}\nretry_retryable probe 2 0 bash -c 'exit 7'`], { cwd });
+    const failed = await runCommand(['bash', '-c', `${snippet!}\nretry_retryable inspection 2 0 bash -c 'exit 7'`], {
+        cwd,
+    });
     expect(failed.code, failed.stderr).toBe(7);
     expect(failed.stderr).toContain('attempt=2/2 status=failed exit=7');
-    const passed = await runCommand(['bash', '-c', `${snippet!}\nretry_retryable probe 2 0 true`], { cwd });
+    const passed = await runCommand(['bash', '-c', `${snippet!}\nretry_retryable inspection 2 0 true`], { cwd });
     expect(passed.code, passed.stderr).toBe(0);
     expect(passed.stderr).toContain('attempt=1/2 status=success');
 });

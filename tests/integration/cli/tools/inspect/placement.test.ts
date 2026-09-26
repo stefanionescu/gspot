@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { RUNS } from '#tests/constants/support/cli.ts';
-import { locateTool, probeTool } from '#cli/tools/probe.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 
-test('managed executable discovery refuses an external link before probing and accepts an internal replacement', async () => {
+test('managed executable discovery refuses an external link before inspecting and accepts an internal replacement', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'project/.gspot/node_modules/.bin/.keep': '',
@@ -20,13 +20,13 @@ test('managed executable discovery refuses an external link before probing and a
     chmodSync(join(directory.path, 'outside/teller'), RUNS);
     chmodSync(join(root, '.gspot/node_modules/teller/run.sh'), RUNS);
     symlinkSync('../../../../outside/teller', binary);
-    expect(() => probeTool({ root, probes: new Map() }, commandPin('teller', '1.2.3'))).toThrow(
+    expect(() => inspectTool({ root, inspections: new Map() }, commandPin('teller', '1.2.3'))).toThrow(
         'Source link leaves the repository',
     );
     expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);
     unlinkSync(binary);
     symlinkSync('../teller/run.sh', binary);
-    expect(probeTool({ root, probes: new Map() }, commandPin('teller', '1.2.3')).state).toBe('ok');
+    expect(inspectTool({ root, inspections: new Map() }, commandPin('teller', '1.2.3')).state).toBe('ok');
 });
 
 test('managed library discovery refuses a linked package directory', async () => {
@@ -37,7 +37,7 @@ test('managed library discovery refuses a linked package directory', async () =>
     });
     const root = join(directory.path, 'project');
     symlinkSync('../../../outside', join(root, '.gspot/node_modules/external-library'));
-    expect(() => probeTool({ root, probes: new Map() }, libraryPin('external-library', '1.2.3'))).toThrow(
+    expect(() => inspectTool({ root, inspections: new Map() }, libraryPin('external-library', '1.2.3'))).toThrow(
         'Unsafe lifecycle parent',
     );
 });
@@ -73,7 +73,7 @@ test('a missing private npm binary cannot fall back to the developer executable'
     mkdirSync(join(sandbox.path, 'node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, 'node_modules/.bin/teller'));
     const tool = commandPin('teller', '5.0.1', 'teller');
-    const missing = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+    const missing = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
     expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
@@ -84,7 +84,10 @@ test('a missing private npm binary cannot fall back to the developer executable'
     chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-    expect(probeTool({ root: sandbox.path, probes: new Map() }, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+    expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+        state: 'ok',
+        found: '5.0.1',
+    });
     expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });
 
@@ -105,11 +108,14 @@ test('a private Python pin refuses a project executable and uses its own environ
     chmodSync(join(sandbox.path, '.venv/bin/teller'), RUNS);
     const tool = commandPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
-    expect(probeTool({ root: sandbox.path, probes: new Map() }, tool).state).toBe('missing');
+    expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool).state).toBe('missing');
     await createFileTree(sandbox.path, {
         '.gspot/.venv/bin/teller': '#!/bin/sh\necho 1.2.3\n',
     });
     chmodSync(join(sandbox.path, '.gspot/.venv/bin/teller'), RUNS);
-    expect(probeTool({ root: sandbox.path, probes: new Map() }, tool)).toMatchObject({ state: 'ok', found: '1.2.3' });
+    expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+        state: 'ok',
+        found: '1.2.3',
+    });
     expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });

@@ -15,7 +15,7 @@ import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import type { PackageManager, Resolution } from '#cli/types/tools/packages.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import { CREDENTIAL_KEY, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
-import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/probe.ts';
+import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/inspect.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
 const COMMANDS: Record<Exclude<PackageManager['name'], 'yarn'>, (frozen: boolean) => string[]> = {

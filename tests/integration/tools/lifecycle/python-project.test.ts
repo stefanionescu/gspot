@@ -75,7 +75,7 @@ async function expectFreshCloneInstalls(
     expect(fixed.code, fixed.stderr).toBe(0);
     const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
     expect(clean.code, clean.stderr).toBe(0);
-    const prefix = await run([join(clone, '.gspot/.venv/bin/gspot-relocation-probe')], { cwd: clone });
+    const prefix = await run([join(clone, '.gspot/.venv/bin/gspot-relocation-marker')], { cwd: clone });
     expect(prefix.code, prefix.stderr).toBe(0);
     expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
 }
@@ -128,8 +128,8 @@ binary, target, version = sys.argv[1:]
 info = "ruff-" + version + ".dist-info"
 entries = {
  "ruff-" + version + ".data/scripts/ruff": open(binary, "rb").read(),
- "gspot_probe.py": b"def main():\n import sys\n print(sys.prefix)\n",
- info + "/entry_points.txt": b"[console_scripts]\ngspot-relocation-probe = gspot_probe:main\n",
+ "gspot_marker.py": b"def main():\n import sys\n print(sys.prefix)\n",
+ info + "/entry_points.txt": b"[console_scripts]\ngspot-relocation-marker = gspot_marker:main\n",
  info + "/METADATA": ("Metadata-Version: 2.1\nName: ruff\nVersion: " + version + "\n").encode(),
  info + "/WHEEL": b"Wheel-Version: 1.0\nGenerator: gspot-acceptance\nRoot-Is-Purelib: false\nTag: py3-none-any\n"
 }
@@ -234,7 +234,7 @@ with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
                 recursive: true,
                 verbatimSymlinks: true,
             });
-            const relocated = await run([join(copiedEnvironment, 'bin/gspot-relocation-probe')], {
+            const relocated = await run([join(copiedEnvironment, 'bin/gspot-relocation-marker')], {
                 cwd: artifacts.path,
             });
             expect(relocated.code, relocated.stderr).toBe(0);

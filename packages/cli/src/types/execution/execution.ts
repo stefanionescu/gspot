@@ -3,8 +3,8 @@ import type { z } from 'zod';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import type { resolveCheck } from '#cli/execution/engines.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
-import type { ToolContext, ToolProbe } from '#cli/types/tools/tools.ts';
 import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
+import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import type { CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
 import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -51,7 +51,7 @@ export type ToolRun = {
     planned: PlannedCheck;
     tool: ToolPin;
     command: string[];
-    probe: ToolProbe;
+    inspection: ToolInspection;
     base: CheckResult;
 };
 export type PreparedCommand = {

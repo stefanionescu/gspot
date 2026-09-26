@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { emitAll } from '#cli/generation/render.ts';
 import { checkActions } from '#cli/checks/actions.ts';
-import { MissingToolError } from '#cli/tools/probe.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { MissingToolError } from '#cli/tools/inspect.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
@@ -61,7 +61,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
         policyFiles: session.policyFiles,
         selection: planned.scope,
         manifests: session.manifests,
-        probes: session.probes,
+        inspections: session.inspections,
         scopeEntries: session.repository.scopes,
         attributes: session.repository.attributes,
         hasGit: session.repository.hasGit,

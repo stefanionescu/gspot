@@ -164,7 +164,7 @@ manifest names and compares:
 | newer    | present above the pin                                   | runs, and `doctor` notes it                          |
 | missing  | not found                                               | fails the checks that need it, with the install hint |
 
-`check` runs the same probe for the tools its checks need, once for a run.
+`check` runs the same inspection for the tools its checks need, once for a run.
 
 ## Upgrade
 
@@ -197,7 +197,7 @@ to run twice. Before the first release it takes its packages from the local regi
 `GSPOT_REGISTRY` names.
 
 `tool-environment.ts` writes `.gspot/pyproject.toml` from every tool with a `pypi`
-name, and `install` runs `uv sync --locked --project .gspot`. The probe looks under `.gspot/.venv/bin`
+name, and `install` runs `uv sync --locked --project .gspot`. The inspection looks under `.gspot/.venv/bin`
 after `.gspot/node_modules/.bin`. `init` call the function, and `--no-install`
 skips it. The developer runs `gspot install` explicitly; no setup or lifecycle script is injected. `apply` resolves lockfiles, while `install` uses only matching locked contents.
 

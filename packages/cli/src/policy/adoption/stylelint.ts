@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { toolPin } from '#cli/tools/probe.ts';
+import { toolPin } from '#cli/tools/inspect.ts';
 import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
 import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';

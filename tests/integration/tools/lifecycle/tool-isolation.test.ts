@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
@@ -68,10 +68,10 @@ test(
         const tool = configurationManifests()
             .get('typescript')!
             .tools.find((entry) => entry.name === 'tsc')!;
-        const probe = probeTool({ root: repository.path, probes: new Map() }, tool);
-        expect(probe.state).toBe('host');
-        expect(probe.found).toMatch(/^\d+\.\d+\.\d+/u);
-        const command = [probe.path!, '--pretty', 'false', '--noEmit', '--strict', 'source.ts'];
+        const inspection = inspectTool({ root: repository.path, inspections: new Map() }, tool);
+        expect(inspection.state).toBe('host');
+        expect(inspection.found).toMatch(/^\d+\.\d+\.\d+/u);
+        const command = [inspection.path!, '--pretty', 'false', '--noEmit', '--strict', 'source.ts'];
         const invalid = await runProcess(command, { cwd: repository.path });
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(invalid.stdout).toContain('TS2322');

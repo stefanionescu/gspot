@@ -84,7 +84,7 @@ test('Bash examples report syntax errors, accept corrections, and stop on cancel
     const session = await openSession(sandbox.path);
     let selected: EngineInput = {
         ...(await checkInput(sandbox.path, 'markdown/fences', ['a.md'])),
-        probes: session.probes,
+        inspections: session.inspections,
         view: session.scopes[0]!.view,
     };
     const found = await fences(selected);

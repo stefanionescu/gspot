@@ -68,14 +68,14 @@ function hasGitEntry(directory: string): boolean {
 
 function isOutsideGit(
     root: string,
-    probe: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
+    inspection: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
         cwd: root,
         env: { LC_ALL: 'C' },
     }),
 ): boolean {
     return (
-        probe.code === NOT_REPOSITORY_CODE &&
-        probe.stderr.startsWith('fatal: not a git repository (or any ') &&
+        inspection.code === NOT_REPOSITORY_CODE &&
+        inspection.stderr.startsWith('fatal: not a git repository (or any ') &&
         !hasGitEntry(resolve(root))
     );
 }
@@ -126,13 +126,15 @@ function listedPaths(root: string): string[] {
  * @throws when Git cannot establish the repository state
  */
 export function isGitRepository(root: string): boolean {
-    const probe = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
+    const inspection = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
         cwd: root,
         env: { LC_ALL: 'C' },
     });
-    if (probe.code === 0 && probe.stdout.trim() === 'true') return true;
-    if (isOutsideGit(root, probe)) return false;
-    throw new Error(`Git work-tree discovery failed in ${root} (exit ${String(probe.code)}): ${probe.stderr.trim()}`);
+    if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
+    if (isOutsideGit(root, inspection)) return false;
+    throw new Error(
+        `Git work-tree discovery failed in ${root} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+    );
 }
 
 /**

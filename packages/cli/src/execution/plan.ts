@@ -1,5 +1,5 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
-import { toolPin } from '#cli/tools/probe.ts';
+import { toolPin } from '#cli/tools/inspect.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';

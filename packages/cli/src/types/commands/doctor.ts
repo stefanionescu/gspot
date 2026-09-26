@@ -1,5 +1,5 @@
 // The types of commands/doctor in this package.
-import type { ToolProbe } from '#cli/types/tools/tools.ts';
+import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { CoverageReport } from '#cli/types/execution/execution.ts';
 
 export type ChangeReport = {
@@ -11,7 +11,7 @@ export type ChangeReport = {
 };
 export type DoctorReport = {
     submodules: string[];
-    tools: ToolProbe[];
+    tools: ToolInspection[];
     coverage: CoverageReport;
     changes: ChangeReport;
     hooks: string;

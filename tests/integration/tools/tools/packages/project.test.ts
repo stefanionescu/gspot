@@ -4,9 +4,9 @@ import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { expect, spyOn, test } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
-import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
@@ -322,7 +322,7 @@ ${lock.toString('utf8')}
             const installed = result?.stdout ?? (await installPackageProject(repository.path, tools));
             // Yarn fetches through the registry again on install; the other managers reuse what resolution fetched.
             expect(manager !== 'yarn' || requests > beforeInstall).toBe(true);
-            // The CLI install records the wrapper's binary and the probe finds it usable.
+            // The CLI install records the wrapper's binary and the inspection finds it usable.
             const binary =
                 runner === 'none'
                     ? readOwnership(repository.path).files.find(
@@ -336,7 +336,8 @@ ${lock.toString('utf8')}
                 .get('formatting')!
                 .tools.find((tool) => tool.name === 'ec')!;
             expect(
-                runner !== 'none' || probeTool({ root: repository.path, probes: new Map() }, checker).state === 'ok',
+                runner !== 'none' ||
+                    inspectTool({ root: repository.path, inspections: new Map() }, checker).state === 'ok',
             ).toBe(true);
             expect(readOwnership(repository.path).files.find((entry) => entry.path === binary?.path)).toStrictEqual(
                 binary,
@@ -387,20 +388,20 @@ ${lock.toString('utf8')}
             expect(readFileSync(join(repository.path, '.gspot/node_modules/prettier/README.md'), 'utf8')).toBe(
                 'authored later',
             );
-            const context = { root: repository.path, probes: new Map() };
+            const context = { root: repository.path, inspections: new Map() };
             const pin = {
                 name: 'prettier',
                 version: '3.8.1',
                 installers: { npm: { name: 'prettier', version: '3.8.1' } },
                 windows: true,
             };
-            expect(probeTool(context, pin)).toMatchObject({
+            expect(inspectTool(context, pin)).toMatchObject({
                 state: 'error',
                 note: 'Tool installation is incomplete. Run: gspot install',
             });
             writeFileSync(readmePath, readme);
             await installPackageProject(repository.path, tools);
-            expect(probeTool(context, pin).state).toBe('ok');
+            expect(inspectTool(context, pin).state).toBe('ok');
             if (projectPath === 'package.json' && runner === 'mise')
                 await expectFreshCloneInstalls(repository.path, artifacts.path, tools, manager, lock, manifest);
         } finally {

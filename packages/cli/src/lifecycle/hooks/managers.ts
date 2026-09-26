@@ -3,7 +3,7 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { probeTool } from '#cli/tools/probe.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -43,7 +43,7 @@ function isIntegrationReady(manager: HookManager, policy: Policy, root: string):
 
 // The manager's executable, found through the repository's tools and, for Lefthook, new enough to be safe.
 function managerExecutable(manager: HookManager, tools: ToolContext): string {
-    const tool = probeTool(tools, {
+    const tool = inspectTool(tools, {
         name: manager,
         provider: 'host',
         windows: true,

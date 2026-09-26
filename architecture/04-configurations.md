@@ -244,7 +244,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   a scalar one.
 - Through such a shared setting a fragment learns what another configuration knows, without
   asking whether it is selected.
-- Tool `env` supplies literal environment settings to version probes and commands. Check
+- Tool `env` supplies literal environment settings to version inspections and commands. Check
   `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that
   numbers by itself.
@@ -602,7 +602,7 @@ words the advice for each runner, and its fallback is the runner the repository 
 list of the rules lint is the set of tool and library names of every manifest, less the names
 of the file's own configuration.
 
-Exercise tool selection, version probing, crash classification, install advice, and
+Exercise tool selection, version inspection, crash classification, install advice, and
 rule explanation using the owning manifest data.
 
 ### Acceptance K-197

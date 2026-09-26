@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import * as tools from '#cli/tools/probe.ts';
+import * as tools from '#cli/tools/inspect.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -36,7 +36,7 @@ async function plant(scope: string, bindings: string): Promise<Planted> {
         spec: spec,
         files: session.repository.files,
     });
-    const locate = spyOn(tools, 'probeTool').mockReturnValue({
+    const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
         state: 'host',
         path: process.execPath,

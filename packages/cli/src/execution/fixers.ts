@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { probeTool, toolPin } from '#cli/tools/probe.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
+import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
@@ -157,17 +157,23 @@ export async function runFixer(
         return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
     const { env, cwd } = prepareCommand(session, { ...plannedCheck, tool }, spec.fix_command);
-    const probe = probeTool({ ...session, cwd }, { ...tool, env });
-    if (probe.path === undefined || ['missing', 'outdated', 'error'].includes(probe.state))
+    const inspection = inspectTool({ ...session, cwd }, { ...tool, env });
+    if (inspection.path === undefined || ['missing', 'outdated', 'error'].includes(inspection.state))
         return {
             check,
             status: 'failed',
             changed: [],
-            note: probe.note ?? `${tool.name} is unavailable. ${probe.hint ?? 'Install the configured tool.'}`,
+            note:
+                inspection.note ?? `${tool.name} is unavailable. ${inspection.hint ?? 'Install the configured tool.'}`,
         };
     if (spec.isolated_files === true)
-        return isolatedCorrection(session, plannedCheck, workingDirectory, spec.fix_command, probe.path);
-    const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, spec.fix_command, probe.path);
+        return isolatedCorrection(session, plannedCheck, workingDirectory, spec.fix_command, inspection.path);
+    const prepared = prepareCommand(
+        { ...session, root: workingDirectory },
+        plannedCheck,
+        spec.fix_command,
+        inspection.path,
+    );
     return runCorrection(session, plannedCheck, prepared);
 }
 

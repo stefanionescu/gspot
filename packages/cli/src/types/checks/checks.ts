@@ -28,7 +28,7 @@ export type EngineInput = {
     policyFiles: PolicyFiles;
     selection: ScopeSelection;
     manifests: Map<string, Manifest>;
-    probes: ToolContext['probes'];
+    inspections: ToolContext['inspections'];
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;

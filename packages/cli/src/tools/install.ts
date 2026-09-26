@@ -1,6 +1,6 @@
 import semver from 'semver';
-import { MissingToolError } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import { MissingToolError } from '#cli/tools/inspect.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';

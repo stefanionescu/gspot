@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import type { ToolProbe } from '#cli/types/tools/tools.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
 import { collect, missingNote } from '#cli/execution/tool-findings.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
@@ -9,8 +9,8 @@ import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { FILES_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
-import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
+import { MissingToolError, inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
 import type { CheckResult, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
@@ -116,12 +116,12 @@ function adapterTool(
 } {
     const tool = toolPin(input.manifests.values(), name);
     const env = { ...tool.env, ...input.spec.env, ...options.env };
-    const probe = probeTool({ ...input, cwd: options.cwd }, { ...tool, env });
-    if (probe.state === 'error') throw new Error(probe.note ?? `${name} version probe failed.`);
-    if (probe.state === 'missing' || probe.state === 'outdated' || probe.path === undefined) {
-        throw new MissingToolError(missingNote(tool, probe, probe.state));
+    const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
+    if (inspection.state === 'error') throw new Error(inspection.note ?? `${name} version inspection failed.`);
+    if (inspection.state === 'missing' || inspection.state === 'outdated' || inspection.path === undefined) {
+        throw new MissingToolError(missingNote(tool, inspection, inspection.state));
     }
-    return { path: probe.path, env };
+    return { path: inspection.path, env };
 }
 
 // The result of a nested-configuration check whose configuration is not generated yet, or undefined.
@@ -149,14 +149,14 @@ function missingConfiguration(
 // Runs the command in the workspace it was given, or in a copy of its files when the check isolates them, and
 // reports the repository's command rather than the copy's.
 async function runInWorkspace(run: ToolRun, workspace: string | undefined): Promise<CheckResult> {
-    const { session, planned, tool, command, probe, base } = run;
+    const { session, planned, tool, command, inspection, base } = run;
     using created = isolatedWorkspace(session, planned, command, workspace);
     const root = workspace ?? created?.root;
     const execution = root === undefined ? session : { ...session, root };
-    const prepared = prepareCommand(execution, planned, command, probe.path);
+    const prepared = prepareCommand(execution, planned, command, inspection.path);
     const result = await runCommands(execution, planned, tool, prepared, base);
     if (root === undefined) return result;
-    const reported = prepareCommand(session, planned, command, probe.path);
+    const reported = prepareCommand(session, planned, command, inspection.path);
     return { ...result, command: reported.argv.filter((part) => typeof part === 'string') };
 }
 
@@ -166,24 +166,25 @@ function unrunnableResult(
     planned: PlannedCheck,
     command: string[],
     base: CheckResult,
-    probe: ToolProbe,
+    inspection: ToolInspection,
 ): CheckResult | undefined {
     const tool = planned.tool;
     if (tool === undefined) return undefined;
-    return missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, probe);
+    return missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, inspection);
 }
 
 // The tool as found from the directory the command runs in, with the command's environment.
-function probeFor(session: Session, planned: PlannedCheck, command: string[], tool: ToolPin): ToolProbe {
+function inspectionFor(session: Session, planned: PlannedCheck, command: string[], tool: ToolPin): ToolInspection {
     const { env, cwd } = prepareCommand(session, planned, command);
-    return probeTool({ ...session, cwd }, { ...tool, env });
+    return inspectTool({ ...session, cwd }, { ...tool, env });
 }
 
-// The result of a check whose tool cannot run: the probe failed, or the tool is missing or too old.
-function unavailableTool(base: CheckResult, tool: ToolPin, probe: ToolProbe): CheckResult | undefined {
-    if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
-    if (probe.state === 'missing' || probe.state === 'outdated')
-        return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
+// The result of a check whose tool cannot run: the inspection failed, or the tool is missing or too old.
+function unavailableTool(base: CheckResult, tool: ToolPin, inspection: ToolInspection): CheckResult | undefined {
+    if (inspection.state === 'error')
+        return { ...base, status: 'error', note: inspection.note ?? 'The version inspection failed.' };
+    if (inspection.state === 'missing' || inspection.state === 'outdated')
+        return { ...base, status: 'missing', note: missingNote(tool, inspection, inspection.state) };
     return undefined;
 }
 
@@ -236,7 +237,7 @@ export function prepareCommand(
     return { root: session.root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands, env };
 }
 /**
- * Runs one planned tool check: probes the tool, expands the command, spawns it once or per file, parses the output.
+ * Runs one planned tool check: inspections the tool, expands the command, spawns it once or per file, parses the output.
  * @param session the session
  * @param planned the check to run
  * @param command the command prepared by an adapter, or the command of the definition
@@ -260,10 +261,10 @@ export async function runToolCheck(
     };
     if (tool === undefined || command === undefined)
         return { ...base, status: 'error', note: 'this check has no command to run' };
-    const probe = probeFor(session, planned, command, tool);
-    const unrunnable = unrunnableResult(session, planned, command, base, probe);
+    const inspection = inspectionFor(session, planned, command, tool);
+    const unrunnable = unrunnableResult(session, planned, command, base, inspection);
     if (unrunnable !== undefined) return unrunnable;
-    return runInWorkspace({ session, planned, tool, command, probe, base }, workspace);
+    return runInWorkspace({ session, planned, tool, command, inspection, base }, workspace);
 }
 
 /**

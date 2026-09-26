@@ -1,11 +1,11 @@
 // The types of integration/cli/checks in this package.
 import type { Mock } from 'bun:test';
-import type { probeTool } from '#cli/tools/probe.ts';
+import type { inspectTool } from '#cli/tools/inspect.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { TestDirectory } from '#tests/types/support/cli.ts';
 
-/** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked probe. */
+/** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked inspection. */
 export type CloudflarePlanted = {
     directory: TestDirectory;
     path: (name: string) => string;
@@ -14,7 +14,7 @@ export type CloudflarePlanted = {
     mode: number;
     spec: CheckSpec;
     input: EngineInput;
-    locate: Mock<typeof probeTool>;
+    locate: Mock<typeof inspectTool>;
 };
 /** What the Drizzle migrations test plants: the manual and the initial migration. */
 export type DrizzlePlanted = {

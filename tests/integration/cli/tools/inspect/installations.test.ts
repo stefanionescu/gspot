@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { RUNS } from '#tests/constants/support/cli.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
@@ -8,9 +8,9 @@ import * as environment from '#cli/platform/environment.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 
-describe('the tool probe', () => {
+describe('the tool inspection', () => {
     if (process.platform !== 'win32')
-        test('version probes and tool execution prefer helpers from the selected installation', async () => {
+        test('version inspections and tool execution prefer helpers from the selected installation', async () => {
             await using sandbox = await testdir();
             const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
             await createFileTree(sandbox.path, {
@@ -22,7 +22,7 @@ describe('the tool probe', () => {
                 chmodSync(join(sandbox.path, path), RUNS);
             const env = { PATH: join(sandbox.path, 'unrelated') };
             const tool = { ...commandPin('teller', '3.8.1'), env };
-            const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+            const observed = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
             expect(observed).toMatchObject({ state: 'ok', found: '3.8.1' });
             const executed = await runToolCommand(undefined, [observed.path!], { cwd: sandbox.path, env });
             expect(executed.code).toBe(0);
@@ -42,16 +42,19 @@ describe('the tool probe', () => {
         const which = spyOn(Bun, 'which').mockReturnValue(active);
         const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
         try {
-            const probe = probeTool({ root: sandbox.path, probes: new Map() }, commandPin('teller', '3.8.1'));
-            expect(probe.state).toBe('ok');
-            expect(probe.path).toBe(active);
+            const inspection = inspectTool(
+                { root: sandbox.path, inspections: new Map() },
+                commandPin('teller', '3.8.1'),
+            );
+            expect(inspection.state).toBe('ok');
+            expect(inspection.path).toBe(active);
         } finally {
             which.mockRestore();
             home.mockRestore();
         }
     });
 
-    test('a managed npm probe refuses a linked manifest before executing and accepts its corrected file', async () => {
+    test('a managed npm inspection refuses a linked manifest before executing and accepts its corrected file', async () => {
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
@@ -63,13 +66,13 @@ describe('the tool probe', () => {
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
         symlinkSync(join(outside.path, 'package.json'), manifest);
-        const context = { root: sandbox.path, probes: new Map() };
+        const context = { root: sandbox.path, inspections: new Map() };
         const tool = commandPin('teller', '5.0.1', 'teller');
-        expect(() => probeTool(context, tool)).toThrow('private regular file');
+        expect(() => inspectTool(context, tool)).toThrow('private regular file');
         expect(existsSync(join(sandbox.path, 'executed'))).toBe(false);
         unlinkSync(manifest);
         await Bun.write(manifest, '{"name":"teller","version":"5.0.1"}');
-        expect(probeTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+        expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
         expect(existsSync(join(sandbox.path, 'executed'))).toBe(true);
         expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"teller","version":"5.0.1"}');
     });
@@ -83,9 +86,12 @@ describe('the tool probe', () => {
         chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, commandPin('teller', '5.0.1', 'teller'));
-        expect(probe.found).toBe('5.0.1');
-        expect(probe.state).toBe('ok');
+        const inspection = inspectTool(
+            { root: sandbox.path, inspections: new Map() },
+            commandPin('teller', '5.0.1', 'teller'),
+        );
+        expect(inspection.found).toBe('5.0.1');
+        expect(inspection.state).toBe('ok');
     });
 
     test.each([
@@ -104,9 +110,9 @@ describe('the tool probe', () => {
         tool.floor = '0.9.0';
         tool.env = { WRAPPER_NATIVE_VERSION: native };
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
-        expect(probe.found).toBe(native);
-        expect(probe.state).toBe(state);
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(inspection.found).toBe(native);
+        expect(inspection.state).toBe(state);
     });
 
     test('a shim that no configuration gives a version is missing, not broken', async () => {
@@ -116,9 +122,9 @@ describe('the tool probe', () => {
                 "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
         });
         chmodSync(join(sandbox.path, 'node_modules/.bin/shimmed'), RUNS);
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, commandPin('shimmed', '3.8.1'));
-        expect(probe.state).toBe('missing');
-        expect(probe.want).toBe('3.8.1');
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, commandPin('shimmed', '3.8.1'));
+        expect(inspection.state).toBe('missing');
+        expect(inspection.want).toBe('3.8.1');
     });
 
     test('color codes around a version are no part of it', async () => {
@@ -127,9 +133,9 @@ describe('the tool probe', () => {
             'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
         });
         chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), RUNS);
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, commandPin('painter', '26.8.0'));
-        expect(probe.found).toBe('26.8.0');
-        expect(probe.state).toBe('ok');
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, commandPin('painter', '26.8.0'));
+        expect(inspection.found).toBe('26.8.0');
+        expect(inspection.state).toBe('ok');
     });
 
     test('a library is found only in its private installation', async () => {
@@ -138,9 +144,11 @@ describe('the tool probe', () => {
             '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
             'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
         });
-        expect(probeTool({ root: sandbox.path, probes: new Map() }, libraryPin('globals', '17.12.0')).state).toBe('ok');
         expect(
-            probeTool({ root: sandbox.path, probes: new Map() }, libraryPin('eslint-plugin-n', '18.3.0')).state,
+            inspectTool({ root: sandbox.path, inspections: new Map() }, libraryPin('globals', '17.12.0')).state,
+        ).toBe('ok');
+        expect(
+            inspectTool({ root: sandbox.path, inspections: new Map() }, libraryPin('eslint-plugin-n', '18.3.0')).state,
         ).toBe('missing');
     });
 
@@ -149,13 +157,13 @@ describe('the tool probe', () => {
         await createFileTree(sandbox.path, {
             '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
         });
-        const absent = probeTool(
-            { root: sandbox.path, probes: new Map() },
+        const absent = inspectTool(
+            { root: sandbox.path, inspections: new Map() },
             libraryPin('eslint-plugin-regexp', '3.3.0'),
         );
         expect(absent.state).toBe('missing');
         expect(absent.want).toBe('3.3.0');
-        const newer = probeTool({ root: sandbox.path, probes: new Map() }, libraryPin('typescript', '5.9.3'));
+        const newer = inspectTool({ root: sandbox.path, inspections: new Map() }, libraryPin('typescript', '5.9.3'));
         expect(newer.state).toBe('newer');
         expect(newer.found).toBe('6.0.0');
     });

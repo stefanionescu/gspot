@@ -15,7 +15,14 @@ import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/constants/tools/tools.ts';
 import { locateCandidates, miseVersion, packageVersion } from '#cli/tools/locate.ts';
-import type { PackageFacts, Probed, ToolContext, ToolProbe, VersionObservation } from '#cli/types/tools/tools.ts';
+
+import type {
+    PackageFacts,
+    Inspected,
+    ToolContext,
+    ToolInspection,
+    VersionObservation,
+} from '#cli/types/tools/tools.ts';
 
 // A mise shim answers for the folder it runs in, so the command runs in the repository.
 function printedVersion(root: string, path: string, tool: ToolPin): SpawnResult {
@@ -39,10 +46,10 @@ function versionFailure(
     text: string,
     expectedExit: number,
 ): VersionObservation | undefined {
-    if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version probe timed out.` };
+    if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.code !== expectedExit)
-        return { state: 'error', note: `${tool.name} version probe exited ${String(result.code)}: ${text}` };
+        return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
     return undefined;
 }
 
@@ -54,8 +61,8 @@ function readVersion(root: string, cwd: string, path: string, tool: ToolPin): Ve
     return observeToolVersion(tool, printedVersion(cwd, path, tool), installedPackage, miseVersion(path, tool));
 }
 
-// The probe of a library whose private package.json declares a version.
-function libraryProbe(root: string, tool: ToolPin, path: string, found: string, hint: string): ToolProbe {
+// The inspection of a library whose private package.json declares a version.
+function libraryInspection(root: string, tool: ToolPin, path: string, found: string, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     const floor = tool.floor ?? tool.version ?? found;
     const state = tool.version === undefined ? 'ok' : toolVersionState(found, tool.version, floor);
@@ -63,7 +70,7 @@ function libraryProbe(root: string, tool: ToolPin, path: string, found: string, 
 }
 
 // Read library versions from the private installation used by generated configurations.
-function probeLibrary(root: string, tool: ToolPin): ToolProbe {
+function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
     const files = openConfinedRoot(root);
     const hint = installHint(tool);
     const name = tool.installers['npm']?.name ?? tool.name;
@@ -71,31 +78,31 @@ function probeLibrary(root: string, tool: ToolPin): ToolProbe {
     try {
         const file = files.read(path);
         const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as PackageFacts);
-        if (parsed?.version === undefined) return missingProbe(tool, hint);
-        return libraryProbe(root, tool, path, parsed.version, hint);
+        if (parsed?.version === undefined) return missingInspection(tool, hint);
+        return libraryInspection(root, tool, path, parsed.version, hint);
     } finally {
         files.close();
     }
 }
 
-// The probe of a tool that is not installed anywhere gspot looks.
-function missingProbe(tool: ToolPin, hint: string): ToolProbe {
+// The inspection of a tool that is not installed anywhere gspot looks.
+function missingInspection(tool: ToolPin, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     return { name: tool.name, state: 'missing', hint, ...want };
 }
 
-// The probe of a host tool, or an unpinned one: present, with the version it prints when it has a version command.
-function hostProbe(probed: Probed): ToolProbe {
-    const { root, cwd, tool, path, hint } = probed;
+// The inspection of a host tool, or an unpinned one: present, with the version it prints when it has a version command.
+function hostInspection(inspected: Inspected): ToolInspection {
+    const { root, cwd, tool, path, hint } = inspected;
     if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
     const observed = readVersion(root, cwd, path, tool);
     if ('state' in observed) return { name: tool.name, path, hint, ...observed };
     return { name: tool.name, state: 'host', path, hint, found: observed.version };
 }
 
-// The probe of a pinned tool: its printed version against the pin and the floor.
-function pinnedProbe(probed: Probed, want: string): ToolProbe {
-    const { root, cwd, tool, path, hint } = probed;
+// The inspection of a pinned tool: its printed version against the pin and the floor.
+function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
+    const { root, cwd, tool, path, hint } = inspected;
     const observed = readVersion(root, cwd, path, tool);
     if ('state' in observed) return { name: tool.name, path, hint, want, ...observed };
     const floor = tool.floor ?? want;
@@ -103,17 +110,17 @@ function pinnedProbe(probed: Probed, want: string): ToolProbe {
     return { name: tool.name, state, path, want, found: observed.version, hint, floor };
 }
 
-function probeUncached(root: string, cwd: string, tool: ToolPin, runner?: string): ToolProbe {
+function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
     const roots = tool.provider === 'host' ? [cwd, root] : [join(root, '.gspot'), cwd, root];
     const [path] = locateCandidates(root, roots, tool.name, privateToolInstallation(tool, runner)?.kind);
     const hint = installHint(tool);
-    if (path === undefined) return missingProbe(tool, hint);
-    const probed: Probed = { root, cwd, tool, path, hint };
-    if (tool.provider === 'host' || tool.version === undefined) return hostProbe(probed);
-    return pinnedProbe(probed, tool.version);
+    if (path === undefined) return missingInspection(tool, hint);
+    const inspected: Inspected = { root, cwd, tool, path, hint };
+    if (tool.provider === 'host' || tool.version === undefined) return hostInspection(inspected);
+    return pinnedInspection(inspected, tool.version);
 }
 
-// Whether a pending private installation covers the tool, so a probe cannot say anything true about it.
+// Whether a pending private installation covers the tool, so a inspection cannot say anything true about it.
 function isInstallationPending(pending: string[] | undefined, tool: ToolPin): boolean {
     if (tool.provider === 'host' || pending === undefined) return false;
     const npmPending = pending.includes('npm') && tool.installers['npm'] !== undefined;
@@ -129,7 +136,7 @@ function expectedExitCode(tool: ToolPin, installedPackage: string | undefined): 
 }
 
 /**
- * Interpret an executable version response for both installation and later probes.
+ * Interpret an executable version response for both installation and later inspections.
  * @param tool the pin
  * @param result what the version command printed and how it exited
  * @param installedPackage the version the private npm package declares, when the tool is one
@@ -162,7 +169,7 @@ export function observeToolVersion(
  * @param floor the lowest version the configuration accepts
  * @returns ok, outdated below the floor, newer above the pin, or error for no version
  */
-export function toolVersionState(found: string, want: string, floor: string): ToolProbe['state'] {
+export function toolVersionState(found: string, want: string, floor: string): ToolInspection['state'] {
     const version = semver.coerce(found);
     if (version === null) return 'error';
     const lowest = semver.coerce(floor);
@@ -187,13 +194,13 @@ export function locateTool(root: string, name: string): string | undefined {
 }
 
 /**
- * Probes one tool, sharing identical observations within its command session.
+ * Inspections one tool, sharing identical observations within its command session.
  * @param context the repository root and session observations
  * @param tool the pin
  * @returns where the tool is, its version and its state
  */
-export function probeTool(context: ToolContext, tool: ToolPin): ToolProbe {
-    const { root, probes } = context;
+export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection {
+    const { root, inspections } = context;
     if (isInstallationPending(readOwnership(root).installations, tool))
         return {
             name: tool.name,
@@ -204,11 +211,11 @@ export function probeTool(context: ToolContext, tool: ToolPin): ToolProbe {
     const cwd = context.cwd ?? root;
     const runner = context.policyFiles?.policy.runner?.tool;
     const key = JSON.stringify([root, cwd, tool, runner]);
-    const cached = probes.get(key);
+    const cached = inspections.get(key);
     if (cached) return cached;
-    const probe = tool.kind === 'library' ? probeLibrary(root, tool) : probeUncached(root, cwd, tool, runner);
-    probes.set(key, probe);
-    return probe;
+    const inspection = tool.kind === 'library' ? inspectLibrary(root, tool) : inspectUncached(root, cwd, tool, runner);
+    inspections.set(key, inspection);
+    return inspection;
 }
 
 /**

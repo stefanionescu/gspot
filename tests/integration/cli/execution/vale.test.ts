@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
@@ -24,7 +24,7 @@ for (const extension of ['md', 'sh']) {
             });
             const session = await openSession(directory.path);
             const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-            const probe = spyOn(probes, 'probeTool').mockReturnValue({
+            const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
                 name: 'vale',
                 state: failure === 'outdated' ? 'outdated' : 'ok',
                 path: process.execPath,
@@ -43,7 +43,7 @@ for (const extension of ['md', 'sh']) {
                 const failed = await runEngineCheck(session, valeFindings, planned!);
                 expect(failed.status).toBe(failure === 'outdated' ? 'missing' : 'error');
                 expect(failed.findings).toStrictEqual([]);
-                probe.mockReturnValue({ name: 'vale', state: 'ok', path: process.execPath });
+                inspection.mockReturnValue({ name: 'vale', state: 'ok', path: process.execPath });
                 spawn.mockImplementation((command, options) => {
                     expect(options.timeoutMs).toBe(1000);
                     // A shell script goes by path like Markdown: vale.ini maps sh to the Python format (K-176).
@@ -76,7 +76,7 @@ for (const extension of ['md', 'sh']) {
                 expect(result.status).toBe('ok');
             } finally {
                 spawn.mockRestore();
-                probe.mockRestore();
+                inspection.mockRestore();
             }
         },
     );

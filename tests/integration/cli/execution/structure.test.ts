@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
-import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import * as inspections from '#cli/tools/inspect.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { engineInput } from '#cli/execution/engines.ts';
@@ -26,7 +26,11 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     const session = await openSession(sandbox.path);
     const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
     const input = engineInput(session, planned!);
-    const probe = spyOn(probes, 'probeTool').mockReturnValue({ name: 'ast-grep', state: 'ok', path: process.execPath });
+    const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+        name: 'ast-grep',
+        state: 'ok',
+        path: process.execPath,
+    });
     const processRun = spyOn(processes, 'run').mockImplementation((command) => {
         const batch = command.slice(5);
         received.push(...batch);
@@ -55,7 +59,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
     } finally {
         processRun.mockRestore();
-        probe.mockRestore();
+        inspection.mockRestore();
     }
 });
 
@@ -70,7 +74,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
         const session = await openSession(sandbox.path);
         const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
         const input = engineInput(session, planned!);
-        const probe = spyOn(probes, 'probeTool').mockReturnValue({
+        const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'ast-grep',
             state: 'ok',
             path: process.execPath,
@@ -114,7 +118,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
             ).toStrictEqual([]);
         } finally {
             processRun.mockRestore();
-            probe.mockRestore();
+            inspection.mockRestore();
         }
     },
 );

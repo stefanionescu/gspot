@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { toolPin } from '#cli/tools/probe.ts';
+import { toolPin } from '#cli/tools/inspect.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';

@@ -1,15 +1,15 @@
 import type { Colors } from 'picocolors/types';
-import { probeTool } from '#cli/tools/probe.ts';
 import { collectPins } from '#cli/tools/pins.ts';
 import { colors } from '#cli/output/messages.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import type { ToolProbe } from '#cli/types/tools/tools.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
+import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
 
@@ -24,7 +24,7 @@ import {
     VERSION_GAP,
 } from '#cli/constants/commands/doctor.ts';
 
-function stateLabel(tool: ToolProbe, colors: Colors): string {
+function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;
     switch (tool.state) {
         case 'ok': {
@@ -48,7 +48,7 @@ function stateLabel(tool: ToolProbe, colors: Colors): string {
     }
 }
 
-function versionText(tool: ToolProbe): string {
+function versionText(tool: ToolInspection): string {
     const found = tool.found ?? '';
     const want = tool.want ?? '';
     if (tool.state === 'outdated') return `${tool.name} ${found} (want ${want})`;
@@ -56,7 +56,7 @@ function versionText(tool: ToolProbe): string {
     return `${tool.name} ${want === '' ? found : want}`.trim();
 }
 
-function toolLines(tools: ToolProbe[], colors: Colors): string[] {
+function toolLines(tools: ToolInspection[], colors: Colors): string[] {
     const width = Math.max(...tools.map((tool) => `${tool.name} ${tool.want ?? ''}`.length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = tool.state !== 'ok' && tool.state !== 'host';
@@ -129,13 +129,13 @@ function versionLine(report: DoctorReport): string {
 }
 
 /**
- * Builds the report: tool probes, coverage, changes after the install, hooks, CI, rules and versions.
+ * Builds the report: tool inspections, coverage, changes after the install, hooks, CI, rules and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const tools = collectPins(everyManifest(session.scopes)).map((tool) => probeTool(session, tool));
+    const tools = collectPins(everyManifest(session.scopes)).map((tool) => inspectTool(session, tool));
     const { policy } = session.policyFiles;
     const hooks = hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
     const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { probeTool } from '#cli/tools/probe.ts';
 import { readPolicy } from '#cli/policy/read.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
@@ -14,7 +14,7 @@ import { HELP_TIMEOUT_MS } from '#tests/constants/integration/tools/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...configurationManifests().values()];
-const context = { root, probes: new Map(), policyFiles: readPolicy(root) };
+const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
 
 function isWord(part: string): boolean {
     return !part.startsWith('-') && !part.startsWith('{') && part !== '.' && !part.includes('/');
@@ -49,8 +49,10 @@ function executableOf(tool: ToolPin): string | undefined {
     if (existsSync(privateBinary)) return privateBinary;
     const developmentBinary = join(root, 'node_modules', '.bin', tool.name);
     if (existsSync(developmentBinary)) return developmentBinary;
-    const probe = probeTool(context, tool);
-    return probe.path !== undefined && ['ok', 'outdated', 'newer'].includes(probe.state) ? probe.path : undefined;
+    const inspection = inspectTool(context, tool);
+    return inspection.path !== undefined && ['ok', 'outdated', 'newer'].includes(inspection.state)
+        ? inspection.path
+        : undefined;
 }
 
 // A manual page bolds a word by overstriking it; the plain word is what the flag has to match.

@@ -18,10 +18,10 @@ if (process.platform === 'darwin')
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["xctest", "xcode"]\n[tools.xcode]\nproject = "Probe.xcodeproj"\nscheme = "Probe"\ndestination = "platform=macOS"\n[[tools.xctest.coverage]]\ntarget = "Probe.xctest"\npercent = 100\n',
-            'Probe.xcodeproj/project.pbxproj': XCTEST_COVERAGE_PROJECT,
-            'Probe.xcodeproj/xcshareddata/xcschemes/Probe.xcscheme':
-                '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Probe.xctest" BlueprintName="Probe" ReferencedContainer="container:Probe.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug" codeCoverageEnabled="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Probe.xctest" BlueprintName="Probe" ReferencedContainer="container:Probe.xcodeproj"/></TestableReference></Testables></TestAction></Scheme>\n',
+                'version = 1\nlevel = "all"\nconfigurations = ["xctest", "xcode"]\n[tools.xcode]\nproject = "Inspection.xcodeproj"\nscheme = "Inspection"\ndestination = "platform=macOS"\n[[tools.xctest.coverage]]\ntarget = "Inspection.xctest"\npercent = 100\n',
+            'Inspection.xcodeproj/project.pbxproj': XCTEST_COVERAGE_PROJECT,
+            'Inspection.xcodeproj/xcshareddata/xcschemes/Inspection.xcscheme':
+                '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Inspection.xctest" BlueprintName="Inspection" ReferencedContainer="container:Inspection.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug" codeCoverageEnabled="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Inspection.xctest" BlueprintName="Inspection" ReferencedContainer="container:Inspection.xcodeproj"/></TestableReference></Testables></TestAction></Scheme>\n',
             'Value.swift': XCTEST_COVERAGE_SOURCE,
             'ValueTests.swift': XCTEST_COVERAGE_TESTS,
         });
@@ -55,7 +55,7 @@ if (process.platform === 'darwin')
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);
             expect(readFileSync(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
-            expect(readFileSync(join(sandbox.path, 'Probe.xcodeproj/project.pbxproj'), 'utf8')).toBe(
+            expect(readFileSync(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
                 XCTEST_COVERAGE_PROJECT,
             );
         } finally {

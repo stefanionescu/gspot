@@ -42,7 +42,7 @@ test('Correction environment paths expand against the execution root', async () 
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
 });
 
-test('a failed version probe blocks a check and its correction without changing source bytes', async () => {
+test('a failed version inspection blocks a check and its correction without changing source bytes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);

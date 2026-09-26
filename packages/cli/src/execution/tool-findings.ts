@@ -66,26 +66,26 @@ function attributeFile(parsed: Finding[], invocation: ToolInvocation, spec: Chec
 /**
  * The note for a tool that cannot run: too old for its floor, or not installed.
  * @param tool the pin
- * @param probe what the probe found
- * @param probe.found the version the tool reported
- * @param probe.floor the lowest version the configuration accepts
- * @param probe.hint how to install the tool
- * @param state the probe state
+ * @param inspection what the inspection found
+ * @param inspection.found the version the tool reported
+ * @param inspection.floor the lowest version the configuration accepts
+ * @param inspection.hint how to install the tool
+ * @param state the inspection state
  * @returns the note
  */
 export function missingNote(
     tool: ToolPin,
-    probe: {
+    inspection: {
         found?: string;
         floor?: string;
         hint?: string;
     },
     state: string,
 ): string {
-    const hint = probe.hint ?? 'Install the configured tool.';
+    const hint = inspection.hint ?? 'Install the configured tool.';
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return state === 'outdated'
-        ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. ${hint}`
+        ? `${tool.name} ${inspection.found ?? '?'} is below ${inspection.floor ?? '?'}. ${hint}`
         : `${tool.name}${version} is not installed. ${hint}`;
 }
 

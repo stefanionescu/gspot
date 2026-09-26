@@ -15,7 +15,7 @@ import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { PolicyFiles, ScopeSelection, Policy } from '#cli/types/policy/policy.ts';
 
 // Resolves every scope: its selected configurations, settings surface, and merged view.
-function resolveScopes(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
+function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
     return scopes.map((scope) => {
         const selected = selectForScope(policy, scope.path, manifests);
         const surface = exposedSettings(selected);
@@ -46,7 +46,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
                 .map((entry) => entry.path),
         ),
     );
-    const scopes = resolveScopes(policyFiles.policy, repo.scopes, manifests);
+    const scopes = scopeSelections(policyFiles.policy, repo.scopes, manifests);
     const runner = policyFiles.policy.runner?.tool;
     const needsPackages =
         Object.keys(
@@ -69,7 +69,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         manifests,
         repository: repo,
         scopes,
-        probes: new Map(),
+        inspections: new Map(),
         observations: { root, sources: new Map() },
     };
 }

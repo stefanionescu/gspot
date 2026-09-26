@@ -112,7 +112,21 @@
         },
         "verbs-strict": {
             "removable": true,
-            "terms": ["load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution"]
+            "terms": [
+                "load",
+                "loaded",
+                "loader",
+                "loaders",
+                "loading",
+                "fetch",
+                "resolve",
+                "resolving",
+                "resolution",
+                "probe",
+                "probes",
+                "probed",
+                "probing"
+            ]
         },
         "conjunctions": {
             "removable": true,

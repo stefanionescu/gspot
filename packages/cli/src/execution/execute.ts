@@ -1,7 +1,7 @@
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
-import { probeTool } from '#cli/tools/probe.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/tree.ts';
@@ -41,14 +41,14 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
     session.repository = await readRepository(session.root, declarations, scopes, exclude);
     opened.repository = session.repository;
     session.observations = { root: session.root, sources: new Map() };
-    session.probes.clear();
+    session.inspections.clear();
 }
 
 // The result of a check that cannot run: canceled, skipped by the plan, or in need of a Docker daemon.
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    if (planned.spec.requires === 'docker' && probeTool(session, DOCKER).state === 'missing')
+    if (planned.spec.requires === 'docker' && inspectTool(session, DOCKER).state === 'missing')
         return { ...base, status: 'missing', note: 'this check needs a Docker daemon and docker is not installed' };
     return undefined;
 }
@@ -146,7 +146,7 @@ function runSession(opened: Session, options: RunOptions, resources: DisposableS
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };
-    session.probes.clear();
+    session.inspections.clear();
     return session;
 }
 

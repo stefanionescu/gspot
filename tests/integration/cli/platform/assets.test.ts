@@ -3,7 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
-import { ASSETS_CONFIGURATION, CHECKOUT, PROBE, SOURCES } from '#tests/constants/integration/cli/platform.ts';
+
+import {
+    ASSETS_CONFIGURATION,
+    CHECKOUT,
+    ASSET_READER_SCRIPT,
+    SOURCES,
+} from '#tests/constants/integration/cli/platform.ts';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('development assets', () => {
@@ -15,13 +21,13 @@ describe('development assets', () => {
         await createFileTree(sandbox.path, {
             ...sources,
             [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
-            [`${CHECKOUT}/probe.ts`]: PROBE,
+            [`${CHECKOUT}/assets-reader.ts`]: ASSET_READER_SCRIPT,
             [`${CHECKOUT}/packages/cli/.build/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
         const execute = () =>
-            Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'probe.ts')], {
+            Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
                 cwd,
                 stdout: 'pipe',
                 stderr: 'pipe',

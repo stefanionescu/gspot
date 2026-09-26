@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { probeTool } from '#cli/tools/probe.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { RUNS } from '#tests/constants/support/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
@@ -16,10 +16,10 @@ test.each([
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
         const tool = { ...commandPin('version-teller', '3.8.1'), version_command: ['-e', script] };
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
-        expect(probe.state).toBe(state);
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(inspection.state).toBe(state);
         // A usable tool reports the version it printed; any other state explains itself in the note.
-        expect(note === undefined ? probe.found : probe.note).toContain(note ?? '3.8.1');
+        expect(note === undefined ? inspection.found : inspection.note).toContain(note ?? '3.8.1');
     } finally {
         which.mockRestore();
     }
@@ -34,9 +34,12 @@ test('an npm package version does not hide a failed executable', async () => {
     chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), RUNS);
     mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-    const probe = probeTool({ root: sandbox.path, probes: new Map() }, commandPin('teller', '5.0.1', 'teller'));
-    expect(probe.state).toBe('error');
-    expect(probe.note).toContain('exited 7');
+    const inspection = inspectTool(
+        { root: sandbox.path, inspections: new Map() },
+        commandPin('teller', '5.0.1', 'teller'),
+    );
+    expect(inspection.state).toBe('error');
+    expect(inspection.note).toContain('exited 7');
 });
 
 test('a version printed before a genuine timeout does not make a tool usable', async () => {
@@ -47,15 +50,15 @@ test('a version printed before a genuine timeout does not make a tool usable', a
             ...commandPin('version-teller', '3.8.1'),
             version_command: ['-e', 'console.log("3.8.1 No version is set for shim"); setInterval(() => {}, 1000);'],
         };
-        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
-        expect(probe.state).toBe('error');
-        expect(probe.note).toContain('timed out');
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(inspection.state).toBe('error');
+        expect(inspection.note).toContain('timed out');
     } finally {
         which.mockRestore();
     }
 }, 20_000);
 
-test('a manifest can declare its help command status without accepting other failed probes', async () => {
+test('a manifest can declare its help command status without accepting other failed inspections', async () => {
     await using sandbox = await testdir();
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
@@ -64,11 +67,11 @@ test('a manifest can declare its help command status without accepting other fai
             version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
             version_exit_code: 2,
         };
-        const context = { root: sandbox.path, probes: new Map() };
-        const probe = probeTool(context, tool);
-        expect(probe.state).toBe('ok');
-        expect(probe.found).toBe('3.8.1');
-        const failed = probeTool(context, { ...tool, version_exit_code: 0 });
+        const context = { root: sandbox.path, inspections: new Map() };
+        const inspection = inspectTool(context, tool);
+        expect(inspection.state).toBe('ok');
+        expect(inspection.found).toBe('3.8.1');
+        const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
         expect(failed.state).toBe('error');
         expect(failed.note).toContain('exited 2');
     } finally {
@@ -84,32 +87,32 @@ test('tool observations distinguish pins and refresh private libraries in the ne
     });
     const session = await openSession(sandbox.path);
     const pin = libraryPin('example', '1.0.0');
-    expect(probeTool(session, pin).state).toBe('missing');
+    expect(inspectTool(session, pin).state).toBe('missing');
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
-    expect(probeTool(session, pin).state).toBe('missing');
+    expect(inspectTool(session, pin).state).toBe('missing');
     const next = await openSession(sandbox.path);
-    expect(probeTool(next, pin).state).toBe('ok');
-    expect(probeTool(next, libraryPin('example', '2.0.0')).state).toBe('outdated');
+    expect(inspectTool(next, pin).state).toBe('ok');
+    expect(inspectTool(next, libraryPin('example', '2.0.0')).state).toBe('outdated');
 });
 
-test('a command shares version observations and the next session probes again', async () => {
+test('a command shares version observations and the next session inspections again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = []\n',
-        'probe.ts':
+        'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
-        const pin = { ...commandPin('version-teller', '3.8.1'), version_command: ['probe.ts'] };
+        const pin = { ...commandPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
         const session = await openSession(sandbox.path);
-        expect(probeTool(session, pin).state).toBe('ok');
-        expect(probeTool(session, pin).state).toBe('ok');
+        expect(inspectTool(session, pin).state).toBe('ok');
+        expect(inspectTool(session, pin).state).toBe('ok');
         expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('1');
         const next = await openSession(sandbox.path);
-        expect(probeTool(next, pin).state).toBe('ok');
+        expect(inspectTool(next, pin).state).toBe('ok');
         expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('2');
     } finally {
         which.mockRestore();
@@ -118,7 +121,7 @@ test('a command shares version observations and the next session probes again', 
 
 test.each([
     ['wrapper', 'ok', '0.9.0'],
-    ['other-package', 'error', 'version probe exited 1'],
+    ['other-package', 'error', 'version inspection exited 1'],
 ] as const)(
     'the declared npm version exit applies only to the matching package: %s',
     async (packageName, state, text) => {
@@ -133,7 +136,7 @@ test.each([
         const tool = commandPin('wrapped', '0.10.0');
         tool.floor = '0.9.0';
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
-        const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+        const observed = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
         expect(observed.state).toBe(state);
         expect(state === 'ok' ? observed.found : observed.note).toContain(text);
     },

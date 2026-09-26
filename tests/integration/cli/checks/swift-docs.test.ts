@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import * as probes from '#cli/tools/probe.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { planRun } from '#cli/execution/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/render.ts';
+import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 
@@ -26,7 +26,7 @@ test('Swift documentation adapter rejects malformed native output and removes it
     const session = await openSession(root);
     const plans = await planRun(session, { stage: 'all', only: ['swift/swiftlint'], skips: [] });
     const planned = plans[0]!;
-    const probe = spyOn(probes, 'probeTool').mockReturnValue({
+    const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'swiftlint',
         state: 'ok',
         path: '/fixture/swiftlint',
@@ -49,6 +49,6 @@ test('Swift documentation adapter rejects malformed native output and removes it
         expect(await Bun.file(join(root, 'nested/Value.swift')).text()).toBe(text);
     } finally {
         malformed.mockRestore();
-        probe.mockRestore();
+        inspection.mockRestore();
     }
 });

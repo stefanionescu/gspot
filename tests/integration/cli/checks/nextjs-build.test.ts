@@ -42,13 +42,13 @@ for (const scope of ['', 'apps/web']) {
                 const mode = statSync(config).mode;
                 const directories: string[] = [];
                 // What the mocked commands were asked and saw, asserted once the check has run.
-                const probes: string[][] = [];
+                const inspections: string[][] = [];
                 const routesSeen: string[] = [];
                 const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
                 const runBlocking = processes.runBlocking;
-                const probe = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+                const inspection = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
                     if (command[0] === 'git') return runBlocking(command, options);
-                    probes.push(command.slice(1));
+                    inspections.push(command.slice(1));
                     return { code: 0, missing: false, duration: 1, stdout: 'Version 5.9.3', stderr: '' };
                 });
                 const run = spyOn(processes, 'run').mockImplementation((command, options) => {
@@ -89,7 +89,7 @@ for (const scope of ['', 'apps/web']) {
                     expect(await execute(input)).toStrictEqual([]);
                     expect(directories).toHaveLength(check === 'nextjs/typecheck' ? 4 : 2);
                     expect(directories).not.toContain(join(directory.path, scope));
-                    expect(probes.every((args) => args.length === 1 && args[0] === '--version')).toBe(true);
+                    expect(inspections.every((args) => args.length === 1 && args[0] === '--version')).toBe(true);
                     expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
                     expect(directories.every((cwd) => !existsSync(cwd))).toBe(true);
                     expect(readFileSync(config)).toStrictEqual(original);
@@ -105,7 +105,7 @@ for (const scope of ['', 'apps/web']) {
                         'Preserve unrelated scope\n',
                     );
                 } finally {
-                    probe.mockRestore();
+                    inspection.mockRestore();
                     locate.mockRestore();
                     run.mockRestore();
                 }

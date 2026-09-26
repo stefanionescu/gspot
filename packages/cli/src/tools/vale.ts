@@ -1,8 +1,8 @@
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
-import { locateTool } from '#cli/tools/probe.ts';
 import { toPosix } from '#cli/platform/paths.ts';
+import { locateTool } from '#cli/tools/inspect.ts';
 import { basename, dirname, join, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';

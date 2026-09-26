@@ -11,7 +11,7 @@ export const SOURCES = [
     'packages/cli/src/constants/platform.ts',
     'packages/cli/src/constants/repository/repository.ts',
 ];
-export const PROBE = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
+export const ASSET_READER_SCRIPT = `import { readAsset, listAssets, grammarPath, GRAMMAR_NAMES } from './packages/cli/src/platform/assets.ts';
 for (const name of GRAMMAR_NAMES) {
     if (!WebAssembly.validate(await Bun.file(grammarPath(name)).arrayBuffer())) throw new Error(name);
 }
