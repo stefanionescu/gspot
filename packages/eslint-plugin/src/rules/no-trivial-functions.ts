@@ -2,6 +2,7 @@ import { statementCount } from '#plugin/statements.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { NoTrivialFunctionsOptions } from '#plugin/types/rules.ts';
 
 export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
@@ -38,5 +39,3 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
         };
     },
 });
-
-export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];

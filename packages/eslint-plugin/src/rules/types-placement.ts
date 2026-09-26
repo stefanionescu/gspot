@@ -1,14 +1,9 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { TYPE_DECLARATIONS } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-
-const TYPE_DECLARATIONS = new Set([
-    'TSTypeAliasDeclaration',
-    'TSInterfaceDeclaration',
-    'TSModuleDeclaration',
-    'TSDeclareFunction',
-]);
+import type { TypesPlacementMessages, TypesPlacementOptions, TypesPlacementReporter } from '#plugin/types/rules.ts';
 
 function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TSAsExpression {
     return (
@@ -136,19 +131,3 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         return isInside ? insideListeners(report) : outsideListeners(report, options.allowInterface === true);
     },
 });
-
-export type TypesPlacementMessages =
-    | 'interface'
-    | 'aliasOutside'
-    | 'enumOutside'
-    | 'runtimeInside'
-    | 'defaultInside'
-    | 'valueImportInside';
-
-export type TypesPlacementReporter = (
-    node: TSESTree.Node,
-    messageId: TypesPlacementMessages,
-    extra?: Record<string, string>,
-) => void;
-
-export type TypesPlacementOptions = [{ typesDirectory?: string; allowInterface?: boolean; exempt?: string[] }];

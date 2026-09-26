@@ -4,21 +4,7 @@ import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-
-const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
-const DECLARATION_KINDS = new Set([
-    'function',
-    'function*',
-    'class',
-    'const',
-    'let',
-    'var',
-    'type',
-    'interface',
-    'enum',
-    'async',
-]);
-const WORD = /^[A-Za-z_$][\w$]*/u;
+import { DECLARATION_KINDS, EXTENSIONS, WORD } from '#plugin/constants/rules.ts';
 
 function stemOf(path: string): string {
     const extension = EXTENSIONS.find((candidate) => path.endsWith(candidate));

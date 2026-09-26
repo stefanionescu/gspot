@@ -1,6 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { NoClientEnvironmentOptions } from '#plugin/types/rules.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 
 function readName(node: TSESTree.MemberExpression): string | undefined {
@@ -84,5 +85,3 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
         };
     },
 });
-
-export type NoClientEnvironmentOptions = [{ clientModule?: boolean; publicPrefixes?: string[]; allowed?: string[] }];

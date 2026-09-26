@@ -1,9 +1,9 @@
+import { WRAPPERS } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { RegistryInstanceOnlyOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-
-const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ChainExpression']);
 
 function isConstructed(node: TSESTree.Node | null): boolean {
     let current: TSESTree.Node | null = node;
@@ -47,5 +47,3 @@ export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'reg
         };
     },
 });
-
-export type RegistryInstanceOnlyOptions = [{ registryFiles?: string[] }];

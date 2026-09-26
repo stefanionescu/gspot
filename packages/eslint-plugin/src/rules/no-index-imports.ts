@@ -1,13 +1,9 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { DEFAULT_PATTERNS } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-
-const DEFAULT_PATTERNS = [
-    String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,
-    String.raw`^\.{1,2}(?:/[^/]+)*/index(?:\.[cm]?[jt]sx?)?$`,
-    String.raw`^\.{1,2}/index(?:\.[cm]?[jt]sx?)?$`,
-];
+import type { NoIndexImportsOptions } from '#plugin/types/rules.ts';
 
 export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
     name: 'no-index-imports',
@@ -70,5 +66,3 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
         };
     },
 });
-
-export type NoIndexImportsOptions = [{ allow?: string[]; patterns?: string[] }];

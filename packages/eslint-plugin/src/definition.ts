@@ -1,5 +1,6 @@
 import { ESLintUtils } from '@typescript-eslint/utils';
 import type { TSESLint } from '@typescript-eslint/utils';
+import type { RuleDocs, RuleSpec } from '#plugin/types/plugin.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 const base = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/reference/plugin/${name}/`);
@@ -23,25 +24,6 @@ export function createRule<Options extends readonly unknown[], MessageIds extend
         create: spec.create,
     });
 }
-
-export type RuleSpec<Options extends readonly unknown[], MessageIds extends string> = Readonly<{
-    name: string;
-    meta: Omit<TSESLint.RuleMetaData<MessageIds, RuleDocs, Options>, 'docs'> & { docs: RuleDocs };
-    defaultOptions: Readonly<Options>;
-    create: (
-        context: Readonly<TSESLint.RuleContext<MessageIds, Options>>,
-        defaultedOptions: Readonly<Options>,
-    ) => TSESLint.RuleListener;
-}>;
-
-export type RuleDocs = {
-    title: string;
-    level?: 'recommended' | 'all';
-    summary: string;
-    why: string;
-    fix: string;
-    example: string;
-};
 
 /**
  * An object with the given properties and nothing else.

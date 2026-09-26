@@ -1,16 +1,7 @@
 import { createRule } from '#plugin/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-const DECLARATIONS = new Set([
-    'FunctionDeclaration',
-    'ClassDeclaration',
-    'VariableDeclaration',
-    'TSTypeAliasDeclaration',
-    'TSInterfaceDeclaration',
-    'TSEnumDeclaration',
-    'TSModuleDeclaration',
-]);
+import { DECLARATIONS } from '#plugin/constants/rules.ts';
 
 function nameOf(statement: TSESTree.Statement): string {
     const declaration = statement.type === AST_NODE_TYPES.ExportNamedDeclaration ? statement.declaration : statement;

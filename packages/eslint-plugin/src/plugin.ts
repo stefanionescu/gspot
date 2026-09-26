@@ -1,5 +1,6 @@
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
+import { INDEX_ONLY_RULES } from '#plugin/constants/plugin.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
@@ -52,9 +53,6 @@ const rules = {
     'tests-directory-contents': testsDirectoryContents,
     'types-placement': typesPlacement,
 };
-
-// Alternative re-export policies are selected explicitly.
-const INDEX_ONLY_RULES = new Set(['max-barrel-reexports', 'no-reexports-outside-index']);
 
 const base = { meta: { name: packageManifest.name, version: packageManifest.version }, rules };
 

@@ -2,27 +2,16 @@ import { isImportLike } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
 
-const DIRECTIVE_PREFIXES = [
-    'eslint',
-    'global ',
-    'globals ',
-    'exported ',
-    'jshint ',
-    'jslint ',
-    'istanbul ',
-    'c8 ',
-    'v8 ',
-    '@vitest',
-    '@jest',
-    'biome-ignore',
-    'oxlint-',
-];
-const TS_DIRECTIVE = /^@?ts-(?:ignore|expect-error|nocheck|check)\b/u;
-const BLANK = /^\s*$/u;
-const BLANK_LINE = /\n\s*\n/u;
-const LEADING_STAR = /^\s*\*?/u;
-const WHITESPACE = /[\t\n\r ]/u;
+import {
+    BLANK,
+    BLANK_LINE,
+    DIRECTIVE_PREFIXES,
+    LEADING_STAR,
+    TS_DIRECTIVE,
+    WHITESPACE,
+} from '#plugin/constants/rules.ts';
 
 function isDirective(value: string): boolean {
     const text = value.replace(LEADING_STAR, '').trim();
@@ -153,5 +142,3 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
         };
     },
 });
-
-export type HeaderCommentsOptions = [{ allowRequire?: boolean }];

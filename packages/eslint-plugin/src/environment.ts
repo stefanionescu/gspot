@@ -1,7 +1,6 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ENVIRONMENT_HOSTS } from '#plugin/constants/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-
-const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
 
 /**
  * The property name a member expression reads, when it is spelled out.

@@ -1,8 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils';
+import { DEFAULT_MAX } from '#plugin/constants/rules.ts';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-
-const DEFAULT_MAX = 20;
+import type { MaxBarrelReexportsOptions } from '#plugin/types/rules.ts';
 
 export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany'>({
     name: 'max-barrel-reexports',
@@ -47,5 +47,3 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
         };
     },
 });
-
-export type MaxBarrelReexportsOptions = [{ max?: number }];

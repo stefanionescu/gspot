@@ -1,8 +1,8 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { DEFAULT_PREFIXES } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-
-const DEFAULT_PREFIXES = ['./', '../', '@/', '#'];
+import type { ImportPathStyleName, ImportPathStyleOptions } from '#plugin/types/rules.ts';
 
 function isCompliant(source: string, style: ImportPathStyleName): boolean {
     if (source.endsWith('.json') || source.endsWith('.css') || source.endsWith('.svg')) return true;
@@ -64,7 +64,3 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
         };
     },
 });
-
-export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
-
-export type ImportPathStyleOptions = [{ style: ImportPathStyleName; internalPrefixes?: string[] }];

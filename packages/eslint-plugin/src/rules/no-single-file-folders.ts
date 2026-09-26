@@ -1,16 +1,9 @@
 import { posix } from 'node:path';
+import { DEFAULT_IGNORED } from '#plugin/constants/rules.ts';
+import { CODE_EXTENSIONS } from '#plugin/constants/plugin.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-
-import {
-    CODE_EXTENSIONS,
-    lintedFile,
-    lintedRoot,
-    isAnyGlobMatch,
-    readDirectory,
-    relativeToRoot,
-} from '#plugin/files.ts';
-
-const DEFAULT_IGNORED = ['node_modules', 'dist', 'build', 'coverage', '.git'];
+import type { SingleFileFoldersOptions } from '#plugin/types/rules.ts';
+import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
 function isIgnored(relative: string, ignored: string[], allow: string[]): boolean {
     if (ignored.some((segment) => relative.split('/').includes(segment))) return true;
@@ -65,5 +58,3 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
         };
     },
 });
-
-export type SingleFileFoldersOptions = [{ extensions?: string[]; ignorePaths?: string[]; allow?: string[] }];

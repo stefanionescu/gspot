@@ -1,5 +1,7 @@
 import { posix } from 'node:path';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { NoPrefixCollisionsOptions } from '#plugin/types/rules.ts';
+import { DEFAULT_IGNORED, DEFAULT_THRESHOLD } from '#plugin/constants/rules.ts';
 
 import {
     isIndexFile,
@@ -11,9 +13,6 @@ import {
     relativeToRoot,
     stemOf,
 } from '#plugin/files.ts';
-
-const DEFAULT_IGNORED = ['node_modules', 'dist', 'build', 'coverage', '.git'];
-const DEFAULT_THRESHOLD = 2;
 
 function isInScope(relative: string, scope: string[], ignored: string[]): boolean {
     const segments = relative.split('/');
@@ -92,7 +91,3 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
         };
     },
 });
-
-export type NoPrefixCollisionsOptions = [
-    { threshold?: number; scope?: string[]; ignorePaths?: string[]; allow?: string[] },
-];

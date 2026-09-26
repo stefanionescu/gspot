@@ -1,9 +1,8 @@
 import { isImportLike } from '#plugin/imports.ts';
+import { BLANK, SPACES } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-
-const BLANK = /^\s*$/u;
-const SPACES = /\s+/gu;
+import type { ImportLayoutEntry, ImportLayoutOptions } from '#plugin/types/rules.ts';
 
 function isOwnLineComment(text: string, comment: TSESTree.Comment, before: number): boolean {
     if (!BLANK.test(text.slice(comment.range[1], before))) return false;
@@ -138,16 +137,3 @@ export const importLayout = createRule<ImportLayoutOptions, 'layout'>({
         };
     },
 });
-
-export type ImportLayoutEntry = {
-    node: TSESTree.Statement;
-    start: number;
-    end: number;
-    text: string;
-    sortText: string;
-    lineSpan: number;
-    multiLine: boolean;
-    index: number;
-};
-
-export type ImportLayoutOptions = [{ allowRequire?: boolean }];

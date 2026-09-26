@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { CrossProjectImportsOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'escape'>({
@@ -72,5 +73,3 @@ export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'esc
         };
     },
 });
-
-export type CrossProjectImportsOptions = [{ scopes?: string[]; allowedEscapes?: string[] }];

@@ -2,27 +2,11 @@ import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-const INDEX_BASENAMES = new Set([
-    'index.ts',
-    'index.tsx',
-    'index.js',
-    'index.jsx',
-    'index.mjs',
-    'index.cjs',
-    'index.mts',
-    'index.cts',
-]);
-const STDIN_NAMES = new Set(['', '<input>', '<text>']);
-const FILE_SCHEME = 'file://';
-const DECLARATION_SUFFIX = '.d.ts';
+import type { DirectoryEntry, RuleContextOf } from '#plugin/types/plugin.ts';
+import { DECLARATION_SUFFIX, FILE_SCHEME, INDEX_BASENAMES, STDIN_NAMES } from '#plugin/constants/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
-
-/** The extensions of code files the rules look at. */
-export const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.vue', '.svelte'];
 
 /**
  * Forward slashes, no query or hash, no file:// scheme.
@@ -148,7 +132,3 @@ export function staticString(node: unknown): string | undefined {
     const literal = node as { type?: string; value?: unknown } | null | undefined;
     return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;
 }
-
-export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
-
-export type RuleContextOf = Readonly<TSESLint.RuleContext<string, unknown[]>>;

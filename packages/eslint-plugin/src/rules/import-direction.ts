@@ -1,23 +1,26 @@
 import { posix } from 'node:path';
 import { importFile } from '#plugin/imports.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 
-const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
-    types: ['**/types/**'],
-    tests: ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**'],
-    harness: ['tests/support/**'],
-    config: ['config/**'],
-    env: ['src/env/**'],
-    runtime: ['src/**'],
-};
-const DEFAULT_CONTRACTS = ['index', 'public', 'contracts'];
-const ROLE_ORDER: ImportDirectionRole[] = ['harness', 'tests', 'types', 'env', 'config', 'runtime'];
-const TEST_ROLES = new Set<ImportDirectionRole>(['tests', 'harness']);
-const CONFIG_ROLES = new Set<ImportDirectionRole>(['config', 'env']);
-const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
+import {
+    CODE_EXTENSION,
+    CONFIG_ROLES,
+    DEFAULT_CONTRACTS,
+    DEFAULT_ROLES,
+    ROLE_ORDER,
+    TEST_ROLES,
+} from '#plugin/constants/rules.ts';
+import type {
+    ImportDirectionMessages,
+    ImportDirectionOptions,
+    ImportDirectionRole,
+    ImportDirectionRoles,
+    ImportEdge,
+    ImportNode,
+    ImportVerdict,
+} from '#plugin/types/rules.ts';
 
 function roleOf(path: string, roles: Required<ImportDirectionRoles>): ImportDirectionRole {
     return ROLE_ORDER.find((role) => role !== 'other' && isAnyGlobMatch(path, roles[role])) ?? 'other';
@@ -131,32 +134,3 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         };
     },
 });
-
-export type ImportDirectionRoles = {
-    types?: string[];
-    tests?: string[];
-    harness?: string[];
-    config?: string[];
-    env?: string[];
-    runtime?: string[];
-};
-
-export type ImportDirectionRole = 'types' | 'tests' | 'harness' | 'config' | 'env' | 'runtime' | 'other';
-
-export type ImportDirectionMessages = 'typesOnlyTypes' | 'runtimeToTests' | 'testsToInternals' | 'configToRuntime';
-
-export type ImportEdge = {
-    role: ImportDirectionRole;
-    targetRole: ImportDirectionRole;
-    source: string;
-    target: string;
-    isTypeOnly: boolean;
-};
-
-export type ImportNode = TSESTree.ImportDeclaration | TSESTree.ExportAllDeclaration | TSESTree.ExportNamedDeclaration;
-
-export type ImportVerdict = { messageId: ImportDirectionMessages; data: Record<string, string> };
-
-export type ImportDirectionOptions = [
-    { roles?: ImportDirectionRoles; aliases?: Record<string, string>; contracts?: string[]; scope?: string },
-];

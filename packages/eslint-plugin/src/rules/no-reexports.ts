@@ -1,4 +1,5 @@
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
+import type { NoReexportsOptions } from '#plugin/types/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 
 export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'local'>({
@@ -35,5 +36,3 @@ export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'loc
         };
     },
 });
-
-export type NoReexportsOptions = [{ allowIndex?: boolean }];
