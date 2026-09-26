@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testManifest } from '#tests/support/cli/tooling.ts';
-import { configurationManifests, parseManifest, validateManifests } from '#cli/configurations/manifests.ts';
+import { validateManifests } from '#cli/configurations/manifest-problems.ts';
+import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
 
 test('loading two configurations refuses duplicate executable check ownership', () => {
     const definition =

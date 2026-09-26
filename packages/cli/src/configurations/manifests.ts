@@ -3,13 +3,34 @@ import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { configurationName } from '#cli/configurations/targets.ts';
 import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
 import type { CheckSpec, RawCheck, RawManifest, RawTool, SettingSpec } from '#cli/configurations/schema.ts';
 
-const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
+import {
+    checkProblems,
+    configurationProblems,
+    ManifestError,
+    validateManifests,
+} from '#cli/configurations/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
+
+// The pin fields a manifest may leave out, copied when declared.
+const OPTIONAL_TOOL_KEYS = [
+    'version',
+    'floor',
+    'provider',
+    'version_command',
+    'version_exit_code',
+    'version_regex',
+    'crash_pattern',
+    'rule_page',
+    'suppression',
+    'env',
+    'takeover',
+    'query_packs',
+    'prettier',
+] as const;
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
     const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
@@ -30,21 +51,14 @@ function installerPins(raw: RawTool): ToolPin['installers'] {
 }
 
 function toTool(raw: RawTool): ToolPin {
-    const tool: ToolPin = { name: raw.name, kind: raw.kind, windows: raw.windows, installers: installerPins(raw) };
-    if (raw.version !== undefined) tool.version = raw.version;
-    if (raw.floor !== undefined) tool.floor = raw.floor;
-    if (raw.provider !== undefined) tool.provider = raw.provider;
-    if (raw.version_command !== undefined) tool.version_command = raw.version_command;
-    if (raw.version_exit_code !== undefined) tool.version_exit_code = raw.version_exit_code;
-    if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
-    if (raw.crash_pattern !== undefined) tool.crash_pattern = raw.crash_pattern;
-    if (raw.rule_page !== undefined) tool.rule_page = raw.rule_page;
-    if (raw.suppression !== undefined) tool.suppression = raw.suppression;
-    if (raw.env !== undefined) tool.env = raw.env;
-    if (raw.takeover !== undefined) tool.takeover = raw.takeover;
-    if (raw.query_packs !== undefined) tool.query_packs = raw.query_packs;
-    if (raw.prettier !== undefined) tool.prettier = raw.prettier;
-    return tool;
+    const declared = OPTIONAL_TOOL_KEYS.filter((key) => raw[key] !== undefined).map((key) => [key, raw[key]] as const);
+    return {
+        name: raw.name,
+        kind: raw.kind,
+        windows: raw.windows,
+        installers: installerPins(raw),
+        ...(Object.fromEntries(declared) as Partial<ToolPin>),
+    };
 }
 
 function toCheck(raw: RawCheck): CheckSpec {
@@ -57,90 +71,35 @@ function toCheck(raw: RawCheck): CheckSpec {
     return check;
 }
 
-function checkProblems(check: RawCheck): string[] {
-    const problems: (string | undefined)[] = [
-        check.nested_config !== undefined && check.cwd !== 'scope'
-            ? `check ${check.name} discovers nested configuration and requires cwd = scope.`
-            : undefined,
-        check.file_prefix !== undefined &&
-        (check.runs !== 'per-file-list' || check.command?.includes('{files}') !== true)
-            ? `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`
-            : undefined,
-        check.isolated_files === true &&
-        !(
-            (check.runs === 'per-file-list' && check.command?.includes('{files}') === true) ||
-            (check.runs === 'per-scope' && check.command?.includes('{root}') === true)
-        )
-            ? `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`
-            : undefined,
-        check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined)
-            ? `check ${check.name} is reported by another check and cannot declare a fixer.`
-            : undefined,
-        check.fix_command !== undefined && check.fix_order === undefined
-            ? `check ${check.name} has a fix_command and no fix_order.`
-            : undefined,
-        check.fix_findings_exit_codes !== undefined && check.fix_command === undefined
-            ? `check ${check.name} has fix_findings_exit_codes and no fix_command.`
-            : undefined,
-        check.requires !== undefined && check.stage === 'commit'
-            ? `check ${check.name} requires ${check.requires} and cannot run at the commit stage.`
-            : undefined,
-        check.stage === 'manual' &&
-        check.requires === undefined &&
-        check.runs === 'per-file-list' &&
-        check.command === undefined
-            ? `check ${check.name} is manual with nothing that makes it slow.`
-            : undefined,
-    ];
-    return problems.filter((problem) => problem !== undefined);
+// Appends each referenced check, declared by another configuration, to the manifest that references it.
+function appendReferences(manifests: Map<string, Manifest>): void {
+    const declared = new Map(
+        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
+    );
+    for (const manifest of manifests.values())
+        for (const reference of new Set(manifest.configuration.check_references)) {
+            const check = declared.get(reference);
+            if (check !== undefined) manifest.checks.push(check);
+        }
 }
 
-function configurationReaders(checks: RawCheck[]): Set<string> {
-    const readers = new Set<string>();
-    for (const check of checks)
-        for (const argument of [
-            ...(check.command ?? []),
-            ...(check.fix_command ?? []),
-            ...Object.values(check.env ?? {}),
-        ])
-            for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
-    return readers;
-}
-
-function configurationProblems(raw: RawManifest): string[] {
-    const readers = configurationReaders(raw.checks);
-    const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
-    if (hasEngineCheck) return [];
-    return raw.configs
-        .filter((config) => !config.fragment && config.pointer === undefined)
-        .filter((config) => {
-            const name = configurationName(config.target);
-            const isReadByTemplate = raw.configs.some(
-                (other) => other !== config && other.template?.includes(name) === true,
-            );
-            return !readers.has(name) && !isReadByTemplate;
-        })
-        .map(
-            (config) =>
-                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no pointer.`,
-        );
+// Parses one embedded manifest and registers it under its folder name, which its declared name must match.
+function registerManifest(manifests: Map<string, Manifest>, path: string): void {
+    const dir = path.slice(0, -'/manifest.toml'.length);
+    const manifest = parseManifest(readAsset(path), dir);
+    const folder = dir.slice(dir.lastIndexOf('/') + 1);
+    if (folder !== manifest.configuration.name)
+        throw new ManifestError(manifest.configuration.name, [
+            `the folder is \`${folder}\` and the name is \`${manifest.configuration.name}\`; they must match.`,
+        ]);
+    if (manifests.has(manifest.configuration.name))
+        throw new ManifestError(manifest.configuration.name, ['The configuration name is already registered.']);
+    manifests.set(manifest.configuration.name, manifest);
 }
 
 type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
 
 /** A manifest that the schema or the design refuses. */
-export class ManifestError extends Error {
-    /**
-     * Names the configuration and lists its problems.
-     * @param configuration the configuration name
-     * @param problems the problems in plain English
-     */
-    constructor(configuration: string, problems: string[]) {
-        super(`The configuration manifest for \`${configuration}\` is not valid:\n${problems.join('\n')}`);
-        this.name = 'ManifestError';
-    }
-}
-
 /**
  * Parses one manifest text into a Manifest. Throws ManifestError.
  * @param text the manifest.toml text
@@ -188,112 +147,16 @@ export function parseManifest(text: string, dir: string): Manifest {
 }
 
 /**
- * Validate required configurations, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
- * @param manifests every manifest by name
- */
-export function validateManifests(manifests: Map<string, Manifest>): void {
-    const owners = new Map<string, string>();
-    for (const manifest of manifests.values()) {
-        for (const required of manifest.configuration.requires)
-            if (!manifests.has(required))
-                throw new ManifestError(manifest.configuration.name, [
-                    `it requires \`${required}\`, which does not exist.`,
-                ]);
-        for (const check of manifest.checks) {
-            if (manifest.configuration.check_references?.includes(check.name) === true) continue;
-            const previous = owners.get(check.name);
-            if (previous !== undefined)
-                throw new ManifestError(manifest.configuration.name, [
-                    `check ${check.name} is already owned by ${previous}.`,
-                ]);
-            owners.set(check.name, manifest.configuration.name);
-        }
-    }
-    const checks = new Map(
-        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
-    );
-    for (const manifest of manifests.values()) {
-        for (const reference of manifest.configuration.check_references ?? []) {
-            const target = checks.get(reference);
-            if (
-                target === undefined ||
-                !owners.has(reference) ||
-                owners.get(reference) === manifest.configuration.name ||
-                target.engine === undefined ||
-                target.runs !== 'once' ||
-                target.tool !== undefined
-            )
-                throw new ManifestError(manifest.configuration.name, [
-                    `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,
-                ]);
-        }
-        for (const tool of manifest.tools) {
-            for (const takeover of tool.takeover ?? []) {
-                if (takeover.check === undefined) continue;
-                const target = checks.get(takeover.check);
-                if (
-                    target === undefined ||
-                    target.reported_by !== undefined ||
-                    (target.tool ?? target.command?.[0]) !== tool.name
-                )
-                    throw new ManifestError(manifest.configuration.name, [
-                        `takeover check ${takeover.check} must execute ${tool.name}.`,
-                    ]);
-            }
-        }
-        for (const check of manifest.checks) {
-            for (const field of ['reported_by', 'takes_over'] as const) {
-                const target = check[field];
-                if (target === undefined) continue;
-                const owner = checks.get(target);
-                if (owner === undefined || target === check.name || owner.reported_by !== undefined)
-                    throw new ManifestError(manifest.configuration.name, [
-                        `check ${check.name} ${field} must name a different executable check; received ${target}.`,
-                    ]);
-            }
-            const chain = [check.name];
-            let next = check.takes_over;
-            while (next !== undefined) {
-                if (chain.includes(next))
-                    throw new ManifestError(manifest.configuration.name, [
-                        `Check replacement cycle: ${[...chain, next].join(' -> ')}.`,
-                    ]);
-                chain.push(next);
-                next = checks.get(next)?.takes_over;
-            }
-        }
-    }
-}
-
-/**
  * Every embedded manifest by configuration name. Read once per process.
  * @returns the manifests
  */
 export function configurationManifests(): Map<string, Manifest> {
     if (state.cache) return state.cache;
     const manifests = new Map<string, Manifest>();
-    for (const path of listAssets('packages/cli/configurations/')) {
-        if (!path.endsWith('/manifest.toml')) continue;
-        const dir = path.slice(0, -'/manifest.toml'.length);
-        const manifest = parseManifest(readAsset(path), dir);
-        const folder = dir.slice(dir.lastIndexOf('/') + 1);
-        if (folder !== manifest.configuration.name)
-            throw new ManifestError(manifest.configuration.name, [
-                `the folder is \`${folder}\` and the name is \`${manifest.configuration.name}\`; they must match.`,
-            ]);
-        if (manifests.has(manifest.configuration.name))
-            throw new ManifestError(manifest.configuration.name, ['The configuration name is already registered.']);
-        manifests.set(manifest.configuration.name, manifest);
-    }
+    for (const path of listAssets('packages/cli/configurations/'))
+        if (path.endsWith('/manifest.toml')) registerManifest(manifests, path);
     validateManifests(manifests);
-    const declaredChecks = new Map(
-        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
-    );
-    for (const manifest of manifests.values())
-        for (const reference of new Set(manifest.configuration.check_references)) {
-            const check = declaredChecks.get(reference);
-            if (check !== undefined) manifest.checks.push(check);
-        }
+    appendReferences(manifests);
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }
