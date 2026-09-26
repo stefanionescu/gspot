@@ -1,8 +1,6 @@
 // Counting executable statements in Python, Swift, and Bash syntax trees, and telling a trivial file from a real one.
 import type { Node } from 'web-tree-sitter';
-
-type Language = 'python' | 'swift' | 'bash';
-type Substance = (node: Node, language: Language, threshold: number) => boolean;
+import type { Language, Substance } from '#cli/types/checks/structure.ts';
 
 const FUNCTIONS = new Set([
     'function_definition',

@@ -4,6 +4,7 @@ import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { evaluateLicenses } from '#cli/evaluation/license.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';
+import type { EvaluationRequest } from '#cli/types/evaluation.ts';
 import { evaluateEslintPreview } from '#cli/evaluation/eslint-preview.ts';
 import { evaluateEslint, evaluateRuleCoverage } from '#cli/evaluation/eslint.ts';
 import { evaluateFormat, evaluateIgnoredPaths } from '#cli/evaluation/format.ts';
@@ -19,10 +20,8 @@ import {
     ignoredPathsResponse,
 } from '#cli/evaluation/protocol.ts';
 
-type Request = z.infer<typeof configurationRequest>;
-
 // Evaluates the operation the request names and checks the answer against its response shape.
-async function evaluate(request: Request, output: string): Promise<unknown> {
+async function evaluate(request: EvaluationRequest, output: string): Promise<unknown> {
     switch (request.operation) {
         case 'preview-rules': {
             return eslintPreviewResponse.parse(await evaluateEslintPreview(request, dirname(output)));

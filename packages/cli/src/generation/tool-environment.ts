@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
 import { pythonPins } from '#cli/tools/pins.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 
 /**
  * Keep Python lint dependencies in a private project owned by gspot.

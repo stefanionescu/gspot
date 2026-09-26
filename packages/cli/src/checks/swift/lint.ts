@@ -1,14 +1,13 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
 const DOC_RULE = 'doc_comment_style';
 const COMMAND = ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', '{files}'];

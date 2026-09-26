@@ -1,20 +1,17 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { isClaimed } from '#cli/configurations/claims.ts';
 import { isKnownCase } from '#cli/checks/naming/cases.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { Engine, EngineInput } from '#cli/checks/input.ts';
-import type { Identifier } from '#cli/checks/naming/extract.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
-import type { EffectivePolicy } from '#cli/checks/naming/policy.ts';
-import type { NamingContext } from '#cli/checks/naming/validate-name.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/checks/naming/policy.ts';
+import type { Engine, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/checks/naming/paths.ts';
 import { languageConfigurations, selectForScope } from '#cli/configurations/select.ts';
+import type { EffectivePolicy, Identifier, NamingContext } from '#cli/types/checks/naming.ts';
 
 const REACT_FILE = /\.[jt]sx$/u;
 const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;

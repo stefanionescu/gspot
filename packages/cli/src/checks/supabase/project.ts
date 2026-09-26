@@ -2,9 +2,8 @@ import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),

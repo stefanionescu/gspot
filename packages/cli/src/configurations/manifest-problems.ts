@@ -1,13 +1,8 @@
 // What makes a manifest invalid: a check that contradicts itself, a configuration nothing reads, or references
 import semver from 'semver';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 // between manifests that do not hold.
 import { configurationName } from '#cli/configurations/targets.ts';
-import type { RawCheck, RawManifest } from '#cli/configurations/schema.ts';
-
-type CheckRule = { applies: (check: RawCheck) => boolean; problem: (check: RawCheck) => string };
-type Checks = Map<string, Manifest['checks'][number]>;
-type Settings = Map<string, Manifest['settings'][number]>;
+import type { CheckRule, Checks, Settings, Manifest, RawCheck, RawManifest } from '#cli/types/configurations.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;

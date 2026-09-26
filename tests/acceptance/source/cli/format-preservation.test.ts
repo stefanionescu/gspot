@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
+import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
 const POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';

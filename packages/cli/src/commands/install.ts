@@ -9,11 +9,9 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
-
-type InstallOptions = { cwd: string; isDryRun: boolean };
+import type { CommandResult, InstallJson, InstallOptions } from '#cli/types/commands/commands.ts';
 
 /**
  * Register immutable installation for a clone.
@@ -102,6 +100,3 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         return { text: `${message}\n`, json: { installed: false, error: message } satisfies InstallJson, exitCode: 2 };
     }
 }
-
-/** The JSON the install command prints: the planned steps of a dry run, or whether the installation completed. */
-export type InstallJson = { isDryRun?: true; installed?: boolean; steps?: string[][]; hooks?: string; error?: string };

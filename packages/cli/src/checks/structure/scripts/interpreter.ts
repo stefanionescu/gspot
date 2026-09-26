@@ -1,10 +1,7 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
-import type { Finding } from '#cli/checks/result.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
-import type { CodeLine } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptFile, ScriptReport } from '#cli/checks/structure/parser.ts';
-import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
 
 import {
     codeLines,
@@ -12,6 +9,13 @@ import {
     withoutComment,
     withoutDeclaration,
 } from '#cli/checks/structure/code-lines.ts';
+import type {
+    CodeLine,
+    ScriptFile,
+    ScriptReport,
+    StructureAnalysis as Analysis,
+    StructureContext,
+} from '#cli/types/checks/structure.ts';
 import {
     BASH_FEATURES,
     INHERITED_ERREXIT,

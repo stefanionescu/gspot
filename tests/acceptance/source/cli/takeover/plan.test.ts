@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import type { InitJson } from '#cli/commands/init/types.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

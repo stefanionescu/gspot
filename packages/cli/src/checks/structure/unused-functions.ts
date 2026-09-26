@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { ENTRY_FUNCTIONS } from '#cli/checks/structure/patterns.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
  * One finding per function that no script references, outside the entry functions.

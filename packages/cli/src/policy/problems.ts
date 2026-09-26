@@ -1,7 +1,7 @@
 import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { Policy, Reasoned, ToolTable } from '#cli/policy/normalize.ts';
+import type { PathSegment, PolicyProblem, Policy, Reasoned, ToolTable } from '#cli/types/policy/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -164,9 +164,3 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
         ...checkProblems(policy),
     ];
 }
-
-/** An authored policy value and the semantic problem it caused. */
-export type PolicyProblem = { path: PathSegment[]; message: string };
-
-/** One step of a zod issue path. */
-export type PathSegment = string | number;

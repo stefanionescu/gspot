@@ -1,6 +1,5 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function escapePattern(text: string): string {
     return text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);

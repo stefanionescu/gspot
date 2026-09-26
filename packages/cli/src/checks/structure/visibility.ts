@@ -1,6 +1,6 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { ENTRY_FUNCTIONS } from '#cli/checks/structure/patterns.ts';
 import { outsideCallers } from '#cli/checks/structure/cross-file-index.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.

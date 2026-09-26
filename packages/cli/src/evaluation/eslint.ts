@@ -6,13 +6,11 @@ import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { EslintRegistration } from '#cli/policy/schema.ts';
 import { legacyEntries } from '#cli/evaluation/eslint-legacy.ts';
+import type { EslintRegistration } from '#cli/types/policy/policy.ts';
+import type { Adoption, EslintRequest } from '#cli/types/evaluation.ts';
 import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
-import type { eslintCoverageRequest, eslintCoverageResponse, eslintRequest } from '#cli/evaluation/protocol.ts';
-
-type Request = z.infer<typeof eslintRequest>;
-type Adoption = { request: Request; configPath: string; references: Map<unknown, EslintRegistration> };
+import type { eslintCoverageRequest, eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
 
 // The ESLint severities that switch a rule on.
 const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
@@ -25,7 +23,7 @@ function isUnrepresentable(value: unknown): boolean {
 }
 
 // The configuration file ESLint reads for the repository, or the one the request names.
-async function activeConfigPath(request: Request, eslint: Eslint.ESLint): Promise<string> {
+async function activeConfigPath(request: EslintRequest, eslint: Eslint.ESLint): Promise<string> {
     if (request.from !== undefined) return join(request.root, request.from);
     const found = await eslint.findConfigFile();
     if (found === undefined) throw new Error('ESLint conversion could not find the active configuration.');
@@ -33,7 +31,7 @@ async function activeConfigPath(request: Request, eslint: Eslint.ESLint): Promis
 }
 
 // The observed configuration's bytes, after every observed file is confirmed present.
-function readConfiguration(request: Request, configPath: string): string {
+function readConfiguration(request: EslintRequest, configPath: string): string {
     const files = openConfinedRoot(request.root);
     try {
         for (const path of request.configs ?? []) {
@@ -157,7 +155,7 @@ function adoptEntry(adoption: Adoption, raw: unknown, index: number): Record<str
  * @param request the repository root, the configuration to read, and whether it is a flat configuration
  * @returns the rules, selectors, and module registrations the configuration holds
  */
-export async function evaluateEslint(request: Request): Promise<z.infer<typeof eslintResponse>> {
+export async function evaluateEslint(request: EslintRequest): Promise<z.infer<typeof eslintResponse>> {
     if (!request.flat && request.from === undefined)
         throw new Error('Legacy ESLint adoption requires a configuration path.');
     const require = createRequire(join(request.root, 'package.json'));

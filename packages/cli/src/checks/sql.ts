@@ -1,9 +1,16 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { SqlStatementView } from '#cli/parsers/sql/types.ts';
+import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+
+import type {
+    EngineInput,
+    Finding,
+    FunctionOption,
+    ParsedSql,
+    SqlAnalysis,
+    SqlSource,
+} from '#cli/types/checks/checks.ts';
 
 // The shipped limit on declared input parameters when the policy names none.
 const SHIPPED_PARAMETER_LIMIT = 7;
@@ -14,7 +21,7 @@ const LINE_COMMENT = '--';
 // A string, a quoted name, a line comment, or the start of a block comment, whichever comes first.
 const SQL_TOKENS = /'[^']*'|"[^"]*"|--[^\n]*|\/\*/gu;
 
-function sources(input: EngineInput): { path: string; text: string }[] {
+function sources(input: EngineInput): SqlSource[] {
     return input.files
         .filter((file) => file.nature === 'source')
         .map((file) => ({
@@ -53,13 +60,6 @@ function sqlStatements(value: unknown): number {
     for (const [key, child] of Object.entries(value)) count += (key.endsWith('Stmt') ? 1 : 0) + sqlStatements(child);
     return count;
 }
-
-type ParsedSql = Awaited<ReturnType<typeof sqlFile>>;
-type SqlSource = ReturnType<typeof sources>[number];
-type FunctionOption = {
-    DefElem: { defname: string; arg: { String?: { sval: string }; List?: { items: { String: { sval: string } }[] } } };
-};
-type Analysis = { input: EngineInput; source: SqlSource; parsed: ParsedSql; threshold: number; maximum: number };
 
 const OUTPUT_PARAMETERS = new Set(['FUNC_PARAM_OUT', 'FUNC_PARAM_TABLE']);
 
@@ -102,7 +102,7 @@ async function bodyStatements(
 }
 
 // A finding at a statement of the source.
-function functionFinding(analysis: Analysis, statement: SqlStatementView, rule: string, message: string): Finding {
+function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, message: string): Finding {
     const { input, source } = analysis;
     return {
         check: input.spec.name,
@@ -116,7 +116,7 @@ function functionFinding(analysis: Analysis, statement: SqlStatementView, rule: 
 
 // The findings of one CREATE FUNCTION statement, and whether the function is trivial.
 async function functionFindings(
-    analysis: Analysis,
+    analysis: SqlAnalysis,
     statement: SqlStatementView,
     index: number,
 ): Promise<{ findings: Finding[]; isTrivial: boolean }> {
@@ -147,7 +147,7 @@ async function functionFindings(
 }
 
 // The findings of one file: each function's, then the file's when every statement is a trivial function.
-async function fileFunctionFindings(analysis: Analysis): Promise<Finding[]> {
+async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
     const { input, source, parsed } = analysis;
     const findings: Finding[] = [];
     let trivial = 0;

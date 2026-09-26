@@ -1,9 +1,9 @@
-import type { MergedView } from '#cli/policy/merge.ts';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import { compareRules } from '#cli/lifecycle/rule-diff.ts';
+import type { MergedView } from '#cli/types/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { GeneratedProposal } from '#cli/types/generation.ts';
+import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
-import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 /**

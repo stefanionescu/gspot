@@ -3,20 +3,17 @@ import { PolicyError } from '#cli/policy/read.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Mutation } from '#cli/policy/write.ts';
 import { installTools } from '#cli/tools/install.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { commitPolicy } from '#cli/commands/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { requireChain } from '#cli/configurations/select.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/platform/arguments.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-
-type AddOptions = { cwd: string; isDryRun: boolean; configurations: string[]; scope?: string };
-type RemoveOptions = { cwd: string; isDryRun: boolean; configuration: string; scope?: string };
+import type { CommandResult, AddOptions, RemoveOptions } from '#cli/types/commands/commands.ts';
 
 async function installChangedSelection(
     root: string,

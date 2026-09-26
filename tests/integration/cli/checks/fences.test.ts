@@ -4,10 +4,10 @@ import { rejects } from 'node:assert/strict';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { fences } from '#cli/checks/docs/fences.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 
 describe('fences and paths', () => {
     test('a fenced block that does not parse in its language is a finding', async () => {

@@ -1,9 +1,6 @@
-import type { Policy } from '#cli/policy/normalize.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
-import type { EslintSettings } from '#cli/policy/schema.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { PathExpressions } from '#cli/repository/paths.ts';
-import type { FragmentSelector } from '#cli/configurations/schema.ts';
+import type { EslintSettings, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { EslintRuleBlock, ResolvedSelector, SelectorGroup } from '#cli/types/generation.ts';
 
 function shape(entry: ResolvedSelector): { selector: string; message: string } {
     return { selector: entry.selector, message: entry.message };
@@ -54,8 +51,6 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
     );
     return [...base, ...overrides, ...ignores];
 }
-
-export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
 
 /**
  * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
@@ -115,9 +110,3 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
         });
     return groups;
 }
-
-/** A fragment selector with the allowed setting replaced by the paths it holds. */
-export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
-
-/** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */
-export type SelectorGroup = { files?: string[]; selectors: { selector: string; message: string }[] };

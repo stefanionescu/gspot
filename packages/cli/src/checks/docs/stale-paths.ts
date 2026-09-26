@@ -1,16 +1,12 @@
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { Finding } from '#cli/checks/result.ts';
 import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-
-type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
-
-type ProseLine = { number: number; line: string };
+import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 const TRAILING_PUNCTUATION = '.,;:';

@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { posix } from 'node:path';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const PROJECT_SUFFIX = '.xcodeproj';
 const SCHEME_SUFFIX = '.xcscheme';

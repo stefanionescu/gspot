@@ -1,9 +1,9 @@
 // The engine input of a Swift check in a planted repository, with its build folders removed after each test.
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 
 const folders = new Set<string>();
 

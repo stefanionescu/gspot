@@ -147,7 +147,3 @@ export const ownershipSchema = z
                 });
         }
     });
-
-export type OwnershipState = z.infer<typeof ownershipSchema>;
-
-export type OwnershipEntry = OwnershipState['files'][number];

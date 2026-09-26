@@ -2,10 +2,7 @@
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { gitLines, gitText } from '#cli/repository/revisions/git-queries.ts';
-
-type FetchMapping = { source: string; destination: string };
-type FetchRules = { mappings: FetchMapping[]; excluded: string[] };
-type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & FetchMapping);
+import type { FetchRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
 
 const GIT_TIMEOUT_MS = 30_000;
 

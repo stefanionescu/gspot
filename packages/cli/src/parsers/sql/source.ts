@@ -1,7 +1,6 @@
-// Keep psql substitutions outside SQL strings and comments while preserving character positions.
-type Lexeme = { end: number; kind: 'comment' | 'dollar' | 'command' | 'variable' | 'other' };
-
 // The index of the first stop character at or after from, or the text length.
+import type { Lexeme } from '#cli/types/parsers/sql.ts';
+
 function lineEnd(text: string, from: number, stops: string): number {
     for (let at = from; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
     return text.length;

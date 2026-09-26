@@ -2,7 +2,7 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { RunReport } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('file and folder arguments intersect check lists and respect -C', async () => {
     const command = [

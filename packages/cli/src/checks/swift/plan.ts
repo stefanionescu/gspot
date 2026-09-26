@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import { buildFolder } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { SwiftBuildPlan } from '#cli/types/checks/swift.ts';
 
 const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
 const WORKSPACE_SUFFIX = '.xcworkspace';
@@ -10,17 +11,6 @@ function text(input: EngineInput, key: string): string {
     const found = input.view.settings[key];
     return typeof found === 'string' ? found : '';
 }
-
-/** The build of one Swift scope. */
-export type SwiftBuildPlan = {
-    /** The cache folder of this scope. */
-    folder: string;
-    /** Where the compiler log is written. */
-    log: string;
-    argv: string[];
-    /** The analyzer clears this folder so its log includes every compiler call. */
-    scratch?: string;
-};
 
 /**
  * The build of one scope: the command, the folder it runs in, and where its log goes.

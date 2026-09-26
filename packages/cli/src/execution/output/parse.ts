@@ -3,10 +3,10 @@ import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
-import type { Finding } from '#cli/checks/result.ts';
 import { parseJson } from '#cli/execution/output/json.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { OutputFormat } from '#cli/configurations/output-format.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
+import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
+import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 import {
     markdownlintFindings,
@@ -14,9 +14,6 @@ import {
     trufflehogFindings,
     typosFindings,
 } from '#cli/execution/output/tool-formats.ts';
-
-/** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
-type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
 
 const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
 const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
@@ -163,8 +160,6 @@ function parseLines(check: string, text: string, help: string): Finding[] {
         .filter((line) => line !== '')
         .map((line) => ({ check, file: '', message: line, help, fixable: false }));
 }
-
-type Parsing = { spec: CheckSpec; stdout: string; text: string; root: string; cwd: string };
 
 // The findings of a JSON report, or the error that says the report could not be read.
 function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {

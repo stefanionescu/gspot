@@ -1,7 +1,8 @@
-import type { Policy } from '#cli/policy/normalize.ts';
+import type { RuleFile } from '#cli/types/agents.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {
     agent: 'How to work here',
@@ -77,5 +78,3 @@ export function agentFiles(root: string, configured: string[] = []): string[] {
     if (files.stat('.cursor')?.isDirectory() === true) detected.push('.cursor/rules/gspot.mdc');
     return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }
-
-export type RuleFile = { source: string; target: string; layer: string; configuration: string; title: string };

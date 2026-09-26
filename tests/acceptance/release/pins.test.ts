@@ -1,6 +1,6 @@
 // Every pin a manifest names exists in its registry, sits at or above its floor, and fits the ESLint the plugins support.
 import { expect, test } from 'bun:test';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

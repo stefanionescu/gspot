@@ -6,10 +6,10 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };

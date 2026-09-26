@@ -6,7 +6,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { InitJson } from '#cli/commands/init/types.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

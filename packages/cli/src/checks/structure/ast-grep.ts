@@ -1,20 +1,15 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/platform/assets.ts';
 import { isAbsolute, join, relative } from 'node:path';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { toPosix, CACHE_DIRECTORY } from '#cli/platform/paths.ts';
+import type { AstGrepMatch } from '#cli/types/checks/structure.ts';
 
 const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;
 const positionSchema = z.object({ line: z.number().int().nonnegative() });
-const matchSchema = z.object({
-    file: z.string().min(1),
-    ruleId: z.string().min(1),
-    range: z.object({ start: positionSchema, end: positionSchema }),
-});
-
 function ruleFile(root: string, asset: string): string {
     const path = `${RULE_CACHE}/${asset.slice(asset.lastIndexOf('/') + 1)}`;
     return withLifecycleOwner(root, (owner) => {
@@ -24,8 +19,11 @@ function ruleFile(root: string, asset: string): string {
     });
 }
 
-/** A validated native structural match with zero-based line positions. */
-export type AstGrepMatch = z.infer<typeof matchSchema>;
+export const matchSchema = z.object({
+    file: z.string().min(1),
+    ruleId: z.string().min(1),
+    range: z.object({ start: positionSchema, end: positionSchema }),
+});
 
 /**
  * Runs one rule asset over selected files through shared execution boundaries.

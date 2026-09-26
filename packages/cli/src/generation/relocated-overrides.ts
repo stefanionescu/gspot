@@ -1,14 +1,5 @@
 // Moving Prettier overrides from the folder they were written in to a configuration generated elsewhere.
-
-type Basename = { isNegated: boolean; basename: string };
-type Group<Options> = {
-    patterns: string[];
-    excluded: string[];
-    options: Options;
-    hasSlash: boolean;
-    base: string;
-    fromConfig: (pattern: string) => string;
-};
+import type { Basename, Group, NativeOverride } from '#cli/types/generation.ts';
 
 const LEADING_GLOBSTARS = /^(?:\*\*\/)+/u;
 const GLOB_GROUPING = /[{}()]/u;
@@ -142,9 +133,3 @@ export function listedOverride<Options>(entry: NativeOverride<Options>): {
 } {
     return { files: asList(entry.files), excludeFiles: asList(entry.excludeFiles), options: entry.options };
 }
-
-export type NativeOverride<Options> = {
-    files: string | string[];
-    excludeFiles?: string | string[] | undefined;
-    options: Options;
-};

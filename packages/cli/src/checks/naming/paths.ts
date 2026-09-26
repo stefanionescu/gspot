@@ -1,4 +1,4 @@
-import type { Identifier } from '#cli/checks/naming/extract.ts';
+import type { Identifier } from '#cli/types/checks/naming.ts';
 
 const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
 const MIGRATION_DIRECTORY = /^\d{14}_/u;

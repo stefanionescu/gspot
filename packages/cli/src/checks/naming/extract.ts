@@ -1,4 +1,5 @@
-import type { EngineInput } from '#cli/checks/input.ts';
+import type { Identifier } from '#cli/types/checks/naming.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/checks/naming/extractors/bash.ts';
@@ -34,20 +35,3 @@ export async function identifiersOf(
         tree.delete();
     }
 }
-
-/** One identifier an extractor found. */
-export type Identifier = {
-    file: string;
-    line: number;
-    column: number;
-    language: string;
-    category: string;
-    /** The label a finding prints, such as `typescript function`. */
-    kind: string;
-    name: string;
-    /** For a directory name: the directory path, so a path rule can match it. */
-    directory?: string;
-};
-
-/** Where an extractor puts what it finds. */
-export type ExtractSink = { file: string; language: string; out: Identifier[] };

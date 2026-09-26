@@ -1,11 +1,10 @@
 import { rmSync } from 'node:fs';
 import { globbySync } from 'globby';
 import { basename, dirname, join } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 

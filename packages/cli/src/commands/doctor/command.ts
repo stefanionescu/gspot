@@ -4,8 +4,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import type { DoctorOptions } from '#cli/commands/doctor/report.ts';
+import type { DoctorOptions } from '#cli/types/commands/doctor.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 
 /**

@@ -3,9 +3,9 @@ import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 

@@ -1,21 +1,19 @@
 // Carrying a Ruff configuration into the policy: its ignored rules, per-file ignores, and inherited configuration.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asRaw, asStrings, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
-import { carriedTool, reasonFor, type CarriedConfiguration, type CarryPush } from '#cli/policy/adoption/results.ts';
 
-type RuffLint = z.infer<typeof RUFF_LINT>;
-type PerFile = Record<string, string[]>;
-type Inheritance = {
-    root: string;
-    lists: CarriedConfiguration;
-    base: string;
-    visiting: Set<string>;
-    inherited: Set<string>;
-};
+import type {
+    Inheritance,
+    PerFile,
+    RuffLint,
+    CarriedConfiguration,
+    CarryPush,
+    CarrySource,
+} from '#cli/types/policy/adoption.ts';
 
 const RUFF_LINT = z.strictObject({
     ignore: z.array(z.string()).optional(),
@@ -23,11 +21,6 @@ const RUFF_LINT = z.strictObject({
     'per-file-ignores': z.record(z.string(), z.array(z.string())).optional(),
     'extend-per-file-ignores': z.record(z.string(), z.array(z.string())).optional(),
 });
-
-const RUFF_SOURCE = z.union([
-    RUFF_LINT.extend({ extend: z.string().min(1).optional() }),
-    z.strictObject({ lint: RUFF_LINT, extend: z.string().min(1).optional() }),
-]);
 
 const ABSOLUTE_OR_ESCAPED = /[\\:]/u;
 const GLOB_MAGIC = /[*?{[!]/u;
@@ -199,5 +192,10 @@ function carryRuff(source: CarrySource, path: string, lists: CarriedConfiguratio
             note: 'Inherited Ruff configuration retained; effective exclusions are represented in gspot configuration',
         });
 }
+
+export const RUFF_SOURCE = z.union([
+    RUFF_LINT.extend({ extend: z.string().min(1).optional() }),
+    z.strictObject({ lint: RUFF_LINT, extend: z.string().min(1).optional() }),
+]);
 
 export const ruffImporter = { schema: RUFF_SOURCE, carry: carryRuff };

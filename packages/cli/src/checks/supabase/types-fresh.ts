@@ -1,10 +1,9 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding when tools.supabase.types_file differs from the types the CLI writes. Without the setting the check passes.

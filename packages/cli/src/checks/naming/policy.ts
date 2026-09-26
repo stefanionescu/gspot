@@ -2,12 +2,21 @@ import { compact } from '#cli/policy/normalize.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
-import type { ExposedSettings } from '#cli/policy/settings.ts';
-import type { Identifier } from '#cli/checks/naming/extract.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { CATEGORY_PARENTS } from '#cli/checks/naming/categories.ts';
 import { settingValue, policyTables } from '#cli/policy/settings.ts';
-import type { NamingSettings, NamingRule, Policy } from '#cli/policy/normalize.ts';
+import type { ExposedSettings, NamingRule, NamingSettings, Policy } from '#cli/types/policy/policy.ts';
+
+import type {
+    Identifier,
+    CategoryLimits,
+    EffectivePolicy,
+    PathRule,
+    ShippedLanguage,
+    ShippedPolicy,
+    ShippedRule,
+    Term,
+} from '#cli/types/checks/naming.ts';
 
 const POLICY_ASSET = 'packages/cli/configurations/policy/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
@@ -190,72 +199,3 @@ export function limitsUnderRules(policy: EffectivePolicy, identifier: Identifier
     const caseRule = rules.findLast((rule) => rule.caseNames !== undefined);
     return caseRule?.caseNames === undefined ? base : { ...base, caseNames: caseRule.caseNames };
 }
-
-/** The shipped policy file, packages/cli/configurations/policy/naming/policy.json. */
-export type ShippedPolicy = {
-    version: number;
-    matching: { wholeParts: boolean; caseInsensitive: boolean };
-    banDigits: boolean;
-    banDuplicateWords: boolean;
-    groups: Record<string, { removable: boolean; terms: string[] }>;
-    reserved: { term: string; allowedFor: string[] }[];
-    external: string[];
-    languages: Record<string, ShippedLanguage>;
-    rules: ShippedRule[];
-};
-
-/** One language's table in the shipped policy. */
-export type ShippedLanguage = {
-    maxChars: number;
-    maxWords: number;
-    acronyms: 'word' | 'initialism' | 'lower';
-    categories: Record<string, { case: string[] }>;
-};
-
-/** One path-scoped rule in the shipped policy. */
-export type ShippedRule = {
-    paths: string[];
-    languages?: string[] | undefined;
-    categories?: string[] | undefined;
-    names?: string[] | undefined;
-    exclude?: boolean | undefined;
-    reason?: string | undefined;
-    allowDigits?: boolean | undefined;
-    allowDuplicateWords?: boolean | undefined;
-    structuralPrefix?: string | undefined;
-    case?: string[] | undefined;
-};
-
-/** A banned term split into parts, with where it came from. */
-export type Term = { term: string; parts: string[]; source: string };
-
-/** A path-scoped rule, compiled. */
-export type PathRule = {
-    isPath: (path: string) => boolean;
-    languages: Set<string> | undefined;
-    categories: Set<string> | undefined;
-    names: Set<string> | undefined;
-    isExcluding: boolean;
-    isDigitsAllowed: boolean;
-    isDuplicatesAllowed: boolean;
-    structuralPrefix: RegExp | undefined;
-    caseNames: string[] | undefined;
-    source: string;
-};
-
-/** The ceilings and cases one identifier category gets. */
-export type CategoryLimits = { caseNames: string[]; maxChars: number; maxWords: number };
-
-/** The policy after gspot.toml is merged in, ready to validate against. */
-export type EffectivePolicy = {
-    terms: Term[];
-    reserved: Map<string, string[]>;
-    external: Set<string>;
-    allowed: Map<string, string | undefined>;
-    contractProperties: Map<string, Set<string>>;
-    rules: PathRule[];
-    languages: Record<string, ShippedLanguage>;
-    limitsFor: (language: string, category: string) => CategoryLimits;
-    isDigitsBanned: boolean;
-    isDuplicatesBanned: boolean;
-};

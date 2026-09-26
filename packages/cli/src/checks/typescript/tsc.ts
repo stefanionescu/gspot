@@ -1,17 +1,16 @@
 import ts from 'typescript';
 import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {
     if (visited.has(path)) return;

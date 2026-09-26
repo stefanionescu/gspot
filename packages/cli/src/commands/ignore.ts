@@ -6,20 +6,11 @@ import { allChecks } from '#cli/configurations/listing.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { PolicyError, readPolicy } from '#cli/policy/read.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
 import { directoryOf, listFlag, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
-
-type IgnoreOptions = {
-    cwd: string;
-    check: string;
-    paths?: string[];
-    rule?: string;
-    reason?: string;
-    remove: boolean;
-};
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {

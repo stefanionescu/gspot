@@ -40,5 +40,3 @@ export function isRepositoryPath(key: string, value: unknown): boolean {
         (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
     );
 }
-
-export type ProfileTables = z.infer<typeof profileSchema>;

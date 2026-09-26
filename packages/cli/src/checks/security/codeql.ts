@@ -2,9 +2,7 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { toolPin } from '#cli/tools/probe.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
@@ -12,8 +10,8 @@ import { isAbsolute, join, relative, sep } from 'node:path';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-
-type AcceptedResult = { rule: string; paths: string[]; reason: string };
+import type { AcceptedResult } from '#cli/types/checks/security.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const TOOL = 'codeql';
 const DEFAULT_SUITE = 'security-extended';

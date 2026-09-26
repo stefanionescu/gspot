@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 // Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';

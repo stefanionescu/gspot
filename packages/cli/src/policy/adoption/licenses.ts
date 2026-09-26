@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import parseLicense from 'spdx-expression-parse';
 import { licenseResponse } from '#cli/evaluation/protocol.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
 import { asList, asStrings } from '#cli/policy/adoption/source.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { appendSetting, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 

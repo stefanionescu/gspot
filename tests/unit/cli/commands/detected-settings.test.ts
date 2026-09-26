@@ -1,8 +1,7 @@
 import { expect, test } from 'bun:test';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
 
 const manifests = configurationManifests();
 const selected = (...names: string[]) => names.map((name) => manifests.get(name)!);

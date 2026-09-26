@@ -1,6 +1,5 @@
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { Policy, RepositoryCheck } from '#cli/policy/normalize.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { Policy, RepositoryCheck, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 /**
  * Describe the persistent policy selection independently of files or tool availability.

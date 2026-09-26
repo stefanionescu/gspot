@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const SHOWN_LINES = 3;
 const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;

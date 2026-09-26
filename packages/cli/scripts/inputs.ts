@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { Command, CommanderError } from 'commander';
-import { SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
+import { SWIFT_GRAMMAR } from '#cli/types/platform.ts';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;

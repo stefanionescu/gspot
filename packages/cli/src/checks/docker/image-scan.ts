@@ -2,13 +2,12 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 import { join } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { scopeFile } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const FINDINGS_EXIT = 10;
 const SHOWN_FINDINGS = 20;

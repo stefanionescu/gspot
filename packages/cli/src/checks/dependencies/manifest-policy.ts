@@ -1,11 +1,9 @@
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { LOCKFILES } from '#cli/repository/locked-packages.ts';
+import type { Reporter } from '#cli/types/checks/dependencies.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { PackageManifest } from '#cli/repository/manifests.ts';
-
-type Reporter = (file: string, rule: string, text: string) => Finding;
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { PackageManifest } from '#cli/types/repository/repository.ts';
 
 const MANIFEST = 'package.json';
 

@@ -1,9 +1,13 @@
 import { posix } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { ScriptFile, ScriptIndex } from '#cli/checks/structure/parser.ts';
-import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 
+import type {
+    ScriptFile,
+    ScriptIndex,
+    StructureAnalysis as Analysis,
+    StructureContext,
+} from '#cli/types/checks/structure.ts';
 import {
     BOUNDARY_HEADER,
     BOUNDARY_HEADER_WINDOW,

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import { carriedTool, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 

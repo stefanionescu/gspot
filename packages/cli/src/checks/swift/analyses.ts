@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { SwiftReader } from '#cli/checks/swift/types.ts';
+import type { SwiftReader } from '#cli/types/checks/swift.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
 import { duplicateFunctions, trivialFunctions } from '#cli/checks/swift/bodies.ts';
 import { environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';

@@ -1,7 +1,6 @@
 import { posix } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { SUPABASE_CONFIG, functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const MIGRATION_NAME = /^\d{14}_[a-z][a-z\d_]*\.sql$/u;

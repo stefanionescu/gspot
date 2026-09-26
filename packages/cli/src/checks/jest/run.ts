@@ -2,45 +2,21 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { EngineInput } from '#cli/checks/input.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { JestRun, Suite, TestReport } from '#cli/types/checks/jest.ts';
 import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
-const reportSchema = z.object({
-    success: z.boolean(),
-    numTotalTests: z.number().int().nonnegative(),
-    numRuntimeErrorTestSuites: z.number().int().nonnegative(),
-    testResults: z.array(
-        z.object({
-            name: z.string().min(1),
-            assertionResults: z.array(
-                z.object({
-                    fullName: z.string(),
-                    status: z.enum(['passed', 'failed', 'skipped', 'pending', 'todo', 'disabled', 'focused']),
-                    failureMessages: z.array(z.string()),
-                    location: z
-                        .object({ line: z.number().int().positive(), column: z.number().int().nonnegative() })
-                        .nullable()
-                        .optional(),
-                }),
-            ),
-        }),
-    ),
-});
 const metric = z.object({ pct: jestPercentage });
 const coverageSchema = z.object({
     total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
 });
-
-type TestReport = z.infer<typeof reportSchema>;
-type Suite = TestReport['testResults'][number];
-type Run = { input: EngineInput; source: string; work: string };
 
 // The Jest command: coverage on, one worker, machine-readable reports into the work folder.
 function jestArguments(work: string, thresholds: Record<string, number>): string[] {
@@ -84,7 +60,7 @@ function suitePath(source: string, suite: Suite): string {
 }
 
 // One finding per failed assertion of a suite.
-function suiteFindings(run: Run, suite: Suite): Finding[] {
+function suiteFindings(run: JestRun, suite: Suite): Finding[] {
     const file = suitePath(run.source, suite);
     return suite.assertionResults
         .filter((assertion) => assertion.status === 'failed')
@@ -102,7 +78,11 @@ function suiteFindings(run: Run, suite: Suite): Finding[] {
 }
 
 // One finding per coverage dimension under its floor.
-function coverageFindings(run: Run, reports: ConfinedRoot, settings: z.infer<typeof jestCoverageSettings>): Finding[] {
+function coverageFindings(
+    run: JestRun,
+    reports: ConfinedRoot,
+    settings: z.infer<typeof jestCoverageSettings>,
+): Finding[] {
     const coverageFile = reports.read('coverage/coverage-summary.json');
     if (coverageFile === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
@@ -125,7 +105,7 @@ function coverageFindings(run: Run, reports: ConfinedRoot, settings: z.infer<typ
 
 // Runs Jest over the copied sources and reads its reports into findings.
 async function runJest(
-    run: Run,
+    run: JestRun,
     reports: ConfinedRoot,
     settings: z.infer<typeof jestCoverageSettings>,
 ): Promise<Finding[]> {
@@ -148,8 +128,30 @@ async function runJest(
     return findings;
 }
 
+export const reportSchema = z.object({
+    success: z.boolean(),
+    numTotalTests: z.number().int().nonnegative(),
+    numRuntimeErrorTestSuites: z.number().int().nonnegative(),
+    testResults: z.array(
+        z.object({
+            name: z.string().min(1),
+            assertionResults: z.array(
+                z.object({
+                    fullName: z.string(),
+                    status: z.enum(['passed', 'failed', 'skipped', 'pending', 'todo', 'disabled', 'focused']),
+                    failureMessages: z.array(z.string()),
+                    location: z
+                        .object({ line: z.number().int().positive(), column: z.number().int().nonnegative() })
+                        .nullable()
+                        .optional(),
+                }),
+            ),
+        }),
+    ),
+});
+
 /**
- * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
+ * JestRun repository-owned Jest against disposable sources and retain test and coverage failures as findings.
  * @param input the engine input
  * @returns the findings
  */

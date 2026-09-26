@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { InstallerPin, Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import type { InstallerPin, Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { MISE_BACKENDS, UV_INSTALLER, collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);

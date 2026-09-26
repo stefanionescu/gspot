@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/checks/postgres/types.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 
 async function migration(name: string, text: string): Promise<Migration> {

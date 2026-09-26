@@ -9,7 +9,7 @@ import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const TOOLING: Omit<ExistingTooling, 'configs'> = {
     hooks: [],

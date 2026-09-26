@@ -3,11 +3,11 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/render.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 async function input(root: string): Promise<EngineInput> {

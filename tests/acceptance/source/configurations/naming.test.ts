@@ -4,8 +4,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();

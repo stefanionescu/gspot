@@ -1,8 +1,8 @@
-import type { Identifier } from '#cli/checks/naming/extract.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { Identifier } from '#cli/types/checks/naming.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
-import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SqlFile, SqlNamed, SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 function columns(elements: unknown): SqlNamed[] {
     return nodesOf(elements, 'ColumnDef').map((column) => ({ category: 'columns', name: textOf(column['colname']) }));

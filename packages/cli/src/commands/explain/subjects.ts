@@ -1,15 +1,15 @@
 // Explain a check, tool rule, configuration, setting, or file path.
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { explainPath } from '#cli/commands/explain/file.ts';
-import type { ResolvedSetting } from '#cli/policy/settings.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
-import type { ListingRow } from '#cli/configurations/listing.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { allChecks, toRow } from '#cli/configurations/listing.ts';
+import type { ResolvedSetting } from '#cli/types/policy/policy.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
+import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
 
 const STAGES = ['commit', 'push', 'manual', 'message'];
@@ -71,8 +71,6 @@ function changeLine(spec: SettingSpec, key: string, scope: string): string {
     const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
     return `Change it: gspot set ${quoteArgument(key)} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
 }
-
-type SettingScope = { scope: string; shipped: unknown; current: ResolvedSetting | undefined };
 
 // The lines that say what a setting holds in a scope now, and where the value came from.
 function valueLines(shipped: unknown, current: ResolvedSetting | undefined): string[] {
@@ -175,10 +173,3 @@ export function explain(session: Session | undefined, subject: string): Explanat
     if (!('error' in named)) return named;
     return file ?? named;
 }
-
-export type Explanation = {
-    kind: 'check' | 'tool-rule' | 'configuration' | 'setting' | 'path';
-    subject: string;
-    text: string;
-    data: Record<string, unknown>;
-};

@@ -1,5 +1,6 @@
-import type { EngineInput } from '#cli/checks/input.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { ScriptFunction } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
 
 /**
@@ -45,25 +46,3 @@ export async function scriptFunctions(
 export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions.find((entry) => entry.start <= line && line <= entry.end);
 }
-
-/** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
-export type ScriptFunction = { name: string; start: number; end: number; body: string[]; statements: number };
-
-/** One shell script the engine reads. */
-export type ScriptFile = {
-    path: string;
-    text: string;
-    lines: string[];
-    functions: ScriptFunction[];
-    isExecutable: boolean;
-    /** Identifier tokens outside declaration lines, by name, with the lines they appear on. */
-    references: Map<string, number[]>;
-    /** Names assigned at the top level, outside every function. */
-    assignments: Set<string>;
-};
-
-/** The shell scripts of one scope, with the function owners across them. */
-export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
-
-/** How an analysis reports one problem in one file. */
-export type ScriptReport = (line: number, rule: string, message: string) => void;

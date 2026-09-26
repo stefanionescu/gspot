@@ -1,16 +1,13 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
 import { writeReport } from '#cli/output/report.ts';
-import type { PushReport } from '#cli/execution/report.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
-import type { PushSelection } from '#cli/repository/revisions/snapshot.ts';
+import type { PushReport } from '#cli/types/execution/execution.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
+import type { PushSelection } from '#cli/types/repository/revisions.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import type { CheckCommandResult, CheckOptions } from '#cli/commands/check/run.ts';
-
-type PushedRevision = PushSelection['revisions'][number];
-type Checked = PushReport['revisions'][number];
+import type { Checked, PushedRevision, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
 
 const CANCELED_EXIT = 2;
 

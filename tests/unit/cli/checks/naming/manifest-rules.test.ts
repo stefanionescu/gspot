@@ -1,7 +1,7 @@
 // A framework carries the naming rules of its own files in its manifest, and the repository's rules follow them (K-50).
 import { expect, test } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import type { Identifier } from '#cli/checks/naming/extract.ts';
+import type { Identifier } from '#cli/types/checks/naming.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { effectivePolicy, rulesFor } from '#cli/checks/naming/policy.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

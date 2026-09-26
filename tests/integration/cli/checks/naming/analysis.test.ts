@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { RunReport } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('SQL migration names retain their timestamp while enforcing snake case', async () => {
     await using sandbox = await testdir();

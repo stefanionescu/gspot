@@ -1,6 +1,6 @@
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
  * Report shell functions and files at or below the executable statement threshold.

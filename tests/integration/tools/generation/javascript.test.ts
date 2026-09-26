@@ -5,9 +5,9 @@ import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { existsSync, chmodSync, statSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test.each([false, true])(
     'JavaScript checking preserves repository resolution and excludes private ambient types (authored: %s)',

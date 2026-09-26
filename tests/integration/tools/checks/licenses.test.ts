@@ -3,10 +3,10 @@ import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 async function input(root: string): Promise<EngineInput> {

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
+import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 

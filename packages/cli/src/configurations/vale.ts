@@ -28,9 +28,6 @@ export const PROSE_FORMATS: [string, string][] = Object.entries(PROSE_GRAMMARS).
     grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
 );
 
-/** A script with no extension reads through stdin as Python, whose comments start the same way. */
-export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
-
 /** A file with no extension and a shell shebang reads as shell. */
 export const SCRIPT_TAG = 'shell';
 

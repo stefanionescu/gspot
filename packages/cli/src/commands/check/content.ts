@@ -4,17 +4,13 @@ import { writeReport } from '#cli/output/report.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { FixReport } from '#cli/execution/fixers.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { StageFilter } from '#cli/execution/plan.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
-import type { CheckCommandResult, CheckOptions } from '#cli/commands/check/run.ts';
-import type { ChangedSet, StagedSet } from '#cli/repository/revisions/selection.ts';
+import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
+import type { Revision, Selections, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
+import type { FixReport, RunOptions, RunReport, Session, StageFilter } from '#cli/types/execution/execution.ts';
 import { refusalFor, revisionSelection, selectedPaths, unknownSelection } from '#cli/commands/check/selection.ts';
 
 const CHANGED_SHOWN = 8;
@@ -130,12 +126,6 @@ function resultFor(
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
 }
 
-type Selections = {
-    changed: ChangedSet | undefined;
-    set: StagedSet | { staged: undefined; unstaged: number };
-    stage: StageFilter;
-};
-
 // What the run narrows to: the changed set, the staged set, and the stage.
 async function selectionsFor(
     session: Session,
@@ -194,15 +184,3 @@ export async function checkContent(
     if (refusal) return refusal;
     return runSelected(session, options, signal, revision, selections);
 }
-
-/** What a snapshot stands for: the staged index or a pushed commit, and where its report goes. */
-export type Revision = {
-    commits?: string[];
-    historyComplete?: boolean;
-    content: 'index' | 'commit';
-    cacheRoot: string;
-    reference: string;
-    reportRoot?: string;
-    staged?: StagedSet;
-    changed?: string[];
-};

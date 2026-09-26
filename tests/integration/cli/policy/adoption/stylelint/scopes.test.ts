@@ -10,7 +10,7 @@ import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { STYLELINT_TOOLING } from '#tests/support/cli/stylelint.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([

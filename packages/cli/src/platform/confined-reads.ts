@@ -2,9 +2,8 @@
 import { join, posix } from 'node:path';
 import { MODE_BITS } from '#cli/platform/file-modes.ts';
 import { lstatSync, mkdirSync, readFileSync, readlinkSync, type Stats } from 'node:fs';
-import { type FileSnapshot, fileMode, mutationPath, nativePath, privateTarget } from '#cli/platform/safe-paths.ts';
-
-type Proposed = ReadonlyMap<string, FileSnapshot | undefined>;
+import type { FileSnapshot, Confinement, PathFormat, Proposed } from '#cli/types/platform.ts';
+import { fileMode, mutationPath, nativePath, privateTarget } from '#cli/platform/safe-paths.ts';
 
 const PORTABLE_LINK_TARGET = /[\\:\p{Cc}]/u;
 
@@ -133,12 +132,3 @@ export function validateSnapshot(
     assertLinkDestination(confinement, path, destination, proposed);
     return target;
 }
-
-export type PathFormat = 'portable' | 'native';
-
-export type Confinement = {
-    canonical: string;
-    pathFormat: PathFormat;
-    partsOf: (path: string) => string[];
-    locks: Map<string, string>;
-};

@@ -1,6 +1,5 @@
 import { splitParts } from '#cli/checks/naming/split.ts';
-import type { Identifier } from '#cli/checks/naming/extract.ts';
-import type { EffectivePolicy, Term } from '#cli/checks/naming/policy.ts';
+import type { EffectivePolicy, Identifier, Term } from '#cli/types/checks/naming.ts';
 
 const RESERVED_USES: Record<string, string[]> = {
     directory: ['directories', 'packages'],

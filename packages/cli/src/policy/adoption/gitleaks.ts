@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asList, asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import { appendSetting, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 // How an allowlist regex is applied travels with it: against the line, the match or the secret, and whether every part must hold.
 function targetKeys(entry: TomlTable): { regex_target?: string; condition?: string } {

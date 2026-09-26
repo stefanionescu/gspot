@@ -3,12 +3,11 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const MANIFEST = 'pyproject.toml';
 const importConfiguration = z.object({

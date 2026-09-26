@@ -1,12 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
 import { gixyRules } from '#cli/repository/gixy-rules.ts';
 import { valeRules } from '#cli/repository/vale-rules.ts';
 import { sqlfluffRules } from '#cli/repository/sqlfluff.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
 import { parse as parseJson, type ParseError } from 'jsonc-parser';
+import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
 import { javascriptRules } from '#cli/repository/javascript-rules.ts';
 import { shellcheckRules } from '#cli/repository/shellcheck-rules.ts';

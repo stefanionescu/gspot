@@ -1,13 +1,11 @@
 // Which files a planned check runs over: what it claims, less excluded and child-scope paths, narrowed to a selection.
-import type { Session } from '#cli/execution/session.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { configurationName } from '#cli/configurations/targets.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { PlanContext, PlanEntry, PlannedCheck } from '#cli/execution/plan.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
+import type { PlanContext, PlanEntry, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {

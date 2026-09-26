@@ -2,16 +2,16 @@ import type { Colors } from 'picocolors/types';
 import { probeTool } from '#cli/tools/probe.ts';
 import { collectPins } from '#cli/tools/pins.ts';
 import { colors } from '#cli/output/messages.ts';
-import type { ToolProbe } from '#cli/tools/probe.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import type { ToolProbe } from '#cli/types/tools/tools.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
-import type { CoverageReport } from '#cli/execution/coverage.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
+import type { ChangeKey, ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;
@@ -190,33 +190,3 @@ export function doctorText(report: DoctorReport): string {
     ];
     return `${lines.join('\n')}\n`;
 }
-
-export type ChangeReport = {
-    detectedNotSelected: { configuration: string; evidence: string; command: string }[];
-    recommendedNotSelected: { configuration: string; evidence: string; command: string }[];
-    configurationNotOwned: { path: string; note: string; command: string }[];
-    changedOutsideGspot: { path: string; note: string; command: string }[];
-    pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
-};
-
-export type DoctorReport = {
-    submodules: string[];
-    tools: ToolProbe[];
-    coverage: CoverageReport;
-    changes: ChangeReport;
-    hooks: string;
-    ci: string;
-    rules: { files: number };
-    version: { running: string; pinned?: string };
-    exitCode: number;
-};
-
-export type ChangeKey =
-    | 'detectedNotSelected'
-    | 'recommendedNotSelected'
-    | 'configurationNotOwned'
-    | 'changedOutsideGspot';
-
-export type ChangeRow = { path: string; note: string; command: string };
-
-export type DoctorOptions = { cwd: string };

@@ -5,10 +5,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { delimiter, dirname, join } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import type { InstallJson } from '#cli/commands/install.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
 

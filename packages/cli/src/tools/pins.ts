@@ -1,4 +1,4 @@
-import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 
 export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
 

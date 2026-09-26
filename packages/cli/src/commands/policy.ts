@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { PolicyError } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Mutation } from '#cli/policy/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import type { Mutation } from '#cli/types/policy/policy.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
 
 /**

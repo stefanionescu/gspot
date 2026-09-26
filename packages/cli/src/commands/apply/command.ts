@@ -3,16 +3,16 @@ import { emitAll } from '#cli/generation/render.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
-import type { DriftEntry } from '#cli/lifecycle/drift.ts';
-import type { ApplyReport } from '#cli/lifecycle/apply.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
+import type { ApplyReport, DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { ApplyOptions, ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -107,11 +107,6 @@ export function registerApply(program: Command): void {
         });
 }
 
-export type ApplyOptions = {
-    cwd: string;
-    isDryRun: boolean;
-};
-
 /**
  * Generates configuration or previews proposed changes without writing.
  * @param options the parsed flags
@@ -124,11 +119,3 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const report = await applyAll(session);
     return { text: reportText(report), json: report, exitCode: 0 };
 }
-
-/** The JSON a dry-run apply prints: the version pin, the drifted files, and the notes of the proposal. */
-export type ApplyPreviewJson = {
-    isDryRun: true;
-    pin: { from: string | undefined; to: string };
-    drift: DriftEntry[];
-    notes: string[];
-};

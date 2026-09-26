@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { shebangInterpreter } from '#cli/repository/shebang.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { claimedByClaims, isClaimed } from '#cli/configurations/claims.ts';
 import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';

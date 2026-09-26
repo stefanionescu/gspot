@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toolPin } from '#cli/tools/probe.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
 import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
+import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { stylelintResponse, stylelintSource } from '#cli/evaluation/protocol.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
-import { carriedTool, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
 
 /**
  * Resolve static inheritance from observed files, retaining every input for publication-time validation.

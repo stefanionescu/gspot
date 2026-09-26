@@ -1,8 +1,9 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { tmpdir } from 'node:os';
 import { PERMISSION_BITS } from '#cli/platform/file-modes.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
 
 import {
     constants,
@@ -22,16 +23,6 @@ import {
 
 const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
 const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
-
-type Copy = { source: string; target: string };
-type Scratch = {
-    root: string;
-    scratch: string;
-    files: ConfinedRoot;
-    copies: Map<string, string>;
-    pending: Copy[];
-    fileLinks: Copy[];
-};
 
 const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE } as const;
 

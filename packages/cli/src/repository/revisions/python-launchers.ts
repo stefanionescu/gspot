@@ -3,9 +3,9 @@ import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { basename, isAbsolute, join, posix } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 import { relocateWindowsLauncher } from '#cli/repository/windows-launcher.ts';
+import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 
 // The local file header signature that opens a ZIP archive.
 const ZIP_SIGNATURE = Buffer.from('PK\u0003\u0004');
@@ -200,15 +200,3 @@ export async function relocateLaunchers(context: RelocationContext, launcher: Py
         if (entry.isFile()) await relocateLauncherFile(context, launcher, entry.name, sourcePaths);
     }
 }
-
-/** An installed virtual environment whose launchers and loader metadata name working-tree paths. */
-export type PythonLauncher = {
-    directory: string;
-    source: string;
-    names: [string, ...string[]];
-    sitePackages: string;
-    hosts: ReadonlySet<string>;
-};
-
-/** The snapshot the relocation writes, the roots it reads, and the cancellation it honours. */
-export type RelocationContext = { root: string; snapshot: string; selected: ConfinedRoot; cancelSignal?: AbortSignal };

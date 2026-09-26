@@ -1,10 +1,13 @@
 // Replacing files under a confined root atomically, and the lock that keeps one lifecycle writer at a time.
+// Writes the bytes and mode of a regular file to the staging path, which must not exist yet.
+
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { sameSnapshot } from '#cli/platform/safe-paths.ts';
 import { OWNER_WRITE_BIT, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
-import { type FileSnapshot, sameSnapshot } from '#cli/platform/safe-paths.ts';
-import { type Confinement, readEntry, resolveParent, validateSnapshot } from '#cli/platform/confined-reads.ts';
+import type { Staging, Confinement, FileSnapshot } from '#cli/types/platform.ts';
+import { readEntry, resolveParent, validateSnapshot } from '#cli/platform/confined-reads.ts';
 
 import {
     closeSync,
@@ -19,9 +22,6 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-type Staging = { confinement: Confinement; path: string; target: string; temporary: string };
-
-// Writes the bytes and mode of a regular file to the staging path, which must not exist yet.
 // A staging file that cannot be completed is removed before the error leaves.
 function stageFile(temporary: string, value: FileSnapshot): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);

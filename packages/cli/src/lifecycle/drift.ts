@@ -1,14 +1,15 @@
 import { createTwoFilesPatch } from 'diff';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import { CACHE_DIRECTORY } from '#cli/platform/paths.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
+import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
+import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
-import type { GeneratedProposal } from '#cli/generation/proposal.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 
@@ -153,11 +154,3 @@ export function computeDrift(
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
 }
-
-export type DriftEntry = {
-    path: string;
-    kind: 'changed' | 'missing' | 'stray' | 'conflict';
-    diff?: string;
-    rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
-    ruleError?: string;
-};

@@ -5,9 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
-
-type Dependencies = Record<string, string>;
-type BunPackage = [string, string, Record<string, unknown>, string];
+import type { BunPackage, Dependencies, LockName } from '#cli/types/tools/packages.ts';
 
 const CONFLICT_MARKER = /^(?:<{7}|={7}|>{7})/mu;
 const HTTP_URL = /^https?:\/\//u;
@@ -156,8 +154,3 @@ export function portableBunLock(content: string, env: Record<string, string>): s
         );
     return edited;
 }
-
-/** The lock file each package manager writes. */
-export const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;
-
-export type LockName = keyof typeof LOCKS;

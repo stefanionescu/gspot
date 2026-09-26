@@ -5,7 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import type { CommandFailureJson } from '#cli/commands/print-result.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 test.each([
     { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },

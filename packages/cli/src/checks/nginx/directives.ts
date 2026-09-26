@@ -1,9 +1,9 @@
+import type { DirectiveScan } from '#cli/types/checks/nginx.ts';
+
 const ESCAPES: Record<string, string> = { t: '\t', r: '\r', n: '\n', '"': '"', "'": "'", '\\': '\\' };
 const WORD_START_STOPS = /[\s"'{};#\\]/u;
 const WORD_STOPS = /[\s{};\\]/u;
 const PUNCTUATION = new Set([';', '{', '}']);
-
-type Scan = { token: string | undefined; end: number };
 
 // The index just past a quoted argument that opens at start, or -1 when the quote never closes.
 function quotedEnd(text: string, start: number, quote: string): number {
@@ -44,26 +44,26 @@ function wordEnd(text: string, at: number): number {
 }
 
 // A comment: the hash to the end of the line.
-function commentAt(text: string, at: number): Scan {
+function commentAt(text: string, at: number): DirectiveScan {
     const end = text.indexOf('\n', at);
     const stop = end === -1 ? text.length : end;
     return { token: text.slice(at, stop), end: stop };
 }
 
 // A quoted argument, or the skipped quote when it never closes.
-function quotedAt(text: string, at: number): Scan {
+function quotedAt(text: string, at: number): DirectiveScan {
     const end = quotedEnd(text, at, text[at] ?? '');
     return end === -1 ? { token: undefined, end: at + 1 } : { token: text.slice(at, end + 1), end: end + 1 };
 }
 
 // A bare word, or the skipped character when none starts here.
-function wordAt(text: string, at: number): Scan {
+function wordAt(text: string, at: number): DirectiveScan {
     const end = wordEnd(text, at);
     return end === at ? { token: undefined, end: at + 1 } : { token: text.slice(at, end), end };
 }
 
 // The comment, punctuation, quoted argument, or bare word at at; a character that starts none is skipped.
-function scanAt(text: string, at: number): Scan {
+function scanAt(text: string, at: number): DirectiveScan {
     const char = text[at] ?? '';
     if (/\s/u.test(char)) return { token: undefined, end: at + 1 };
     if (char === '#') return commentAt(text, at);

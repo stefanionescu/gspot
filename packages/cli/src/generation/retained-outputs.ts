@@ -1,18 +1,8 @@
 // Generated files withdrawn where the repository keeps its own editor or ESLint configuration.
 import { posix } from 'node:path';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
-import type { GeneratedProposal } from '#cli/generation/proposal.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { Retention, GeneratedProposal } from '#cli/types/generation.ts';
+import type { EditorconfigAdoption, Policy } from '#cli/types/policy/policy.ts';
 import { retainedConfigurationPaths } from '#cli/generation/retained-config.ts';
-
-type Retention = {
-    root: string;
-    policy: Policy;
-    files: TrackedFile[];
-    takeover: ReadonlyMap<string, FileSnapshot> | undefined;
-};
 
 // The authored configuration files of the tools that the repository keeps.
 function retainedPaths(retention: Retention, tools: string[]): string[] {

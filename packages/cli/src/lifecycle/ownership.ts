@@ -1,17 +1,15 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
+import { openJournal } from '#cli/lifecycle/ownership-journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership-restoration.ts';
-import type { OwnershipEntry, OwnershipState } from '#cli/lifecycle/journal.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { applyProposal, applyProposals } from '#cli/lifecycle/ownership-apply.ts';
-import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
-import { type FileProposal, type Journal, openJournal } from '#cli/lifecycle/ownership-journal.ts';
+import type { LifecycleOwner, Journal, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     proposeBlock,
@@ -19,8 +17,6 @@ import {
     proposeReplacement,
     proposeRetirement,
 } from '#cli/lifecycle/ownership-proposals.ts';
-
-type Outcome = 'changed' | 'unchanged' | 'preserved';
 
 const activeMutation = new AsyncLocalStorage<Map<string, LifecycleOwner>>();
 // The owner's operations over an open journal.
@@ -151,40 +147,3 @@ export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): O
         files.close();
     }
 }
-
-export type LifecycleOwner = {
-    beginInstallation(kind: 'npm' | 'python'): void;
-    finishInstallation(kind: 'npm' | 'python'): void;
-    proposeConfiguration(
-        path: string,
-        format: ConfigurationFormat,
-        changes: { path: (string | number)[]; value: unknown }[],
-        takeover?: boolean,
-    ): FileProposal;
-    proposeReplacement(
-        path: string,
-        next: FileSnapshot,
-        kind: OwnershipEntry['kind'],
-        takeover?: boolean,
-        expected?: FileSnapshot,
-        proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
-    ): FileProposal;
-    proposeBlock(path: string, body: string, style: BlockStyle): FileProposal;
-    applyProposal(proposal: FileProposal): Outcome;
-    applyProposals(proposals: FileProposal[]): Outcome[];
-    replaceBlock(path: string, body: string, style: BlockStyle): Outcome;
-    read(path: string): FileSnapshot | undefined;
-    paths(): string[];
-    installedPaths(): string[];
-    proposeRetirement(path: string, expected: FileSnapshot): FileProposal;
-    replace(
-        path: string,
-        next: FileSnapshot,
-        kind: OwnershipEntry['kind'],
-        takeover?: boolean,
-        expected?: FileSnapshot,
-    ): Outcome;
-    proposeRestoration(path: string, original?: FileSnapshot): FileProposal;
-    restore(path: string, original?: FileSnapshot): 'changed' | 'preserved';
-    close(): void;
-};

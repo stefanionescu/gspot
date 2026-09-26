@@ -1,5 +1,5 @@
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';

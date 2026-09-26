@@ -1,5 +1,6 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { OWNER_WRITE_BIT, READ_ONLY_FILE, WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 
 const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
@@ -8,7 +9,7 @@ const TRAILING_DOT_OR_SPACE = /[. ]$/u;
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {
-    if (part === '' || part === '.' || part === '..') return true;
+    if (['', '.', '..'].includes(part)) return true;
     if (UNSAFE_CHARACTERS.test(part) || TRAILING_DOT_OR_SPACE.test(part)) return true;
     return DEVICE_NAME.test(part);
 }
@@ -83,5 +84,3 @@ export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);
 }
-
-export type FileSnapshot = { bytes: Buffer; mode: number; isLink?: true };

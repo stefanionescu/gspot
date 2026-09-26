@@ -1,19 +1,15 @@
 // Keeping every line of gspot.toml readable: an array that runs past the width goes one item per line.
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import type { Edit, KeyValue, TomlBlock, Value } from '#cli/types/policy/policy.ts';
 
 const DEFAULT_INDENT_WIDTH = 4;
-
-type Block = ReturnType<typeof parseDocument>['cst'][number];
-type KeyValue = Extract<Block, { type: 'KeyValue' }>;
-type Value = KeyValue['value'];
-type Edit = { start: number; end: number; replacement: string };
 
 function isValue(node: { type: string }): node is Value {
     return ['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable'].includes(node.type);
 }
 
-function keyValues(blocks: Block[]): KeyValue[] {
+function keyValues(blocks: TomlBlock[]): KeyValue[] {
     return blocks.flatMap((block) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- toml-patch does not export its node kinds
         if (block.type === 'KeyValue') return [block];

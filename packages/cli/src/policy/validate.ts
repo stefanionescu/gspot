@@ -1,12 +1,11 @@
 import { nearMatches } from '#cli/policy/near.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { PathSegment, Policy, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 /**
  * The configuration names a policy selects that no manifest defines, each at its declaration.

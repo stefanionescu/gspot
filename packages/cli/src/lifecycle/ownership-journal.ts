@@ -1,20 +1,21 @@
 // The durable ownership journal an owner works from: its records, its recovery of an interrupted mutation, and
 // the backups it takes before a file changes hands.
-import type { z } from 'zod';
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
-import type { OwnershipEntry, OwnershipState, identitySchema, originalSchema } from '#cli/lifecycle/journal.ts';
-
-type Identity = z.infer<typeof identitySchema>;
-type Original = z.infer<typeof originalSchema>;
-type Pending = NonNullable<OwnershipState['pending']>[number];
+import type {
+    Identity,
+    Journal,
+    Original,
+    OwnershipEntry,
+    OwnershipState,
+    PendingOwnership,
+} from '#cli/types/lifecycle/lifecycle.ts';
 
 // Restores the file an interrupted replacement removed, from the backup the journal recorded for it.
-function restoreFromBackup(confined: ConfinedRoot, pending: Pending, backup: Original): void {
+function restoreFromBackup(confined: ConfinedRoot, pending: PendingOwnership, backup: Original): void {
     const saved = confined.read(backup.backup);
     if (saved === undefined || identity(saved).hash !== backup.hash)
         throw new Error(`Interrupted replacement backup is missing or changed: ${pending.path}`);
@@ -26,7 +27,7 @@ function restoreFromBackup(confined: ConfinedRoot, pending: Pending, backup: Ori
 }
 
 // The file an interrupted mutation touched, read as a link when either side of the mutation was one.
-function currentOf(confined: ConfinedRoot, pending: Pending): FileSnapshot | undefined {
+function currentOf(confined: ConfinedRoot, pending: PendingOwnership): FileSnapshot | undefined {
     const isLink = pending.before?.isLink === true || pending.after?.isLink === true;
     return isLink ? confined.readEntry(pending.path) : confined.read(pending.path);
 }
@@ -34,8 +35,8 @@ function currentOf(confined: ConfinedRoot, pending: Pending): FileSnapshot | und
 // Settles one interrupted mutation: accepted when it completed, restored when the file vanished, refused when edited.
 function recoverPending(
     confined: ConfinedRoot,
-    pending: Pending,
-    accept: (pending: Pending) => void,
+    pending: PendingOwnership,
+    accept: (pending: PendingOwnership) => void,
     recovery: string,
 ): void {
     const current = currentOf(confined, pending);
@@ -67,8 +68,8 @@ function readState(recorded: FileSnapshot | undefined): OwnershipState {
 // Settles every interrupted mutation, regular files before links so a restored link finds its target.
 function recoverAll(
     confined: ConfinedRoot,
-    pending: Pending[],
-    accept: (pending: Pending) => void,
+    pending: PendingOwnership[],
+    accept: (pending: PendingOwnership) => void,
     recovery: string,
 ): void {
     const ordered = pending.toSorted(
@@ -152,7 +153,7 @@ export function openJournal(confined: ConfinedRoot, stateDirectory: string): Jou
         confined.write(record, next, recorded);
         recorded = next;
     };
-    const accept = (pending: Pending): void => {
+    const accept = (pending: PendingOwnership): void => {
         const key = normalizedKey(pending.path);
         if (pending.entry === undefined) entries.delete(key);
         else entries.set(key, pending.entry);
@@ -183,24 +184,3 @@ export function openJournal(confined: ConfinedRoot, stateDirectory: string): Jou
         },
     };
 }
-
-/** The open journal: the locked root, the recorded state, and the operations that read and write it. */
-export type Journal = {
-    confined: ConfinedRoot;
-    state: OwnershipState;
-    save(): void;
-    backup(path: string, file: FileSnapshot): Original;
-    entryFor(path: string): OwnershipEntry | undefined;
-    finish(): void;
-};
-
-/** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
-export type FileProposal = {
-    path: string;
-    current: FileSnapshot | undefined;
-    previous: OwnershipEntry | undefined;
-    status: 'changed' | 'unchanged' | 'preserved';
-    next?: FileSnapshot;
-    entry?: OwnershipEntry;
-    saveOriginal?: boolean;
-};

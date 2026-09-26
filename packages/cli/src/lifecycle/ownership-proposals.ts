@@ -1,17 +1,21 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
-import type { BlockStyle } from '#cli/lifecycle/managed-blocks.ts';
+import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration-plan.ts';
-import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
-import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';
 
-type Block = NonNullable<OwnershipEntry['block']>;
-type Span = ReturnType<typeof blockSpan>;
-type PlannedBlock = { nextText: string; block: Block };
+import type {
+    OwnedBlock,
+    PlannedBlock,
+    Span,
+    BlockStyle,
+    ConfigurationFormat,
+    FileProposal,
+    Journal,
+    OwnershipEntry,
+} from '#cli/types/lifecycle/lifecycle.ts';
 
 // Whether the current file must stay: an edited owned file without review, or an unowned file without takeover.
 function isPreservedReplacement(
@@ -66,7 +70,7 @@ function blockText(path: string, current: FileSnapshot | undefined): string {
 function updatedBlock(
     text: string,
     span: Span,
-    recorded: Block,
+    recorded: OwnedBlock,
     style: BlockStyle,
     body: string,
 ): PlannedBlock | undefined {

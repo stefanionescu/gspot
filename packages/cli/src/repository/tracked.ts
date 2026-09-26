@@ -3,10 +3,11 @@ import ignore, { type Ignore } from 'ignore';
 import { dirname, join, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/platform/safe-paths.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
+import type { RawEntry, SourceObservations } from '#cli/types/repository/repository.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
@@ -272,11 +273,3 @@ export function readSource(root: string, path: string, observations?: SourceObse
         files.close();
     }
 }
-
-export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
-
-/** Source bytes observed during one run, confined to its original repository root. */
-export type SourceObservations = {
-    root: string;
-    sources: Map<string, Buffer>;
-};

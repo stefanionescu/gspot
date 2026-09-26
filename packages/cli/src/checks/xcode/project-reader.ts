@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-
-type Plist = string | Plist[] | { [key: string]: Plist };
-type Token = { text: string; quoted: boolean; at: number };
+import type { Folder, Plist, ProjectObject, Token, XcodeProject } from '#cli/types/checks/xcode.ts';
 
 const PUNCTUATION = new Set(['{', '}', '(', ')', '=', ';', ',']);
 const WORD_CHARACTER = /[A-Za-z0-9_.$/+-]/u;
@@ -25,8 +23,6 @@ const objectSchema = z.object({
     targets: z.array(z.string()).optional(),
     projectDirPath: z.string().optional(),
 });
-const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), objectSchema) });
-
 // The index past the quoted text that opens before from, where a backslash escapes the next character, or -1.
 function quotedEnd(text: string, from: number): number {
     for (let at = from; at < text.length; at += 1) {
@@ -143,21 +139,10 @@ function parse(text: string): Plist {
     return result;
 }
 
-type ProjectObject = z.infer<typeof objectSchema>;
-type ProjectRoot = ProjectObject & { mainGroup: string };
-type Project = {
-    objects: Record<string, ProjectObject>;
-    root: ProjectRoot;
-    directory: string;
-    parents: Map<string, string>;
-    visiting: Set<string>;
-};
-type Folder = { path: string; excluded: Set<string> };
-
 const BUILD_SETTING = /\$[({]/u;
 
 // The object an id names, which must exist.
-function objectOf(project: Pick<Project, 'objects'>, id: string): ProjectObject {
+function objectOf(project: Pick<XcodeProject, 'objects'>, id: string): ProjectObject {
     const found = project.objects[id];
     if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
     return found;
@@ -176,7 +161,7 @@ function parentGroups(objects: Record<string, ProjectObject>): Map<string, strin
 }
 
 // The folder a group-relative object is resolved against: the project folder for the main group, else its parent's.
-function groupBase(project: Project, id: string): string {
+function groupBase(project: XcodeProject, id: string): string {
     if (id === project.root.mainGroup) return posix.join(project.directory, project.root.projectDirPath ?? '');
     const parent = project.parents.get(id);
     if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
@@ -184,7 +169,7 @@ function groupBase(project: Project, id: string): string {
 }
 
 // The folder an object's source tree starts from.
-function treeBase(project: Project, id: string, tree: string): string {
+function treeBase(project: XcodeProject, id: string, tree: string): string {
     if (tree === 'SOURCE_ROOT') return project.directory;
     if (tree === '<absolute>') return '/';
     if (tree === '<group>') return groupBase(project, id);
@@ -192,7 +177,7 @@ function treeBase(project: Project, id: string, tree: string): string {
 }
 
 // The repository-relative path of an object, following its groups up to the main group.
-function resolvePath(project: Project, id: string): string {
+function resolvePath(project: XcodeProject, id: string): string {
     if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
     project.visiting.add(id);
     const entry = objectOf(project, id);
@@ -204,7 +189,7 @@ function resolvePath(project: Project, id: string): string {
 }
 
 // The Swift files a target compiles, from its sources build phases.
-function targetSources(project: Project, target: ProjectObject): string[] {
+function targetSources(project: XcodeProject, target: ProjectObject): string[] {
     const phases = (target.buildPhases ?? []).map((phaseId) => objectOf(project, phaseId));
     return phases
         .filter((phase) => phase.isa === 'PBXSourcesBuildPhase')
@@ -218,7 +203,7 @@ function targetSources(project: Project, target: ProjectObject): string[] {
 }
 
 // The synchronized folders a target owns, each with the files its exceptions leave out.
-function targetFolders(project: Project, id: string, target: ProjectObject): Folder[] {
+function targetFolders(project: XcodeProject, id: string, target: ProjectObject): Folder[] {
     return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
         const group = objectOf(project, groupId);
         const path = resolvePath(project, groupId);
@@ -229,6 +214,8 @@ function targetFolders(project: Project, id: string, target: ProjectObject): Fol
         return { path: `${path}/`, excluded: new Set(excluded) };
     });
 }
+
+export const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), objectSchema) });
 
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
@@ -241,7 +228,7 @@ export function readProject(text: string, directory: string): { sources: Set<str
     const root = objectOf(parsed, parsed.rootObject);
     if (root.isa !== 'PBXProject' || root.mainGroup === undefined)
         throw new Error('The Xcode project has no main group.');
-    const project: Project = {
+    const project: XcodeProject = {
         objects: parsed.objects,
         root: { ...root, mainGroup: root.mainGroup },
         directory,

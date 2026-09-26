@@ -1,10 +1,12 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { run, runBinary } from '#cli/platform/spawn.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { GitEntry, SnapshotSource } from '#cli/types/repository/revisions.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
 
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
@@ -265,21 +267,3 @@ export async function withRevisionSnapshot<Result>(
         rmSync(snapshot, { recursive: true, force: true });
     }
 }
-
-export type SnapshotSource = { kind: 'index' } | { kind: 'commit'; object: string };
-
-export type PushRevision = {
-    object: string;
-    tree: string;
-    refs: string[];
-    commits: string[];
-    historyComplete: boolean;
-    paths?: string[];
-};
-
-export type PushSelection = {
-    revisions: PushRevision[];
-    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
-};
-
-export type GitEntry = { mode: string; object: string; path: string };

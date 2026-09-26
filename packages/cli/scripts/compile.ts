@@ -3,9 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { prepareInput } from './inputs.ts';
 import { releaseTargets } from './targets.ts';
 import { dirname, join, relative } from 'node:path';
+import { grammarPath } from '#cli/platform/assets.ts';
+import { SWIFT_GRAMMAR } from '#cli/types/platform.ts';
 import { grammarAssets, writeEntry } from './assets.ts';
 import { binaryNotices, dependencyNotices } from './notices.ts';
-import { grammarPath, SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const here = fileURLToPath(new URL('..', import.meta.url));

@@ -1,4 +1,5 @@
 import { fail, print, printJson } from '#cli/output/messages.ts';
+import type { CommandFailureJson, CommandResult } from '#cli/types/commands/commands.ts';
 
 const KNOWN_ERRORS = new Set([
     'PolicyError',
@@ -39,8 +40,3 @@ export async function printCommand(
         else throw error;
     }
 }
-
-export type CommandResult = { text: string; json: unknown; exitCode: number };
-
-/** The JSON a failed command prints: the error's name and message. */
-export type CommandFailureJson = { error: string; message: string };

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import { carriedTool } from '#cli/policy/adoption/results.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
-import { carriedTool, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 import { asRaw, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
 
 const MARKDOWN_SOURCE = z

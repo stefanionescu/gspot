@@ -1,4 +1,5 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
+import type { JsonFormat } from '#cli/types/generation.ts';
 
 function primitive(value: unknown): string | undefined {
     if (value === null || typeof value === 'number' || typeof value === 'boolean') return String(value);
@@ -68,5 +69,3 @@ export const GENERATED_JSON_KEY = '_gspot';
 export function jsonText(value: unknown, format: JsonFormat): string {
     return `${block(value, 0, format, 0)}\n`;
 }
-
-export type JsonFormat = { width: number; indent: number };

@@ -2,9 +2,10 @@ import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
 import { isInScope } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { Edge, EdgeSource, ImportIndex } from '#cli/types/checks/structure.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;
 const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
@@ -27,9 +28,6 @@ function modulePath(path: string, directory: string): string | undefined {
         throw error;
     }
 }
-
-type Edge = ImportIndex['edges'][number];
-type EdgeSource = { input: EngineInput; path: string; owned: Set<string>; scanner: Bun.Transpiler };
 
 // Refuses a file tree-sitter could not parse in full, naming the first place it lost the thread.
 function assertParsed(tree: NonNullable<Awaited<ReturnType<typeof parseSource>>>, path: string): void {
@@ -125,9 +123,3 @@ export async function scopeImports(input: EngineInput): Promise<ImportIndex> {
     scopes.set(key, index);
     return index;
 }
-
-export type ImportIndex = {
-    paths: string[];
-    importers: Map<string, Set<string>>;
-    edges: { from: string; to: string; source: string; line: number; column: number }[];
-};

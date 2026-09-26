@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { probeTool } from '#cli/tools/probe.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

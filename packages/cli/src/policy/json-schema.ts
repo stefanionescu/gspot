@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { SchemaNode } from '#cli/types/policy/policy.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
 
@@ -81,12 +82,3 @@ export function knownKeysAt(path: (string | number)[]): string[] {
 export function policyJsonSchemaText(): string {
     return `${JSON.stringify(policyJsonSchema(), null, JSON_INDENT)}\n`;
 }
-
-/** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
-export type SchemaNode = {
-    type?: string;
-    properties?: Record<string, SchemaNode>;
-    items?: SchemaNode;
-    additionalProperties?: SchemaNode | boolean;
-    anyOf?: SchemaNode[];
-};

@@ -2,21 +2,17 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { PolicyFiles } from '#cli/policy/read.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { installHint } from '#cli/tools/install-hints.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
-import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { locateCandidates, miseVersion, type PackageFacts, packageVersion } from '#cli/tools/locate.ts';
-
-type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
-type Probed = { root: string; cwd: string; tool: ToolPin; path: string; hint: string };
-type VersionObservation = { version: string } | { state: 'missing' | 'error'; note: string };
+import { locateCandidates, miseVersion, packageVersion } from '#cli/tools/locate.ts';
+import type { PackageFacts, Probed, ToolContext, ToolProbe, VersionObservation } from '#cli/types/tools/tools.ts';
 
 const VERSION_TIMEOUT_MS = 15_000;
 // What a mise shim prints when no configuration in reach names a version of the tool.
@@ -230,24 +226,6 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
     }
     return { name, provider: 'host', windows: true, installers: {} };
 }
-
-export type ToolProbe = {
-    name: string;
-    state: ToolState;
-    want?: string;
-    found?: string;
-    path?: string;
-    hint?: string;
-    note?: string;
-    floor?: string;
-};
-
-export type ToolContext = {
-    root: string;
-    cwd?: string;
-    probes: Map<string, ToolProbe>;
-    policyFiles?: PolicyFiles;
-};
 
 /** Thrown by an analysis when the command it runs is not installed. */
 export class MissingToolError extends Error {

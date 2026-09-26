@@ -3,10 +3,10 @@ import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { readSource } from '#cli/repository/tracked.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
+import type { Pruning } from '#cli/types/checks/swift.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
 
 // Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.
@@ -56,8 +56,6 @@ function removeStale(files: ConfinedRoot, path: string, isLink: boolean): void {
     const current = isLink ? files.readEntry(path) : files.read(path);
     if (current !== undefined) files.remove(path, current);
 }
-
-type Pruning = { folder: string; files: ConfinedRoot; desired: Map<string, FileSnapshot>; wanted: Set<string> };
 
 // Handles one entry under source/: a folder is queued and noted when unwanted, anything else unwanted is removed.
 function pruneEntry(pruning: Pruning, path: string, directories: string[], empty: string[]): void {

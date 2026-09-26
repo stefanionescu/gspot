@@ -1,7 +1,6 @@
 // A planted repository with one correction check whose command each test replaces with its own script.
 import { planRun } from '#cli/execution/plan.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
+import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
 /** A policy with one check whose correction exits 3 until a test gives it a script. */
 export const CORRECTION_POLICY = `version = 1

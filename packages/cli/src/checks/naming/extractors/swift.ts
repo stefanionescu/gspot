@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/checks/naming/extract.ts';
+import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
 
 const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
 const FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];

@@ -1,4 +1,4 @@
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
 import { MINIMUM_REASON_WORDS, REFUSED_REASONS } from '#cli/policy/reasons.ts';
 
 function isNumberLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {

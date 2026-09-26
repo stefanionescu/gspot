@@ -29,6 +29,7 @@ describe('build script arguments', () => {
                     'packages/cli/src/platform/paths.ts',
                     'packages/cli/src/platform/environment.ts',
                     'packages/cli/src/repository/hooks.ts',
+                    'packages/cli/src/types/platform.ts',
                     'packages/cli/scripts/inputs.ts',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
             ),

@@ -3,18 +3,18 @@ import { join, relative } from 'node:path';
 import { head } from '#cli/repository/tracked.ts';
 import { emitAll } from '#cli/generation/render.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { isOwned } from '#cli/policy/adoption/collect.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { MISE_CONFIG_PATH, pinnedTwice } from '#cli/tools/mise.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import type { ChangeReport, ChangeRow } from '#cli/commands/doctor/report.ts';
+import type { ChangeReport, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const HEAD_BYTES = 600;
 

@@ -1,12 +1,12 @@
 // The comment forms of an inline ignore. `marker` finds the comment and captures the check id; the
-
-import type { Finding } from '#cli/checks/result.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
-import type { IgnoreEntry } from '#cli/policy/normalize.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
+import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { IgnoreUse, InlineIgnore } from '#cli/types/execution/execution.ts';
 
 // reason is what follows `--` in the rest of the comment.
 const INLINE_IGNORE: Record<string, RegExp> = {
@@ -140,7 +140,3 @@ export function applyInlineIgnores(observations: SourceObservations, findings: F
             inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
     );
 }
-
-export type IgnoreUse = { entry: IgnoreEntry; matched: number };
-
-export type InlineIgnore = { line: number; check: string; reason?: string };

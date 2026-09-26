@@ -9,7 +9,7 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
 /**

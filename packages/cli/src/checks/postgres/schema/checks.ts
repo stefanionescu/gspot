@@ -1,11 +1,10 @@
-import type { Finding } from '#cli/checks/result.ts';
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { Declared } from '#cli/checks/postgres/types.ts';
+import type { Declared } from '#cli/types/checks/postgres.ts';
 // The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { schemaFacts, DEFAULT_SCHEMA } from '#cli/checks/postgres/schema/facts.ts';
 
 function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {

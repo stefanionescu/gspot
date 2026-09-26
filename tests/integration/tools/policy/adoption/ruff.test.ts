@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],

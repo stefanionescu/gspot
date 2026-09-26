@@ -2,6 +2,7 @@ import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
+import type { RuleFinding, RuleText, RulesLintReport } from '#cli/types/agents.ts';
 
 import {
     BOUNDARY_LAYERS,
@@ -200,12 +201,3 @@ export function isRulePath(path: string): boolean {
 export function lintRules(files: RuleText[]): RulesLintReport {
     return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
 }
-
-/** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */
-export type RuleFinding = { file: string; line: number; message: string };
-
-/** A rule file by its path relative to rules/. */
-export type RuleText = { path: string; text: string };
-
-/** The rule lint's result. */
-export type RulesLintReport = { findings: RuleFinding[]; files: number };

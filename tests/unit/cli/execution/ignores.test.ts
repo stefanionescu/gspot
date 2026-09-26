@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import type { Finding } from '#cli/checks/result.ts';
 import { applyIgnores } from '#cli/execution/ignores.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 
 const finding = (file: string, rule = 'r1', check = 'c/x'): Finding => ({
     check,

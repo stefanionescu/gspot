@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
 
 const CONFIGURATIONS = [
     'typescript',

@@ -3,16 +3,22 @@ import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { RawPolicy } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems } from '#cli/policy/problems.ts';
 import { parse as parseToml, TomlError } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
 import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
+
+import type {
+    PolicyFiles,
+    PolicyFinding,
+    PathSegment,
+    Policy,
+    PolicyProblem,
+    RawPolicy,
+} from '#cli/types/policy/policy.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');
@@ -235,14 +241,3 @@ export function readPolicy(root: string): PolicyFiles {
     const { policy, problems } = readPolicyText(text, 'gspot.toml', root);
     return { policy, path, text, problems };
 }
-
-export type PolicyFiles = {
-    policy: Policy;
-    path: string;
-    text: string;
-    /** The wrong entries reading dropped, each with its line; empty for a policy every command accepts. */
-    problems: PolicyFinding[];
-};
-
-/** A wrong entry or key of gspot.toml, where it is, and what is wrong with it. */
-export type PolicyFinding = PolicyProblem & { line: number; column: number };

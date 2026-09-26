@@ -1,10 +1,5 @@
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { PathSegment } from '#cli/policy/problems.ts';
-
-type Block = ReturnType<typeof parseDocument>['cst'][number];
-type KeyValue = Extract<Block, { type: 'KeyValue' }>;
-type Value = KeyValue['value'];
-type Position = Value['loc']['start'];
+import type { PathSegment, KeyValue, Position, Value } from '#cli/types/policy/policy.ts';
 
 function isValue(node: { type: string; loc: Value['loc'] }): node is Value {
     return ['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable'].includes(node.type);

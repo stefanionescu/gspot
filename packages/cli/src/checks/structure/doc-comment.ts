@@ -1,5 +1,4 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
-import type { ScriptFunction } from '#cli/checks/structure/parser.ts';
+import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 import { DOC_SECTIONS, ENTRY_FUNCTIONS, VAGUE_SUMMARY_WORDS } from '#cli/checks/structure/patterns.ts';
 
 const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;

@@ -1,15 +1,8 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { waitingSetting } from '#cli/policy/check-state.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import type { PlannedCheck, PlanOptions } from '#cli/execution/plan.ts';
-
-type Skip = PlannedCheck['skip'];
-type RuleSkip = {
-    applies: (spec: CheckSpec, check: PlannedCheck, hasGit: boolean) => boolean;
-    note: (spec: CheckSpec) => string;
-};
+import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import type { RuleSkip, Skip, PlanOptions, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
 const RULE_SKIPS: RuleSkip[] = [

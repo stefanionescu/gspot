@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#cli/checks/prose/syntax.ts';
 
 const MARKDOWN = new Set(['.md', '.mdx']);

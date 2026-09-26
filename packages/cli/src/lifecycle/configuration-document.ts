@@ -3,9 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ConfigurationDocument, ConfigurationFormat, KeyPath } from '#cli/types/lifecycle/lifecycle.ts';
 import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
-
-type KeyPath = (string | number)[];
 
 function jsonDocument(text: string) {
     const errors: ParseError[] = [];
@@ -150,12 +149,3 @@ export function hasConfiguration(
         files.close();
     }
 }
-
-export type ConfigurationFormat = 'json' | 'yaml' | 'toml';
-
-/** A configuration file read and edited by key path, keeping its comments and layout. */
-export type ConfigurationDocument = {
-    value(path: KeyPath): unknown;
-    set(path: KeyPath, value: unknown): void;
-    text(): string;
-};

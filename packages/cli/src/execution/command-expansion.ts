@@ -2,11 +2,17 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { isWorkspace } from '#cli/repository/scopes.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
+import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { configurationName, targetInScope } from '#cli/configurations/targets.ts';
+
+import type {
+    PlannedCheck,
+    Session,
+    CommandPart,
+    Substitutions,
+    ToolInvocation,
+} from '#cli/types/execution/execution.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
@@ -195,16 +201,3 @@ export function perFileCommands(parts: CommandPart[], files: string[]): ToolInvo
         ...(hasFile ? { file } : {}),
     }));
 }
-
-export type CommandPart = string | { file: true };
-
-export type Substitutions = {
-    files: string[];
-    scope: string;
-    root: string;
-    messageFile?: string;
-    indent: number;
-};
-
-/** A tool command expanded and ready to spawn: once, or once per file. */
-export type ToolInvocation = { argv: string[]; file?: string };

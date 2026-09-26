@@ -2,41 +2,35 @@
 import { print } from '#cli/output/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
-import type { Profile } from '#cli/policy/profiles/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import type { Profile } from '#cli/types/policy/profiles.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import { unknownLanguages } from '#cli/configurations/detect.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner-task-plan.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { ExistingTooling, TomlTable } from '#cli/types/repository/repository.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { assertPolicyComplete, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
 import { collectCarried, ownedTools, unownedTools } from '#cli/policy/adoption/collect.ts';
-import type { InitAnswers, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/commands/init/types.ts';
 
-type Planning = {
-    root: string;
-    options: InitOptions;
-    tooling: ExistingTooling;
-    selection: InitSelection;
-    everySelected: Manifest[];
-    answers: InitAnswers;
-    carried: CarriedConfiguration;
-};
+import type {
+    Planning,
+    InitInputs,
+    InitOptions,
+    InitPrepared,
+    InitSelection,
+    TakeoverPlan,
+} from '#cli/types/commands/init.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.allowDirty || options.isDryRun) return;

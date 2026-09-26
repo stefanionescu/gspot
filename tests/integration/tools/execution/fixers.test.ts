@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
 import { textContaining } from '#tests/support/expectations.ts';
+import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 

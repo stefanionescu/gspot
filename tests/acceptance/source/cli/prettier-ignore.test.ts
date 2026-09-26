@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { InitJson } from '#cli/commands/init/types.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
+import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 const SOURCE = 'export const greeting="hello";\n';

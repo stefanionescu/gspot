@@ -2,12 +2,11 @@ import { parseBuffer } from 'editorconfig';
 import { basename, dirname } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
 import { parseCarrySource } from '#cli/policy/adoption/source.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
-import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarriedFormatter, CarrySource } from '#cli/types/policy/adoption.ts';
 
 async function carryFormat(
     root: string,

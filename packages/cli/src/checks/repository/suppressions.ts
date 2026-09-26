@@ -1,14 +1,12 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { EngineInput, SuppressionComment } from '#cli/checks/input.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/execution/ignores.ts';
+import type { SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { EngineInput, Finding, SuppressionComment } from '#cli/types/checks/checks.ts';
 
 const GSPOT_SUPPRESSION = {
     marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',

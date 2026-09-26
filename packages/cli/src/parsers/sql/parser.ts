@@ -1,8 +1,7 @@
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
-
 import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
-import type { PgModule, SqlNode, SqlParse, SqlTree } from '#cli/parsers/sql/types.ts';
+import type { PgModule, SqlNode, SqlParse, SqlTree } from '#cli/types/parsers/sql.ts';
 
 const POINTER_BYTES = 4;
 const ERROR_POSITION_OFFSET = 16;

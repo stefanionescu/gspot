@@ -32,6 +32,3 @@ export const outputSchema = z.strictObject({
     fixable: z.string().optional(),
     message: z.string().optional(),
 });
-
-/** The output fields accepted by both configuration and repository checks. */
-export type OutputFormat = z.infer<typeof outputSchema>;

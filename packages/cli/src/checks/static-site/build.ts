@@ -1,8 +1,6 @@
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -10,6 +8,8 @@ import { commandArguments } from '#cli/platform/arguments.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { SiteBuild } from '#cli/types/checks/static-site.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const DEFAULT_OUTPUT = 'dist';
 const DEFAULT_BUILD = 'npm run build';
@@ -54,15 +54,6 @@ function digests(folder: string): Map<string, string> {
         filesUnder(folder).map((path) => [path, createHash('sha256').update(readSource(folder, path)).digest('hex')]),
     );
 }
-
-/** The output of one isolated static-site build. */
-export type SiteBuild = {
-    cwd: string;
-    command: string;
-    output: string;
-    isBuilt: boolean;
-    said: string;
-};
 
 /**
  * Every file under a folder, relative to it, sorted.

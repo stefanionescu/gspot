@@ -1,5 +1,5 @@
-import type { SwiftFunction } from '#cli/checks/swift/types.ts';
-import type { StructureProblem } from '#cli/checks/structure/engine.ts';
+import type { SwiftFunction } from '#cli/types/checks/swift.ts';
+import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
 
 function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {

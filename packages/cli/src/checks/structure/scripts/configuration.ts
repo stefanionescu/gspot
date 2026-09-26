@@ -1,9 +1,13 @@
-import type { Finding } from '#cli/checks/result.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptFile } from '#cli/checks/structure/parser.ts';
-import type { CodeLine } from '#cli/checks/structure/code-lines.ts';
-import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/checks/structure/patterns.ts';
+
+import type {
+    CodeLine,
+    ScriptFile,
+    StructureAnalysis as Analysis,
+    StructureContext,
+} from '#cli/types/checks/structure.ts';
 
 function markProblems(
     file: ScriptFile,

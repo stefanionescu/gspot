@@ -1,16 +1,14 @@
 // What the selected fragments add to a generated target: rendered text, imports, file globs, and selectors.
+
+// The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
+
 import { eta } from '#cli/generation/registry.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { selectorGroups } from '#cli/generation/eslint.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { TemplateInputs } from '#cli/generation/templates.ts';
-import type { ResolvedSelector, SelectorGroup } from '#cli/generation/eslint.ts';
-import type { ConfigurationTarget, FragmentSelector } from '#cli/configurations/schema.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { ConfigurationTarget, FragmentSelector, Manifest } from '#cli/types/configurations.ts';
+import type { Fragment, ResolvedSelector, SelectorGroup, TemplateInputs } from '#cli/types/generation.ts';
 
-type Fragment = { manifest: Manifest; config: ConfigurationTarget };
-
-// The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
 function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
     if (owner.per_scope) return selection.selected;

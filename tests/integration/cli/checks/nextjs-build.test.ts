@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 

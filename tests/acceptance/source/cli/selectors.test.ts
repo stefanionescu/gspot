@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { CommandFailureJson } from '#cli/commands/print-result.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

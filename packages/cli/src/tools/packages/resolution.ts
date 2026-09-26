@@ -1,21 +1,19 @@
 // Running the package manager over the tool project in a scratch directory, with credentials kept out of its lock.
 import semver from 'semver';
 import { join } from 'node:path';
+import { LOCKS } from '#cli/types/tools/packages.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import type { parsePackageManager } from '#cli/tools/packages/manager.ts';
-import { LOCKS, portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
+import type { PackageManager, Resolution } from '#cli/types/tools/packages.ts';
+import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/probe.ts';
-
-type PackageManager = ReturnType<typeof parsePackageManager>;
-type Resolution = { root: string; work: string; manager: PackageManager; frozen: boolean; env: Record<string, string> };
 
 const SETUP = 'Run: gspot apply, then gspot install';
 const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;

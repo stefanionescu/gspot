@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import type { SarifReport } from '#tests/support/cli/reports.ts';
-import type { CommandFailureJson } from '#cli/commands/print-result.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';
 
 test(

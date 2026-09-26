@@ -4,14 +4,16 @@ import { compact } from '#cli/policy/normalize.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/platform/paths.ts';
-import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
+import type { FormatSettings, Policy } from '#cli/types/policy/policy.ts';
+import { listedOverride, literalGlob, relocatedOverrides } from '#cli/generation/relocated-overrides.ts';
 
-import {
-    listedOverride,
-    literalGlob,
-    type NativeOverride,
-    relocatedOverrides,
-} from '#cli/generation/relocated-overrides.ts';
+import type {
+    NativeOverride,
+    EditorconfigOverride,
+    FormatOverride,
+    PrettierPlugin,
+    ScopedFormat,
+} from '#cli/types/generation.ts';
 
 // Line breaks and extglob groups, which EditorConfig sections cannot express.
 const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
@@ -39,10 +41,8 @@ function editorconfigOptions(format: Partial<FormatSettings>): Record<string, st
     };
 }
 
-type Override = { files: string[]; excludeFiles: string[]; options: Record<string, unknown> };
-
 // The overrides the policy's scoped and path-specific format settings become, relative to the generated file.
-function policyOverrides(policy: Policy, fromConfig: (pattern: string) => string): Override[] {
+function policyOverrides(policy: Policy, fromConfig: (pattern: string) => string): FormatOverride[] {
     return formatEntries(policy).map(({ scope, paths, format }) => {
         const expanded = expandedPaths(paths);
         const files = expanded.filter((path) => !path.startsWith('!')).map((path) => fromConfig(path));
@@ -139,13 +139,6 @@ export function prettierConfig(
     };
 }
 
-/** A Prettier plugin a selected manifest ships: its npm name, its entry file, and the overrides its files need. */
-export type PrettierPlugin = {
-    name: string;
-    entry: string;
-    overrides: { files: string; options: Record<string, unknown> }[];
-};
-
 /**
  * Emit representable EditorConfig selectors without expanding the current file inventory.
  * @param policy the repository policy
@@ -158,7 +151,3 @@ export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
         return expandedPaths(paths).map((pattern) => ({ path: `/${editorconfigSelector(pattern, scope)}`, options }));
     });
 }
-
-export type ScopedFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
-
-export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };

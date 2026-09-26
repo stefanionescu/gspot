@@ -1,17 +1,23 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import { toolPin } from '#cli/tools/probe.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
-import type { CheckSpec, Stage } from '#cli/configurations/schema.ts';
-import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { restrictIgnoredPaths, skipFor } from '#cli/execution/plan-skips.ts';
+import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
 import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/plan-files.ts';
+
+import type {
+    Session,
+    PlanContext,
+    PlanEntry,
+    PlanOptions,
+    PlannedCheck,
+    StageFilter,
+} from '#cli/types/execution/execution.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 
@@ -229,46 +235,3 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
     }
     return checks;
 }
-
-export type StageFilter = 'all' | 'commit' | 'push' | 'manual' | 'message';
-
-export type PlanOptions = {
-    commits?: string[];
-    historyComplete?: boolean;
-    stage: StageFilter;
-    staged?: string[];
-    changed?: string[];
-    only?: string[];
-    /** Root-relative paths selected by positional file and directory arguments. */
-    paths?: string[];
-    skips: string[];
-    messageFile?: string;
-};
-
-export type PlannedCheck = {
-    commits?: string[];
-    check: string;
-    scope: ScopeSelection;
-    spec: CheckSpec;
-    manifest?: Manifest;
-    files: TrackedFile[];
-    tool?: ToolPin;
-    skip?: { source: RunReport['skips'][number]['source']; note: string };
-    projectWide: boolean;
-    /** Changed paths absent from the readable tree that still trigger a project check. */
-    triggerPaths: string[];
-    messageFile?: string;
-};
-
-/** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
-export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
-
-/** What planning one scope needs. */
-export type PlanContext = {
-    session: Session;
-    scope: ScopeSelection;
-    options: PlanOptions;
-    platform: string;
-    narrow: Set<string> | undefined;
-    children: string[];
-};

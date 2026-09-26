@@ -1,6 +1,6 @@
 // The header init prints: what it found in the repository, one row per kind.
-import type { Proposal } from '#cli/configurations/detect.ts';
-import type { DetectionSummary } from '#cli/commands/init/selection.ts';
+import type { DetectionSummary } from '#cli/types/commands/init.ts';
+import type { ConfigurationEvidence as Proposal } from '#cli/types/configurations.ts';
 
 const LABEL_WIDTH = 13;
 const GAP_WIDTH = 3;

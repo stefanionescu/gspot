@@ -1,10 +1,10 @@
 import { nearMatches } from '#cli/policy/near.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
+import type { RuleFile } from '#cli/types/agents.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
-import type { RuleFile } from '#cli/agents/instructions.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 
 const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);
 const RULES_PREFIX = 'packages/cli/rules/';

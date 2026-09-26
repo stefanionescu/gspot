@@ -2,9 +2,10 @@ import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { reportSchema, type RunReport } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { runProcess, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 

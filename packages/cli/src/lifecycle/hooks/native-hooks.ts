@@ -1,14 +1,12 @@
 // The hook gspot installs beside a native manager's copy: it runs the manager's own hook, reads what gspot
-// reported through it, and runs gspot itself when the manager did not.
 import { join } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { HookName } from '#cli/types/generation.ts';
+// reported through it, and runs gspot itself when the manager did not.
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
+import type { HookManager, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
 import { hookPrefix, huskyLines, lefthookCommand, simpleGitHookCommand } from '#cli/generation/hooks.ts';
-
-type HookName = (typeof HOOK_FILES)[number];
 
 // The lines every gspot hook starts with: a work directory that is removed on exit, and signal exits.
 const WORK_LINES = (name: string): string[] => [
@@ -238,20 +236,3 @@ export function nativeHook(preparation: Preparation, name: string): PreparedHook
     if (installed.includes(work)) throw new Error(`Hook manager embedded a temporary path in ${name}.`);
     return { generated, installed };
 }
-
-/** A native hook manager gspot integrates with. */
-export type HookManager = 'simple-git-hooks' | 'pre-commit' | 'lefthook' | 'husky';
-
-/** The prepared Git directory a manager generated its hooks into, and what the generation needs. */
-export type Preparation = {
-    manager: HookManager;
-    policy: Policy;
-    root: string;
-    executable: string;
-    installedConfig: string;
-    work: string;
-    files: ConfinedRoot;
-};
-
-/** A hook a native manager generated, and the text gspot installs in its place. */
-export type PreparedHook = { generated: string; installed: string };

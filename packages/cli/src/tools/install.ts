@@ -1,9 +1,9 @@
 import semver from 'semver';
 import { MissingToolError } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';

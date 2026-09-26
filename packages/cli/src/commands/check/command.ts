@@ -1,12 +1,12 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
 import { progress } from '#cli/output/reporter.ts';
-import type { StageFilter } from '#cli/execution/plan.ts';
+import type { Stage } from '#cli/types/configurations.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
-import type { Stage } from '#cli/configurations/schema.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { CheckOptions } from '#cli/commands/check/run.ts';
+import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { Command, InvalidArgumentError, Option } from 'commander';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
+import type { StageFilter } from '#cli/types/execution/execution.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 
 class CheckCommand extends Command {

@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { LOCKFILES } from '#cli/repository/locked-packages.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

@@ -1,12 +1,10 @@
 // What one tool run accumulates from its spawns: findings attributed to files and scopes, and whether it failed.
 import { isAbsolute } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import type { ToolInvocation } from '#cli/execution/command-expansion.ts';
+import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolRunState, PlannedCheck, ToolInvocation } from '#cli/types/execution/execution.ts';
 
 function firstLine(result: SpawnResult, placeholder: string): string {
     const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
@@ -116,6 +114,3 @@ export function collect(
     state.findings.push(...parsed);
     markFailure(spec, tool, result, parsed, state);
 }
-
-/** What one tool run accumulates across its spawns. */
-export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

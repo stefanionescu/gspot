@@ -1,19 +1,28 @@
-import type { z } from 'zod';
+// One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
 import { npmPins } from '#cli/tools/pins.ts';
-import type { PolicyFiles } from '#cli/policy/read.ts';
-import type { ToolContext } from '#cli/tools/probe.ts';
+import { mergeForScope } from '#cli/policy/merge.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import type { Repository } from '#cli/repository/tree.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import packageManifest from '#package' with { type: 'json' };
-// One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
+import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { toolPackageManager } from '#cli/tools/packages/manager.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
-import { resolveScopes, type ScopeSelection } from '#cli/policy/resolve.ts';
+import type { PolicyFiles, ScopeSelection, Policy } from '#cli/types/policy/policy.ts';
+
+// Resolves every scope: its selected configurations, settings surface, and merged view.
+function resolveScopes(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {
+    return scopes.map((scope) => {
+        const selected = selectForScope(policy, scope.path, manifests);
+        const surface = exposedSettings(selected);
+        const view = mergeForScope(surface, policy, selected, scope.path);
+        return { scope, selected, surface, view };
+    });
+}
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -64,17 +73,3 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         observations: { root, sources: new Map() },
     };
 }
-
-export type Session = ToolContext & {
-    observations: SourceObservations;
-    /** Persistent result storage for a disposable revision snapshot. */
-    cacheRoot?: string;
-    resources?: DisposableStack;
-    packageManager?: z.infer<typeof packageManagerSchema>;
-    cancelSignal?: AbortSignal;
-    version: string;
-    policyFiles: PolicyFiles;
-    manifests: Map<string, Manifest>;
-    repository: Repository;
-    scopes: ScopeSelection[];
-};

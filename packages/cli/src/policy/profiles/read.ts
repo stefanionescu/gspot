@@ -4,7 +4,7 @@ import { parse as parseToml } from 'smol-toml';
 import { readFileSync, statSync } from 'node:fs';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { ProfileTables } from '#cli/policy/profiles/schema.ts';
+import type { Profile } from '#cli/types/policy/profiles.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { isRepositoryPath, profileSchema } from '#cli/policy/profiles/schema.ts';
 
@@ -106,5 +106,3 @@ export function parseProfile(text: string, source: string): Profile {
 export async function readProfile(source: string, cwd: string): Promise<Profile> {
     return parseProfile(await profileText(source, cwd), source);
 }
-
-export type Profile = { source: string; digest: string; tables: ProfileTables };

@@ -1,7 +1,6 @@
 // The setting keys a policy table writes, spelled the way the surface exposes them.
 import { asRecord } from '#cli/policy/settings.ts';
-import type { ExposedSettings } from '#cli/policy/settings.ts';
-import type { NamingCategoryTable, Policy } from '#cli/policy/normalize.ts';
+import type { ExposedSettings, NamingCategoryTable, Policy } from '#cli/types/policy/policy.ts';
 
 const NAMING_SCALARS = ['max_chars', 'max_words', 'case'] as const;
 

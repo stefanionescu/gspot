@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { Migration } from '#cli/checks/postgres/types.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { committedEntries, gitBlobs } from '#cli/repository/revisions/snapshot.ts';
 
 const FROZEN_NONE = 'none';

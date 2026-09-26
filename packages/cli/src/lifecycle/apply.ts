@@ -1,10 +1,8 @@
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { GeneratedProposal } from '#cli/generation/proposal.ts';
-import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { ConfigurationFormat } from '#cli/lifecycle/configuration-document.ts';
+import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/platform/file-modes.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
@@ -132,13 +130,3 @@ export function publishGenerated(
     }
     report.removed.push(...pruning.filter((proposal) => proposal.status !== 'preserved').map(({ path }) => path));
 }
-
-export type ApplyReport = {
-    preserved: string[];
-    written: string[];
-    unchanged: string[];
-    removed: string[];
-    blocks: string[];
-    packages: string[];
-    notes: string[];
-};

@@ -4,13 +4,12 @@ import { tmpdir } from 'node:os';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { statSync, mkdtempSync, rmSync } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import type { LicenseException, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const TOOL = 'license-checker-rseidelsohn';
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
@@ -18,13 +17,6 @@ const reportSchema = z.record(z.string(), licenseSchema);
 const pythonReportSchema = z.array(
     z.object({ Name: z.string().min(1), Version: z.string().min(1), License: z.string().min(1) }),
 );
-const configurationSchema = z.object({
-    licenses_allowed: z.array(z.string().min(1)),
-    packages_allowed: z.array(
-        z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
-    ),
-});
-
 // A license expression passes when every part of a conjunction, or one part of a choice, is allowed.
 function isAllowed(license: string, allow: Set<string>): boolean {
     try {
@@ -45,7 +37,12 @@ function verdict(name: string, license: string, exception: LicenseException | un
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
 }
 
-export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];
+export const configurationSchema = z.object({
+    licenses_allowed: z.array(z.string().min(1)),
+    packages_allowed: z.array(
+        z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
+    ),
+});
 
 /**
  * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.

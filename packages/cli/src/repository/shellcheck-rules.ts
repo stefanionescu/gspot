@@ -1,6 +1,4 @@
-// Reading a .shellcheckrc without ShellCheck: the rules its directives enable and disable.
-type Rules = { enable: string[]; disable: string[] };
-type Directive = { key: string; value: string; remaining: string };
+import type { Directive, Rules } from '#cli/types/repository/repository.ts';
 
 const DIRECTIVE = /^([a-zA-Z-]+)=/u;
 const RULE_NAME = /^[a-zA-Z-]+$/u;

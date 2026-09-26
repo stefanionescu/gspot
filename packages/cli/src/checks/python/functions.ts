@@ -1,7 +1,7 @@
 import { docstringOf } from '#cli/checks/python/modules.ts';
-import type { StructureProblem } from '#cli/checks/structure/engine.ts';
+import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
-import type { PythonFunction, PythonModule } from '#cli/checks/python/types.ts';
+import type { PythonFunction, PythonModule } from '#cli/types/checks/python.ts';
 
 const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {

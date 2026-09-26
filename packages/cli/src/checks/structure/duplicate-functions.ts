@@ -1,6 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptFunction } from '#cli/checks/structure/parser.ts';
+import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 const DEFAULT_MIN_LINES = 3;
 

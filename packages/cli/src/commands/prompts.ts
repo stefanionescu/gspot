@@ -1,9 +1,8 @@
 import { note } from '#cli/output/messages.ts';
 import { isCi } from '#cli/platform/environment.ts';
+import type { Choice } from '#cli/types/commands/commands.ts';
 // The clack questions, asked only in a terminal and never under --yes.
 import { confirm, multiselect, select } from '@clack/prompts';
-
-type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
 
 /** Thrown when a question cannot be answered: no terminal to ask in, or the person cancelled. The command exits 2. */
 export class PromptError extends Error {

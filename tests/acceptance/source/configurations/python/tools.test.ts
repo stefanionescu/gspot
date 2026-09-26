@@ -2,12 +2,13 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+// Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
+import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-// Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
-import { reportSchema, type RunReport } from '#cli/execution/report.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [

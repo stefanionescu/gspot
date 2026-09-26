@@ -1,14 +1,13 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { StageFilter } from '#cli/execution/plan.ts';
-import type { CheckOptions } from '#cli/commands/check/run.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { CheckOptions } from '#cli/types/commands/check.ts';
+import type { ChangedSet } from '#cli/types/repository/revisions.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
-import type { ChangedSet } from '#cli/repository/revisions/selection.ts';
+import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
 
 const INVALID_INPUT_EXIT = 2;

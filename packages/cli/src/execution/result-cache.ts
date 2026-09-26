@@ -1,12 +1,11 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
 import { probeTool } from '#cli/tools/probe.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
+import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import type { RunHashes, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
 
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
@@ -156,10 +155,3 @@ export function storeResult(session: Session, key: string, result: CheckResult):
     const stored = portableResult(session, result);
     writeCached(session.cacheRoot ?? session.root, key, stored);
 }
-
-/** File observations shared by cached checks within one execution pass. */
-export type RunHashes = {
-    policy: string;
-    files: Map<string, string>;
-    tools: Map<string, string>;
-};

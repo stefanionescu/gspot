@@ -1,7 +1,9 @@
 // Which grammar Vale reads each file with: by path where Vale has one, through stdin under a look-alike where it does not.
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import { PROSE_GRAMMARS, SCRIPT_GRAMMAR, SCRIPT_TAG } from '#cli/configurations/vale.ts';
+import type { ProseRoute } from '#cli/types/checks/prose.ts';
+import { SCRIPT_GRAMMAR } from '#cli/types/configurations.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { PROSE_GRAMMARS, SCRIPT_TAG } from '#cli/configurations/vale.ts';
 
 /**
  * The route for a tracked file, or undefined when Vale has nothing to read in it.
@@ -31,5 +33,3 @@ export function routeGroups(files: TrackedFile[]): ProseRoute[][] {
     }
     return [...byPath.values(), ...routes.filter((entry) => entry.mode === 'stdin').map((route) => [route])];
 }
-
-export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: string };

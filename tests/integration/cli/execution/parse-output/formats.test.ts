@@ -3,7 +3,7 @@ import { join, win32 } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 

@@ -1,7 +1,6 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 const ESLINT_FILE = '.gspot/config/eslint.config.mjs';

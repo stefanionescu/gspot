@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
-import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
+import type { AssetContents, StringsFile } from '#cli/types/checks/xcode.ts';
 
 const NOT_WORD = /[^A-Za-z\d]/u;
 const IMAGE_SET = '.imageset/Contents.json';

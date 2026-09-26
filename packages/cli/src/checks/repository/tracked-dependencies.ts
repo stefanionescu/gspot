@@ -1,6 +1,5 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/repository/file-classification.ts';
 
 function dependencyFolder(path: string): string | undefined {

@@ -1,28 +1,21 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
-import { configurationFieldsSchema, type OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import { configurationFieldsSchema } from '#cli/lifecycle/journal.ts';
+import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
 
-import {
-    type ConfigurationDocument,
-    type ConfigurationFormat,
-    configurationDocument,
-} from '#cli/lifecycle/configuration-document.ts';
-
-type KeyPath = (string | number)[];
-type Field = z.infer<typeof configurationFieldsSchema>[number];
-type Recorded = NonNullable<OwnershipEntry['configuration']>;
-type Planned = { next: FileSnapshot; configuration: Recorded; status: 'changed' | 'unchanged' };
-type Request = {
-    path: string;
-    format: ConfigurationFormat;
-    current: FileSnapshot | undefined;
-    existing: OwnershipEntry | undefined;
-    matchesInstalled: boolean;
-    takeover: boolean;
-};
+import type {
+    ConfigurationDocument,
+    ConfigurationFormat,
+    OwnershipEntry,
+    ConfigurationWriteRequest,
+    Field,
+    KeyPath,
+    Planned,
+    Recorded,
+} from '#cli/types/lifecycle/lifecycle.ts';
 
 // Whether two key paths name the same key.
 function samePath(left: KeyPath, right: KeyPath): boolean {
@@ -45,7 +38,7 @@ function isEmptyContainer(value: unknown): boolean {
 }
 
 // The file text, which must be UTF-8, or the empty document of the format for a file that does not exist.
-function sourceText(request: Request): string {
+function sourceText(request: ConfigurationWriteRequest): string {
     const { current, format, path } = request;
     const text = current?.bytes.toString('utf8') ?? (format === 'toml' ? '' : '{}\n');
     if (current !== undefined && !Buffer.from(text).equals(current.bytes))
@@ -54,7 +47,7 @@ function sourceText(request: Request): string {
 }
 
 // Whether the recorded ownership rules out a plan: another format, or an edited file with no recorded fields.
-function isUnplannable(request: Request): boolean {
+function isUnplannable(request: ConfigurationWriteRequest): boolean {
     const { existing, format, current, matchesInstalled } = request;
     if (existing?.configuration !== undefined && existing.configuration.format !== format) return true;
     return existing !== undefined && existing.configuration === undefined && current !== undefined && !matchesInstalled;
@@ -73,7 +66,7 @@ function retireFields(document: ConfigurationDocument, recorded: Field[], reques
 // The field as it will be recorded, or undefined when the developer's value stands in the way of installing it.
 function plannedField(
     document: ConfigurationDocument,
-    request: Request,
+    request: ConfigurationWriteRequest,
     field: Field,
     previous: Field | undefined,
 ): Field | undefined {
@@ -99,7 +92,7 @@ function recordParents(document: ConfigurationDocument, path: KeyPath, parents: 
 // Installs every requested field, returning the recorded fields, or undefined when one cannot be installed.
 function installFields(
     document: ConfigurationDocument,
-    request: Request,
+    request: ConfigurationWriteRequest,
     fields: Field[],
     requested: Field[],
     parents: KeyPath[],
@@ -117,7 +110,7 @@ function installFields(
 }
 
 // Whether the developer edited the file since the last installation, which the record keeps once true.
-function isEdited(request: Request): boolean {
+function isEdited(request: ConfigurationWriteRequest): boolean {
     const { existing, current, matchesInstalled } = request;
     if (existing?.configuration?.edited === true) return true;
     return existing !== undefined && current !== undefined && !matchesInstalled;
@@ -126,7 +119,7 @@ function isEdited(request: Request): boolean {
 // Retires the fields no longer requested, then installs the requested ones; undefined when either cannot be done.
 function replaceFields(
     document: ConfigurationDocument,
-    request: Request,
+    request: ConfigurationWriteRequest,
     recorded: Field[],
     requested: Field[],
     parents: KeyPath[],
@@ -136,7 +129,7 @@ function replaceFields(
 }
 
 // The ownership record of a plan that changed the fields or the text.
-function nextRecord(request: Request, fields: Field[], parents: KeyPath[]): Recorded {
+function nextRecord(request: ConfigurationWriteRequest, fields: Field[], parents: KeyPath[]): Recorded {
     const recorded = request.existing?.configuration;
     return {
         format: request.format,
@@ -148,7 +141,13 @@ function nextRecord(request: Request, fields: Field[], parents: KeyPath[]): Reco
 }
 
 // The ownership to record after the plan: unchanged when the fields and the text are what was recorded.
-function planned(request: Request, text: string, nextText: string, fields: Field[], parents: KeyPath[]): Planned {
+function planned(
+    request: ConfigurationWriteRequest,
+    text: string,
+    nextText: string,
+    fields: Field[],
+    parents: KeyPath[],
+): Planned {
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
@@ -202,7 +201,7 @@ export function planConfiguration(
     matchesInstalled: boolean,
     takeover: boolean,
 ): Planned | undefined {
-    const request: Request = { path, format, current, existing, matchesInstalled, takeover };
+    const request: ConfigurationWriteRequest = { path, format, current, existing, matchesInstalled, takeover };
     const text = sourceText(request);
     const document = configurationDocument(text, format, current === undefined);
     if (isUnplannable(request)) return undefined;

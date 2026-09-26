@@ -1,13 +1,10 @@
 import { basename, dirname } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { LicenseException } from '#cli/checks/licenses.ts';
+import type { PathPattern } from '#cli/types/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-
-type PathPattern = { pattern: string; where: string };
+import type { EngineInput, Finding, LicenseException } from '#cli/types/checks/checks.ts';
 
 const POLICY_FILE = 'gspot.toml';
 

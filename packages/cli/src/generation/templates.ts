@@ -3,22 +3,19 @@ import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import type { MergedView } from '#cli/policy/merge.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { styleNames } from '#cli/generation/vale-styles.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { markdownlintRules } from '#cli/generation/markdownlint.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import { aliasesFor, javascriptConfig } from '#cli/generation/javascript.ts';
-import type { EslintRuleBlock, SelectorGroup } from '#cli/generation/eslint.ts';
+import type { TemplateInputs, PrettierPlugin } from '#cli/types/generation.ts';
 import { editorconfigOverrides, prettierConfig } from '#cli/generation/format.ts';
 import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
-import type { EditorconfigOverride, PrettierPlugin } from '#cli/generation/format.ts';
 import { BLOCK_IGNORES, PROSE_FORMATS, TOKEN_IGNORES } from '#cli/configurations/vale.ts';
 import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
@@ -217,50 +214,3 @@ export function emitTarget(
     if (!isHeaderWanted) return body;
     return `${headerFor(targetPath, inputs.version)}${body}`;
 }
-
-export type TemplateInputs = {
-    markdownlintRules: Record<string, unknown>;
-    targetPath?: string;
-    scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
-    javascriptConfig: (targetPath: string) => Record<string, unknown>;
-    prettierConfig: (targetPath: string) => Record<string, unknown>;
-    editorconfigOverrides: () => EditorconfigOverride[];
-    eslintPolicy: EslintRuleBlock[];
-    isAll: boolean;
-    typescriptOptions: Record<string, boolean>;
-    prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[]; formats: [string, string][] };
-    version: string;
-    scope: string;
-    scopes: { path: string; configurations: string[] }[];
-    configurationScopes: (configuration: string) => { path: string; settings: Record<string, unknown> }[];
-    /** The folders the selected settings with this role name, for the scope being rendered. */
-    roleFolders: (role: string) => string[];
-    /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
-    roleScopes: (role: string) => { path: string; folders: string[] }[];
-    configurations: string[];
-    policy: Policy;
-    view: MergedView;
-    format: MergedView['format'];
-    settings: Record<string, unknown>;
-    fragments: string;
-    fragmentImports: string;
-    fragmentFiles: string[];
-    fragmentSelectors: SelectorGroup[];
-    tool: (name: string) => Record<string, unknown>;
-    entryFiles: (scope: string) => string[];
-    limit: (key: string, language?: string) => number | undefined;
-    rulesOff: (check: string) => string[];
-    ignoresFor: MergedView['ignoresFor'];
-    extra: (name: string) => Record<string, unknown> | undefined;
-    json: (value: unknown, indent?: number) => string;
-    toml: (value: Record<string, unknown>) => string;
-    yaml: (value: Record<string, unknown>) => string;
-    tomlDate: new (value: string) => Date;
-    files: (extension: string) => string[];
-    importAliases: (scope: string) => Record<string, string>;
-    tools: string[];
-    /** The npm package of every selected tool that has one. */
-    toolPackages: string[];
-    header: string;
-    headerLines: string[];
-};

@@ -3,9 +3,9 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import type { SarifReport } from '#tests/support/cli/reports.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
     chmodSync,

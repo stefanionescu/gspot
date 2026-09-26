@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-patterns.ts';
 
 /**

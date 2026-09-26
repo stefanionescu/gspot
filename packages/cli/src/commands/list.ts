@@ -1,17 +1,55 @@
 import { Argument, type Command } from 'commander';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
-import { settingRows } from '#cli/policy/settings-list.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
+
+import type {
+    Policy,
+    ScopeSelection,
+    ExtraRow,
+    SettingRow,
+    SettingsListing,
+    ToolTables,
+} from '#cli/types/policy/policy.ts';
+
+function rowsFor(policy: Policy, scopes: ScopeSelection[]): SettingRow[] {
+    return scopes.flatMap((selection) => {
+        const scope = selection.scope.path;
+        return listSettings(selection.surface, policy, scope)
+            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
+            .map((entry) => ({
+                key: entry.key,
+                value: entry.value,
+                source: entry.source,
+                direction: entry.spec.direction,
+                scope,
+            }));
+    });
+}
+
+function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
+    return Object.entries(tools).flatMap(([tool, table]) => {
+        if (table.extra === undefined) return [];
+        return [
+            {
+                tool,
+                keys: Object.keys(table.extra).filter((key) => key !== 'reason'),
+                ...(table.extra.reason === undefined ? {} : { reason: table.extra.reason }),
+                scope,
+            },
+        ];
+    });
+}
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;
@@ -82,6 +120,19 @@ function configurationsResult(session: Session): CommandResult {
     const coverage = coverageReport(session);
     lines.push('', ...coverageLines(coverage));
     return { text: `${lines.join('\n')}\n`, json: { installed, detected, available, coverage }, exitCode: 0 };
+}
+
+/**
+ * Every setting per scope, plus every extra table under "not a slot."
+ * @param policy the resolved policy
+ * @param scopes the resolved settings for each scope
+ * @returns the rows and the extra tables
+ */
+export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
+    const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
+        table.tools === undefined ? [] : extrasFor(scope, table.tools),
+    );
+    return { rows: rowsFor(policy, scopes), extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }
 
 /**

@@ -5,7 +5,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import type { RunOptions } from '#cli/execution/execute.ts';
+import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 /** A planted token with the shape gitleaks looks for; it belongs to nothing. */

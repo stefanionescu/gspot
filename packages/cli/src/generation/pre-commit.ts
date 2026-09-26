@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookCommand, hookPrefix } from '#cli/generation/hooks.ts';
-import type { ConfigurationOutput } from '#cli/generation/proposal.ts';
+import type { ConfigurationOutput } from '#cli/types/generation.ts';
 
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({

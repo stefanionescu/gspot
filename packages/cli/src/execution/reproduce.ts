@@ -1,5 +1,5 @@
-import type { StageFilter } from '#cli/execution/plan.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
+import type { StageFilter } from '#cli/types/execution/execution.ts';
 
 /**
  * The command that runs one check alone.

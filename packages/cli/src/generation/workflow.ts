@@ -1,8 +1,7 @@
 import { stringify } from 'yaml';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/tools/mise.ts';
+import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
@@ -298,13 +297,3 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     });
     return { path, content: `${headerFor(path, shape.version)}${content}`, readOnly: true, kind: 'workflow' };
 }
-
-export type WorkflowShape = {
-    version: string;
-    run?: NonNullable<Policy['ci']>['run'];
-    sarif?: NonNullable<Policy['ci']>['sarif'];
-    platforms: string[];
-    /** The Swift scope path, or undefined when no scope selects swift. */
-    swiftScope: string | undefined;
-    isMise: boolean;
-};

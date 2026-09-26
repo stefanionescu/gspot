@@ -1,15 +1,11 @@
 import { rmSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { join, relative as relativePath } from 'node:path';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import type { ConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { SwiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
-
-/** The observed build status and its compiler output. */
-type SwiftBuildOutput = { code: number; output: string };
+import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
 
 const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 const RESPONSE_FILE = /@(?<path>\/\S+)/gu;

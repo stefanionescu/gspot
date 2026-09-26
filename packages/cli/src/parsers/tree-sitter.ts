@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { Language, Parser, type Tree } from 'web-tree-sitter';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';
 
 const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
 const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
@@ -24,8 +25,6 @@ async function build(name: GrammarName): Promise<Parser> {
     parser.setLanguage(language);
     return parser;
 }
-
-export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 
 /**
  * The parser for a grammar, built on first use.
@@ -84,5 +83,3 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
     if (language !== 'typescript') return undefined;
     return path.endsWith('.tsx') ? 'tsx' : 'typescript';
 }
-
-export type ParseContext = { observations: SourceObservations; resources?: DisposableStack };

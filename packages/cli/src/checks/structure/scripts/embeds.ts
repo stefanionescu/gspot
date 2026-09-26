@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { RUNTIME_EMBEDS } from '#cli/checks/structure/patterns.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
  * One finding per line that embeds another runtime.

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 

@@ -7,7 +7,7 @@ import { readRepository } from '#cli/repository/tree.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],

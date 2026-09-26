@@ -1,6 +1,6 @@
 import { stemOf } from '#cli/checks/structure/directories.ts';
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 import {
     DEPRECATED_ALIAS,

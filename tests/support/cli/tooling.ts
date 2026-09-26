@@ -1,6 +1,7 @@
 // What the adoption and selection tests start from: a discovery result naming configurations, and a minimal manifest.
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { type Manifest, parseManifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import { parseManifest } from '#cli/configurations/manifests.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /**
  * A discovery result holding only the given configuration files.

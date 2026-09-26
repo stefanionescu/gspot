@@ -1,15 +1,19 @@
 // Restoring a file the owner changed: merged fields go back, a managed block is removed, or the original returns.
 import { isDeepStrictEqual } from 'node:util';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
 import { currentSnapshot } from '#cli/lifecycle/ownership-proposals.ts';
+import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration-plan.ts';
-import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';
 
-type Configuration = NonNullable<OwnershipEntry['configuration']>;
-type Restoration = { next?: FileSnapshot };
+import type {
+    Configuration,
+    Restoration,
+    FileProposal,
+    Journal,
+    OwnershipEntry,
+} from '#cli/types/lifecycle/lifecycle.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
 function fieldRestoration(

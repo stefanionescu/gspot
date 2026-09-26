@@ -1,19 +1,11 @@
+import type { SqlNode } from '#cli/types/parsers/sql.ts';
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
-import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
-import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
+import type { Migration, SchemaFacts, FactReader, Location, SchemaState } from '#cli/types/checks/postgres.ts';
 
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
     return `${textOf(node['schemaname']) || DEFAULT_SCHEMA}.${textOf(node['relname'])}`;
 }
-
-type SchemaState = Pick<SchemaFacts, 'tables' | 'secured'> & {
-    policies: Map<string, Set<string>>;
-    indexes: { table: string; name: string; column: string; constraint: string }[];
-    constraints: Map<string, Map<string, SchemaFacts['foreignKeys']>>;
-};
-type FactReader = (facts: SchemaState, migration: Migration, statement: SqlStatementView) => void;
-type Location = { migration: Migration; statement: SqlStatementView; table: string };
 
 function forgetTable(facts: SchemaState, table: string): void {
     facts.tables.delete(table);

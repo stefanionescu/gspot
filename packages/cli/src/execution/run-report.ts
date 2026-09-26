@@ -1,26 +1,20 @@
 // The report a run ends with: every result, the ignores that matched, the skips, coverage, and the exit code.
 import { writeReport } from '#cli/output/report.ts';
 import { claimedInputs } from '#cli/execution/plan.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { FixReport } from '#cli/execution/fixers.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { IgnoreUse } from '#cli/execution/ignores.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
-import type { CheckResult, Finding } from '#cli/checks/result.ts';
-import type { PlanOptions, PlannedCheck } from '#cli/execution/plan.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
-type ReportInput = {
-    session: Session;
-    options: ReportOptions;
-    started: Date;
-    planned: PlannedCheck[];
-    active: PlannedCheck[];
-    ran: CheckResult[];
-    uses: Map<string, IgnoreUse>;
-    fixes: FixReport | undefined;
-};
+import type {
+    ReportInput,
+    RunReportOptions,
+    FixReport,
+    IgnoreUse,
+    PlannedCheck,
+    RunReport,
+    Session,
+} from '#cli/types/execution/execution.ts';
 
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
@@ -96,7 +90,7 @@ function claimedPaths(session: Session, active: PlannedCheck[], ran: CheckResult
 }
 
 // One finding per supported source no check claims, when the policy demands strict coverage.
-function coverageFindings(session: Session, options: ReportOptions, unchecked: { path: string }[]): Finding[] {
+function coverageFindings(session: Session, options: RunReportOptions, unchecked: { path: string }[]): Finding[] {
     if (!session.policyFiles.policy.coverage.strict || options.stage === 'message') return [];
     return unchecked.map((entry) => ({
         check: 'coverage.strict',
@@ -149,9 +143,3 @@ export function assembleReport(input: ReportInput): RunReport {
     if (!options.isDryRun && options.stage !== 'message') writeReport(session.root, report);
     return report;
 }
-
-export type ReportOptions = PlanOptions & {
-    onResult?: (result: CheckResult) => void;
-    isDryRun: boolean;
-    comparison?: NonNullable<RunReport['comparison']>;
-};

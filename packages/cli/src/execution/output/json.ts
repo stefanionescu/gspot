@@ -1,6 +1,6 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
-import type { Finding } from '#cli/checks/result.ts';
-import type { OutputFormat } from '#cli/configurations/output-format.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
+import type { OutputFormat } from '#cli/types/configurations.ts';
 
 function at(value: unknown, path: string | undefined): unknown {
     if (path === undefined || path === '') return value;

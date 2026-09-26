@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { CloneReport } from '#cli/types/checks/docs.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 
 const FULL_PERCENTAGE = 100;
@@ -19,21 +19,18 @@ const clonePlaceSchema = z.object({
     start: z.number().int().positive(),
     end: z.number().int().positive(),
 });
-const cloneReportSchema = z.object({
-    statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(FULL_PERCENTAGE) }) }),
-    duplicates: z.array(
-        z.object({ lines: z.number().int().positive(), firstFile: clonePlaceSchema, secondFile: clonePlaceSchema }),
-    ),
-});
-
 function relativePlace(root: string, place: z.infer<typeof clonePlaceSchema>): string {
     return toPosix(
         isAbsolute(place.name) ? relative(toNamespacedPath(root), toNamespacedPath(place.name)) : place.name,
     );
 }
 
-/** The validated native duplication report consumed by finding generation. */
-export type CloneReport = z.infer<typeof cloneReportSchema>;
+export const cloneReportSchema = z.object({
+    statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(FULL_PERCENTAGE) }) }),
+    duplicates: z.array(
+        z.object({ lines: z.number().int().positive(), firstFile: clonePlaceSchema, secondFile: clonePlaceSchema }),
+    ),
+});
 
 /**
  * The findings of a jscpd report: none while the duplicated share is at or under the ceiling, then one for each clone in a claimed file.

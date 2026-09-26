@@ -2,9 +2,8 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({

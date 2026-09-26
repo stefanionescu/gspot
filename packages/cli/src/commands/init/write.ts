@@ -1,4 +1,5 @@
 // Writing what init prepared: the policy, the generated files, the retirements, and the tool installation.
+
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { PolicyError } from '#cli/policy/read.ts';
@@ -7,23 +8,46 @@ import { installTools } from '#cli/tools/install.ts';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { MissingToolError } from '#cli/tools/probe.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
-import { retireReplaced } from '#cli/lifecycle/retire.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/platform/file-modes.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
-import type { InitOptions, InitPrepared } from '#cli/commands/init/types.ts';
-
-type Written = { lines: string[]; installNote: string; exitCode: number };
-type Installed = { installNote: string; exitCode: number };
+import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Installed, Written, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 const INCOMPLETE_INSTALL_EXIT = 2;
+
+// Retire explicitly replaced files after saving recoverable originals; retain directories.
+function retireReplaced(
+    root: string,
+    removed: { path: string }[],
+    observed: ReadonlyMap<string, FileSnapshot>,
+): TakeoverRemovalResult {
+    return withLifecycleOwner(root, (owner) => {
+        const result: TakeoverRemovalResult = { removed: [], preserved: [] };
+        const proposals = [];
+        for (const entry of removed) {
+            if (entry.path.endsWith('/')) {
+                result.preserved.push(entry.path);
+                continue;
+            }
+            const expected = observed.get(entry.path);
+            if (expected === undefined) throw new Error(`No takeover observation exists for ${entry.path}.`);
+            const proposal = owner.proposeRetirement(entry.path, expected);
+            proposals.push(proposal);
+            const status = proposal.status;
+            if (status === 'changed') result.removed.push(entry.path);
+            else if (status === 'preserved') result.preserved.push(entry.path);
+        }
+        owner.applyProposals(proposals.filter((proposal) => proposal.status !== 'preserved'));
+        return result;
+    });
+}
 
 // Refuses to write when a configuration the takeover read has changed since the plan was made.
 function assertObservedUnchanged(owner: LifecycleOwner, observed: ReadonlyMap<string, FileSnapshot>): void {

@@ -1,12 +1,11 @@
 // The modules an ESLint configuration imports: each export is registered so a plugin, parser, or processor value
-// found in the configuration can be named by module and export instead of serialized.
 import ts from 'typescript';
 import { pathToFileURL } from 'node:url';
 import { isAbsolute, relative } from 'node:path';
 import { createRequire, isBuiltin } from 'node:module';
-import type { EslintRegistration } from '#cli/policy/schema.ts';
-
-type Pending = { value: unknown; exported: string; members: string[] };
+import type { PendingModule } from '#cli/types/evaluation.ts';
+// found in the configuration can be named by module and export instead of serialized.
+import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 
 // Whether a value can be named by its module: an object or a function.
 function isRegistrable(value: unknown): value is object {
@@ -15,7 +14,7 @@ function isRegistrable(value: unknown): value is object {
 }
 
 // The members of an exported object, queued for registration under their export.
-function memberEntries(value: object, exported: string, members: string[]): Pending[] {
+function memberEntries(value: object, exported: string, members: string[]): PendingModule[] {
     if (typeof value !== 'object') return [];
     const children: [string, unknown][] = Object.entries(value);
     return children.map(([member, child]) => ({ value: child, exported, members: [...members, member] }));
@@ -27,7 +26,7 @@ function registerExports(
     specifier: string,
     references: Map<unknown, EslintRegistration>,
 ): void {
-    const pending: Pending[] = Object.entries(imported)
+    const pending: PendingModule[] = Object.entries(imported)
         .toSorted(([left], [right]) => Number(left === 'default') - Number(right === 'default'))
         .map(([key, value]) => ({ value, exported: key, members: [] }));
     for (let entry = pending.pop(); entry !== undefined; entry = pending.pop()) {

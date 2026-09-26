@@ -2,21 +2,16 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { PushSelection } from '#cli/repository/revisions/snapshot.ts';
 import { fetchedObjects } from '#cli/repository/revisions/fetch-mappings.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
 
-type PushRevision = PushSelection['revisions'][number];
-type PushLine = { localRef: string; localObject: string; remoteRef: string; remoteObject: string };
-type Comparison = { changed: string[] | undefined; excluded: string[] };
-type PushContext = {
-    root: string;
-    cancelSignal: AbortSignal | undefined;
-    commits: Map<string, string | undefined>;
-    fetched: string[];
-    shallow: boolean;
-    boundaries: Set<string>;
-};
+import type {
+    PushRevision,
+    PushSelection,
+    Comparison,
+    PushContext,
+    PushLine,
+} from '#cli/types/repository/revisions.ts';
 
 const OBJECT_ID = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
 const ABSENT_OBJECT = /^0+$/u;

@@ -1,9 +1,8 @@
 import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { TestPlan } from '#cli/checks/xcode/types.ts';
+import type { TestPlan } from '#cli/types/checks/xcode.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/revisions/snapshot.ts';
 import { projectTestTargets, readProject } from '#cli/checks/xcode/project-reader.ts';
 

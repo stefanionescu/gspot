@@ -1,8 +1,15 @@
+import type { Manifest } from '#cli/types/configurations.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { ExposedSettings, PolicyScopeLayer } from '#cli/policy/settings.ts';
 import { listSettings, policyTables, settingValue } from '#cli/policy/settings.ts';
-import type { FormatSettings, IgnoreEntry, Policy } from '#cli/policy/normalize.ts';
+
+import type {
+    MergedView,
+    ExposedSettings,
+    FormatSettings,
+    IgnoreEntry,
+    Policy,
+    PolicyScopeLayer,
+} from '#cli/types/policy/policy.ts';
 
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);
@@ -128,16 +135,3 @@ export function mergeForScope(
         extra: (name) => extraOf(toolTables(policy, scope, name)),
     };
 }
-
-export type MergedView = {
-    scope: string;
-    configurations: string[];
-    settings: Record<string, unknown>;
-    reasons: Record<string, string>;
-    format: FormatSettings;
-    limit: (key: string, language?: string) => number | undefined;
-    tool: (name: string) => Record<string, unknown>;
-    ignoresFor: (check: string) => IgnoreEntry[];
-    rulesOff: (check: string) => string[];
-    extra: (name: string) => Record<string, unknown> | undefined;
-};

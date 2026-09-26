@@ -1,16 +1,15 @@
 import { z } from 'zod';
 import { hasPackages } from '#cli/tools/vale.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { isAbsolute, join, relative } from 'node:path';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
-import type { ProseRoute } from '#cli/checks/prose/grammars.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { VALE_CONFIG, VALE_STDIN } from '#cli/configurations/vale.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { ValeAlert, ProseRoute } from '#cli/types/checks/prose.ts';
 
 const alertsSchema = z.record(
     z.string().min(1),
@@ -105,6 +104,3 @@ export async function valeFindings(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
-
-/** One Vale alert, parsed. */
-export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };

@@ -4,31 +4,29 @@ import { cpus } from 'node:os';
 import { probeTool } from '#cli/tools/probe.ts';
 import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { resolveCheck } from '#cli/execution/engines.ts';
-import type { FixReport } from '#cli/execution/fixers.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { jobsWanted } from '#cli/platform/environment.ts';
-import type { IgnoreUse } from '#cli/execution/ignores.ts';
-import type { IgnoreEntry } from '#cli/policy/normalize.ts';
+import { isActive, planRun } from '#cli/execution/plan.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
-import type { ReportOptions } from '#cli/execution/run-report.ts';
-import type { SourceObservations } from '#cli/repository/tracked.ts';
+import type { CheckResult } from '#cli/types/checks/checks.ts';
+import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
-import { isActive, planRun, type PlannedCheck } from '#cli/execution/plan.ts';
-import { cachedResult, cacheKeyFor, type RunHashes, runHashes, storeResult } from '#cli/execution/result-cache.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import { cachedResult, cacheKeyFor, runHashes, storeResult } from '#cli/execution/result-cache.ts';
 
-type Executable = { check: PlannedCheck; run: ReturnType<typeof resolveCheck> };
-type Pass = {
-    session: Session;
-    options: RunOptions;
-    hashes: RunHashes;
-    staged: Set<string> | undefined;
-    uses: Map<string, IgnoreUse>;
-};
+import type {
+    Executable,
+    Pass,
+    RunOptions,
+    RunOutcome,
+    FixReport,
+    IgnoreUse,
+    PlannedCheck,
+    RunReport,
+    Session,
+} from '#cli/types/execution/execution.ts';
 
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
@@ -214,11 +212,3 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     if (isPruneWorthy(options, report)) pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }
-
-export type RunOptions = ReportOptions & {
-    fix: boolean;
-    noCache?: boolean;
-    cancelSignal?: AbortSignal;
-};
-
-export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { RunnerTask, RunnerTaskNames } from '#cli/types/policy/policy.ts';
 
 const taskName = z
     .string()
@@ -36,8 +37,6 @@ export const runnerTasksSchema = z
             context.addIssue({ code: 'custom', message: 'Each gspot task requires a distinct runner name.' });
     });
 
-export type RunnerTaskNames = z.infer<typeof runnerTasksSchema>;
-
 export const runnerSchema = z
     .strictObject({
         tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'yarn']).describe('The runner that receives generated tasks.'),
@@ -67,5 +66,3 @@ export const RUNNER_TASKS: (RunnerTask & { key: keyof RunnerTaskNames })[] = [
         run: 'gspot doctor',
     },
 ];
-
-export type RunnerTask = { name: string; description: string; run: string };

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Defined } from '#cli/policy/schema.ts';
 
 export const findingSchema = z.strictObject({
     check: z.string(),
@@ -28,12 +27,6 @@ export const checkResultSchema = z.strictObject({
     reproduce: z.string().optional(),
     command: z.array(z.string()).optional(),
 });
-
-export type Finding = Defined<z.infer<typeof findingSchema>>;
-
-export type CheckResult = Defined<Omit<z.infer<typeof checkResultSchema>, 'findings'>> & {
-    findings: Finding[];
-};
 
 /** A prerequisite prevents this check from running. */
 export class SkippedCheckError extends Error {

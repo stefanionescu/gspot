@@ -7,12 +7,23 @@ import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { prettierOptions } from '#cli/generation/format.ts';
-import type { CarriedFormatter } from '#cli/policy/adoption/results.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { literalGlob, relocatedOverrides  } from '#cli/generation/relocated-overrides.ts';
+import { literalGlob, relocatedOverrides } from '#cli/generation/relocated-overrides.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
+
+import type {
+    Base,
+    Carried,
+    FormatRequest,
+    NestedInput,
+    Parsed,
+    PrettierOverride,
+    Source,
+} from '#cli/types/evaluation.ts';
 
 // Git precedence: a nested ignore line is relative to its folder and follows the lines of every ancestor file.
 function rebasedIgnoreLine(line: string, folder: string): string {
@@ -25,7 +36,7 @@ function rebasedIgnoreLine(line: string, folder: string): string {
     return `${isNegated ? '!' : ''}/${directory}/${isAnchored ? '' : '**/'}${body}`;
 }
 
-function supportedOptions(value: unknown) {
+function supportedOptions(value: unknown): Base {
     const parsed = prettierSettings.safeParse(value);
     if (!parsed.success)
         throw new Error(
@@ -51,12 +62,6 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
         throw new Error('The installed Prettier does not expose its configuration API. Repair that installation.');
     return loaded;
 }
-type FormatRequest = z.infer<typeof formatRequest>;
-type Source = NonNullable<FormatRequest['source']>;
-type Override = NonNullable<z.infer<typeof prettierSource>['overrides']>[number];
-type Carried = { format: CarriedFormatter['format']; extra: Record<string, unknown> };
-type NestedInput = { from: string; settings: CarriedFormatter };
-
 // The Prettier options the policy models as format fields; every other option is carried under extra.
 const MODELED_OPTIONS = new Set([
     'tabWidth',
@@ -124,13 +129,6 @@ function choice<Value>(flag: boolean | undefined, whenTrue: Value, whenFalse: Va
     return flag ? whenTrue : whenFalse;
 }
 
-type Base = ReturnType<typeof supportedOptions>;
-type Parsed = {
-    indent: ReturnType<typeof formatFields.indent_width.safeParse>;
-    width: ReturnType<typeof formatFields.print_width.safeParse>;
-    ending: ReturnType<typeof formatFields.line_ending.safeParse>;
-};
-
 // The policy fields the base settings settle.
 function policyFormat(base: Base, parsed: Parsed): CarriedFormatter['format'] {
     const { indent, width, ending } = parsed;
@@ -146,7 +144,7 @@ function policyFormat(base: Base, parsed: Parsed): CarriedFormatter['format'] {
 }
 
 // The settings that stay Prettier's own under extra: unmodeled options, overrides, and values the policy cannot hold.
-function extraSettings(base: Base, parsed: Parsed, overrides: Override[]): Record<string, unknown> {
+function extraSettings(base: Base, parsed: Parsed, overrides: PrettierOverride[]): Record<string, unknown> {
     const { tabWidth, printWidth, endOfLine } = base;
     const native = Object.fromEntries(Object.entries(base).filter(([key]) => !MODELED_OPTIONS.has(key)));
     return compact({
@@ -199,18 +197,18 @@ function childExclusions(inputs: NestedInput[], folder: string): string[] {
 }
 
 // The exclusions an override already names, as a list.
-function excludedOf(override: Override): string[] {
+function excludedOf(override: PrettierOverride): string[] {
     if (override.excludeFiles === undefined) return [];
     return typeof override.excludeFiles === 'string' ? [override.excludeFiles] : override.excludeFiles;
 }
 
 // The overrides one configuration contributes: its settings for its folder, then its own overrides relocated there.
-function overridesOf(input: NestedInput, inputs: NestedInput[]): Override[] {
+function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverride[] {
     const folder = folderOf(input);
     const exclusions = childExclusions(inputs, folder);
     const { overrides: childOverrides = [], ...carried } = input.settings.extra ?? {};
     const options = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
-    const own: Override = {
+    const own: PrettierOverride = {
         files: folder === '.' ? '**/*' : `${literalGlob(folder)}/**/*`,
         excludeFiles: exclusions,
         options: supportedOptions({ ...prettierOptions(input.settings.format), ...options }),

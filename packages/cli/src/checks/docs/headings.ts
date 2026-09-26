@@ -1,9 +1,8 @@
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const BANNED_HEADINGS = [
     'table of contents',

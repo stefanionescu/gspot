@@ -1,31 +1,28 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, runner tasks, and rules.
 import { binaryPath } from '#cli/platform/assets.ts';
-import type { MergedView } from '#cli/policy/merge.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
-import type { Repository } from '#cli/repository/tree.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
 import { miseTasks } from '#cli/generation/runner-tasks.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { toolPackages } from '#cli/generation/tool-packages.ts';
-import type { GeneratedProposal } from '#cli/generation/proposal.ts';
+import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { withdrawRetained } from '#cli/generation/retained-outputs.ts';
-import type { ToolPackageManager } from '#cli/tools/packages/manager.ts';
 import { simpleGitHookOutputs } from '#cli/generation/simple-git-hooks.ts';
 import { configurationFiles } from '#cli/generation/configuration-files.ts';
 import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-import { gitignoreBlock, type Manifest } from '#cli/configurations/manifests.ts';
+import type { GeneratedProposal, GenerationOptions } from '#cli/types/generation.ts';
+import type { MergedView, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // The hook manager integrations gspot writes, by the tool the policy names; gspot's own hooks need none.
 const HOOK_OUTPUTS: Record<
@@ -185,9 +182,3 @@ export function emitAll(
     validateProposal(out);
     return out;
 }
-
-export type GenerationOptions = {
-    version: string;
-    packageManager: ToolPackageManager | undefined;
-    takeover?: ReadonlyMap<string, FileSnapshot> | undefined;
-};

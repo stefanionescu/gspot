@@ -1,4 +1,16 @@
-import type { RawPolicy, RawScope, Defined } from '#cli/policy/schema.ts';
+import type {
+    Defined,
+    RawPolicy,
+    RawScope,
+    Limits,
+    NamingCategoryTable,
+    NamingLanguageTable,
+    NamingSettings,
+    Policy,
+    RawLimits,
+    RawNaming,
+    Reasoned,
+} from '#cli/types/policy/policy.ts';
 
 const NAMING_LIST_KEYS = new Set([
     'banned_terms',
@@ -208,114 +220,3 @@ export function normalize(raw: RawPolicy): Policy {
         scopeTables,
     };
 }
-
-export type Reasoned<T> = { value: T; reason?: string };
-
-export type LimitTable = Record<string, Reasoned<number>>;
-
-export type Limits = {
-    root: LimitTable;
-    groups: Record<string, LimitTable>;
-};
-
-export type NamingCategoryTable = {
-    max_chars?: Reasoned<number>;
-    max_words?: Reasoned<number>;
-    case?: Reasoned<string[]>;
-};
-
-export type NamingLanguageTable = NamingCategoryTable & {
-    categories: Record<string, NamingCategoryTable>;
-};
-
-export type NamingRule = {
-    paths: string[];
-    languages?: string[];
-    categories?: string[];
-    names?: string[];
-    structural_prefix?: string;
-    allow_digits?: boolean;
-    allow_duplicate_words?: boolean;
-    exclude?: boolean;
-    case?: string[];
-    reason?: string;
-};
-
-export type NamingSettings = {
-    banned_terms: string[];
-    allowed: { name: string; reason?: string }[];
-    external: string[];
-    reserved: { term: string; allowed_for: string[] }[];
-    remove_groups: { group: string; reason?: string }[];
-    contract_properties: { file: string; names: string[] }[];
-    languages: Record<string, NamingLanguageTable>;
-    rules: NamingRule[];
-};
-
-export type ArchitectureElement = { name: string; paths: string[] };
-
-export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
-
-export type ArchitectureSettings = {
-    types_directory?: string;
-    elements: ArchitectureElement[];
-    edges_allowed: ArchitectureAllow[];
-    roles: Record<string, string | string[]>;
-    contracts: Record<string, unknown>[];
-};
-
-export type StructureSettings = {
-    reexports: 'none' | 'index-only';
-    single_file_folder_allowed: { paths: string[]; reason?: string }[];
-    prefix_collision_allowed: { paths: string[]; reason?: string }[];
-    folder_name_allowed: { paths: string[]; reason?: string }[];
-    python: Record<string, unknown>;
-};
-
-export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
-
-export type ToolTable = Record<string, unknown> & {
-    extra?: Record<string, unknown> & { reason?: string };
-};
-
-export type IgnoreEntry = NonNullable<RawPolicy['ignore']>[number];
-
-export type FileDeclaration =
-    | (RawPolicy['generated'][number] & { nature: 'generated' })
-    | (RawPolicy['vendored'][number] & { nature: 'vendored' });
-
-export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
-
-export type ScopeEntry = { path: string; configurations: string[] };
-
-export type Policy = {
-    version: number;
-    level: RawPolicy['level'];
-    requireReasons: RawPolicy['require_reasons'];
-    extraChecks: string[];
-    exclude: RawPolicy['exclude'];
-    configurations: string[];
-    scopes: ScopeEntry[];
-    limits: Limits;
-    naming: NamingSettings;
-    architecture: ArchitectureSettings;
-    structure: StructureSettings;
-    format: Defined<NonNullable<RawPolicy['format']>>;
-    prose: { vocabulary: string[] };
-    tools: Record<string, ToolTable>;
-    ignores: IgnoreEntry[];
-    declarations: FileDeclaration[];
-    checks: RepositoryCheck[];
-    hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
-    ci?: NonNullable<RawPolicy['ci']>;
-    rules: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
-    coverage: { strict: boolean };
-    runner?: Defined<NonNullable<RawPolicy['runner']>>;
-    scopeTables: Record<string, Partial<Policy>>;
-};
-
-/** The [limits] table as written. */
-export type RawLimits = NonNullable<RawPolicy['limits']>;
-
-/** The [naming] table as written. */
-export type RawNaming = NonNullable<RawPolicy['naming']>;

@@ -1,11 +1,9 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { LOCKFILES } from '#cli/repository/locked-packages.ts';
-
-type Reporter = (file: string, rule: string, text: string) => Finding;
+import type { Reporter } from '#cli/types/checks/dependencies.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const BUNFIG = 'bunfig.toml';
 const DEFAULT_AGE_DAYS = 7;

@@ -1,16 +1,13 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import type { Finding } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { SiteBuild } from '#cli/checks/static-site/build.ts';
 import { isAbsolute, join, relative as relativePath } from 'node:path';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { SiteBuild, SizeLimit } from '#cli/types/checks/static-site.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
-
-type SizeLimit = { paths: string[]; kb: number; reason?: string };
 
 const BYTES_PER_KB = 1024;
 const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;

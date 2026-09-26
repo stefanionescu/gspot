@@ -1,19 +1,16 @@
 import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { probeTool, toolPin } from '#cli/tools/probe.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
-import type { FixOrder } from '#cli/configurations/schema.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool-runner.ts';
+import type { FixOrder, ToolPin } from '#cli/types/configurations.ts';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import type { PreparedCommand } from '#cli/execution/tool-runner.ts';
 import { readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import { executionFailure, hasToolError } from '#cli/execution/broken-tool.ts';
 import { createFileWorkspace, scratchCopy } from '#cli/execution/file-workspace.ts';
+import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution/execution.ts';
 
 const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
 
@@ -213,10 +210,3 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
         if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
     }
 }
-
-export type FixResult = { check: string; changed: string[] } & (
-    | { status: 'changed' | 'unchanged' | 'skipped' }
-    | { status: 'failed'; note: string }
-);
-
-export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };

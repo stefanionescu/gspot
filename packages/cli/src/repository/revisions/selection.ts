@@ -1,6 +1,7 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
+import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
 
 const GIT_TIMEOUT_MS = 30_000;
@@ -103,7 +104,3 @@ export async function pushBase(root: string, cancelSignal?: AbortSignal): Promis
     if (first === undefined || first === '') throw new Error('Git did not return a root commit for HEAD.');
     return first;
 }
-
-export type ChangedSet = { reference: string; paths: string[] };
-
-export type StagedSet = { staged: string[]; unstaged: number };

@@ -3,17 +3,15 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
 import { PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import type { CheckResult } from '#cli/types/checks/checks.ts';
+import type { SecretScan } from '#cli/types/checks/secrets.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { gitBlobs } from '#cli/repository/revisions/snapshot.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-
-type Scan = { session: Session; planned: PlannedCheck; input: string };
+import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
 const GIT_TIMEOUT_MS = 30_000;
 const CHANGE_LINE =
@@ -80,7 +78,7 @@ function appendRecord(input: string, record: Record<string, unknown>): void {
 }
 
 // Appends every changed blob of a commit to the enumerator input.
-async function appendBlobs(scan: Scan, commit: string): Promise<void> {
+async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const entries = changedObjects(await changeFields(scan.session, commit));
     const blobs = await gitBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
     for (const [file, object] of entries) {
@@ -91,7 +89,7 @@ async function appendBlobs(scan: Scan, commit: string): Promise<void> {
 }
 
 // Appends a commit's author, committer, and message to the enumerator input.
-async function appendMetadata(scan: Scan, commit: string): Promise<void> {
+async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
     const { session, planned } = scan;
     const message = await runToolCommand(
         planned.scope.view,
@@ -108,7 +106,7 @@ async function appendMetadata(scan: Scan, commit: string): Promise<void> {
 async function scanCommits(session: Session, planned: PlannedCheck, commits: string[]): Promise<CheckResult> {
     const scratch = mkdtempSync(join(tmpdir(), 'gspot-verified-secrets-'));
     try {
-        const scan: Scan = { session, planned, input: join(scratch, 'commits.jsonl') };
+        const scan: SecretScan = { session, planned, input: join(scratch, 'commits.jsonl') };
         writeFileSync(scan.input, '', { mode: PRIVATE_FILE });
         for (const commit of commits) {
             await appendBlobs(scan, commit);

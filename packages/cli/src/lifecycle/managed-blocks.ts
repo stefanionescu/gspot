@@ -1,3 +1,5 @@
+import type { BlockStyle } from '#cli/types/lifecycle/lifecycle.ts';
+
 const MANAGED_BLOCK_START = '<!-- >>> gspot managed >>> -->';
 const MANAGED_BLOCK_END = '<!-- <<< gspot managed <<< -->';
 
@@ -67,5 +69,3 @@ export function currentBlock(text: string, style: BlockStyle): string | undefine
     if (startIndex === -1 || endIndex < startIndex) return undefined;
     return text.slice(startIndex + start.length, endIndex).trim();
 }
-
-export type BlockStyle = 'markdown' | 'hash';

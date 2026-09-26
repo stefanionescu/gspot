@@ -13,11 +13,11 @@ import { hooksSchema } from '#cli/repository/hooks.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { readProfile } from '#cli/policy/profiles/read.ts';
-import type { Profile } from '#cli/policy/profiles/read.ts';
+import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan-text.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
-import type { InitOptions, InitPrepared, InitResult } from '#cli/commands/init/types.ts';
+import type { InitOptions, InitPrepared, InitResult } from '#cli/types/commands/init.ts';
 
 const UNREADABLE_EXIT = 2;
 const ALREADY_INSTALLED =

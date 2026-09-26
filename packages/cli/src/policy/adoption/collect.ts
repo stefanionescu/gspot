@@ -4,7 +4,7 @@ import { osvImporter } from '#cli/policy/adoption/osv.ts';
 import { ruffImporter } from '#cli/policy/adoption/ruff.ts';
 import { typosImporter } from '#cli/policy/adoption/typos.ts';
 import { collectEslint } from '#cli/policy/adoption/eslint.ts';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
+import { appendSetting } from '#cli/policy/adoption/results.ts';
 import { gitleaksImporter } from '#cli/policy/adoption/gitleaks.ts';
 import { licensesImporter } from '#cli/policy/adoption/licenses.ts';
 import { stylelintImporter } from '#cli/policy/adoption/stylelint.ts';
@@ -13,43 +13,11 @@ import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
 import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
-import type { ExistingTool, ExistingTooling } from '#cli/repository/existing-tooling.ts';
-import { appendSetting, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
+import type { Carrier, Owned, CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
-
-const nativeImporters: Record<
-    string,
-    {
-        schema: z.ZodType;
-        carry?: (
-            source: CarrySource,
-            path: string,
-            lists: CarriedConfiguration,
-            root: string,
-            check?: string,
-        ) => void | Promise<void>;
-    }
-> = {
-    typos: typosImporter,
-    gitleaks: gitleaksImporter,
-    'osv-scanner': osvImporter,
-    basedpyright: { schema: z.strictObject({ exclude: strings.optional() }), carry: carryPyright },
-    'license-checker-rseidelsohn': licensesImporter,
-    ruff: ruffImporter,
-    'markdownlint-cli2': markdownImporter,
-    stylelint: stylelintImporter,
-    squawk: { schema: z.strictObject({ excluded_rules: strings.optional() }) },
-    swiftlint: { schema: z.strictObject({ disabled_rules: strings.optional() }) },
-    hadolint: { schema: z.strictObject({ ignored: strings.optional() }) },
-    sqlfluff: {
-        schema: z.strictObject({ sqlfluff: z.strictObject({ exclude_rules: z.string().optional() }).optional() }),
-    },
-};
-
-type Carrier = NonNullable<(typeof nativeImporters)[string]['carry']>;
-type Owned = ExistingTooling['configs'][number];
 
 // The setting an ignore-path file of a tool fills, for the tools whose importer reads one.
 const IGNORE_PATH_KEYS: Record<string, string> = { sqlfluff: 'exclude', semgrep: 'ignore' };
@@ -192,6 +160,35 @@ function isCarriedElsewhere(entry: Owned): boolean {
 function sortedUnique(items: string[]): string[] {
     return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
 }
+
+export const nativeImporters: Record<
+    string,
+    {
+        schema: z.ZodType;
+        carry?: (
+            source: CarrySource,
+            path: string,
+            lists: CarriedConfiguration,
+            root: string,
+            check?: string,
+        ) => void | Promise<void>;
+    }
+> = {
+    typos: typosImporter,
+    gitleaks: gitleaksImporter,
+    'osv-scanner': osvImporter,
+    basedpyright: { schema: z.strictObject({ exclude: strings.optional() }), carry: carryPyright },
+    'license-checker-rseidelsohn': licensesImporter,
+    ruff: ruffImporter,
+    'markdownlint-cli2': markdownImporter,
+    stylelint: stylelintImporter,
+    squawk: { schema: z.strictObject({ excluded_rules: strings.optional() }) },
+    swiftlint: { schema: z.strictObject({ disabled_rules: strings.optional() }) },
+    hadolint: { schema: z.strictObject({ ignored: strings.optional() }) },
+    sqlfluff: {
+        schema: z.strictObject({ sqlfluff: z.strictObject({ exclude_rules: z.string().optional() }).optional() }),
+    },
+};
 
 /**
  * True when a selected configuration declares adoption for the tool.

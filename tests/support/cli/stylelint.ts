@@ -1,5 +1,5 @@
 // The discovered Stylelint configuration the adoption tests start from.
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** One discovered root Stylelint configuration and nothing else. */
 export const STYLELINT_TOOLING: ExistingTooling = {

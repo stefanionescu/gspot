@@ -1,6 +1,17 @@
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
-import type { NamingLanguageTable, Policy, Reasoned } from '#cli/policy/normalize.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
+
+import type {
+    NamingLanguageTable,
+    Policy,
+    Reasoned,
+    ExposedSettings,
+    PolicyLayer,
+    ResolvedSetting,
+    SettingState,
+    SpecMatch,
+    WrittenValue,
+} from '#cli/types/policy/policy.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
@@ -263,33 +274,3 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
         .toSorted((a, b) => a.localeCompare(b));
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
 }
-
-export type ResolvedSetting = {
-    key: string;
-    spec: SettingSpec;
-    value: unknown;
-    reason?: string;
-    source: string;
-    scope?: string;
-};
-
-export type ExposedSettings = {
-    specs: Map<string, SettingSpec>;
-    defaults: Map<string, { value: unknown; configuration: string }>;
-    problems: { key: string; message: string }[];
-};
-
-/** A written value with its reason, once the reasoned form is unwrapped. */
-export type WrittenValue = { value: unknown; reason?: string };
-
-/** One layer of policy that a key is resolved through: the root table or one scope table. */
-export type PolicyLayer = { table: Partial<Policy>; name: string };
-
-/** A written key matched to its spec, with the language and category the key names. */
-export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
-
-/** Where a resolved value stands after some layers were applied. */
-export type SettingState = { value: unknown; source: string; reason: string | undefined };
-
-/** What resolving a value for one scope needs. */
-export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };

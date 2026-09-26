@@ -1,30 +1,22 @@
 // Whether the installed Git hooks still match what the journal recorded, with the line that says so.
 import { basename, posix } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { Repository } from '#cli/repository/tree.ts';
+import type { HookName } from '#cli/types/generation.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { EXECUTE_BITS } from '#cli/platform/file-modes.ts';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
-import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
-import { type FileSnapshot } from '#cli/platform/safe-paths.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { hookLocation } from '#cli/repository/hook-location.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
 import { HOOK_ARTIFACTS, HOOK_FILES } from '#cli/repository/hooks.ts';
+import type { Readiness, Status } from '#cli/types/lifecycle/hooks.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
+import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
+import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { type HookLocation, hookLocation } from '#cli/repository/hook-location.ts';
-import { type HookName, huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
-
-type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;
-type Status = {
-    policy: Policy;
-    root: string;
-    location: HookLocation;
-    entries: OwnershipEntry[];
-    hasManager: boolean;
-    husky: Map<string, string> | undefined;
-};
 
 // Whether each native manager's integration is in place, by the tool that owns the hooks.
 const INTEGRATIONS: Record<string, Readiness> = {

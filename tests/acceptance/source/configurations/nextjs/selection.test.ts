@@ -4,10 +4,10 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { TakeoverPlan } from '#cli/commands/init/plan.ts';
+import type { TakeoverPlan } from '#cli/types/commands/init.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 
 test.each(['none', 'index-only'])(

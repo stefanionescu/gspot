@@ -2,9 +2,11 @@
 import { homedir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { miseHome } from '#cli/platform/environment.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { PackageFacts, PrivateKind } from '#cli/types/tools/tools.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
@@ -139,8 +141,3 @@ export function miseVersion(path: string, tool: ToolPin): string | undefined {
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
     return existsOnDisk(installed) ? npm.version : undefined;
 }
-
-/** The two facts of a package.json that say which package it is. */
-export type PackageFacts = { name?: string; version?: string };
-
-export type PrivateKind = 'npm' | 'python';

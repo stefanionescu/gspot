@@ -4,9 +4,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { RunReport } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installPythonProject, resolvePythonProject } from '#cli/tools/python-project.ts';
 
 test.each(['recommended', 'all'])(

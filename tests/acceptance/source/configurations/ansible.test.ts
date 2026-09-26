@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { Finding } from '#cli/checks/result.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';

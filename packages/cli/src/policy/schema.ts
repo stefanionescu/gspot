@@ -432,20 +432,3 @@ export const policySchema = z.strictObject({
     coverage: coverageSchema.optional(),
     runner: runnerSchema.optional(),
 });
-
-export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
-
-/** gspot.toml as the schema accepts it, before normalization. */
-export type RawPolicy = z.infer<typeof policySchema>;
-
-export type EslintAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['eslint']>['adopted']>[number];
-
-/** One [[scope]] entry as written. */
-export type RawScope = z.infer<typeof scopeSchema>;
-
-/** ESLint settings retain the validation shape of their policy owner. */
-export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;
-
-export type EslintRegistration = NonNullable<EslintAdoption['plugins']>[string];
-
-export type EditorconfigAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted']>;

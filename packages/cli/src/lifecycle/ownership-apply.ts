@@ -1,18 +1,10 @@
 // Applying proposals: each batch is journaled before a byte moves, so an interruption can be recovered.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { OwnershipEntry, originalSchema } from '#cli/lifecycle/journal.ts';
-import { type FileProposal, identity, type Journal, matches } from '#cli/lifecycle/ownership-journal.ts';
-
-type Outcome = 'changed' | 'unchanged' | 'preserved';
-type Prepared = {
-    path: string;
-    current: FileSnapshot | undefined;
-    next: FileSnapshot | undefined;
-    entry: OwnershipEntry | undefined;
-    recovery: z.infer<typeof originalSchema> | undefined;
-};
+import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { originalSchema } from '#cli/lifecycle/journal.ts';
+import { identity, matches } from '#cli/lifecycle/ownership-journal.ts';
+import type { Outcome, Prepared, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the proposal is a link.
 function foundSnapshot(

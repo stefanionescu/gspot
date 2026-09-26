@@ -1,15 +1,20 @@
 // The paths a policy names that must exist in the repository: scope directories and adopted ESLint and EditorConfig
-// locations.
 import * as messages from '#cli/policy/messages.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
+// locations.
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import type { PathSegment, PolicyProblem } from '#cli/policy/problems.ts';
-import type { EditorconfigAdoption, EslintAdoption } from '#cli/policy/schema.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
-type Located<T> = { value: T; path: PathSegment[] };
-type ModuleReference = { module: string };
+import type {
+    Located,
+    ModuleReference,
+    EditorconfigAdoption,
+    EslintAdoption,
+    PathSegment,
+    Policy,
+    PolicyProblem,
+} from '#cli/types/policy/policy.ts';
 
 // A module specifier that names a location on disk rather than a package, unless it is repository-relative.
 const LOCATION_SPECIFIER = /^(?:\.|\/|\\|[A-Za-z]:)/u;

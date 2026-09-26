@@ -2,20 +2,15 @@
 import { posix } from 'node:path';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { EditorconfigAdoption } from '#cli/policy/schema.ts';
-import type { TemplateInputs } from '#cli/generation/templates.ts';
 import { GENERATED_JSON_KEY } from '#cli/generation/json-format.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
-import type { ConfigurationTarget } from '#cli/configurations/schema.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-import type { GeneratedFile, GeneratedProposal } from '#cli/generation/proposal.ts';
-
-type Pointer = NonNullable<ConfigurationTarget['pointer']>;
+import type { EditorconfigAdoption, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { EmitContext, Pointer, GeneratedFile, GeneratedProposal } from '#cli/types/generation.ts';
 
 const JSON_INDENT = 4;
 
@@ -190,13 +185,3 @@ export function configurationFiles(context: EmitContext, out: GeneratedProposal,
         emitConfiguration(context, config, target, out);
     }
 }
-
-/** What emitting one manifest in one scope needs. */
-export type EmitContext = {
-    root: string;
-    files: TrackedFile[];
-    scopes: ScopeSelection[];
-    inputs: TemplateInputs;
-    selection: ScopeSelection;
-    manifest: Manifest;
-};

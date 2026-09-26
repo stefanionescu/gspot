@@ -1,5 +1,6 @@
 import { extensionOf } from '#cli/platform/paths.ts';
-import { GENERATED_JSON_KEY, jsonText, type JsonFormat } from '#cli/generation/json-format.ts';
+import type { JsonFormat } from '#cli/types/generation.ts';
+import { GENERATED_JSON_KEY, jsonText } from '#cli/generation/json-format.ts';
 
 const JSON_EXTENSIONS = new Set(['.json', '.webmanifest']);
 const SLASH_COMMENT_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts', '.jsonc', '.json5']);

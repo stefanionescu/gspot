@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import type { CommandFailureJson } from '#cli/commands/print-result.ts';
+import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { gspot, PLANTED_TIMEOUT_MS, run, runProcess } from '#tests/support/cli/command.ts';

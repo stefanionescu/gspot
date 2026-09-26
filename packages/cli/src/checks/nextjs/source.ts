@@ -1,6 +1,5 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;
 const CONFIG_FILE = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;

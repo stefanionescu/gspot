@@ -1,21 +1,17 @@
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/checks/input.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { PlannedCheck } from '#cli/execution/plan.ts';
+import type { ToolProbe } from '#cli/types/tools/tools.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
+import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import { collect, missingNote } from '#cli/execution/tool-findings.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import type { CheckResult, Finding } from '#cli/checks/result.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/platform/spawn.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
+import { MissingToolError, probeTool, toolPin } from '#cli/tools/probe.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
-import type { Substitutions, ToolInvocation } from '#cli/execution/command-expansion.ts';
-import { collect, missingNote, type ToolRunState } from '#cli/execution/tool-findings.ts';
-import { MissingToolError, probeTool, type ToolProbe, toolPin } from '#cli/tools/probe.ts';
+import type { CheckResult, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 import {
     commandConfigurations,
@@ -23,6 +19,15 @@ import {
     substitute,
     substituteValue,
 } from '#cli/execution/command-expansion.ts';
+import type {
+    PreparedCommand,
+    ToolRun,
+    PlannedCheck,
+    Session,
+    Substitutions,
+    ToolInvocation,
+    ToolRunState,
+} from '#cli/types/execution/execution.ts';
 
 const FILES_PLACEHOLDER = '{files}';
 function workingDirectory(session: Session, planned: PlannedCheck): string {
@@ -134,25 +139,16 @@ function missingConfiguration(
         return {
             ...base,
             status: 'error',
-            note: `Required configuration ${missing} is missing. Run gspot apply before checking.`,
+            note: `Required configuration ${missing} is missing. ToolRun gspot apply before checking.`,
         };
     } finally {
         files.close();
     }
 }
 
-type Run = {
-    session: Session;
-    planned: PlannedCheck;
-    tool: ToolPin;
-    command: string[];
-    probe: ToolProbe;
-    base: CheckResult;
-};
-
 // Runs the command in the workspace it was given, or in a copy of its files when the check isolates them, and
 // reports the repository's command rather than the copy's.
-async function runInWorkspace(run: Run, workspace: string | undefined): Promise<CheckResult> {
+async function runInWorkspace(run: ToolRun, workspace: string | undefined): Promise<CheckResult> {
     const { session, planned, tool, command, probe, base } = run;
     using created = isolatedWorkspace(session, planned, command, workspace);
     const root = workspace ?? created?.root;
@@ -271,7 +267,7 @@ export async function runToolCheck(
 }
 
 /**
- * Run an adapter command through the shared execution boundaries.
+ * ToolRun an adapter command through the shared execution boundaries.
  * @param input the check and its command session
  * @param command the executable name and arguments
  * @param options the working directory, environment, and standard input
@@ -297,11 +293,3 @@ export async function runCheckCommand(
     if (failure !== undefined) throw new Error(failure.note);
     return result;
 }
-
-export type PreparedCommand = {
-    root: string;
-    cwd: string;
-    argv: string[];
-    commands: ToolInvocation[];
-    env: Record<string, string>;
-};

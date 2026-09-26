@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { CarrySource } from '#cli/policy/adoption/source.ts';
 import { asList, asRaw, asText } from '#cli/policy/adoption/source.ts';
-import { appendSetting, reasonFor, type CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
 
 function reviewBy(value: unknown): string | undefined {
     return asText(value) ?? (value instanceof Date ? value.toISOString() : undefined);

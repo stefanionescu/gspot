@@ -1,5 +1,5 @@
-import type { Analysis } from '#cli/checks/structure/engine.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
  * One finding per function whose body code lines exceed limits.bash.function_lines.

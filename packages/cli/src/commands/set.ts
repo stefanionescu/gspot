@@ -2,31 +2,19 @@ import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
 import { PolicyError } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Mutation } from '#cli/policy/write.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { isLoosening } from '#cli/policy/loosening.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { Mutation, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import { directoryOf, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
-
-type SetOptions = {
-    cwd: string;
-    key: string;
-    items: string[];
-    reason?: string;
-    scope?: string;
-    replace: boolean;
-    remove: boolean;
-    toDefault: boolean;
-};
 
 const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;

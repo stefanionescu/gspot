@@ -2,22 +2,19 @@ import { z } from 'zod';
 import { pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
+import type { LicenseChecker } from '#cli/types/evaluation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { licenseRequest, licenseResponse } from '#cli/evaluation/protocol.ts';
+import type { licenseRequest, licenseResponse } from '#cli/evaluation/protocol.ts';
 
 const reportSchema = z.record(
     z.string(),
     z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() }),
 );
 
-type LicenseChecker = {
-    init: (
-        options: { start: string; includePackages: string; excludePrivatePackages: boolean },
-        callback: (error: Error | null, report: unknown) => void,
-    ) => void;
-};
-
-/** Resolve excluded packages through the installed scanner before adopting version-bound exceptions. */
+/**
+ * Resolve excluded packages through the installed scanner before adopting version-bound exceptions.
+ * @param request
+ */
 export async function evaluateLicenses(
     request: z.infer<typeof licenseRequest>,
 ): Promise<z.infer<typeof licenseResponse>> {

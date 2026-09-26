@@ -1,24 +1,18 @@
 import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { constants, readFileSync, statSync } from 'node:fs';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { OwnershipEntry } from '#cli/lifecycle/journal.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/platform/file-modes.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { basename, dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
+import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/python-launchers.ts';
+import type { Directory, PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/python-site-packages.ts';
-
-import {
-    type PythonLauncher,
-    pythonLauncher,
-    type RelocationContext,
-    relocateLaunchers,
-} from '#cli/repository/revisions/python-launchers.ts';
-
-type Directory = { folder: string; dependency: string };
 
 const COPY_CONCURRENCY = 8;
 const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];

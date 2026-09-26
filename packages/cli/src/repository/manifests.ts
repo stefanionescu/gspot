@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
@@ -251,19 +251,3 @@ export function readManifests(root: string, files: TrackedFile[]): ManifestFacts
             }
         });
 }
-
-export type PackageManifest = z.infer<typeof packageManifestSchema>;
-
-export type DependencyMap = Record<string, string>;
-
-export type ManifestFacts = {
-    path: string;
-    kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
-    dependencies: DependencyMap;
-    installed: DependencyMap;
-    scripts: Record<string, string>;
-    workspaces: string[];
-    installer?: string;
-    engines: Record<string, string>;
-    type?: string;
-};

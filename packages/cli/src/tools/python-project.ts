@@ -6,13 +6,13 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { MissingToolError } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/platform/file-modes.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
+import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     chmodSync,

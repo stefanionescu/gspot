@@ -2,6 +2,7 @@
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { HookLocation } from '#cli/types/repository/repository.ts';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 
 // One line of Git plumbing output, or a failure that names what could not be resolved.
@@ -67,11 +68,3 @@ export function hookLocation(root: string): HookLocation {
     if (internal !== undefined) return { ...location, root: gitDirectory, directory: internal };
     return { ...location, stateDirectory: `${location.directory}/.gspot/state` };
 }
-
-export type HookLocation = {
-    root: string;
-    directory: string;
-    absolute: string;
-    gitRoot: string;
-    stateDirectory: string;
-};

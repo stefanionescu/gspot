@@ -1,31 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { Repository } from '#cli/repository/tree.ts';
+import type { HookName } from '#cli/types/generation.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { basename, posix, relative, resolve } from 'node:path';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
-import type { FileProposal } from '#cli/lifecycle/ownership-journal.ts';
-import type { PreparedHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/platform/file-modes.ts';
+import { hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { HookLocation, Repository } from '#cli/types/repository/repository.ts';
+import type { FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { HOOK_ARTIFACTS, HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/repository/hooks.ts';
-import { type HookLocation, hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
-
-type HookName = (typeof HOOK_FILES)[number];
-type Installation = {
-    owner: LifecycleOwner;
-    location: HookLocation;
-    policy: Policy;
-    manager: ReadonlyMap<string, PreparedHook> | undefined;
-    recorded: Set<string>;
-    nativeMarker: string | undefined;
-    directory: string;
-};
-type Restorations = { proposals: FileProposal[]; preserved: string[] };
+import type { PreparedHook, Installation, Restorations } from '#cli/types/lifecycle/hooks.ts';
 
 function rejectDifferingNativeHook(
     path: string,

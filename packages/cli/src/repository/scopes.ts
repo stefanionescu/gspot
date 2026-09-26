@@ -8,14 +8,13 @@ import { relative, join } from 'node:path';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { readdirSync, statSync, type Dirent } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/repository/patterns.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { ScopeEntry, ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
@@ -286,13 +285,6 @@ export function scopeAncestors(
         .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
         .toSorted((left, right) => left.path.length - right.path.length);
 }
-
-export type ScopeEntry = {
-    name: string;
-    path: string;
-    configurations: string[];
-    source: 'root' | 'gspot.toml' | 'workspace' | 'project';
-};
 
 /**
  * Whether a scope is a package the package manager knows: a workspace flag names only a folder with a package.json.

@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 // Below the all level, svgo must save a tenth of the file before the saving is reported.
 const REPORTED_SAVINGS_SHARE = 10;

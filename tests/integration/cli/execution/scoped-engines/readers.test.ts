@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { containing } from '#tests/support/expectations.ts';
 
 const HEADERS =

@@ -2,7 +2,7 @@
 import { expect, test } from 'bun:test';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/file-batches.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 const file = (path: string): TrackedFile => ({
     path,

@@ -2,9 +2,9 @@
 import { fileURLToPath } from 'node:url';
 import { afterAll, expect, test } from 'bun:test';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { InstallJson } from '#cli/commands/install.ts';
 import { delimiter, dirname, join, relative } from 'node:path';
 import { runProcess as run } from '#tests/support/cli/command.ts';
+import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environment, RELEASE_TIMEOUT_MS } from '#tests/support/release/packages.ts';
 import { installedConsumer, publishRelease } from '#tests/support/release/published.ts';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';

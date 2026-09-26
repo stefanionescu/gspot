@@ -2,7 +2,7 @@
 declare module 'libpg-query/wasm/libpg-query.js' {
     const createModule: (options: {
         locateFile: () => string;
-    }) => Promise<import('#cli/parsers/sql/types.ts').PgModule>;
+    }) => Promise<import('#cli/types/parsers/sql.ts').PgModule>;
     export default createModule;
 }
 

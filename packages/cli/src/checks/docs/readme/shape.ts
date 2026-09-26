@@ -2,12 +2,10 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-
-type ShapeProblem = [number, string, string];
+import type { ShapeProblem } from '#cli/types/checks/docs.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function titleProblem(nodes: RootContent[]): ShapeProblem[] {
     const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);

@@ -1,12 +1,8 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-
-type BaselineReason = { fingerprint: string; reason: string };
-
-type GitleaksFinding = { Fingerprint: string; File: string; RuleID: string; Commit?: string };
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';
 
 const BASELINE = '.gspot/gitleaks-baseline.json';
 

@@ -1,20 +1,26 @@
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
-import type { ScopeEntry } from '#cli/repository/scopes.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
-import type { RunnerTaskNames } from '#cli/policy/runner.ts';
-import type { Proposal } from '#cli/commands/init/propose.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import type { RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import { runnerTaskPlan } from '#cli/generation/runner-task-plan.ts';
-import type { DetectedSetting } from '#cli/commands/init/settings.ts';
-import type { ConfigurationReason } from '#cli/commands/init/selection.ts';
-import type { CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { ScopeEntry } from '#cli/types/repository/repository.ts';
+import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
 import { MISE_CONFIG_PATH, misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/generation/bun.ts';
-import type { InitAnswers, InitPlanInputs, InitSelection } from '#cli/commands/init/types.ts';
+
+import type {
+    InstallSettings,
+    TakeoverPlan,
+    DetectedSetting,
+    InitAnswers,
+    InitPlanInputs,
+    InitProposal as Proposal,
+    InitSelection,
+} from '#cli/types/commands/init.ts';
 
 // How many values a carried setting holds: the entries of a list or table, or one scalar.
 function carriedCount(value: unknown): number {
@@ -22,8 +28,6 @@ function carriedCount(value: unknown): number {
     if (typeof value === 'object' && value !== null) return Object.keys(value).length;
     return 1;
 }
-
-type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
 
 const CURSOR_RULE = '.cursor/rules/gspot.mdc';
 const HOOKS_ROW = {
@@ -272,16 +276,3 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         ignores: [...carried.tools.values()].flatMap((tool) => tool.ignores),
     };
 }
-
-export type TakeoverPlan = {
-    profile?: { name: string; digest: string; selection: string; detected: string[] };
-    configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
-    write: { path: string; note: string }[];
-    remove: { path: string; note: string }[];
-    unread: { path: string; note: string }[];
-    retained: { path: string; note: string }[];
-    carried: { from: string; count: number; into: string }[];
-    change: { path: string; note: string }[];
-    noLongerRuns: { path: string; note: string }[];
-    ignores: { check: string; rule?: string; reason: string }[];
-};

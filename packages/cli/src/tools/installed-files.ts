@@ -1,10 +1,10 @@
 import { basename, dirname, join } from 'node:path';
 import { MODE_BITS } from '#cli/platform/file-modes.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/platform/paths.ts';
 
 /**

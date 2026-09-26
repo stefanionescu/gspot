@@ -1,11 +1,10 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { RawPolicy } from '#cli/policy/schema.ts';
-import type { DetectedSetting } from '#cli/commands/init/settings.ts';
+import type { InitProposal } from '#cli/types/commands/init.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
-import type { CarriedFormatter, CarriedConfiguration } from '#cli/policy/adoption/results.ts';
+import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
 
 const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 
@@ -23,7 +22,7 @@ function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
     return kept.length === 0 ? undefined : Object.fromEntries(kept);
 }
 
-function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
+function xcodeTable(xcode: InitProposal['xcode']): TomlTable | undefined {
     if (xcode === undefined) return undefined;
     return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
 }
@@ -31,7 +30,7 @@ function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
 function toolTables(
     carried: CarriedConfiguration,
     commitScopes: string[] | undefined,
-    xcode?: Proposal['xcode'],
+    xcode?: InitProposal['xcode'],
 ): TomlTable {
     const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
         [...carried.tools]
@@ -46,7 +45,7 @@ function toolTables(
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
 
-function headTables(proposal: Proposal): TomlTable {
+function headTables(proposal: InitProposal): TomlTable {
     const document: TomlTable = {
         version: 1,
         level: policySchema.shape.level.parse(undefined),
@@ -131,7 +130,7 @@ function bodyText(document: TomlTable): string {
  * @param proposal the proposal
  * @returns the TOML text with the schema line and the preface
  */
-export function proposeText(proposal: Proposal): string {
+export function proposeText(proposal: InitProposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
     if (proposal.formatter?.extra !== undefined)
@@ -173,21 +172,3 @@ export function proposeText(proposal: Proposal): string {
     }
     return `${PREFACE}${bodyText(document)}`;
 }
-
-export type Proposal = {
-    profileTables?: TomlTable;
-    configurations: string[];
-    scopes: { path: string; configurations: string[] }[];
-    carried: CarriedConfiguration;
-    hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
-    ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
-    rules: boolean;
-    runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
-    runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
-    formatter?: CarriedFormatter;
-    /** The Xcode project and scheme init found, for the tools.xcode table. */
-    xcode?: { scope: string; project: string; scheme?: string };
-    /** The settings init filled from the repository through their detect tables. */
-    detected?: DetectedSetting[];
-    commitScopes?: string[];
-};

@@ -1,10 +1,10 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { claimants } from '#cli/configurations/claims.ts';
-import type { Explanation } from '#cli/commands/explain/subjects.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
     if (file.nature === 'binary') return 'binary: eligible for secrets and size checks';
@@ -107,19 +107,6 @@ function pathText(report: PathExplanation): string {
     ];
     return `${lines.join('\n')}\n`;
 }
-
-type PathExplanation = {
-    path: string;
-    scope: string;
-    nature: string;
-    natureSource?: string;
-    tags: string[];
-    configurations: string[];
-    checks: { check: string; stage: string; configuration?: string }[];
-    ignores: { check: string; rule?: string; reason?: string }[];
-    unchecked?: string;
-    remedy?: string;
-};
 
 /**
  * Explains a repository file or an explicitly requested path.

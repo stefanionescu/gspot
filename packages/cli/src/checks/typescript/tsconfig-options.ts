@@ -1,8 +1,7 @@
 import { join } from 'node:path';
 import type { CompilerOptions } from 'typescript';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
 // Nest injects by the emitted types of constructor parameters, which takes both decorator options.

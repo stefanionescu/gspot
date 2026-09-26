@@ -2,6 +2,7 @@
 import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
+import type { OutputOptions } from '#cli/types/output.ts';
 import { isCi, isColorRefused } from '#cli/platform/environment.ts';
 
 const LEVELS: Record<OutputOptions['verbosity'], number> = { quiet: 1, normal: 3, verbose: 4 };
@@ -89,8 +90,6 @@ export function reportStorageFailure(path: string, error: unknown): void {
 export function print(text: string): void {
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
-
-export type OutputOptions = { verbosity: 'quiet' | 'normal' | 'verbose'; json: boolean; color: boolean };
 
 /**
  * Prints one object as JSON on stdout.

@@ -5,25 +5,20 @@ import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { probeTool } from '#cli/tools/probe.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { ToolContext } from '#cli/tools/probe.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { Repository } from '#cli/repository/tree.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import type { ToolContext } from '#cli/types/tools/tools.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
 import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/repository/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
 import { hookPrefix, lefthookConfiguration } from '#cli/generation/hooks.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-
-import {
-    type HookManager,
-    nativeHook,
-    type Preparation,
-    type PreparedHook,
-} from '#cli/lifecycle/hooks/native-hooks.ts';
+import type { HookManager, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
 
 const MANAGERS = new Set<string>(['simple-git-hooks', 'pre-commit', 'lefthook', 'husky']);
 const CONFIG_PATHS: Record<HookManager, string> = {

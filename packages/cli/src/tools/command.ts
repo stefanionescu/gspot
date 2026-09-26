@@ -1,6 +1,7 @@
-import type { MergedView } from '#cli/policy/merge.ts';
+import { run } from '#cli/platform/spawn.ts';
+import type { MergedView } from '#cli/types/policy/policy.ts';
 import { TOOL_DEADLINE } from '#cli/configurations/settings.ts';
-import { run, type SpawnOptions, type SpawnResult } from '#cli/platform/spawn.ts';
+import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
 
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 const MILLISECONDS = 1000;

@@ -2,8 +2,8 @@ import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
-import type { InitJson } from '#cli/commands/init/types.ts';
-import type { ApplyPreviewJson } from '#cli/commands/apply/command.ts';
+import type { InitJson } from '#cli/types/commands/init.ts';
+import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 

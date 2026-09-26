@@ -4,7 +4,7 @@ import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_PATHS } from '#cli/platform/paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
-import type { CheckSpec, RawCheck, RawManifest, RawTool, SettingSpec } from '#cli/configurations/schema.ts';
+import type { Manifest, ToolPin, CheckSpec, RawCheck, RawTool } from '#cli/types/configurations.ts';
 
 import {
     checkProblems,
@@ -97,8 +97,6 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
     manifests.set(manifest.configuration.name, manifest);
 }
 
-type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
-
 /** A manifest that the schema or the design refuses. */
 /**
  * Parses one manifest text into a Manifest. Throws ManifestError.
@@ -160,40 +158,6 @@ export function configurationManifests(): Map<string, Manifest> {
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }
-
-export type ConfigurationHeader = Omit<RawManifest['configuration'], 'check_references'> & {
-    check_references?: RawManifest['configuration']['check_references'];
-};
-
-export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> & Partial<Omit<NpmInstallerDefinition, 'name'>>;
-
-export type ToolPin = {
-    name: string;
-    kind?: 'binary' | 'library';
-    version?: string;
-    floor?: string;
-    provider?: 'host';
-    windows: boolean;
-    version_command?: string[];
-    version_exit_code?: number;
-    version_regex?: string;
-    crash_pattern?: string;
-    rule_page?: string;
-    suppression?: NonNullable<RawTool['suppression']>;
-    takeover?: NonNullable<RawTool['takeover']>;
-    query_packs?: NonNullable<RawTool['query_packs']>;
-    prettier?: NonNullable<RawTool['prettier']>;
-    env?: Record<string, string>;
-    installers: Record<string, InstallerPin>;
-};
-
-export type Manifest = Omit<RawManifest, 'configuration' | 'tools' | 'checks' | 'settings'> & {
-    configuration: ConfigurationHeader;
-    tools: ToolPin[];
-    checks: CheckSpec[];
-    settings: SettingSpec[];
-    dir: string;
-};
 
 /**
  * The .gitignore block: the paths gspot writes that git never tracks.

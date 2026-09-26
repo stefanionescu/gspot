@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/checks/naming/extract.ts';
+import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
 
 const PARAMETER_NODES = new Set(['identifier', 'typed_parameter', 'default_parameter', 'typed_default_parameter']);
 const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);

@@ -1,6 +1,4 @@
-// Reading vale.ini without Vale: the styles and rule levels of each file-pattern section.
-type Reader = { lines: string[]; index: number };
-type Section = Map<string, string[]>;
+import type { Reader, Section } from '#cli/types/repository/repository.ts';
 
 const BYTE_ORDER_MARK = '\uFEFF';
 const KEY_QUOTES = ['"', '`'];

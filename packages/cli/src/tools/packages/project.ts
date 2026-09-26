@@ -4,26 +4,19 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
+import { LOCKS } from '#cli/types/tools/packages.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
+import { lockMatches } from '#cli/tools/packages/locks.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { ToolPin } from '#cli/configurations/manifests.ts';
-import type { GeneratedFile } from '#cli/generation/proposal.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { LifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { parsePackageManager } from '#cli/tools/packages/manager.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
+import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { lockMatches, type LockName, LOCKS } from '#cli/tools/packages/locks.ts';
 import { packageCommand, packageManagerCommand, prepareNativeWrappers } from '#cli/tools/packages/resolution.ts';
-
-type PackageManager = ReturnType<typeof parsePackageManager>;
-type Project = {
-    manager: PackageManager;
-    dependencies: Record<string, string>;
-    lock: (typeof LOCKS)[LockName];
-    lockPath: string;
-};
-type Inputs = { project: FileSnapshot; recorded: FileSnapshot; yarn: FileSnapshot | undefined };
 
 const PROJECT = '.gspot/package.json';
 const YARN_SETTINGS = '.gspot/.yarnrc.yml';
@@ -40,7 +33,7 @@ const packageSchema = z.strictObject({
 });
 
 // What the tool project's manifest says: its manager, its dependencies, and the lock the manager writes.
-function projectOf(manifest: string): Project {
+function projectOf(manifest: string): ToolProject {
     const parsed = packageSchema.parse(JSON.parse(manifest));
     const manager = parsePackageManager(parsed.packageManager);
     const lock = LOCKS[manager.name];
@@ -48,7 +41,7 @@ function projectOf(manifest: string): Project {
 }
 
 // Whether a recorded lock pins the project's dependencies.
-function isCurrentLock(project: Project, recorded: FileSnapshot | undefined): boolean {
+function isCurrentLock(project: ToolProject, recorded: FileSnapshot | undefined): boolean {
     return (
         recorded !== undefined &&
         lockMatches(project.manager.name, recorded.bytes.toString('utf8'), project.dependencies)
@@ -63,7 +56,7 @@ function writeProject(work: string, manifest: string, yarn: string | undefined):
 // Resolves the lock in a scratch directory, starting from the recorded lock when it still matches.
 async function resolveLock(
     root: string,
-    project: Project,
+    project: ToolProject,
     files: GeneratedFile[],
     manifest: string,
     recorded: string | undefined,
@@ -84,7 +77,7 @@ async function resolveLock(
 }
 
 // Refuses an installation whose inputs the manager rewrote or another writer changed meanwhile.
-function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: Project, inputs: Inputs): void {
+function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: ToolProject, inputs: Inputs): void {
     const manifestKept = readFileSync(join(work, 'package.json')).equals(inputs.project.bytes);
     const lockKept = readFileSync(join(work, project.lock)).equals(inputs.recorded.bytes);
     if (!manifestKept || !lockKept)
@@ -99,7 +92,7 @@ function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: Pro
 async function installFromInputs(
     root: string,
     owner: LifecycleOwner,
-    project: Project,
+    project: ToolProject,
     inputs: Inputs,
     tools: Iterable<ToolPin>,
 ): Promise<void> {

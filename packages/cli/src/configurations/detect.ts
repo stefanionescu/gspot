@@ -1,19 +1,10 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import { pathMatcher } from '#cli/repository/paths.ts';
 import * as linguistLanguages from 'linguist-languages';
-import type { TreeFacts } from '#cli/repository/tree.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
-
-type LinguistEntry = {
-    extensions?: readonly string[];
-    type?: string;
-    filenames?: readonly string[];
-    aliases?: readonly string[];
-};
+import type { ManifestFacts, TrackedFile, TreeFacts } from '#cli/types/repository/repository.ts';
+import type { Manifest, ConfigurationEvidence, LinguistEntry, UnknownLanguage } from '#cli/types/configurations.ts';
 
 const SHEBANG_TAG = 'shebang:';
 const GLOB_CHARS = /[*?{]/u;
@@ -137,7 +128,7 @@ const EVIDENCE = [
     defaultEvidence,
 ];
 
-function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined {
+function proposalFor(manifest: Manifest, tree: TreeFacts): ConfigurationEvidence | undefined {
     const { configuration } = manifest;
     const byExtension = extensionEvidence(manifest, tree);
     if (byExtension !== undefined)
@@ -167,7 +158,7 @@ export function detectConfigurations(
     manifests: Map<string, Manifest>,
     facts: ManifestFacts[],
     scope = '',
-): Proposal[] {
+): ConfigurationEvidence[] {
     const tree = treeFacts(files, facts, scope);
     return manifests
         .values()
@@ -211,7 +202,3 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
         }))
         .toSorted((a, b) => b.count - a.count);
 }
-
-export type Proposal = { configuration: string; evidence: string; kind: string; count?: number };
-
-export type UnknownLanguage = { language: string; extensions: string[]; count: number };

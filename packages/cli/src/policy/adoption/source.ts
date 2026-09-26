@@ -3,10 +3,11 @@ import { parse as parseYaml } from 'yaml';
 import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
+import type { FileSnapshot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
+import type { CarrySource } from '#cli/types/policy/adoption.ts';
 import { sqlfluffConfiguration } from '#cli/repository/sqlfluff.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
@@ -80,8 +81,6 @@ export function parseCarrySource(
         throw new Error('Configuration must contain a settings table.');
     return { ...source, parsed: parsed as TomlTable };
 }
-
-export type CarrySource = { text: string; parsed: TomlTable; original: FileSnapshot };
 
 /**
  * A parsed value as a table.

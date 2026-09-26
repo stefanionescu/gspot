@@ -1,16 +1,13 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
-import type { Engine, EngineInput } from '#cli/checks/input.ts';
+import type { CheckSpec } from '#cli/types/configurations.ts';
 import { countFindings } from '#cli/checks/structure/counts.ts';
 import { docComment } from '#cli/checks/structure/doc-comment.ts';
-import type { ScriptIndex } from '#cli/checks/structure/parser.ts';
 import { folderNames } from '#cli/checks/structure/folder-names.ts';
+import type { Engine, EngineInput } from '#cli/types/checks/checks.ts';
 import { scriptEmbeds } from '#cli/checks/structure/scripts/embeds.ts';
 import { scriptPolicy } from '#cli/checks/structure/scripts/policy.ts';
 import { scriptSafety } from '#cli/checks/structure/scripts/safety.ts';
 import { DOCUMENT_EXTENSIONS } from '#cli/checks/structure/patterns.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { deadParameters } from '#cli/checks/structure/dead-parameters.ts';
 import { functionLength } from '#cli/checks/structure/function-length.ts';
 import { envAccessOwner } from '#cli/checks/structure/env-access-owner.ts';
@@ -23,10 +20,11 @@ import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
 import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
 import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts';
 import { privateBeforePublic, privatePrefix } from '#cli/checks/structure/visibility.ts';
+import type { StructureAnalysis, StructureContext } from '#cli/types/checks/structure.ts';
 import { fileDirectoryCollision, fileLength } from '#cli/checks/structure/file-layout.ts';
 import { scriptConfigDefaults, scriptConfigGuards } from '#cli/checks/structure/scripts/configuration.ts';
 
-const ANALYSES: Record<string, Analysis> = {
+const ANALYSES: Record<string, StructureAnalysis> = {
     'single-file-folder': singleFileFolder,
     'prefix-collisions': prefixCollisions,
     'file-directory-collision': fileDirectoryCollision,
@@ -87,7 +85,7 @@ function contextFor(input: EngineInput): StructureContext {
  */
 export function resolveStructure(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';
-    const analysis: Analysis | undefined = COUNT_ANALYSES.has(name)
+    const analysis: StructureAnalysis | undefined = COUNT_ANALYSES.has(name)
         ? async (context, scripts) => countFindings(name, context, await scripts())
         : ANALYSES[name];
     if (analysis === undefined) throw new Error(`No structure analysis is called ${name}.`);
@@ -97,28 +95,3 @@ export function resolveStructure(spec: CheckSpec): Engine {
         return analysis(context, () => scriptIndex(input, scriptFiles));
     };
 }
-
-/** What every analysis receives. */
-export type StructureContext = {
-    input: EngineInput;
-    /** The files this check runs over. */
-    files: TrackedFile[];
-    /** A limit by its `[limits]` key, read for the file's language. */
-    limit: (key: string, language?: string) => number | undefined;
-    /** A `[tools.bash]` text slot, or the fallback. */
-    bashText: (slot: string, otherwise: string) => string;
-    /** A `[tools.bash]` list slot, empty when unset. */
-    bashList: (slot: string) => string[];
-    /** A `[tools.bash]` slot as written. */
-    bashSetting: (slot: string) => unknown;
-    /** A finding for this check. */
-    report: (file: string, line: number, rule: string, message: string) => Finding;
-};
-
-/** One analysis: a function over the context that returns findings. */
-export type Analysis = (
-    context: StructureContext,
-    scripts: () => Promise<ScriptIndex>,
-) => Finding[] | Promise<Finding[]>;
-
-export type StructureProblem = { file: string; line: number; rule: string; text: string };

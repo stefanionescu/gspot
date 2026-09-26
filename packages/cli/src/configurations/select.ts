@@ -1,17 +1,9 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
+import type { Manifest, SelectionWalk } from '#cli/types/configurations.ts';
 // Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
-import type { Manifest } from '#cli/configurations/manifests.ts';
-
-type SelectionWalk = {
-    manifests: Map<string, Manifest>;
-    problems: string[];
-    order: Manifest[];
-    seen: Set<string>;
-    visiting: string[];
-};
 
 function visit(walk: SelectionWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;

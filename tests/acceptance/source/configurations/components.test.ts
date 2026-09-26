@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
+import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
-// Planted repositories for the vue and svelte configurations: markup set from a string and a list with no key, in each framework, and the shared JavaScript and TypeScript rules inside component scripts.
-import { reportSchema, type RunReport } from '#cli/execution/report.ts';
 import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, installSandbox } from '#tests/support/cli/sandbox.ts';
 

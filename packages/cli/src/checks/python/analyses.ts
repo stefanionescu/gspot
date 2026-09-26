@@ -1,7 +1,6 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
-import type { StructureReader } from '#cli/checks/python/types.ts';
+import type { StructureReader } from '#cli/types/checks/python.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { importCycles, singletons } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
 import { longFunctions, longModules, placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';

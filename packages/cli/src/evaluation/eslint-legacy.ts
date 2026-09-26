@@ -4,18 +4,20 @@ import { createRequire } from 'node:module';
 import { dirname, relative, resolve } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 import { registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
-import type { EslintAdoption, EslintRegistration } from '#cli/policy/schema.ts';
 
-type Ignores = NonNullable<EslintAdoption['legacyIgnores']>;
-type Criteria = NonNullable<EslintAdoption['legacyCriteria']>;
-type Plugins = NonNullable<LegacyEslintEntry['plugins']>;
-type Legacy = {
-    api: LegacyEslintApi;
-    factory: InstanceType<LegacyEslintApi['Legacy']['ConfigArrayFactory']>;
-    compat: InstanceType<LegacyEslintApi['FlatCompat']>;
-};
-type Translation = { root: string; configPath: string; references: Map<unknown, EslintRegistration>; legacy: Legacy };
+import type {
+    Criteria,
+    Ignores,
+    Legacy,
+    LegacyEslintApi,
+    LegacyEslintCriteria,
+    LegacyEslintEntry,
+    LegacyEslintMatcher,
+    Plugins,
+    Translation,
+} from '#cli/types/evaluation.ts';
 
 const CONFIG_KEYS = [
     'env',
@@ -223,47 +225,3 @@ export async function legacyEntries(
         result.push(...(await directoryEntries(translation, directory, directories, configurations)));
     return result;
 }
-
-export type LegacyEslintMatcher = {
-    pattern: string;
-    negate: boolean;
-    options: { matchBase?: boolean };
-};
-
-export type LegacyEslintCriteria = {
-    basePath: string;
-    patterns: { includes: LegacyEslintMatcher[] | null; excludes: LegacyEslintMatcher[] | null }[];
-};
-
-export type LegacyEslintDependency = {
-    id: string;
-    filePath: string;
-    definition: unknown;
-    original?: unknown;
-    error?: Error | null;
-};
-
-export type LegacyEslintEntry = {
-    type: string;
-    name: string;
-    criteria: LegacyEslintCriteria | null;
-    ignorePattern?: { basePath: string; patterns: string[]; loose: boolean };
-    parser?: LegacyEslintDependency;
-    plugins?: Record<string, LegacyEslintDependency>;
-    [key: string]: unknown;
-};
-
-export type LegacyEslintApi = {
-    Legacy: {
-        ConfigArrayFactory: new (options: Record<string, unknown>) => {
-            loadFile(path: string): LegacyEslintEntry[];
-            loadInDirectory(path: string): LegacyEslintEntry[];
-            loadDefaultESLintIgnore(): LegacyEslintEntry[];
-        };
-        IgnorePattern: { DefaultPatterns: string[] };
-        naming: { normalizePackageName(name: string, prefix: string): string };
-    };
-    FlatCompat: new (options: Record<string, unknown>) => {
-        config(configuration: Record<string, unknown>): Record<string, unknown>[];
-    };
-};

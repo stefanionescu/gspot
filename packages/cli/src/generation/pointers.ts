@@ -2,9 +2,9 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { PointerSpec } from '#cli/configurations/schema.ts';
+import type { PointerSpec } from '#cli/types/configurations.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/generation/proposal.ts';
+import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
 
 const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 

@@ -2,11 +2,10 @@
 import { z } from 'zod';
 import { relative, resolve } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-
-type TypoEntry = z.infer<typeof typosEntry>;
+import type { Finding } from '#cli/types/checks/checks.ts';
+import type { TypoEntry } from '#cli/types/execution/output.ts';
 
 const LINE_FEED = 10;
 
@@ -55,15 +54,6 @@ const trufflehogFinding = z.object({
     SourceMetadata: z.object({ Data: z.object({ JsonEnumerator: z.object({ metadata: z.string() }) }) }),
 });
 const historyMetadata = z.object({ commit: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u), file: z.string() });
-
-const typosEntry = z.object({
-    type: z.literal('typo'),
-    path: z.string().min(1),
-    line_num: z.number().int().positive().optional(),
-    byte_offset: z.number().int().nonnegative(),
-    typo: z.string().min(1),
-    corrections: z.array(z.string()).nullable(),
-});
 
 // The lines of a source file as bytes, read once per file, so byte offsets can be turned into columns.
 function sourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
@@ -120,6 +110,15 @@ function typoFinding(
         ...position,
     };
 }
+
+export const typosEntry = z.object({
+    type: z.literal('typo'),
+    path: z.string().min(1),
+    line_num: z.number().int().positive().optional(),
+    byte_offset: z.number().int().nonnegative(),
+    typo: z.string().min(1),
+    corrections: z.array(z.string()).nullable(),
+});
 
 /**
  * Findings from markdownlint's JSON report, each checked against the source it points at.

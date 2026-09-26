@@ -1,17 +1,16 @@
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
-import type { ToolPin } from '#cli/configurations/manifests.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import type { ManifestFacts } from '#cli/repository/manifests.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { configurationSection } from '#cli/repository/configuration-section.ts';
-import { type ConfinedRoot, openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { ManifestFacts, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import {
     AGENT_FILE_NAMES,
@@ -269,29 +268,3 @@ export function ciLintJobs(root: string, paths: string[]): string[] {
         files.close();
     }
 }
-
-export type ExistingTool = {
-    tool: string;
-    path: string;
-    shared?: boolean;
-    table?: string;
-    key?: string;
-    carries: NonNullable<ToolPin['takeover']>[number]['carries'];
-    check?: string;
-};
-
-export type ExistingTooling = {
-    configs: ExistingTool[];
-    hooks: {
-        kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
-        path: string;
-        files: string[];
-    }[];
-    ci: string[];
-    agentFiles: string[];
-    rulesDirectories: string[];
-    lintFolders: string[];
-    lintOnlyManifests: string[];
-    runner: NonNullable<Policy['runner']>['tool'] | 'yarn' | 'none';
-    runnerFile?: string;
-};

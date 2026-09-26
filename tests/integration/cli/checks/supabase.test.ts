@@ -3,10 +3,10 @@ import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/execution/session.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
 import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 

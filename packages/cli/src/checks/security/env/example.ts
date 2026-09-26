@@ -1,7 +1,7 @@
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
+import type { EnvRead } from '#cli/types/checks/security.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 import {
     ENV_KEY_LINE,
@@ -9,8 +9,6 @@ import {
     ENV_READ_PATTERNS,
     ENV_TEMPLATE_NAMES,
 } from '#cli/repository/env-patterns.ts';
-
-type EnvRead = { key: string; line: number };
 
 const KEY_GROUP = 1;
 

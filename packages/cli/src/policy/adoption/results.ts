@@ -1,9 +1,7 @@
-import type { Policy } from '#cli/policy/normalize.ts';
-import type { RawPolicy } from '#cli/policy/schema.ts';
 import { CARRIED_REASON } from '#cli/policy/reasons.ts';
 import { asList } from '#cli/policy/adoption/source.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import type { CarriedConfiguration, CarriedIgnore } from '#cli/types/policy/adoption.ts';
 
 /**
  * The reason written on every entry carried from one authored file.
@@ -41,27 +39,3 @@ export function carriedTool(
     lists.tools.set(tool, entry);
     return entry;
 }
-
-export type CarriedIgnore = { check: string; rule?: string; reason: string; paths?: string[] };
-
-export type CarriedFormatter = {
-    format: Policy['format'];
-    extra?: TomlTable;
-    ignorePatterns?: string[];
-    nativeDefaults?: boolean;
-    editorconfig?: NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted'];
-};
-
-export type CarriedLists = Map<string, { settings: TomlTable; ignores: CarriedIgnore[] }>;
-
-export type CarriedConfiguration = {
-    tools: CarriedLists;
-    scopes: Map<string, { configurations: string[]; tools: Record<string, TomlTable> }>;
-    formatter?: CarriedFormatter;
-    observed: Map<string, FileSnapshot>;
-    removed: { path: string; note: string }[];
-    unread: { path: string; note: string }[];
-    retained: { path: string; note: string }[];
-};
-
-export type CarryPush = (rule: string, paths?: string[]) => void;

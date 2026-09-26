@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
 

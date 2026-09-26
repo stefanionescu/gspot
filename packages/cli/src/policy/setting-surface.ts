@@ -1,9 +1,8 @@
 // The settings a selection exposes: gspot's own, then each manifest's, with defaults that later configurations may override.
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
-import type { ExposedSettings } from '#cli/policy/settings.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { ExposedSettings } from '#cli/types/policy/policy.ts';
+import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/configurations/settings.ts';
 import { integrationSettingSchemas, rootSettingSchemas } from '#cli/policy/schema.ts';
 

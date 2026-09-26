@@ -1,9 +1,8 @@
 import { dirname, join } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const SHOWN_LINES = 3;
 const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {

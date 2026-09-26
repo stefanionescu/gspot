@@ -3,9 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import type { ReferencePage } from './page.ts';
 import { cell, referencePage, table } from './page.ts';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
-import type { Manifest } from '@gspot/cli/src/configurations/manifests.ts';
-import type { SettingSpec } from '@gspot/cli/src/configurations/schema.ts';
 import { exposedSettings } from '@gspot/cli/src/policy/setting-surface.ts';
+import type { Manifest, SettingSpec } from '@gspot/cli/src/types/configurations.ts';
 
 function schemaCell(value: string): string {
     return value

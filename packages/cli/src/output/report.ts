@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import type { Finding } from '#cli/checks/result.ts';
 import { REPORT_DIRECTORY } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { reportStorageFailure } from '#cli/output/messages.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { PushReport, RunReport } from '#cli/execution/report.ts';
+import type { PushReport, RunReport } from '#cli/types/execution/execution.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
 const { version: GSPOT_VERSION } = packageManifest;

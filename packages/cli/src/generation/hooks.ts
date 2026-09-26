@@ -1,7 +1,7 @@
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfigurationOutput } from '#cli/generation/proposal.ts';
+import type { ConfigurationOutput, HookName, LefthookBlock } from '#cli/types/generation.ts';
 import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY, HOOK_FILES } from '#cli/repository/hooks.ts';
 
 const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
@@ -222,10 +222,6 @@ export function lefthookConfiguration(
         ],
     };
 }
-
-export type HookName = 'pre-commit' | 'pre-push' | 'commit-msg';
-
-export type LefthookBlock = Record<string, { commands: Record<string, unknown> }>;
 
 /**
  * Invoke the generated integration from the Git working directory.

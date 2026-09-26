@@ -1,18 +1,13 @@
 // Explain a check, or one rule of the tool a check runs.
 import { probeTool } from '#cli/tools/probe.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Session } from '#cli/execution/session.ts';
 import { allChecks } from '#cli/configurations/listing.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import type { CheckSpec } from '#cli/configurations/schema.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { Explanation } from '#cli/commands/explain/subjects.ts';
-import type { Manifest, ToolPin } from '#cli/configurations/manifests.ts';
+import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-
-type Found = { check: CheckSpec; configuration: Manifest | undefined };
-type OwnCheck = Session['policyFiles']['policy']['checks'][number];
-type Facts = { settings: string[]; rules: string[]; crashPattern: string | undefined };
+import type { Explanation, Facts, Found, OwnCheck } from '#cli/types/commands/explain.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;

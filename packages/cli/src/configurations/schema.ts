@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Defined } from '#cli/policy/schema.ts';
 import { outputSchema } from '#cli/configurations/output-format.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
 
@@ -299,8 +298,6 @@ function isUntrackedPath(path: string): boolean {
     );
 }
 
-type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
-
 export const manifestSchema = z.strictObject({
     untracked: z
         .array(z.string().refine((path) => isUntrackedPath(path), 'Untracked paths must stay inside .gspot.'))
@@ -360,29 +357,3 @@ export const manifestSchema = z.strictObject({
 });
 
 export const INSTALLER_KEYS = Object.keys(installerFields) as (keyof typeof installerFields)[];
-
-export type Stage = RawCheck['stage'];
-
-export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
-
-export type Claims = RawManifest['claims'];
-
-export type ConfigurationTarget = RawManifest['configs'][number];
-
-export type FragmentSelector = z.infer<typeof selectorSchema>;
-
-export type PointerSpec = NonNullable<ConfigurationTarget['pointer']>;
-
-/** Validated execution variants. Repository-defined commands do not require reference examples. */
-export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string };
-
-export type SettingSpec = Defined<RawManifest['settings'][number]>;
-
-/** manifest.toml as the schema accepts it. */
-export type RawManifest = z.infer<typeof manifestSchema>;
-
-/** One [[tools]] entry as written. */
-export type RawTool = RawManifest['tools'][number];
-
-/** One [[checks]] entry as written. */
-export type RawCheck = RawManifest['checks'][number];

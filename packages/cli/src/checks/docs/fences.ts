@@ -1,15 +1,13 @@
 import { parseAllDocuments } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { Finding } from '#cli/checks/result.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { GrammarName } from '#cli/parsers/tree-sitter.ts';
+import type { FencedBlock } from '#cli/types/checks/docs.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-
-type FencedBlock = { line: number; language: string; body: string };
+import type { GrammarName } from '#cli/types/parsers/parsers.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 const STRUCTURED_PARSERS = new Set(['json', 'toml', 'yaml']);
 const TREE_PARSERS = new Set(['typescript', 'javascript', 'python']);

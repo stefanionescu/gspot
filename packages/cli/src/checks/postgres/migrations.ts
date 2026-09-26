@@ -1,8 +1,8 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { EngineInput } from '#cli/checks/input.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/checks/postgres/types.ts';
+import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 
 const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 

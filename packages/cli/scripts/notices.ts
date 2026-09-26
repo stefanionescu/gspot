@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
 import { prepareInput } from './inputs.ts';
-import { SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
+import { SWIFT_GRAMMAR } from '#cli/types/platform.ts';
 import { dirname, join, resolve, sep } from 'node:path';
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 

@@ -1,9 +1,9 @@
 import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
-import type { Policy } from '#cli/policy/normalize.ts';
 import { stringify as stringifyToml } from 'smol-toml';
+import type { TomlTable } from '#cli/types/repository/repository.ts';
+import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
-import type { TomlTable } from '#cli/repository/configuration-section.ts';
 import { assertPolicyComplete, parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {
@@ -222,7 +222,3 @@ export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTabl
     if (holder === undefined) throw new PolicyError([messages.scopeMissing(scope)]);
     return holder;
 }
-
-export type Mutation = (raw: TomlTable) => void;
-
-export type WriteResult = { text: string; policy: Policy; changed: boolean };

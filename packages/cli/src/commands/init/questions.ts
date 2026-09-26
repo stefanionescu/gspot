@@ -1,14 +1,14 @@
 import { MISE_CONFIG_PATH } from '#cli/tools/mise.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { FormatSettings, Policy } from '#cli/policy/normalize.ts';
-import type { CarriedFormatter } from '#cli/policy/adoption/results.ts';
-import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
+import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
+import type { FormatSettings, Policy } from '#cli/types/policy/policy.ts';
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askChoice, askConfirmation, askMany } from '#cli/commands/prompts.ts';
-import type { InitAnswers, InitOptions, InitSelection } from '#cli/commands/init/types.ts';
+import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },

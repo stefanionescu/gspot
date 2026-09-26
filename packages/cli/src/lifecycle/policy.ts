@@ -3,9 +3,9 @@ import { PolicyError } from '#cli/policy/read.ts';
 import { proposePolicy } from '#cli/policy/write.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { FileSnapshot } from '#cli/platform/safe-paths.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { Mutation, WriteResult } from '#cli/policy/write.ts';
+import type { PreparedPolicy } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 
 /**
  * Capture the input bytes and mode before evaluating and validating a policy mutation.
@@ -44,5 +44,3 @@ export function writePolicy(root: string, proposal: PreparedPolicy): WriteResult
         });
     return proposal;
 }
-
-export type PreparedPolicy = WriteResult & { original: FileSnapshot };

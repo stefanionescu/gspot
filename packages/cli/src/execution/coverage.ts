@@ -1,12 +1,12 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { Session } from '#cli/execution/session.ts';
-import type { ScopeSelection } from '#cli/policy/resolve.ts';
-import type { Manifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { claimedInputs, configuredChecks } from '#cli/execution/plan.ts';
-import type { TrackedFile } from '#cli/repository/file-classification.ts';
 // Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
+import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';
 
 const CORE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 
@@ -102,10 +102,3 @@ export function coverageReport(session: Session): CoverageReport {
     report.endings = endingCoverage(session, provided);
     return report;
 }
-
-export type CoverageReport = {
-    endings: { ending: string; scope: string; files: number; kinds: string[] }[];
-    unchecked: { path: string; reason: string; remedy?: string }[];
-    partial: { path: string; missing: string[] }[];
-    checked: number;
-};

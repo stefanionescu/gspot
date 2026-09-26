@@ -1,4 +1,5 @@
 import picomatch from 'picomatch';
+import type { PathExpressions } from '#cli/types/repository/repository.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -58,5 +59,3 @@ export function expandedPaths(patterns: string[]): string[] {
         return picomatch.scan(bare).isGlob ? [pattern] : [pattern, `${pattern.replace(/\/$/u, '')}/**`];
     });
 }
-
-export type PathExpressions = { includes: string[]; excludes: string[] };

@@ -2,9 +2,10 @@ import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { HOOK_FILES } from '#cli/repository/hooks.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { CheckResult, Finding } from '#cli/checks/result.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { Columns, ReporterOptions } from '#cli/types/output.ts';
+import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;
@@ -72,7 +73,7 @@ function checkTail(check: CheckResult): string {
     return `${fileCount(check.files).padEnd(FILES_WIDTH)} ${time}`;
 }
 
-function failureLines(check: CheckResult, options: ReportOptions, colors: Colors): string[] {
+function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
     const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
     const lines = shown.flatMap((finding) => findingLines(finding, colors));
     const hidden = check.findings.length - shown.length;
@@ -83,7 +84,7 @@ function failureLines(check: CheckResult, options: ReportOptions, colors: Colors
     return lines;
 }
 
-function checkLines(check: CheckResult, columns: Columns, options: ReportOptions, colors: Colors): string[] {
+function checkLines(check: CheckResult, columns: Columns, options: ReporterOptions, colors: Colors): string[] {
     const scope = scopeName(check.scope).padEnd(columns.scope);
     const word = statusWord(check, colors);
     const status = word.padEnd(STATUS_WIDTH + word.length - stripVTControlCharacters(word).length);
@@ -97,7 +98,7 @@ function checkLines(check: CheckResult, columns: Columns, options: ReportOptions
     return lines;
 }
 
-function ignoreLines(report: RunReport, options: ReportOptions, colors: Colors): string[] {
+function ignoreLines(report: RunReport, options: ReporterOptions, colors: Colors): string[] {
     if (report.ignores.length === 0) return [];
     if (!options.verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
@@ -113,7 +114,7 @@ function skipLine(check: string, source: string, colors: Colors): string {
     return `skipped    ${check}  ${colors.dim(shown)}`;
 }
 
-function tailLines(report: RunReport, options: ReportOptions, colors: Colors): string[] {
+function tailLines(report: RunReport, options: ReporterOptions, colors: Colors): string[] {
     const lines = [
         ...ignoreLines(report, options, colors),
         ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
@@ -146,17 +147,13 @@ function summaryLine(report: RunReport, colors: Colors): string {
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
-type Columns = { scope: number; check: number };
-
-type ReportOptions = { quiet: boolean; verbose: boolean };
-
 /**
  * The run as text, the way 02-cli.md shows it.
  * @param report the run report
  * @param options quiet and verbose output flags
  * @returns the text for stdout
  */
-export function runText(report: RunReport, options: ReportOptions): string {
+export function runText(report: RunReport, options: ReporterOptions): string {
     const shown = report.checks.filter((check) => !QUIET_HIDES.has(check.status));
     const columns: Columns = {
         scope: Math.max(SCOPE_WIDTH_MIN, ...report.checks.map((check) => scopeName(check.scope).length)),

@@ -3,13 +3,13 @@ import { relative, resolve } from 'node:path';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { OwnershipState } from '#cli/lifecycle/journal.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
 import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/platform/paths.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { CommandResult, UninstallOptions, UninstallPlan } from '#cli/types/commands/commands.ts';
 
 function planText(plan: UninstallPlan): string {
     return [
@@ -159,8 +159,3 @@ export function registerUninstall(program: Command): void {
             );
         });
 }
-
-export type UninstallPlan = { remove: string[]; blocks: string[]; hooks: boolean };
-
-/** gspot uninstall. */
-export type UninstallOptions = { cwd: string; yes: boolean; isDryRun: boolean };

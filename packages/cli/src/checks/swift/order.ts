@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { visibilityOf } from '#cli/checks/swift/sources.ts';
-import type { SwiftSource } from '#cli/checks/swift/types.ts';
-import type { StructureProblem } from '#cli/checks/structure/engine.ts';
+import type { SwiftSource } from '#cli/types/checks/swift.ts';
+import type { StructureProblem } from '#cli/types/checks/structure.ts';
 
 const DECLARATIONS = new Set([
     'class_declaration',

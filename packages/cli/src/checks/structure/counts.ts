@@ -1,9 +1,7 @@
-import type { Finding } from '#cli/checks/result.ts';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
-import type { ScriptIndex } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-import type { AstGrepMatch } from '#cli/checks/structure/ast-grep.ts';
-import type { StructureContext } from '#cli/checks/structure/engine.ts';
+import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/types/checks/structure.ts';
 
 const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
     'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },

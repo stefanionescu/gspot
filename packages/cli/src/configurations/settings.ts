@@ -1,4 +1,4 @@
-import type { SettingSpec } from '#cli/configurations/schema.ts';
+import type { SettingSpec } from '#cli/types/configurations.ts';
 
 /** Strict source coverage applies independently of selected configurations and run filters. */
 export const COVERAGE_STRICT = {

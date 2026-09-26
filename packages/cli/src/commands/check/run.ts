@@ -1,17 +1,14 @@
 // check: open the session, honor the pin, run, render, decide the exit code.
 import { relative, resolve } from 'node:path';
-import type { CheckResult } from '#cli/checks/result.ts';
-import type { RunReport } from '#cli/execution/report.ts';
-import type { StageFilter } from '#cli/execution/plan.ts';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import type { CommandResult } from '#cli/commands/print-result.ts';
+import type { CheckOptions } from '#cli/types/commands/check.ts';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
-
 // Checks an exact snapshot of the staged index, with the report published to the repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
@@ -53,23 +50,3 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
     if (!options.staged) return checkContent(root, options, signal);
     return checkStaged(root, options, signal);
 }
-
-export type CheckOptions = {
-    onResult?: (result: CheckResult) => void;
-    cwd: string;
-    only?: string[];
-    paths: string[];
-    staged: boolean;
-    push?: { input: string; remote?: string };
-    changed?: string;
-    fix: boolean;
-    isDryRun: boolean;
-    stage?: StageFilter;
-    skips: string[];
-    messageFile?: string;
-    quiet: boolean;
-    verbose: boolean;
-    noCache: boolean;
-};
-
-export type CheckCommandResult = CommandResult & { report?: RunReport };
