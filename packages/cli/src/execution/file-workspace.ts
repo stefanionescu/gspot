@@ -16,6 +16,8 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
+const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
+const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 
 /**
  * Copy selected files and declared configurations without native discovery inputs.
@@ -59,8 +61,6 @@ export function createFileWorkspace(
         throw error;
     }
 }
-const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
-const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 
 /**
  * Copies selected source and configuration files for commands run outside the working tree.

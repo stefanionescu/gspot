@@ -62,6 +62,12 @@ function scopeRoots(input: EngineInput): Set<string> {
     return new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
 }
 
+const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements'];
+
+const CONTENTS_THRESHOLD = 6;
+
+const CONTENTS_HEADING = 'contents';
+
 /**
  * The shape findings for every README in the check's files.
  * @param input the engine input
@@ -92,9 +98,3 @@ export function readmeShape(input: EngineInput): Finding[] {
             })),
         );
 }
-
-const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements'];
-
-const CONTENTS_THRESHOLD = 6;
-
-const CONTENTS_HEADING = 'contents';

@@ -1,6 +1,10 @@
 // The planted Bash scripts of the bash configuration tests: one defect per check, each with a corrected script.
 import type { FindingCase } from '#tests/support/cli/planted.ts';
 
+function file(body: string): string {
+    return `${HEAD}${body}`;
+}
+
 export const HEAD =
     '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
 export const MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
@@ -16,10 +20,6 @@ export const BRANCHES = Array.from(
 export const NESTED =
     '    if [[ -n "$1" ]]; then\n        for item in "$@"; do\n            while true; do\n                if [[ -n "${item}" ]]; then\n                    case "${item}" in\n                        a) echo a ;;\n                    esac\n                fi\n                break\n            done\n        done\n    fi';
 export const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
-
-function file(body: string): string {
-    return `${HEAD}${body}`;
-}
 
 export const BASH_CASES: FindingCase[] = [
     {

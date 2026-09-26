@@ -104,6 +104,19 @@ function pathText(report: PathExplanation): string {
     return `${lines.join('\n')}\n`;
 }
 
+type PathExplanation = {
+    path: string;
+    scope: string;
+    nature: string;
+    natureSource?: string;
+    tags: string[];
+    configurations: string[];
+    checks: { check: string; stage: string; configuration?: string }[];
+    ignores: { check: string; rule?: string; reason?: string }[];
+    unchecked?: string;
+    remedy?: string;
+};
+
 /**
  * Explains a repository file or an explicitly requested path.
  * @param session the repository session, or undefined outside a configured repository
@@ -122,16 +135,3 @@ export function explainPath(
     if ('error' in report) return report;
     return { kind: 'path', subject: path, text: pathText(report), data: report };
 }
-
-type PathExplanation = {
-    path: string;
-    scope: string;
-    nature: string;
-    natureSource?: string;
-    tags: string[];
-    configurations: string[];
-    checks: { check: string; stage: string; configuration?: string }[];
-    ignores: { check: string; rule?: string; reason?: string }[];
-    unchecked?: string;
-    remedy?: string;
-};

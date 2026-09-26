@@ -285,6 +285,10 @@ const settingSchema = z.strictObject({
     detect: settingDetectSchema.optional(),
 });
 
+// The shape of a configuration manifest.toml after validation.
+
+type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
+
 export const manifestSchema = z.strictObject({
     untracked: z
         .array(
@@ -352,10 +356,6 @@ export const manifestSchema = z.strictObject({
 });
 
 export const INSTALLER_KEYS = Object.keys(installerFields) as (keyof typeof installerFields)[];
-
-// The shape of a configuration manifest.toml after validation.
-
-type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 
 export type Stage = RawCheck['stage'];
 

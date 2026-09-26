@@ -4,8 +4,6 @@ import { grammarPath } from '#cli/platform/assets.ts';
 import { Language, Parser, type Tree } from 'web-tree-sitter';
 import type { SourceObservations } from '#cli/repository/tracked.ts';
 
-export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
-
 const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
 const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
 
@@ -26,6 +24,8 @@ async function build(name: GrammarName): Promise<Parser> {
     parser.setLanguage(language);
     return parser;
 }
+
+export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 
 /**
  * The parser for a grammar, built on first use.

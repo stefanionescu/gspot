@@ -28,8 +28,6 @@ const LEADING_NEWLINES = /^\n+/u;
 
 const JSON_EXTENSIONS = new Set(['.json', '.webmanifest']);
 
-export const eta = new Eta({ autoEscape: false, autoTrim: false, useWith: true, rmWhitespace: false, varName: 'it' });
-
 function toolNames(scopes: ScopeSelection[]): string[] {
     const names = scopes.flatMap((entry) =>
         entry.selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
@@ -103,6 +101,8 @@ function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
             left.scope.path.localeCompare(right.scope.path),
     );
 }
+
+export const eta = new Eta({ autoEscape: false, autoTrim: false, useWith: true, rmWhitespace: false, varName: 'it' });
 
 /**
  * The inputs every template sees.

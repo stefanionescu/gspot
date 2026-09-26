@@ -2,9 +2,6 @@
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/repository/configuration-section.ts';
 
-/** The most characters one line of gspot.toml holds. */
-export const POLICY_LINE_WIDTH = 120;
-
 const DEFAULT_INDENT_WIDTH = 4;
 
 type Block = ReturnType<typeof parseDocument>['cst'][number];
@@ -34,6 +31,9 @@ function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, 
     const body = items.map((item) => `${pad}${indent}${text.slice(item.range![0], item.range![1])},`).join('\n');
     return { start: value.range[0], end: value.range[1], replacement: `[\n${body}\n${pad}]` };
 }
+
+/** The most characters one line of gspot.toml holds. */
+export const POLICY_LINE_WIDTH = 120;
 
 /**
  * Rewrites every array whose line runs past the width as one item per line, each item as it was written.

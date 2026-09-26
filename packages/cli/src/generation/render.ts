@@ -376,6 +376,15 @@ function validateProposal(proposal: GeneratedProposal): void {
     }
 }
 
+type EmitContext = {
+    root: string;
+    files: TrackedFile[];
+    scopes: ScopeSelection[];
+    inputs: TemplateInputs;
+    selection: ScopeSelection;
+    manifest: Manifest;
+};
+
 /**
  * Renders proposed files in memory while retaining observations at the caller’s lifecycle lock boundary.
  * @param policy the repository policy
@@ -464,15 +473,6 @@ export function emitAll(
     validateProposal(out);
     return out;
 }
-
-type EmitContext = {
-    root: string;
-    files: TrackedFile[];
-    scopes: ScopeSelection[];
-    inputs: TemplateInputs;
-    selection: ScopeSelection;
-    manifest: Manifest;
-};
 
 export type GenerationOptions = {
     version: string;

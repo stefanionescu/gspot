@@ -14,6 +14,14 @@ const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
     yarn: /Your lockfile needs to be updated|YN0028|lockfile would have been modified/u,
 };
 
+const FROZEN_INSTALLS: Record<string, string[]> = {
+    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
+    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
+    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
+    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
+    'uv.lock': ['uv', 'lock', '--check'],
+};
+
 /**
  * One finding for each lockfile its package manager refuses to install from unchanged.
  * @param input the engine input
@@ -55,11 +63,3 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
-
-const FROZEN_INSTALLS: Record<string, string[]> = {
-    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
-    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
-    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
-    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
-    'uv.lock': ['uv', 'lock', '--check'],
-};

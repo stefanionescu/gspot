@@ -1,10 +1,10 @@
-import { grammarPath } from '#cli/platform/assets.ts';
 import { execaSync } from 'execa';
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { grammarAssets, writeEntry } from './assets.ts';
-import { prepareInput, SWIFT_GRAMMAR } from './inputs.ts';
+import { prepareInput } from './inputs.ts';
+import { grammarPath, SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
 import { binaryNotices, dependencyNotices } from './notices.ts';
 import { releaseTargets } from './targets.ts';
 const here = fileURLToPath(new URL('..', import.meta.url));

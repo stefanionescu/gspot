@@ -3,7 +3,8 @@ import { testdir } from 'testdirs';
 import { fileURLToPath } from 'node:url';
 import { expect, spyOn, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { prepareInput, SWIFT_GRAMMAR } from '../../../packages/cli/scripts/inputs.ts';
+import { prepareInput } from '../../../packages/cli/scripts/inputs.ts';
+import { SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
 import { rejection } from '#tests/support/rejection.ts';
 
 const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));

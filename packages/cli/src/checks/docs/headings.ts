@@ -5,6 +5,15 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 
+const BANNED_HEADINGS = [
+    'table of contents',
+    'project structure',
+    'repository layout',
+    'directory structure',
+    'file map',
+    'codebase map',
+];
+
 /**
  * One finding per heading that matches the banned list or [tools.docs] banned_headings.
  * @param input the engine input
@@ -32,12 +41,3 @@ export function docsHeadings(input: EngineInput): Finding[] {
     }
     return findings;
 }
-
-const BANNED_HEADINGS = [
-    'table of contents',
-    'project structure',
-    'repository layout',
-    'directory structure',
-    'file map',
-    'codebase map',
-];

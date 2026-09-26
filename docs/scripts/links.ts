@@ -57,6 +57,15 @@ function pageProblems(page: PageLinks, origin: string, files: Set<string>, pages
     });
 }
 
+if (import.meta.main) {
+    if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
+    await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
+    const schema = JSON.parse(await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'));
+    if (!isDeepStrictEqual(schema, policyJsonSchema()))
+        throw new Error('The public schema differs from the runtime policy schema.');
+    process.stdout.write('All built-site links and fragment targets are valid.\n');
+}
+
 /**
  * Validate local links and fragment targets across the emitted site and assets.
  * @param directory complete build output directory
@@ -79,13 +88,4 @@ export async function validateSiteLinks(directory: URL, site: string): Promise<v
     const origin = new URL(site).origin;
     const failures = [...new Set(pages.values())].flatMap((page) => pageProblems(page, origin, files, pages));
     if (failures.length > 0) throw new Error(`Invalid built-site links:\n${failures.join('\n')}`);
-}
-
-if (import.meta.main) {
-    if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
-    await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
-    const schema = JSON.parse(await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'));
-    if (!isDeepStrictEqual(schema, policyJsonSchema()))
-        throw new Error('The public schema differs from the runtime policy schema.');
-    process.stdout.write('All built-site links and fragment targets are valid.\n');
 }

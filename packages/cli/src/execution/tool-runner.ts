@@ -186,6 +186,23 @@ async function runCommands(
     }
     return finished(base, spec, state, argv, started);
 }
+function adapterTool(
+    input: EngineInput,
+    name: string,
+    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
+): {
+    path: string;
+    env: Record<string, string>;
+} {
+    const tool = toolPin(input.manifests.values(), name);
+    const env = { ...tool.env, ...input.spec.env, ...options.env };
+    const probe = probeTool({ ...input, cwd: options.cwd }, { ...tool, env });
+    if (probe.state === 'error') throw new Error(probe.note ?? `${name} version probe failed.`);
+    if (probe.state === 'missing' || probe.state === 'outdated' || probe.path === undefined) {
+        throw new MissingToolError(missingNote(tool, probe, probe.state));
+    }
+    return { path: probe.path, env };
+}
 /**
  * Prepares scoped commands with bounded file batches for checks and corrections.
  * @param session the session rooted at the working copy
@@ -312,23 +329,6 @@ export async function runCheckCommand(
     if (failure?.status === 'missing') throw new MissingToolError(failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     return result;
-}
-function adapterTool(
-    input: EngineInput,
-    name: string,
-    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
-): {
-    path: string;
-    env: Record<string, string>;
-} {
-    const tool = toolPin(input.manifests.values(), name);
-    const env = { ...tool.env, ...input.spec.env, ...options.env };
-    const probe = probeTool({ ...input, cwd: options.cwd }, { ...tool, env });
-    if (probe.state === 'error') throw new Error(probe.note ?? `${name} version probe failed.`);
-    if (probe.state === 'missing' || probe.state === 'outdated' || probe.path === undefined) {
-        throw new MissingToolError(missingNote(tool, probe, probe.state));
-    }
-    return { path: probe.path, env };
 }
 
 export type PreparedCommand = {

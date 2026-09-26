@@ -169,6 +169,19 @@ function fileReport(file: RuleText): RuleFinding[] {
     ];
 }
 
+if (import.meta.main) {
+    const rulesFolder = fileURLToPath(new URL('../../rules/', import.meta.url));
+    const paths = await globby(['**/*.md'], { cwd: rulesFolder });
+    const files = paths
+        .filter(isRulePath)
+        .toSorted((a, b) => a.localeCompare(b))
+        .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
+    const report = lintRules(files);
+    for (const finding of report.findings)
+        console.log(`rules/${finding.file}:${String(finding.line)}: ${finding.message}`);
+    process.exitCode = report.findings.length > 0 ? 1 : 0;
+}
+
 /**
  * True when a path under rules/ is a rule file: Markdown in a known layer folder.
  * @param path the path relative to rules/
@@ -186,19 +199,6 @@ export function isRulePath(path: string): boolean {
  */
 export function lintRules(files: RuleText[]): RulesLintReport {
     return { findings: files.flatMap(fileReport), files: files.length };
-}
-
-if (import.meta.main) {
-    const rulesFolder = fileURLToPath(new URL('../../rules/', import.meta.url));
-    const paths = await globby(['**/*.md'], { cwd: rulesFolder });
-    const files = paths
-        .filter(isRulePath)
-        .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
-    const report = lintRules(files);
-    for (const finding of report.findings)
-        console.log(`rules/${finding.file}:${String(finding.line)}: ${finding.message}`);
-    process.exitCode = report.findings.length > 0 ? 1 : 0;
 }
 
 /** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */

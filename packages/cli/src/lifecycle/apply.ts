@@ -31,6 +31,33 @@ function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
     }
 }
 
+// Pruning restores only locally recorded outputs that no selected owner still needs.
+function pruningProposals(
+    owner: LifecycleOwner,
+    root: string,
+    expected: Set<string>,
+    retained: { prose: boolean; packages: boolean },
+): FileProposal[] {
+    const recorded = new Set(
+        readOwnership(root)
+            .files.filter((entry) => entry.kind === 'hook' || entry.kind === 'runtime' || entry.kind === 'export')
+            .map((entry) => entry.path),
+    );
+    return owner
+        .installedPaths()
+        .filter(
+            (path) =>
+                !(
+                    expected.has(path) ||
+                    recorded.has(path) ||
+                    (retained.prose && isValePackageFile(path)) ||
+                    (retained.packages && path.startsWith('.gspot/node_modules/')) ||
+                    (expected.has('.gspot/pyproject.toml') && path.startsWith('.gspot/.venv/'))
+                ),
+        )
+        .map((path) => owner.proposeRestoration(path));
+}
+
 // Every proposal is prepared before the owner publishes the batch.
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
@@ -95,33 +122,6 @@ export function publishGenerated(
         if (proposal.status === 'changed') (isPackage ? report.packages : report.written).push(proposal.path);
     }
     report.removed.push(...pruning.filter((proposal) => proposal.status !== 'preserved').map(({ path }) => path));
-}
-
-// Pruning restores only locally recorded outputs that no selected owner still needs.
-function pruningProposals(
-    owner: LifecycleOwner,
-    root: string,
-    expected: Set<string>,
-    retained: { prose: boolean; packages: boolean },
-): FileProposal[] {
-    const recorded = new Set(
-        readOwnership(root)
-            .files.filter((entry) => entry.kind === 'hook' || entry.kind === 'runtime' || entry.kind === 'export')
-            .map((entry) => entry.path),
-    );
-    return owner
-        .installedPaths()
-        .filter(
-            (path) =>
-                !(
-                    expected.has(path) ||
-                    recorded.has(path) ||
-                    (retained.prose && isValePackageFile(path)) ||
-                    (retained.packages && path.startsWith('.gspot/node_modules/')) ||
-                    (expected.has('.gspot/pyproject.toml') && path.startsWith('.gspot/.venv/'))
-                ),
-        )
-        .map((path) => owner.proposeRestoration(path));
 }
 
 export type ApplyReport = {

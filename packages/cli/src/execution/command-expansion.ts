@@ -76,6 +76,19 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
 function pointerPath(name: string, scope: string): string {
     return scope === '' ? name : `${scope}/${name}`;
 }
+
+function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
+    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
+    return policyPart ?? plainPart(session, planned, part, sub);
+}
+
+function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
+    if (part === '{files}') return sub.files;
+    if (part === '{file}') return [{ file: true }];
+    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
+        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
+    return [substituteValue(session, planned, part, sub)];
+}
 /**
  * Configuration paths named by a check command or its environment.
  * @param session the open session
@@ -132,19 +145,6 @@ export function commandConfigurations(
             ]),
         ]),
     ].toSorted((left, right) => left.localeCompare(right));
-}
-
-function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
-    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
-    return policyPart ?? plainPart(session, planned, part, sub);
-}
-
-function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
-    if (part === '{files}') return sub.files;
-    if (part === '{file}') return [{ file: true }];
-    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
-        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
-    return [substituteValue(session, planned, part, sub)];
 }
 /**
  * Expands a scalar command argument or environment value from the check scope.

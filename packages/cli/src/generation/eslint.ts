@@ -5,6 +5,20 @@ import type { ScopeSelection } from '#cli/policy/resolve.ts';
 import type { PathExpressions } from '#cli/repository/paths.ts';
 import type { FragmentSelector } from '#cli/configurations/schema.ts';
 
+function shape(entry: ResolvedSelector): { selector: string; message: string } {
+    return { selector: entry.selector, message: entry.message };
+}
+
+function distinctLists(lists: string[][]): string[][] {
+    const seen = new Set<string>();
+    return lists.filter((list) => {
+        const key = JSON.stringify(list);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 /**
  * Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope.
  * @param policy the repository policy
@@ -94,20 +108,6 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
             ].map(shape),
         });
     return groups;
-}
-
-function shape(entry: ResolvedSelector): { selector: string; message: string } {
-    return { selector: entry.selector, message: entry.message };
-}
-
-function distinctLists(lists: string[][]): string[][] {
-    const seen = new Set<string>();
-    return lists.filter((list) => {
-        const key = JSON.stringify(list);
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
 }
 
 /** A fragment selector with the allowed setting replaced by the paths it holds. */

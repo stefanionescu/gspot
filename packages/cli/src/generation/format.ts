@@ -11,6 +11,29 @@ type NativeOverride<Options> = {
     options: Options;
 };
 
+function formatEntries(policy: Policy): ScopedFormat[] {
+    const tables = [
+        { scope: '', format: policy.format },
+        ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ scope, format: table.format ?? {} })),
+    ].toSorted((first, second) => first.scope.split('/').length - second.scope.split('/').length);
+    const base = tables.flatMap(({ scope, format: { overrides: _overrides, ...format } }) =>
+        scope === '' || Object.keys(format).length === 0 ? [] : [{ scope, paths: ['**/*'], format }],
+    );
+    const overrides = tables.flatMap(({ scope, format }) =>
+        (format.overrides ?? []).map(({ paths, ...format }) => ({ scope, paths, format: compact(format) })),
+    );
+    return [...base, ...overrides];
+}
+
+function editorconfigOptions(format: Partial<FormatSettings>): Record<string, string | number | boolean> {
+    return {
+        ...(format.indent_style === undefined ? {} : { indent_style: format.indent_style }),
+        ...(format.indent_width === undefined ? {} : { indent_size: format.indent_width }),
+        ...(format.line_ending === undefined ? {} : { end_of_line: format.line_ending }),
+        ...(format.newline_at_end === undefined ? {} : { insert_final_newline: format.newline_at_end }),
+    };
+}
+
 /**
  * Relocate native selectors while retaining Prettier's separate basename and relative-path matching.
  * @param entries the authored overrides
@@ -85,20 +108,6 @@ export function relocatedOverrides<Options>(
     });
 }
 
-function formatEntries(policy: Policy): ScopedFormat[] {
-    const tables = [
-        { scope: '', format: policy.format },
-        ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ scope, format: table.format ?? {} })),
-    ].toSorted((first, second) => first.scope.split('/').length - second.scope.split('/').length);
-    const base = tables.flatMap(({ scope, format: { overrides: _overrides, ...format } }) =>
-        scope === '' || Object.keys(format).length === 0 ? [] : [{ scope, paths: ['**/*'], format }],
-    );
-    const overrides = tables.flatMap(({ scope, format }) =>
-        (format.overrides ?? []).map(({ paths, ...format }) => ({ scope, paths, format: compact(format) })),
-    );
-    return [...base, ...overrides];
-}
-
 /**
  * The Prettier options for the format settings a policy states.
  * @param format the format settings, each optional
@@ -123,15 +132,6 @@ export function prettierOptions(format: Partial<FormatSettings>): Record<string,
  */
 export function literalGlob(path: string): string {
     return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
-}
-
-function editorconfigOptions(format: Partial<FormatSettings>): Record<string, string | number | boolean> {
-    return {
-        ...(format.indent_style === undefined ? {} : { indent_style: format.indent_style }),
-        ...(format.indent_width === undefined ? {} : { indent_size: format.indent_width }),
-        ...(format.line_ending === undefined ? {} : { end_of_line: format.line_ending }),
-        ...(format.newline_at_end === undefined ? {} : { insert_final_newline: format.newline_at_end }),
-    };
 }
 
 /**

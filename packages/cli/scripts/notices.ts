@@ -2,7 +2,8 @@ import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
-import { prepareInput, SWIFT_GRAMMAR } from './inputs.ts';
+import { prepareInput } from './inputs.ts';
+import { SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
 
 const packageSchema = z.object({
     name: z.string(),

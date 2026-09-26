@@ -3,36 +3,7 @@ import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptFile } from '#cli/checks/structure/parser.ts';
 import type { CodeLine } from '#cli/checks/structure/code-lines.ts';
 import type { Analysis, StructureContext } from '#cli/checks/structure/engine.ts';
-import { CONFIG_GUARD, DEFAULT_EXPANSION  } from '#cli/checks/structure/patterns.ts';
-
-/**
- * One finding per `${name:-value}` default outside the configuration owners, unless an allowed fragment is on the line.
- * @param context the check context
- * @param scripts the shell index
- * @returns the findings
- */
-export const scriptConfigDefaults: Analysis = async (context, scripts) => {
-    const owners = new Set(context.bashSetting('config_owners') as string[] | undefined);
-    const fragments = context.bashList('default_fragments_allowed');
-    const index = await scripts();
-    return index.files.flatMap((file) => {
-        if (owners.has(file.path)) return [];
-        return file.lines.flatMap((line, position) => {
-            if (line.trimStart().startsWith('#') || fragments.some((fragment) => line.includes(fragment))) return [];
-            const match = DEFAULT_EXPANSION.exec(line);
-            return match === null
-                ? []
-                : [
-                      context.report(
-                          file.path,
-                          position + 1,
-                          'default-outside-owner',
-                          `${match[0]} sets a default outside the configuration owners.`,
-                      ),
-                  ];
-        });
-    });
-};
+import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/checks/structure/patterns.ts';
 
 function markProblems(
     file: ScriptFile,
@@ -69,6 +40,35 @@ function guardFindings(file: ScriptFile, seen: Map<string, string>, context: Str
         ];
     return markProblems(file, [first, second], name, seen, context);
 }
+
+/**
+ * One finding per `${name:-value}` default outside the configuration owners, unless an allowed fragment is on the line.
+ * @param context the check context
+ * @param scripts the shell index
+ * @returns the findings
+ */
+export const scriptConfigDefaults: Analysis = async (context, scripts) => {
+    const owners = new Set(context.bashSetting('config_owners') as string[] | undefined);
+    const fragments = context.bashList('default_fragments_allowed');
+    const index = await scripts();
+    return index.files.flatMap((file) => {
+        if (owners.has(file.path)) return [];
+        return file.lines.flatMap((line, position) => {
+            if (line.trimStart().startsWith('#') || fragments.some((fragment) => line.includes(fragment))) return [];
+            const match = DEFAULT_EXPANSION.exec(line);
+            return match === null
+                ? []
+                : [
+                      context.report(
+                          file.path,
+                          position + 1,
+                          'default-outside-owner',
+                          `${match[0]} sets a default outside the configuration owners.`,
+                      ),
+                  ];
+        });
+    });
+};
 
 /**
  * One finding per owner without the guard, with a malformed second line, or with a guard another owner already uses.

@@ -93,6 +93,33 @@ function parseEntry(line: string, kind: SnapshotSource['kind']): GitEntry {
 }
 
 /**
+ * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
+ * @param root repository directory
+ * @param source index or commit to inspect
+ * @param cancelSignal command cancellation
+ * @returns validated entries
+ */
+async function readEntries(root: string, source: SnapshotSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+    const command =
+        source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.object];
+    const observed = await runBinary(command, {
+        cwd: root,
+        timeoutMs: 30_000,
+        ...(cancelSignal === undefined ? {} : { cancelSignal }),
+    });
+    if (observed.code !== 0)
+        throw new SelectionError(['Cannot read the Git index. Resolve Git errors before checking staged content.']);
+    const bytes = Buffer.from(observed.stdout);
+    const text = bytes.toString('utf8');
+    if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['Revision paths must be valid UTF-8.']);
+    if (text !== '' && !text.endsWith('\0')) throw new SelectionError(['The Git entry stream is incomplete.']);
+    return text
+        .split('\0')
+        .filter(Boolean)
+        .map((line) => parseEntry(line, source.kind));
+}
+
+/**
  * Read raw blob bytes once, validating framing and every returned identity.
  * @param root repository directory
  * @param requested full blob object IDs
@@ -128,33 +155,6 @@ export async function gitBlobs(
     }
     if (cursor !== output.length) throw new SelectionError(['The Git object stream contains unexpected data.']);
     return blobs;
-}
-
-/**
- * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
- * @param root repository directory
- * @param source index or commit to inspect
- * @param cancelSignal command cancellation
- * @returns validated entries
- */
-async function readEntries(root: string, source: SnapshotSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const command =
-        source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.object];
-    const observed = await runBinary(command, {
-        cwd: root,
-        timeoutMs: 30_000,
-        ...(cancelSignal === undefined ? {} : { cancelSignal }),
-    });
-    if (observed.code !== 0)
-        throw new SelectionError(['Cannot read the Git index. Resolve Git errors before checking staged content.']);
-    const bytes = Buffer.from(observed.stdout);
-    const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['Revision paths must be valid UTF-8.']);
-    if (text !== '' && !text.endsWith('\0')) throw new SelectionError(['The Git entry stream is incomplete.']);
-    return text
-        .split('\0')
-        .filter(Boolean)
-        .map((line) => parseEntry(line, source.kind));
 }
 
 /**

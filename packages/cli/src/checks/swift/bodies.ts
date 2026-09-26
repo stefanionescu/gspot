@@ -6,6 +6,15 @@ function problem(fn: SwiftFunction, rule: string, text: string): StructureProble
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
+function normalized(fn: SwiftFunction): string[] {
+    return fn.body.flatMap((statement) =>
+        statement.text
+            .split('\n')
+            .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
+            .filter((line) => line !== '' && !line.startsWith('//')),
+    );
+}
+
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -25,15 +34,6 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
               ]
             : [];
     });
-}
-
-function normalized(fn: SwiftFunction): string[] {
-    return fn.body.flatMap((statement) =>
-        statement.text
-            .split('\n')
-            .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
-            .filter((line) => line !== '' && !line.startsWith('//')),
-    );
 }
 
 /**

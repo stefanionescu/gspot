@@ -12,6 +12,7 @@ import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import type { CommandResult } from '#cli/commands/print-result.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tool-environment.ts';
+type InstallOptions = { cwd: string; isDryRun: boolean };
 
 /**
  * Register immutable installation for a clone.
@@ -35,7 +36,6 @@ export function registerInstall(program: Command): void {
             );
         });
 }
-type InstallOptions = { cwd: string; isDryRun: boolean };
 
 /**
  * Preview or install this clone's locked tools without regenerating tracked configuration.

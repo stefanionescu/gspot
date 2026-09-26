@@ -97,22 +97,6 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
     }
 }
 
-/**
- * One finding per statement, call, function or control-flow construct in a file under the config role.
- * @param input the engine input
- * @returns the findings
- */
-export async function configurationPurity(input: EngineInput): Promise<Finding[]> {
-    const isConfig = pathMatcher(configurationRolePaths(input));
-    const findings: Finding[] = [];
-    for (const file of input.files) {
-        const language = languageOf(file);
-        if (language === undefined || file.nature !== 'source' || !isConfig(file.path)) continue;
-        findings.push(...(await fileFindings(input, file, language)));
-    }
-    return findings;
-}
-
 const CONFIG_STATEMENTS = new Set([
     'import_statement',
     'export_statement',
@@ -142,3 +126,19 @@ const CONFIG_LOGIC_NODES = new Set([
 const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
 
 const CONFIG_IMPORT_PREFIXES = ['#config/'];
+
+/**
+ * One finding per statement, call, function or control-flow construct in a file under the config role.
+ * @param input the engine input
+ * @returns the findings
+ */
+export async function configurationPurity(input: EngineInput): Promise<Finding[]> {
+    const isConfig = pathMatcher(configurationRolePaths(input));
+    const findings: Finding[] = [];
+    for (const file of input.files) {
+        const language = languageOf(file);
+        if (language === undefined || file.nature !== 'source' || !isConfig(file.path)) continue;
+        findings.push(...(await fileFindings(input, file, language)));
+    }
+    return findings;
+}

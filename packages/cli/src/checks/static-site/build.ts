@@ -10,15 +10,6 @@ import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { mutationTarget, openConfinedRoot } from '#cli/platform/filesystem.ts';
 
-/** The output of one isolated static-site build. */
-export type SiteBuild = {
-    cwd: string;
-    command: string;
-    output: string;
-    isBuilt: boolean;
-    said: string;
-};
-
 const DEFAULT_OUTPUT = 'dist';
 const DEFAULT_BUILD = 'npm run build';
 const SHOWN_DIFFERENCES = 10;
@@ -62,6 +53,15 @@ function digests(folder: string): Map<string, string> {
         filesUnder(folder).map((path) => [path, createHash('sha256').update(readSource(folder, path)).digest('hex')]),
     );
 }
+
+/** The output of one isolated static-site build. */
+export type SiteBuild = {
+    cwd: string;
+    command: string;
+    output: string;
+    isBuilt: boolean;
+    said: string;
+};
 
 /**
  * Every file under a folder, relative to it, sorted.

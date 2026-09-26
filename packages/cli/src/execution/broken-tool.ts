@@ -26,6 +26,21 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
+const TAIL_LINES = 20;
+const TRUFFLEHOG_FINDINGS = 183;
+const TYPOS_FINDINGS = 2;
+
+function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
+    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
+        throw new ToolOutputError(`TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
+    const findings = parseOutput(spec, result.stdout, result.stderr, root);
+    if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
+        throw new ToolOutputError(
+            'TruffleHog reported findings without valid structured data; raw output was withheld.',
+        );
+    return findings;
+}
+
 /**
  * Whether a run that exited nonzero produced nothing that points at a real file.
  * @param spec the check
@@ -71,10 +86,6 @@ export function executionFailure(
         return { status: 'error', note: `${name} failed during process launch, capture, or termination.` };
     return undefined;
 }
-
-const TAIL_LINES = 20;
-const TRUFFLEHOG_FINDINGS = 183;
-const TYPOS_FINDINGS = 2;
 
 /**
  * Match the declared fatal diagnostics of a check or of the tool it runs, for checks and corrections.
@@ -134,15 +145,4 @@ export function checkedFindings(planned: PlannedCheck, result: SpawnResult, root
         throw new ToolOutputError(`${name} broke: exit ${String(result.code)}\n${detail}`);
     }
     return parsed;
-}
-
-function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
-    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
-        throw new ToolOutputError(`TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
-    const findings = parseOutput(spec, result.stdout, result.stderr, root);
-    if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
-        throw new ToolOutputError(
-            'TruffleHog reported findings without valid structured data; raw output was withheld.',
-        );
-    return findings;
 }

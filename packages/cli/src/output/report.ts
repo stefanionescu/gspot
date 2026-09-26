@@ -58,38 +58,6 @@ function codeQualityText(report: RunReport | PushReport): string {
 }
 
 /**
- * Write every public report through the lifecycle owner.
- * @param root the repository root
- * @param report the run report
- */
-export function writeReport(root: string, report: RunReport | PushReport): void {
-    const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
-    const sarif = sarifText(report);
-    const path = join(root, REPORT_DIRECTORY, 'report.json');
-    try {
-        withLifecycleOwner(root, (owner) => {
-            const proposals = (
-                [
-                    [`${REPORT_DIRECTORY}/report.json`, json],
-                    [`${REPORT_DIRECTORY}/report.sarif`, sarif],
-                    [`${REPORT_DIRECTORY}/report.codequality.json`, codeQualityText(report)],
-                ] as const
-            ).map(([destination, content]) =>
-                owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),
-            );
-            const conflict = proposals.find((proposal) => proposal.status === 'preserved');
-            if (conflict !== undefined)
-                throw new Error(
-                    `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
-                );
-            owner.applyProposals(proposals);
-        });
-    } catch (error) {
-        reportStorageFailure(path, error);
-    }
-}
-
-/**
  * The SARIF rendering of a report, with locations for findings that have them.
  * @param report the run report
  * @returns the SARIF JSON text
@@ -128,6 +96,38 @@ function sarifRun(report: RunReport): SarifRunBuilder {
         );
     }
     return run;
+}
+
+/**
+ * Write every public report through the lifecycle owner.
+ * @param root the repository root
+ * @param report the run report
+ */
+export function writeReport(root: string, report: RunReport | PushReport): void {
+    const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
+    const sarif = sarifText(report);
+    const path = join(root, REPORT_DIRECTORY, 'report.json');
+    try {
+        withLifecycleOwner(root, (owner) => {
+            const proposals = (
+                [
+                    [`${REPORT_DIRECTORY}/report.json`, json],
+                    [`${REPORT_DIRECTORY}/report.sarif`, sarif],
+                    [`${REPORT_DIRECTORY}/report.codequality.json`, codeQualityText(report)],
+                ] as const
+            ).map(([destination, content]) =>
+                owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),
+            );
+            const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+            if (conflict !== undefined)
+                throw new Error(
+                    `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
+                );
+            owner.applyProposals(proposals);
+        });
+    } catch (error) {
+        reportStorageFailure(path, error);
+    }
 }
 
 /**

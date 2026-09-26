@@ -36,6 +36,8 @@ const composeSchema = z.object({
     services: z.record(z.string(), z.object({ image: z.string().min(1).optional() })).optional(),
 });
 
+const COMPOSE_FILES = ['**/docker-compose*.yml', '**/docker-compose*.yaml', '**/compose*.yml', '**/compose*.yaml'];
+
 /**
  * Scan each literal service image once per Compose file.
  * @param input the engine input
@@ -104,5 +106,3 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
-
-const COMPOSE_FILES = ['**/docker-compose*.yml', '**/docker-compose*.yaml', '**/compose*.yml', '**/compose*.yaml'];

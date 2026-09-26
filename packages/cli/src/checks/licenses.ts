@@ -12,8 +12,6 @@ import { targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool-runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 
-export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];
-
 const TOOL = 'license-checker-rseidelsohn';
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);
@@ -46,6 +44,8 @@ function verdict(name: string, license: string, exception: LicenseException | un
     if (exception.license === license) return undefined;
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
 }
+
+export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];
 
 /**
  * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.

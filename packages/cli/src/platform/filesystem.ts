@@ -25,6 +25,32 @@ import {
 
 const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 
+function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
+    if (actual === undefined || expected === undefined) return actual === expected;
+    const observed = { ...actual, mode: fileMode(actual) };
+    const requested = { ...expected, mode: fileMode(expected) };
+    return isDeepStrictEqual(observed, requested);
+}
+
+/**
+ * Snapshot names reject path traversal and null bytes.
+ * @param path a repository-relative path in the platform's own spelling
+ * @returns the path's segments
+ */
+function nativePath(path: string): string[] {
+    if (process.platform === 'win32') return mutationPath(path);
+    const parts = path.split('/');
+    if (parts.some((part) => part === '' || part === '.' || part === '..' || part.includes('\0')))
+        throw new Error(`Unsafe lifecycle path: ${JSON.stringify(path)}`);
+    return parts;
+}
+
+function privateTarget(path: string): void {
+    if (LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'))) {
+        throw new Error(`Lifecycle metadata is not a generated target: ${path}`);
+    }
+}
+
 /** Recovery and ownership metadata never enter repository checks or generated proposals. */
 export const LIFECYCLE_PRIVATE_PATH =
     /(?:^|\/)\.gspot\/(?:state(?:\/|$)|ownership\.json$|writer\.lock$|recovery(?:\/|$))/iu;
@@ -39,13 +65,6 @@ export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform =
     if (platform !== 'win32') return file.mode;
     if (file.isLink || (file.mode & 0o200) !== 0) return 0o666;
     return 0o444;
-}
-
-function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
-    if (actual === undefined || expected === undefined) return actual === expected;
-    const observed = { ...actual, mode: fileMode(actual) };
-    const requested = { ...expected, mode: fileMode(expected) };
-    return isDeepStrictEqual(observed, requested);
 }
 
 /**
@@ -69,25 +88,6 @@ export function mutationPath(path: string): string[] {
         throw new Error(`Unsafe lifecycle path: ${JSON.stringify(path)}`);
     }
     return parts;
-}
-
-/**
- * Snapshot names reject path traversal and null bytes.
- * @param path a repository-relative path in the platform's own spelling
- * @returns the path's segments
- */
-function nativePath(path: string): string[] {
-    if (process.platform === 'win32') return mutationPath(path);
-    const parts = path.split('/');
-    if (parts.some((part) => part === '' || part === '.' || part === '..' || part.includes('\0')))
-        throw new Error(`Unsafe lifecycle path: ${JSON.stringify(path)}`);
-    return parts;
-}
-
-function privateTarget(path: string): void {
-    if (LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'))) {
-        throw new Error(`Lifecycle metadata is not a generated target: ${path}`);
-    }
 }
 
 /**

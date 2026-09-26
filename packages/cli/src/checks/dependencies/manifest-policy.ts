@@ -89,6 +89,12 @@ function lockfileFindings(input: EngineInput): Finding[] {
         }));
 }
 
+const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+
+const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
+
+const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
+
 /**
  * The findings of the manifest policy over every tracked package.json.
  * @param input the engine input
@@ -107,9 +113,3 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     );
     return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
 }
-
-const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
-
-const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
-
-const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;

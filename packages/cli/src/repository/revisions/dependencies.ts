@@ -56,6 +56,51 @@ const PYTHON_PATH_SPANS = z.array(
     z.object({ start: z.number().int().nonnegative(), end: z.number().int().nonnegative(), path: z.string() }),
 );
 
+async function validateCopiedLinks(
+    root: string,
+    directory: string,
+    interpreterLinks: ReadonlyMap<string, ReadonlySet<string>>,
+    cancelSignal?: AbortSignal,
+): Promise<void> {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+        cancelSignal?.throwIfAborted();
+        const path = join(directory, entry.name);
+        if (entry.isDirectory()) await validateCopiedLinks(root, path, interpreterLinks, cancelSignal);
+        else if (entry.isSymbolicLink()) {
+            let resolved: string;
+            try {
+                resolved = await realpath(path);
+            } catch (error) {
+                throw new SelectionError([
+                    `Installed dependency link ${relative(root, path)} cannot be resolved: ${(error as Error).message}. Repair the dependency installation before checking this revision.`,
+                ]);
+            }
+            const target = relative(root, resolved);
+            if (
+                (isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`)) &&
+                !interpreterLinks.get(path)?.has(resolved)
+            )
+                throw new SelectionError([
+                    'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
+                ]);
+        }
+    }
+}
+
+function assertDependencyReady(snapshot: string, folder: string, dependency: string, pending: string[]): void {
+    if (basename(folder) === '.gspot' && pending.includes(dependency === 'node_modules' ? 'npm' : 'python'))
+        throw new SelectionError([
+            'Tool installation is incomplete. Run gspot install before checking staged content.',
+        ]);
+    if (
+        !LOCKS.some((lock) => statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
+        !LOCKS.some((lock) => statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined)
+    )
+        throw new SelectionError([
+            'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',
+        ]);
+}
+
 /**
  * Copy verified journal-owned Vale packages matching the selected configuration.
  * @param root the repository root
@@ -94,37 +139,6 @@ export function copyProsePackages(root: string, snapshot: string, paths: string[
         } finally {
             installed.close();
             destination.close();
-        }
-    }
-}
-
-async function validateCopiedLinks(
-    root: string,
-    directory: string,
-    interpreterLinks: ReadonlyMap<string, ReadonlySet<string>>,
-    cancelSignal?: AbortSignal,
-): Promise<void> {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-        cancelSignal?.throwIfAborted();
-        const path = join(directory, entry.name);
-        if (entry.isDirectory()) await validateCopiedLinks(root, path, interpreterLinks, cancelSignal);
-        else if (entry.isSymbolicLink()) {
-            let resolved: string;
-            try {
-                resolved = await realpath(path);
-            } catch (error) {
-                throw new SelectionError([
-                    `Installed dependency link ${relative(root, path)} cannot be resolved: ${(error as Error).message}. Repair the dependency installation before checking this revision.`,
-                ]);
-            }
-            const target = relative(root, resolved);
-            if (
-                (isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`)) &&
-                !interpreterLinks.get(path)?.has(resolved)
-            )
-                throw new SelectionError([
-                    'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
-                ]);
         }
     }
 }
@@ -403,18 +417,4 @@ export async function copyDependencies(
         installed.close();
         selected.close();
     }
-}
-
-function assertDependencyReady(snapshot: string, folder: string, dependency: string, pending: string[]): void {
-    if (basename(folder) === '.gspot' && pending.includes(dependency === 'node_modules' ? 'npm' : 'python'))
-        throw new SelectionError([
-            'Tool installation is incomplete. Run gspot install before checking staged content.',
-        ]);
-    if (
-        !LOCKS.some((lock) => statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
-        !LOCKS.some((lock) => statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined)
-    )
-        throw new SelectionError([
-            'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',
-        ]);
 }

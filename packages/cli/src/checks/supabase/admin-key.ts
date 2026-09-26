@@ -13,6 +13,10 @@ const DEFAULT_PATHS = [
     'scripts/**',
 ];
 
+const ADMIN_KEY_NAMES = ['SERVICE_ROLE_KEY', 'service_role_key', 'serviceRoleKey'];
+
+const CODE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.swift', '.py', '.kt', '.dart'];
+
 /**
  * One finding for each line that names the service role key outside tools.supabase.admin_key_files.
  * @param input the engine input
@@ -39,7 +43,3 @@ export function adminKey(input: EngineInput): Finding[] {
             }),
     );
 }
-
-const ADMIN_KEY_NAMES = ['SERVICE_ROLE_KEY', 'service_role_key', 'serviceRoleKey'];
-
-const CODE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.swift', '.py', '.kt', '.dart'];

@@ -4,6 +4,19 @@ import { mutationPath, mutationTarget } from '#cli/platform/filesystem.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(0o7777);
+const pathSchema = z.string().superRefine((path, context) => {
+    try {
+        mutationTarget(path);
+    } catch (error) {
+        context.addIssue({ code: 'custom', message: String(error) });
+    }
+});
+const configurationPathSchema = z.array(z.union([z.string().min(1), z.number().int().nonnegative()])).min(1);
+const configurationFieldSchema = z.strictObject({
+    path: configurationPathSchema,
+    installed: z.json(),
+    original: z.json().optional(),
+});
 export const identitySchema = z.strictObject({
     hash: hashSchema,
     mode: modeSchema,
@@ -20,19 +33,6 @@ export const originalSchema = identitySchema.extend({
             }
         })
         .regex(/^(?:[^/]+\/)*\.gspot\/state\/recovery\/[a-f0-9-]{36}\/[a-f0-9-]{36}\.original$/u),
-});
-const pathSchema = z.string().superRefine((path, context) => {
-    try {
-        mutationTarget(path);
-    } catch (error) {
-        context.addIssue({ code: 'custom', message: String(error) });
-    }
-});
-const configurationPathSchema = z.array(z.union([z.string().min(1), z.number().int().nonnegative()])).min(1);
-const configurationFieldSchema = z.strictObject({
-    path: configurationPathSchema,
-    installed: z.json(),
-    original: z.json().optional(),
 });
 export const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
     for (const [index, field] of fields.entries()) {

@@ -47,6 +47,11 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
     ];
 }
 
+function comparable(setting: SettingSpec): Omit<SettingSpec, 'default' | 'detect'> {
+    const { default: _default, detect: _detect, ...rest } = setting;
+    return rest;
+}
+
 /**
  * Render all policy fields from the schema used by the production reader.
  * @returns Markdown reference tables
@@ -58,11 +63,6 @@ export function configurationReference(): string {
             `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
     );
     return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected configurations, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for configuration-owned values.\n\n${sections.join('\n')}`;
-}
-
-function comparable(setting: SettingSpec): Omit<SettingSpec, 'default' | 'detect'> {
-    const { default: _default, detect: _detect, ...rest } = setting;
-    return rest;
 }
 
 /**

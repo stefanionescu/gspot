@@ -11,8 +11,6 @@ const state: { options: OutputOptions; instance: ConsolaInstance | undefined } =
     instance: undefined,
 };
 
-export const colors = pc.createColors(false);
-
 function consola(): ConsolaInstance {
     state.instance ??= createConsola({
         level: LEVELS.normal,
@@ -20,6 +18,10 @@ function consola(): ConsolaInstance {
     });
     return state.instance;
 }
+
+const JSON_INDENT = 2;
+
+export const colors = pc.createColors(false);
 
 /**
  * True when color is allowed: a terminal, no NO_COLOR, no CI, no --no-color.
@@ -89,8 +91,6 @@ export function print(text: string): void {
 }
 
 export type OutputOptions = { verbosity: 'quiet' | 'normal' | 'verbose'; json: boolean; color: boolean };
-
-const JSON_INDENT = 2;
 
 /**
  * Prints one object as JSON on stdout.

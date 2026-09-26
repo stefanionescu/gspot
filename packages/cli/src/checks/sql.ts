@@ -25,6 +25,30 @@ function blockCommentAt(text: string): number {
     return found?.index ?? -1;
 }
 
+function proceduralStatements(value: unknown): number {
+    if (value === null || typeof value !== 'object') return 0;
+    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + proceduralStatements(child), 0);
+    let count = 0;
+    for (const [key, child] of Object.entries(value)) {
+        if (
+            key.startsWith('PLpgSQL_stmt_') &&
+            key !== 'PLpgSQL_stmt_block' &&
+            ((child as { lineno?: number }).lineno ?? 0) > 0
+        )
+            count += 1;
+        count += proceduralStatements(child);
+    }
+    return count;
+}
+
+function sqlStatements(value: unknown): number {
+    if (value === null || typeof value !== 'object') return 0;
+    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + sqlStatements(child), 0);
+    let count = 0;
+    for (const [key, child] of Object.entries(value)) count += (key.endsWith('Stmt') ? 1 : 0) + sqlStatements(child);
+    return count;
+}
+
 /**
  * One finding for each file Postgres refuses to parse. Another dialect has no parser here, so its files pass.
  * @param input the engine input
@@ -90,30 +114,6 @@ export function sqlFileLength(input: EngineInput): Finding[] {
             { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
         ];
     });
-}
-
-function proceduralStatements(value: unknown): number {
-    if (value === null || typeof value !== 'object') return 0;
-    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + proceduralStatements(child), 0);
-    let count = 0;
-    for (const [key, child] of Object.entries(value)) {
-        if (
-            key.startsWith('PLpgSQL_stmt_') &&
-            key !== 'PLpgSQL_stmt_block' &&
-            ((child as { lineno?: number }).lineno ?? 0) > 0
-        )
-            count += 1;
-        count += proceduralStatements(child);
-    }
-    return count;
-}
-
-function sqlStatements(value: unknown): number {
-    if (value === null || typeof value !== 'object') return 0;
-    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + sqlStatements(child), 0);
-    let count = 0;
-    for (const [key, child] of Object.entries(value)) count += (key.endsWith('Stmt') ? 1 : 0) + sqlStatements(child);
-    return count;
 }
 
 /**

@@ -96,18 +96,6 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
     return findings;
 }
 
-/**
- * One finding per fenced block whose tagged language refuses to parse it.
- * @param input the engine input
- * @returns the findings
- */
-export async function fences(input: EngineInput): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    const markdown = input.files.filter((entry) => entry.nature === 'source' && entry.path.endsWith('.md'));
-    for (const file of markdown) findings.push(...(await fileFindings(input, file.path)));
-    return findings;
-}
-
 const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 
 const ELLIPSIS_ARGUMENTS = '(...)';
@@ -133,3 +121,15 @@ const FENCE_PARSERS: Record<string, 'json' | 'toml' | 'yaml' | 'bash' | 'typescr
     python: 'python',
     py: 'python',
 };
+
+/**
+ * One finding per fenced block whose tagged language refuses to parse it.
+ * @param input the engine input
+ * @returns the findings
+ */
+export async function fences(input: EngineInput): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    const markdown = input.files.filter((entry) => entry.nature === 'source' && entry.path.endsWith('.md'));
+    for (const file of markdown) findings.push(...(await fileFindings(input, file.path)));
+    return findings;
+}

@@ -16,6 +16,25 @@ function pushCodes(push: CarryPush, codes: string): void {
     for (const code of codes.split(',')) if (code.trim() !== '') push(code.trim());
 }
 
+const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush, path: string) => void> = {
+    shellcheck: (source, push) => {
+        for (const code of shellcheckRules(source.text).disable) push(code);
+    },
+    sqlfluff: (source, push) => {
+        const codes = asText(asRaw(source.parsed['sqlfluff'])?.['exclude_rules']);
+        if (codes !== undefined) pushCodes(push, codes);
+    },
+    squawk: (source, push) => {
+        disabledFromList(source.parsed, 'excluded_rules', push);
+    },
+    swiftlint: (source, push) => {
+        disabledFromList(source.parsed, 'disabled_rules', push);
+    },
+    hadolint: (source, push) => {
+        disabledFromList(source.parsed, 'ignored', push);
+    },
+};
+
 /**
  * The value of a `key = value` line.
  * @param line one line of an authored file
@@ -39,25 +58,6 @@ export function disabledFromList(parsed: TomlTable, key: string, push: CarryPush
     const rules = asStrings(parsed[key]);
     for (const rule of rules) push(rule);
 }
-
-const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush, path: string) => void> = {
-    shellcheck: (source, push) => {
-        for (const code of shellcheckRules(source.text).disable) push(code);
-    },
-    sqlfluff: (source, push) => {
-        const codes = asText(asRaw(source.parsed['sqlfluff'])?.['exclude_rules']);
-        if (codes !== undefined) pushCodes(push, codes);
-    },
-    squawk: (source, push) => {
-        disabledFromList(source.parsed, 'excluded_rules', push);
-    },
-    swiftlint: (source, push) => {
-        disabledFromList(source.parsed, 'disabled_rules', push);
-    },
-    hadolint: (source, push) => {
-        disabledFromList(source.parsed, 'ignored', push);
-    },
-};
 
 /**
  * Carries the rules an authored tool configuration disables as ignores of the tool's check.

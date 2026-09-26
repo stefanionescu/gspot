@@ -7,13 +7,6 @@ const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const ASSET_FOLDERS = ['packages/cli/configurations', 'packages/cli/rules'];
 
-export const grammarAssets = new Map(
-    GRAMMAR_NAMES.map((name) => [
-        name === 'swift.wasm' ? join(here, '.build', name) : grammarPath(name),
-        `grammars/${name}`,
-    ]),
-);
-
 function assetKey(file: string): string {
     const key =
         grammarAssets.get(file) ??
@@ -22,6 +15,13 @@ function assetKey(file: string): string {
             : relative(root, file));
     return key.replaceAll('\\', '/');
 }
+
+export const grammarAssets = new Map(
+    GRAMMAR_NAMES.map((name) => [
+        name === 'swift.wasm' ? join(here, '.build', name) : grammarPath(name),
+        `grammars/${name}`,
+    ]),
+);
 
 /**
  * Writes the entry module that embeds every asset and starts the CLI.

@@ -39,15 +39,6 @@ function patch(path: string, before: string, after: string, beforeName: string):
 
 const CONFLICT_MARKERS = /^(?:<{7}|={7}|>{7})(?: |$)/mu;
 
-/**
- * Whether a text holds the markers a merge leaves behind, so no tool can read it.
- * @param text the file's text
- * @returns true when a marker line is present
- */
-export function hasConflictMarkers(text: string): boolean {
-    return CONFLICT_MARKERS.test(text);
-}
-
 function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
     const confined = openConfinedRoot(root);
@@ -109,6 +100,15 @@ function knownPaths(rendered: GeneratedProposal): Set<string> {
         ...rendered.merges.map((merge) => merge.path),
         ...rendered.configurations.map((output) => output.path),
     ]);
+}
+
+/**
+ * Whether a text holds the markers a merge leaves behind, so no tool can read it.
+ * @param text the file's text
+ * @returns true when a marker line is present
+ */
+export function hasConflictMarkers(text: string): boolean {
+    return CONFLICT_MARKERS.test(text);
 }
 
 /**

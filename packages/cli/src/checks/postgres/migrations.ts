@@ -34,6 +34,10 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
     return migrations;
 }
 
+const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
+
+const MIGRATION_VERSION = /^(?<version>\d+)/u;
+
 /**
  * Every tracked migration in version order, read and parsed.
  * @param input the engine input
@@ -63,7 +67,3 @@ export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
     }
     return migrations;
 }
-
-const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
-
-const MIGRATION_VERSION = /^(?<version>\d+)/u;

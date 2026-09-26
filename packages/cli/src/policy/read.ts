@@ -24,37 +24,6 @@ function issueText(issue: z.core.$ZodIssue): string {
     return `${shown}: ${issue.message}`;
 }
 
-/**
- * Parse TOML and retain the parser location in policy errors.
- * @param text the policy text
- * @param path the policy file, for the error
- * @returns the parsed table
- */
-export function parseTomlText(text: string, path: string): Record<string, unknown> {
-    try {
-        return parseToml(text);
-    } catch (error) {
-        if (!(error instanceof TomlError)) throw error;
-        const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
-        throw new PolicyError([messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail)]);
-    }
-}
-
-/** Every problem a policy file has, as one error with one line per problem. */
-export class PolicyError extends Error {
-    readonly problems: string[];
-
-    /**
-     * Joins the problems into the message and keeps them as a list.
-     * @param problems the problems in plain English
-     */
-    constructor(problems: string[]) {
-        super(problems.join('\n'));
-        this.name = 'PolicyError';
-        this.problems = problems;
-    }
-}
-
 // A problem on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
 const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
 
@@ -128,6 +97,37 @@ function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
     if (Array.isArray(container) && typeof last === 'number') container.splice(last, 1);
     else if (typeof container === 'object' && container !== null && typeof last === 'string')
         delete (container as Record<string, unknown>)[last];
+}
+
+/**
+ * Parse TOML and retain the parser location in policy errors.
+ * @param text the policy text
+ * @param path the policy file, for the error
+ * @returns the parsed table
+ */
+export function parseTomlText(text: string, path: string): Record<string, unknown> {
+    try {
+        return parseToml(text);
+    } catch (error) {
+        if (!(error instanceof TomlError)) throw error;
+        const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
+        throw new PolicyError([messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail)]);
+    }
+}
+
+/** Every problem a policy file has, as one error with one line per problem. */
+export class PolicyError extends Error {
+    readonly problems: string[];
+
+    /**
+     * Joins the problems into the message and keeps them as a list.
+     * @param problems the problems in plain English
+     */
+    constructor(problems: string[]) {
+        super(problems.join('\n'));
+        this.name = 'PolicyError';
+        this.problems = problems;
+    }
 }
 
 /**

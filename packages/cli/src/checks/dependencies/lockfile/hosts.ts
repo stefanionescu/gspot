@@ -31,6 +31,8 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
     );
 }
 
+const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;
+
 /**
  * The findings of the lockfile host check over every tracked text lockfile.
  * @param input the engine input
@@ -46,5 +48,3 @@ export function lockfileHosts(input: EngineInput): Finding[] {
         });
     return paths.flatMap((path) => fileFindings(input, path, hosts));
 }
-
-const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;

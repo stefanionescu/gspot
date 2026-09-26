@@ -13,15 +13,6 @@ import {
     unlinkSync,
     writeFileSync,
 } from 'node:fs';
-/** The files and policy needed to plant a defect for one check. */
-export type PlantedInput = {
-    check: string;
-    files: Record<string, string>;
-    policy?: string;
-    policyEdit?: [string, string];
-    removed?: string[];
-    executable?: string[];
-};
 
 type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
 
@@ -93,6 +84,22 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     writeFileSync(join(cwd, 'gspot.toml'), policy);
 }
 
+function plantedPolicy(policy: string, planted: PlantedInput): string {
+    const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
+    if (edited === policy && planted.policyEdit !== undefined)
+        throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
+    return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
+}
+/** The files and policy needed to plant a defect for one check. */
+export type PlantedInput = {
+    check: string;
+    files: Record<string, string>;
+    policy?: string;
+    policyEdit?: [string, string];
+    removed?: string[];
+    executable?: string[];
+};
+
 // Preserve bytes and permissions before the first mutation, including setup that fails partway through.
 export function plant(cwd: string, planted: PlantedInput): () => void {
     const policyPath = join(cwd, 'gspot.toml');
@@ -115,11 +122,4 @@ export function plant(cwd: string, planted: PlantedInput): () => void {
         throw error;
     }
     return restore;
-}
-
-function plantedPolicy(policy: string, planted: PlantedInput): string {
-    const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
-    if (edited === policy && planted.policyEdit !== undefined)
-        throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
-    return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
 }

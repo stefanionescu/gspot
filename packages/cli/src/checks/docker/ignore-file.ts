@@ -20,6 +20,8 @@ function missingEntries(text: string): string[] {
     );
 }
 
+const DOCKERIGNORE_ENTRIES = ['.git', 'node_modules', '.env'];
+
 /**
  * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.
  * @param input the engine input
@@ -41,5 +43,3 @@ export function dockerignore(input: EngineInput): Finding[] {
     });
     return findings.toArray();
 }
-
-const DOCKERIGNORE_ENTRIES = ['.git', 'node_modules', '.env'];

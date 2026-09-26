@@ -1,8 +1,6 @@
 import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/tree.ts';
 import type { SqlNode, SqlStatementView } from '#cli/parsers/sql/types.ts';
 import type { Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
-// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
-export const DEFAULT_SCHEMA = 'public';
 
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
@@ -136,6 +134,8 @@ const READERS: Record<string, FactReader> = {
         facts.indexes.push({ table, name: textOf(statement.fields['idxname']), column, constraint: '' });
     },
 };
+// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
+export const DEFAULT_SCHEMA = 'public';
 
 /**
  * Reads every migration in order and gathers what they declare.

@@ -4,6 +4,8 @@ import type { EngineInput } from '#cli/checks/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { SUPABASE_CONFIG, functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
+const MIGRATION_NAME = /^\d{14}_[a-z][a-z\d_]*\.sql$/u;
+
 /**
  * The project file parses, and every function it configures has a folder.
  * @param input the engine input
@@ -70,5 +72,3 @@ export async function migrationNames(input: EngineInput): Promise<Finding[]> {
             ),
         );
 }
-
-const MIGRATION_NAME = /^\d{14}_[a-z][a-z\d_]*\.sql$/u;

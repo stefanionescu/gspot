@@ -42,7 +42,7 @@ import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { collectCarried, ownedTools, unownedTools } from '#cli/policy/adoption/collect.ts';
-import { assertPolicyComplete, hasPolicy, parsePolicyText, PolicyError  } from '#cli/policy/read.ts';
+import { assertPolicyComplete, hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
 import type { InitInputs, InitOptions, InitPrepared, InitResult, InitSelection } from '#cli/commands/init/types.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -227,6 +227,42 @@ async function write(
     });
 }
 
+function integrationChoice<Value extends string>(
+    flags: Record<string, unknown>,
+    name: string,
+    schema: z.ZodType<Value>,
+): Value | 'none' | undefined {
+    return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
+}
+
+function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
+    const lists = {
+        configurations: listFlag(flags, 'configurations'),
+        without: listFlag(flags, 'without'),
+        scopes: listFlag(flags, 'scope'),
+    };
+    const choices = {
+        hooks: integrationChoice(flags, 'hooks', hooksSchema.shape.tool),
+        ci: integrationChoice(flags, 'ci', ciSchema.shape.provider),
+        runner: integrationChoice(flags, 'runner', runnerSchema.shape.tool),
+        rules: flags['rules'] === false ? ('no' as const) : undefined,
+        format: textFlag(flags, 'format') as InitOptions['format'],
+    };
+    const given: Partial<InitOptions> = Object.fromEntries(
+        [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
+    ) as Partial<InitOptions>;
+    return {
+        cwd: directoryOf(global),
+        yes: flags['yes'] === true,
+        isDryRun: flags['dryRun'] === true,
+        json: global['json'] === true,
+        install: flags['install'] !== false,
+        allowDirty: flags['allowDirty'] === true,
+        ...textEntry(flags, 'from', 'from'),
+        ...given,
+    };
+}
+
 /**
  * Runs init: detection, questions, plan, then writes and installs after acceptance.
  * @param options the init flags
@@ -263,42 +299,6 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
             install: written.installNote,
         },
         exitCode: written.exitCode,
-    };
-}
-
-function integrationChoice<Value extends string>(
-    flags: Record<string, unknown>,
-    name: string,
-    schema: z.ZodType<Value>,
-): Value | 'none' | undefined {
-    return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
-}
-
-function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
-    const lists = {
-        configurations: listFlag(flags, 'configurations'),
-        without: listFlag(flags, 'without'),
-        scopes: listFlag(flags, 'scope'),
-    };
-    const choices = {
-        hooks: integrationChoice(flags, 'hooks', hooksSchema.shape.tool),
-        ci: integrationChoice(flags, 'ci', ciSchema.shape.provider),
-        runner: integrationChoice(flags, 'runner', runnerSchema.shape.tool),
-        rules: flags['rules'] === false ? ('no' as const) : undefined,
-        format: textFlag(flags, 'format') as InitOptions['format'],
-    };
-    const given: Partial<InitOptions> = Object.fromEntries(
-        [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
-    ) as Partial<InitOptions>;
-    return {
-        cwd: directoryOf(global),
-        yes: flags['yes'] === true,
-        isDryRun: flags['dryRun'] === true,
-        json: global['json'] === true,
-        install: flags['install'] !== false,
-        allowDirty: flags['allowDirty'] === true,
-        ...textEntry(flags, 'from', 'from'),
-        ...given,
     };
 }
 

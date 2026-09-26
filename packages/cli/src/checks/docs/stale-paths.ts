@@ -126,6 +126,18 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
     return [...paths, ...runs];
 }
 
+const PATH_CHARS = /^[\w./-]+$/u;
+
+const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
+
+const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
+
+const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
+
+const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
+
+const PATH_TOKEN_SKIPS = [/^https?:/u, /^[a-z]+:\/\//u, /^\.\.?\/?$/u, /^\/dev\//u, /^\d+\/\d+$/u, /^\//u];
+
 /**
  * One finding per path token that names nothing tracked and per run invocation that names no task.
  * @param input the engine input
@@ -143,15 +155,3 @@ export function stalePaths(input: EngineInput): Finding[] {
             ),
         );
 }
-
-const PATH_CHARS = /^[\w./-]+$/u;
-
-const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
-
-const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
-
-const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
-
-const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
-
-const PATH_TOKEN_SKIPS = [/^https?:/u, /^[a-z]+:\/\//u, /^\.\.?\/?$/u, /^\/dev\//u, /^\d+\/\d+$/u, /^\//u];

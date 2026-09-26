@@ -3,12 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-export const SWIFT_GRAMMAR = {
-    version: '0.7.3',
-    url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
-    sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
-} as const;
+import { SWIFT_GRAMMAR } from '#cli/platform/assets.ts';
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 

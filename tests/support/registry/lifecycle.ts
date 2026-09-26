@@ -6,15 +6,6 @@ import type { SpawnOutcome } from '#tests/support/cli/command.ts';
 // An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-/** A local npm registry the release tests publish into. */
-export type Registry = {
-    url: string;
-    npmrc: string;
-    work: string;
-    assertRunning: () => void;
-    stop: () => Promise<void>;
-};
-
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const serverEntry = fileURLToPath(new URL('server.ts', import.meta.url));
 const STARTUP_MS = 30_000;
@@ -95,6 +86,15 @@ async function configure(work: string): Promise<string> {
     );
     return config;
 }
+
+/** A local npm registry the release tests publish into. */
+export type Registry = {
+    url: string;
+    npmrc: string;
+    work: string;
+    assertRunning: () => void;
+    stop: () => Promise<void>;
+};
 
 /** Starts an owned registry and cleans failed setup before rejecting. */
 export async function startRegistry(

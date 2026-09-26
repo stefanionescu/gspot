@@ -38,6 +38,8 @@ function scannerFindings(report: Reporter, install: Record<string, unknown>, sca
     return [report(BUNFIG, 'security-scanner', `[install.security] scanner is not ${scanner}.`)];
 }
 
+const SECONDS_PER_DAY = 86_400;
+
 /**
  * The findings of the install policy; it reads bunfig.toml when the repository installs through Bun.
  * @param input the engine input
@@ -62,5 +64,3 @@ export function installPolicy(input: EngineInput): Finding[] {
         return [report('bun.lock', 'release-age', `No ${BUNFIG} sets [install] minimumReleaseAge.`)];
     return [...ageFindings(report, install, days), ...scannerFindings(report, install, scanner)];
 }
-
-const SECONDS_PER_DAY = 86_400;

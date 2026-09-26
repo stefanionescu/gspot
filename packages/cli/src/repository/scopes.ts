@@ -30,22 +30,6 @@ function segmentMatches(pattern: string, segment: string): boolean {
     return picomatch.scan(pattern).isGlob ? picomatch.isMatch(segment, pattern, { dot: true }) : pattern === segment;
 }
 
-/**
- * The folder a project file marks: the path before the segments the pattern names, when the file carries them.
- * @param path the tracked file, root-relative
- * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`
- * @returns the project folder, '' for the root, or undefined when the file is no such project file
- */
-export function projectFolder(path: string, pattern: string): string | undefined {
-    const segments = path.split('/');
-    const wanted = pattern.split('/');
-    for (let start = 0; start + wanted.length <= segments.length; start += 1) {
-        if (wanted.every((part, index) => segmentMatches(part, segments[start + index]!)))
-            return segments.slice(0, start).join('/');
-    }
-    return undefined;
-}
-
 // A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
 function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: Iterable<Manifest>): ScopeEntry[] {
     const patterns = [...manifests].flatMap((manifest) => manifest.detect.project_files);
@@ -163,6 +147,22 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
     } finally {
         files.close();
     }
+}
+
+/**
+ * The folder a project file marks: the path before the segments the pattern names, when the file carries them.
+ * @param path the tracked file, root-relative
+ * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`
+ * @returns the project folder, '' for the root, or undefined when the file is no such project file
+ */
+export function projectFolder(path: string, pattern: string): string | undefined {
+    const segments = path.split('/');
+    const wanted = pattern.split('/');
+    for (let start = 0; start + wanted.length <= segments.length; start += 1) {
+        if (wanted.every((part, index) => segmentMatches(part, segments[start + index]!)))
+            return segments.slice(0, start).join('/');
+    }
+    return undefined;
 }
 
 /**

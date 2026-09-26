@@ -5,6 +5,8 @@ import { isUnderLfs } from '#cli/repository/file-classification.ts';
 
 const KILOBYTE = 1024;
 
+const FILE_SIZE_KB_DEFAULT = 1024;
+
 /**
  * One finding per tracked file over `limits.file_size_kb` that is neither under LFS nor declared.
  * @param input the engine input
@@ -28,5 +30,3 @@ export function largeFiles(input: EngineInput): Finding[] {
             fixable: false,
         }));
 }
-
-const FILE_SIZE_KB_DEFAULT = 1024;

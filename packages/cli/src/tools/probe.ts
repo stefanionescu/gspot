@@ -143,51 +143,6 @@ function readVersion(root: string, cwd: string, path: string, tool: ToolPin): Ve
     return observeToolVersion(tool, printedVersion(cwd, path, tool), installedPackage, miseVersion(path, tool));
 }
 
-/**
- * Interpret an executable version response for both installation and later probes.
- * @param tool the pin
- * @param result what the version command printed and how it exited
- * @param installedPackage the version the private npm package declares, when the tool is one
- * @param installedMiseVersion the version mise installed, when the tool is a mise tool
- * @returns the version, or the state and note of a tool that gave none
- */
-export function observeToolVersion(
-    tool: ToolPin,
-    result: SpawnResult,
-    installedPackage?: string,
-    installedMiseVersion?: string,
-): VersionObservation {
-    const npm = tool.installers['npm'];
-    const expectedExit =
-        (installedPackage === undefined ? undefined : npm?.version_exit_code) ?? tool.version_exit_code ?? 0;
-    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const failure = versionFailure(result, tool, text, expectedExit);
-    if (failure !== undefined) return failure;
-    const version =
-        (npm?.version === tool.version ? installedPackage : undefined) ??
-        installedMiseVersion ??
-        parsedVersion(text, tool);
-    if (version === undefined || semver.coerce(version) === null)
-        return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
-    return { version };
-}
-
-/**
- * Classify a native version against its selected pin and accepted floor.
- * @param found the version the tool reported
- * @param want the pinned version
- * @param floor the lowest version the configuration accepts
- * @returns ok, outdated below the floor, newer above the pin, or error for no version
- */
-export function toolVersionState(found: string, want: string, floor: string): ToolProbe['state'] {
-    const version = semver.coerce(found);
-    if (version === null) return 'error';
-    const lowest = semver.coerce(floor);
-    if (lowest !== null && semver.lt(version, lowest)) return 'outdated';
-    const pinned = semver.coerce(want);
-    return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
-}
-
 // Read library versions from the private installation used by generated configurations.
 function probeLibrary(root: string, tool: ToolPin): ToolProbe {
     const files = openConfinedRoot(root);
@@ -239,6 +194,53 @@ function probeUncached(root: string, cwd: string, tool: ToolPin, runner?: string
         hint,
         floor,
     };
+}
+
+type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
+
+/**
+ * Interpret an executable version response for both installation and later probes.
+ * @param tool the pin
+ * @param result what the version command printed and how it exited
+ * @param installedPackage the version the private npm package declares, when the tool is one
+ * @param installedMiseVersion the version mise installed, when the tool is a mise tool
+ * @returns the version, or the state and note of a tool that gave none
+ */
+export function observeToolVersion(
+    tool: ToolPin,
+    result: SpawnResult,
+    installedPackage?: string,
+    installedMiseVersion?: string,
+): VersionObservation {
+    const npm = tool.installers['npm'];
+    const expectedExit =
+        (installedPackage === undefined ? undefined : npm?.version_exit_code) ?? tool.version_exit_code ?? 0;
+    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
+    const failure = versionFailure(result, tool, text, expectedExit);
+    if (failure !== undefined) return failure;
+    const version =
+        (npm?.version === tool.version ? installedPackage : undefined) ??
+        installedMiseVersion ??
+        parsedVersion(text, tool);
+    if (version === undefined || semver.coerce(version) === null)
+        return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
+    return { version };
+}
+
+/**
+ * Classify a native version against its selected pin and accepted floor.
+ * @param found the version the tool reported
+ * @param want the pinned version
+ * @param floor the lowest version the configuration accepts
+ * @returns ok, outdated below the floor, newer above the pin, or error for no version
+ */
+export function toolVersionState(found: string, want: string, floor: string): ToolProbe['state'] {
+    const version = semver.coerce(found);
+    if (version === null) return 'error';
+    const lowest = semver.coerce(floor);
+    if (lowest !== null && semver.lt(version, lowest)) return 'outdated';
+    const pinned = semver.coerce(want);
+    return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
 }
 
 /**
@@ -299,8 +301,6 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
     }
     return { name, provider: 'host', windows: true, installers: {} };
 }
-
-type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 
 export type ToolProbe = {
     name: string;

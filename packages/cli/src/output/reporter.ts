@@ -142,6 +142,10 @@ function summaryLine(report: RunReport, colors: Colors): string {
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
+type Columns = { scope: number; check: number };
+
+type ReportOptions = { quiet: boolean; verbose: boolean };
+
 /**
  * The run as text, the way 02-cli.md shows it.
  * @param report the run report
@@ -174,7 +178,3 @@ export function runText(report: RunReport, options: ReportOptions): string {
               : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
     return `${comparison}${lines.join('\n')}\n`;
 }
-
-type Columns = { scope: number; check: number };
-
-type ReportOptions = { quiet: boolean; verbose: boolean };

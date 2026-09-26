@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const taskName = z
+    .string()
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]*$/u)
+    .describe('The accepted runner task name.');
+
 export const PACKAGE_LIFECYCLE = new Set([
     'preinstall',
     'install',
@@ -17,11 +22,6 @@ export const PACKAGE_LIFECYCLE = new Set([
     'version',
     'postversion',
 ]);
-
-const taskName = z
-    .string()
-    .regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]*$/u)
-    .describe('The accepted runner task name.');
 
 export const runnerTasksSchema = z
     .strictObject({

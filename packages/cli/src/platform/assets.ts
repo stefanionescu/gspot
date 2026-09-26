@@ -17,8 +17,6 @@ const GRAMMAR_SOURCES: Record<string, string> = {
     'libpg-query.wasm': 'libpg-query/wasm/libpg-query.wasm',
 };
 
-export const GRAMMAR_NAMES = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'];
-
 type EmbeddedIndex = Record<string, string>;
 
 const ROOT_SEARCH_DEPTH = 6;
@@ -50,6 +48,15 @@ function developmentRoot(): string {
     state.developmentRoot ??= findRepoRoot();
     return state.developmentRoot;
 }
+
+export const GRAMMAR_NAMES = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'];
+
+/** The pinned upstream Swift parser: the build downloads it and verifies this checksum before embedding it. */
+export const SWIFT_GRAMMAR = {
+    version: '0.7.3',
+    url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
+    sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
+} as const;
 
 /**
  * The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source.

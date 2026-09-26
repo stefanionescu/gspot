@@ -8,6 +8,42 @@ import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import type { ExistingTooling } from '#cli/repository/existing-tooling.ts';
 import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
 import type { CarriedConfiguration, CarriedFormatter } from '#cli/policy/adoption/results.ts';
+async function carryFormat(
+    root: string,
+    configurations: { from: string; source?: CarrySource }[],
+    ignorePaths: string[],
+    nativeDefaults = false,
+): Promise<CarriedFormatter> {
+    const base = configurations.find((entry) => !entry.from.includes('/'));
+    const from = base?.from ?? '.prettierrc.json';
+    const source = base === undefined ? { parsed: {} } : base.source;
+    const request = formatRequest.safeParse({
+        root,
+        from,
+        nativeDefaults,
+        ...(ignorePaths.length === 0 ? {} : { ignorePaths }),
+        ...(source === undefined ? {} : { source: source.parsed }),
+        nested: configurations
+            .filter((entry) => entry.from.includes('/'))
+            .toSorted((a, b) => a.from.split('/').length - b.from.split('/').length)
+            .map((entry) => ({
+                from: entry.from,
+                ...(entry.source === undefined ? {} : { source: entry.source.parsed }),
+            })),
+    });
+    if (!request.success)
+        throw new Error(
+            `Formatter configuration cannot be replaced without losing settings: ${request.error.issues.map((issue) => issue.message).join('; ')}`,
+        );
+    const parsed = formatResponse.parse(
+        await evaluateConfiguration({ ...request.data, tool: 'prettier', operation: 'format' }),
+    );
+    return compact({
+        format: compact(parsed.format),
+        ignorePatterns: parsed.ignorePatterns,
+        extra: parsed.extra === undefined ? undefined : compact(parsed.extra),
+    });
+}
 
 /**
  * Convert observed formatter and EditorConfig settings before proposing retirement.
@@ -93,40 +129,4 @@ export async function collectFormatting(
     } catch (error) {
         lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
     }
-}
-async function carryFormat(
-    root: string,
-    configurations: { from: string; source?: CarrySource }[],
-    ignorePaths: string[],
-    nativeDefaults = false,
-): Promise<CarriedFormatter> {
-    const base = configurations.find((entry) => !entry.from.includes('/'));
-    const from = base?.from ?? '.prettierrc.json';
-    const source = base === undefined ? { parsed: {} } : base.source;
-    const request = formatRequest.safeParse({
-        root,
-        from,
-        nativeDefaults,
-        ...(ignorePaths.length === 0 ? {} : { ignorePaths }),
-        ...(source === undefined ? {} : { source: source.parsed }),
-        nested: configurations
-            .filter((entry) => entry.from.includes('/'))
-            .toSorted((a, b) => a.from.split('/').length - b.from.split('/').length)
-            .map((entry) => ({
-                from: entry.from,
-                ...(entry.source === undefined ? {} : { source: entry.source.parsed }),
-            })),
-    });
-    if (!request.success)
-        throw new Error(
-            `Formatter configuration cannot be replaced without losing settings: ${request.error.issues.map((issue) => issue.message).join('; ')}`,
-        );
-    const parsed = formatResponse.parse(
-        await evaluateConfiguration({ ...request.data, tool: 'prettier', operation: 'format' }),
-    );
-    return compact({
-        format: compact(parsed.format),
-        ignorePatterns: parsed.ignorePatterns,
-        extra: parsed.extra === undefined ? undefined : compact(parsed.extra),
-    });
 }

@@ -21,6 +21,10 @@ function listItemKey(item: unknown): string {
     return JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
 }
 
+function isSameIgnore(existing: TomlTable, entry: TomlTable): boolean {
+    return ['check', 'rule', 'reason'].every((field) => (existing[field] ?? undefined) === (entry[field] ?? undefined));
+}
+
 /**
  * Walks a dotted path of tables, creating the missing ones when asked to.
  * @param raw the parsed document
@@ -78,10 +82,6 @@ export function appendEntry(table: string, entry: TomlTable): Mutation {
         list.push(entry);
         raw[table] = list;
     };
-}
-
-function isSameIgnore(existing: TomlTable, entry: TomlTable): boolean {
-    return ['check', 'rule', 'reason'].every((field) => (existing[field] ?? undefined) === (entry[field] ?? undefined));
 }
 
 /**

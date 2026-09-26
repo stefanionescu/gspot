@@ -10,28 +10,6 @@ const ACCEPTANCE = join(TESTS, 'acceptance/source');
 const SETUP_MS = 60_000;
 const TEST_MS = 30 * 60_000;
 
-/** Select only source acceptance paths and Bun name filters. */
-export function acceptanceArguments(args: readonly string[]): string[] {
-    const paths: string[] = [];
-    const flags: string[] = [];
-    for (let index = 0; index < args.length; index += 1) {
-        const argument = args[index]!;
-        if (argument === '--test-name-pattern' || argument === '-t') {
-            const pattern = args[++index];
-            if (pattern === undefined || pattern === '') throw new Error(`${argument} requires a pattern.`);
-            flags.push('--test-name-pattern', pattern);
-            continue;
-        }
-        if (argument.startsWith('-')) throw new Error(`Unsupported acceptance option: ${argument}.`);
-        const selected = realpathSync(resolve(process.cwd(), argument));
-        const within = relative(ACCEPTANCE, selected);
-        if (within === '..' || within.startsWith('../') || within.startsWith('..\\') || isAbsolute(within))
-            throw new Error('Select a source test under tests/acceptance/source.');
-        paths.push(selected);
-    }
-    return ['--timeout', '60000', ...flags, ...(paths.length === 0 ? [ACCEPTANCE] : paths)];
-}
-
 /** Build and serve the local plugin while exercising source CLI consumers. */
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
@@ -123,3 +101,25 @@ async function main(): Promise<void> {
 }
 
 if (import.meta.main) await main();
+
+/** Select only source acceptance paths and Bun name filters. */
+export function acceptanceArguments(args: readonly string[]): string[] {
+    const paths: string[] = [];
+    const flags: string[] = [];
+    for (let index = 0; index < args.length; index += 1) {
+        const argument = args[index]!;
+        if (argument === '--test-name-pattern' || argument === '-t') {
+            const pattern = args[++index];
+            if (pattern === undefined || pattern === '') throw new Error(`${argument} requires a pattern.`);
+            flags.push('--test-name-pattern', pattern);
+            continue;
+        }
+        if (argument.startsWith('-')) throw new Error(`Unsupported acceptance option: ${argument}.`);
+        const selected = realpathSync(resolve(process.cwd(), argument));
+        const within = relative(ACCEPTANCE, selected);
+        if (within === '..' || within.startsWith('../') || within.startsWith('..\\') || isAbsolute(within))
+            throw new Error('Select a source test under tests/acceptance/source.');
+        paths.push(selected);
+    }
+    return ['--timeout', '60000', ...flags, ...(paths.length === 0 ? [ACCEPTANCE] : paths)];
+}

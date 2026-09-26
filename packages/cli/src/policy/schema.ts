@@ -29,15 +29,6 @@ const textListNonEmpty = z.array(text.min(1)).min(1);
 
 const anyTable = z.record(text, z.unknown());
 
-/** Primitive value shapes declared by manifest settings, before reason wrappers. */
-export const settingValueSchemas = {
-    number: z.number(),
-    string: z.string(),
-    boolean: z.boolean(),
-    list: z.array(z.unknown()),
-    table: anyTable,
-};
-
 const reasoned = <T extends z.ZodType>(inner: T) => z.union([inner, z.strictObject({ value: inner, reason: text })]);
 
 const reasonedNumber = reasoned(z.number());
@@ -340,16 +331,6 @@ const checkSchema = z
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
 
-export const ciSchema = z.strictObject({
-    provider: z.enum(['github', 'gitlab']).describe('The CI provider that receives generated jobs.'),
-    platforms: z.array(ciPlatform).min(1).default(['ubuntu']).describe('Platforms for GitHub check and manual jobs.'),
-    run: z
-        .enum(['changed', 'all'])
-        .default('changed')
-        .describe('Check changed inputs or the full checked-out tree in CI.'),
-    sarif: z.boolean().default(true).describe('Upload SARIF through a separate GitHub code-scanning job.'),
-});
-
 const rulesSchema = z.strictObject({
     install: flag.default(true).describe('Install rule files and agent instructions.'),
     directory: relativeDirectory
@@ -367,6 +348,36 @@ const rulesSchema = z.strictObject({
 
 const coverageSchema = z.strictObject({ strict: flag.optional() });
 
+const namingTable = namingLists.catchall(namingLanguage);
+
+const scopeBody = {
+    limits: limitsTable.optional(),
+    naming: namingTable.optional(),
+    architecture: architectureSchema.optional(),
+    structure: structureSchema.optional(),
+    tools: toolsSchema.optional(),
+    format: formatSchema.optional(),
+};
+
+/** Primitive value shapes declared by manifest settings, before reason wrappers. */
+export const settingValueSchemas = {
+    number: z.number(),
+    string: z.string(),
+    boolean: z.boolean(),
+    list: z.array(z.unknown()),
+    table: anyTable,
+};
+
+export const ciSchema = z.strictObject({
+    provider: z.enum(['github', 'gitlab']).describe('The CI provider that receives generated jobs.'),
+    platforms: z.array(ciPlatform).min(1).default(['ubuntu']).describe('Platforms for GitHub check and manual jobs.'),
+    run: z
+        .enum(['changed', 'all'])
+        .default('changed')
+        .describe('Check changed inputs or the full checked-out tree in CI.'),
+    sarif: z.boolean().default(true).describe('Upload SARIF through a separate GitHub code-scanning job.'),
+});
+
 /** Integration settings use the same fields, defaults, and descriptions as policy validation. */
 export const integrationSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema, ci: ciSchema, runner: runnerSchema, rules: rulesSchema }).flatMap(
@@ -380,17 +391,6 @@ export const integrationSettingSchemas = Object.fromEntries(
             ),
     ),
 );
-
-const namingTable = namingLists.catchall(namingLanguage);
-
-const scopeBody = {
-    limits: limitsTable.optional(),
-    naming: namingTable.optional(),
-    architecture: architectureSchema.optional(),
-    structure: structureSchema.optional(),
-    tools: toolsSchema.optional(),
-    format: formatSchema.optional(),
-};
 
 /** One [[scope]] entry: its path, configurations, and the per-scope tables. */
 export const scopeSchema = z.strictObject({

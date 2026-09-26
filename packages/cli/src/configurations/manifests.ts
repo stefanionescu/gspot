@@ -124,6 +124,8 @@ function configurationProblems(raw: RawManifest): string[] {
         );
 }
 
+type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
+
 /** A manifest that the schema or the design refuses. */
 export class ManifestError extends Error {
     /**
@@ -293,8 +295,6 @@ export function configurationManifests(): Map<string, Manifest> {
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }
-
-type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
 
 export type ConfigurationHeader = Omit<RawManifest['configuration'], 'check_references'> & {
     check_references?: RawManifest['configuration']['check_references'];

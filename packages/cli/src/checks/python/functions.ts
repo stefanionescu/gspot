@@ -8,6 +8,10 @@ function problem(fn: PythonFunction, rule: string, text: string): StructureProbl
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
+function codeLines(lines: string[], from: number, to: number): number {
+    return lines.slice(from, to).filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
+}
+
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -27,10 +31,6 @@ export function trivialFunctions(functions: PythonFunction[], threshold: number)
               ]
             : [];
     });
-}
-
-function codeLines(lines: string[], from: number, to: number): number {
-    return lines.slice(from, to).filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
 }
 
 /**

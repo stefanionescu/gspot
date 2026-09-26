@@ -12,6 +12,15 @@ function aliasTarget(source: string, prefix: string, target: string): string | u
     return posix.join(base, rest);
 }
 
+function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
+    return (
+        node?.type === AST_NODE_TYPES.CallExpression &&
+        node.callee.type === AST_NODE_TYPES.Identifier &&
+        node.callee.name === 'require' &&
+        node.arguments.length === 1
+    );
+}
+
 /**
  * The file an import source names, relative imports against the importer and aliases against the root; undefined for packages.
  * @param importer the importing file
@@ -35,15 +44,6 @@ export function importFile(
         if (aliased !== undefined) return normalizePath(posix.normalize(posix.join(root, aliased)));
     }
     return undefined;
-}
-
-function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
-    return (
-        node?.type === AST_NODE_TYPES.CallExpression &&
-        node.callee.type === AST_NODE_TYPES.Identifier &&
-        node.callee.name === 'require' &&
-        node.arguments.length === 1
-    );
 }
 
 /**

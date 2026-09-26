@@ -12,6 +12,16 @@ import { readPackageManifest } from '#cli/repository/manifests.ts';
 const FAILED_CHECK = /^✖ (?<description>.+)$/u;
 const BLOCK_END = /^(?:Advice:|✔ .*|✖ .*|\d+\/\d+ checks passed\..*)?$/u;
 
+function hasInstalledExpo(scopeRoot: string): boolean {
+    try {
+        createRequire(join(scopeRoot, 'package.json')).resolve('expo/package.json');
+        return true;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') return false;
+        throw error;
+    }
+}
+
 /**
  * Reads the report Expo Doctor prints.
  * @param check the check name
@@ -33,16 +43,6 @@ export function doctorFindings(check: string, file: string, stdout: string): Fin
             { check, file, line: 1, rule: 'expo-doctor', message: [description, ...issues].join(' '), fixable: false },
         ];
     });
-}
-
-function hasInstalledExpo(scopeRoot: string): boolean {
-    try {
-        createRequire(join(scopeRoot, 'package.json')).resolve('expo/package.json');
-        return true;
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') return false;
-        throw error;
-    }
 }
 
 /**
