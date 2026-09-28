@@ -31,14 +31,14 @@ test('a dependency turns a boolean setting on, and its absence leaves the settin
     const nestjs = selected('nestjs');
     expect(
         detectedSettings(nestjs, [fields({ '@nestjs/core': '11.0.0', '@nestjs/swagger': '11.0.0' })], []),
-    ).toStrictEqual([{ key: 'tools.nestjs.swagger', value: true, configuration: 'nestjs' }]);
+    ).toStrictEqual([{ key: 'tools.nestjs.swagger', value: true, kit: 'nestjs' }]);
     expect(detectedSettings(nestjs, [fields({ '@nestjs/core': '11.0.0' })], [])).toStrictEqual([]);
 });
 
 test('the first folder that exists names the types directory', () => {
     const structure = selected('structure');
     expect(detectedSettings(structure, [], [file('src/types/user.ts'), file('src/index.ts')])).toStrictEqual([
-        { key: 'architecture.types_directory', value: 'src/types', configuration: 'structure' },
+        { key: 'architecture.types_directory', value: 'src/types', kit: 'structure' },
     ]);
     expect(detectedSettings(structure, [], [file('types/user.ts'), file('src/types/other.ts')])).toMatchObject([
         { value: 'types' },
@@ -49,7 +49,7 @@ test('the first folder that exists names the types directory', () => {
 test('a dependency or a folder names the SQL dialect, and the first declaration of a setting wins', () => {
     const sql = selected('sql', 'postgres');
     expect(detectedSettings(sql, [fields({ mysql2: '3.0.0' })], [])).toStrictEqual([
-        { key: 'tools.sqlfluff.dialect', value: 'mysql', configuration: 'sql' },
+        { key: 'tools.sqlfluff.dialect', value: 'mysql', kit: 'sql' },
     ]);
     expect(detectedSettings(sql, [fields({})], [file('supabase/config.toml')])).toMatchObject([{ value: 'postgres' }]);
     expect(detectedSettings(sql, [fields({ express: '5.0.0' })], [file('src/app.ts')])).toStrictEqual([]);
@@ -68,7 +68,7 @@ test.each([
         const setting = manifest.settings.find((entry) => entry.name === 'tools.nestjs.swagger')!;
         const selected = { ...manifest, settings: [{ ...setting, detect }] };
         expect(detectedSettings([selected], [fields({ present: '1.0.0' })], [file('src/entry.ts')])).toStrictEqual(
-            expected.map((value) => ({ key: setting.name, value, configuration: 'nestjs' })),
+            expected.map((value) => ({ key: setting.name, value, kit: 'nestjs' })),
         );
     },
 );
@@ -80,6 +80,6 @@ test('an unmatched declaration leaves a later setting eligible while a matched f
     const second = { ...manifest, settings: [{ ...setting, detect: { dependencies: { present: false } } }] };
     const third = { ...manifest, settings: [{ ...setting, detect: { dependency: 'present' } }] };
     expect(detectedSettings([first, second, third], [fields({ present: '1.0.0' })], [])).toStrictEqual([
-        { key: setting.name, value: false, configuration: 'nestjs' },
+        { key: setting.name, value: false, kit: 'nestjs' },
     ]);
 });

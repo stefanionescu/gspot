@@ -51,7 +51,7 @@ const CASES: FindingCase[] = [
     {
         check: 'drizzle/relations-complete',
         files: {
-            'src/tables.ts': `// A planted file.\n\nimport { pgTable, uuid } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n`,
+            'src/tables.ts': `// A planted file.\n\nimport { uuid, pgTable } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n`,
         },
         expected: { file: 'src/tables.ts', rule: 'relations', line: 9 },
     },

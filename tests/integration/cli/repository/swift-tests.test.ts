@@ -24,9 +24,7 @@ test.each([
     await createFileTree(sandbox.path, { 'Examples/Checks.swift': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
-    expect(
-        detectKits(repository.files, kitManifests(), []).some(({ configuration }) => configuration === 'xctest'),
-    ).toBe(selected);
+    expect(detectKits(repository.files, kitManifests(), []).some(({ kit }) => kit === 'xctest')).toBe(selected);
 });
 
 test.each([true, false])('Swift package test targets are executable declarations: %s', async (declared) => {
@@ -37,9 +35,7 @@ test.each([true, false])('Swift package test targets are executable declarations
             : '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    expect(
-        detectKits(repository.files, kitManifests(), []).some(({ configuration }) => configuration === 'xctest'),
-    ).toBe(declared);
+    expect(detectKits(repository.files, kitManifests(), []).some(({ kit }) => kit === 'xctest')).toBe(declared);
 });
 
 test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {

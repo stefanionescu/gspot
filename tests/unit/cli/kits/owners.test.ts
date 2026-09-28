@@ -67,8 +67,8 @@ describe('owners', () => {
 describe('detection', () => {
     test('proposes a language from an extension and the defaults for every repository', () => {
         const plans = detectKits([file('a.sh')], manifests, []);
-        expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
-        expect(plans.some((plan) => plan.configuration === 'spelling')).toBe(true);
+        expect(plans.find((plan) => plan.kit === 'bash')?.evidence).toBe('1 .sh file');
+        expect(plans.some((plan) => plan.kit === 'spelling')).toBe(true);
     });
 
     test('names a language gspot has no configuration for through Linguist', () => {
@@ -79,7 +79,7 @@ describe('detection', () => {
     test('Sass is a language without a configuration, and a stylesheet proposes css alone', () => {
         const files = [file('theme.scss'), file('site.css')];
         const plans = detectKits(files, manifests, []);
-        expect(plans.find((plan) => plan.configuration === 'css')?.evidence).toBe('1 .css file');
+        expect(plans.find((plan) => plan.kit === 'css')?.evidence).toBe('1 .css file');
         expect(unknownLanguages(files, manifests)).toStrictEqual([
             { language: 'SCSS', extensions: ['.scss'], count: 1 },
         ]);

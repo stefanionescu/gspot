@@ -24,7 +24,7 @@ function recommendedNotSelected(session: Session, selected: Set<string>): Change
         for (const id of manifest.kit.recommends)
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
-                    configuration: id,
+                    kit: id,
                     evidence: `recommended by ${manifest.kit.name}`,
                     command: `gspot add ${id}`,
                 });
@@ -104,15 +104,15 @@ export function changeReport(session: Session): ChangeReport {
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         detectedNotSelected: detectKits(session.repository.files, session.manifests, fields)
-            .filter((plan) => !selected.has(plan.configuration))
+            .filter((plan) => !selected.has(plan.kit))
             .filter((plan) => {
-                const manifest = session.manifests.get(plan.configuration);
+                const manifest = session.manifests.get(plan.kit);
                 return manifest?.kit.default !== true && manifest?.kit.kind !== 'general';
             })
             .map((plan) => ({
-                configuration: plan.configuration,
+                kit: plan.kit,
                 evidence: plan.evidence,
-                command: `gspot add ${plan.configuration}`,
+                command: `gspot add ${plan.kit}`,
             })),
         recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: [

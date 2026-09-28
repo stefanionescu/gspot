@@ -64,7 +64,13 @@ test(
         });
         chmodSync(join(repository.path, '.gspot/node_modules/.bin/tsc'), 0o755);
         mkdirSync(join(repository.path, 'node_modules/.bin'), { recursive: true });
-        symlinkSync(join(MODULES, 'typescript/bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
+        // Windows runs the project compiler through a command file; a POSIX host through the linked script.
+        if (process.platform === 'win32')
+            writeFileSync(
+                join(repository.path, 'node_modules/.bin/tsc.cmd'),
+                `@node "${join(MODULES, 'typescript/bin/tsc')}" %*\r\n`,
+            );
+        else symlinkSync(join(MODULES, 'typescript/bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
         const tool = kitManifests()
             .get('typescript')!
             .tools.find((entry) => entry.name === 'tsc')!;

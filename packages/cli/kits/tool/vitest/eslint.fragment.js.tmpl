@@ -15,7 +15,7 @@
             'vitest/prefer-strict-equal': 'error',
         },
     },
-<% if (isAll) { for (const selected of configurationScopes('vitest')) { %>    {
+<% if (isAll) { for (const selected of kitScopes('vitest')) { %>    {
         files: [<%= json(selected.path === '' ? '**/*' : `${selected.path}/**/*`) %>],
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json([selected.path, selected.settings['tools.vitest.harness_directory']].filter(Boolean).join('/')) %> }] },
     },

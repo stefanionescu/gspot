@@ -19,7 +19,7 @@ test('agent instructions reach detected and configured consumers and uninstall r
     const gemini = join(sandbox.path, 'GEMINI.md');
     chmodSync(gemini, 0o600);
     const mode = statSync(gemini).mode;
-    const selected = await run(sandbox.path, ['set', 'rules.agents', 'TEAM.md']);
+    const selected = await run(sandbox.path, ['set', 'guides.agents', 'TEAM.md']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -60,7 +60,7 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
     expect(readFileSync(join(sandbox.path, '.cursor/rules/gspot.mdc'), 'utf8')).toBe(original);
     expect(applied.stdout + applied.stderr).toContain('.cursor/rules/gspot.mdc');
     const before = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-    const refused = await run(sandbox.path, ['set', 'rules.agents', '../outside.md']);
+    const refused = await run(sandbox.path, ['set', 'guides.agents', '../outside.md']);
     expect(refused.code).toBe(2);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });

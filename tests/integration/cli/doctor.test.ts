@@ -151,7 +151,7 @@ test('doctor excludes private tool manifests from language detection and detects
     const authored = await doctorCommand({ cwd: sandbox.path });
     expect(authored.json).toMatchObject({
         changes: {
-            detectedNotSelected: containingAll([containing({ configuration: 'python', evidence: 'pyproject.toml' })]),
+            detectedNotSelected: containingAll([containing({ kit: 'python', evidence: 'pyproject.toml' })]),
         },
     });
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);

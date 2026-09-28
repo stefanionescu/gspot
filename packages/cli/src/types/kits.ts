@@ -5,7 +5,7 @@ import type { manifestSchema } from '#cli/kits/schema.ts';
 import type { Defined } from '#cli/types/policy/policy.ts';
 import type { outputSchema } from '#cli/kits/output-format.ts';
 
-export type KitEvidence = { configuration: string; evidence: string; kind: string; count?: number };
+export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
 export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 export type Stage = RawCheck['stage'];
 export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';

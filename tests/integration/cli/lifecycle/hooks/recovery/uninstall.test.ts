@@ -115,7 +115,7 @@ test('uninstall reports both restoration-conflict paths and restores the origina
     expect(conflict.text).not.toContain('private original bytes');
     expect(conflict.json).toMatchObject({
         preserved: ['authored.txt'],
-        originals: [{ backup: textContaining(backup) }],
+        originals: [{ backup: textContaining(resolve(sandbox.path, backup)) }],
     });
     expect(readFileSync(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('later authored bytes');
     expect(readFileSync(join(sandbox.path, backup), 'utf8')).toBe('private original bytes');

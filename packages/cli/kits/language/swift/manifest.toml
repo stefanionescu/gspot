@@ -51,6 +51,7 @@ keeps = "rules-table"
 
 [[tools]]
 name = "periphery"
+platforms = ["macos"]
 version = "3.6.0"
 floor = "3.0.0"
 mise = "periphery"

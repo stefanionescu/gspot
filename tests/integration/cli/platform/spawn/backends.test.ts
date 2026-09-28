@@ -140,17 +140,19 @@ test('preserves stdin, argument boundaries, final newlines, and the requested en
     }
 });
 
-test('explicitly removes inherited environment values', async () => {
-    await using sandbox = await testdir();
-    for (const backend of backends) {
-        const result = await backend.execute(
-            [process.execPath, '-e', 'process.stdout.write(String(process.env.PATH === undefined))'],
-            {
-                cwd: sandbox.path,
-                env: { PATH: undefined },
-            },
-        );
-        expect(result.code).toBe(0);
-        expect(result.stdout).toBe('true');
-    }
-});
+// Windows names environment variables without case and supplies Path itself.
+if (process.platform !== 'win32')
+    test('explicitly removes inherited environment values', async () => {
+        await using sandbox = await testdir();
+        for (const backend of backends) {
+            const result = await backend.execute(
+                [process.execPath, '-e', 'process.stdout.write(String(process.env.PATH === undefined))'],
+                {
+                    cwd: sandbox.path,
+                    env: { PATH: undefined },
+                },
+            );
+            expect(result.code).toBe(0);
+            expect(result.stdout).toBe('true');
+        }
+    });

@@ -51,18 +51,16 @@ function ownershipRows(summary: DetectionSummary): string[] {
  */
 export function detectionText(summary: DetectionSummary): string {
     const languages = summary.plans
-        .filter((plan) => plan.kind === 'language' && summary.manifests.get(plan.configuration)?.kit.default !== true)
-        .map((plan) => `${plan.configuration} ${plan.evidence.split(' ', 1)[0] ?? ''}`);
+        .filter((plan) => plan.kind === 'language' && summary.manifests.get(plan.kit)?.kit.default !== true)
+        .map((plan) => `${plan.kit} ${plan.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
         row('languages', languages),
         ...KIND_ROWS.map(({ label, kind }) =>
             row(
                 label,
                 summary.plans
-                    .filter(
-                        (plan) => plan.kind === kind && summary.manifests.get(plan.configuration)?.kit.default !== true,
-                    )
-                    .map((plan) => `${plan.configuration}  ${plan.evidence}`),
+                    .filter((plan) => plan.kind === kind && summary.manifests.get(plan.kit)?.kit.default !== true)
+                    .map((plan) => `${plan.kit}  ${plan.evidence}`),
             ),
         ),
         scopesRow(summary),

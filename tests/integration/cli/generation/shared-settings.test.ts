@@ -64,10 +64,10 @@ test('Ruff selects the families the test runner and the framework declare, and i
     expect(tested.select).toContain('PT009');
     expect(tested.select).not.toContain('PT001');
     expect(tested['per-file-ignores']).toStrictEqual({
-        '**/tests/**': ['S101'],
-        '**/test_*.py': ['S101'],
-        '**/*_test.py': ['S101'],
-        '**/conftest.py': ['S101'],
+        '**/tests/**': ['S101', 'PLR2004'],
+        '**/test_*.py': ['S101', 'PLR2004'],
+        '**/*_test.py': ['S101', 'PLR2004'],
+        '**/conftest.py': ['S101', 'PLR2004'],
     });
     const served = await ruffLint('version = 1\nkits = ["python", "fastapi"]\n');
     expect(served.select).toContain('FAST003');
@@ -78,5 +78,5 @@ test('a policy ignore joins the runner ignores of the same test path', async () 
     const lint = await ruffLint(
         'version = 1\nkits = ["python", "pytest"]\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/conftest.py"]\nreason = "Fixtures document themselves through their names."\n',
     );
-    expect(lint['per-file-ignores']?.['**/conftest.py']).toStrictEqual(['S101', 'D103']);
+    expect(lint['per-file-ignores']?.['**/conftest.py']).toStrictEqual(['S101', 'PLR2004', 'D103']);
 });

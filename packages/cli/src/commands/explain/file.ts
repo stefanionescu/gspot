@@ -55,7 +55,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
             .map((check) => ({
                 check: check.check,
                 stage: check.spec.stage,
-                ...(check.manifest === undefined ? {} : { configuration: check.manifest.kit.name }),
+                ...(check.manifest === undefined ? {} : { kit: check.manifest.kit.name }),
             })),
         ignores: session.policyFiles.policy.ignores
             .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
@@ -77,7 +77,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
 function pathText(report: PathExplanation): string {
     const by = report.fileSource === undefined ? '' : ` by ${report.fileSource}`;
     const checks = report.checks.map(
-        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
+        (check) => `  ${check.check}  ${check.stage}  (${check.kit ?? 'repository command'})`,
     );
     const ignores = report.ignores.map((entry) => ignoreLine(entry));
     const lines = [

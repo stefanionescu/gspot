@@ -20,12 +20,12 @@
         ...extra('typos')?.type,
         'gspot-policy': {
             'extend-glob': ['gspot.toml'],
-            'extend-identifiers': Object.fromEntries(configurationScopes('spelling').flatMap((entry) =>
+            'extend-identifiers': Object.fromEntries(kitScopes('spelling').flatMap((entry) =>
                 Object.values(entry.extra('typos')?.type ?? {}).flatMap((type) =>
                     Object.keys(type['extend-identifiers'] ?? {}).map((identifier) => [identifier, identifier])
                 )
             )),
-            'extend-words': Object.fromEntries(configurationScopes('spelling').flatMap((entry) => [
+            'extend-words': Object.fromEntries(kitScopes('spelling').flatMap((entry) => [
                 ...(entry.settings['tools.typos.words'] ?? []).map((value) => {
                     const word = typeof value === 'string' ? value : value.word;
                     return [word, word];

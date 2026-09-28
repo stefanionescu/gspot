@@ -297,6 +297,11 @@ binary of its own architecture in an Alpine container after the build. GitHub ho
 macOS runner, so the macOS job runs the x64 binary under Rosetta, which is a smoke test and not
 native evidence.
 
+A dispatch of the workflow takes two more inputs for a probe. The `runner` input picks one runner
+of the matrix. The `tests` input names test files under `tests/` that run in place of the
+acceptance steps.
+A probe answers one platform question in minutes; the full matrix stays the merge evidence.
+
 ### Acceptance K-281
 
 Apply the installed version without migrating policy. Dry-run is read-only. Preserve originals and recovery before publication, and update the pin last. Verify pin changes, edited outputs, lock failure, interruption, and safe retry.

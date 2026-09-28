@@ -1,4 +1,4 @@
-<% for (const selected of configurationScopes('react-native')) { const inScope = selected.path === '' ? '**/*' : `${selected.path}/**/*`; %>
+<% for (const selected of kitScopes('react-native')) { const inScope = selected.path === '' ? '**/*' : `${selected.path}/**/*`; %>
     {
         files: CODE.map((pattern) => [<%= json(inScope, 0) %>, pattern]),
         plugins: { expo: expoPlugin, '@react-native': reactNativePlatform, 'react-native': reactNative },

@@ -237,9 +237,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                   name: options.profile.tables.profile,
                   digest: options.profile.digest,
                   selection: options.profile.tables.selection,
-                  detected: selection.rootPlans
-                      .map((plan) => plan.configuration)
-                      .filter((id) => !selection.selectedIds.has(id)),
+                  detected: selection.rootPlans.map((plan) => plan.kit).filter((id) => !selection.selectedIds.has(id)),
               };
     const agents = policy.guides.install ? agentFiles(root, policy.guides.agents) : [];
     const policyLines = policyText.split('\n').length;

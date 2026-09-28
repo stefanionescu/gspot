@@ -80,8 +80,8 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                 path: entry.scope.path,
                 kits: entry.selected.map((manifest) => manifest.kit.name),
             })),
-        configurationScopes: (configuration: string) =>
-            byDepth(scopes.filter((entry) => entry.view.kits.includes(configuration))).map((entry) => ({
+        kitScopes: (kit: string) =>
+            byDepth(scopes.filter((entry) => entry.view.kits.includes(kit))).map((entry) => ({
                 path: entry.scope.path,
                 settings: entry.view.settings,
                 extra: entry.view.extra,

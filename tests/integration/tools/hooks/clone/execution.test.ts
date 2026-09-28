@@ -27,7 +27,8 @@ test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'] as const)(
             expect(await readHookStatus(clone.path)).toMatchObject({ ready: true });
             const status = await run(['git', 'status', '--porcelain'], { cwd: clone.path });
             expect(status.code, status.stderr).toBe(0);
-            expect(status.stdout).toBe('');
+            const diff = await run(['git', 'diff'], { cwd: clone.path });
+            expect(status.stdout, diff.stdout).toBe('');
             expect(readFileSync(lockPath)).toStrictEqual(lock);
         }
     },

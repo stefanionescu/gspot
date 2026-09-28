@@ -72,36 +72,36 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
 });
 
 test.each([
-    { configuration: 'bash', tool: 'shellcheck', rule: 'SC2086', target: 'shellcheckrc', collection: 'disable' },
+    { kit: 'bash', tool: 'shellcheck', rule: 'SC2086', target: 'shellcheckrc', collection: 'disable' },
     {
-        configuration: 'swift',
+        kit: 'swift',
         tool: 'swiftformat',
         rule: 'consecutiveSpaces',
         target: 'swiftformat',
         collection: 'disable',
     },
     {
-        configuration: 'sql',
+        kit: 'sql',
         tool: 'sqlfluff',
         rule: 'CP01',
         target: 'sqlfluff.cfg',
         collection: 'sqlfluff.exclude_rules',
     },
     {
-        configuration: 'postgres',
+        kit: 'postgres',
         tool: 'squawk',
         rule: 'adding-required-field',
         target: 'squawk.toml',
         collection: 'excluded_rules',
     },
-    { configuration: 'nginx', tool: 'gixy', rule: 'ssrf', target: 'gixy.cfg', collection: 'skips' },
+    { kit: 'nginx', tool: 'gixy', rule: 'ssrf', target: 'gixy.cfg', collection: 'skips' },
 ])(
     'apply preview names a removed $tool suppression without changing installed rules',
-    async ({ configuration, tool, rule, target, collection }) => {
+    async ({ kit, tool, rule, target, collection }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n[guides]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nkits = ["${kit}"]\n[guides]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
+            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${kit}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
         });
         const originalSession = await openSession(sandbox.path);
         const original = emitAll(
@@ -176,16 +176,16 @@ test('apply preview names added Vale styles when prose moves from recommended to
 });
 
 test.each([
-    { configuration: 'commits', check: 'commitlint', rule: 'type-case', target: 'commitlint.config.cjs' },
-    { configuration: 'files', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
-    { configuration: 'html', check: 'html-validate', rule: 'no-inline-style', target: 'html-validate-templates.json' },
+    { kit: 'commits', check: 'commitlint', rule: 'type-case', target: 'commitlint.config.cjs' },
+    { kit: 'files', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
+    { kit: 'html', check: 'html-validate', rule: 'no-inline-style', target: 'html-validate-templates.json' },
 ])(
     'apply preview names an enabled $check rule and preserves installed configuration',
-    async ({ configuration, check, rule, target }) => {
+    async ({ kit, check, rule, target }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n[guides]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nkits = ["${kit}"]\n[guides]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
+            'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${kit}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
         });
         const originalSession = await openSession(sandbox.path);
         const original = emitAll(

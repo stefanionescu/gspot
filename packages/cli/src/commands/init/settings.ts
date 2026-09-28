@@ -46,7 +46,7 @@ export function detectedSettings(manifests: Manifest[], fields: Fields[], files:
             const value = detectedValue(spec.detect, dependencies, folders);
             if (value === undefined) return [];
             seen.add(spec.name);
-            return [{ key: spec.name, value, configuration: manifest.kit.name }];
+            return [{ key: spec.name, value, kit: manifest.kit.name }];
         }),
     );
 }

@@ -1,7 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
@@ -10,6 +10,7 @@ import { miseTasks } from '#cli/generation/runner/tasks.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
+import { plantLauncher } from '#tests/support/cli/platforms.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -27,10 +28,7 @@ test.each([undefined, 'yarn'])(
         const original =
             '{"name":"fixture","private":true,"packageManager":"yarn@1.22.22","scripts":{"prepare":"authored setup"}}\n';
         await createFileTree(directory.path, { 'package.json': original, 'yarn.lock': '# yarn lockfile v1\n' });
-        await createFileTree(launcher.path, {
-            'bin/gspot': `#!${process.execPath}\nconsole.log(JSON.stringify(process.argv.slice(2)));\n`,
-        });
-        chmodSync(join(launcher.path, 'bin/gspot'), 0o755);
+        await plantLauncher(launcher.path, 'bin/gspot', 'console.log(JSON.stringify(process.argv.slice(2)));\n');
         const initialized = await initCommand({
             cwd: directory.path,
             yes: true,
@@ -101,10 +99,7 @@ test.each([
         await using directory = await testdir();
         await using launcher = await testdir();
         await createFileTree(directory.path, { [path]: original });
-        await createFileTree(launcher.path, {
-            'bin/gspot': `#!${process.execPath}\nconsole.log(JSON.stringify(process.argv.slice(2)));\n`,
-        });
-        chmodSync(join(launcher.path, 'bin/gspot'), 0o755);
+        await plantLauncher(launcher.path, 'bin/gspot', 'console.log(JSON.stringify(process.argv.slice(2)));\n');
         const initialized = await initCommand({
             cwd: directory.path,
             yes: true,

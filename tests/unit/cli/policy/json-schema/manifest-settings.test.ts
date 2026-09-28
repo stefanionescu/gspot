@@ -5,44 +5,41 @@ import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 test.each([
-    { configuration: 'docs', tool: 'docs', key: 'contents_threshold', bad: 'many', good: 6 },
-    { configuration: 'docs', tool: 'docs', key: 'require_license', bad: 'false', good: true },
-    { configuration: 'xcode', tool: 'xcode', key: 'project', bad: 42, good: 'App.xcodeproj' },
-    { configuration: 'xcode', tool: 'xcode', key: 'entitlements_allowed', bad: 'one', good: [] },
-    { configuration: 'i18n', tool: 'i18n', key: 'translations', bad: [], good: { directory: 'messages', base: 'en' } },
-])(
-    'manifest settings validate $tool.$key kinds in root and scope tables',
-    ({ configuration, tool, key, bad, good }) => {
-        const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-        for (const scoped of [false, true]) {
-            const tools = { [tool]: { [key]: bad } };
-            const input = {
-                version: 1,
-                kits: [configuration],
-                ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }),
-            };
-            const text = stringify(input);
-            const path = 'gspot.toml';
-            const policy = parsePolicyText(text, path);
-            expect(() => {
-                assertPolicyComplete({ text, path, policy });
-            }).toThrow(/gspot.toml:\d+:/);
-            expect(validate(input)).toBe(false);
-            const correctedTools = { [tool]: { [key]: good } };
-            const corrected = {
-                version: 1,
-                kits: [configuration],
-                ...(scoped ? { scope: [{ path: 'app', tools: correctedTools }] } : { tools: correctedTools }),
-            };
-            const correctedText = stringify(corrected);
-            const correctedPolicy = parsePolicyText(correctedText, path);
-            expect(() => {
-                assertPolicyComplete({ text: correctedText, path, policy: correctedPolicy });
-            }).not.toThrow();
-            expect(validate(corrected)).toBe(true);
-        }
-    },
-);
+    { kit: 'docs', tool: 'docs', key: 'contents_threshold', bad: 'many', good: 6 },
+    { kit: 'docs', tool: 'docs', key: 'require_license', bad: 'false', good: true },
+    { kit: 'xcode', tool: 'xcode', key: 'project', bad: 42, good: 'App.xcodeproj' },
+    { kit: 'xcode', tool: 'xcode', key: 'entitlements_allowed', bad: 'one', good: [] },
+    { kit: 'i18n', tool: 'i18n', key: 'translations', bad: [], good: { directory: 'messages', base: 'en' } },
+])('manifest settings validate $tool.$key kinds in root and scope tables', ({ kit, tool, key, bad, good }) => {
+    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+    for (const scoped of [false, true]) {
+        const tools = { [tool]: { [key]: bad } };
+        const input = {
+            version: 1,
+            kits: [kit],
+            ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }),
+        };
+        const text = stringify(input);
+        const path = 'gspot.toml';
+        const policy = parsePolicyText(text, path);
+        expect(() => {
+            assertPolicyComplete({ text, path, policy });
+        }).toThrow(/gspot.toml:\d+:/);
+        expect(validate(input)).toBe(false);
+        const correctedTools = { [tool]: { [key]: good } };
+        const corrected = {
+            version: 1,
+            kits: [kit],
+            ...(scoped ? { scope: [{ path: 'app', tools: correctedTools }] } : { tools: correctedTools }),
+        };
+        const correctedText = stringify(corrected);
+        const correctedPolicy = parsePolicyText(correctedText, path);
+        expect(() => {
+            assertPolicyComplete({ text: correctedText, path, policy: correctedPolicy });
+        }).not.toThrow();
+        expect(validate(corrected)).toBe(true);
+    }
+});
 
 test('nested manifest settings preserve typed leaf values and reject unknown siblings', () => {
     const source = 'version = 1\nkits = ["bash"]\n[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n';

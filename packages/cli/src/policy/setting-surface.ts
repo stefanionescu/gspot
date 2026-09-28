@@ -8,12 +8,8 @@ import { TOOL_DEADLINE, COVERAGE_STRICT } from '#cli/config/kits.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 
 // Whether another kit's scalar default disagrees with this one, and this one may not override it.
-function isScalarConflict(
-    previous: { value: unknown; configuration: string },
-    manifest: Manifest,
-    spec: SettingSpec,
-): boolean {
-    if (previous.configuration === manifest.kit.name) return false;
+function isScalarConflict(previous: { value: unknown; kit: string }, manifest: Manifest, spec: SettingSpec): boolean {
+    if (previous.kit === manifest.kit.name) return false;
     if (JSON.stringify(previous.value) === JSON.stringify(spec.default)) return false;
     return !OVERRIDING_KINDS.has(manifest.kit.kind);
 }
@@ -25,13 +21,13 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
     if (!isList && previous !== undefined && isScalarConflict(previous, manifest, spec)) {
         surface.problems.push({
             key: spec.name,
-            message: messages.conflictingScalars(spec.name, previous.configuration, manifest.kit.name),
+            message: messages.conflictingScalars(spec.name, previous.kit, manifest.kit.name),
         });
         return;
     }
     surface.defaults.set(spec.name, {
         value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
-        configuration: manifest.kit.name,
+        kit: manifest.kit.name,
     });
 }
 
@@ -66,7 +62,7 @@ export function exposedSettings(selected: Manifest[], level: 'recommended' | 'al
         ),
     ]) {
         surface.specs.set(spec.name, spec);
-        surface.defaults.set(spec.name, { value: spec.default, configuration: 'gspot' });
+        surface.defaults.set(spec.name, { value: spec.default, kit: 'gspot' });
     }
     for (const manifest of selected) {
         const settings = manifest.settings.map((declared) => {

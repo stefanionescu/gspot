@@ -1,11 +1,11 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and how it runs a launcher.
 import { join } from 'node:path';
-import { chmodSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/tools/platforms.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
+import { chmodSync, mkdirSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 
 /**
  * Whether the pinned tool has a build for this machine.
@@ -52,8 +52,8 @@ export function venvExecutable(environment: string, name: string): string {
 
 /**
  * Plants a launcher that records what a hook or runner hands it. A POSIX host runs the script through its shebang.
- * On Windows a hook's shell runs the script through env, which hands Bun a Windows path. A direct interpreter in the
- * shebang gets the shell's POSIX spelling instead. A runner or a direct spawn uses the command file beside it.
+ * Windows cannot: a hook's shell spells the script path the POSIX way, which Bun does not read. There the script
+ * lives beside a shell wrapper that converts the path, and beside a command file for a runner or a direct spawn.
  * @param root the directory the path is relative to
  * @param path the launcher path a hook finds on PATH, such as bin/gspot
  * @param script the Bun script body that runs with the launcher's arguments
@@ -64,9 +64,32 @@ export async function plantLauncher(root: string, path: string, script: string):
         chmodSync(join(root, path), 0o755);
         return;
     }
+    const bun = process.execPath.replaceAll('\\', '/');
     const name = path.slice(path.lastIndexOf('/') + 1);
     await createFileTree(root, {
-        [path]: `#!/usr/bin/env bun\n${script}`,
-        [`${path}.cmd`]: `@"${process.execPath}" "%~dp0${name}" %*\r\n`,
+        [`${path}.mjs`]: script,
+        [path]: `#!/bin/sh\nscript=$(cygpath -w "$0" 2>/dev/null || printf '%s' "$0")\nexec "${bun}" "$script.mjs" "$@"\n`,
+        [`${path}.cmd`]: `@"${process.execPath}" "%~dp0${name}.mjs" %*\r\n`,
     });
+}
+
+/**
+ * Links every installed module of this repository into a directory, entry by entry, so a relative link inside the
+ * store resolves from its real location. A directory link of the whole store breaks those on Windows.
+ * @param target the node_modules directory to create
+ */
+export function linkInstalledModules(target: string): void {
+    const store = join(import.meta.dir, '../../../node_modules');
+    const kind = process.platform === 'win32' ? 'junction' : 'dir';
+    mkdirSync(target, { recursive: true });
+    for (const entry of readdirSync(store)) {
+        if (entry.startsWith('.')) continue;
+        if (!entry.startsWith('@')) {
+            symlinkSync(realpathSync(join(store, entry)), join(target, entry), kind);
+            continue;
+        }
+        mkdirSync(join(target, entry), { recursive: true });
+        for (const child of readdirSync(join(store, entry)))
+            symlinkSync(realpathSync(join(store, entry, child)), join(target, entry, child), kind);
+    }
 }

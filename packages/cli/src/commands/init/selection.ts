@@ -50,18 +50,18 @@ function getCandidate(context: InitContext, configuration: string, without: Set<
     return manifest;
 }
 
-function rootSelection(context: InitContext, rootPlans: { configuration: string }[], hasScopes: boolean): string[] {
+function rootSelection(context: InitContext, rootPlans: { kit: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
     const named = context.options.kits?.filter((id) => id !== NO_KITS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
     const detected = rootPlans
         .filter((plan) => {
-            const manifest = getCandidate(context, plan.configuration, without);
+            const manifest = getCandidate(context, plan.kit, without);
             if (!manifest) return false;
             const { kind } = manifest.kit;
             return !hasScopes || kind === 'general' || kind === 'language';
         })
-        .map((plan) => plan.configuration);
+        .map((plan) => plan.kit);
     return [...new Set([...(named ?? []), ...detected])];
 }
 
@@ -76,10 +76,10 @@ function scopeSelection(
         flagged ??
         detectKits(context.files, context.manifests, context.fields, scope.path)
             .filter((plan) => {
-                const manifest = getCandidate(context, plan.configuration, without);
+                const manifest = getCandidate(context, plan.kit, without);
                 return manifest !== undefined && manifest.kit.kind !== 'general';
             })
-            .map((plan) => plan.configuration);
+            .map((plan) => plan.kit);
     // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
     const atRoot = new Set(rootIds);
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.kit.kind !== 'language');
@@ -200,7 +200,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         options,
         [...keptRoot, ...inScopes],
         manifests,
-        new Set(rootPlans.map((plan) => plan.configuration)),
+        new Set(rootPlans.map((plan) => plan.kit)),
     ).filter((id) => !inScopes.has(id));
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);

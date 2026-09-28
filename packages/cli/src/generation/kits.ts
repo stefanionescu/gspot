@@ -65,7 +65,7 @@ function pointerFile(
     path: string,
 ): GeneratedFile {
     const { inputs, manifest } = context;
-    const base = { path, readOnly: true, kind: 'pointer', configuration: manifest.kit.name } as const;
+    const base = { path, readOnly: true, kind: 'pointer', kit: manifest.kit.name } as const;
     if (pointer.template !== undefined)
         return {
             ...base,
@@ -155,7 +155,7 @@ function emitConfiguration(
         content: emitTarget(`${manifest.dir}/${configuration.template ?? ''}`, target, inputs, configuration.header),
         readOnly: true,
         kind: 'config',
-        configuration: manifest.kit.name,
+        kit: manifest.kit.name,
         ...(configuration.rules_path === undefined ? {} : { rulesPath: configuration.rules_path }),
     };
     const templateContext = { ...context, inputs };

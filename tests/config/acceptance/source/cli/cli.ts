@@ -94,7 +94,7 @@ export const TYPED_TABLES_INIT = [
     '--no-install',
 ];
 export const CONFIGURATION_ARRIVAL_PACKAGE =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n';
+    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "zod": "4.6.2"\n    }\n}\n';
 export const LOOSE =
     "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
 export const INIT_SELECTION_QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-guides', '--no-install'];

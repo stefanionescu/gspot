@@ -30,7 +30,7 @@ function fillTarget(value: unknown, pointerPath: string, targetPath: string): un
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
  * @param version the gspot version
- * @param configuration the configuration that owns the pointer
+ * @param kit the kit that owns the pointer
  * @returns the generated file
  */
 export function bodyPointer(
@@ -38,7 +38,7 @@ export function bodyPointer(
     pointerPath: string,
     targetPath: string,
     version: string,
-    configuration: string,
+    kit: string,
 ): GeneratedFile {
     const body = String(fillTarget(pointer.body ?? '', pointerPath, targetPath));
     const ended = body.endsWith('\n') ? body : `${body}\n`;
@@ -47,7 +47,7 @@ export function bodyPointer(
         content: `${headerFor(pointerPath, version)}${ended}`,
         readOnly: true,
         kind: 'pointer',
-        configuration,
+        kit,
     };
 }
 

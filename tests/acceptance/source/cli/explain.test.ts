@@ -100,7 +100,7 @@ test('explain > a recognized name keeps its meaning and an explicit path selects
     commitAll(sandbox.path);
     const configuration = await run(sandbox.path, ['explain', 'bash', '--json']);
     expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
-    expect(JSON.parse(configuration.stdout)).toMatchObject({ kind: 'configuration', subject: 'bash' });
+    expect(JSON.parse(configuration.stdout)).toMatchObject({ kind: 'kit', subject: 'bash' });
     const file = await run(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
@@ -121,8 +121,8 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
         path: 'api/build.sh',
         scope: 'api',
         file: 'source',
-        configurations: containingAll(['bash']),
-        checks: containingAll([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
+        kits: containingAll(['bash']),
+        checks: containingAll([{ check: 'bash/shellcheck', stage: 'commit', kit: 'bash' }]),
         ignores: [
             {
                 check: 'bash/shellcheck',
@@ -147,12 +147,12 @@ test('explain > a missing explicit path fails', async () => {
     expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
 });
 
-test('explain > configuration and check explanations still resolve without a policy', async () => {
+test('explain > kit and check explanations still resolve without a policy', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
     commitAll(sandbox.path);
     for (const [subject, kind] of [
-        ['bash', 'configuration'],
+        ['bash', 'kit'],
         ['bash/shellcheck', 'check'],
     ] as const) {
         const result = await run(sandbox.path, ['explain', subject, '--json']);

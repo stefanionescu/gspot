@@ -48,7 +48,7 @@ test('Vue and Svelte keep source tags while unsupported JVM languages remain det
         { language: 'Java', extensions: ['.java'], count: 1 },
         { language: 'Kotlin', extensions: ['.kt'], count: 1 },
     ]);
-    const selected = detectKits(repository.files, manifests, []).map((entry) => entry.configuration);
+    const selected = detectKits(repository.files, manifests, []).map((entry) => entry.kit);
     expect(selected).toContain('vue');
     expect(selected).toContain('svelte');
     expect(selected).not.toContain('java');

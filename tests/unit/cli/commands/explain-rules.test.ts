@@ -36,7 +36,7 @@ test('check explanations retain correction exit codes without adding absent meta
     const correction = explain(undefined, 'python/ruff');
     expect(correction).toMatchObject({
         kind: 'check',
-        data: { configuration: 'python', fix_findings_exit_codes: [1] },
+        data: { kit: 'python', fix_findings_exit_codes: [1] },
         text: textContaining('Correction exit codes that mean findings remain: 1'),
     });
     const format = explain(undefined, 'python/ruff-format');

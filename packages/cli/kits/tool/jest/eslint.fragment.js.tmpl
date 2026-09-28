@@ -1,4 +1,4 @@
-<% for (const selected of configurationScopes('jest')) { const inScope = selected.path === '' ? '**/*' : `${selected.path}/**/*`; %>
+<% for (const selected of kitScopes('jest')) { const inScope = selected.path === '' ? '**/*' : `${selected.path}/**/*`; %>
     {
         files: <%= json(selected.settings['tools.eslint.test_files'].map((pattern) => [inScope, pattern])) %>,
         plugins: { jest },

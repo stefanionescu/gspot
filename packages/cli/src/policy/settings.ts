@@ -254,7 +254,7 @@ export function settingValue(
         layers.some((layer) => policyValue(layer.table, key) !== undefined);
     const start: SettingState = {
         value: declaredLicenses ? [] : shipped?.value,
-        source: shipped ? `configuration ${shipped.configuration}` : 'unset',
+        source: shipped ? `kit ${shipped.kit}` : 'unset',
         reason: undefined,
     };
     const candidates = match.language === undefined ? [key] : [spec.name, key];

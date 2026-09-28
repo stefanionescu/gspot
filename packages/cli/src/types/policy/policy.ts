@@ -60,7 +60,7 @@ export type ResolvedSetting = {
 };
 export type ExposedSettings = {
     specs: Map<string, SettingSpec>;
-    defaults: Map<string, { value: unknown; configuration: string }>;
+    defaults: Map<string, { value: unknown; kit: string }>;
     problems: { key: string; message: string }[];
 };
 /** A written value with its reason, once the reasoned form is unwrapped. */

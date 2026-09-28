@@ -6,6 +6,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
+import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
@@ -25,6 +26,8 @@ export function toolsPath(names: string[]): string {
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
+        // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
+        if (!toolShipsHere(tool.name)) return [];
         const found = inspectTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
             throw new Error(`Required tool ${name} is ${found.state}. ${found.hint ?? ''} ${found.note ?? ''}`);

@@ -68,11 +68,11 @@ function kitsResult(session: Session): CommandResult {
     }));
     const fields = readManifests(session.root, session.repository.files);
     const detected = detectKits(session.repository.files, session.manifests, fields)
-        .filter((plan) => !names.has(plan.configuration))
+        .filter((plan) => !names.has(plan.kit))
         .map((plan) => ({
-            name: plan.configuration,
+            name: plan.kit,
             evidence: plan.evidence,
-            command: `gspot add ${plan.configuration}`,
+            command: `gspot add ${plan.kit}`,
         }));
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
@@ -109,7 +109,7 @@ export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsL
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         return listSettings(selection.surface, policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
+            .filter((entry) => scope === '' || !entry.source.startsWith('kit'))
             .map((entry) => ({
                 key: entry.key,
                 value: entry.value,

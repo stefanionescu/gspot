@@ -119,7 +119,7 @@ function planFor(manifest: Manifest, tree: Layout): KitEvidence | undefined {
     const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
         return {
-            configuration: configuration.name,
+            kit: configuration.name,
             kind: configuration.kind,
             evidence: byExtension,
             count: manifest.detect.extensions.reduce(
@@ -129,12 +129,10 @@ function planFor(manifest: Manifest, tree: Layout): KitEvidence | undefined {
         };
     for (const source of EVIDENCE) {
         const evidence = source(manifest.detect, tree);
-        if (evidence !== undefined) return { configuration: configuration.name, kind: configuration.kind, evidence };
+        if (evidence !== undefined) return { kit: configuration.name, kind: configuration.kind, evidence };
     }
     const evidence = configuration.default && tree.scope === '' ? 'every repository' : undefined;
-    return evidence === undefined
-        ? undefined
-        : { configuration: configuration.name, kind: configuration.kind, evidence };
+    return evidence === undefined ? undefined : { kit: configuration.name, kind: configuration.kind, evidence };
 }
 
 /**

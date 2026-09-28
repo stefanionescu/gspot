@@ -11,6 +11,7 @@ import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {
     await using sandbox = await testdir();
@@ -131,4 +132,5 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
             ),
         ).toStrictEqual([]);
     },
+    INSTALL_TIMEOUT_MS,
 );

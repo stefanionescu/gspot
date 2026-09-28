@@ -22,88 +22,106 @@ import {
     installPythonProject,
     preparePythonProject,
 } from '#cli/tools/python-project.ts';
+// A Windows virtual environment has launchers and no interpreter links; the windows-launcher tests cover it.
+const POSIX_ENVIRONMENT = process.platform !== 'win32';
 
-test.each(PYTHON_PROJECTS)(
-    'private Python CLI installation preserves authored and generated inputs with %s and %s',
-    async (configuration, runner) => {
-        await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path);
-        await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
-        const { plans, rootProject, rootConfiguration } = prepared;
-        const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
-        expect(plans[0]!.content).toContain(`ruff==${registry.pinned}`);
-        expect(pythonInstallSteps(repository.path)).toStrictEqual([['uv', 'sync', '--locked', '--project', '.gspot']]);
-        expect(lock.toString('utf8')).not.toContain('synthetic-uv-password');
-        await createFileTree(artifacts.path, { 'bin/uv': '#!/bin/sh\nexit 87\n' });
-        chmodSync(join(artifacts.path, 'bin/uv'), 0o755);
-        const command = await run(
-            [
-                process.execPath,
-                fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url)),
-                'install',
-                '--json',
-            ],
-            {
-                cwd: repository.path,
-                env: {
-                    ...(runner === 'mise'
-                        ? { PATH: `${join(artifacts.path, 'bin')}:${environmentVariables()['PATH'] ?? ''}` }
-                        : {}),
-                    MISE_TRUSTED_CONFIG_PATHS: repository.path,
-                    MISE_STATE_DIR: join(artifacts.path, 'mise-state'),
-                    MISE_CACHE_DIR: join(artifacts.path, 'mise-cache'),
-                    MISE_CONFIG_DIR: join(artifacts.path, 'mise-config'),
+if (POSIX_ENVIRONMENT)
+    test.each(PYTHON_PROJECTS)(
+        'private Python CLI installation preserves authored and generated inputs with %s and %s',
+        async (configuration, runner) => {
+            await using repository = await testdir();
+            await using artifacts = await testdir();
+            await using registry = await createPythonRegistry(artifacts.path);
+            await using prepared = await preparePythonInstallation(
+                repository.path,
+                configuration,
+                runner,
+                registry.url,
+            );
+            const { plans, rootProject, rootConfiguration } = prepared;
+            const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
+            const lockPath = join(repository.path, '.gspot/uv.lock');
+            const lock = readFileSync(lockPath);
+            expect(plans[0]!.content).toContain(`ruff==${registry.pinned}`);
+            expect(pythonInstallSteps(repository.path)).toStrictEqual([
+                ['uv', 'sync', '--locked', '--project', '.gspot'],
+            ]);
+            expect(lock.toString('utf8')).not.toContain('synthetic-uv-password');
+            await createFileTree(artifacts.path, { 'bin/uv': '#!/bin/sh\nexit 87\n' });
+            chmodSync(join(artifacts.path, 'bin/uv'), 0o755);
+            const command = await run(
+                [
+                    process.execPath,
+                    fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url)),
+                    'install',
+                    '--json',
+                ],
+                {
+                    cwd: repository.path,
+                    env: {
+                        ...(runner === 'mise'
+                            ? { PATH: `${join(artifacts.path, 'bin')}:${environmentVariables()['PATH'] ?? ''}` }
+                            : {}),
+                        MISE_TRUSTED_CONFIG_PATHS: repository.path,
+                        MISE_STATE_DIR: join(artifacts.path, 'mise-state'),
+                        MISE_CACHE_DIR: join(artifacts.path, 'mise-cache'),
+                        MISE_CONFIG_DIR: join(artifacts.path, 'mise-config'),
+                    },
                 },
-            },
-        );
-        expect(command.code, command.stdout + command.stderr).toBe(2);
-        expect((JSON.parse(command.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
-        expect((JSON.parse(command.stdout) as InstallJson).error).toContain('installed locked Python tools');
-        expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
-        expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
-        expect(readFileSync(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
-        expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
-    },
-    120_000,
-);
+            );
+            expect(command.code, command.stdout + command.stderr).toBe(2);
+            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('Run: gspot apply, then gspot install');
+            expect((JSON.parse(command.stdout) as InstallJson).error).toContain('installed locked Python tools');
+            expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
+            expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
+                'keep the project environment',
+            );
+            expect(readFileSync(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
+            expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
+        },
+        120_000,
+    );
 
-test.each(PYTHON_PROJECTS)(
-    'private Python tools relocate console scripts and reject then correct source with %s and %s',
-    async (configuration, runner) => {
-        await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path);
-        await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
-        await installPythonProject(prepared.root);
-        const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
-        const copiedEnvironment = join(artifacts.path, 'relocated environment');
-        cpSync(join(repository.path, '.gspot/.venv'), copiedEnvironment, {
-            recursive: true,
-            verbatimSymlinks: true,
-        });
-        const relocated = await run([venvExecutable(copiedEnvironment, 'gspot-relocation-marker')], {
-            cwd: artifacts.path,
-        });
-        expect(relocated.code, relocated.stderr).toBe(0);
-        expect(realpathSync(relocated.stdout.trim())).toBe(realpathSync(copiedEnvironment));
-        const invalid = await run([installed, 'check', '--output-format', 'json', 'source.py'], {
-            cwd: repository.path,
-        });
-        expect(invalid.code, invalid.stderr).toBe(1);
-        expect((JSON.parse(invalid.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
-            'F401',
-        ]);
-        const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
-        expect(corrected.code, corrected.stderr).toBe(0);
-        const ran = await run([installed, 'check', 'source.py'], { cwd: repository.path });
-        expect(ran.code).toBe(0);
-    },
-    120_000,
-);
+if (POSIX_ENVIRONMENT)
+    test.each(PYTHON_PROJECTS)(
+        'private Python tools relocate console scripts and reject then correct source with %s and %s',
+        async (configuration, runner) => {
+            await using repository = await testdir();
+            await using artifacts = await testdir();
+            await using registry = await createPythonRegistry(artifacts.path);
+            await using prepared = await preparePythonInstallation(
+                repository.path,
+                configuration,
+                runner,
+                registry.url,
+            );
+            await installPythonProject(prepared.root);
+            const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
+            const copiedEnvironment = join(artifacts.path, 'relocated environment');
+            cpSync(join(repository.path, '.gspot/.venv'), copiedEnvironment, {
+                recursive: true,
+                verbatimSymlinks: true,
+            });
+            const relocated = await run([venvExecutable(copiedEnvironment, 'gspot-relocation-marker')], {
+                cwd: artifacts.path,
+            });
+            expect(relocated.code, relocated.stderr).toBe(0);
+            expect(realpathSync(relocated.stdout.trim())).toBe(realpathSync(copiedEnvironment));
+            const invalid = await run([installed, 'check', '--output-format', 'json', 'source.py'], {
+                cwd: repository.path,
+            });
+            expect(invalid.code, invalid.stderr).toBe(1);
+            expect((JSON.parse(invalid.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
+                'F401',
+            ]);
+            const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
+            expect(corrected.code, corrected.stderr).toBe(0);
+            const ran = await run([installed, 'check', 'source.py'], { cwd: repository.path });
+            expect(ran.code).toBe(0);
+        },
+        120_000,
+    );
 
 test.each([
     ['uv.toml', 'none'],
@@ -159,43 +177,49 @@ test.each([
     120_000,
 );
 
-test.each(PYTHON_PROJECTS)(
-    'conflicted Python locks refuse installation until generated repair with %s and %s',
-    async (configuration, runner) => {
-        await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path);
-        await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
-        const { scopes, rootConfiguration } = prepared;
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
-        await installPythonProject(repository.path);
-        const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
-        writeFileSync(join(repository.path, 'source.py'), '');
-        chmodSync(lockPath, 0o644);
-        writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
-        expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
-        expect(await rejection(installPythonProject(repository.path))).toContain(
-            'Run: gspot apply, then gspot install',
-        );
-        const repaired = toolEnvironment(everyManifest(scopes));
-        await runOwnedLifecycle(repository.path, async (owner) => {
-            await preparePythonProject(repository.path, repaired, owner);
-            for (const file of repaired)
-                owner.replace(
-                    file.path,
-                    { bytes: Buffer.from(file.content), mode: 0o444 },
-                    file.kind === 'lock' ? 'lock' : 'config',
-                    file.kind === 'lock',
-                    file.read,
-                );
-        });
-        expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });
-        await installPythonProject(repository.path);
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
-        expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
-        const checked = await run([installed, 'check', 'source.py'], { cwd: repository.path });
-        expect(checked.code).toBe(0);
-    },
-    120_000,
-);
+if (POSIX_ENVIRONMENT)
+    test.each(PYTHON_PROJECTS)(
+        'conflicted Python locks refuse installation until generated repair with %s and %s',
+        async (configuration, runner) => {
+            await using repository = await testdir();
+            await using artifacts = await testdir();
+            await using registry = await createPythonRegistry(artifacts.path);
+            await using prepared = await preparePythonInstallation(
+                repository.path,
+                configuration,
+                runner,
+                registry.url,
+            );
+            const { scopes, rootConfiguration } = prepared;
+            const lockPath = join(repository.path, '.gspot/uv.lock');
+            const lock = readFileSync(lockPath);
+            await installPythonProject(repository.path);
+            const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
+            writeFileSync(join(repository.path, 'source.py'), '');
+            chmodSync(lockPath, 0o644);
+            writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
+            expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
+            expect(await rejection(installPythonProject(repository.path))).toContain(
+                'Run: gspot apply, then gspot install',
+            );
+            const repaired = toolEnvironment(everyManifest(scopes));
+            await runOwnedLifecycle(repository.path, async (owner) => {
+                await preparePythonProject(repository.path, repaired, owner);
+                for (const file of repaired)
+                    owner.replace(
+                        file.path,
+                        { bytes: Buffer.from(file.content), mode: 0o444 },
+                        file.kind === 'lock' ? 'lock' : 'config',
+                        file.kind === 'lock',
+                        file.read,
+                    );
+            });
+            expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });
+            await installPythonProject(repository.path);
+            expect(readFileSync(lockPath)).toStrictEqual(lock);
+            expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
+            const checked = await run([installed, 'check', 'source.py'], { cwd: repository.path });
+            expect(checked.code).toBe(0);
+        },
+        120_000,
+    );

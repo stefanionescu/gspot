@@ -36,7 +36,7 @@ export type DetectionSummary = {
 };
 export type KitReason = 'named' | 'detected' | 'recommended' | 'required';
 export type Detect = NonNullable<SettingSpec['detect']>;
-export type DetectedSetting = { key: string; value: unknown; configuration: string };
+export type DetectedSetting = { key: string; value: unknown; kit: string };
 export type InitOptions = {
     cwd: string;
     yes: boolean;

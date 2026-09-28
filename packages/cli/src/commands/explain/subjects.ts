@@ -40,7 +40,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
     };
     const { detect, owners } = manifest;
     const lines = [
-        `${row.title} (${row.kind} configuration)`,
+        `${row.title} (${row.kind} kit)`,
         '',
         row.description,
         '',
@@ -62,7 +62,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         ...listLine('Settings', row.settings),
         ...listLine('Guides', row.rules),
     ];
-    return { kind: 'configuration', subject: kitName, text: `${lines.join('\n')}\n`, data: row };
+    return { kind: 'kit', subject: kitName, text: `${lines.join('\n')}\n`, data: row };
 }
 
 // The lines about one scope: its default, its current value and source, and how to change it.
@@ -144,7 +144,7 @@ function explainDotted(session: Session | undefined, subject: string): Explanati
 /**
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository.
- * @param subject a check name, a tool/rule pair, a configuration name, a setting key, or a file path.
+ * @param subject a check name, a tool/rule pair, a kit name, a setting key, or a file path.
  * @returns the explanation, or an error naming the closest matches.
  */
 export function explain(session: Session | undefined, subject: string): Explanation | { error: string } {

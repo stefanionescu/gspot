@@ -139,31 +139,33 @@ test('per-file failures name the selected file when expanded arguments follow it
     expect(corrected.findings).toStrictEqual([]);
 });
 
-test('a signaled per-file process is an execution error rather than a source finding', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            version: 1,
-            kits: [],
-            check: [
-                {
-                    name: 'project/termination',
-                    command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
-                    paths: ['source.txt'],
-                    stage: 'commit',
-                },
-            ],
-        }),
-        'source.txt': 'valid source',
+// Windows has no signals: a process that kills itself exits with a code.
+if (process.platform !== 'win32')
+    test('a signaled per-file process is an execution error rather than a source finding', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': stringify({
+                version: 1,
+                kits: [],
+                check: [
+                    {
+                        name: 'project/termination',
+                        command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
+                        paths: ['source.txt'],
+                        stage: 'commit',
+                    },
+                ],
+            }),
+            'source.txt': 'valid source',
+        });
+        const session = await openSession(sandbox.path);
+        const plans = await planRun(session, { stage: 'all', skips: [] });
+        const planned = plans[0]!;
+        planned.tool = { name: process.execPath, installers: {} };
+        const failed = await runToolCheck(session, planned);
+        expect(failed.status).toBe('error');
+        expect(failed.findings).toStrictEqual([]);
+        planned.spec.command![2] = 'process.exitCode = 0';
+        const result = await runToolCheck(session, planned);
+        expect(result.status).toBe('ok');
     });
-    const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'all', skips: [] });
-    const planned = plans[0]!;
-    planned.tool = { name: process.execPath, installers: {} };
-    const failed = await runToolCheck(session, planned);
-    expect(failed.status).toBe('error');
-    expect(failed.findings).toStrictEqual([]);
-    planned.spec.command![2] = 'process.exitCode = 0';
-    const result = await runToolCheck(session, planned);
-    expect(result.status).toBe('ok');
-});

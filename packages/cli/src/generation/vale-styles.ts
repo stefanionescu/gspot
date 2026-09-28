@@ -31,7 +31,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
                     (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
                 readOnly: true,
                 kind: 'config',
-                configuration: 'prose',
+                kit: 'prose',
             };
         });
     const shipped = readAsset('packages/cli/kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
@@ -44,7 +44,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
             content: `${vocabulary.join('\n')}\n`,
             readOnly: true,
             kind: 'config',
-            configuration: 'prose',
+            kit: 'prose',
         },
     ];
 }

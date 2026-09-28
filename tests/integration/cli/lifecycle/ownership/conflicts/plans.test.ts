@@ -70,13 +70,13 @@ test.each(['replacement', 'block'] as const)(
                           true,
                       )
                     : owner.proposeBlock('config.txt', 'managed content', 'hash');
-            expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('authored\n'), mode: 0o640 });
+            expect(owner.read('config.txt')).toStrictEqual({ bytes: Buffer.from('authored\n'), mode: keptMode(0o640) });
             writeFileSync(join(directory.path, 'config.txt'), 'edited after plan\n');
             expect(() => owner.applyPlan(plan)).toThrow('File changed after its plan');
             expect(owner.restore('config.txt')).toBe('preserved');
             expect(owner.read('config.txt')).toStrictEqual({
                 bytes: Buffer.from('edited after plan\n'),
-                mode: 0o640,
+                mode: keptMode(0o640),
             });
         } finally {
             owner.close();

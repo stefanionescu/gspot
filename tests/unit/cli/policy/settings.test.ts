@@ -96,7 +96,7 @@ test.each([
         const policy = parsePolicyText(source, 'gspot.toml');
         expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
             value: expected,
-            source: `configuration ${configuration}`,
+            source: `kit ${configuration}`,
         });
         const corrected = parsePolicyText(`${source}[tools.squawk]\nassume_in_transaction = false\n`, 'gspot.toml');
         expect(settingValue(settings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
@@ -118,7 +118,7 @@ test.each([
         expect(validateAgainstSurface(settings, policy)).toStrictEqual([]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
             value: dialect,
-            source: `configuration ${owner}`,
+            source: `kit ${owner}`,
         });
     },
 );
@@ -137,7 +137,7 @@ test('the settings surface > resolves configuration default, root table, then sc
     );
     expect(settingValue(surface, policy, 'limits.file_lines')?.value).toBe(250);
     expect(settingValue(surface, policy, 'limits.file_lines', 'api')?.value).toBe(200);
-    expect(settingValue(surface, policy, 'limits.function_lines')?.source).toBe('configuration structure');
+    expect(settingValue(surface, policy, 'limits.function_lines')?.source).toBe('kit structure');
 });
 
 test('the settings surface > lists append and deduplicate across layers', () => {

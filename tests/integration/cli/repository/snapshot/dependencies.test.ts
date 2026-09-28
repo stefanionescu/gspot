@@ -19,7 +19,7 @@ test('staged snapshots copy all workspace dependency trees before validating cro
         'packages/two/node_modules/owned/value.js': 'export const value = 2;',
         '.gitignore': 'node_modules/\n',
     });
-    symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'));
+    symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'), 'dir');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
@@ -30,7 +30,7 @@ test('staged snapshots copy all workspace dependency trees before validating cro
         'value = 2',
     );
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
-    symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
+    symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
     expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'external link',
     );

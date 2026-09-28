@@ -49,7 +49,7 @@ describe('the docker configuration', () => {
             await createFileTree(sandbox.path, {
                 'api/Dockerfile': DOCKER_CLEAN,
                 'api/.dockerignore': IGNORES,
-                'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
+                'api/compose.yml': 'services:\n    api:\n        build: .\n',
                 'api/package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
             commitAll(sandbox.path);

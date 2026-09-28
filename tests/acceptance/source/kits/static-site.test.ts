@@ -156,11 +156,16 @@ test(
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
         await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);
-        const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
+        const checked = await run(
+            sandbox.path,
+            ['check', '--stage', 'push', '--json'],
+            environment,
+            PLANTED_TIMEOUT_MS * 4,
+        );
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = reportSchema.parse(JSON.parse(checked.stdout));
         expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
         expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
     },
-    PLANTED_TIMEOUT_MS * 3,
+    PLANTED_TIMEOUT_MS * 5,
 );

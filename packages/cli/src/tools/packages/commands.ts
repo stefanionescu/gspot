@@ -3,12 +3,12 @@ import semver from 'semver';
 import { join } from 'node:path';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { SETUP } from '#cli/config/tools/tools.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
@@ -165,10 +165,14 @@ export async function prepareNativeWrappers(
 ): Promise<void> {
     const tools = [...new Map([...selected].map((tool) => [tool.name, tool])).values()];
     const files = openRoot(work, 'native');
-    const suffix = process.platform === 'win32' ? '.cmd' : '';
+    // A Windows shim is a command file from npm or an executable from Bun; the first that exists is the wrapper.
+    const suffixes = process.platform === 'win32' ? ['.cmd', '.exe', ''] : [''];
     try {
-        for (const tool of tools.filter((candidate) => needsVersionCheck(candidate, dependencies)))
-            await assertNativeVersion(work, files.source(`node_modules/.bin/${tool.name}${suffix}`), tool);
+        for (const tool of tools.filter((candidate) => needsVersionCheck(candidate, dependencies))) {
+            const extension =
+                suffixes.find((suffix) => existsSync(join(work, 'node_modules', '.bin', tool.name + suffix))) ?? '';
+            await assertNativeVersion(work, files.source(`node_modules/.bin/${tool.name}${extension}`), tool);
+        }
     } finally {
         files.close();
     }

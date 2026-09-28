@@ -86,7 +86,7 @@ function partialLines(report: DoctorReport): string[] {
 function changeLines(changes: ChangeReport): string[] {
     const sections = CHANGE_SECTIONS.map(({ key, title }) => {
         const rows = changes[key].map((entry) => {
-            const name = ('configuration' in entry ? entry.configuration : entry.path).padEnd(COLUMN_WIDTHS.name);
+            const name = ('kit' in entry ? entry.kit : entry.path).padEnd(COLUMN_WIDTHS.name);
             const detail = ('evidence' in entry ? entry.evidence : entry.note).padEnd(COLUMN_WIDTHS.note);
             return `  ${name} ${detail} ${entry.command}`;
         });

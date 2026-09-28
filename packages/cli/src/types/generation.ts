@@ -32,9 +32,7 @@ export type TemplateInputs = {
     version: string;
     scope: string;
     scopes: { path: string; kits: string[] }[];
-    configurationScopes: (
-        configuration: string,
-    ) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
+    kitScopes: (kit: string) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
     /** The folders the selected settings with this role name, for the scope being rendered. */
     roleFolders: (role: string) => string[];
     /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
@@ -74,7 +72,7 @@ export type GeneratedFile = {
     executable?: boolean;
     read?: Read;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
-    configuration?: string;
+    kit?: string;
 };
 export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type ConfigurationOutput = {

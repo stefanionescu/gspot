@@ -96,17 +96,17 @@ test.each([
     ]);
     const manifests = kitManifests();
     const proposed = detectKits(repository.files, manifests, fields, 'api');
-    expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
-    expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
-    expect(
-        detectKits(repository.files, manifests, fields, 'other').some((entry) => entry.configuration === 'fastapi'),
-    ).toBe(false);
+    expect(proposed.find((entry) => entry.kit === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
+    expect(proposed.find((entry) => entry.kit === 'python')?.evidence).toBe(`api/${path}`);
+    expect(detectKits(repository.files, manifests, fields, 'other').some((entry) => entry.kit === 'fastapi')).toBe(
+        false,
+    );
     expect(readFileSync(join(sandbox.path, 'api', path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = readManifests(sandbox.path, repository.files);
-    expect(
-        detectKits(repository.files, manifests, corrected, 'api').some((entry) => entry.configuration === 'fastapi'),
-    ).toBe(false);
+    expect(detectKits(repository.files, manifests, corrected, 'api').some((entry) => entry.kit === 'fastapi')).toBe(
+        false,
+    );
 });
 
 test.each([

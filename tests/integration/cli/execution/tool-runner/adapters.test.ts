@@ -71,57 +71,60 @@ if (toolShipsHere('ansible-lint'))
 const versionCommand = (version: string): string =>
     `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
 
-test('an adapter reads a changed executable version on the next command instead of reusing its old success', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible"]\n',
-        '.gitignore': '.gspot/\n.venv/\n',
-        'ansible.cfg': '[defaults]\n',
-        'site.yml': '---\n- hosts: all\n  tasks: []\n',
-        '.gspot/.venv/bin/ansible-lint': versionCommand('26.8.0'),
+if (toolShipsHere('ansible-lint'))
+    test('an adapter reads a changed executable version on the next command instead of reusing its old success', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible"]\n',
+            '.gitignore': '.gspot/\n.venv/\n',
+            'ansible.cfg': '[defaults]\n',
+            'site.yml': '---\n- hosts: all\n  tasks: []\n',
+            '.gspot/.venv/bin/ansible-lint': versionCommand('26.8.0'),
+        });
+        const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
+        chmodSync(executable, 0o755);
+        const options = { stage: 'commit' as const, skips: [], only: ['ansible/lint'], fix: false, isDryRun: false };
+        const initial = await executeRun(await openSession(sandbox.path), options);
+        expect(initial.report.checks[0]!.status).toBe('ok');
+        writeFileSync(executable, versionCommand('23.0.0'));
+        const changed = await executeRun(await openSession(sandbox.path), options);
+        expect(changed.report.exitCode).toBe(2);
+        expect(changed.report.checks[0]!.status).toBe('missing');
+        expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
+        writeFileSync(executable, versionCommand('26.8.0'));
+        const executed = await executeRun(await openSession(sandbox.path), options);
+        expect(executed.report.exitCode).toBe(0);
     });
-    const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
-    chmodSync(executable, 0o755);
-    const options = { stage: 'commit' as const, skips: [], only: ['ansible/lint'], fix: false, isDryRun: false };
-    const initial = await executeRun(await openSession(sandbox.path), options);
-    expect(initial.report.checks[0]!.status).toBe('ok');
-    writeFileSync(executable, versionCommand('23.0.0'));
-    const changed = await executeRun(await openSession(sandbox.path), options);
-    expect(changed.report.exitCode).toBe(2);
-    expect(changed.report.checks[0]!.status).toBe('missing');
-    expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
-    writeFileSync(executable, versionCommand('26.8.0'));
-    const executed = await executeRun(await openSession(sandbox.path), options);
-    expect(executed.report.exitCode).toBe(0);
-});
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
-test('cached results read executable replacement and permissions in a reused session', async () => {
-    await using sandbox = await testdir();
-    const executable = join(sandbox.path, 'checker');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
-        'source.txt': 'input\n',
-        checker: exitScript(false),
+// Windows keeps no permission bits to read back.
+if (process.platform !== 'win32')
+    test('cached results read executable replacement and permissions in a reused session', async () => {
+        await using sandbox = await testdir();
+        const executable = join(sandbox.path, 'checker');
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+            'source.txt': 'input\n',
+            checker: exitScript(false),
+        });
+        chmodSync(executable, 0o755);
+        const session = await openSession(sandbox.path);
+        const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
+        const executed = await executeRun(session, options);
+        expect(executed.report.exitCode).toBe(0);
+        const repeated = await executeRun(session, options);
+        expect(repeated.report.checks[0]!.status).toBe('cache');
+        writeFileSync(executable, exitScript(true));
+        const changed = await executeRun(session, options);
+        expect(changed.report.exitCode).toBe(1);
+        expect(changed.report.checks[0]!.status).toBe('fail');
+        chmodSync(executable, 0o644);
+        const unexecutable = await executeRun(session, options);
+        expect(unexecutable.report.exitCode).toBe(2);
+        chmodSync(executable, 0o755);
+        writeFileSync(executable, exitScript(false));
+        const restored = await executeRun(session, options);
+        expect(restored.report.exitCode).toBe(0);
     });
-    chmodSync(executable, 0o755);
-    const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
-    const executed = await executeRun(session, options);
-    expect(executed.report.exitCode).toBe(0);
-    const repeated = await executeRun(session, options);
-    expect(repeated.report.checks[0]!.status).toBe('cache');
-    writeFileSync(executable, exitScript(true));
-    const changed = await executeRun(session, options);
-    expect(changed.report.exitCode).toBe(1);
-    expect(changed.report.checks[0]!.status).toBe('fail');
-    chmodSync(executable, 0o644);
-    const unexecutable = await executeRun(session, options);
-    expect(unexecutable.report.exitCode).toBe(2);
-    chmodSync(executable, 0o755);
-    writeFileSync(executable, exitScript(false));
-    const restored = await executeRun(session, options);
-    expect(restored.report.exitCode).toBe(0);
-});

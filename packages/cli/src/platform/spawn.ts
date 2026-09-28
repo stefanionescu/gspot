@@ -37,7 +37,13 @@ function commandOptions(options: SpawnOptions, executable: string) {
 // A command that names a file which does not exist. A bare name is left to PATH lookup at spawn time.
 function missingExecutable(executable: string, cwd: string): boolean {
     if (!/[\\/]/u.test(executable)) return false;
-    return statSync(resolve(cwd, executable), { throwIfNoEntry: false }) === undefined;
+    const path = resolve(cwd, executable);
+    // Windows names an executable without its extension; the spawn shim tries each PATHEXT entry in turn.
+    const extensions =
+        process.platform === 'win32' ? (environmentVariables()['PATHEXT'] ?? '.COM;.EXE;.BAT;.CMD').split(';') : [];
+    return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
+        (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
+    );
 }
 
 // The result of a command whose executable file does not exist, decided before any process starts.

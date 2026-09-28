@@ -20,13 +20,13 @@ function adoptedEditorconfigs(policy: Policy): Set<string> {
 
 // Withdraws the formatting files that sit beside a retained Prettier or EditorConfig file.
 function retainFormatting(retention: Retention, out: Generated): void {
-    if (!out.files.some((file) => file.configuration === 'formatting')) return;
+    if (!out.files.some((file) => file.kit === 'formatting')) return;
     const retained = retainedPaths(retention, ['prettier', 'ec']);
     if (retained.length === 0) return;
     const editorconfigs = adoptedEditorconfigs(retention.policy);
     out.files = out.files.filter(
         (file) =>
-            file.configuration !== 'formatting' ||
+            file.kit !== 'formatting' ||
             file.path.startsWith('.gspot/') ||
             editorconfigs.has(file.path) ||
             retained.every((path) => posix.dirname(path) !== posix.dirname(file.path)),

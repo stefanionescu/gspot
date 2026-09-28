@@ -93,7 +93,11 @@ test.each(['custom', 'native'])(
         const { configuration, input, options } = await prepareLefthook(root, existing);
         await installHookTool(root);
         writeFileSync(join(root, 'failed'), 'finding');
-        const commitFile = 'message with spaces "quotes" $dollar `literal`';
+        // Windows file names cannot hold a double quote.
+        const commitFile =
+            process.platform === 'win32'
+                ? "message with spaces 'quotes' $dollar `literal`"
+                : 'message with spaces "quotes" $dollar `literal`';
         writeFileSync(join(root, commitFile), 'test: fixture\n');
         const commitResult = await run(['git', 'hook', 'run', 'commit-msg', '--', commitFile], {
             ...options,

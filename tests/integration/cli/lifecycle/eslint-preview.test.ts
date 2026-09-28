@@ -3,11 +3,12 @@ import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { eslintPreviewResponse } from '#cli/native/protocol.ts';
 import { runConfiguration } from '#cli/native/configuration.ts';
-import { symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
@@ -34,11 +35,7 @@ test('apply preview names a generated ESLint rule change using installed depende
         'gspot.toml': policy + ignored,
         '.gspot/config/.keep': '',
     });
-    symlinkSync(
-        join(import.meta.dir, '../../../../node_modules'),
-        join(directory.path, '.gspot/node_modules'),
-        process.platform === 'win32' ? 'junction' : 'dir',
-    );
+    linkInstalledModules(join(directory.path, '.gspot/node_modules'));
     const originalSession = await openSession(directory.path);
     const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
         version: originalSession.version,

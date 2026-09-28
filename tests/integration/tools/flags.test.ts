@@ -8,6 +8,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -70,6 +71,7 @@ for (const { manifest, check } of checks)
 
 const seen = new Set<string>();
 const distinct = commands.filter((command) => {
+    if (!toolShipsHere(command.tool.name)) return false;
     const key = `${command.tool.name} ${command.subcommands.join(' ')} ${command.flags.join(' ')}`;
     if (seen.has(key)) return false;
     seen.add(key);

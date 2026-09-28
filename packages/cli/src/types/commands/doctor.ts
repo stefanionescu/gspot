@@ -3,8 +3,8 @@ import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { CoverageReport } from '#cli/types/execution/execution.ts';
 
 export type ChangeReport = {
-    detectedNotSelected: { configuration: string; evidence: string; command: string }[];
-    recommendedNotSelected: { configuration: string; evidence: string; command: string }[];
+    detectedNotSelected: { kit: string; evidence: string; command: string }[];
+    recommendedNotSelected: { kit: string; evidence: string; command: string }[];
     configurationNotOwned: { path: string; note: string; command: string }[];
     changedOutsideGspot: { path: string; note: string; command: string }[];
     pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];

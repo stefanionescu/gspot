@@ -30,7 +30,7 @@ const REACHES_ROWS = CONTROLLER.replace(
 );
 const CIRCULAR = NESTJS_MODULE.replace(
     "import { Module } from '@nestjs/common';",
-    () => "import { forwardRef, Module } from '@nestjs/common';",
+    () => "import { Module, forwardRef } from '@nestjs/common';",
 ).replace('@Module({ controllers', () => '@Module({ imports: [forwardRef(() => GreetingModule)], controllers');
 const MISMATCHED = CONTROLLER.replace("@Get(':name')", () => "@Get(':id')");
 
