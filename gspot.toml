@@ -55,79 +55,6 @@ tool = "mise"
 
 [[tools.docs.paths_allowed]]
 patterns = [
-    "api/overrides/boundaries.js",
-    "api/overrides/naming.js",
-    "api/policy.js",
-    "config/duplication/python.json",
-    "config/eslint.js",
-    "config/lint/ecosystem.mjs",
-    "config/python/imports.json",
-    "config/python/limits.py",
-    "config/python/packages.json",
-    "config/repository/folders.py",
-    "config/shell.py",
-    "configurations/overrides/restrictions.js",
-    "eslint/api/index.js",
-    "eslint/architecture.mjs",
-    "eslint/supabase/index.js",
-    "functions/python.py",
-    "functions/shell.js",
-    "functions/sql.js",
-    "hooks/shell.mjs",
-    "imports/boundary.py",
-    "imports/cycles.py",
-    "imports/deferred.py",
-    "imports/exports.py",
-    "imports/graph.py",
-    "imports/layout.py",
-    "integrity/architecture.js",
-    "integrity/config.py",
-    "integrity/folder.py",
-    "integrity/gitleaks.py",
-    "integrity/policies.py",
-    "integrity/semgrep-suppressions.js",
-    "integrity/suppressions.py",
-    "integrity/typecheck.py",
-    "integrity/typescript.mjs",
-    "ios/.swiftlint.yml",
-    "naming/checks/shell.py",
-    "naming/extractors/sql.js",
-    "nginx/lint.js",
-    "package-json/scripts.js",
-    "python/rules/module_length.py",
-    "quality/naming/extractors/swift.js",
-    "repository/dependencies.py",
-    "rulesets/node.js",
-    "rulesets/regexp.js",
-    "rulesets/security.js",
-    "rulesets/sonar.js",
-    "rulesets/unicorn.js",
-    "security/semgrep/rules/supabase.yml",
-    "site/eslint/index.js",
-    "site/semgrep/hooks.yml",
-    "supabase/overrides/naming.js",
-    "supabase/policy.js",
-]
-reason = "The enforcement ledger attributes these exact historical source paths to its four named reference repositories. They are provenance, not files in gspot. Remove an entry when that source attribution is removed or replaced."
-
-[[tools.docs.paths_allowed]]
-patterns = [
-    "../nx/astro-docs/src/content.config.ts",
-    "../nx/astro-docs/src/plugins/nx-reference-packages.loader.ts",
-    "../nx/astro-docs/src/plugins/plugin.loader.ts",
-    "../nx/packages/jest/src/generators/configuration/schema.json",
-    "../turborepo/packages/eslint-plugin-turbo/package.json",
-    "../turborepo/packages/turbo-releaser/src/config.ts",
-    "../turborepo/packages/turbo-releaser/src/stage.ts",
-    "../turborepo/packages/turbo/package.json",
-    ".qlty/qlty.toml",
-    ".trunk/trunk.yaml",
-    "conf.d",
-]
-reason = "The prior-art record identifies these external tool configuration paths and files in the recorded Nx and Turborepo checkouts. Preserve the inspected paths until the corresponding comparison or pinned inspection is replaced."
-
-[[tools.docs.paths_allowed]]
-patterns = [
     ".github/workflows/gspot.yml",
     ".gspot/config/basedpyrightconfig.json",
     ".gspot/config/hadolint.yaml",
@@ -902,9 +829,6 @@ reason = "A permissive license with no conditions; it arrives through a test too
 [tools.osv]
 
 
-[[tools.osv.ignore]]
-id = "GHSA-w5hq-g745-h8pq"
-reason = "uuid 9.0.1 is used only by gaxios 6.7.1 under linkinator. The advisory affects v3, v5, and v6 with caller buffers; installed gaxios calls only unaffected v4 with no arguments. Linkinator 6.x retains that dependency. Reassess this exact advisory when the lockfile changes, and remove the exception when the affected dependency leaves the graph."
 [tools.jest]
 global_package = "bun:test"
 
@@ -924,38 +848,6 @@ paths = [
     "packages/cli/src/evaluation/stylelint.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.alt-text"
-paths = [
-    "tests/acceptance/source/configurations/component-files/accessibility.test.ts",
-    "tests/acceptance/source/configurations/component-files/types.test.ts",
-    "tests/acceptance/source/configurations/html.test.ts",
-    "tests/acceptance/source/configurations/react/web.test.ts",
-    "tests/acceptance/source/configurations/static-site.test.ts",
-    "tests/integration/tools/checks/site-output.test.ts",
-    "tests/integration/tools/execution/suppressions.test.ts",
-]
-reason = "These exact tests plant images without alt attributes to verify accessibility findings. Vale raw matching reads the fixture strings as markup. Correcting those strings removes the tested defect; native checks assert the intended diagnostics. Remove a path when its missing-alt regression is retired."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.alt-text"
-paths = ["tests/unit/cli/checks/svelte.test.ts"]
-reason = "This parser test quotes the exact upstream Svelte diagnostic containing an img tag. Altering the diagnostic invalidates the parser fixture. Remove this exception if the upstream diagnostic changes."
-
-[[ignore]]
-check = "prose/vale"
-rule = "RedHat.MergeConflictMarkers"
-paths = ["tests/integration/tools/tools/packages/project.test.ts"]
-reason = "This test deliberately writes merge conflict markers into a generated lockfile to verify drift detection and recovery. Removing the markers removes the defect under test. Other prose rules remain active."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.alt-text"
-paths = ["tests/integration/tools/execution/vale.test.ts"]
-reason = "This native regression plants missing-alt markup to prove that a fixture exception preserves adjacent images and other prose diagnostics. Keep the invalid image strings until that regression is retired."
 
 [[ignore]]
 check = "prose/vale"

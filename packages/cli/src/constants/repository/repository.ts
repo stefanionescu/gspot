@@ -1,6 +1,10 @@
 // The literal values repository reads: names, patterns, limits, and tables.
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
+/** The package-lock format that carries both the packages table and the old dependencies tree. */
+const HYBRID_LOCKFILE = 2;
+/** The package-lock format that carries the packages table alone. */
+const PACKAGES_LOCKFILE = 3;
 export const NATURE_HEAD_BYTES = 2048;
 export const FOREIGN_HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
 export const EXECUTABLE_BITS = 0o111;
@@ -8,8 +12,7 @@ export const NOT_REPOSITORY_CODE = 128;
 export const BYTE_ORDER_MARK = '\uFEFF';
 export const KEY_QUOTES = ['"', '`'];
 export const VALUE_QUOTES = ['"""', '`'];
-// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- reason: npm defines versions 2 and 3 for package tables.
-export const LOCKFILE_VERSIONS = [2, 3];
+export const LOCKFILE_VERSIONS = [HYBRID_LOCKFILE, PACKAGES_LOCKFILE] as const;
 export const LOCKFILES: Record<string, string> = {
     'bun.lock': 'bun',
     'bun.lockb': 'bun',

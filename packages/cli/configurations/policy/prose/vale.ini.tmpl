@@ -202,3 +202,11 @@ Harper.MoreAdjective4 = NO
 <% } else { for (const style of prose.styles) { if (!['dates', 'links', 'alt-text'].includes(style)) { %>
 gspot.<%= style %> = NO
 <% } } } %>
+# "an image without alternative text and a merge conflict marker are markup facts; a code string that quotes them is not"
+gspot.alt-text = NO
+<% if (isAll) { %>RedHat.MergeConflictMarkers = NO
+<% } %>
+[*.{md,mdx,html,htm,astro,svelte,vue}]
+gspot.alt-text = YES
+<% if (isAll) { %>RedHat.MergeConflictMarkers = YES
+<% } %>

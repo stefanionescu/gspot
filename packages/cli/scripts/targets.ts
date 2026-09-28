@@ -1,6 +1,5 @@
 import { z } from 'zod';
-// eslint-disable-next-line gspot/no-cross-folder-imports, gspot/no-cross-project-imports -- reason: The npm launcher owns the shared release target contract.
-import definitions from '../../npm/targets.json' with { type: 'json' };
+import { readFileSync } from 'node:fs';
 
 const targetSchema = z.object({
     os: z.enum(['darwin', 'linux', 'win32']),
@@ -10,5 +9,8 @@ const targetSchema = z.object({
     binary: z.string().regex(/^gspot-[a-z0-9.-]+$/u),
     package: z.string().startsWith('@gspot/cli-'),
 });
+
+// The npm launcher owns the target table and ships it, so the build reads that file rather than a copy.
+const definitions: unknown = JSON.parse(readFileSync(new URL('../../npm/targets.json', import.meta.url), 'utf8'));
 
 export const releaseTargets = z.array(targetSchema).parse(definitions);

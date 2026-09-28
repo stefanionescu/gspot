@@ -29,6 +29,26 @@ export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 export type KeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 export type Value = KeyValue['value'];
 export type Position = Value['loc']['start'];
+/** A syntax node with the kind field every parser node carries. */
+export type Kinded = { type: unknown };
+/** The kinds of syntax node the parser produces, as the literals it names them by. */
+export type NodeKind =
+    | 'Document'
+    | 'Table'
+    | 'TableKey'
+    | 'TableArray'
+    | 'TableArrayKey'
+    | 'KeyValue'
+    | 'Key'
+    | 'String'
+    | 'Integer'
+    | 'Float'
+    | 'Boolean'
+    | 'DateTime'
+    | 'InlineArray'
+    | 'InlineItem'
+    | 'InlineTable'
+    | 'Comment';
 export type Edit = { start: number; end: number; replacement: string };
 export type ResolvedSetting = {
     key: string;

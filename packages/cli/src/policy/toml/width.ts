@@ -1,26 +1,22 @@
 // Keeping every line of gspot.toml readable: an array that runs past the width goes one item per line.
-import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import { expandLongTables } from '#cli/policy/toml/tables.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
 import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/constants/policy/policy.ts';
+import { isComment, isKeyValue, isTomlValue, isInlineArray } from '#cli/policy/toml/nodes.ts';
 
 function keyAssignments(blocks: TomlBlock[]): KeyValue[] {
     return blocks.flatMap((block) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        if (block.type === 'KeyValue') return [block];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        if (block.type === 'Comment') return [];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        return block.items.filter((entry): entry is KeyValue => entry.type === 'KeyValue');
+        if (isKeyValue(block)) return [block];
+        if (isComment(block)) return [];
+        return block.items.filter((entry) => isKeyValue(entry));
     });
 }
 
 function wrapped(text: string, pair: KeyValue, lines: string[], indent: string, width: number): Edit | undefined {
     const { value } = pair;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-    if (value.type !== 'InlineArray' || value.range === undefined) return undefined;
+    if (!isInlineArray(value) || value.range === undefined) return undefined;
     if ((lines[pair.loc.start.line - 1] ?? '').length <= width) return undefined;
     const items = value.items.map((entry) => entry.item);
     const ranges = items.flatMap((item) => (item.range === undefined || !isTomlValue(item) ? [] : [item.range]));

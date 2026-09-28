@@ -821,6 +821,11 @@ Repair prose, Markdown, documentation paths, and executable example findings.
 Reconcile unused dependencies, including the retained documentation YAML dependency, in the
 authorized dependency scope from phase 1. Preserve dependencies outside that scope.
 
+### Step 8.5 evidence
+
+Done on 2026-09-28. [The cleanup record](lint-cleanup.md#suppressions-that-became-code) lists the
+suppressions and policy exceptions that became code or scoped rules.
+
 ### Step 8.6
 
 Resolve external-tool failures separately from source findings, including Pinact GitHub quotas

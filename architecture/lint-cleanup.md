@@ -497,6 +497,18 @@ accepting only the explicitly named duplicate. Other rules remain enabled in bot
 The combined JavaScript-generation and grammar suite passes seven tests with
 65 assertions. Git mapping validation passes three cases with nine assertions.
 
+## Suppressions that became code
+
+The twelve enum-comparison suppressions around the TOML parser are gone:
+`packages/cli/src/policy/toml/nodes.ts` reads a node's kind through one guard, because the parser
+keeps its enum private. The build
+script reads the release target table from disk instead of importing across package folders.
+The two npm lockfile formats are named constants. The Vale image and merge-marker rules run on
+markup files only, so the seven test-file ignores are gone. The enforcement ledger and the prior
+art record name their reference repositories without file paths, so the docs path allowance is
+gone. Linkinator 8.1.0 dropped the dependency that carried the uuid advisory, so the ignore for
+Open Source Vulnerabilities (OSV) is gone.
+
 ## Full-force enforcement
 
 The trivial-function rule lost every exemption the language does not force: shared computation,

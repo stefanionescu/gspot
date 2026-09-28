@@ -1,16 +1,22 @@
-import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { Value, KeyValue, Position, PathSegment } from '#cli/types/policy/policy.ts';
 
+import {
+    isComment,
+    isKeyValue,
+    isTomlValue,
+    isTableArray,
+    isInlineArray,
+    isInlineTable,
+} from '#cli/policy/toml/nodes.ts';
+
 function valueLocations(value: Value, path: PathSegment[], locations: Map<string, Position>): void {
     locations.set(JSON.stringify(path), value.loc.start);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-    if (value.type === 'InlineTable') {
+    if (isInlineTable(value)) {
         for (const entry of value.items) keyLocations(entry.item, path, locations);
         return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-    if (value.type !== 'InlineArray') return;
+    if (!isInlineArray(value)) return;
     const items = value.items.map((entry) => entry.item).filter(isTomlValue);
     for (const [index, item] of items.entries()) valueLocations(item, [...path, index], locations);
 }
@@ -39,20 +45,15 @@ function expandedTable(parts: string[], arrays: Map<string, number>): PathSegmen
 export function sourceLocations(text: string): Map<string, Position> {
     const locations = new Map<string, Position>([['[]', { line: 1, column: 0 }]]);
     const arrays = new Map<string, number>();
-    const blocks = parseDocument(text).cst.filter(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        (block) => block.type !== 'Comment',
-    );
+    const blocks = parseDocument(text).cst.filter((block) => !isComment(block));
     for (const block of blocks) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        if (block.type === 'KeyValue') {
+        if (isKeyValue(block)) {
             keyLocations(block, [], locations);
             continue;
         }
         const parts = block.key.item.value;
         let path: PathSegment[];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-        if (block.type === 'TableArray') {
+        if (isTableArray(block)) {
             const parent = expandedTable(parts.slice(0, -1), arrays);
             const target = [...parent, ...parts.slice(-1)];
             const key = JSON.stringify(target);
@@ -61,10 +62,7 @@ export function sourceLocations(text: string): Map<string, Position> {
             path = [...target, index];
         } else path = expandedTable(parts, arrays);
         locations.set(JSON.stringify(path), block.key.loc.start);
-        const entries = block.items.filter(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: `@decimalturn/toml-patch` does not export its node kinds.
-            (entry) => entry.type === 'KeyValue',
-        );
+        const entries = block.items.filter((entry) => isKeyValue(entry));
         for (const entry of entries) keyLocations(entry, path, locations);
     }
     return locations;

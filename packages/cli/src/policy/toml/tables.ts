@@ -1,14 +1,9 @@
-import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { Edit, Value, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
-
-function isInlineTable(value: { type: string }): value is Extract<Value, { type: 'InlineTable' }> {
-    return value.type === 'InlineTable';
-}
+import { isKeyValue, isTomlValue, isInlineArray, isInlineTable } from '#cli/policy/toml/nodes.ts';
 
 function tableItems(value: Value): Extract<Value, { type: 'InlineTable' }>[] {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: The parser does not export its node kinds.
-    if (value.type !== 'InlineArray') return [];
+    if (!isInlineArray(value)) return [];
     const items = value.items.map(({ item }) => item);
     const tables = items.filter(isTomlValue).filter(isInlineTable);
     return tables.length === items.length ? tables : [];
@@ -69,8 +64,7 @@ function sectionEdits(text: string, rows: TomlBlock[], prefix: string, end: numb
     const edits: Edit[] = [];
     const additions: string[] = [];
     for (const pair of rows) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- reason: The parser does not export its node kinds.
-        if (pair.type !== 'KeyValue' || !needsBlocks(pair.value, width)) continue;
+        if (!isKeyValue(pair) || !needsBlocks(pair.value, width)) continue;
         const [start, stop] = range(pair);
         const pad = text.slice(text.lastIndexOf('\n', start - 1) + 1, start);
         const assignments = fields(pair, '');
