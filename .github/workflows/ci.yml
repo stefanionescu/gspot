@@ -149,14 +149,27 @@ jobs:
                   persist-credentials: false
             - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
               with:
-                  pattern: ${{ inputs.full && 'acceptance-ubuntu-24.04-*' || 'affected-*' }}
-                  path: reports
-            - name: Upload repository SARIF
-              if: hashFiles('reports/**/report.sarif') != ''
+                  pattern: ${{ inputs.full && format('acceptance-ubuntu-24.04-normal-{0}', github.sha) || format('affected-{0}', github.sha) }}
+                  path: reports/normal
+                  merge-multiple: true
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+              if: inputs.full
+              with:
+                  pattern: acceptance-ubuntu-24.04-manual-${{ github.sha }}
+                  path: reports/manual
+                  merge-multiple: true
+            - name: Upload normal repository SARIF
+              if: hashFiles('reports/normal/report.sarif') != ''
               uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
               with:
-                  sarif_file: reports
+                  sarif_file: reports/normal/report.sarif
                   category: gspot-repository
+            - name: Upload manual repository SARIF
+              if: hashFiles('reports/manual/report.sarif') != ''
+              uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
+              with:
+                  sarif_file: reports/manual/report.sarif
+                  category: gspot-repository-manual
             - name: Report absent SARIF
               if: hashFiles('reports/**/report.sarif') == ''
               run: echo '::notice::No SARIF artifact was produced. Inspect the setup and check job result.'
