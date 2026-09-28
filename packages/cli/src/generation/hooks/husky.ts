@@ -1,5 +1,5 @@
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
-import { hookPrefix, hookCommand } from '#cli/generation/hooks/scripts.ts';
+import { hookPrefix, hookCommand, commitPathLines } from '#cli/generation/hooks/scripts.ts';
 /**
  * The managed invocation in each authored Husky script.
  * @param root the repository root.
@@ -22,10 +22,7 @@ export function huskyLines(
                 ? ['set -- "${GSPOT_HUSKY_REMOTE_NAME-$1}" "${GSPOT_HUSKY_REMOTE_LOCATION-$2}"']
                 : []),
             ...(name === 'commit-msg'
-                ? [
-                      'gspot_message=${GSPOT_HUSKY_MESSAGE-$1}',
-                      'case "$gspot_message" in /*|[[:alpha:]]:*) ;; *) gspot_message="$PWD/$gspot_message" ;; esac',
-                  ]
+                ? ['gspot_message=${GSPOT_HUSKY_MESSAGE-$1}', ...commitPathLines('gspot_message', true)]
                 : []),
             `(${hookCommand(name, runner, binaryPath, prefix)})${name === 'pre-push' ? ' < "${GSPOT_HUSKY_INPUT:-/dev/stdin}"' : ''} || gspot_status=$?`,
             'if [ -n "${GSPOT_HUSKY_RESULT:-}" ]; then printf "%s\\n" "$gspot_status" > "$GSPOT_HUSKY_RESULT"; fi',

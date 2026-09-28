@@ -115,7 +115,7 @@ test.each(['', "apps/worker's tools"])(
         const hashed = await run(['git', 'hash-object', 'source.txt'], { cwd: root });
         expect(hashed.code, hashed.stderr).toBe(0);
         const blob = hashed.stdout.trim();
-        const conflictPath = relative(sandbox.path, join(root, 'source.txt'));
+        const conflictPath = relative(sandbox.path, join(root, 'source.txt')).replaceAll('\\', '/');
         const conflicted = await run(['git', 'update-index', '--index-info'], {
             cwd: sandbox.path,
             stdin: `0 ${'0'.repeat(blob.length)}\t${conflictPath}\n100644 ${blob} 1\t${conflictPath}\n100644 ${blob} 2\t${conflictPath}\n100644 ${blob} 3\t${conflictPath}\n`,

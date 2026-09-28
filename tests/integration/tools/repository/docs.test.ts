@@ -7,6 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '#docs/src/components/home/repository.json';
+import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
 test('the quickstart supplies every policy, project, defect, and correction shown on the homepage', () => {
     const guide = readFileSync(
@@ -21,39 +22,43 @@ test('the quickstart supplies every policy, project, defect, and correction show
     }
 });
 
-test('the homepage repository reports its captured findings and accepts working corrections', async () => {
-    await using sandbox = await testdir();
-    const environment = { PATH: toolsPath(['shellcheck', 'shfmt']) };
-    await createFileTree(sandbox.path, {
-        'gspot.toml': example.policy,
-        'pyproject.toml': example.project,
-        ...Object.fromEntries(example.files.map((file) => [file.path, file.before])),
-    });
-    for (const command of ['apply', 'install']) {
-        const prepared = await run(sandbox.path, [command], environment);
-        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-    }
-    const args = ['check', '--no-cache', '--json'];
-    const failed = await run(sandbox.path, args, environment);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const before = reportSchema.parse(JSON.parse(failed.stdout));
-    expect(
-        before.checks.filter((check) => check.status === 'fail'),
-        failed.stdout,
-    ).toHaveLength(example.failedChecks);
-    expect(before.checks.flatMap((check) => check.findings)).toMatchObject(example.findings);
-    expect(before.checks.flatMap((check) => check.findings)).toHaveLength(example.findings.length);
-    for (const file of example.files) await Bun.write(join(sandbox.path, file.path), file.after);
-    const corrected = await run(sandbox.path, args, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const after = reportSchema.parse(JSON.parse(corrected.stdout));
-    expect(after.checks.filter((check) => check.status === 'ok')).toHaveLength(example.passedChecks);
-    expect(after.checks.flatMap((check) => check.findings)).toStrictEqual([]);
-    expect(after.checks.filter((check) => check.status === 'skipped')).toMatchObject([
-        { check: 'python/import-linter', note: 'This scope has no tool.importlinter configuration.' },
-    ]);
-    expect(after.checks.filter((check) => check.status === 'skipped')).toHaveLength(example.skippedChecks);
-}, 120_000);
+test(
+    'the homepage repository reports its captured findings and accepts working corrections',
+    async () => {
+        await using sandbox = await testdir();
+        const environment = { PATH: toolsPath(['shellcheck', 'shfmt']) };
+        await createFileTree(sandbox.path, {
+            'gspot.toml': example.policy,
+            'pyproject.toml': example.project,
+            ...Object.fromEntries(example.files.map((file) => [file.path, file.before])),
+        });
+        for (const command of ['apply', 'install']) {
+            const prepared = await run(sandbox.path, [command], environment);
+            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        }
+        const args = ['check', '--no-cache', '--json'];
+        const failed = await run(sandbox.path, args, environment);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const before = reportSchema.parse(JSON.parse(failed.stdout));
+        expect(
+            before.checks.filter((check) => check.status === 'fail'),
+            failed.stdout,
+        ).toHaveLength(example.failedChecks);
+        expect(before.checks.flatMap((check) => check.findings)).toMatchObject(example.findings);
+        expect(before.checks.flatMap((check) => check.findings)).toHaveLength(example.findings.length);
+        for (const file of example.files) await Bun.write(join(sandbox.path, file.path), file.after);
+        const corrected = await run(sandbox.path, args, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const after = reportSchema.parse(JSON.parse(corrected.stdout));
+        expect(after.checks.filter((check) => check.status === 'ok')).toHaveLength(example.passedChecks);
+        expect(after.checks.flatMap((check) => check.findings)).toStrictEqual([]);
+        expect(after.checks.filter((check) => check.status === 'skipped')).toMatchObject([
+            { check: 'python/import-linter', note: 'This scope has no tool.importlinter configuration.' },
+        ]);
+        expect(after.checks.filter((check) => check.status === 'skipped')).toHaveLength(example.skippedChecks);
+    },
+    INSTALL_TIMEOUT_MS,
+);
 
 test('the corrected parser rejects non-JSON input and the shell script accepts archive paths with spaces', async () => {
     await using sandbox = await testdir();

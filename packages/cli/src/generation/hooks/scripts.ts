@@ -30,6 +30,20 @@ export function runnerExec(runner: string | undefined, binaryPath?: string): str
 }
 
 /**
+ * The lines that spell a commit message path the way gspot reads it. The path becomes absolute when the hook
+ * needs that. Under Git for Windows, whose shell hands hooks POSIX paths, it takes the Windows spelling.
+ * @param variable the shell variable that holds the path
+ * @param absolute whether a relative path becomes absolute first
+ * @returns the shell lines
+ */
+export function commitPathLines(variable: string, absolute: boolean): string[] {
+    const lines = [`if command -v cygpath >/dev/null 2>&1; then ${variable}=$(cygpath -w "$${variable}"); fi`];
+    if (absolute)
+        lines.unshift(`case "$${variable}" in /*|[[:alpha:]]:*) ;; *) ${variable}="$PWD/$${variable}" ;; esac`);
+    return lines;
+}
+
+/**
  * The check invocation for one Git hook.
  * @param name the hook.
  * @param runner the task runner the policy names, or undefined.
@@ -59,12 +73,7 @@ export function hookBody(name: HookName, original: boolean, commands: string[]):
         HOOK_HEADER,
         '# Runtime: Bash 3.2+, macOS, Linux, and Git for Windows.',
         'set -euo pipefail',
-        ...(name === 'commit-msg'
-            ? [
-                  'gspot_message=$1',
-                  'if [[ ${gspot_message} != /* && ${gspot_message} != [[:alpha:]]:* ]]; then gspot_message="${PWD}/${gspot_message}"; fi',
-              ]
-            : []),
+        ...(name === 'commit-msg' ? ['gspot_message=$1', ...commitPathLines('gspot_message', true)] : []),
         ...(buffered
             ? [
                   'input=$(mktemp "${TMPDIR:-/tmp}/gspot-push.XXXXXXXX")',

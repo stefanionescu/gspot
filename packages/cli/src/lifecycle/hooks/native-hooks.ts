@@ -7,8 +7,8 @@ import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { lefthookCommand } from '#cli/generation/hooks/lefthook.ts';
 import { simpleGitDirectHook } from '#cli/generation/hooks/simple-git-hooks.ts';
-import { hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
 import type { HookTool, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
+import { hookPrefix, commitPathLines, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
 
 // The lines every gspot hook starts with: a work directory that is removed on exit, and signal exits.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
@@ -130,7 +130,12 @@ function simpleGitHook(preparation: Preparation, name: string, generated: string
 // The environment lines a Husky or Lefthook stage exports for the arguments Git passed it.
 function stageExports(prefix: string, name: string): string[] {
     if (name === 'pre-push') return [`export ${prefix}_REMOTE_NAME="$1" ${prefix}_REMOTE_LOCATION="$2"`];
-    return name === 'commit-msg' ? [`export ${prefix}_MESSAGE="$1"`] : [];
+    if (name !== 'commit-msg') return [];
+    return [
+        'gspot_message="$1"',
+        ...commitPathLines('gspot_message', false),
+        `export ${prefix}_MESSAGE="$gspot_message"`,
+    ];
 }
 
 // The gspot hook that runs Husky's runtime for the repository's script, then gspot when the script did not.

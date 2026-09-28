@@ -123,59 +123,65 @@ if (POSIX_ENVIRONMENT)
         120_000,
     );
 
-test.each([
-    ['uv.toml', 'none'],
-    ['pyproject.toml', 'none'],
-] as const)(
-    'fresh Python clones install immutable inputs twice and run relocated tools with %s and %s',
-    async (configuration, runner) => {
-        await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path);
-        await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
-        const { rootConfiguration } = prepared;
-        const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
-        const clone = join(artifacts.path, 'clone');
-        for (const args of [
-            ['init', '--quiet'],
-            ['add', '--all'],
-            ['-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'Fixture'],
-            ['clone', '--quiet', '--no-local', repository.path, clone],
-        ])
-            gitOutput(repository.path, args);
-        expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
-        expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
-        for (let attempt = 0; attempt < 2; attempt++) {
-            expect(await installPythonProject(clone)).toContain('installed locked Python tools');
-            const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
-            expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-            expect({
-                manifest: readFileSync(join(clone, '.gspot/pyproject.toml')),
-                lock: readFileSync(join(clone, '.gspot/uv.lock')),
-                configuration: readFileSync(join(clone, configuration)),
-            }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
-        }
-        const checker = venvExecutable(join(clone, '.gspot/.venv'), 'ruff');
-        writeFileSync(join(clone, 'source.py'), 'import os\n');
-        const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
-        expect(defect.code, defect.stderr).toBe(1);
-        expect((JSON.parse(defect.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
-            'F401',
-        ]);
-        const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
-        expect(fixed.code, fixed.stderr).toBe(0);
-        const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
-        expect(clean.code, clean.stderr).toBe(0);
-        const prefix = await run([venvExecutable(join(clone, '.gspot/.venv'), 'gspot-relocation-marker')], {
-            cwd: clone,
-        });
-        expect(prefix.code, prefix.stderr).toBe(0);
-        expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
-    },
-    120_000,
-);
+if (POSIX_ENVIRONMENT)
+    test.each([
+        ['uv.toml', 'none'],
+        ['pyproject.toml', 'none'],
+    ] as const)(
+        'fresh Python clones install immutable inputs twice and run relocated tools with %s and %s',
+        async (configuration, runner) => {
+            await using repository = await testdir();
+            await using artifacts = await testdir();
+            await using registry = await createPythonRegistry(artifacts.path);
+            await using prepared = await preparePythonInstallation(
+                repository.path,
+                configuration,
+                runner,
+                registry.url,
+            );
+            const { rootConfiguration } = prepared;
+            const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
+            const lockPath = join(repository.path, '.gspot/uv.lock');
+            const lock = readFileSync(lockPath);
+            const clone = join(artifacts.path, 'clone');
+            for (const args of [
+                ['init', '--quiet'],
+                ['add', '--all'],
+                ['-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'Fixture'],
+                ['clone', '--quiet', '--no-local', repository.path, clone],
+            ])
+                gitOutput(repository.path, args);
+            expect(existsSync(join(clone, '.gspot/.venv'))).toBe(false);
+            expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
+            for (let attempt = 0; attempt < 2; attempt++) {
+                expect(await installPythonProject(clone)).toContain('installed locked Python tools');
+                const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
+                expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
+                expect({
+                    manifest: readFileSync(join(clone, '.gspot/pyproject.toml')),
+                    lock: readFileSync(join(clone, '.gspot/uv.lock')),
+                    configuration: readFileSync(join(clone, configuration)),
+                }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
+            }
+            const checker = venvExecutable(join(clone, '.gspot/.venv'), 'ruff');
+            writeFileSync(join(clone, 'source.py'), 'import os\n');
+            const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
+            expect(defect.code, defect.stderr).toBe(1);
+            expect((JSON.parse(defect.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
+                'F401',
+            ]);
+            const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
+            expect(fixed.code, fixed.stderr).toBe(0);
+            const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
+            expect(clean.code, clean.stderr).toBe(0);
+            const prefix = await run([venvExecutable(join(clone, '.gspot/.venv'), 'gspot-relocation-marker')], {
+                cwd: clone,
+            });
+            expect(prefix.code, prefix.stderr).toBe(0);
+            expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
+        },
+        120_000,
+    );
 
 if (POSIX_ENVIRONMENT)
     test.each(PYTHON_PROJECTS)(

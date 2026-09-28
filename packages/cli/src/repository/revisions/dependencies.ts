@@ -8,11 +8,11 @@ import { statSync, constants, readFileSync } from 'node:fs';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { cp, stat, chmod, mkdir, readdir, realpath } from 'node:fs/promises';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
 import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/virtualenv/launchers.ts';
 import type { Directory, PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
+import { cp, stat, chmod, lstat, mkdir, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/virtualenv/site-packages.ts';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
@@ -114,6 +114,18 @@ function assertManifestsUnchanged(root: string, installed: Root, selected: Root,
 }
 
 // Copies one dependency tree into the snapshot with the mode of its source, draining every child before returning.
+
+// A link to a directory keeps its type in the copy: a generic copy makes a file link, which Windows cannot follow.
+async function copyDirectoryLink(source: string, target: string): Promise<boolean> {
+    const entry = await lstat(source);
+    if (!entry.isSymbolicLink()) return false;
+    const linkTarget = await readlink(source);
+    const resolved = await stat(source).catch(() => undefined);
+    if (resolved?.isDirectory() !== true) return false;
+    await symlink(linkTarget, target, isAbsolute(linkTarget) ? 'junction' : 'dir');
+    return true;
+}
+
 async function copyTree(source: string, target: string, cancelSignal?: AbortSignal): Promise<void> {
     if (statSync(target, { throwIfNoEntry: false }) !== undefined)
         throw new SelectionError([
@@ -128,6 +140,7 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
         children.map((name) =>
             copy(async () => {
                 cancelSignal?.throwIfAborted();
+                if (await copyDirectoryLink(join(source, name), join(target, name))) return;
                 await cp(join(source, name), join(target, name), {
                     recursive: true,
                     verbatimSymlinks: true,

@@ -76,13 +76,17 @@ test.each(['custom', 'native'])(
         expect(readFileSync(join(root, 'gspot-runs'), 'utf8')).toBe('x');
         writeFileSync(join(root, 'hook-settings.yml'), 'rc: ./hook-init.sh\n');
         const executable = join(root, 'node_modules/.bin/lefthook');
-        renameSync(executable, `${executable}.retained`);
+        // Windows installs a command file beside the script; every spelling steps aside.
+        const spellings = ['', '.cmd', '.exe', '.ps1']
+            .map((suffix) => executable + suffix)
+            .filter((path) => existsSync(path));
+        for (const path of spellings) renameSync(path, `${path}.retained`);
         try {
             const unavailable = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
             expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
             expect(unavailable.stderr).toContain('gspot install');
         } finally {
-            renameSync(`${executable}.retained`, executable);
+            for (const path of spellings) renameSync(`${path}.retained`, path);
         }
         const corrected = await run(['git', 'hook', 'run', 'pre-commit'], { ...options, stdin: '' });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
