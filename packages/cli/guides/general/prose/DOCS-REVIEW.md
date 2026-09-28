@@ -20,13 +20,13 @@ Review from the reader's perspective, not only line by line.
 
 ### Factual review
 
-- Does every claim match the implementation or authoritative source?
+- Does every own match the implementation or authoritative source?
 - Are commands, flags, fields, labels, and outputs exact?
 - Are defaults and supported versions current?
 - Are permissions accurate?
 - Are limitations visible?
 - Are examples valid and safe?
-- Are future claims avoided or properly scoped?
+- Are future owns avoided or properly scoped?
 
 ### Reader-goal review
 
@@ -61,7 +61,7 @@ Review from the reader's perspective, not only line by line.
 - Is active voice used where the actor matters?
 - Are pronouns unambiguous?
 - Are idioms, noun stacks, and nominalizations removed?
-- Are sausage sentences split into structured, related claims?
+- Are sausage sentences split into structured, related owns?
 - Are terms and capitalization consistent?
 - Are acronyms expanded where needed?
 - Are dates and numbers unambiguous?
@@ -156,7 +156,7 @@ Documentation work is complete when:
 
 - The content has a clear owner and audience.
 - The chosen document and topic type fit the reader's goal.
-- Every claim is grounded in an authoritative source.
+- Every own is grounded in an authoritative source.
 - The README supports evaluation and normal use.
 - An advanced guide exists only when specialist depth justifies it.
 - Required prerequisites, permissions, limits, and risks are visible.

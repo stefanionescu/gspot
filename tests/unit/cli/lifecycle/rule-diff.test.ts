@@ -171,7 +171,7 @@ test.each([
     expect(ruleDiff(file, after)).toStrictEqual({ rules: [] });
 });
 
-test('rule comparison ignores list order and reports malformed JSON without claiming additions', () => {
+test('rule comparison ignores list order and reports malformed JSON without owning additions', () => {
     const file: GeneratedFile = {
         path: 'rules.json',
         content: '{"rules":["first","second"]}',

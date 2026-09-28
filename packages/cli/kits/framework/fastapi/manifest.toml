@@ -36,7 +36,7 @@ runs = "once"
 engine = "integrity"
 analysis = "openapi-lint"
 tool = "spectral"
-claims = {extensions = [".yaml", ".yml", ".json"]}
+owners = {extensions = [".yaml", ".yml", ".json"]}
 coverage = ["style"]
 summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
 why = "Clients are written from this document, so an operation with no id becomes somebody's broken client."
@@ -64,7 +64,7 @@ level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "python-blocking-calls"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Refuses time.sleep, the requests library, and a plain open inside an async function."
 why = "A blocking call inside an async function stops the event loop, so every other request waits for it."

@@ -86,7 +86,7 @@ export function parseAlerts(stdout: string): ValeAlert[] {
 export async function valeFindings(input: EngineInput): Promise<Finding[]> {
     if (!hasPackages(input.root))
         throw new Error('The Vale packages are not synced; run gspot apply with the network on.');
-    const groups = routeGroups(input.files.filter((file) => file.nature === 'source'));
+    const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {
         const alerts = await alertsFor(input, group);

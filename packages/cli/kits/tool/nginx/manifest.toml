@@ -7,9 +7,9 @@ description = "nginx configuration: gixy for the security mistakes, and the serv
 [detect]
 paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
 
-[claims]
+[owners]
 paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "gixy"
@@ -57,7 +57,7 @@ requires = "docker"
 engine = "integrity"
 analysis = "nginx-test"
 tool = "docker"
-claims = {filenames = ["nginx.conf"]}
+owners = {filenames = ["nginx.conf"]}
 coverage = ["syntax"]
 summary = "Validates each main configuration inside the nginx image and records the files nginx parsed. It mounts a throwaway certificate and resolves upstream names."
 why = "Only nginx knows whether nginx accepts the file, and the other place to learn it is the restart in production."

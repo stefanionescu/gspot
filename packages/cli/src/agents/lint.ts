@@ -56,7 +56,7 @@ function independenceFindings(file: string, line: string, number: number, layer:
     return INDEPENDENCE_TERMS.filter((term) => term.test(prose)).map((term) => ({
         file,
         line: number,
-        message: `names gspot or claims enforcement: '${term.source}'; a guide states the rule and nothing else`,
+        message: `names gspot or owners enforcement: '${term.source}'; a guide states the rule and nothing else`,
     }));
 }
 

@@ -30,11 +30,11 @@ function installerPins(raw: RawTool): ToolPin['installers'] {
 }
 
 function toCheck(raw: RawCheck): CheckSpec {
-    const { claims, ...rest } = raw;
+    const { owners, ...rest } = raw;
     const check = compact(rest) as CheckSpec;
-    if (claims) {
-        const { extensions, filenames, tags, paths, from_languages: isFromLanguages, natures } = claims;
-        check.claims = { extensions, filenames, tags, paths, from_languages: isFromLanguages, natures };
+    if (owners) {
+        const { extensions, filenames, tags, paths, from_languages: isFromLanguages, kinds } = owners;
+        check.owners = { extensions, filenames, tags, paths, from_languages: isFromLanguages, kinds };
     }
     return check;
 }
@@ -94,7 +94,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         kit: raw.kit,
         untracked: raw.untracked,
         detect: raw.detect,
-        claims: raw.claims,
+        owners: raw.owners,
         tools: raw.tools.map((tool) => {
             const declared = OPTIONAL_TOOL_KEYS.filter((key) => tool[key] !== undefined).map(
                 (key) => [key, tool[key]] as const,

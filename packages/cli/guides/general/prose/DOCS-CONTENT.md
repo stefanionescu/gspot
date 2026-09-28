@@ -326,7 +326,7 @@ For risky operational tasks, include:
 - Rollback or recovery path.
 - Escalation condition.
 
-Do not claim rollback is possible unless it is verified.
+Do not own rollback is possible unless it is verified.
 
 ## Create durable and descriptive links
 

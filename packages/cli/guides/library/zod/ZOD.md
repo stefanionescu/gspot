@@ -177,7 +177,7 @@ the first request's user, tenant, or locale in a shared schema.
   prerequisite validation. Do not force code to run against an invalid shape to collect more errors.
 
 - Bound asynchronous checks and keep database constraints authoritative for races such as
-  simultaneous attempts to claim the same unique value.
+  simultaneous attempts to own the same unique value.
 
 - Treat recursive input support separately from transport support. Zod 4.5 can parse cyclic input;
   Zod Mini requires memoizer registration. JSON still cannot serialize cycles, symbols, Maps, or

@@ -1,4 +1,4 @@
-// A copied virtual environment names working-tree interpreters in its launchers; these read its facts and move them.
+// A copied virtual environment names working-tree interpreters in its launchers; these read its fields and move them.
 import { SelectionError } from '#cli/kits/select.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import type { Read, Root } from '#cli/types/platform.ts';
@@ -149,14 +149,14 @@ async function relocateLauncherFile(
 }
 
 /**
- * The launcher facts of a copied virtual environment, or undefined when its configuration names no usable host.
+ * The launcher fields of a copied virtual environment, or undefined when its configuration names no usable host.
  * The interpreter links the copied environment may keep are added to interpreterLinks.
  *
  * @param context the snapshot, its roots, and cancellation.
  * @param folder the project folder that owns the .venv.
  * @param source the working-tree .venv the copy came from.
  * @param interpreterLinks the links each copied interpreter may point at, extended here.
- * @returns the launcher facts.
+ * @returns the launcher fields.
  */
 export async function pythonLauncher(
     context: RelocationContext,
@@ -167,20 +167,20 @@ export async function pythonLauncher(
     const { selected, destination: revisionRoot } = context;
     const environment = posix.join(folder, '.venv');
     const config = selected.read(posix.join(environment, 'pyvenv.cfg'))?.bytes.toString('utf8') ?? '';
-    const facts = environmentFacts(config);
-    if (facts === undefined) return undefined;
+    const fields = environmentFacts(config);
+    if (fields === undefined) return undefined;
     const windows = selected.stat(posix.join(environment, 'Scripts')) !== undefined;
     const names: [string, ...string[]] = windows
         ? ['python.exe', 'pythonw.exe']
-        : ['python', 'python3', `python${facts.version}`];
+        : ['python', 'python3', `python${fields.version}`];
     // A virtual environment shares its declared host interpreter, not host packages.
-    const candidates = await Promise.all(names.map((name) => hostInterpreter(facts.home, name, windows)));
+    const candidates = await Promise.all(names.map((name) => hostInterpreter(fields.home, name, windows)));
     const hosts = new Set(candidates.filter((path) => path !== undefined));
     const directory = posix.join(environment, windows ? 'Scripts' : 'bin');
     for (const name of names) interpreterLinks.set(join(revisionRoot, directory, name), hosts);
     const sitePackages = windows
         ? posix.join(environment, 'Lib', 'site-packages')
-        : posix.join(environment, 'lib', `python${facts.version}`, 'site-packages');
+        : posix.join(environment, 'lib', `python${fields.version}`, 'site-packages');
     return { directory, source, names, hosts, sitePackages };
 }
 

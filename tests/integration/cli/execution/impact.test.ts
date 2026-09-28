@@ -68,7 +68,7 @@ function projectChecks(session: Session): void {
         cwd: 'root' as const,
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
-        claims: manifest.claims,
+        owners: manifest.owners,
         fix_order: 'codemod' as const,
         fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };

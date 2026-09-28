@@ -9,7 +9,7 @@ description = "Every installed dependency reports a license from the allowed lis
 [detect]
 filenames = ["package.json", "pyproject.toml"]
 
-[claims]
+[owners]
 filenames = ["package.json", "pyproject.toml"]
 
 [[tools]]
@@ -44,7 +44,7 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "licenses-packages"
 waits_for = "tools.licenses.licenses_allowed"
-claims = {filenames = ["package.json", "pyproject.toml"]}
+owners = {filenames = ["package.json", "pyproject.toml"]}
 coverage = ["licenses"]
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."

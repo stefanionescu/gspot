@@ -11,7 +11,7 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 filenames = ["tsconfig.json"]
 dependencies = ["typescript"]
 
-[claims]
+[owners]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
@@ -74,7 +74,7 @@ fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
-claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
+owners = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."

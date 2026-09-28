@@ -6,11 +6,11 @@ import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adopti
 import type { Manifest, SettingSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
 
 import type {
+    Fields,
     TomlTable,
     Repository,
     ScopeEntry,
     TrackedFile,
-    ManifestFacts,
     ExistingTooling,
 } from '#cli/types/repository/repository.ts';
 
@@ -96,7 +96,7 @@ export type InitPrepared = {
 export type InitContext = {
     manifests: Map<string, Manifest>;
     files: TrackedFile[];
-    facts: ManifestFacts[];
+    fields: Fields[];
     options: InitOptions;
     /** Whether the folder is a git repository; a configuration whose checks all read git stays out otherwise. */
     hasGit: boolean;
@@ -105,7 +105,7 @@ export type InitContext = {
 export type InitInputs = {
     root: string;
     repo: Repository;
-    facts: ManifestFacts[];
+    fields: Fields[];
     workspace: ScopeEntry[];
     manifests: Map<string, Manifest>;
     options: InitOptions;

@@ -98,7 +98,7 @@ keeps language semantics explicit; no analysis is required to be language-blind.
 
 Runs external tools. Owns nothing about what they find.
 
-- **File lists, always.** gspot computes the file set (the files git tracks or is about to track, filtered by claims, scope, declarations and ignores) and passes it to the tool.
+- **File lists, always.** gspot computes the file set (the files git tracks or is about to track, filtered by owns, scope, declarations and ignores) and passes it to the tool.
 - **Tools that walk the tree** (`runs = "per-scope"` or `"once"`) receive a generated ignore file that mirrors git's ignored set and the declarations. gspot compares what the tool reported against the list it expected.
 - **Explicit configuration.** Every tool receives its config path by flag. Discovery is for
   editors; the runner never relies on it.
@@ -211,7 +211,7 @@ Ruff `I001` with `length-sort` owns Python imports. SwiftFormat `sortImports` ow
 | Duplicate functions                                                 | all         | yes  | yes    | yes   | yes        | no  |
 | Unused functions, dead parameters                                   | recommended | yes  | yes    | yes   | yes        | no  |
 | Import cycles                                                       | recommended | no   | yes    | no    | yes        | no  |
-| Folder facts: prefix, file beside folder                            | all         | yes  | yes    | yes   | yes        | yes |
+| Folder fields: prefix, file beside folder                           | all         | yes  | yes    | yes   | yes        | yes |
 | Shell safety: strict mode, a trap for `mktemp`, a discarded failure | recommended | yes  | no     | no    | no         | no  |
 | Environment owner                                                   | all         | yes  | yes    | yes   | yes        | no  |
 | Import layout and boundaries                                        | all         | yes  | yes    | yes   | yes        | no  |
@@ -329,11 +329,11 @@ That registry test.
 
 ### Acceptance K-208
 
-The list of code files holds the endings a framework claims, and one ESLint check
+The list of code files holds the endings a framework owns, and one ESLint check
 reads it. A framework turns a shared rule off in its manifest, with a reason.
 Type check, format, style, and names reach a component file.
 
-`CODE` in the template is built from the `claims.extensions` of the selected kits.
+`CODE` in the template is built from the `owns.extensions` of the selected kits.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
 
 `vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue configuration
@@ -360,7 +360,7 @@ These selections do not remove standalone plugin capabilities. Preserve narrow N
 index-only exceptions without exempting the policy that forbids all re-exports.
 
 Shared policies apply to Swift, JavaScript, TypeScript, Python, and
-all their supported frameworks. Language-only file claims missed Vue and Svelte components.
+all their supported frameworks. Language-only file owners missed Vue and Svelte components.
 Shared selection must include framework source. Component parsers must receive shared language
 rules as well as their framework-specific rules. See
 [05-engines.md](#shared-enforcement-across-languages-and-frameworks).

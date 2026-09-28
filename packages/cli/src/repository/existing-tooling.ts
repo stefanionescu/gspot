@@ -10,8 +10,8 @@ import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
+import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
-import type { TrackedFile, ExistingTool, ManifestFacts, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import {
     LINT_PAIRS,
@@ -185,18 +185,18 @@ export function declaredKits(root: string, paths: Iterable<string>, selected?: s
  * Find declared tool configuration, hooks, CI, and repository-owned lint infrastructure.
  * @param root the repository root
  * @param files the tracked files
- * @param facts the manifests read from the tree
+ * @param fields the manifests read from the tree
  * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function existingTooling(root: string, files: TrackedFile[], facts: ManifestFacts[]): ExistingTooling {
+export function existingTooling(root: string, files: TrackedFile[], fields: Fields[]): ExistingTooling {
     const paths = new Set(files.map((file) => file.path));
-    const lintOnlyManifests = facts
+    const lintOnlyManifests = fields
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
     const configurations = declaredKits(
         root,
-        files.filter((file) => file.nature === 'source').map((file) => file.path),
+        files.filter((file) => file.kind === 'source').map((file) => file.path),
     );
     return {
         configs: [

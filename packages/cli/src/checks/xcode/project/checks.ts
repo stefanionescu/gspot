@@ -146,7 +146,7 @@ export function trackedEnding(input: EngineInput, endings: string[]): string[] {
     return input.files
         .filter(
             (file) =>
-                file.nature === 'source' &&
+                file.kind === 'source' &&
                 scopeOf(file.path, input.scopeEntries).path === input.scope &&
                 endings.some((ending) => file.path.endsWith(ending)),
         )

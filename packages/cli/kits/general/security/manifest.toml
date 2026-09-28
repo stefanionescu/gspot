@@ -5,7 +5,7 @@ title = "Security"
 proposed = true
 description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL on request."
 
-[claims]
+[owners]
 from_languages = true
 extensions = [".plist"]
 

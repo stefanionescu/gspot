@@ -6,7 +6,7 @@ import { retainedConfigurationPaths } from '#cli/generation/retained/configurati
 
 // The authored configuration files of the tools that the repository keeps.
 function retainedPaths(retention: Retention, tools: string[]): string[] {
-    const sources = retention.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const sources = retention.files.filter((file) => file.kind === 'source').map((file) => file.path);
     return retainedConfigurationPaths(retention.root, sources, tools, retention.replace);
 }
 

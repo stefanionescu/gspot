@@ -198,8 +198,8 @@ export function normalize(raw: RawPolicy): Policy {
         tools: (raw.tools ?? {}) as Policy['tools'],
         ignores: compactAll(raw.ignore),
         declarations: [
-            ...raw.generated.map((entry) => ({ ...entry, nature: 'generated' as const })),
-            ...raw.vendored.map((entry) => ({ ...entry, nature: 'vendored' as const })),
+            ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),
+            ...raw.vendored.map((entry) => ({ ...entry, kind: 'vendored' as const })),
         ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 

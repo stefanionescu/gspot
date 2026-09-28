@@ -369,7 +369,7 @@ These include 52 historical references, 11 prior-art paths, 23 generated or embe
 Missing-path and
 allowlist-consistency checks pass. Adjacent missing literal paths remain covered by the
 document-relative, wildcard, and custom-check regression tests. Obsolete task, Deno, CodeQL,
-and Python Semgrep claims are corrected rather than excepted.
+and Python Semgrep owns are corrected rather than excepted.
 
 Executable directives retain specific contracts: macOS link modes, unpublished TOML
 node kinds, npm lock versions, standalone target imports, a required package entrypoint,

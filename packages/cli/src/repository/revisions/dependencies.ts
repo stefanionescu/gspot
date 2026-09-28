@@ -3,11 +3,11 @@ import { createHash } from 'node:crypto';
 import type { Root } from '#cli/types/platform.ts';
 import { SelectionError } from '#cli/kits/select.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { isValePackageFile } from '#cli/repository/kind.ts';
 import { statSync, constants, readFileSync } from 'node:fs';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { cp, stat, chmod, mkdir, readdir, realpath } from 'node:fs/promises';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
@@ -144,7 +144,7 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
     await chmod(target, sourceStat.mode & MODE_BITS);
 }
 
-// Copies one dependency folder and, for a virtual environment, reads the launcher facts the relocation needs.
+// Copies one dependency folder and, for a virtual environment, reads the launcher fields the relocation needs.
 async function copyDirectory(
     context: RelocationContext,
     { folder, dependency }: Directory,

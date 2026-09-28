@@ -115,8 +115,8 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         'apps/web/supabase/config.toml': 'project_id = "web"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const facts = readManifests(sandbox.path, repository.files);
-    const found = proposedScopes(sandbox.path, repository.files, facts, kitManifests().values());
+    const fields = readManifests(sandbox.path, repository.files);
+    const found = proposedScopes(sandbox.path, repository.files, fields, kitManifests().values());
     expect(found.scopes.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],

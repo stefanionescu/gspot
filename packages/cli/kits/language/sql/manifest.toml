@@ -9,9 +9,9 @@ description = "SQL files: sqlfluff for layout and style, a parse by the Postgres
 [detect]
 extensions = [".sql", ".pgsql", ".psql"]
 
-[claims]
+[owners]
 extensions = [".sql", ".pgsql", ".psql"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "sqlfluff"

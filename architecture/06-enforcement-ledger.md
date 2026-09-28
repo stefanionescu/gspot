@@ -324,7 +324,7 @@ Source: `SS quality/`.
 
 | Rule                                                                                                                                                                                                                                                                    | Sources                               | gspot                                                                                                                          |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| typos with extend-words carrying reasons, excludes by nature                                                                                                                                                                                                            | all                                   | `spelling/typos`                                                                                                               |
+| typos with extend-words carrying reasons, excludes by kind                                                                                                                                                                                                              | all                                   | `spelling/typos`                                                                                                               |
 | Prettier with the shared options, `embeddedLanguageFormatting: off`                                                                                                                                                                                                     | all                                   | `formatting/prettier`                                                                                                          |
 | `.editorconfig` derived from `[format]`                                                                                                                                                                                                                                 | SA                                    | `formatting/editorconfig-checker`                                                                                              |
 | editorconfig-checker                                                                                                                                                                                                                                                    | SA qlty                               | `formatting/editorconfig-checker`                                                                                              |
@@ -357,7 +357,7 @@ Source: `SS quality/`.
 | minimum plugin versions (unicorn needs ESLint 9.38)                                                                                                                                                                                                                     | SA, LA `version-policy.js`            | `doctor` version checks                                                                                                        |
 | CodeQL false-positive file names an existing path                                                                                                                                                                                                                       | SA, LA                                | `integrity/allowlists-match`                                                                                                   |
 | Semgrep suppression census                                                                                                                                                                                                                                              | SA                                    | `integrity/suppressions`                                                                                                       |
-| `.gitattributes` binary and generated markers respected                                                                                                                                                                                                                 | SA                                    | file natures                                                                                                                   |
+| `.gitattributes` binary and generated markers respected                                                                                                                                                                                                                 | SA                                    | file kinds                                                                                                                     |
 | coverage thresholds gate (80 percent)                                                                                                                                                                                                                                   | SA, ran only under a variable         | `vitest/coverage`, `pytest/coverage` (push) with `[tools.vitest] coverage`                                                     |
 
 ## 12. Prose
@@ -532,7 +532,7 @@ An Express planted handler named `handleLogin` holds none.
 The prefix of a file name is its first word, in any case style.
 
 `prefixOf` calls `splitName` of `packages/cli/src/checks/naming/split.ts` and takes the first part. Peers are
-files whose nature is `source`.
+files whose kind is `source`.
 
 Unit tests for `user_card.py`, `UserCard.swift`, and `user-card.ts` beside a README.
 
@@ -546,10 +546,10 @@ A unit test with both forms.
 
 ### Acceptance K-233
 
-The css configuration claims `.css` alone. Detection names Sass as a language gspot has no
+The css configuration owns `.css` alone. Detection names Sass as a language gspot has no
 configuration for.
 
-Two endings leave the claim.
+Two endings leave the own.
 
 The css planted repository holds a `.scss` file with a mixin and no finding.
 
@@ -579,11 +579,11 @@ That test.
 
 ### Acceptance K-256
 
-The xctest configuration writes a nested SwiftLint file over the folders it claims, with the
+The xctest configuration writes a nested SwiftLint file over the folders it owns, with the
 three rules off.
 
 SwiftLint reads a `.swiftlint.yml` in a subfolder as a nested config. The manifest
-writes one pointer file into each claimed test folder, with `parent_config` set to the file under
+writes one pointer file into each owned test folder, with `parent_config` set to the file under
 `.gspot/`, using the supported tool include mechanism.
 
 A planted test file with a force unwrap holds no finding, and a source file holds one.
@@ -608,7 +608,7 @@ A table saying a language supports an idea is descriptive metadata, not evidence
 `bash/syntax` reads `.sh`, `.bash`, and files with a Bash shebang. `bash/zsh-syntax`
 runs `zsh -n` over `.zsh` files, and `bash/bats-syntax` runs `bats --count` over `.bats` files.
 
-Three checks with three claims. `zsh` and `bats` are host tools, so an absent one
+Three checks with three owns. `zsh` and `bats` are host tools, so an absent one
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
 manifest already says.
 
@@ -640,7 +640,7 @@ Two planted scripts, one for each header, each valid under its own rule.
 A route counts as tested when a test file of the same scope imports it.
 
 The check asks the import index of the scope, which the structure engine builds, for
-the importers of the route file, and keeps those the test claim matches.
+the importers of the route file, and keeps those the test own matches.
 
 `express.test.ts` plants `users.ts` and a test that names `users` in a comment, and
 holds the finding.
@@ -724,12 +724,12 @@ The contract test runs `<tool> --help` for each pinned tool and holds each flag.
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                  |
 | ----------------------- | ---------------------------------------------------------------- |
 | Detect                  | `.swift` in the tree; `Package.swift`; `*.xcodeproj`             |
-| Claims                  | `.swift`, `Package.swift`, `Package.resolved`                    |
+| Owners                  | `.swift`, `Package.swift`, `Package.resolved`                    |
 | Required check coverage | format, syntax, style, types, structure, naming, prose, spelling |
 
 Tools:
@@ -838,7 +838,7 @@ SwiftLint options. Each number comes from `[limits]` and `[limits.swift]`, and w
 | `unused_import`         | `tools.swiftlint.keep_imports`     | `CoreGraphics`                |                                                                    |
 
 `included` and `excluded` are not rendered: gspot passes the file list. The shipped exclusions
-are file natures: `Pods`, `DerivedData`, `build`, `.build` and `Generated` folders are vendored
+are file kinds: `Pods`, `DerivedData`, `build`, `.build` and `Generated` folders are vendored
 or generated, and `*.generated.swift` is generated.
 
 SwiftFormat options. `--indent`, `--maxwidth` and `--linebreaks` come from `[format]`.
@@ -941,12 +941,12 @@ configuration reports the gap.
 
 Kind: language. Requires: formatting. Recommends: docs, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                       |
 | ----------------------- | ------------------------------------- |
 | Detect                  | `.md`, `.mdx` in the tree             |
-| Claims                  | `.md`, `.mdx`                         |
+| Owners                  | `.md`, `.mdx`                         |
 | Required check coverage | format, style, links, prose, spelling |
 
 Tools:
@@ -955,10 +955,10 @@ markdownlint-cli2, prettier, lychee.
 
 Generated configuration:
 
-| Target                             | Stub                                                                     | Holds                                                                                                                                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/config/markdownlint.jsonc` | `.markdownlint-cli2.jsonc` with `config.extends` and `globs` from claims | `default: true`; MD007 indent from `[format] indent_width`; MD013 off; MD024 siblings only; MD033 off; MD041 on; MD046 fenced; MD048 backtick; MD049 underscore; MD050 asterisk; MD060 off |
-| `.gspot/config/lychee.toml`        | none                                                                     | through docs: `offline`, `include_fragments`; an online profile for the manual run                                                                                                         |
+| Target                             | Stub                                                                   | Holds                                                                                                                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.gspot/config/markdownlint.jsonc` | `.markdownlint-cli2.jsonc` with `config.extends` and `globs` from owns | `default: true`; MD007 indent from `[format] indent_width`; MD013 off; MD024 siblings only; MD033 off; MD041 on; MD046 fenced; MD048 backtick; MD049 underscore; MD050 asterisk; MD060 off |
+| `.gspot/config/lychee.toml`        | none                                                                   | through docs: `offline`, `include_fragments`; an online profile for the manual run                                                                                                         |
 
 Checks:
 
@@ -1012,12 +1012,12 @@ Rule files:
 
 Kind: framework. Requires: react. Recommends: typescript, jest.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                             |
 | ------ | --------------------------------------------------------------------------- |
 | Detect | `react-native` or `expo` in dependencies                                    |
-| Claims | `app.json`, `app.config.js`, `app.config.ts`, `metro.config.js`, `eas.json` |
+| Owners | `app.json`, `app.config.js`, `app.config.ts`, `metro.config.js`, `eas.json` |
 
 Tools:
 
@@ -1089,12 +1089,12 @@ Rule files:
 
 Kind: database. Requires: sql.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect                  | Postgres syntax in any `.sql` file; a Postgres connection string in configuration; supabase                                                                     |
-| Claims                  | `.sql` files under a migrations directory (`[tools.postgres] migrations_directory`, default detected from `supabase/migrations`, `migrations`, `db/migrations`) |
+| Owners                  | `.sql` files under a migrations directory (`[tools.postgres] migrations_directory`, default detected from `supabase/migrations`, `migrations`, `db/migrations`) |
 | Architecture it assumes | none. Postgres, not any product on it.                                                                                                                          |
 
 Tools:
@@ -1137,12 +1137,12 @@ Rule files:
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling, dependencies.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                              |
 | ----------------------- | ---------------------------------------------------------------------------- |
 | Detect                  | `.py` in the tree; `pyproject.toml`; `requirements*.txt`; a `python` shebang |
-| Claims                  | `.py`, `.pyi`, `pyproject.toml`, extensionless files with a `python` shebang |
+| Owners                  | `.py`, `.pyi`, `pyproject.toml`, extensionless files with a `python` shebang |
 | Required check coverage | format, syntax, style, types, structure, naming, prose, spelling             |
 
 Tools:
@@ -1156,7 +1156,7 @@ Generated configuration:
 | Target                                  | Stub                              | Holds                                                                                                                                                                                                                                           |
 | --------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.gspot/config/ruff.toml`               | none; the check passes `--config` | the selected families including `S` and `ANN401`, `PLR2004`, `PLR1702`, `PLR0917`, `FAST`; the ignores; the limits (`C901` at `cyclomatic_complexity`, `PLR0915` at `statements`, `PLR1702` at `nested_blocks`); format options from `[format]` |
-| `.gspot/config/basedpyrightconfig.json` | `pyrightconfig.json`              | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from claims                                                                                                                                                               |
+| `.gspot/config/basedpyrightconfig.json` | `pyrightconfig.json`              | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from owns                                                                                                                                                                 |
 
 import-linter, deptry, and vulture each read a generated file under `.gspot/`, which the check passes
 by flag. A table of `pyproject.toml` is read and carried at `init`, and left in place.
@@ -1217,9 +1217,9 @@ slot; no other check reads notebooks.
 Kind: policy. Requires: nothing. Required by every language kit, because it owns the `limits.*`
 settings their configurations read. It runs the structural rules no standard linter ships.
 
-Claims:
+Owners:
 
-Every file a language kit claims. The engine dispatches by grammar.
+Every file a language kit owns. The engine dispatches by grammar.
 
 Checks:
 
@@ -1269,12 +1269,12 @@ Rule files:
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                           |
 | ------ | ----------------------------------------- |
 | Detect | `svelte` in dependencies, `.svelte` files |
-| Claims | `.svelte`                                 |
+| Owners | `.svelte`                                 |
 
 Tools:
 
@@ -1289,7 +1289,7 @@ Every shared rule of the javascript and typescript configurations reads the file
 too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The configuration claims `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
+The configuration owns `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
 ESLint config holds them. The config gains the `recommended` blocks of the Svelte plugin, with
 every rule that is on set to error. One more block sets the parser, and hands it the TypeScript
 parser for the script where typescript is selected. It adds: `svelte/no-at-html-tags`,
@@ -1365,12 +1365,12 @@ Rule files:
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                       |
 | ----------------------- | --------------------------------------------------------------------- |
 | Detect                  | `.css` and `.module.css` in the tree; Sass is reported as unsupported |
-| Claims                  | the same                                                              |
+| Owners                  | the same                                                              |
 | Required check coverage | format, syntax, style, spelling                                       |
 
 Tools:
@@ -1410,7 +1410,7 @@ Rule files:
 
 Kind: policy. Requires: markdown. Runs Vale over every comment and every documentation file.
 
-Claims:
+Owners:
 
 Comments in `.ts`, `.tsx`, `.js`, `.mjs`, `.cjs`, `.swift` (Vale native); `.sh`, `.bash`, hook
 and task files (stdin as `.rb`); `.sql`, `.pgsql`, `.psql` (stdin as `.lua`); `.py` (stdin as
@@ -1459,12 +1459,12 @@ disabled upstream rules and the reason for each is in the template.
 Kind: tool. Requires: swift. macOS only. Every check here passes as a platform skip elsewhere.
 Covers XCTest, Swift Testing, and snapshot tests.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                                                              |
 | ------ | ------------------------------------------------------------------------------------------------------------ |
 | Detect | a `.swift` file with `import XCTest` or `import Testing`; a `*.xctestplan`; a test target in `Package.swift` |
-| Claims | `.swift` files under a folder named `Tests` or ending in `Tests`, `__Snapshots__/**`, and `*.xctestplan`     |
+| Owners | `.swift` files under a folder named `Tests` or ending in `Tests`, `__Snapshots__/**`, and `*.xctestplan`     |
 
 Tools:
 
@@ -1472,10 +1472,10 @@ swiftlint (from swift), xcodebuild (host). No tool of its own.
 
 Generated configuration:
 
-`.gspot/config/swiftlint.yml` gains, over the claimed files, the five test rules of the swift configuration
+`.gspot/config/swiftlint.yml` gains, over the owned files, the five test rules of the swift configuration
 (`balanced_xctest_lifecycle`, `empty_xctest_method`, `final_test_case`, `test_case_accessibility`,
 `xct_specific_matcher`) and turns `force_unwrapping`, `missing_docs` and `no_magic_numbers` off
-there. The configuration writes a nested SwiftLint file into each test folder it claims, with `parent_config`
+there. The configuration writes a nested SwiftLint file into each test folder it owns, with `parent_config`
 set to the file under `.gspot/` (K-256).
 
 Checks:
@@ -1483,7 +1483,7 @@ Checks:
 | Id                        | Stage       | Command                                                                                                                                                                                                       |
 | ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `xctest/disabled`         | commit      | engine: `XCTSkip`, `.disabled(`, `@available(*, unavailable)` on a test, and a `skippedTests` entry in a test plan each carry a reason on the same line or the line above; report findings without a baseline |
-| `xctest/no-sleep`         | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a claimed file outside `[tools.xctest] sleep_allowed`                                                                                       |
+| `xctest/no-sleep`         | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a owned file outside `[tools.xctest] sleep_allowed`                                                                                         |
 | `xctest/recording`        | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                    |
 | `xctest/reference-images` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                        |
 | `xctest/coverage`         | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                              |
@@ -1503,7 +1503,7 @@ Rule files:
 
 Kind: policy. Requires: nothing. Selected by default in every repository.
 
-Claims:
+Owners:
 
 The whole tree, including binaries, and vendored files.
 
@@ -1542,12 +1542,12 @@ Rule files:
 
 Kind: tool. Requires: python.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                |
 | ------ | -------------------------------------------------------------- |
 | Detect | `pytest` in dependencies or dependency groups; `[tool.pytest]` |
-| Claims | `tests/**/*.py`, `test_*.py`, `*_test.py`, `conftest.py`       |
+| Owners | `tests/**/*.py`, `test_*.py`, `*_test.py`, `conftest.py`       |
 
 Tools:
 
@@ -1557,7 +1557,7 @@ Generated configuration:
 
 `.gspot/config/ruff.toml` keeps the `PT` family on and adds test-file overrides: `S101` (assert) off in
 gspot writes nothing into `pyproject.toml`. The coverage check passes its options by flag.
-with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config"`.
+with `testpaths` from owns and `addopts = "-q --strict-markers --strict-config"`.
 
 Checks:
 
@@ -1581,12 +1581,12 @@ Rule files:
 Kind: policy. Requires: html, css, javascript. For a site built to a directory and served
 as files: the checks that only make sense over built output.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                                                                                                         |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect | `.html` files with no framework dependency and a build script in `package.json`                                                                         |
-| Claims | the build output directory (`[tools.site] output`, default `dist`) as generated; `assets/**` as binary; `sitemap.xml`, `robots.txt`, `site.webmanifest` |
+| Owners | the build output directory (`[tools.site] output`, default `dist`) as generated; `assets/**` as binary; `sitemap.xml`, `robots.txt`, `site.webmanifest` |
 
 Tools:
 
@@ -1625,12 +1625,12 @@ Rule files:
 
 Kind: tool. Requires: nothing.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                        |
 | ----------------------- | ------------------------------------------------------ |
 | Detect                  | `nginx.conf`, `*.conf` under a directory named `nginx` |
-| Claims                  | the same                                               |
+| Owners                  | the same                                               |
 | Required check coverage | syntax, security                                       |
 
 Tools:
@@ -1660,12 +1660,12 @@ Rule files:
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                     |
 | ------ | ----------------------------------- |
 | Detect | `vue` in dependencies, `.vue` files |
-| Claims | `.vue`                              |
+| Owners | `.vue`                              |
 
 Tools:
 
@@ -1680,7 +1680,7 @@ Every shared rule of the javascript and typescript configurations reads the file
 too, with the same limits. A rule this configuration turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The configuration claims `.vue`, so the list of code files of the ESLint config holds it. The config
+The configuration owns `.vue`, so the list of code files of the ESLint config holds it. The config
 gains the `flat/recommended` blocks of the Vue plugin and of the accessibility plugin, with every
 rule that is on set to error. One more block over `.vue` files sets the parser, and hands it the
 TypeScript parser for the script where typescript is selected. It adds: `vue/no-v-html`,
@@ -1727,12 +1727,12 @@ Rule files:
 
 Kind: framework. Requires: typescript, react. Recommends: css, configs.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                                          |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Detect                  | `next` in dependencies; `next.config.{js,mjs,ts}`                                                                                                                        |
-| Claims                  | `app/**`, `pages/**`, `src/app/**`, `src/pages/**`, `middleware.{js,ts}`, `proxy.{js,ts}`, `next.config.*`, `next-env.d.ts` (generated), `public/**` (binary and static) |
+| Owners                  | `app/**`, `pages/**`, `src/app/**`, `src/pages/**`, `middleware.{js,ts}`, `proxy.{js,ts}`, `next.config.*`, `next-env.d.ts` (generated), `public/**` (binary and static) |
 | Architecture it assumes | the App Router layout, because `create-next-app` produces it; nothing else                                                                                               |
 
 Tools:
@@ -1793,15 +1793,15 @@ present; `packages/cli/guides/library/next-intl/NEXTINTL.md` when `next-intl` is
 
 ### Configuration configs
 
-Kind: policy. Requires: formatting. Recommends: spelling. Claims every data and configuration file no
+Kind: policy. Requires: formatting. Recommends: spelling. Owners every data and configuration file no
 language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked only.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                                                                                                                                                                         |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect                  | any repository                                                                                                                                                                                                                                                                                          |
-| Claims                  | `.json`, `.jsonc`, `.json5`, `.yaml`, `.yml`, `.toml`, `.ini`, `.cfg`, `.properties`, `.env`, `.env.*` (tracked ones only), `.plist`, `.entitlements`, `.xcconfig`, `.xcstrings`, `.xml`, `.storyboard`, `.xib`, `.webmanifest`, `.nvmrc`, `.node-version`, `.python-version`, `_headers`, `_redirects` |
+| Owners                  | `.json`, `.jsonc`, `.json5`, `.yaml`, `.yml`, `.toml`, `.ini`, `.cfg`, `.properties`, `.env`, `.env.*` (tracked ones only), `.plist`, `.entitlements`, `.xcconfig`, `.xcstrings`, `.xml`, `.storyboard`, `.xib`, `.webmanifest`, `.nvmrc`, `.node-version`, `.python-version`, `_headers`, `_redirects` |
 | Required check coverage | format, syntax, schema where a schema is known, style, spelling                                                                                                                                                                                                                                         |
 
 Tools:
@@ -1839,7 +1839,7 @@ Checks:
 
 `files/env-example` searches the whole scope for reads and compares them with the
 templates in the scope; a scope with no template has nothing to compare and no finding.
-`.xcstrings` files are claimed here and checked by the xcode configuration.
+`.xcstrings` files are owned here and checked by the xcode configuration.
 
 Settings:
 
@@ -1861,7 +1861,7 @@ ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder t
 Kind: policy. Requires: nothing. Dependency health: advisories, unused, duplicated,
 skewed, foreign lockfiles, ownership, install policy.
 
-Claims:
+Owners:
 
 Every manifest and lockfile: `package.json`, `bun.lock`, `package-lock.json`, `pnpm-lock.yaml`,
 `yarn.lock`, `bunfig.toml`, `.npmrc`, `pnpm-workspace.yaml`, `pyproject.toml`, `uv.lock`,
@@ -1942,12 +1942,12 @@ Rule files:
 
 Kind: framework. Requires: javascript. Recommends: security, vitest.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                             |
 | ----------------------- | --------------------------------------------------------------------------- |
 | Detect                  | `express` in dependencies                                                   |
-| Claims                  | nothing by path; adds rules to the scope's JavaScript checks                |
+| Owners                  | nothing by path; adds rules to the scope's JavaScript checks                |
 | Architecture it assumes | none. Routers, handlers and middleware live wherever the project puts them. |
 
 Tools:
@@ -1983,12 +1983,12 @@ Rule files:
 
 Kind: language. Requires: formatting. Recommends: naming, structure, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                           |
 | ----------------------- | --------------------------------------------------------- |
 | Detect                  | `.sql`, `.pgsql`, `.psql` in the tree                     |
-| Claims                  | `.sql`, `.pgsql`, `.psql`                                 |
+| Owners                  | `.sql`, `.pgsql`, `.psql`                                 |
 | Required check coverage | format, syntax, style, structure, naming, prose, spelling |
 
 Tools:
@@ -2049,7 +2049,7 @@ and grants belong to supabase.
 
 Kind: policy. Requires: nothing. Offered when a manifest exists; selected only on acceptance.
 
-Claims:
+Owners:
 
 The installed dependency tree per ecosystem.
 
@@ -2098,12 +2098,12 @@ None.
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                          |
 | ----------------------- | ------------------------------------------------------------------------ |
 | Detect                  | `.js`, `.jsx`, `.mjs`, `.cjs` in the tree; a `node` shebang              |
-| Claims                  | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
+| Owners                  | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
 | Required check coverage | format, syntax, style, types, structure, naming, prose, spelling         |
 
 Tools:
@@ -2131,7 +2131,7 @@ Checks:
 
 Settings:
 
-`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform kit claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform kit owns it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
@@ -2183,12 +2183,12 @@ Rule files:
 Kind: tool. Requires: configs. Recommends: swift. macOS only; every check here passes as a platform skip
 elsewhere.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect                  | `*.xcodeproj`, `*.xcworkspace`                                                                                                                                                               |
-| Claims                  | `project.pbxproj`, `*.xcscheme`, `*.xctestplan`, `*.xcconfig`, `*.entitlements`, `Info.plist` and other `.plist`, `*.xcstrings`, `*.storyboard`, `*.xib`, `Assets.xcassets/**/Contents.json` |
+| Owners                  | `project.pbxproj`, `*.xcscheme`, `*.xctestplan`, `*.xcconfig`, `*.entitlements`, `Info.plist` and other `.plist`, `*.xcstrings`, `*.storyboard`, `*.xib`, `Assets.xcassets/**/Contents.json` |
 | Architecture it assumes | none. Does not assume MVVM.                                                                                                                                                                  |
 
 Tools:
@@ -2294,12 +2294,12 @@ Rule files:
 
 Kind: platform. Requires: postgres. Recommends: typescript, configs, security.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Detect                  | `supabase/config.toml`                                                                                                                           |
-| Claims                  | `supabase/migrations/**`, `supabase/functions/**`, `supabase/config.toml`, `supabase/seed.sql`, the generated types file the repository declares |
+| Owners                  | `supabase/migrations/**`, `supabase/functions/**`, `supabase/config.toml`, `supabase/seed.sql`, the generated types file the repository declares |
 | Architecture it assumes | the Supabase CLI layout, because the CLI dictates it                                                                                             |
 
 Tools:
@@ -2379,12 +2379,12 @@ Kind: tool. Requires: typescript or javascript.
 NestJS and React Native test with Jest by default, so this configuration ships beside `vitest`.
 A repository selects the one its tests run with.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                                                   |
 | ------ | ------------------------------------------------------------------------------------------------- |
 | Detect | `jest` in dependencies, or a `jest.config.*` file                                                 |
-| Claims | test files: `**/*.{test,spec}.{ts,tsx,js,jsx}`, `**/tests/**`, `**/__tests__/**`, `jest.config.*` |
+| Owners | test files: `**/*.{test,spec}.{ts,tsx,js,jsx}`, `**/tests/**`, `**/__tests__/**`, `jest.config.*` |
 
 Tools:
 
@@ -2486,12 +2486,12 @@ Rule files:
 
 Kind: tool. Requires: configs.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                        |
 | ------ | -------------------------------------- |
 | Detect | `ansible.cfg` at any depth             |
-| Claims | `ansible.cfg`; YAML stays with configs |
+| Owners | `ansible.cfg`; YAML stays with configs |
 
 Tools:
 
@@ -2515,9 +2515,9 @@ where a playbook exists.
 
 Kind: policy. Requires: nothing. Recommended by every language kit.
 
-Claims:
+Owners:
 
-Every text file. Binaries, lockfiles, generated files and vendored files are excluded by nature.
+Every text file. Binaries, lockfiles, generated files and vendored files are excluded by kind.
 
 Tools:
 
@@ -2525,7 +2525,7 @@ typos.
 
 Generated configuration:
 
-`.gspot/config/typos.toml` with a `typos.toml` pointer: `[files] extend-exclude` from natures and
+`.gspot/config/typos.toml` with a `typos.toml` pointer: `[files] extend-exclude` from kinds and
 `[tools.typos] exclude`; `[default.extend-words]` from `[tools.typos] words`, each with its
 reason as a comment.
 
@@ -2574,12 +2574,12 @@ Rule files:
 
 Kind: platform. Requires: javascript. Recommends: security, configs.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                                           |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect                  | `wrangler.jsonc`, `wrangler.toml`, `functions/_middleware.js`, `functions/_worker.js`, `_headers`, `_redirects`, `@opennextjs/cloudflare` in dependencies |
-| Claims                  | `wrangler.*`, `functions/**`, `_headers`, `_redirects`, `cloudflare-env.d.ts` (generated), `.open-next/**` (build output, untracked)                      |
+| Owners                  | `wrangler.*`, `functions/**`, `_headers`, `_redirects`, `cloudflare-env.d.ts` (generated), `.open-next/**` (build output, untracked)                      |
 | Architecture it assumes | Pages Functions under `functions/` and the two underscore files, because Cloudflare reads them there                                                      |
 
 Tools:
@@ -2588,7 +2588,7 @@ wrangler, zizmor is not relevant; the Semgrep landing pack for workers.
 
 Generated configuration:
 
-The files this configuration claims get the `worker` runtime (the rule in [javascript.md](#configuration-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
+The files this configuration owns get the `worker` runtime (the rule in [javascript.md](#configuration-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
 `functions/**` and `_worker.*`.
 
 Checks:
@@ -2616,7 +2616,7 @@ Rule files:
 Kind: policy. Requires: nothing. Documentation integrity: links, anchors, headings,
 stale paths, and the agent files.
 
-Claims:
+Owners:
 
 Every `.md` file, `CLAUDE.md`, `AGENTS.md`, the rules directory, `README.md` at every scope.
 
@@ -2659,12 +2659,12 @@ Rule files:
 
 Kind: tool. Requires: configs. Recommends: spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------- |
 | Detect                  | `Dockerfile*`, `*.dockerfile`, `docker-compose*.yml`, `compose*.yml`, `.dockerignore` |
-| Claims                  | the same                                                                              |
+| Owners                  | the same                                                                              |
 | Required check coverage | syntax, style, security, spelling                                                     |
 
 Tools:
@@ -2706,12 +2706,12 @@ The compose file itself is a configs YAML with the Compose schema.
 
 Kind: framework. Requires: typescript. Recommends: jest, security, dependencies.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                 |
 | ------ | ----------------------------------------------- |
 | Detect | `@nestjs/core` in dependencies, `nest-cli.json` |
-| Claims | `nest-cli.json`                                 |
+| Owners | `nest-cli.json`                                 |
 
 What the framework needs from the other configurations:
 
@@ -2802,7 +2802,7 @@ Generated configuration:
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.editorconfig`                      | none; gspot owns the whole file at its conventional path, with the header                              | `end_of_line`, `insert_final_newline`, `charset`, `trim_trailing_whitespace`, indent per extension, `switch_case_indent` for shell; `[tools.editorconfig.extra]` for a section gspot does not render |
 | `.gspot/config/prettier.json`        | `.prettierrc.json` (the whole document is the path)                                                    | `tabWidth`, `printWidth`, `singleQuote`, `trailingComma`, `semi`, `arrowParens: always`, `embeddedLanguageFormatting: off`                                                                           |
-| `.prettierignore`                    | none; gspot owns the whole file at the root, with the header, for editors (the gate passes file lists) | by nature: generated, vendored, binary, lockfiles                                                                                                                                                    |
+| `.prettierignore`                    | none; gspot owns the whole file at the root, with the header, for editors (the gate passes file lists) | by kind: generated, vendored, binary, lockfiles                                                                                                                                                      |
 | shfmt flags                          | in the bash check command                                                                              | `-i <width> -ci -s`                                                                                                                                                                                  |
 | ruff format section                  | in `.gspot/config/ruff.toml`                                                                           | `indent-width`, `quote-style`, `line-ending`                                                                                                                                                         |
 | markdownlint MD007                   | in `.gspot/config/markdownlint.jsonc`                                                                  | `indent`                                                                                                                                                                                             |
@@ -2828,12 +2828,12 @@ None. Formatting decisions are the tools' and are not restated in prose.
 
 Kind: framework. Requires: python. Recommends: security, pytest.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                                                              |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Detect                  | `fastapi` in `pyproject.toml` dependencies                                                                                                   |
-| Claims                  | nothing by path                                                                                                                              |
+| Owners                  | nothing by path                                                                                                                              |
 | Architecture it assumes | `APIRouter` composition, `Depends` injection, Pydantic models at the boundary, lifespan handlers: what the framework's own tutorial produces |
 
 Tools:
@@ -2871,9 +2871,9 @@ with the shipped policy in [08-naming-policy.md](08-naming-policy.md).
 Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
 `generate` and `service`. Case, length, digit, ordering, and layout preferences also run at `all`. Only demonstrated external-contract defects qualify for recommended naming checks.
 
-Claims:
+Owners:
 
-Every file a language kit claims, plus every directory name, and file name in the tree
+Every file a language kit owns, plus every directory name, and file name in the tree
 outside build output and vendored paths.
 
 Checks:
@@ -2909,12 +2909,12 @@ Rule files:
 
 Kind: language. Requires: javascript, structure. Recommends: naming, formatting, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                          |
 | ----------------------- | ---------------------------------------------------------------------------------------- |
 | Detect                  | `.ts`, `.tsx`, `.mts`, `.cts` in the tree; `tsconfig.json`; `typescript` in dependencies |
-| Claims                  | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, `tsconfig.json`, `tsconfig.*.json`               |
+| Owners                  | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, `tsconfig.json`, `tsconfig.*.json`               |
 | Required check coverage | format, syntax, style, types, structure, naming, prose, spelling                         |
 
 Tools:
@@ -2923,11 +2923,11 @@ Tools:
 
 Generated configuration:
 
-| Target                              | Stub                                                                           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ----------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/config/eslint.config.mjs`   | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | the flat config: ignores by nature; typescript-eslint `strictTypeChecked` over typed files; sonarjs and unicorn `recommended` bases with the listed exceptions; the rule sets from the ledger section 3 and the additions (`strict-boolean-expressions`, `explicit-module-boundary-types`, `no-unnecessary-condition`, `only-throw-error`, `prefer-optional-chain`, `no-magic-numbers`, `eqeqeq`, `no-param-reassign`, `prefer-const`, `max-depth` 3, `complexity`, `max-statements` from `[limits]`, `no-console` in source); `@gspot/eslint-plugin` with limits from `[limits]`, `types-placement` from `[architecture] types_directory`, `import-direction` from `[architecture] roles`, `no-reexports` from `[structure] reexports`, `env-access-owner` from `roles.env`, `private-before-public`, `import-path-style` per file class from `[tools.eslint] import_style`; `import-x/exports-last`; `boundaries/element-types` from `[architecture] elements` and `allow`; test overrides; prettier last |
-| `.gspot/config/tsconfig.check.json` | none; it extends the `tsconfig.json` of the repository                         | `strict` at `recommended`, and four more flags at `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `.gspot/config/knip.json`           | none                                                                           | entry points from the framework kit or `[tools.knip] entry`; project globs from claims                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Target                              | Stub                                                                           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/config/eslint.config.mjs`   | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | the flat config: ignores by kind; typescript-eslint `strictTypeChecked` over typed files; sonarjs and unicorn `recommended` bases with the listed exceptions; the rule sets from the ledger section 3 and the additions (`strict-boolean-expressions`, `explicit-module-boundary-types`, `no-unnecessary-condition`, `only-throw-error`, `prefer-optional-chain`, `no-magic-numbers`, `eqeqeq`, `no-param-reassign`, `prefer-const`, `max-depth` 3, `complexity`, `max-statements` from `[limits]`, `no-console` in source); `@gspot/eslint-plugin` with limits from `[limits]`, `types-placement` from `[architecture] types_directory`, `import-direction` from `[architecture] roles`, `no-reexports` from `[structure] reexports`, `env-access-owner` from `roles.env`, `private-before-public`, `import-path-style` per file class from `[tools.eslint] import_style`; `import-x/exports-last`; `boundaries/element-types` from `[architecture] elements` and `allow`; test overrides; prettier last |
+| `.gspot/config/tsconfig.check.json` | none; it extends the `tsconfig.json` of the repository                         | `strict` at `recommended`, and four more flags at `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `.gspot/config/knip.json`           | none                                                                           | entry points from the framework kit or `[tools.knip] entry`; project globs from owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 Checks:
 
@@ -2986,12 +2986,12 @@ Runtime-specific rules (Node, browser, workers) come from the runtime detected i
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                                                            |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Detect                  | `.sh`, `.bash`, `.zsh`, `.bats` in the tree; shell shebangs                                                |
-| Claims                  | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks, and task files |
+| Owners                  | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks, and task files |
 | Required check coverage | format, syntax, style, structure, naming, prose, spelling                                                  |
 
 Tools:
@@ -3018,7 +3018,7 @@ Checks:
 | `structure/bash-interpreter`                                                    | commit | shebang is `#!/usr/bin/env bash` or `#!/bin/bash`; line 2 is `#`; line 3 is a concrete description; line 4 is `# Runtime: Bash N.N+, macOS and Linux.` (or `Linux`); `set -euo pipefail` and `shopt -s inherit_errexit` before the first command in an executable; Bash 4 features named in the header; computed directory constants use `CDPATH=`, `cd --`, `pwd -P` and a failure path; `main "$@"` last in an executable; top-level assignments `readonly`; a library (sourced) file is declarative at top level and not executable; an executable file has the bit set through git; every `mktemp` has a `trap` that removes it |
 | `structure/doc-comment`                                                         | commit | function header `# name: summary`, no vague summary words (`handle`, `perform`, `execute`, `do`), doc sections when present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `structure/duplicate-functions`                                                 | commit | normalized bodies, min lines from `[limits.bash]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `structure/unused-functions`, `dead-parameters`                                 | commit | reachability across every claimed file; reasoned `gspot-ignore` comments                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `structure/unused-functions`, `dead-parameters`                                 | commit | reachability across every owned file; reasoned `gspot-ignore` comments                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `structure/private-prefix`                                                      | commit | a function called from no other file starts with `_`; `main` and hook entry points exempt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `structure/private-before-public`                                               | commit | `_` functions above the rest; `main` last                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `structure/trivial-function`                                                    | commit | executable statement threshold; every implemented function; reasoned narrow `gspot-ignore` comment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -3050,16 +3050,16 @@ Not covered here:
 
 Zsh-specific lint and formatting remain outside this configuration. Zsh syntax uses
 `zsh -n`; Bash syntax uses `bash -n`; Bats syntax uses `bats --count`. ShellCheck
-and shfmt claim Bash and Bats files. Broader dialect-aware structure analysis
+and shfmt own Bash and Bats files. Broader dialect-aware structure analysis
 remains open.
 
 ### Configuration security
 
 Kind: policy. Requires: nothing. Static analysis for security patterns, per language. One SAST tool.
 
-Claims:
+Owners:
 
-Every file a language kit claims.
+Every file a language kit owns.
 
 Tools:
 
@@ -3101,12 +3101,12 @@ Rule files:
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
-Detects and claims:
+Detects and owns:
 
 |                         |                                                                    |
 | ----------------------- | ------------------------------------------------------------------ |
 | Detect                  | `.html`, `.htm` in the tree outside build output                   |
-| Claims                  | `.html`, `.htm`; inline `<script>` bodies are handed to javascript |
+| Owners                  | `.html`, `.htm`; inline `<script>` bodies are handed to javascript |
 | Required check coverage | format, syntax, style, structure, spelling                         |
 
 Tools:
@@ -3151,7 +3151,7 @@ jscpd.
 Generated configuration:
 
 `.gspot/config/jscpd.json`: `mode: strict`, `minLines` 8, `minTokens` 40, `threshold` 4 percent,
-formats from the selected languages, ignore by nature, reporters `console` and `json`.
+formats from the selected languages, ignore by kind, reporters `console` and `json`.
 
 Checks:
 
@@ -3174,12 +3174,12 @@ Rule files:
 
 Kind: tool. Requires: javascript.
 
-Detects and claims:
+Detects and owns:
 
 |        |                                                                                                 |
 | ------ | ----------------------------------------------------------------------------------------------- |
 | Detect | `vitest` in dependencies                                                                        |
-| Claims | test files: `**/*.{test,spec}.{ts,tsx,js}`, `**/tests/**`, `**/__tests__/**`, `vitest.config.*` |
+| Owners | test files: `**/*.{test,spec}.{ts,tsx,js}`, `**/tests/**`, `**/__tests__/**`, `vitest.config.*` |
 
 Tools:
 

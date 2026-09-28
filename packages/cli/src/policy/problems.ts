@@ -36,18 +36,18 @@ function ignoreProblems(policy: Policy): PolicyProblem[] {
 
 function declarationProblems(policy: Policy): PolicyProblem[] {
     if (!policy.requireReasons) return [];
-    return ['generated', 'vendored'].flatMap((nature) =>
+    return ['generated', 'vendored'].flatMap((kind) =>
         policy.declarations
-            .filter((entry) => entry.nature === nature)
+            .filter((entry) => entry.kind === kind)
             .flatMap((entry, index) => {
-                const where = `[[${entry.nature}]] ${entry.paths.join(', ')}`;
+                const where = `[[${entry.kind}]] ${entry.paths.join(', ')}`;
                 const [firstPath = ''] = entry.paths;
                 return located(
-                    [nature, index, 'reason'],
+                    [kind, index, 'reason'],
                     needReason(
                         where,
                         entry.reason,
-                        `gspot set ${entry.nature} ${quoteArgument(firstPath)} --reason "..."`,
+                        `gspot set ${entry.kind} ${quoteArgument(firstPath)} --reason "..."`,
                     ),
                 );
             }),

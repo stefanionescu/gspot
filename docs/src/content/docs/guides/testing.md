@@ -64,7 +64,7 @@ apply at either level. Use [custom checks](/guides/custom-checks/) for another t
 
 ## Swift tests
 
-Select `xctest` to generate a nested `.swiftlint.yml` for each claimed `Tests` or `*Tests`
+Select `xctest` to generate a nested `.swiftlint.yml` for each owned `Tests` or `*Tests`
 folder. These files disable `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in
 tests. Source files retain those rules. Nested policy scopes retain their own configuration.
 

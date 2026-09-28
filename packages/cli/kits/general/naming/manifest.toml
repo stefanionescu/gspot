@@ -4,7 +4,7 @@ kind = "general"
 title = "Naming"
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
-[claims]
+[owners]
 from_languages = true
 
 [[checks]]

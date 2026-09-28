@@ -96,7 +96,7 @@ export async function fileIntegrity(input: EngineInput): Promise<Finding[]> {
     for (const file of input.files) {
         const dot = file.path.lastIndexOf('.');
         const language = dot === -1 ? undefined : LANGUAGE_BY_EXTENSION[file.path.slice(dot)];
-        if (language === undefined || file.nature !== 'source' || !isConfig(file.path)) continue;
+        if (language === undefined || file.kind !== 'source' || !isConfig(file.path)) continue;
         findings.push(...(await fileFindings(input, file, language)));
     }
     return findings;

@@ -10,10 +10,10 @@ description = "Svelte components: ESLint reads the markup and the script togethe
 dependencies = ["svelte"]
 extensions = [".svelte"]
 
-[claims]
+[owners]
 extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "eslint-plugin-svelte"
@@ -65,7 +65,7 @@ fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 tool = "eslint"
-claims = {extensions = [".svelte"]}
+owners = {extensions = [".svelte"]}
 coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
@@ -82,7 +82,7 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "svelte-check"
 replaces = "typescript/tsc"
-claims = {extensions = [".svelte"]}
+owners = {extensions = [".svelte"]}
 coverage = ["types", "syntax"]
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."

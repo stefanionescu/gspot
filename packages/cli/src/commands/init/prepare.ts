@@ -90,14 +90,14 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((entry) => entry.path);
     const repo = await readRepository(root, [], [], [], new Set(runtime));
     if (repo.hasGit) assertCleanTree(root, options);
-    const facts = readManifests(root, repo.files);
-    const workspace = proposedScopes(root, repo.files, facts, manifests.values());
-    const inputs = { root, repo, facts, workspace: workspace.scopes, manifests };
+    const fields = readManifests(root, repo.files);
+    const workspace = proposedScopes(root, repo.files, fields, manifests.values());
+    const inputs = { root, repo, fields, workspace: workspace.scopes, manifests };
     const detected = selectForInit({ ...inputs, options });
-    const tooling = existingTooling(root, repo.files, facts);
+    const tooling = existingTooling(root, repo.files, fields);
     if (!options.json) printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
-    const sources = repo.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const sources = repo.files.filter((file) => file.kind === 'source').map((file) => file.path);
     const kept = await collectKept(root, tooling, selection.selectedIds, sources);
     const answers = await askInitQuestions(root, options, tooling, kept.formatter);
     const tasks = proposedRunnerTasks(root, answers.runner);
@@ -105,7 +105,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const planning: Planning = { root, options, tooling, selection, everySelected, answers, kept };
-    const settings = detectedSettings(everySelected, facts, repo.files);
+    const settings = detectedSettings(everySelected, fields, repo.files);
     const proposed = { ...plan(root, selection, answers, kept, settings), runnerTasks: tasks.names };
     const { policyText, policy } = policyTextFor(planning, proposed);
     return {

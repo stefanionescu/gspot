@@ -101,7 +101,7 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
  */
 export async function fences(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const markdown = input.files.filter((entry) => entry.nature === 'source' && entry.path.endsWith('.md'));
+    const markdown = input.files.filter((entry) => entry.kind === 'source' && entry.path.endsWith('.md'));
     for (const file of markdown) findings.push(...(await fileFindings(input, file.path)));
     return findings;
 }

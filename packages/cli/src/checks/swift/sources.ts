@@ -19,7 +19,7 @@ export function visibilityOf(node: Node): string {
 }
 
 /**
- * Parses every claimed Swift source file.
+ * Parses every owned Swift source file.
  * @param input the engine input
  * @returns the sources
  */
@@ -29,7 +29,7 @@ export async function swiftSources(
     const sources: SwiftSource[] = [];
     try {
         for (const file of input.files) {
-            if (file.nature !== 'source' || !file.path.endsWith('.swift')) continue;
+            if (file.kind !== 'source' || !file.path.endsWith('.swift')) continue;
             const text = readSource(input.root, file.path, input.reads).toString('utf8');
             const tree = await parseSource('swift', text, input);
             if (tree === null) throw new Error('The Swift parser returned no tree.');

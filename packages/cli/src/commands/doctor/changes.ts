@@ -94,16 +94,16 @@ function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
  * @returns what changed after init, by kind
  */
 export function changeReport(session: Session): ChangeReport {
-    const facts = readManifests(session.root, session.repository.files);
+    const fields = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
-    const tooling = existingTooling(session.root, session.repository.files, facts);
+    const tooling = existingTooling(session.root, session.repository.files, fields);
     const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
     });
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detectedNotSelected: detectKits(session.repository.files, session.manifests, facts)
+        detectedNotSelected: detectKits(session.repository.files, session.manifests, fields)
             .filter((plan) => !selected.has(plan.configuration))
             .filter((plan) => {
                 const manifest = session.manifests.get(plan.configuration);

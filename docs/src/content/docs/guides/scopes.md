@@ -41,7 +41,7 @@ The deepest containing scope owns a file. Files outside nested scopes belong to 
 A project-wide check triggered by a path can inspect other files in that project. Generated
 configuration lives under `.gspot/config/<path>/` when the owning tool needs a separate scope file.
 
-`gspot explain <file>` reports the scope and claims. Use `./` for a filename that also names a
+`gspot explain <file>` reports the scope and owns. Use `./` for a filename that also names a
 kit or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`
 explains the file.
 

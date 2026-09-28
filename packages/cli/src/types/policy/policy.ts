@@ -157,8 +157,8 @@ export type ToolTable = Record<string, unknown> & {
 };
 export type IgnoreEntry = NonNullable<RawPolicy['ignore']>[number];
 export type FileDeclaration =
-    | (RawPolicy['generated'][number] & { nature: 'generated' })
-    | (RawPolicy['vendored'][number] & { nature: 'vendored' });
+    | (RawPolicy['generated'][number] & { kind: 'generated' })
+    | (RawPolicy['vendored'][number] & { kind: 'vendored' });
 export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
 export type PolicyScope = { path: string; kits: string[] };
 export type Policy = {

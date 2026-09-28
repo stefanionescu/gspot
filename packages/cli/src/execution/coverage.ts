@@ -1,16 +1,16 @@
-// Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
+// Unchecked and partial files: what no configuration owners, and what falls short of its required check kinds.
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { claimants, claimedByClaims } from '#cli/kits/claims.ts';
+import { ownedBy, ownerOf } from '#cli/kits/owners.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { SOURCE_COVERAGE_KINDS } from '#cli/config/execution/execution.ts';
+import { ownedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';
-import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 
 function endingCoverage(session: Session, provided: Map<string, Set<string>>): CoverageReport['endings'] {
     const groups = new Map<string, CoverageReport['endings'][number]>();
     for (const file of session.repository.files) {
-        if (file.nature !== 'source') continue;
+        if (file.kind !== 'source') continue;
         const ending = extensionOf(file.path);
         const scope = scopeOf(file.path, session.repository.scopes).path;
         const kinds = [...SOURCE_COVERAGE_KINDS].filter((kind) => provided.get(file.path)?.has(kind) === true);
@@ -36,13 +36,13 @@ function coverSource(
 ): void {
     const scope = scopeOf(file.path, session.repository.scopes);
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
-    const owners = selection === undefined ? [] : claimants(file, selection.selected);
+    const owners = selection === undefined ? [] : ownerOf(file, selection.selected);
     const kinds = provided.get(file.path);
     if (kinds === undefined) {
         if (!supported.has(file.path)) return;
         report.unchecked.push({
             path: file.path,
-            reason: 'no enabled check claims it',
+            reason: 'no enabled check owners it',
             remedy: 'gspot set generated <path>, gspot set vendored <path>, or gspot add <kit>',
         });
         return;
@@ -67,7 +67,7 @@ export function coverageReport(session: Session): CoverageReport {
         manifests.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
                 check.coverage.some((kind) => SOURCE_COVERAGE_KINDS.has(kind))
-                    ? claimedByClaims(check.claims ?? manifest.claims, manifests, session.repository.files, '').map(
+                    ? ownedBy(check.owners ?? manifest.owners, manifests, session.repository.files, '').map(
                           (file) => file.path,
                       )
                     : [],
@@ -77,11 +77,11 @@ export function coverageReport(session: Session): CoverageReport {
     const provided = new Map<string, Set<string>>();
     for (const check of configuredChecks(session)) {
         const coverage = new Set(check.spec.coverage);
-        for (const file of claimedInputs(session, check))
+        for (const file of ownedInputs(session, check))
             provided.set(file.path, (provided.get(file.path) ?? new Set<string>()).union(coverage));
     }
     for (const file of session.repository.files) {
-        if (file.nature === 'source') coverSource(session, file, report, provided, supported);
+        if (file.kind === 'source') coverSource(session, file, report, provided, supported);
     }
     report.endings = endingCoverage(session, provided);
     return report;

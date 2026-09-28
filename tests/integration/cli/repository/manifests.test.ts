@@ -8,17 +8,17 @@ import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-test('Python workspace detection uses captured manifest facts', async () => {
+test('Python workspace detection uses captured manifest fields', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'pyproject.toml': '[project]\ndependencies = ["fastapi>=1"]\n[tool.uv.workspace]\nmembers = ["api"]\n',
         'api/main.py': 'print("ready")\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const facts = readManifests(sandbox.path, repository.files);
-    expect(facts[0]!.dependencies).toStrictEqual({ fastapi: 'fastapi>=1' });
+    const fields = readManifests(sandbox.path, repository.files);
+    expect(fields[0]!.dependencies).toStrictEqual({ fastapi: 'fastapi>=1' });
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[invalid');
-    expect(workspaceScopes(sandbox.path, facts).scopes.map((scope) => scope.path)).toStrictEqual(['api']);
+    expect(workspaceScopes(sandbox.path, fields).scopes.map((scope) => scope.path)).toStrictEqual(['api']);
     expect(() => readManifests(sandbox.path, repository.files)).toThrow('pyproject.toml');
 });
 
@@ -44,8 +44,8 @@ test('Python group includes coexist with dependency detection', async () => {
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const facts = readManifests(sandbox.path, repository.files);
-    expect(facts[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
+    const fields = readManifests(sandbox.path, repository.files);
+    expect(fields[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
 test.each(['package.json', 'pyproject.toml', 'Package.swift', 'Pipfile', 'requirements.txt'])(
@@ -89,17 +89,17 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [`api/${path}`]: source, 'other/readme.txt': 'No Python dependencies.\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const facts = readManifests(sandbox.path, repository.files);
-    expect(Object.keys(facts[0]!.dependencies).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    const fields = readManifests(sandbox.path, repository.files);
+    expect(Object.keys(fields[0]!.dependencies).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'fastapi',
         'friendly-bard',
     ]);
     const manifests = kitManifests();
-    const proposed = detectKits(repository.files, manifests, facts, 'api');
+    const proposed = detectKits(repository.files, manifests, fields, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectKits(repository.files, manifests, facts, 'other').some((entry) => entry.configuration === 'fastapi'),
+        detectKits(repository.files, manifests, fields, 'other').some((entry) => entry.configuration === 'fastapi'),
     ).toBe(false);
     expect(readFileSync(join(sandbox.path, 'api', path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');

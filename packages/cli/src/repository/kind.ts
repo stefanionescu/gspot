@@ -1,8 +1,8 @@
-// Every tracked path has one nature: source, generated, vendored, binary.
+// Every tracked path has one kind: source, generated, vendored, binary.
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
-import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.ts';
+import type { Verdict, Attribute } from '#cli/types/repository/repository.ts';
 
 import {
     LICENSE_FILE,
@@ -32,35 +32,33 @@ function attributeRule(line: string): Attribute | undefined {
     return { matcher: pathMatcher([pattern.includes('/') ? bare : `**/${pattern}`]), attributes };
 }
 
-function declaredNature(path: string, declarations: FileDeclaration[]): NatureVerdict | undefined {
+function declaredKind(path: string, declarations: FileDeclaration[]): Verdict | undefined {
     for (const entry of declarations) {
         if (!pathMatcher(entry.paths)(path)) continue;
         return {
-            nature: entry.nature,
-            source: entry.nature,
-            ...(entry.nature === 'generated' && entry.produced_by !== undefined
-                ? { producedBy: entry.produced_by }
-                : {}),
+            kind: entry.kind,
+            source: entry.kind,
+            ...(entry.kind === 'generated' && entry.produced_by !== undefined ? { producedBy: entry.produced_by } : {}),
         };
     }
     return undefined;
 }
 
-function attributeNature(attributes: string[]): NatureVerdict | undefined {
+function attributeKind(attributes: string[]): Verdict | undefined {
     if (attributes.some((attribute) => GENERATED_ATTRIBUTES.has(attribute)))
-        return { nature: 'generated', source: '.gitattributes' };
+        return { kind: 'generated', source: '.gitattributes' };
     if (attributes.some((attribute) => VENDORED_ATTRIBUTES.has(attribute)))
-        return { nature: 'vendored', source: '.gitattributes' };
+        return { kind: 'vendored', source: '.gitattributes' };
     const isBinary = attributes.some(
         (attribute) => BINARY_ATTRIBUTES.has(attribute) || attribute.startsWith('filter=lfs'),
     );
-    return isBinary ? { nature: 'binary', source: '.gitattributes' } : undefined;
+    return isBinary ? { kind: 'binary', source: '.gitattributes' } : undefined;
 }
 
-function managedNature(path: string): NatureVerdict | undefined {
-    if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { nature: 'vendored', source: 'license' };
-    if (INSTALLED_PREFIXES.some((prefix) => path.startsWith(prefix))) return { nature: 'generated', source: 'gspot' };
-    if (isValePackageFile(path)) return { nature: 'vendored', source: 'gspot' };
+function managedKind(path: string): Verdict | undefined {
+    if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { kind: 'vendored', source: 'license' };
+    if (INSTALLED_PREFIXES.some((prefix) => path.startsWith(prefix))) return { kind: 'generated', source: 'gspot' };
+    if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
     return undefined;
 }
 
@@ -81,31 +79,31 @@ export function isValePackageFile(path: string): boolean {
  * @param isBinary whether the content sniff found binary bytes.
  * @param prefix the captured first bytes.
  * @param attributes the captured attribute rules.
- * @returns the nature and where it came from.
+ * @returns the kind and where it came from.
  */
-export function natureOf(
+export function kindOf(
     path: string,
     declarations: FileDeclaration[],
     isBinary: boolean,
     prefix: Buffer,
     attributes: Attribute[],
-): NatureVerdict {
+): Verdict {
     const matched = attributes.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
-    const declared = declaredNature(path, declarations) ?? attributeNature(matched);
+    const declared = declaredKind(path, declarations) ?? attributeKind(matched);
     if (declared) return declared;
-    if (isBinary) return { nature: 'binary', source: 'content' };
-    const managed = managedNature(path);
+    if (isBinary) return { kind: 'binary', source: 'content' };
+    const managed = managedKind(path);
     if (managed) return managed;
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    if (GENERATED_BANNERS.some((banner) => banner.test(start))) return { nature: 'generated', source: 'banner' };
+    if (GENERATED_BANNERS.some((banner) => banner.test(start))) return { kind: 'generated', source: 'banner' };
     if (
         path
             .split('/')
             .slice(0, -1)
             .some((segment) => VENDORED_DIRECTORIES.includes(segment))
     )
-        return { nature: 'vendored', source: 'directory' };
-    return { nature: 'source', source: 'default' };
+        return { kind: 'vendored', source: 'directory' };
+    return { kind: 'source', source: 'default' };
 }
 
 /**
@@ -125,7 +123,7 @@ export function readAttributes(root: string): Attribute[] {
     }
 }
 
-// What is in the tree: files, natures, tags, scopes, and the tooling init finds.
+// What is in the tree: files, kinds, tags, scopes, and the tooling init finds.
 
 /**
  * Identify environment files that contain machine values rather than templates.

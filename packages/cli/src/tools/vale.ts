@@ -5,10 +5,10 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { isValePackageFile } from '#cli/repository/kind.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/kits.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { rmSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 

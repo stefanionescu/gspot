@@ -16,7 +16,7 @@ import {
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files
-        .filter((file) => file.nature === 'source')
+        .filter((file) => file.kind === 'source')
         .map((file) => ({
             path: file.path,
             text: readSource(input.root, file.path, input.reads).toString('utf8'),

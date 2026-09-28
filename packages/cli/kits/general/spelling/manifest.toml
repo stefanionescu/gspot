@@ -5,9 +5,9 @@ title = "Spelling"
 default = true
 description = "typos over every text file, with the words this repository allows and the reason for each."
 
-[claims]
+[owners]
 paths = ["**"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "typos"

@@ -15,7 +15,7 @@ import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/config/tools/tools.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
-import type { Inspected, ToolContext, VersionRead, PackageFacts, ToolInspection } from '#cli/types/tools/tools.ts';
+import type { Package, Inspected, ToolContext, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
     if (tool.version_regex === undefined) return semver.coerce(text)?.version;
@@ -65,7 +65,7 @@ function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
     try {
         const file = files.read(path);
-        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as PackageFacts);
+        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
         if (parsed?.version === undefined) return missingInspection(tool, hint);
         return libraryInspection(root, tool, path, parsed.version, hint);
     } finally {

@@ -8,9 +8,9 @@ description = "Dependency health: known advisories, one version for each depende
 [detect]
 filenames = ["package.json", "pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
 
-[claims]
+[owners]
 filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]
-natures = ["source", "generated"]
+kinds = ["source", "generated"]
 
 [[tools]]
 name = "osv-scanner"
@@ -94,7 +94,7 @@ stage = "push"
 runs = "once"
 command = ["syncpack", "lint", "--config", "{config:syncpack}"]
 tool = "syncpack"
-claims = {filenames = ["package.json"]}
+owners = {filenames = ["package.json"]}
 coverage = ["consistency"]
 output = {format = "lines"}
 summary = "Checks that every workspace package resolves each dependency to one version."
@@ -110,7 +110,7 @@ stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "manifest-policy"
-claims = {filenames = ["package.json"]}
+owners = {filenames = ["package.json"]}
 coverage = ["consistency"]
 summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
 why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
@@ -139,7 +139,7 @@ stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "install-policy"
-claims = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
+owners = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
 coverage = ["consistency"]
 summary = "Checks that the install configuration waits out a minimum release age, and names the security scanner the policy asks for."
 why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."

@@ -3,7 +3,7 @@ import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/nextjs.ts';
 
 function paths(input: EngineInput): string[] {
-    return input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    return input.files.filter((file) => file.kind === 'source').map((file) => file.path);
 }
 /**
  * One finding for each route segment that holds a page and a route handler.

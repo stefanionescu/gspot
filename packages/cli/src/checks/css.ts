@@ -141,7 +141,7 @@ function definedClasses(text: string, path: string): string[] {
  * @returns the findings
  */
 export function cssModuleUsage(input: EngineInput): Finding[] {
-    const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     const code = paths
         .filter((path) => CODE_SUFFIX.test(path))
         .map((path) => ({ path, text: readSource(input.root, path, input.reads).toString('utf8') }));

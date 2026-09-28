@@ -17,7 +17,7 @@ function exportList(statement: Node): Node | undefined {
 }
 
 /**
- * Parses every claimed Python source file.
+ * Parses every owned Python source file.
  * @param input the engine input
  * @returns the modules
  */
@@ -25,7 +25,7 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
     const modules: PythonModule[] = [];
     try {
         for (const file of input.files) {
-            if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
+            if (file.kind !== 'source' || !file.path.endsWith('.py')) continue;
             const text = readSource(input.root, file.path, input.reads).toString('utf8');
             const tree = await parseSource('python', text, input);
             if (tree === null) throw new Error('The Python parser returned no tree.');

@@ -10,9 +10,9 @@ description = "A NestJS service: the compiler options decorators need, the NestJ
 dependencies = ["@nestjs/core"]
 filenames = ["nest-cli.json"]
 
-[claims]
+[owners]
 filenames = ["nest-cli.json"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "@darraghor/eslint-plugin-nestjs-typed"

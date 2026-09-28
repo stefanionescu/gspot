@@ -430,7 +430,7 @@ and package acceptance checkpoints. Do not restore a full matrix on every interm
 Inventory duplicate jobs, preserve unique manual and report checks, share reusable
 setup where it saves work, and cancel superseded runs in the same workflow/ref group. Choose
 path filtering and required-check behavior together so a skipped required check cannot leave
-an unexplained pending merge gate. Record cold and warm durations before claiming improvement.
+an unexplained pending merge gate. Record cold and warm durations before owning improvement.
 Do not suppress failures, replace platform acceptance with a Linux-only badge, or enable paid
 capacity. This work does not authorize running CI during the active bypass.
 

@@ -171,12 +171,12 @@ async function findings(
 }
 
 /**
- * Inline script, handler attributes and script links in every claimed HTML file.
+ * Inline script, handler attributes and script links in every owned HTML file.
  * @param input the engine input
  * @returns the findings
  */
 export function htmlScripts(input: EngineInput): Promise<Finding[]> {
-    const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     return findings(input, paths, scriptProblems);
 }
 

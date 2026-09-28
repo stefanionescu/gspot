@@ -4,8 +4,8 @@ import * as linguistLanguages from 'linguist-languages';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { Fields, Layout, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Manifest, KitEvidence, LinguistEntry, UnknownLanguage } from '#cli/types/kits.ts';
-import type { TreeFacts, TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
 const LANGUAGE_BY_FILENAME = new Map(
     Object.entries(linguistLanguages).flatMap(([language, value]) =>
@@ -32,19 +32,19 @@ function languageByExtension(): Map<string, string> {
     return map;
 }
 
-function dependencyMap(facts: ManifestFacts[], scope: string): Map<string, string> {
+function dependencyMap(fields: Fields[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
-    for (const fact of facts) {
+    for (const fact of fields) {
         if (scope !== '' && !fact.path.startsWith(`${scope}/`)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
 }
 
-function treeFacts(files: TrackedFile[], facts: ManifestFacts[], scope: string): TreeFacts {
+function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
     const candidates = files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             !file.path.split('/').some((part) => part.toLowerCase() === '.gspot') &&
             (scope === '' || file.path.startsWith(`${scope}/`)),
     );
@@ -57,23 +57,23 @@ function treeFacts(files: TrackedFile[], facts: ManifestFacts[], scope: string):
         names.add(baseName(file.path));
         for (const tag of file.tags) if (tag.startsWith(SHEBANG_TAG)) shebangs.add(tag.slice(SHEBANG_TAG.length));
     }
-    return { candidates, extensionCounts, names, shebangs, dependencies: dependencyMap(facts, scope), scope };
+    return { candidates, extensionCounts, names, shebangs, dependencies: dependencyMap(fields, scope), scope };
 }
 
-function isFileNamed(tree: TreeFacts, name: string): boolean {
+function isFileNamed(tree: Layout, name: string): boolean {
     if (!GLOB_CHARS.test(name)) return tree.names.has(name);
     const matcher = pathMatcher([name]);
     return tree.candidates.some((file) => matcher(baseName(file.path)) || matcher(file.path));
 }
 
-function extensionEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function extensionEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     const extensions = detect.extensions.filter((extension) => tree.extensionCounts.has(extension));
     if (extensions.length === 0) return undefined;
     const count = extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
     return `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`;
 }
 
-function filenameEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function filenameEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     const filename = detect.filenames.find((name) => isFileNamed(tree, name));
     if (filename === undefined) return undefined;
     const matcher = pathMatcher([filename]);
@@ -84,7 +84,7 @@ function filenameEvidence(detect: Manifest['detect'], tree: TreeFacts): string |
 }
 
 // A project file names the project it marks, so the file is the evidence and its folder is a scope (K-48).
-function projectEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function projectEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     for (const pattern of detect.project_files) {
         const found = tree.candidates.find((file) => projectFolder(file.path, pattern) !== undefined);
         if (found !== undefined) return found.path;
@@ -92,29 +92,29 @@ function projectEvidence(detect: Manifest['detect'], tree: TreeFacts): string | 
     return undefined;
 }
 
-function dependencyEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function dependencyEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     const dependency = detect.dependencies.find((name) => tree.dependencies.has(name));
     return dependency === undefined ? undefined : `${dependency} in ${tree.dependencies.get(dependency) ?? ''}`;
 }
 
-function shebangEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function shebangEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     const shebang = detect.shebangs.find((name) => tree.shebangs.has(name));
     return shebang === undefined ? undefined : `${shebang} shebang`;
 }
 
-function pathEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function pathEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     if (detect.paths.length === 0) return undefined;
     const matcher = pathMatcher(detect.paths);
     return tree.candidates.find((file) => matcher(file.path))?.path;
 }
 
-function tagEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+function tagEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     return tree.candidates.find((file) => detect.tags.some((tag) => file.tags.includes(tag)))?.path;
 }
 
 const EVIDENCE = [projectEvidence, filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence];
 
-function planFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefined {
+function planFor(manifest: Manifest, tree: Layout): KitEvidence | undefined {
     const { kit: configuration } = manifest;
     const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
@@ -141,17 +141,17 @@ function planFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefined {
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
  * @param manifests every kit manifest
- * @param facts the package manifests read from the tree
+ * @param fields the package manifests read from the tree
  * @param scope the scope path, '' for the root
  * @returns one plan per configuration with evidence
  */
 export function detectKits(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
-    facts: ManifestFacts[],
+    fields: Fields[],
     scope = '',
 ): KitEvidence[] {
-    const tree = treeFacts(files, facts, scope);
+    const tree = layout(files, fields, scope);
     return manifests
         .values()
         .map((manifest) => planFor(manifest, tree))
@@ -163,15 +163,15 @@ export function detectKits(
  * Selects conditional declarations using the shared file and dependency evidence.
  * @param conditions the detection conditions declared by selected manifests.
  * @param files the repository source inventory.
- * @param facts the package dependency reads.
+ * @param fields the package dependency reads.
  * @returns the matching condition objects.
  */
 export function detectConditions(
     conditions: Manifest['detect'][],
     files: TrackedFile[],
-    facts: ManifestFacts[],
+    fields: Fields[],
 ): Set<Manifest['detect']> {
-    const tree = treeFacts(files, facts, '');
+    const tree = layout(files, fields, '');
     const matched = new Set<Manifest['detect']>();
     for (const condition of conditions)
         if (
@@ -184,7 +184,7 @@ export function detectConditions(
 
 /**
  * Languages in the tree that no configuration detects, named through GitHub Linguist's data. A policy such as
- * formatting claims files of many languages without supporting any, so only the other kinds make a language known.
+ * formatting owners files of many languages without supporting any, so only the other kinds make a language known.
  * @param files the tracked files
  * @param manifests every kit manifest
  * @returns the languages with their extensions and file counts, most files first
@@ -194,14 +194,13 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
         manifests
             .values()
             .filter((manifest) => manifest.kit.kind !== 'general')
-            .flatMap((manifest) => [...manifest.detect.extensions, ...manifest.claims.extensions]),
+            .flatMap((manifest) => [...manifest.detect.extensions, ...manifest.owners.extensions]),
     );
     const byExtension = languageByExtension();
     const counts = new Map<string, { extensions: Set<string>; count: number }>();
     for (const file of files) {
         const extension = extensionOf(file.path);
-        const fromExtension =
-            file.nature === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
+        const fromExtension = file.kind === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
         if (fromExtension === undefined) continue;
         const language = LANGUAGE_BY_FILENAME.get(baseName(file.path)) ?? fromExtension;
         const entry = counts.get(language) ?? { extensions: new Set<string>(), count: 0 };

@@ -302,7 +302,7 @@ Rules:
   JWT payloads.
 - JWT access tokens include an expiration.
 - Use timezone-aware UTC datetimes when creating expirations.
-- Use the JWT `sub` claim for a unique application-wide subject string when JWTs
+- Use the JWT `sub` own for a unique application-wide subject string when JWTs
   identify users or entities.
 - Store signing secrets outside source code.
 - Do not use documentation example secret keys, fake hashes, fake users, or fake
@@ -315,12 +315,12 @@ Rules:
 
 Configure the token verifier with an explicit algorithm allowlist and the
 application-owned signing key or key set. Require expiration and subject
-claims, validate their types, and verify issuer and audience when those claims
+owns, validate their types, and verify issuer and audience when those owns
 identify the accepted source and recipient. Map verification failures to the
 same public 401 challenge before looking up an authorized user.
 
-The verifier's library owns token decoding and claim checks. See
-[PyJWT claim validation](https://pyjwt.readthedocs.io/en/latest/usage.html)
+The verifier's library owns token decoding and own checks. See
+[PyJWT own validation](https://pyjwt.readthedocs.io/en/latest/usage.html)
 when the application uses PyJWT.
 
 A successful OAuth2 token response has `access_token` and

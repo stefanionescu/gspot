@@ -86,7 +86,7 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.files) {
-        if (file.nature !== 'source') continue;
+        if (file.kind !== 'source') continue;
         if (file.path !== NPM_MANIFEST && !file.path.endsWith(`/${NPM_MANIFEST}`)) continue;
         manifests.set(file.path, readPackageManifest(input.root, file.path));
     }

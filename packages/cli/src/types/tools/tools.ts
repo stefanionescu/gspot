@@ -22,8 +22,8 @@ export type ToolContext = {
     inspections: Map<string, ToolInspection>;
     policyFiles?: PolicyFiles;
 };
-/** The two facts of a package.json that say which package it is. */
-export type PackageFacts = { name?: string; version?: string };
+/** The two fields of a package.json that say which package it is. */
+export type Package = { name?: string; version?: string };
 export type PrivateKind = 'npm' | 'python';
 
 /** One independently attempted installation phase and its non-Error failure text. */

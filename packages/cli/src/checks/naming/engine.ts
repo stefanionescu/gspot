@@ -1,4 +1,4 @@
-import { isClaimed } from '#cli/kits/claims.ts';
+import { isOwned } from '#cli/kits/owners.ts';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { roleFolders } from '#cli/policy/settings.ts';
@@ -18,10 +18,10 @@ import type { Identifier, NamingContext, EffectivePolicy } from '#cli/types/chec
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
     const languages = languageKits(input.selection.selected);
     return input.files
-        .filter((file) => file.nature === 'source')
+        .filter((file) => file.kind === 'source')
         .map((file) => ({
             file,
-            language: languages.find((manifest) => isClaimed(manifest.claims, file))?.kit.name,
+            language: languages.find((manifest) => isOwned(manifest.owners, file))?.kit.name,
         }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
@@ -83,9 +83,9 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
     );
     const read: { path: string; names: string[] }[] = [];
     for (const file of input.files) {
-        if (file.nature !== 'source') continue;
+        if (file.kind !== 'source') continue;
         const scope = scopeOf(file.path, input.scopeEntries);
-        const language = selections.get(scope.path)?.find((manifest) => isClaimed(manifest.claims, file));
+        const language = selections.get(scope.path)?.find((manifest) => isOwned(manifest.owners, file));
         if (language === undefined) continue;
         const name = language.kit.name;
         const identifiers = await identifiersOf(

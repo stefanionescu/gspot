@@ -42,7 +42,7 @@ export function banned(input: EngineInput): Finding[] {
     return input.files
         .filter(
             (file) =>
-                file.nature === 'source' && (MARKDOWN.has(extensionOf(file.path)) || SQL.has(extensionOf(file.path))),
+                file.kind === 'source' && (MARKDOWN.has(extensionOf(file.path)) || SQL.has(extensionOf(file.path))),
         )
         .flatMap((file) =>
             lineFindings(input, file.path, readSource(input.root, file.path, input.reads).toString('utf8').split('\n')),

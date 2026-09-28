@@ -25,7 +25,7 @@ export function requirePackageConfiguration(files: Root): void {
 }
 
 /**
- * Verify the invocation without claiming ownership of authored Husky commands.
+ * Verify the invocation without owning ownership of authored Husky commands.
  * @param root the repository root
  * @param runner the task runner the policy names, or undefined
  * @param binaryPath the pinned executable when no runner resolves gspot

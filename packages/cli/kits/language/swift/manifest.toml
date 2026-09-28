@@ -11,10 +11,10 @@ extensions = [".swift"]
 filenames = ["Package.swift"]
 project_files = ["Package.swift"]
 
-[claims]
+[owners]
 extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "swiftlint"
@@ -109,7 +109,7 @@ fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"
 fix_order = "codemod"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["style", "structure"]
 output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
 summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
@@ -126,7 +126,7 @@ command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}
 findings_exit_codes = [1]
 fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
 fix_order = "format"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["format"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
 summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
@@ -193,7 +193,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "swift-trivial-function"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
@@ -208,7 +208,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "swift-duplicate-functions"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Finds functions whose bodies match line for line."
 why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
@@ -223,7 +223,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "swift-private-before-public"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
 why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
@@ -238,7 +238,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "swift-import-comments"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Finds a comment written inside an import block, between its first and last import."
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
@@ -253,7 +253,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "swift-env-access-owner"
-claims = {extensions = [".swift"]}
+owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."

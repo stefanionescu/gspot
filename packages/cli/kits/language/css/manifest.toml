@@ -9,9 +9,9 @@ description = "Stylesheets and the style blocks of Vue and Svelte components: st
 [detect]
 extensions = [".css"]
 
-[claims]
+[owners]
 extensions = [".css"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "stylelint"
@@ -96,7 +96,7 @@ fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir"
 fix_order = "codemod"
 findings_exit_codes = [2]
 fix_findings_exit_codes = [2]
-claims = {extensions = [".css", ".vue", ".svelte"]}
+owners = {extensions = [".css", ".vue", ".svelte"]}
 coverage = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
@@ -112,7 +112,7 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "css-module-usage"
-claims = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
+owners = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 coverage = ["consistency"]
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."

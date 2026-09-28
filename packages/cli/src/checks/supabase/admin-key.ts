@@ -14,7 +14,7 @@ export function adminKey(input: EngineInput): Finding[] {
     const isAllowed = pathMatcher(named ?? DEFAULT_PATHS);
     const files = input.files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             !isAllowed(input.scope === '' ? file.path : file.path.slice(input.scope.length + 1)) &&
             CODE_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );

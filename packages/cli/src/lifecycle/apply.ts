@@ -1,6 +1,6 @@
 import type { Generated } from '#cli/types/generation.ts';
+import { isValePackageFile } from '#cli/repository/kind.ts';
 import type { WriteRequest } from '#cli/types/lifecycle/apply.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner, Planned, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';

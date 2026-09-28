@@ -1,26 +1,26 @@
-// Builds the Repository record: the file set with natures and tags, and the scopes.
+// Builds the Repository record: the file set with kinds and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
+import { kindOf, readAttributes } from '#cli/repository/kind.ts';
 import { swiftSourceTags } from '#cli/repository/swift-source.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/repository.ts';
-import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
 import { readPrefix, readSource, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 import type {
     Tagged,
+    Verdict,
     RawEntry,
     Repository,
     ScopeEntry,
     TrackedFile,
-    NatureVerdict,
 } from '#cli/types/repository/repository.ts';
 
-function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: NatureVerdict): TrackedFile {
+function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: Verdict): TrackedFile {
     const file: TrackedFile = {
         path: entry.path,
         prefix,
-        nature: verdict.nature,
-        natureSource: verdict.source,
+        kind: verdict.kind,
+        kindSource: verdict.source,
         tags: tagged.tags,
         executable: entry.executable,
         size: entry.size,
@@ -30,7 +30,7 @@ function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: N
 }
 
 /**
- * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.
+ * Reads the tree once: every tracked or about-to-be-tracked file with its kind and tags.
  * @param root the repository root
  * @param declarations the generated and vendored declarations
  * @param scopeEntries the [[scope]] entries
@@ -52,10 +52,10 @@ export async function readRepository(
         const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES);
         const tagged = tagEntry(entry, prefix);
         const verdict = runtimeFiles.has(entry.path)
-            ? { nature: 'generated' as const, source: 'gspot', producedBy: 'gspot check' }
-            : natureOf(entry.path, declarations, tagged.binary, prefix, attributes);
+            ? { kind: 'generated' as const, source: 'gspot', producedBy: 'gspot check' }
+            : kindOf(entry.path, declarations, tagged.binary, prefix, attributes);
         const file = trackedFile(entry, prefix, tagged, verdict);
-        if (!entry.symlink && file.nature === 'source' && file.path.endsWith('.swift')) {
+        if (!entry.symlink && file.kind === 'source' && file.path.endsWith('.swift')) {
             const tags = await swiftSourceTags(readSource(root, file.path).toString('utf8'));
             file.tags.push(
                 ...tags.filter((tag) => tag !== 'swift-test-target' || file.path.split('/').at(-1) === 'Package.swift'),

@@ -2,9 +2,9 @@
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/types/checks/postgres.ts';
+import { schema } from '#cli/checks/postgres/schema/fields.ts';
 import { DEFAULT_SCHEMA } from '#cli/config/checks/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
@@ -59,17 +59,17 @@ async function statementFindings(
  * @returns the findings
  */
 export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
-    const facts = schemaFacts(await migrationsOf(input));
+    const fields = schema(await migrationsOf(input));
     const schemas = new Set(
         (input.view.tool('postgres')['client_schemas'] as string[] | undefined) ?? [DEFAULT_SCHEMA],
     );
-    return facts.tables
+    return fields.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
         .flatMap(([table, at]): Finding[] => {
-            if (!facts.secured.has(table))
+            if (!fields.secured.has(table))
                 return [finding(input, at, 'row-security', `${table} does not have row level security enabled.`)];
-            if (facts.policed.has(table)) return [];
+            if (fields.policed.has(table)) return [];
             return [finding(input, at, 'policy', `${table} enables row level security and has no policy.`)];
         })
         .toArray();
@@ -81,9 +81,9 @@ export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> {
-    const facts = schemaFacts(await migrationsOf(input));
-    return facts.foreignKeys
-        .filter((key) => facts.indexed.get(key.table)?.has(key.column) !== true)
+    const fields = schema(await migrationsOf(input));
+    return fields.foreignKeys
+        .filter((key) => fields.indexed.get(key.table)?.has(key.column) !== true)
         .map((key) =>
             finding(
                 input,

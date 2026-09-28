@@ -133,7 +133,7 @@ writes and alternate clients.
   that failed.
   [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html).
 
-### Preserve domain facts
+### Preserve domain fields
 
 - Store a fact once when several records refer to the same changing fact. Use related tables to
   avoid independently updating copies of names, memberships, or configuration.
@@ -330,7 +330,7 @@ ordering at the query level where they determine the result.
 Use Drizzle operators and the `sql` template to bind data values. Build optional predicates from
 typed expressions. Map user-selected sort fields to an allowlist of known columns and directions.
 
-- Keep user strings, claims, and serialized JSON out of `sql.raw()`. Pass them as bound values.
+- Keep user strings, owns, and serialized JSON out of `sql.raw()`. Pass them as bound values.
 - SQL identifiers are not ordinary value parameters. Choose tables, columns, role names, and SQL
   keywords from trusted application definitions; do not accept arbitrary identifier text.
 - Use `sql.raw()` only for trusted SQL whose structure is controlled by the application. Keep the
@@ -431,7 +431,7 @@ Coordinate database cache invalidation with application caches.
 - Inspect the installed cache adapter's keys and supported query paths. Include every value that
   affects the result, including verified identity when results depend on it.
 - For RLS-backed reads, verify identity isolation explicitly. SQL and bound parameters can be
-  identical for two users while transaction claims differ. Keep shared caching disabled for that
+  identical for two users while transaction owns differ. Keep shared caching disabled for that
   path unless its keys and authorization preserve isolation.
 - Handle invalidation for writes outside the cached client, including raw SQL, transactions,
   Supabase API calls, triggers, and administrative tools. Check adapter support for relational
@@ -611,20 +611,20 @@ application passes identity into PostgreSQL, keep that bridge in one reviewed se
    not establish trust.
 2. Map verified identity to a small set of allowed application roles. Reject unexpected roles. Keep
    administrative roles out of this user-request path.
-3. Open a transaction using the intended restricted database connection. Set identity claims with
+3. Open a transaction using the intended restricted database connection. Set identity owns with
    parameterized values and transaction-local settings, such as `set_config` with its local flag.
    Choose a role from fixed trusted SQL definitions, not interpolated token text.
 4. Execute all protected queries through that transaction's handle. Do not pass a global database
-   client to a callback that expects the transaction's role and claims.
+   client to a callback that expects the transaction's role and owns.
 5. Let commit or rollback end the transaction-local context. Verify that successful requests,
    failures, and pooled connection reuse cannot carry identity into the next request.
 
-Use Supabase's [verified claims API](https://supabase.com/docs/reference/javascript/auth-getclaims)
+Use Supabase's [verified owns API](https://supabase.com/docs/reference/javascript/auth-getclaims)
 according to the installed SDK and signing configuration. When the operation requires confirmation
 that a session remains active, use the supported server-side session check in addition to the
 required token verification.
 
-- Bind JSON claim values as parameters. Do not embed `JSON.stringify(token)` in `sql.raw()` or quote
+- Bind JSON own values as parameters. Do not embed `JSON.stringify(token)` in `sql.raw()` or quote
   an interpolated raw fragment to construct a settings statement.
 - Keep role selection separate from value binding. SQL role identifiers require a controlled
   allowlist and supported identifier handling; they are not arbitrary string parameters.
@@ -657,5 +657,5 @@ Knip's Drizzle adapter discovers configured schema entry points when `drizzle-ki
 custom migration scripts and generated-code boundaries explicit in its configuration. See
 [Knip's Drizzle plugin](https://knip.dev/reference/plugins/drizzle).
 
-When reporting requested verification, state what ran and whether it passed. Do not claim database
+When reporting requested verification, state what ran and whether it passed. Do not own database
 behavior was verified by a static check. Keep credentials and private row data out of diagnostics.

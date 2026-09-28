@@ -8,9 +8,9 @@ import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { planRun, ownedInputs } from '#cli/execution/planning/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
-import { planRun, claimedInputs } from '#cli/execution/planning/plan.ts';
 
 test.each([
     {
@@ -89,7 +89,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
     });
     const project = planned.find((entry) => entry.check === 'jest/coverage' && entry.scope.scope.path === 'apps/web')!;
     const scopeInput = engineInput(session, project);
-    expect(claimedInputs(session, project).map((file) => file.path)).toStrictEqual(['apps/web/value.test.js']);
+    expect(ownedInputs(session, project).map((file) => file.path)).toStrictEqual(['apps/web/value.test.js']);
     expect(scopeInput.scopeRoot).toBe(join(sandbox.path, 'apps/web'));
     expect(
         scopeInput.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),

@@ -1,7 +1,7 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
+import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { SelectionError } from '#cli/kits/select.ts';
-import { claimedByClaims } from '#cli/kits/claims.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
@@ -187,16 +187,16 @@ export function configuredChecks(session: Session): PlannedCheck[] {
 }
 
 /**
- * Source claims of a planned check, separate from inputs supplied to project-wide analysis.
+ * Source owners of a planned check, separate from inputs supplied to project-wide analysis.
  * @param session the open session
  * @param check the planned check
- * @returns the files the check's claims select
+ * @returns the files the check's owners select
  */
-export function claimedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
-    const claims = check.spec.claims ?? check.manifest?.claims;
+export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
+    const owners = check.spec.owners ?? check.manifest?.owners;
     const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
     const files = check.files.filter((file) => isOutsideChildren(file, children));
-    return claims === undefined ? [] : claimedByClaims(claims, check.scope.selected, files, check.scope.scope.path);
+    return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
 }
 
 /**

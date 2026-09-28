@@ -14,7 +14,7 @@ import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/patterns.ts';
-import type { ScopeEntry, TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
+import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
@@ -28,13 +28,13 @@ function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'
 }
 
 // A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
-function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: Iterable<Manifest>): ScopeEntry[] {
+function projectScopes(files: TrackedFile[], fields: Fields[], manifests: Iterable<Manifest>): ScopeEntry[] {
     const patterns = [...manifests].flatMap((manifest) => manifest.detect.project_files);
-    const lintOnly = new Set(facts.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
+    const lintOnly = new Set(fields.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
     const folders = new Set<string>();
     const sources = files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             !lintOnly.has(file.path) &&
             !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
     );
@@ -135,7 +135,7 @@ function workspacePackages(root: string): Package[] {
     }
 }
 
-function npmScopes(root: string, byPath: Map<string, ManifestFacts>, lintOnly: string[]): ScopeEntry[] {
+function npmScopes(root: string, byPath: Map<string, Fields>, lintOnly: string[]): ScopeEntry[] {
     const packages = workspacePackages(root);
     const scopes: ScopeEntry[] = [];
     for (const found of packages) {
@@ -186,11 +186,11 @@ export function projectFolder(path: string, pattern: string): string | undefined
 
 /**
  * True when every dependency of a manifest is a lint tool gspot pins, so the manifest exists only to hold tooling.
- * @param facts the manifest
+ * @param fields the manifest
  * @returns whether it holds tooling only
  */
-export function isLintOnlyManifest(facts: ManifestFacts): boolean {
-    const names = Object.keys(facts.installed);
+export function isLintOnlyManifest(fields: Fields): boolean {
+    const names = Object.keys(fields.installed);
     if (names.length === 0) return false;
     return names.every((name) =>
         LINT_TOOL_PACKAGE_PREFIXES.some(
@@ -202,12 +202,12 @@ export function isLintOnlyManifest(facts: ManifestFacts): boolean {
 /**
  * Workspace packages as scopes, from every workspace format @manypkg knows plus uv. Lint-only packages are left out.
  * @param root the repository root
- * @param facts the manifests read from the tree
+ * @param fields the manifests read from the tree
  * @returns the scopes in path order, and the lint-only manifests left out
  */
-export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes: ScopeEntry[]; lintOnly: string[] } {
+export function workspaceScopes(root: string, fields: Fields[]): { scopes: ScopeEntry[]; lintOnly: string[] } {
     const lintOnly: string[] = [];
-    const byPath = new Map(facts.map((fact) => [fact.path, fact]));
+    const byPath = new Map(fields.map((fact) => [fact.path, fact]));
     const found = [
         ...npmScopes(root, byPath, lintOnly),
         ...memberScopes(root, byPath.get('pyproject.toml')?.workspaces ?? []),
@@ -227,19 +227,19 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
  * The scopes init proposes: every folder that holds a project file of a configuration, and every workspace member.
  * @param root the repository root
  * @param files the tracked files
- * @param facts the manifests read from the tree
+ * @param fields the manifests read from the tree
  * @param manifests every kit manifest
  * @returns the scopes in path order, and the lint-only manifests left out
  */
 export function proposedScopes(
     root: string,
     files: TrackedFile[],
-    facts: ManifestFacts[],
+    fields: Fields[],
     manifests: Iterable<Manifest>,
 ): { scopes: ScopeEntry[]; lintOnly: string[] } {
-    const workspace = workspaceScopes(root, facts);
+    const workspace = workspaceScopes(root, fields);
     const unique = new Map<string, ScopeEntry>();
-    for (const scope of [...projectScopes(files, facts, manifests), ...workspace.scopes])
+    for (const scope of [...projectScopes(files, fields, manifests), ...workspace.scopes])
         if (!unique.has(scope.path)) unique.set(scope.path, scope);
     return {
         scopes: [...unique.values()].toSorted((a, b) => a.path.localeCompare(b.path)),

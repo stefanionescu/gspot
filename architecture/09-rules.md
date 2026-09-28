@@ -203,7 +203,7 @@ A rule file with a broken link fails `guides/lint`, and one with a long sentence
 
 ### Acceptance K-179
 
-Selected manifests own rule-file selection and conditional inclusion. Reject missing listed assets. Preserve SwiftUI/UIKit, Tailwind, Playwright, and Bun detection where selected. Rule guides follow selected levels and exclusions; rules-only installation must not claim that checks were installed.
+Selected manifests own rule-file selection and conditional inclusion. Reject missing listed assets. Preserve SwiftUI/UIKit, Tailwind, Playwright, and Bun detection where selected. Rule guides follow selected levels and exclusions; rules-only installation must not own that checks were installed.
 
 ### Acceptance K-231
 

@@ -213,7 +213,7 @@ test.each(CASES)(
                         '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
                     'src/card.js':
                         "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
-                    // Sass is outside CSS claims, so CSS checks do not parse its mixins (K-233).
+                    // Sass is outside CSS owners, so CSS checks do not parse its mixins (K-233).
                     'src/theme.scss': '@mixin card { .unused { color: red; } }\n.panel { @include card; }\n',
                 },
             },

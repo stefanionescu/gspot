@@ -6,7 +6,7 @@ combine, and the available configurations.
 ## Policy ownership
 
 Shared language policies cover Swift, JavaScript, TypeScript, Python, and their supported
-frameworks. `from_languages` includes source claims contributed by framework kits, such
+frameworks. `from_languages` includes source owners contributed by framework kits, such
 as Vue and Svelte components. Selecting a framework must not drop language rules. See
 [shared enforcement](05-engines.md#shared-enforcement-across-languages-and-frameworks).
 
@@ -28,7 +28,7 @@ A configuration bundles its manifest and assets under its name. Resolve template
 assets from the manifest's actual directory. Agent rule guides remain separate and are selected
 by the manifest; no source/test directory inventory is implied.
 
-A configuration contributes: files it claims, tools with versions, configuration it renders, checks it
+A configuration contributes: files it owns, tools with versions, configuration it renders, checks it
 runs, settings it exposes, and rule files it installs. It contributes nothing it does not declare.
 
 ## Kinds
@@ -48,7 +48,7 @@ Files. It covers JSON, YAML, TOML, workflows, environment files, XML, and relate
 Its templates configure the tools that inspect those files; the configuration is not a generic
 owner for every kit's configuration assets.
 
-| Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                          |
+| Kind      | Selected by                                    | Owners files by                           | Examples                                                                                                                          |
 | --------- | ---------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | language  | an extension in the tree                       | extension, filename, shebang              | typescript, python, swift, bash, sql, css, html, markdown                                                                         |
 | framework | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi                                                                                                          |
@@ -73,7 +73,7 @@ project_files = ["tsconfig.json"]      # a folder that holds one is a scope, and
 extensions    = [".ts", ".tsx", ".mts", ".cts"]
 dependencies  = ["typescript"]
 
-[claims]
+[owners]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames  = ["tsconfig.json", "tsconfig.*.json"]
 
@@ -169,7 +169,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - `[[tools]]` rows take `kind = "binary"` (the default) or `kind = "library"`. `doctor`
   looks for a library under `.gspot/node_modules/<npm name>/` and reads its version there
   . A library is never spawned.
-- `runs` says how a check receives files. `per-file-list` passes the claimed files of each scope.
+- `runs` says how a check receives files. `per-file-list` passes the owned files of each scope.
   `per-scope` runs once in each scope with no file list. `once` runs one time over the whole
   repository, from the root. It replaces `takes`, `whole` and the scope guard inside a check.
 - `reported_by` names the check whose run carries this check's findings, such as
@@ -186,9 +186,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the configuration's own name), not
   always the configuration. `gspot explain <check>` prints the kit that ships it.
 - `detect` proposes the configuration at `init` and in `doctor`. Detection never selects.
-- `claims` decides which files the configuration's checks receive. A `filenames` claim matches at any
-  depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected kit is unchecked.
-- `claims` may also name `tags`, computed the way the pre-commit `identify` library does from extension, shebang, executable bit, and content (`shell`, `python`, `node`, `executable`, `text`, `binary`). Hooks and task files with no extension are then claimed without a filename list.
+- `owners` decides which files the configuration's checks receive. A `filenames` own matches at any
+  depth (`_headers` under `public/` is `_headers`); an `extensions` own likewise. A file owned by no selected kit is unchecked.
+- `owners` may also name `tags`, computed the way the pre-commit `identify` library does from extension, shebang, executable bit, and content (`shell`, `python`, `node`, `executable`, `text`, `binary`). Hooks and task files with no extension are then owned without a filename list.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
   and the name under each ecosystem gspot knows (`npm`, `pypi`, `mise`, `brew`, `cargo`,
   `github`). `doctor` verifies presence and version.
@@ -202,9 +202,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   without it) and `help` (what to do), written for a person who does not code. The loader refuses an empty one.
 - `explain`, the finding line, and the generated rule reference print these fields.
   `docs/src/content/reference/collection.ts` creates the reference pages from the check definitions.
-- `runs = "per-file-list"` receives the claimed file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
+- `runs = "per-file-list"` receives the owned file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
   tracked text file under the scope, child scopes included, because the tool reads the project
-  rather than the claimed files.
+  rather than the owned files.
 - A check carries `level`, `recommended` or `all`, and a check with no level fails to load.
 - A check takes `waits_for`, the setting it needs. With the setting unset the check prints
   `skipped` and names it.
@@ -362,7 +362,7 @@ A framework changes which plugins run. It does not change the rules of the langu
 .
 
 - Every shared rule reads every code file: `js`, `ts`, `jsx`, `tsx`, and the component endings
-  a framework kit claims (`.vue`, `.svelte`, `.svelte.ts`).
+  a framework kit owns (`.vue`, `.svelte`, `.svelte.ts`).
 - A limit is the same number in every framework: lines for each file, lines for each function,
   parameters, depth, statements, and complexity. No configuration may change one.
 - A framework turns a shared rule off only in its manifest, with a reason. A test compares the
@@ -389,7 +389,7 @@ app, an Express API, a Supabase project, a static site on Cloudflare, and a Next
 
 ## What a configuration never does
 
-- Hard-code a directory layout. A framework kit claims only the paths the framework itself
+- Hard-code a directory layout. A framework kit owns only the paths the framework itself
   dictates (`app/`, `supabase/migrations/`, `functions/`).
 - Read a product value into its own configuration. A check that needs the nginx image tag reads
   the compose file at run time.

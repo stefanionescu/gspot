@@ -7,7 +7,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
-import type { PrivateKind, PackageFacts } from '#cli/types/tools/tools.ts';
+import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
@@ -58,17 +58,17 @@ function hostCandidates(name: string, names: string[]): string[] {
 }
 
 // The parsed package.json at a path, or undefined when there is none or it lies outside the managed tree.
-function packageFacts(files: Root | undefined, root: string, manifest: string): PackageFacts | undefined {
+function packageFacts(files: Root | undefined, root: string, manifest: string): Package | undefined {
     if (files === undefined) {
         try {
-            return JSON.parse(readFileSync(manifest, 'utf8')) as PackageFacts;
+            return JSON.parse(readFileSync(manifest, 'utf8')) as Package;
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
             throw error;
         }
     }
     const text = files.read(relative(root, manifest).replaceAll('\\', '/'))?.bytes.toString('utf8');
-    return text === undefined ? undefined : (JSON.parse(text) as PackageFacts);
+    return text === undefined ? undefined : (JSON.parse(text) as Package);
 }
 
 // The version the first package.json above a folder declares for the named package, searching upward.

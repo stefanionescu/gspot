@@ -327,7 +327,7 @@ first bytes of the file, in that order.
 
 | Kind      | Checks that apply                                        |
 | --------- | -------------------------------------------------------- |
-| source    | everything the selected kits claim for its kind of file  |
+| source    | everything the selected kits own for its kind of file    |
 | generated | secrets                                                  |
 | vendored  | secrets, licenses, security                              |
 | binary    | secrets, and the size limit unless the file is under LFS |

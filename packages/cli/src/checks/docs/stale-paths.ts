@@ -89,7 +89,7 @@ function pathTokens(line: string): string[] {
         );
 }
 
-// A token claims to be a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
+// A token owners to be a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
 function isPathClaim(token: string, index: PathIndex): boolean {
     const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
     const first = clean.split('/', 1)[0] ?? '';
@@ -138,7 +138,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
  */
 export function referencedPaths(input: EngineInput): Set<string> {
     const referenced = new Set<string>();
-    const files = input.files.filter((file) => file.nature === 'source' && file.path.endsWith('.md'));
+    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
     for (const file of files) {
         const prose = proseLines(readSource(input.root, file.path, input.reads).toString('utf8'));
         for (const { line } of prose)
@@ -166,7 +166,7 @@ export function stalePaths(input: EngineInput): Finding[] {
         isException,
     };
     return input.files
-        .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
+        .filter((file) => file.kind === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>
             proseLines(readSource(input.root, file.path, input.reads).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),

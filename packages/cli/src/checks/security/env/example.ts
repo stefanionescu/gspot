@@ -24,7 +24,7 @@ function readPatterns(input: EngineInput): RegExp[] {
 export function envExample(input: EngineInput): Finding[] {
     const listed = input.view.tool('dotenv')['templates'];
     const names = Array.isArray(listed) ? listed.map(String) : ENV_TEMPLATE_NAMES;
-    // The claimed files are configuration; the reads are in code, so the whole scope is searched.
+    // The owned files are configuration; the reads are in code, so the whole scope is searched.
     const inScope = input.files.filter((file) => input.scope === '' || file.path.startsWith(`${input.scope}/`));
     const templates = inScope.filter((file) => names.includes(file.path.slice(file.path.lastIndexOf('/') + 1)));
     if (templates.length === 0) return [];
@@ -39,7 +39,7 @@ export function envExample(input: EngineInput): Finding[] {
     );
     const patterns = readPatterns(input);
     const searched = inScope.filter(
-        (file) => file.nature === 'source' && ENV_READ_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+        (file) => file.kind === 'source' && ENV_READ_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
     return searched.flatMap((file) => {
         const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');

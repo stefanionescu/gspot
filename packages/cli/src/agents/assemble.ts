@@ -22,8 +22,8 @@ function declaredGuides(manifests: Manifest[], repository: Repository): Pick<Rul
             .flat()
             .some((entry) => entry.when !== undefined && entry.when.dependencies.length > 0),
     );
-    const facts = dependencies ? readManifests(repository.root, repository.files) : [];
-    const matched = detectConditions(conditions, repository.files, facts);
+    const fields = dependencies ? readManifests(repository.root, repository.files) : [];
+    const matched = detectConditions(conditions, repository.files, fields);
     return manifests.flatMap((manifest) =>
         Object.entries(manifest.guides).flatMap(([layer, paths]) =>
             paths

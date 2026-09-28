@@ -54,7 +54,7 @@ const ANALYSES: Record<string, StructureAnalysis> = {
 function contextFor(input: EngineInput): StructureContext {
     const files = input.files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             DOCUMENT_EXTENSIONS.every((extension) => !file.path.endsWith(extension)) &&
             !file.path.startsWith(GSPOT_DIRECTORY),
     );

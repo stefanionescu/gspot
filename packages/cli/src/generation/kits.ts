@@ -1,7 +1,7 @@
 // The generated configuration files of one manifest in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
+import { ownedBy } from '#cli/kits/owners.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
-import { claimedByClaims } from '#cli/kits/claims.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
@@ -40,17 +40,17 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
     return directories;
 }
 
-// One pointer per directory the kit's claimed files sit in, when the pointer names directories.
+// One pointer per directory the kit's owned files sit in, when the pointer names directories.
 function directoryPointers(context: EmitContext, configuration: ConfigurationTarget, target: string): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
     const pointer = configuration.pointer;
     if (pointer?.directories === undefined) return [];
     const scope = selection.scope.path;
     const matches = pathMatcher(pointer.directories);
-    const claimed = claimedByClaims(manifest.claims, selection.selected, files, scope).filter(
+    const owned = ownedBy(manifest.owners, selection.selected, files, scope).filter(
         (file) => !isInChildScope(context, file),
     );
-    const directories = new Set(claimed.flatMap((file) => pointerDirectories(scope, file, matches)));
+    const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
     return [...directories].map((directory) =>
         bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version, manifest.kit.name),
     );

@@ -326,7 +326,7 @@ Writes generated configuration and resolves the tool lockfiles from `gspot.toml`
 `--dry-run` prints the proposed changes without writing project files. Dependency resolution
 uses a temporary environment and can require the network; failure never replaces a lockfile.
 A dry run prints unresolved operations when the resolver is unavailable and exits 2 rather
-than claiming a complete diff.
+than owning a complete diff.
 
 - It writes `.gspot/<tool-file>` for each tool, `.gspot/package.json`, the mise file, approved tracked hook composition,
   the CI job, the managed blocks, and the rule files.
@@ -357,9 +357,9 @@ One verb that says what a thing is. It takes:
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | a check name (`structure/trivial-function`) | `summary`, `why`, and `help`; its configuration and level; its settings; the `ignore` line that turns it off |
 | a tool rule (`markdownlint/MD024`)          | the summary of the tool where it has one, the page of the rule, and the check that runs it                   |
-| a configuration name (`python`)             | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files           |
+| a configuration name (`python`)             | what it detects and owns, its tools, its checks by stage and level, its settings, its rule files             |
 | a setting name (`limits.function_lines`)    | meaning, default, the value in every scope that holds it, and the `set` line that changes it                 |
-| a path (`api/src/routes/turn.ts`)           | the kits that claim the file, and the checks that read it at each stage                                      |
+| a path (`api/src/routes/turn.ts`)           | the kits that own the file, and the checks that read it at each stage                                        |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
 page of the manual.
@@ -623,7 +623,7 @@ only when a linter exists that reads its kind, and `check` and `doctor` print th
 `hooksLine` reads `git config core.hooksPath` and the hook files, and says which of
 three states holds: the hooks run, the hooks exist and this clone does not run them, or none
 exist. It ends with the setup command of the repository. `coverage.ts` owns one function
-that both commands call, and it leaves out files whose nature is `binary`, `generated`, or
+that both commands call, and it leaves out files whose kind is `binary`, `generated`, or
 `vendored`.
 
 A unit test of each hooks state. A planted repository of images alone holds a count of
@@ -634,7 +634,7 @@ zero.
 `doctor` and `gspot list` report which looks each file ending gets: format, syntax,
 style, and types. An ending that gets only the general ones is named.
 
-Rename the check's `inspection` list to `coverage` and the manifest's `[inspections]` table to `[coverage]` (K-308). `coverage.ts` groups the claimed endings by the check kinds supplied by their checks, and prints one line for an
+Rename the check's `inspection` list to `coverage` and the manifest's `[inspections]` table to `[coverage]` (K-308). `coverage.ts` groups the owned endings by the check kinds supplied by their checks, and prints one line for an
 ending with none of the four.
 
 A planted repository with `.kt` files holds a line that names the ending.
@@ -698,7 +698,7 @@ on exits 2.
 
 `gspot check [<path>...]`, `--only <check>`, and `exclude` in `gspot.toml`.
 
-`plan.ts` keeps the files under the given paths, and then the checks that claim them.
+`plan.ts` keeps the files under the given paths, and then the checks that own them.
 A path that is a scope plans the whole-project checks of that scope too. `tracked.ts` drops the
 files under `exclude` before anything else reads them, so no check, no count, and no `doctor`
 line sees them. The first question of `init` in a monorepo lists the projects found, and an

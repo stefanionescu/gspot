@@ -1,7 +1,7 @@
 // The report a run ends with: every result, the ignores that matched, the skips, coverage, and the exit code.
 import { writeReport } from '#cli/output/report.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
-import { claimedInputs } from '#cli/execution/planning/plan.ts';
+import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
@@ -54,24 +54,24 @@ function isUnable(session: Session, results: CheckResult[], fixes: FixReport | u
     return fixes?.results.some((result) => result.status === 'failed') === true;
 }
 
-// The source paths the checks that ran claimed: what they reported checking, or what the plan gave them.
+// The source paths the checks that ran owned: what they reported checking, or what the plan gave them.
 function claimedPaths(session: Session, active: PlannedCheck[], ran: CheckResult[]): Set<string> {
     const paths = active.flatMap((check, index) => {
         const outcome = ran[index];
         if (outcome === undefined || !RAN_STATUSES.has(outcome.status)) return [];
         if (outcome.checkedFiles !== undefined) return outcome.checkedFiles;
-        return claimedInputs(session, check).map((file) => file.path);
+        return ownedInputs(session, check).map((file) => file.path);
     });
     return new Set(paths);
 }
 
-// One finding per supported source no check claims, when the policy demands strict coverage.
+// One finding per supported source no check owners, when the policy demands strict coverage.
 function coverageFindings(session: Session, options: RunReportOptions, unchecked: { path: string }[]): Finding[] {
     if (!session.policyFiles.policy.coverage.strict || options.stage === 'message') return [];
     return unchecked.map((entry) => ({
         check: 'coverage.strict',
         file: entry.path,
-        message: 'No enabled check claims this supported source file.',
+        message: 'No enabled check owners this supported source file.',
         help: 'Run gspot doctor to inspect coverage and enable a check for this file.',
         fixable: false,
     }));
@@ -94,9 +94,9 @@ export async function assembleReport(input: ReportInput): Promise<RunReport> {
     const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
     if (policyResult !== undefined) options.onResult?.(policyResult);
     const results = policyResult === undefined ? ran : [...ran, policyResult];
-    const claimed = claimedPaths(session, active, ran);
-    const sources = session.repository.files.filter((file) => file.nature === 'source');
-    const checkedSources = sources.filter((file) => claimed.has(file.path));
+    const owned = claimedPaths(session, active, ran);
+    const sources = session.repository.files.filter((file) => file.kind === 'source');
+    const checkedSources = sources.filter((file) => owned.has(file.path));
     const configured = coverageReport(session);
     const coverage = coverageFindings(session, options, configured.unchecked);
     const failed = failedChecks(results, fixes);

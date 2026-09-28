@@ -63,7 +63,7 @@ message at line 2, column 25:
 A client module may read only public environment variables (NEXT_PUBLIC_*, NODE_ENV). Keep private configuration in a server-only module.
 ```
 
-The rule checks the module boundary. It does not claim that a framework exposed the value
+The rule checks the module boundary. It does not own that a framework exposed the value
 in a browser bundle.
 
 ## 3. Correct the boundary

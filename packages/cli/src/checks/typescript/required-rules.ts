@@ -34,7 +34,7 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
     const required = requiredByEnding(input);
     const files = input.files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             scopeOf(file.path, input.scopeEntries).path === input.scope &&
             required.has(file.path.split('.').at(-1) ?? ''),
     );

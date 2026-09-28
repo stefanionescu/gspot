@@ -13,8 +13,8 @@ export type Explanation = {
 export type PathExplanation = {
     path: string;
     scope: string;
-    nature: string;
-    natureSource?: string;
+    file: string;
+    fileSource?: string;
     tags: string[];
     kits: string[];
     checks: { check: string; stage: string; configuration?: string }[];
@@ -24,4 +24,4 @@ export type PathExplanation = {
 };
 export type Found = { check: CheckSpec; kit: Manifest | undefined };
 export type OwnCheck = Session['policyFiles']['policy']['checks'][number];
-export type Facts = { settings: string[]; rules: string[]; crashPattern: string | undefined };
+export type Fields = { settings: string[]; rules: string[]; crashPattern: string | undefined };

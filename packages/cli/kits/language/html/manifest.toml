@@ -9,9 +9,9 @@ description = "HTML files: html-validate for structure and accessibility, no inl
 [detect]
 extensions = [".html", ".htm"]
 
-[claims]
+[owners]
 extensions = [".html", ".htm"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "html-validate"

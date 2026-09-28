@@ -58,7 +58,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
     const packageClient = needsPackages
         ? await packageTool(
               root,
-              repo.files.filter((file) => file.nature === 'source').map((file) => file.path),
+              repo.files.filter((file) => file.kind === 'source').map((file) => file.path),
           )
         : undefined;
     return {

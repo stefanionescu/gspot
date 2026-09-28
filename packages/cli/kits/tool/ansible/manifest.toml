@@ -8,9 +8,9 @@ description = "Ansible playbooks: ansible-lint in every folder that holds an ans
 [detect]
 paths = ["ansible.cfg", "**/ansible.cfg"]
 
-[claims]
+[owners]
 paths = ["ansible.cfg", "**/ansible.cfg"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "ansible-lint"
@@ -32,7 +32,7 @@ platform = ["macos", "linux"]
 engine = "integrity"
 analysis = "ansible-lint"
 tool = "ansible-lint"
-claims = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
+owners = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
 coverage = ["style"]
 summary = "Runs ansible-lint in every folder that holds an ansible.cfg."
 why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."

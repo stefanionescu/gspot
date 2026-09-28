@@ -62,7 +62,7 @@ async function executionInput(
             session.root,
             session.scopes,
             session.reads,
-            planned.files.filter((file) => file.nature === 'source' && file.tags.includes('text')),
+            planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
         );
     if (staged) input.staged = staged;
     return input;

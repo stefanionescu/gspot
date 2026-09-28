@@ -66,8 +66,8 @@ function kitsResult(session: Session): CommandResult {
                 : [],
         ),
     }));
-    const facts = readManifests(session.root, session.repository.files);
-    const detected = detectKits(session.repository.files, session.manifests, facts)
+    const fields = readManifests(session.root, session.repository.files);
+    const detected = detectKits(session.repository.files, session.manifests, fields)
         .filter((plan) => !names.has(plan.configuration))
         .map((plan) => ({
             name: plan.configuration,

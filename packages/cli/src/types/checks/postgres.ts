@@ -15,7 +15,7 @@ export type Declared = { path: string; offset: number; text: string };
 /** One foreign key column of a table. */
 export type ForeignKey = Declared & { table: string; column: string };
 /** What the migrations say about the schema, read across every file. */
-export type SchemaFacts = {
+export type Schema = {
     /** Qualified table name to where it was created. */
     tables: Map<string, Declared>;
     secured: Set<string>;
@@ -26,10 +26,10 @@ export type SchemaFacts = {
 };
 /** One layout problem of a documented migration. */
 export type DocProblem = { line: number; rule: string; text: string };
-export type SchemaState = Pick<SchemaFacts, 'tables' | 'secured'> & {
+export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
     policies: Map<string, Set<string>>;
     indexes: { table: string; name: string; column: string; constraint: string }[];
-    constraints: Map<string, Map<string, SchemaFacts['foreignKeys']>>;
+    constraints: Map<string, Map<string, Schema['foreignKeys']>>;
 };
-export type FactReader = (facts: SchemaState, migration: Migration, statement: SqlStatementView) => void;
+export type Reader = (fields: SchemaState, migration: Migration, statement: SqlStatementView) => void;
 export type Location = { migration: Migration; statement: SqlStatementView; table: string };

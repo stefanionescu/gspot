@@ -43,7 +43,7 @@ runs = "once"
 engine = "integrity"
 analysis = "openapi-lint"
 tool = "spectral"
-claims = {extensions = [".yaml", ".yml", ".json"]}
+owners = {extensions = [".yaml", ".yml", ".json"]}
 coverage = ["style"]
 summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
 why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."

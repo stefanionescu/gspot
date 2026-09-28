@@ -22,8 +22,8 @@ describe('tags', () => {
         // Windows has no executable bit to read.
         expect(hook.tags.includes('executable')).toBe(process.platform !== 'win32');
         for (const tag of ['shell', 'shebang:shell', 'text']) expect(hook.tags).toContain(tag);
-        expect(files.get('a.png')!.nature).toBe('binary');
-        expect(files.get('binary.js')!.nature).toBe('binary');
+        expect(files.get('a.png')!.kind).toBe('binary');
+        expect(files.get('binary.js')!.kind).toBe('binary');
         expect(files.get('Dockerfile')!.tags).toContain('dockerfile');
     });
 });
@@ -40,7 +40,7 @@ test('Vue and Svelte keep source tags while unsupported JVM languages remain det
     const files = new Map(repository.files.map((file) => [file.path, file]));
     for (const language of ['vue', 'svelte']) {
         const component = files.get(`View.${language}`)!;
-        expect(component.nature).toBe('source');
+        expect(component.kind).toBe('source');
         for (const tag of [language, 'source', 'text']) expect(component.tags).toContain(tag);
     }
     const manifests = kitManifests();

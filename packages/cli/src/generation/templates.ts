@@ -130,9 +130,7 @@ export function templateInputs(
 ): TemplateInputs {
     const { view } = selection;
     const files = (extension: string): string[] =>
-        sourceFiles
-            .filter((file) => file.path.endsWith(extension) && file.nature === 'source')
-            .map((file) => file.path);
+        sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
         ...scopeInputs(policy, scopes, selection),
         javascriptConfig: (targetPath) => javascriptConfiguration(root, policy, targetPath, selection.scope.path),

@@ -145,11 +145,9 @@ function applyLayers(
     return result;
 }
 
-// The declarations of one nature, without the nature field each carries.
-function declarationsOf(policy: Partial<Policy>, nature: string): unknown {
-    return policy.declarations
-        ?.filter((entry) => entry.nature === nature)
-        .map(({ nature: _nature, ...entry }) => entry);
+// The declarations of one kind, without the kind field each carries.
+function declarationsOf(policy: Partial<Policy>, kind: string): unknown {
+    return policy.declarations?.filter((entry) => entry.kind === kind).map(({ kind: _nature, ...entry }) => entry);
 }
 
 // The keys that live at the top of the policy, read from their normalized fields.

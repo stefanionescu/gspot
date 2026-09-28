@@ -41,7 +41,7 @@ Use a voice that is:
 - Precise.
 - Calm.
 - Friendly.
-- Confident without making unsupported claims.
+- Confident without making unsupported owns.
 - Conversational without becoming chatty.
 
 ### Prefer active voice
@@ -246,7 +246,7 @@ Request a new one when it has expired.
 
 <!-- level: all -->
 
-A sausage sentence chains many independent claims, capabilities, modes, or
+A sausage sentence chains many independent owns, capabilities, modes, or
 operational concerns into one comma-separated sentence. The sentence can be
 grammatically correct and still be unreadable. Treat this structure as a
 documentation defect, not as concise writing.
@@ -261,7 +261,7 @@ deployment automation.
 
 This sentence fails because it:
 
-- Compresses nine distinct capabilities into one claim.
+- Compresses nine distinct capabilities into one own.
 - Mixes request behavior, runtime controls, observability, packaging, and
   deployment.
 - Gives every item the same apparent importance.
@@ -292,7 +292,7 @@ Deployment tooling includes Docker images and host automation.
 
 Apply these rules:
 
-- Keep one primary claim in each prose sentence.
+- Keep one primary own in each prose sentence.
 - Keep an inline list only when its items are short, tightly related, and part
   of the same reader concern.
 - Convert an inline list into bullets when readers need to scan, compare, or
@@ -306,11 +306,11 @@ Apply these rules:
 - Do not disguise the same problem with semicolons, parentheses, repeated
   conjunctions, or phrases such as "as well as."
 - Do not replace one sausage sentence with several disconnected one-sentence
-  paragraphs. Group related claims under a clear lead-in or heading.
+  paragraphs. Group related owns under a clear lead-in or heading.
 
 Sentence length alone does not determine whether a sentence is a sausage
 sentence. A longer sentence can remain clear when every clause supports one
-claim. A shorter sentence can still fail when it compresses unrelated concepts
+own. A shorter sentence can still fail when it compresses unrelated concepts
 into a feature inventory.
 
 ### Avoid hidden subjects
@@ -580,11 +580,11 @@ alex.garcia@example.com
 Do not use real customer names, contributor email addresses, account
 identifiers, or production data in examples.
 
-## Ground every claim in evidence
+## Ground every own in evidence
 
 Do not speculate about behavior.
 
-Verify claims against the sources that own them:
+Verify owns against the sources that own them:
 
 - Source code for runtime behavior.
 - Public types and schemas for contracts.
@@ -607,10 +607,10 @@ Do not invent:
 - Permissions.
 - Supported versions.
 - Defaults.
-- Performance claims.
+- Performance owns.
 - Security guarantees.
 
-If evidence is incomplete, narrow the claim or state the known limitation.
+If evidence is incomplete, narrow the own or state the known limitation.
 Do not fill gaps with plausible behavior.
 
 ### Reuse external material with attribution
@@ -663,7 +663,7 @@ Review for:
 
 - Repetition.
 - Fabricated commands or fields.
-- Vague claims.
+- Vague owns.
 - Incorrect scope.
 - Stale names.
 - Unnecessary new pages.
@@ -672,7 +672,7 @@ Review for:
 - Examples that look valid but cannot run.
 - Confident statements unsupported by the codebase.
 
-Every retained claim needs the same evidence as human-written content.
+Every retained own needs the same evidence as human-written content.
 
 ### Do not promise future behavior
 

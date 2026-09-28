@@ -1,7 +1,7 @@
 // Validate suppression comments against the repository reason policy; reporting owns the census.
+import { ownedBy } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { claimedByClaims } from '#cli/kits/claims.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -31,7 +31,7 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
     const readers = new Set(
         selected.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
-                claimedByClaims(check.claims ?? manifest.claims, selected, [file], selection.scope.path).length === 0
+                ownedBy(check.owners ?? manifest.owners, selected, [file], selection.scope.path).length === 0
                     ? []
                     : [check.tool ?? check.command?.[0]],
             ),

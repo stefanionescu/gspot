@@ -8,7 +8,7 @@ import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
-import type { Facts, Found, OwnCheck, Explanation } from '#cli/types/commands/explain.ts';
+import type { Found, Fields, OwnCheck, Explanation } from '#cli/types/commands/explain.ts';
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {
@@ -59,7 +59,7 @@ function toolOf(check: CheckSpec): string | undefined {
 }
 
 // The settings that change the check, and the guides and crash pattern it carries.
-function checkFacts(check: CheckSpec, configuration: Found['kit']): Facts {
+function checkFacts(check: CheckSpec, configuration: Found['kit']): Fields {
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
     const settings = (configuration?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
@@ -99,11 +99,11 @@ function checkText(
     checkName: string,
     found: Found,
     own: OwnCheck | undefined,
-    facts: Facts,
+    fields: Fields,
     owner: string,
 ): string {
     const { check, kit: configuration } = found;
-    const { settings, rules, crashPattern } = facts;
+    const { settings, rules, crashPattern } = fields;
     const lines = [
         `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -138,11 +138,11 @@ function buildCheckExplanation(
     owner: string,
 ): Explanation {
     const { check, kit: configuration } = found;
-    const facts = checkFacts(check, configuration);
+    const fields = checkFacts(check, configuration);
     return {
         kind: 'check',
         subject: checkName,
-        text: checkText(session, checkName, found, own, facts, owner),
+        text: checkText(session, checkName, found, own, fields, owner),
         data: {
             check: checkName,
             ...(configuration === undefined
@@ -157,11 +157,11 @@ function buildCheckExplanation(
             ...(check.fix_findings_exit_codes === undefined
                 ? {}
                 : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
-            ...(facts.crashPattern === undefined ? {} : { tool_errors: facts.crashPattern }),
+            ...(fields.crashPattern === undefined ? {} : { tool_errors: fields.crashPattern }),
             ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
             ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
-            settings: facts.settings,
-            rules: facts.rules,
+            settings: fields.settings,
+            rules: fields.rules,
         },
     };
 }

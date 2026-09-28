@@ -238,7 +238,7 @@ Order causes from most common and least invasive to rare and destructive.
 
 Do not start with a destructive reset when a focused diagnosis exists.
 
-Do not present speculative causes as confirmed facts.
+Do not present speculative causes as confirmed fields.
 
 ### Logs and errors
 

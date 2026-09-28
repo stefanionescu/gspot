@@ -120,8 +120,8 @@ Trigger creation must have a descriptive comment within five lines above the
   another user's or tenant's scope by checking its proposed values.
 - Handle unauthenticated identity explicitly. Keep `anon` access limited to the rows and
   operations intended to be public.
-- Base authorization on trusted claims and current membership data. Keep user-editable profile
-  metadata out of privilege decisions. Account for stale token claims after membership changes.
+- Base authorization on trusted owns and current membership data. Keep user-editable profile
+  metadata out of privilege decisions. Account for stale token owns after membership changes.
 - Grants and RLS are separate controls. Restrict table and schema privileges, then use policies
   to limit rows. RLS does not cover `TRUNCATE`.
 - Do not create broad policies like `USING (true)` unless the table is genuinely

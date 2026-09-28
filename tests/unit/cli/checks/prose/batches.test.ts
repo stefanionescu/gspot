@@ -11,7 +11,7 @@ test('ten Python files form one path group and one Vale command line', () => {
             ({
                 path: `src/module_${String(index)}.py`,
                 prefix: Buffer.alloc(0),
-                nature: 'source',
+                kind: 'source',
                 tags: ['text'],
                 executable: false,
                 size: 1,
@@ -35,7 +35,7 @@ test('a CSS file and a Python file take separate groups, each with its own exten
         {
             path: 'site.css',
             prefix: Buffer.alloc(0),
-            nature: 'source',
+            kind: 'source',
             tags: ['text'],
             executable: false,
             size: 1,
@@ -43,7 +43,7 @@ test('a CSS file and a Python file take separate groups, each with its own exten
         {
             path: 'main.py',
             prefix: Buffer.alloc(0),
-            nature: 'source',
+            kind: 'source',
             tags: ['text'],
             executable: false,
             size: 1,

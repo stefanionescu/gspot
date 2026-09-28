@@ -26,7 +26,7 @@ export async function storageSession(root: string, status: number, stage: Stage 
                     summary: 'Reports the planted storage finding.',
                     why: 'Storage failures preserve the check result.',
                     help: 'Fix the planted finding.',
-                    claims: manifest.claims,
+                    owners: manifest.owners,
                     name: 'sandbox/storage',
                     stage,
                     cwd: 'root',

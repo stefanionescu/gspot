@@ -1,9 +1,9 @@
 import { selectKits } from '#cli/kits/select.ts';
 import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { isOwned, ownedBy } from '#cli/kits/owners.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { shebangInterpreter } from '#cli/repository/shebang.ts';
-import { isClaimed, claimedByClaims } from '#cli/kits/claims.ts';
 import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
@@ -11,45 +11,45 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     path,
     prefix: Buffer.alloc(0),
-    nature: 'source',
+    kind: 'source',
     tags,
     executable: false,
     size: 1,
 });
 const manifests = kitManifests();
 
-describe('claims', () => {
+describe('owners', () => {
     test('match by extension, filename at any depth, tag and glob', () => {
         const bash = manifests.get('bash')!;
-        expect(isClaimed(bash.claims, file('scripts/build.sh'))).toBe(true);
-        expect(isClaimed(bash.claims, file('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
-        expect(isClaimed(bash.claims, file('README.md'))).toBe(false);
+        expect(isOwned(bash.owners, file('scripts/build.sh'))).toBe(true);
+        expect(isOwned(bash.owners, file('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
+        expect(isOwned(bash.owners, file('README.md'))).toBe(false);
         expect(
-            isClaimed(
+            isOwned(
                 {
                     extensions: [],
                     filenames: ['_headers'],
                     tags: [],
                     paths: [],
                     from_languages: false,
-                    natures: ['source'],
+                    kinds: ['source'],
                 },
                 file('public/_headers'),
             ),
         ).toBe(true);
     });
 
-    test('a repository configuration with from_languages claims what the language kits claim', () => {
+    test('a repository configuration with from_languages owners what the language kits claim', () => {
         const selected = selectKits(['bash'], manifests);
         const structure = manifests.get('structure')!;
-        const claimed = claimedByClaims(structure.claims, selected, [file('a.sh'), file('README.md')], '');
-        expect(claimed.map((entry) => entry.path)).toStrictEqual(['a.sh']);
+        const owned = ownedBy(structure.owners, selected, [file('a.sh'), file('README.md')], '');
+        expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
     });
 
     test('a scope narrows the file set', () => {
         const selected = selectKits(['bash'], manifests);
         expect(
-            claimedByClaims(manifests.get('bash')!.claims, selected, [file('api/a.sh'), file('b.sh')], 'api').map(
+            ownedBy(manifests.get('bash')!.owners, selected, [file('api/a.sh'), file('b.sh')], 'api').map(
                 (entry) => entry.path,
             ),
         ).toStrictEqual(['api/a.sh']);
@@ -107,14 +107,9 @@ describe('detection', () => {
     });
 });
 
-test('security combines language claims with plist inputs', () => {
+test('security combines language owners with plist inputs', () => {
     const selected = selectKits(['swift', 'security'], manifests);
     const security = manifests.get('security')!;
-    const claimed = claimedByClaims(
-        security.claims,
-        selected,
-        [file('App.swift'), file('Info.plist'), file('notes.md')],
-        '',
-    );
-    expect(claimed.map((entry) => entry.path)).toStrictEqual(['App.swift', 'Info.plist']);
+    const owned = ownedBy(security.owners, selected, [file('App.swift'), file('Info.plist'), file('notes.md')], '');
+    expect(owned.map((entry) => entry.path)).toStrictEqual(['App.swift', 'Info.plist']);
 });

@@ -20,7 +20,7 @@ function callsOf(node: Node): Node[] {
 export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
-        if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
+        if (file.kind !== 'source' || !file.path.endsWith('.py')) continue;
         const tree = await parseSource(
             'python',
             readSource(input.root, file.path, input.reads).toString('utf8'),

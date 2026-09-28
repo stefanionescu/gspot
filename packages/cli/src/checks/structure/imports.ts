@@ -112,7 +112,7 @@ export async function scopeImports(input: EngineInput): Promise<ImportIndex> {
         .map((entry) => entry.path)
         .filter((path) => path !== input.scope && isInScope(path, input.scope));
     const paths = input.files
-        .filter((file) => file.nature === 'source' && SOURCE.test(file.path))
+        .filter((file) => file.kind === 'source' && SOURCE.test(file.path))
         .map((file) => file.path)
         .filter((path) => isInScope(path, input.scope) && children.every((child) => !isInScope(path, child)));
     const key = JSON.stringify([input.scope, paths]);

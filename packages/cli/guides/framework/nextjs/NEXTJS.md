@@ -46,7 +46,7 @@ responsible module and the required behavior when designing or reviewing such a 
 
 ### Structure and routing
 
-- Next.js owns two path facts and no more: the router directory, `app/` or `pages/`, optionally
+- Next.js owns two path fields and no more: the router directory, `app/` or `pages/`, optionally
   under `src/`, and the reserved names inside it. Everything else about the layout is the
   project's own.
 - Follow Next.js special filenames and exports. A `page` exposes UI; a `route` exposes an HTTP

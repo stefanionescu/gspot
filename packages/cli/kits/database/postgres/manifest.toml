@@ -8,9 +8,9 @@ description = "Postgres migrations: squawk for the changes that lock or break, o
 [detect]
 paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
 
-[claims]
+[owners]
 paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "squawk"

@@ -81,12 +81,12 @@ Documentation must be:
 - Scannable: Headings, short paragraphs, lists, and examples expose the page
   structure.
 - Complete at its chosen level: A task includes every required step. A reference
-  includes the full contract it claims to cover.
+  includes the full contract it owns to cover.
 - Concise: Every sentence contributes new information.
 - Honest: Limitations, destructive effects, prerequisites, and uncertainty are
   visible before they affect the reader.
 - Maintainable: The content has a clear owner and does not duplicate volatile
-  facts without a reason.
+  fields without a reason.
 - Accessible: Text carries the essential meaning, and formatting does not
   exclude readers who use assistive technology.
 - Secure: Examples never expose credentials, personal data, or unsafe defaults.
@@ -489,7 +489,7 @@ Use one task for one primary outcome. Split unrelated outcomes.
 
 ### Reference
 
-A reference topic provides exact facts for lookup.
+A reference topic provides exact fields for lookup.
 
 Use reference topics for:
 
@@ -578,7 +578,7 @@ For non-trivial documentation work:
 1. Find the current owner for the topic.
 1. Decide whether to update an existing page or create a new page.
 1. Select the topic type.
-1. List the claims that require evidence.
+1. List the owns that require evidence.
 1. Identify security, permission, compatibility, and data-loss caveats.
 1. Choose the smallest example that proves normal use.
 1. Outline sections in cognitive-funnel order.
@@ -651,13 +651,13 @@ Prefer stable authoritative sources. Replace or remove:
 - Archived unofficial copies.
 - Links to branch line numbers.
 - Private destinations.
-- Pages that do not support the claim.
+- Pages that do not support the own.
 
 Do not inline all external information to avoid link rot. Copying creates a
 different form of drift. Keep essential project instructions local and link to
 authoritative external contracts.
 
-### Maintain duplicated facts
+### Maintain duplicated fields
 
 When a fact changes, search for:
 

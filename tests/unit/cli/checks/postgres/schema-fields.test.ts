@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
-import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
+import { schema } from '#cli/checks/postgres/schema/fields.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven cases parse a migration fixture; one owner keeps its shape.
 async function migration(name: string, text: string): Promise<Migration> {
@@ -9,9 +9,9 @@ async function migration(name: string, text: string): Promise<Migration> {
     return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };
 }
 
-describe('schemaFacts', () => {
+describe('schema', () => {
     test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
-        const facts = schemaFacts([
+        const fields = schema([
             await migration(
                 '1_create.sql',
                 'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));',
@@ -21,17 +21,17 @@ describe('schemaFacts', () => {
                 'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;',
             ),
         ]);
-        expect(facts.tables.keys().toArray()).toStrictEqual(['public.posts']);
-        expect(facts.foreignKeys.map((key) => `${key.table}.${key.column}`)).toStrictEqual([
+        expect(fields.tables.keys().toArray()).toStrictEqual(['public.posts']);
+        expect(fields.foreignKeys.map((key) => `${key.table}.${key.column}`)).toStrictEqual([
             'public.posts.author_id',
             'public.posts.team_id',
         ]);
-        expect(facts.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'author_id']));
+        expect(fields.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'author_id']));
     });
 });
 
 test('table recreation discards security, policies, keys, and indexes from the old table', async () => {
-    const facts = schemaFacts([
+    const fields = schema([
         await migration(
             '1_reset.sql',
             `
@@ -44,11 +44,11 @@ test('table recreation discards security, policies, keys, and indexes from the o
     `,
         ),
     ]);
-    expect([...facts.tables.keys()]).toStrictEqual(['public.posts']);
-    expect([...facts.secured]).toStrictEqual([]);
-    expect([...facts.policed]).toStrictEqual([]);
-    expect([...facts.indexed]).toStrictEqual([]);
-    expect(facts.foreignKeys.map((key) => key.column)).toStrictEqual(['author_id']);
+    expect([...fields.tables.keys()]).toStrictEqual(['public.posts']);
+    expect([...fields.secured]).toStrictEqual([]);
+    expect([...fields.policed]).toStrictEqual([]);
+    expect([...fields.indexed]).toStrictEqual([]);
+    expect(fields.foreignKeys.map((key) => key.column)).toStrictEqual(['author_id']);
 });
 
 test('removing one policy or equivalent index preserves the other until it is removed', async () => {
@@ -65,10 +65,10 @@ test('removing one policy or equivalent index preserves the other until it is re
         DROP INDEX first;
     `,
     );
-    const retained = schemaFacts([initial]);
+    const retained = schema([initial]);
     expect(retained.policed.has('public.posts')).toBe(true);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
-    const removed = schemaFacts([
+    const removed = schema([
         initial,
         await migration(
             '2_drop.sql',
@@ -84,7 +84,7 @@ test('removing one policy or equivalent index preserves the other until it is re
     expect([...removed.indexed]).toStrictEqual([]);
 });
 
-test('dropped foreign and unique constraints remove only the facts they own', async () => {
+test('dropped foreign and unique constraints remove only the fields they own', async () => {
     const initial = await migration(
         '1_keys.sql',
         `
@@ -96,9 +96,9 @@ test('dropped foreign and unique constraints remove only the facts they own', as
         ALTER TABLE posts DROP CONSTRAINT author_fk, DROP CONSTRAINT author_unique;
     `,
     );
-    const retained = schemaFacts([initial]);
+    const retained = schema([initial]);
     expect(retained.foreignKeys.map((key) => key.column)).toStrictEqual(['team_id']);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
-    const removed = schemaFacts([initial, await migration('2_drop.sql', 'DROP INDEX author_index;')]);
+    const removed = schema([initial, await migration('2_drop.sql', 'DROP INDEX author_index;')]);
     expect([...removed.indexed]).toStrictEqual([]);
 });

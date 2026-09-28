@@ -66,7 +66,7 @@ test('repository file discovery > classifies a dangling tracked symlink without 
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
-    expect(repository.files[0]?.nature).toBe('source');
+    expect(repository.files[0]?.kind).toBe('source');
 });
 
 test('repository file discovery > reads only the requested prefix and reports absent required content', async () => {

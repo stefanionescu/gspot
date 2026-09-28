@@ -41,7 +41,7 @@ that content loader. It does not require rebuilding the site shell.
 Use the inspected [Nx content-loader pattern](15-prior-art.md#nx-and-turborepo) for reference
 mechanics. Use the selected Turborepo visual direction: neutral surfaces, restrained typography, and
 understated blue links. Use Nx's task-focused documentation structure. These are design
-influences, not copied artwork or claims of those sites' accessibility. Verify the rendered gspot
+influences, not copied artwork or owns of those sites' accessibility. Verify the rendered gspot
 experience against the acceptance criteria below.
 
 ## The README
@@ -57,7 +57,7 @@ follows the introduction. The compact logo does not replace the text title.
 Use this ordered content brief when rewriting the root README:
 
 1. Title `gspot`. Use the product description "CLI to lint and enforce rules for LLM generated codebases."
-1. State prerelease status and material platform limits before setup. Do not claim gspot
+1. State prerelease status and material platform limits before setup. Do not own gspot
    detects whether a human or an agent wrote code.
 1. A compact, selectable example of one finding: path, check name, explanation, and `help:`.
    Copy it from a test repository run. Link to an optional recording on the site; do not make an
@@ -149,14 +149,14 @@ side effects, noninteractive behavior, and an example. Check reference includes 
 purpose, level, stage, scope, a triggering example, a corrected example, and the scoped
 exception procedure. Settings reference includes type, default, scope, precedence, and a
 complete configuration fragment. Link tool rules to their upstream reference. Keep these
-facts with the generator's source definitions, not a second hand-written table.
+fields with the generator's source definitions, not a second hand-written table.
 
 A description, usage string, option list, or JSON Schema dump alone is not a complete reference.
 Provide the behavioral explanations and examples above through the existing content loader and
 its owning definitions. Validate missing required content before replacing a generated entry.
 
 A successful build or large page count does not establish reader completeness. Keep authored
-recovery guides separate from reference facts; remove duplicated procedures and stale claims.
+recovery guides separate from reference fields; remove duplicated procedures and stale owns.
 Do not add a second documentation generator or a universal example-execution framework.
 Each shipped check and plugin rule owns one required, nonempty Markdown `example` field.
 Render that field through the existing reference loader. Exercise its defect and correction
@@ -192,7 +192,7 @@ clearly distinguished. Link to the owning guide for the complete procedure. Remo
 repeated explanations, decorative sign-offs, and oversized terminal framing.
 
 Exclude testimonials, usage-statistics cards, competitor graphics, and unsupported product
-claims. Demonstrations record the test repository or revision, CLI version, command, platform,
+owns. Demonstrations record the test repository or revision, CLI version, command, platform,
 and tool availability; timing also names cold or warm caches. A check count is neither coverage
 nor correctness. Passing the gate does not prove that code has no defects.
 
@@ -287,7 +287,7 @@ Acceptance is task-based as well as mechanical:
   rerun. A teammate follows the clone/install path. A third task covers a scoped exception
   and finding recovery instructions.
 - Record where readers get stuck; do not use page count
-  or a forced five-minute completion claim as evidence of usability.
+  or a forced five-minute completion own as evidence of usability.
 - Internal links, command samples, generated-reference completeness, and release/version
   consistency pass. No unshipped command or setting appears as supported public behavior.
 - All controls have accessible names, visible focus, and keyboard operation. Text contrast

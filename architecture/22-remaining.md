@@ -49,7 +49,7 @@ remains deferred, not passed.
 Implementation-owner paths are relative to `packages/cli/src/`, except explicit repository
 paths. Build ownership is `packages/cli/scripts/`; configuration and rule ownership is under
 `packages/cli/`. Each retained task below names its owner, dependencies, acceptance clauses,
-and required completion evidence. Those requirements are not claims of completed execution.
+and required completion evidence. Those requirements are not owns of completed execution.
 
 Retired directory prescriptions, removed Go/Rust/Ruby configurations, generated-Markdown
 inventories, project-template flags, and delegation preferences remain retired.
@@ -209,21 +209,21 @@ Checked without change on 2026-09-26:
 
 `K-224` and `K-228` have no text in the architecture folder.
 
-Done 2026-09-26, `K-233` (step 2.4): the css configuration detects and claims `.css` alone. The
+Done 2026-09-26, `K-233` (step 2.4): the css configuration detects and owns `.css` alone. The
 css checks read `.module.css` and no Sass; a `.scss` file is a language init lists without a
 configuration.
 
-### CSS claims contradict the contract
+### CSS owns contradict the contract
 
 Step 2.4. Confirmed defect.
 
-[Acceptance `K-233`](06-enforcement-ledger.md#acceptance-k-233) limits CSS claims to `.css` and
+[Acceptance `K-233`](06-enforcement-ledger.md#acceptance-k-233) limits CSS owns to `.css` and
 requires Sass to be reported as unsupported. The
 [CSS manifest](../packages/cli/kits/language/css/manifest.toml) instead detects and
-claims `.scss` and `.pcss` alongside `.css`.
+owns `.scss` and `.pcss` alongside `.css`.
 
-Owner: CSS configuration and detection. Task: align detection and check claims with the agreed
-contract. Dependencies: scope/claim selection. Completion evidence: `.css` receives the intended
+Owner: CSS configuration and detection. Task: align detection and check owners with the agreed
+contract. Dependencies: scope/own selection. Completion evidence: `.css` receives the intended
 checks, unsupported files receive no CSS findings, and Sass detection explains unsupported
 coverage. Acceptance: `K-233`.
 
@@ -253,7 +253,7 @@ removal. The ownership tests hold two replacements, later edits through apply an
 interrupted logs, damaged backups, a full disk during a batch, a failed rename, and a fresh
 clone. `K-252` has no text in the architecture folder.
 
-Exit: fixture scenarios reach their intended assertions; schemas, scopes, CSS claims, and
+Exit: fixture scenarios reach their intended assertions; schemas, scopes, CSS owns, and
 local publication/recovery contracts agree. Verify bounds primitives in 2.5, then their
 publication/recovery integration in 2.6. Native-only evidence remains assigned to phase 10.
 

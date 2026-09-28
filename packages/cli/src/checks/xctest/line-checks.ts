@@ -23,7 +23,7 @@ async function testFindings(
 ): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
-        if (file.nature !== 'source' || !file.tags.includes('swift-test')) continue;
+        if (file.kind !== 'source' || !file.tags.includes('swift-test')) continue;
         const source = readSource(input.root, file.path, input.reads).toString('utf8');
         const tree = await parseSource('swift', source, input);
         if (tree === null) throw new Error('Swift test analysis could not parse the source.');

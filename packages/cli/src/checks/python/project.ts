@@ -100,7 +100,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files.filter(
-        (file) => file.nature === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
+        (file) => file.kind === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
     );
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))

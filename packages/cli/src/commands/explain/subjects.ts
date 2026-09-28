@@ -38,7 +38,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         default: manifest.kit.default,
         proposed: manifest.kit.proposed,
     };
-    const { detect, claims } = manifest;
+    const { detect, owners } = manifest;
     const lines = [
         `${row.title} (${row.kind} configuration)`,
         '',
@@ -49,8 +49,8 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
             ...detect.filenames,
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
-        ...listLine('Claims', [...claims.extensions, ...claims.filenames, ...claims.paths]),
-        ...(claims.from_languages ? ['Claims: every file a language kit claims'] : []),
+        ...listLine('Owners', [...owners.extensions, ...owners.filenames, ...owners.paths]),
+        ...(owners.from_languages ? ['Owners: every file a language kit owners'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>

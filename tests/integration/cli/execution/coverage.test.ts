@@ -160,7 +160,7 @@ test('engine coverage rejects an unread path and accepts confirmed repository so
     expect(corrected).toMatchObject({ status: 'ok', files: 1, checkedFiles: ['source.sh'] });
 });
 
-test('a per-scope check runs only where that scope owns a claimed source', async () => {
+test('a per-scope check runs only where that scope owns a owned source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = ["bash"]\n[[scope]]\npath = "app"\nkits = []\n',
@@ -193,7 +193,7 @@ test('a per-scope check runs only where that scope owns a claimed source', async
     expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 2, findings: [] });
 });
 
-test('a project-wide check covers its claimed sources without claiming unrelated project inputs', async () => {
+test('a project-wide check covers its owned sources without owning unrelated project inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = ["bash"]\n',

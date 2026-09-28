@@ -71,10 +71,10 @@ test('pre-commit is detected from its native configuration', async () => {
     const files = [
         {
             path: '.pre-commit-config.yaml',
-            nature: 'source' as const,
+            kind: 'source' as const,
             tags: [],
             prefix: Buffer.from('repos: []'),
-            natureSource: 'default' as const,
+            kindSource: 'default' as const,
             executable: false,
             size: 10,
         },

@@ -33,7 +33,7 @@ function policyPatterns(input: EngineInput): PathPattern[] {
     return [
         ...policy.ignores.flatMap((entry) => (entry.paths ?? []).map((pattern) => ({ pattern, where: '[[ignore]]' }))),
         ...policy.declarations.flatMap((entry) =>
-            entry.paths.map((pattern) => ({ pattern, where: `[[${entry.nature}]]` })),
+            entry.paths.map((pattern) => ({ pattern, where: `[[${entry.kind}]]` })),
         ),
         ...listed(structure.single_file_folder_allowed, 'paths').map((pattern) => ({
             pattern,

@@ -12,10 +12,10 @@ filenames = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 project_files = ["pyproject.toml", "requirements*.txt", "Pipfile"]
 shebangs = ["python", "python3"]
 
-[claims]
+[owners]
 extensions = [".py", ".pyi"]
 filenames = ["pyproject.toml"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "ruff"
@@ -115,7 +115,7 @@ findings_exit_codes = [1]
 fix_command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
 fix_order = "codemod"
 fix_findings_exit_codes = [1]
-claims = {extensions = [".py", ".pyi"]}
+owners = {extensions = [".py", ".pyi"]}
 coverage = ["style", "structure", "security"]
 output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
 summary = "Lints every Python file with the shipped Ruff families, the security family included."
@@ -132,7 +132,7 @@ command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check
 findings_exit_codes = [1]
 fix_command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
 fix_order = "format"
-claims = {extensions = [".py", ".pyi"]}
+owners = {extensions = [".py", ".pyi"]}
 coverage = ["format"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it."}
 summary = "Checks the layout of every Python file against the Ruff formatter."
@@ -149,7 +149,7 @@ runs = "per-scope"
 cwd = "scope"
 command = ["basedpyright", "--outputjson"]
 findings_exit_codes = [1]
-claims = {extensions = [".py", ".pyi"]}
+owners = {extensions = [".py", ".pyi"]}
 coverage = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
 summary = "Type checks the project with stable diagnostics and adds annotation conventions at all."
@@ -167,7 +167,7 @@ cwd = "scope"
 engine = "integrity"
 analysis = "python-import-linter"
 tool = "lint-imports"
-claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
+owners = {extensions = [".py"], filenames = ["pyproject.toml"]}
 coverage = ["structure"]
 summary = "Runs the import contracts of the project, when pyproject.toml holds any."
 why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
@@ -183,7 +183,7 @@ analysis = "pydoclint"
 cwd = "scope"
 nested_config = "pyproject.toml"
 tool = "pydoclint"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["prose"]
 output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}
 summary = "Checks that every docstring names the arguments, the return, and the exceptions its function really has."
@@ -201,7 +201,7 @@ cwd = "scope"
 analysis = "deptry"
 tool = "deptry"
 cached = true
-claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
+owners = {extensions = [".py"], filenames = ["pyproject.toml"]}
 coverage = ["consistency"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$"}
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
@@ -218,7 +218,7 @@ runs = "per-scope"
 cwd = "scope"
 command = ["vulture", ".", "--min-confidence", "{setting:tools.vulture.min_confidence}", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
 findings_exit_codes = [3]
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
 summary = "Finds functions, classes, and variables nothing uses."
@@ -233,7 +233,7 @@ level = "recommended"
 stage = "commit"
 command = ["validate-pyproject", "{file}"]
 findings_exit_codes = [1]
-claims = {filenames = ["pyproject.toml"]}
+owners = {filenames = ["pyproject.toml"]}
 tool = "validate-pyproject"
 coverage = ["schema"]
 output = {format = "regex", pattern = "^\\[ERROR\\] (?<message>.*)$"}
@@ -248,7 +248,7 @@ example = "An authored `requirements.txt` beside a locked Python project creates
 level = "all"
 stage = "commit"
 runs = "per-scope"
-claims = {filenames = ["uv.lock", "poetry.lock", "pdm.lock"], natures = ["source", "generated"]}
+owners = {filenames = ["uv.lock", "poetry.lock", "pdm.lock"], kinds = ["source", "generated"]}
 engine = "integrity"
 analysis = "python-dependency-ownership"
 coverage = ["consistency"]
@@ -279,7 +279,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-file-length"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that no Python file has more code lines than the ceiling."
 why = "A long module holds more than one job, and the second job is the one nobody finds."
@@ -294,7 +294,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-function-length"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that no Python function has more code lines than the ceiling."
 why = "A function that fills a screen does several things, and a reader has to hold all of them."
@@ -309,7 +309,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-trivial-function"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
@@ -325,7 +325,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-placeholder-docstring"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
 why = "A docstring that says nothing passes the docstring rule and wastes the line."
@@ -340,7 +340,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-private-prefix"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name."
 why = "A name that is public by accident gets imported, and then it cannot change."
@@ -355,7 +355,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-private-before-public"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that private functions sit above the public functions of a module."
 why = "A reader who meets the parts first understands what is built from them."
@@ -370,7 +370,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-exports-at-bottom"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that the export list is the last statement of its module."
 why = "A reader looks for the public surface in one place."
@@ -385,7 +385,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-no-lazy-exports"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Refuses a module-level attribute hook that makes names appear at run time."
 why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
@@ -400,7 +400,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-package-exports"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that a package exports no more names than the ceiling."
 why = "A package that exports everything has no surface, so every change to it is a breaking one."
@@ -415,7 +415,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-import-comments"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Finds a comment written inside an import block, between its first and last import."
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry."
@@ -430,7 +430,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-export-order"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Checks that the names in the export list go shortest first, alphabetically among names of one length."
 why = "One order for every export list means a reader never searches it."
@@ -445,7 +445,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-import-cycles"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Finds first-party modules that import each other in a circle."
 why = "A circle imports in one order and fails in another, and the order changes with an unrelated edit."
@@ -460,7 +460,7 @@ stage = "commit"
 runs = "per-scope"
 engine = "integrity"
 analysis = "python-no-singletons"
-claims = {extensions = [".py"]}
+owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Finds objects built at import time and kept in a module variable."
 why = "Every importer shares the one instance, and no test gets a fresh one."

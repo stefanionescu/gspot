@@ -74,7 +74,7 @@ function scopeSelection(
     const without = new Set(context.options.without);
     const ids =
         flagged ??
-        detectKits(context.files, context.manifests, context.facts, scope.path)
+        detectKits(context.files, context.manifests, context.fields, scope.path)
             .filter((plan) => {
                 const manifest = getCandidate(context, plan.configuration, without);
                 return manifest !== undefined && manifest.kit.kind !== 'general';
@@ -88,9 +88,9 @@ function scopeSelection(
 function hasSourceOutsideScopes(context: InitContext, manifest: Manifest, scopes: ScopeEntry[]): boolean {
     return context.files.some(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             scopes.every((scope) => scope.path === '' || !file.path.startsWith(`${scope.path}/`)) &&
-            manifest.claims.extensions.some((extension) => file.path.endsWith(extension)),
+            manifest.owners.extensions.some((extension) => file.path.endsWith(extension)),
     );
 }
 
@@ -178,13 +178,13 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
  * @returns the scopes, the root and per-scope kit ids, and the closure of everything selected.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
-    const { root, repo, facts, workspace, manifests, options } = inputs;
-    const context: InitContext = { manifests, files: repo.files, facts, options, hasGit: repo.hasGit };
+    const { root, repo, fields, workspace, manifests, options } = inputs;
+    const context: InitContext = { manifests, files: repo.files, fields, options, hasGit: repo.hasGit };
     const scopeFlags = parseScopeFlags(options.scopes);
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;
-    const rootPlans = detectKits(repo.files, manifests, facts);
+    const rootPlans = detectKits(repo.files, manifests, fields);
     const proposedRoot = rootSelection(context, rootPlans, hasScopes);
     const scopePlans = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {

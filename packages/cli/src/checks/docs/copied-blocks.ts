@@ -24,18 +24,18 @@ export const cloneReportSchema = z.object({
 });
 
 /**
- * The findings of a jscpd report: none while the duplicated share is at or under the ceiling, then one for each clone in a claimed file.
+ * The findings of a jscpd report: none while the duplicated share is at or under the ceiling, then one for each clone in a owned file.
  * @param report the parsed report.
- * @param shape the check id, the repository root, the ceiling out of 100, and the claimed paths.
+ * @param shape the check id, the repository root, the ceiling out of 100, and the owned paths.
  * @param shape.check the check id.
  * @param shape.root the repository root.
  * @param shape.ceiling the largest duplicated share accepted, out of 100.
- * @param shape.claimed the paths the check claims.
+ * @param shape.owned the paths the check owners.
  * @returns the findings.
  */
 export function cloneFindings(
     report: CloneReport,
-    shape: { check: string; root: string; ceiling: number; claimed: Set<string> },
+    shape: { check: string; root: string; ceiling: number; owned: Set<string> },
 ): Finding[] {
     const share = report.statistics.total.percentage;
     if (share <= shape.ceiling) return [];
@@ -45,7 +45,7 @@ export function cloneFindings(
                 ? relative(toNamespacedPath(shape.root), toNamespacedPath(clone.secondFile.name))
                 : clone.secondFile.name,
         );
-        if (!shape.claimed.has(file)) return [];
+        if (!shape.owned.has(file)) return [];
         const first = toPosix(
             isAbsolute(clone.firstFile.name)
                 ? relative(toNamespacedPath(shape.root), toNamespacedPath(clone.firstFile.name))
@@ -73,7 +73,7 @@ export function cloneFindings(
 export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
     try {
-        const claimed = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+        const owned = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
         const files = openRoot(input.root);
         let content: Buffer;
         try {
@@ -86,7 +86,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
         const shipped = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
         // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
         const config = join(work, 'jscpd.json');
-        writeFileSync(config, JSON.stringify({ ...shipped, path: claimed.map((path) => join(input.root, path)) }));
+        writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
         const argv = [JSCPD_TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
         const result = await runCheckCommand(input, argv, { cwd: input.root });
         if (result.code !== 0)
@@ -101,7 +101,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
                 check: input.spec.name,
                 root: input.root,
                 ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
-                claimed: new Set(claimed),
+                owned: new Set(owned),
             },
         );
     } finally {

@@ -257,7 +257,7 @@ exemptions that whole-part matching does not need.
 The engine extracts identifiers with tree-sitter per language and classifies them. One unit test for each language runs the shipped policy over a short file written the way
 that language and its frameworks are written, and expects no finding (T-19).
 
-Extraction skips: generated files (by nature), lockfiles, the paths a configuration excludes
+Extraction skips: generated files (by kind), lockfiles, the paths a configuration excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
 Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table).
 

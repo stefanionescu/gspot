@@ -9,9 +9,9 @@ description = "Dockerfiles and Compose files: hadolint, a Compose file that pars
 [detect]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]
 
-[claims]
+[owners]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "hadolint"
@@ -79,7 +79,7 @@ example = "The instruction `FROM node:latest` reports DL3007 because the tag cha
 level = "recommended"
 stage = "commit"
 command = ["hadolint", "--no-color", "--config", "{config:hadolint}", "{files}"]
-claims = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
+owners = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
 coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$"}
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
@@ -95,7 +95,7 @@ stage = "push"
 requires = "docker"
 tool = "docker"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
-claims = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
+owners = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
 coverage = ["syntax"]
 output = {format = "lines"}
 summary = "Asks Docker Compose to parse every Compose file, which needs no running daemon."

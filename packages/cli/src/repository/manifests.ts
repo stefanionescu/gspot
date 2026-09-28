@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
-import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
+import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {
     const files = openRoot(root, 'native');
@@ -17,7 +17,7 @@ function manifestText(root: string, path: string): string {
     }
 }
 
-function packageJsonFacts(root: string, path: string): ManifestFacts {
+function packageJsonFacts(root: string, path: string): Fields {
     const parsed = readPackageManifest(root, path);
     const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
     const dependencies: DependencyMap = {
@@ -25,7 +25,7 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         ...parsed.peerDependencies,
         ...parsed.optionalDependencies,
     };
-    const facts: ManifestFacts = {
+    const fields: Fields = {
         path,
         kind: 'package.json',
         dependencies,
@@ -35,9 +35,9 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         engines: parsed.engines ?? {},
     };
     const installer = parsed['packageManager'];
-    if (typeof installer === 'string') facts.installer = installer;
-    if (typeof parsed['type'] === 'string') facts.type = parsed['type'];
-    return facts;
+    if (typeof installer === 'string') fields.installer = installer;
+    if (typeof parsed['type'] === 'string') fields.type = parsed['type'];
+    return fields;
 }
 
 // A requirement that names a package: letters or digits at both ends, dots, dashes, and underscores between.
@@ -87,7 +87,7 @@ function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse
     );
 }
 
-function pipfileFacts(root: string, path: string): ManifestFacts {
+function pipfile(root: string, path: string): Fields {
     const parsed = pipfileSchema.parse(parseToml(manifestText(root, path)));
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
@@ -96,7 +96,7 @@ function pipfileFacts(root: string, path: string): ManifestFacts {
     return { path, kind: 'Pipfile', dependencies, installed: dependencies, scripts: {}, workspaces: [], engines: {} };
 }
 
-function requirementsFacts(root: string, path: string): ManifestFacts {
+function requirements(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
@@ -116,7 +116,7 @@ function requirementsFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-function pyprojectFacts(root: string, path: string): ManifestFacts {
+function pyproject(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const parsed = pythonManifestSchema.parse(parseToml(text));
     const project = parsed.project ?? {};
@@ -134,7 +134,7 @@ function pyprojectFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-function swiftFacts(root: string, path: string): ManifestFacts {
+function swift(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
@@ -153,11 +153,11 @@ function swiftFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-const READERS: Record<string, (root: string, path: string) => ManifestFacts> = {
+const READERS: Record<string, (root: string, path: string) => Fields> = {
     'package.json': packageJsonFacts,
-    'pyproject.toml': pyprojectFacts,
-    'Package.swift': swiftFacts,
-    Pipfile: pipfileFacts,
+    'pyproject.toml': pyproject,
+    'Package.swift': swift,
+    Pipfile: pipfile,
 };
 
 const stringList = z.array(z.string());
@@ -236,21 +236,21 @@ export function readPackageManifest(root: string, path: string): PackageManifest
 }
 
 /**
- * Facts from every manifest in the tree.
+ * Fields from every manifest in the tree.
  * @param root the repository root
  * @param files the tracked files
- * @returns one facts entry per supported manifest
+ * @returns one fields entry per supported manifest
  */
-export function readManifests(root: string, files: TrackedFile[]): ManifestFacts[] {
+export function readManifests(root: string, files: TrackedFile[]): Fields[] {
     return files
         .filter(
             (file) =>
-                file.nature === 'source' &&
+                file.kind === 'source' &&
                 !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
         )
         .flatMap((file) => {
             const base = file.path.slice(file.path.lastIndexOf('/') + 1);
-            const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirementsFacts : READERS[base];
+            const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirements : READERS[base];
             if (reader === undefined) return [];
             try {
                 return [reader(root, file.path)];

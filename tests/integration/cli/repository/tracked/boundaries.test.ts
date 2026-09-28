@@ -25,7 +25,7 @@ test('opening a session reads less than one megabyte with a fifty-megabyte sourc
         expect(large.size).toBeGreaterThanOrEqual(50 * megabyte);
         expect(large.prefix.byteLength).toBe(4096);
         expect(large.tags).toContain('bash');
-        expect(large.nature).toBe('generated');
+        expect(large.kind).toBe('generated');
         const prefixBytes = prefixReads.mock.results.reduce(
             (sum, result) => sum + (result.type === 'return' ? result.value : 0),
             0,

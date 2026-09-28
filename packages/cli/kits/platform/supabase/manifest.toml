@@ -11,9 +11,9 @@ filenames = ["supabase/config.toml"]
 paths = ["supabase/config.toml", "**/supabase/config.toml"]
 project_files = ["supabase/config.toml"]
 
-[claims]
+[owners]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "deno"

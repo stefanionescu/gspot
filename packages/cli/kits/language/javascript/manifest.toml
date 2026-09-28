@@ -14,7 +14,7 @@ extensions = [".js", ".jsx", ".mjs", ".cjs"]
 project_files = ["package.json"]
 shebangs = ["node"]
 
-[claims]
+[owners]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 tags = ["shebang:node"]
 
@@ -241,7 +241,7 @@ fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
-claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
+owners = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
 coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
@@ -258,7 +258,7 @@ runs = "per-scope"
 cwd = "scope"
 analysis = "javascript"
 tool = "tsc"
-claims = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
+owners = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."

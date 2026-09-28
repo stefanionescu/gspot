@@ -5,12 +5,12 @@ import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { Generated } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
+import { isValePackageFile } from '#cli/repository/kind.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 

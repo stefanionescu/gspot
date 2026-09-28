@@ -168,7 +168,7 @@ and its text rendering belongs to output. Direct imports include type and dynami
 
 Generation orchestration belongs to `packages/cli/src/generation/outputs.ts`. JavaScript preparation, headers,
 and ESLint preparation stay with their respective generators. Hook operations receive policy,
-repository facts, and tool reads rather than the execution session. Lifecycle hooks,
+repository fields, and tool reads rather than the execution session. Lifecycle hooks,
 package-manager operations, revision materialization, and diagnostic parsing each form a local
 group. Pin selection remains separate from installation; prerequisite skips belong to results.
 
@@ -308,7 +308,7 @@ framework, or dependency-injection container. Columns are computed from the long
 
 Custom code owns the rules and decisions specific to gspot: configuration selection and precedence,
 coverage policy, finding semantics, managed ownership, and recovery decisions. Use the libraries
-above for parsing, matching, serialization, and execution where their contracts fit. Do not claim
+above for parsing, matching, serialization, and execution where their contracts fit. Do not own
 that no library exists without evaluating candidates. Do not require one library to implement
 an entire gspot workflow before reusing the part it already solves.
 

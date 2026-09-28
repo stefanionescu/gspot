@@ -23,7 +23,7 @@ function generatedContents(cwd: string): Map<string, Buffer> {
  */
 export function drizzleRelations(input: EngineInput): Finding[] {
     const files = input.files
-        .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
+        .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({
             path: file.path,
             text: readSource(input.root, file.path, input.reads).toString('utf8'),

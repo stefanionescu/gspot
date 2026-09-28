@@ -1,7 +1,7 @@
 // What init fills in from the repository: every setting whose manifest says where to look (K-93).
 import type { Manifest } from '#cli/types/kits.ts';
 import type { Detect, DetectedSetting } from '#cli/types/commands/init.ts';
-import type { TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
+import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function folderNames(files: TrackedFile[]): Set<string> {
     const folders = new Set<string>();
@@ -30,17 +30,13 @@ function detectedValue(detect: Detect, dependencies: Set<string>, folders: Set<s
 /**
  * The settings init can fill from what the repository holds, each with the value its detect table gives.
  * @param manifests the selected kits
- * @param facts the project manifests read from the tree
+ * @param fields the project manifests read from the tree
  * @param files the tracked files
  * @returns the detected settings in manifest order, one per setting
  */
-export function detectedSettings(
-    manifests: Manifest[],
-    facts: ManifestFacts[],
-    files: TrackedFile[],
-): DetectedSetting[] {
+export function detectedSettings(manifests: Manifest[], fields: Fields[], files: TrackedFile[]): DetectedSetting[] {
     const dependencies = new Set(
-        facts.flatMap((fact) => [...Object.keys(fact.dependencies), ...Object.keys(fact.installed)]),
+        fields.flatMap((fact) => [...Object.keys(fact.dependencies), ...Object.keys(fact.installed)]),
     );
     const folders = folderNames(files);
     const seen = new Set<string>();

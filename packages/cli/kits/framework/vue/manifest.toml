@@ -10,9 +10,9 @@ description = "Vue single-file components: ESLint reads the template and the scr
 dependencies = ["vue"]
 extensions = [".vue"]
 
-[claims]
+[owners]
 extensions = [".vue"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "eslint-plugin-vue"
@@ -63,7 +63,7 @@ fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 tool = "eslint"
-claims = {extensions = [".vue"]}
+owners = {extensions = [".vue"]}
 coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
@@ -82,7 +82,7 @@ tool = "vue-tsc"
 analysis = "typescript"
 replaces = "typescript/tsc"
 needs = "typescript"
-claims = {extensions = [".vue"]}
+owners = {extensions = [".vue"]}
 coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."

@@ -42,7 +42,7 @@ and gets findings from the hooks with a message it can act on.
 
 ## Promises
 
-These are target promises, not claims that every implementation already passes. Required
+These are target promises, not owns that every implementation already passes. Required
 evidence appears below; [remaining work](22-remaining.md) owns current dispositions.
 
 | Promise                                                  | What it means                                                                                                                                                   | Held by                                                                   |

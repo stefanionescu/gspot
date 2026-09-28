@@ -7,11 +7,11 @@ requires = ["formatting"]
 recommends = ["spelling"]
 description = "Checks JSON, YAML, TOML, workflows, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
 
-[claims]
+[owners]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".properties", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib", ".webmanifest"]
 filenames = [".nvmrc", ".node-version", ".python-version", "_headers", "_redirects", ".env", ".dev.vars"]
 paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]
-natures = ["source"]
+kinds = ["source"]
 
 [[tools]]
 name = "taplo"
@@ -121,7 +121,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 reported_by = "formatting/prettier"
-claims = {extensions = [".json", ".jsonc", ".json5"]}
+owners = {extensions = [".json", ".jsonc", ".json5"]}
 coverage = ["format", "syntax"]
 summary = "Parses and formats every JSON file through Prettier."
 why = "A JSON file that does not parse breaks the tool that reads it at the worst moment; one formatter keeps the diff about the values."
@@ -135,7 +135,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
-claims = {extensions = [".toml"]}
+owners = {extensions = [".toml"]}
 coverage = ["syntax"]
 output = {format = "regex", pattern = "^\\s*┌─ (?<file>[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
 summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
@@ -152,7 +152,7 @@ runs = "per-file-list"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix_command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
 fix_order = "format"
-claims = {extensions = [".toml"]}
+owners = {extensions = [".toml"]}
 coverage = ["format"]
 output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
 summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
@@ -167,7 +167,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
-claims = {extensions = [".yaml", ".yml"]}
+owners = {extensions = [".yaml", ".yml"]}
 coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
 summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
@@ -184,7 +184,7 @@ runs = "per-file-list"
 requires = "network"
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = {V8R_CONFIG_FILE = "{config:v8r}"}
-claims = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
+owners = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
 coverage = ["schema"]
 output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
 summary = "Validates every kit file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
@@ -201,7 +201,7 @@ runs = "per-file-list"
 analysis = "actions"
 tool = "actionlint"
 findings_exit_codes = [1]
-claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$"}
 summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
@@ -217,7 +217,7 @@ stage = "push"
 runs = "per-file-list"
 requires = "network"
 command = ["pinact", "run", "--verify", "--check", "{files}"]
-claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 coverage = ["security"]
 output = {format = "lines"}
 summary = "Verifies GitHub action commits and version comments without changing workflow files."
@@ -233,7 +233,7 @@ stage = "commit"
 runs = "per-file-list"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
 findings_exit_codes = [11, 12, 13, 14]
-claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+owners = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 coverage = ["security"]
 output = {format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$"}
 summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
@@ -250,7 +250,7 @@ runs = "per-file-list"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
 fix_command = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
 fix_order = "format"
-claims = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
+owners = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
 coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+) (?<rule>[A-Za-z]+): (?<message>.*)$"}
 summary = "Checks every tracked environment file: key format, duplicates, quoting, ordering, and trailing spaces."
@@ -280,7 +280,7 @@ stage = "commit"
 runs = "per-file-list"
 platform = ["macos"]
 command = ["plutil", "-lint", "{files}"]
-claims = {extensions = [".plist", ".entitlements"]}
+owners = {extensions = [".plist", ".entitlements"]}
 coverage = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$"}
 summary = "Parses every property list and entitlements file with plutil."
@@ -295,7 +295,7 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["xmllint", "--noout", "{files}"]
-claims = {extensions = [".xml", ".storyboard", ".xib"]}
+owners = {extensions = [".xml", ".storyboard", ".xib"]}
 coverage = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
 summary = "Parses every XML file, storyboard, and xib with xmllint."

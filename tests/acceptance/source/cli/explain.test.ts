@@ -71,7 +71,7 @@ stage = "manual"
     expect(ignored.code).toBe(0);
     expect(JSON.parse(ignored.stdout)).toMatchObject({
         checks: [],
-        unchecked: 'no enabled check claims this file',
+        unchecked: 'no enabled check owners this file',
         ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
     });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
@@ -120,7 +120,7 @@ test('explain > a file path reports its scope, checks, and recorded ignores', as
         subject: 'api/build.sh',
         path: 'api/build.sh',
         scope: 'api',
-        nature: 'source',
+        file: 'source',
         configurations: containingAll(['bash']),
         checks: containingAll([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
         ignores: [

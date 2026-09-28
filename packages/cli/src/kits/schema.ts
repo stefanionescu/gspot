@@ -6,13 +6,13 @@ import { commandSchema, findingExitCodesSchema } from '#cli/kits/command-schema.
 
 const stringList = z.array(z.string()).default([]);
 
-const claimsSchema = z.strictObject({
+const ownersSchema = z.strictObject({
     extensions: stringList,
     filenames: stringList,
     tags: stringList,
     paths: stringList,
     from_languages: z.boolean().default(false),
-    natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
+    kinds: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
 const pointerSchema = z
@@ -102,7 +102,7 @@ const checkFields = z.strictObject({
     waits_for: z.string().optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     tool: z.string().optional(),
-    claims: claimsSchema.optional(),
+    owners: ownersSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
     nested_config: z
@@ -242,13 +242,13 @@ export const manifestSchema = z.strictObject({
         description: sentence,
     }),
     detect: detectionSchema,
-    claims: claimsSchema.default({
+    owners: ownersSchema.default({
         extensions: [],
         filenames: [],
         tags: [],
         paths: [],
         from_languages: false,
-        natures: ['source'],
+        kinds: ['source'],
     }),
     tools: z.array(toolSchema).default([]),
     configs: z.array(configSchema).default([]),

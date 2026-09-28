@@ -63,7 +63,7 @@ export function deadAssets(input: EngineInput): Finding[] {
  */
 export async function svgCompressed(input: EngineInput): Promise<Finding[]> {
     const paths = input.files
-        .filter((file) => file.nature === 'source' && file.path.endsWith('.svg'))
+        .filter((file) => file.kind === 'source' && file.path.endsWith('.svg'))
         .map((file) => file.path);
     const findings: Finding[] = [];
     for (const path of paths) findings.push(...(await svgFinding(input, path)));
