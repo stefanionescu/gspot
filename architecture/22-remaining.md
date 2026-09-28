@@ -778,9 +778,8 @@ release-matched site and installed acceptance execute in phase 9.
 
 ## 8. Complete repository-wide lint remediation
 
-This is the active repository-wide cleanup phase. Current findings do not establish
-a clean repository. The historical full and staged counts are diagnostic observations, not current
-completion evidence. Owner: the source/configuration owners named by each finding. Dependencies:
+Local repository-wide cleanup passes its required checks. Historical diagnostic counts do not
+replace the candidate results in the cleanup record. Owner: the source/configuration owners named by each finding. Dependencies:
 phases 1 through 7 and current generated policy. Completion: rerun the unchanged candidate's
 full and manual checks with every required check executed and passing; record final staged
 evidence in step 9.8.
@@ -789,12 +788,11 @@ evidence in step 9.8.
 
 Repair TypeScript and ESLint findings, including authored build code.
 
-All installed commit tools execute. The full diagnostic passes code, structure,
-formatting, and asset checks. Its two record-wording findings pass a focused rerun.
-Guide corrections pass their focused rerun and full native verification.
+All installed commit tools execute. Full normal and manual checks pass code, structure,
+formatting, prose, and asset checks. Guide corrections pass native verification.
 
-The deterministic suite passes 2,388 cases with coverage. The full native suite passes
-417 cases. Seven-target builds, package dry runs, and embedded-parser verification pass.
+The deterministic suite passes 2,389 cases with coverage. The full native suite passes
+419 cases. Seven-target builds, package dry runs, and embedded-parser verification pass.
 Source and installed-release acceptance pass. Exact-commit CI evidence remains open. A source repair requires affected checks
 to run again.
 
@@ -1032,14 +1030,14 @@ and external repository changes are outside this cleanup.
 Verification uses the repository-pinned Bun 1.4.2. Test startup rejects an unsupported
 runtime before executing scenarios. Run the mise tasks from the repository root.
 
-The complete deterministic lane passes 2,388 tests across 273 files with coverage and
-9,741 assertions. Workspace and documentation types pass. The latest full commit-stage
-scan passes. The real index still matches the checkpoint recorded after the user commit.
-Final full and staged checks remain required.
+The complete deterministic lane passes 2,389 tests across 273 files with coverage and
+9,752 assertions, including execution from the pre-push environment. Workspace and
+documentation types pass. Full normal and manual checks pass. The final disposable-index
+check passes and preserves the real index before staging the reviewed commits.
 
 The full source acceptance run passes 557 tests with 4,364 assertions across 105 files.
 Installed-release acceptance then passes 171 tests with 394 assertions across nine files.
-Final staged checks and remote CI have no passing result yet. Native Windows and Linux results require their own
+Remote CI still requires verification. Native Windows and Linux results require their own
 runners. Simulated platform behavior does not replace them.
 
 [The cleanup record](lint-cleanup.md) owns detailed verification results. Superseded runtime

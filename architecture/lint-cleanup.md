@@ -101,6 +101,12 @@ violation still reports `gspot/no-trivial-functions`; the corrected index passes
 real index stays unchanged. Repeated apply writes nothing, preview has no drift, and
 doctor exits 0 against the resulting policy.
 
+The pre-push run exposed report tests inheriting the parent hook context. The existing test
+preload clears that context in the test process. Hook-specific cases still set and verify
+their own context, and the parent Git hook remains enabled. All 25 focused report and
+coverage tests pass with 77 assertions when launched from a pre-push environment.
+The full coverage run in that environment passes 2,389 tests with 9,752 assertions.
+
 Repository CI downloads normal and manual reports separately. Each Static Analysis Results
 Interchange Format (SARIF) upload uses a distinct category. This follows the
 [GitHub requirement for report identity](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/integrate-with-existing-tools/upload-sarif-file).
