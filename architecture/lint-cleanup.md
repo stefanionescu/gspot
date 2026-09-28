@@ -1,33 +1,113 @@
 # Repository Lint Cleanup
 
 This record tracks the repository-wide cleanup on `fix/root-cause-lint-cleanup`.
-The acceptance status is incomplete. No failed or unavailable check counts as passing.
+The results below distinguish local verification from external acceptance.
+No failed or unavailable check counts as passing.
 
 ## Baseline
 
-The current branch is `fix/root-cause-lint-cleanup`, at revision
-`d6403a02d83f3b609f7df876281d8e1d156a434b`. The resumed work preserves the inherited
-851-file change set. The real index contains only the rename from
-`statements.ts` to `packages/eslint-plugin/src/syntax.ts`. Starting patches and an index
-hash are recorded under `/tmp/gspot-lint-cleanup/resumption/`. The policy uses `level = "all"`.
+Work resumed on `fix/root-cause-lint-cleanup` at revision
+`d6403a02d83f3b609f7df876281d8e1d156a434b`, preserving the inherited 851-file change set.
+The starting index contained only the rename from `statements.ts` to
+`packages/eslint-plugin/src/syntax.ts`. Starting patches and index hashes are recorded under
+`/tmp/gspot-lint-cleanup/resumption/`. The policy uses `level = "all"`.
 
-The full commit diagnostic in `guide-audit-commit.json` passes with no findings.
-Later guide and native-example changes are undergoing focused verification before the
-unchanged-candidate gate. All required commit tools execute.
+The user committed the implementation as `3c4d0ba5e6ce1fc7947fcef270ddeecd95294af8`
+during verification. Its files matched the candidate at that checkpoint. With explicit user approval, the normal
+hooks reworded that commit to `fix(root): Complete repository cleanup`, producing
+`bd7c65943be772c769fcf76dfe04b27c233dcb72`. Its tree, author, author date, and parents are
+unchanged. The task branch requires the approved force-with-lease update.
+
+The empty index and its hash were recorded
+after the user commit. Later verification preserves this new checkpoint. The user authorized merging the completed branch into `main` after verification.
 
 Implementation files pass the latest direct scan. Test cleanup preserves independent
 failure and correction journeys, exact process arguments, ownership bytes, and native
 execution. No rule threshold or blanket exemption changed.
 
-The latest deterministic coverage run passes 2,383 tests with 9,706 assertions across
-272 files. Aggregate coverage is 83.35% of functions and 84.74% of lines. Type checks
-pass. The run includes the source-registry and release-harness repairs. Later formatter edits
-pass 23 focused tests with 100 assertions.
+The preceding deterministic run passes 2,388 tests with 9,744 assertions across 273 files.
+Coverage is 83.39% of functions and 84.78% of lines. Types pass. After the native platform
+correction, the affected guide rerun passes 19 tests with 93 assertions, and types pass again.
 
-The full native-tool suite passes 385 tests and 2,614 assertions across 62 files in
-501 seconds. Complete acceptance and CI remain open.
+The preceding full native suite passes 417 tests with 2,793 assertions across 65 files in
+524.82 seconds. Full source acceptance passes 557 tests with 4,364 assertions across
+105 files in 3,815.84 seconds. Installed-release acceptance passes 171 tests with 394 assertions across nine files in
+243.05 seconds. Both suites use the same CLI and plugin. CI remains open.
 
 ## Current implementation evidence
+
+The documentation review covers all 20 authored guides and the owners of generated references.
+Page and sidebar names use direct task names. Repeated explanations are removed; setup,
+private registries, existing configuration, hooks, CI reports, and coverage prerequisites have
+explicit instructions. Conditional rule guides list their selection conditions in the reference. Framework rule
+exclusions retain their selectors, setting conditions, and reasons in the same reference.
+
+The homepage demonstrates one real Python and Bash repository. Its configuration, two native
+findings, and corrected result share one example definition with the quickstart. A full native
+check proves both findings and both corrections; runtime assertions reject invalid JSON and
+accept archive paths containing spaces.
+
+Sixteen page renders cover four widths and both themes.
+Eight control scenarios verify copy alignment, the left menu, and theme placement and focus.
+Twelve keyboard-selected demonstration states preserve focus, selection, and viewport width.
+The rendered Python example retains four-space indentation at every tested width.
+
+This example exposed deptry scanning private installed tools outside Git repositories. The
+Python check excludes `.gspot` while retaining authored native exclusions. Its regression keeps
+an undeclared application import failing, accepts the correction, and verifies configuration
+changes invalidate the Git-backed cache.
+
+The affected native run passes 35 tests and 262 assertions. The Python source file passes
+11 tests and 72 assertions, including the new regression. The broader Python and lifecycle source rerun passes 32 tests and 186 assertions. The
+installed-release rerun passes 171 tests and 394 assertions. Earlier full source and release results below describe the preceding candidate.
+
+The commitlint pointer used a retired configuration path. Direct native execution reproduced
+the missing-module failure. Its manifest now uses the generated target placeholder, and apply
+regenerates the pointer. Native commitlint rejects an invalid message and accepts the correction.
+The four commit acceptance tests pass with 51 assertions; 220 generation tests pass with
+1,304 assertions. Other manifest pointers already derive their target or copy their generated content.
+
+All seven CLI targets rebuild. The four affected installed binary tests pass with 21 assertions.
+A separate compiled-CLI journey generates the pointer and verifies both native message outcomes.
+
+The full check exposed blocked process output during isolated dependency copying. A CPU
+profile traced the delay to synchronous workspace copies and cleanup. Git read the same
+objects successfully on its own but exceeded its unchanged timeout during the full run.
+Workspace copies and concurrent cleanup now use asynchronous filesystem operations.
+Link repair, permissions, confinement, and working-tree preservation retain their existing owners.
+A native-output regression fails with the synchronous implementation and passes after the repair.
+
+All 277 execution tests pass with 1,172 assertions, and TypeScript passes.
+The coverage rerun passes 2,389 tests with 9,752 assertions. Function coverage remains
+83.39%, and line coverage remains 84.78%.
+
+The uncached commit-and-push check passes 141 checks in 238.713 seconds. Its 12 ownership
+skips name their replacement checks. All seven manual checks pass without skips in
+214.509 seconds, including Bun coverage, CodeQL, and the selected Semgrep packs. Doctor exits 0.
+
+The native rerun passes 419 tests with 2,816 assertions across 66 files. All seven binaries,
+the plugin, and eight CLI package dry runs pass. Affected source acceptance passes 54 tests
+with 331 assertions across ten files. Installed-release acceptance passes all 171 tests
+with 394 assertions across nine files.
+
+The staged gate exposed an obsolete repository plugin registration. It redirected checks to
+untracked workspace build output that is absent from immutable Git snapshots. The source
+installer already supplies and verifies the same plugin through the private installation.
+Removing the registration and regenerating ESLint configuration preserves the effective
+configuration for CLI, test, and documentation files. Repository policy owns this repair.
+
+The full uncached normal check passes again after that deletion. A disposable staged
+violation still reports `gspot/no-trivial-functions`; the corrected index passes, and the
+real index stays unchanged. Repeated apply writes nothing, preview has no drift, and
+doctor exits 0 against the resulting policy.
+
+Repository CI downloads normal and manual reports separately. Each Static Analysis Results
+Interchange Format (SARIF) upload uses a distinct category. This follows the
+[GitHub requirement for report identity](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/integrate-with-existing-tools/upload-sarif-file).
+
+YAML, Actions, and workflow-security checks pass. The native CI regression passes one test
+with 17 assertions. This workflow-only correction leaves CLI, plugin, and acceptance inputs
+unchanged. Remote upload verification remains part of the exact-commit CI gate.
 
 The source-checkout install task builds and publishes the workspace plugin only into the
 existing isolated registry, runs immutable `gspot install`, and compares installed ESM,
@@ -62,9 +142,9 @@ CI uses that option before installed release acceptance. Linux owns Docker-backe
 journeys; the exact test-file exclusion on the other hosts does not establish native database
 execution there. The Linux result remains required.
 
-The latest agent and documentation tests pass 28 cases with 1,741 assertions.
-The separate generated-level comparison passes with the earlier guide changes. The site build
-produces 324 pages and passes link and fragment validation. Current README artwork passes
+The final documentation tests pass 15 cases with 1,711 assertions. The site build
+produces 324 pages and passes link and fragment validation. The served schema matches
+the policy schema exactly. Current README artwork passes
 320-, 390-, 768-, and 1200-pixel render checks in both themes. Final light and dark 320-pixel
 screenshots show the original blue/orange mark aligned with the wordmark.
 
@@ -154,14 +234,15 @@ from requirements that apply at both levels.
 The section audit separates naming, architecture, documentation coverage, declaration order,
 and API conventions from correctness and supported runtime contracts. Generation tests verify
 that the conventions disappear at recommended while neighboring correctness sections remain.
-Nineteen guide selection and lint tests pass with 93 assertions. The final candidate gate
-must rerun affected evidence after the latest source changes.
+Nineteen guide selection and lint tests pass with 93 assertions. The full native candidate
+run also passes the executable guide owners. A subsequent source change requires affected
+evidence to run again.
 
-The full source acceptance diagnostic completed with 556 passes and one acquisition failure:
-GitHub returned HTTP 500 while EditorConfig Checker downloaded its pinned release. That case
-passes through normal authenticated installation on rerun: one test and nine assertions.
-The contractual performance case passes with 5,000 files and ten staged inputs: initialization
-6.733 seconds, cold check 4.611 seconds, and warm check 4.317 seconds. The unchanged-candidate run remains required.
+Source and installed-release acceptance pass through normal authenticated acquisition,
+including reruns for subsequent repairs. The contractual performance case passes with 5,000 files and ten staged inputs: initialization
+8.924 seconds, cold check 4.513 seconds, and warm check 4.124 seconds. This measurement
+follows source and installed-release acceptance on the unchanged CLI and plugin. The host
+is an Apple M4 Max with 64 GiB of memory, macOS 26.5.1, and Bun 1.4.2.
 
 ## Website and README
 
@@ -180,8 +261,11 @@ The README banner centers the wordmark and original blue/orange artwork in both 
 Each embedded image uses 560 pixels for its 280-pixel display slot. Resampling reduces each
 complete SVG to 365 KB while preserving its placement and colors. The light variant is the
 fallback. The local GitHub-style preview passes image-loading and overflow checks at
-320, 390, 768, and 1200 pixels in both themes. Final asset rendering remains part of the
-candidate documentation gate.
+320, 390, 768, and 1200 pixels in both themes.
+
+The final site build passes 16 homepage
+and overview renders at those widths and themes. Eight rendered control scenarios verify
+copy centering, the left mobile menu, theme-menu placement, selection, and Escape focus.
 
 Native Chrome verification passes at 200% zoom on the homepage and documentation. Navigation
 remains available with no horizontal clipping. The browser's reduced-motion setting reports
@@ -365,7 +449,7 @@ Each policy entry states its ownership constraint and removal condition.
 Native CodeQL verification uses two identical temporary race fixtures. An exact-path
 exception accepts one while the neighboring fixture still
 reports `js/file-system-race` at line two, column 66. The exception does not disable
-the query. Whole-repository verification after these entries remains pending.
+the query. The full scan passes these retained entries without new findings.
 
 Four production CodeQL exceptions retain specific, tested contracts:
 
@@ -392,31 +476,34 @@ The combined JavaScript-generation and grammar suite passes seven tests with
 Bun 1.4.2 owns all accepted runtime evidence. Detailed reports and failed diagnostic history
 remain outside tracked source under `/tmp/gspot-lint-cleanup/resumption/`.
 
-| Required gate                 | Current evidence                                                                                  | Remaining verification                                                        |
-| ----------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Discovery                     | 452 files: 94 unit, 179 deterministic integration, 65 native, 105 source, and nine release.       | Complete.                                                                     |
-| Types and coverage            | Types pass. Coverage passes 2,388 tests with 9,741 assertions; 83.39% functions and 84.77% lines. | Affected guide rerun passes 19 tests with 93 assertions.                      |
-| Native tools                  | Earlier full suite passes. Swift native tests now honor declared host support.                    | Full candidate native suite is running.                                       |
-| Builds and packages           | Earlier seven-target builds pass; current installed plugin matches its build.                     | Rebuild CLI targets and verify candidate package journeys.                    |
-| Source and release acceptance | Focused repairs pass through isolated registries.                                                 | Run complete suites sequentially against the same candidate.                  |
-| Documentation                 | Focused generation and documentation tests pass; earlier 324-page build and links pass.           | Final build, schema, references, and README rendering.                        |
-| Performance                   | Earlier acquisition failures are superseded by working authentication.                            | Measure the contractual cold, warm, and initialization cases.                 |
-| Full checks and doctor        | Required tools execute; remaining diagnostic findings are repaired.                               | Run commit, push, manual, and doctor checks.                                  |
-| Lifecycle and staged index    | Native hook/clone journeys pass; real index matches the starting record.                          | Final disposable-index staged check and preservation comparison.              |
-| Remote CI                     | Authentication is available; source-plugin installation is repaired.                              | Commit with hooks, push the task branch, enable CI, and verify its exact SHA. |
+| Required gate                 | Current evidence                                                                                                 | Scope and required follow-up                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Discovery                     | 453 files: 94 unit, 179 deterministic integration, 66 native, 105 source, and nine release.                      | Complete.                                                                                        |
+| Types and coverage            | Types pass. Coverage passes 2,389 tests with 9,752 assertions; 83.39% functions and 84.78% lines.                | The manual coverage replacement passes too.                                                      |
+| Native tools                  | 419 tests and 2,816 assertions across 66 files pass.                                                             | Local macOS evidence; other native platforms use their CI runners.                               |
+| Builds and packages           | Seven targets and plugin build; eight CLI package dry runs and one plugin dry run pass.                          | Host embedded parsers, ESM/CommonJS imports, and installed journeys pass.                        |
+| Source and release acceptance | Full source baseline: 557 tests and 4,364 assertions. Current release: 171 tests and 394 assertions.             | Affected reruns: 32 Python/lifecycle tests, four commit tests, and 54 workspace-copy tests.      |
+| Documentation                 | 15 tests and 1,711 assertions pass; 324 pages build with valid links and fragments.                              | Schema parity, responsive controls, code indentation, and README artwork have rendered evidence. |
+| Performance                   | 5,000 files, ten staged: initialization 8.924 seconds, cold 4.513 seconds, warm 4.124 seconds.                   | Measured after source and installed-release acceptance; all limits pass.                         |
+| Full checks and doctor        | 141 normal checks pass with 12 ownership skips; seven manual checks pass without skips. Doctor exits 0.          | Every ownership skip names its passing replacement.                                              |
+| Lifecycle                     | 18 final clone and hook tests pass with 237 assertions. Repeated apply writes nothing; preview reports no drift. | The real index matches its recorded checkpoint before staged verification.                       |
+| Staged index                  | The final check uses a disposable index containing the reviewed changes.                                         | `final-staged.json` and `final-staged-index.json` record its result and real-index hashes.       |
+| Remote CI                     | The workflow installs the source plugin and uploads normal and manual reports separately.                        | Require successful Linux, macOS, Windows, and report jobs for the exact commit before merging.   |
 
 The complete deterministic suite covers policy serialization, generated configuration, ownership,
 immutable revisions, process errors, cache invalidation, reports, and plugin rules. Native and
-provider-dependent checks retain their separate gates. Ownership skips count as passing only
+provider-dependent checks retain their separate gates. Ownership skips satisfy their contract only
 when their named replacement passes. A repair invalidates the affected evidence.
 
-## Remaining work
+## Remote verification
 
-Complete the ordered candidate gate in
-[the backlog](22-remaining.md#candidate-gate). Keep accepted level assignments unchanged.
-Commit and push with normal hooks after required checks pass, enable `GSPOT_CI_ENABLED`, and
-dispatch full CI against the task branch. Verify Linux, macOS, Windows, and uploaded reports
-for the exact commit. No commit or push has been made yet.
+[The candidate gate](22-remaining.md#candidate-gate) defines the required local checks.
+Keep accepted level assignments unchanged and commit with normal hooks. Enable
+`GSPOT_CI_ENABLED` and dispatch full CI against the existing task branch.
+[CI runs for this branch](https://github.com/stefanionescu/gspot/actions/workflows/ci.yml?query=branch%3Afix%2Froot-cause-lint-cleanup)
+record each commit's platform results and uploaded reports.
 
-Public publication, deployment, merging into `main`, and changes to other repositories remain
-excluded. Unavailable native platforms or provider-dependent results remain outstanding.
+Merge the completed task branch into `main` only after its exact-commit CI succeeds, using
+normal hooks. Do not create another branch. Public publication, deployment, and changes to
+other repositories remain excluded. Unavailable native targets and provider-dependent gates
+retain their separate requirements in phase 10 of the backlog.

@@ -19,9 +19,13 @@ into plugin runtime dependencies.
 
 Preserve strict coverage and the accepted recommended/all policy. Do not add compatibility
 aliases, forwarding modules, private packages, or a test framework. Work alone.
-Generate managed outputs through policy and `gspot apply`. The active lint cleanup authorizes
-normal-hook commits and pushes to its task branch, with remote CI verification. Publication,
-deployment, merging into `main`, and changes to other repositories remain outside that scope.
+Generate managed outputs through policy and `gspot apply`.
+
+The active lint cleanup authorizes
+normal-hook commits and pushes to its task branch, with remote CI verification. After all
+cleanup and exact-commit CI verification, merge the completed branch into `main` with normal
+hooks. Do not create another branch. Public publication, deployment, and changes to other
+repositories remain outside that scope.
 
 When implementation resumes, follow phases 1 through 10 and their substeps in the printed
 order. Complete each phase's exit condition before proceeding to dependent work. A verification
@@ -302,7 +306,7 @@ A test definition or package pin does not establish native acceptance.
 
 ### React accessibility and test integration
 
-Step 4.1. Implemented; native acceptance remains.
+Step 4.1. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
 The [React manifest](../packages/cli/configurations/framework/react/manifest.toml) pins Hooks,
 JSX accessibility, refresh, and Testing Library. Its
@@ -317,7 +321,7 @@ Acceptance: `K-211`, `K-248`, `K-251`.
 
 ### React Native tooling
 
-Step 4.2. Implemented; native acceptance remains.
+Step 4.2. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
 The [React Native manifest](../packages/cli/configurations/framework/react-native/manifest.toml)
 pins both native ESLint plugins and Expo Doctor. Its fragment installs native rules and disables
@@ -331,7 +335,7 @@ Doctor failures without commit-stage network activity. Acceptance: `K-211`, `K-2
 
 ### Vue and Svelte component support
 
-Step 4.3. Implemented; native acceptance remains.
+Step 4.3. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
 The [Vue manifest](../packages/cli/configurations/framework/vue/manifest.toml) pins `vue-tsc`,
 Vue accessibility, and Testing Library. The
@@ -363,12 +367,12 @@ GitHub for every pin (`K-206`). It holds each pin at or above the floor its mani
 supplies carries a floor and no pin.
 
 `tests/integration/tools/flags.test.ts` runs the help of every pinned tool a command names and
-holds each flag it passes (`K-251`). A tool absent from the machine is a visible skip. `K-250` holds
+holds each flag it passes (`K-251`). A missing tool fails its native test. `K-250` holds
 through the licenses and readme-shape tests. `K-213` has no text in the architecture folder.
 
 ### NestJS integration
 
-Step 4.5. Implemented; native acceptance remains.
+Step 4.5. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
 The [NestJS manifest](../packages/cli/configurations/framework/nestjs/manifest.toml) pins
 `@darraghor/eslint-plugin-nestjs-typed` and declares `tools.nestjs.swagger`. The fragment selects
@@ -541,7 +545,10 @@ Acceptance: `K-43`, `K-44`, `K-71`, `K-196`, `T-12`, `K-69`.
 
 Step 6.5. Verification and confirmed repairs.
 
-Verify isolated generation and build checks without modifying authored or untracked working-tree files. Swift incremental compilation is locally implemented; native Xcode reuse and complete build isolation remain open.
+Isolated generation and build checks preserve authored and untracked working-tree files.
+The candidate native run verifies Swift incremental compilation and Xcode object reuse.
+Compiler errors fail the check, and corrected source passes. Other hosts retain their declared
+platform limits.
 
 Owner: `checks/`. Dependencies: revision isolation. Completion evidence: Build/generator checks preserve authored and untracked files; native Xcode reuse and per-language build settings pass.
 
@@ -713,7 +720,7 @@ covered retired behavior: the `allow` and `declare` commands, `apply --check`,
 `presets` policy field.
 The oversized Lefthook and package-install scenarios are split into independently disposable
 cases. Their native runs retain failed commands, corrected outcomes, and preservation assertions.
-Current discovery accounts for 452 files: 94 unit, 179 deterministic integration, 65 native,
+Current discovery accounts for 453 files: 94 unit, 179 deterministic integration, 66 native,
 105 source acceptance, and nine release files.
 
 ### Repository checks and tooling
@@ -741,7 +748,7 @@ Implemented and verified portions of steps 7.1 to 7.4:
 Checked without change: the rules lint tests, the managed block tests, the reference loader
 tests, the asset path tests (`K-306`), and the agent file tests (`K-279`).
 
-Implemented guide verification, pending the unchanged-candidate gate:
+Candidate guide verification:
 
 - `K-230`: selected sections preserve syntax, type safety, security, accessibility, and runtime
   contracts at both levels. Naming, ownership, API conventions, and documentation coverage carry
@@ -755,7 +762,8 @@ Implemented guide verification, pending the unchanged-candidate gate:
 
 The corpus contains 50 Good blocks. Python also receives type, docstring, structural, and
 FastAPI HTTP verification. Explanatory text and diffs are not executable; the TOML block is
-parsed by its native reader. Final candidate verification must rerun the changed guides.
+parsed by its native reader. The candidate native run passes all 417 cases across 65 files,
+including every applicable executable guide owner.
 
 No text exists in the architecture folder for these names:
 
@@ -783,12 +791,12 @@ Repair TypeScript and ESLint findings, including authored build code.
 
 All installed commit tools execute. The full diagnostic passes code, structure,
 formatting, and asset checks. Its two record-wording findings pass a focused rerun.
-Guide corrections remain under verification.
+Guide corrections pass their focused rerun and full native verification.
 
-The deterministic suite passes 2,383
-cases with coverage. The full native suite passes 385 cases; final acceptance, packaging,
-and CI evidence remains open. Subsequent source-registry and guide repairs require the
-affected final checks again.
+The deterministic suite passes 2,388 cases with coverage. The full native suite passes
+417 cases. Seven-target builds, package dry runs, and embedded-parser verification pass.
+Source and installed-release acceptance pass. Exact-commit CI evidence remains open. A source repair requires affected checks
+to run again.
 
 [The cleanup record](lint-cleanup.md) owns current counts, focused results, retained
 exception rationale, and restoration evidence. Historical scans and overlapping test
@@ -878,6 +886,13 @@ Run repository checks at `level = "all"`, manual checks, and doctor. The existin
 `tests/unit` and `tests/coverage` substitution for Jest coverage remains the only substitution.
 No required missing tool or skipped check establishes a pass.
 
+Current full-check evidence: 141 checks pass, with 12 declared ownership skips, in 238.713
+seconds. Synchronous isolated-workspace copying had blocked process output and caused a Git
+timeout. Its asynchronous repair passes 277 execution tests, 54 affected source acceptance
+tests, and all 171 installed-release tests. The native rerun passes 419 tests. All seven
+manual checks pass without skips, and doctor exits 0. The final disposable-index gate
+records its result and real-index hashes alongside the local verification logs.
+
 #### Step 9.8
 
 Verify repeated apply, drift preview, immutable installation in a disposable checkout, and
@@ -930,9 +945,9 @@ Acceptance: `G-10`, `K-202`, `S-19`.
 Evidence for step 9.6.
 
 Owner: execution cache and lifecycle installation. Measure cold and warm initialization,
-commit checks, parser reuse, and build caches under the contract's stated conditions. The prior
-performance case failed during acquisition. It has no complete replacement result. Record
-hardware, versions, inputs, elapsed times, and cache state without relaxing bounds.
+commit checks, parser reuse, and build caches under the contract's stated conditions. The post-release performance case passes with 5,000 files and ten staged inputs.
+Initialization takes 8.924 seconds, the cold check 4.513 seconds, and the warm check 4.124 seconds.
+The cleanup record names the host, runtime, and measurement order. No bound changes.
 
 Depends on
 successful normal acquisition and stable source. Acceptance: `K-43`, `K-44`, `K-69`, `K-71`, `K-196`, `T-12`.
@@ -1011,7 +1026,7 @@ external adoption each have their required evidence. Deferred items remain open 
 Source inspection confirms the framework integrations above. It does not close native-tool,
 platform, remote CI, or release acceptance. Manifest-driven `rules_off` (`K-208`), the Ruff
 pydocstyle mapping (`K-152`), and long inline-table formatting (`K-51`) have focused repairs
-recorded in the cleanup record. Their unchanged-candidate verification remains open. Remote CI verification is required. Public publication, deployment,
+recorded in the cleanup record. Candidate deterministic, native, and source acceptance pass. Remote CI verification is required. Public publication, deployment,
 and external repository changes are outside this cleanup.
 
 Verification uses the repository-pinned Bun 1.4.2. Test startup rejects an unsupported
@@ -1019,14 +1034,13 @@ runtime before executing scenarios. Run the mise tasks from the repository root.
 
 The complete deterministic lane passes 2,388 tests across 273 files with coverage and
 9,741 assertions. Workspace and documentation types pass. The latest full commit-stage
-scan passes, and the real index still matches its starting record. Later guide edits
-require regeneration and affected checks again.
+scan passes. The real index still matches the checkpoint recorded after the user commit.
+Final full and staged checks remain required.
 
-The diagnostic source acceptance run passed 556 tests and failed one during a GitHub
-HTTP 500 download. That case passed through normal authenticated installation on rerun.
-The unchanged-candidate source run, complete release acceptance, final staged checks, and
-remote CI have no passing result yet. Native Windows
-and Linux results require their own runners. Simulated platform behavior does not replace them.
+The full source acceptance run passes 557 tests with 4,364 assertions across 105 files.
+Installed-release acceptance then passes 171 tests with 394 assertions across nine files.
+Final staged checks and remote CI have no passing result yet. Native Windows and Linux results require their own
+runners. Simulated platform behavior does not replace them.
 
 [The cleanup record](lint-cleanup.md) owns detailed verification results. Superseded runtime
 failures and earlier diagnostic counts are not current evidence.
