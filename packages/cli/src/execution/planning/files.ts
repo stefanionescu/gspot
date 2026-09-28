@@ -108,8 +108,7 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
  * @returns true when the check runs once for the repository
  */
 export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope')
-        return false;
+    if (manifest.kit.kind !== 'general' || manifest.claims.from_languages || spec.runs === 'per-scope') return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>

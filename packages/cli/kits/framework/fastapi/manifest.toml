@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "fastapi"
 kind = "framework"
 title = "FastAPI"
@@ -92,6 +92,6 @@ default = ["FAST001", "FAST002", "FAST003"]
 default_all = ["FAST001", "FAST002", "FAST003"]
 summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
 
-[rule_files]
+[guides]
 framework = [{path = "framework/fastapi/FASTAPI.md"}, {path = "framework/fastapi/RUNTIME.md"}]
 shared = [{path = "shared/http/HTTP.md"}]

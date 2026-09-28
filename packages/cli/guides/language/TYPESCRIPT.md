@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: typescript
+kit: typescript
 title: TypeScript
 ---
 

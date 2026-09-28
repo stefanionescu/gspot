@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: trpc
+kit: trpc
 title: tRPC
 ---
 

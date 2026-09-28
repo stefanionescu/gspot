@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "structure"
-kind = "policy"
+kind = "general"
 title = "Structure"
 description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
 
@@ -502,5 +502,5 @@ direction = "tightening"
 default = []
 summary = "Which element may import which; an element imports only itself unless a row says otherwise."
 
-[rule_files]
+[guides]
 general = [{path = "general/agent/WORKING.md"}]

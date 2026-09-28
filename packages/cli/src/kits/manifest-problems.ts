@@ -79,26 +79,24 @@ function configurationReaders(checks: RawCheck[]): Set<string> {
 
 // Refuses a manifest that requires a configuration no manifest declares.
 function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Manifest>): void {
-    for (const required of manifest.configuration.requires)
+    for (const required of manifest.kit.requires)
         if (!manifests.has(required))
-            throw new ManifestError(manifest.configuration.name, [
-                `it requires \`${required}\`, which does not exist.`,
-            ]);
+            throw new ManifestError(manifest.kit.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
 // Records the manifest as the owner of a check name, refusing a name another manifest already owns.
 function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Manifest['checks'][number]): void {
     const previous = owners.get(check.name);
     if (previous !== undefined)
-        throw new ManifestError(manifest.configuration.name, [`check ${check.name} is already owned by ${previous}.`]);
-    owners.set(check.name, manifest.configuration.name);
+        throw new ManifestError(manifest.kit.name, [`check ${check.name} is already owned by ${previous}.`]);
+    owners.set(check.name, manifest.kit.name);
 }
 
 // The configuration that owns each check name, refusing a name two manifests declare.
 function checkOwners(manifests: Map<string, Manifest>): Map<string, string> {
     const owners = new Map<string, string>();
     for (const manifest of manifests.values()) {
-        const references = manifest.configuration.check_references ?? [];
+        const references = manifest.kit.check_references ?? [];
         for (const check of manifest.checks.filter((entry) => !references.includes(entry.name)))
             claimOwner(owners, manifest, check);
     }
@@ -119,10 +117,10 @@ function runsTool(check: Manifest['checks'][number] | undefined, tool: string): 
 
 // Refuses a check reference that does not name another configuration's standalone built-in check.
 function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string, string>): void {
-    for (const reference of manifest.configuration.check_references ?? []) {
+    for (const reference of manifest.kit.check_references ?? []) {
         const owner = owners.get(reference);
-        if (owner === undefined || owner === manifest.configuration.name || !isStandalone(checks.get(reference)))
-            throw new ManifestError(manifest.configuration.name, [
+        if (owner === undefined || owner === manifest.kit.name || !isStandalone(checks.get(reference)))
+            throw new ManifestError(manifest.kit.name, [
                 `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,
             ]);
     }
@@ -133,9 +131,7 @@ function assertTakeovers(manifest: Manifest, checks: Checks): void {
     for (const tool of manifest.tools)
         for (const takeover of tool.takeover ?? []) {
             if (takeover.check === undefined || runsTool(checks.get(takeover.check), tool.name)) continue;
-            throw new ManifestError(manifest.configuration.name, [
-                `takeover check ${takeover.check} must execute ${tool.name}.`,
-            ]);
+            throw new ManifestError(manifest.kit.name, [`takeover check ${takeover.check} must execute ${tool.name}.`]);
         }
 }
 
@@ -144,9 +140,7 @@ function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][
     const chain = [check.name];
     for (let next = check.takes_over; next !== undefined; next = checks.get(next)?.takes_over) {
         if (chain.includes(next))
-            throw new ManifestError(manifest.configuration.name, [
-                `Check replacement cycle: ${[...chain, next].join(' -> ')}.`,
-            ]);
+            throw new ManifestError(manifest.kit.name, [`Check replacement cycle: ${[...chain, next].join(' -> ')}.`]);
         chain.push(next);
     }
 }
@@ -158,7 +152,7 @@ function assertReporting(manifest: Manifest, check: Manifest['checks'][number], 
         if (target === undefined) continue;
         const owner = checks.get(target);
         if (owner === undefined || target === check.name || owner.reported_by !== undefined)
-            throw new ManifestError(manifest.configuration.name, [
+            throw new ManifestError(manifest.kit.name, [
                 `check ${check.name} ${field} must name a different executable check; received ${target}.`,
             ]);
     }
@@ -176,9 +170,9 @@ function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): voi
     const isUnpinned =
         tool.version === undefined && Object.values(tool.installers).some((entry) => entry.version === undefined);
     if (isUnpinned && tool.floor === undefined)
-        throw new ManifestError(manifest.configuration.name, [`tool ${tool.name} has no version and no floor.`]);
+        throw new ManifestError(manifest.kit.name, [`tool ${tool.name} has no version and no floor.`]);
     if (isBelowFloor(tool))
-        throw new ManifestError(manifest.configuration.name, [
+        throw new ManifestError(manifest.kit.name, [
             `tool ${tool.name} pins ${tool.version ?? ''}, below its floor ${tool.floor ?? ''}.`,
         ]);
 }
@@ -195,7 +189,7 @@ function settingsRead(check: Manifest['checks'][number]): string[] {
 // Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
 function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number], settings: Settings): void {
     if (check.waits_for !== undefined && !settings.has(check.waits_for))
-        throw new ManifestError(manifest.configuration.name, [
+        throw new ManifestError(manifest.kit.name, [
             `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
         ]);
     const missing = settingsRead(check).filter((name) => {
@@ -206,7 +200,7 @@ function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number]
         return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
     });
     for (const name of missing)
-        throw new ManifestError(manifest.configuration.name, [
+        throw new ManifestError(manifest.kit.name, [
             `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`,
         ]);
 }

@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: i18n
+kit: i18n
 title: next-intl
 ---
 

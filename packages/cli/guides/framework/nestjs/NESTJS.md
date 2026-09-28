@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: nestjs
+kit: nestjs
 title: NestJS
 ---
 

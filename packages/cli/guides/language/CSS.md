@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: css
+kit: css
 title: CSS
 ---
 

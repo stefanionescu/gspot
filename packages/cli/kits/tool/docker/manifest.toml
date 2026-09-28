@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "docker"
 kind = "tool"
 title = "Docker"
@@ -177,5 +177,5 @@ direction = "neutral"
 default = "10m"
 summary = "How long one Trivy scan may take."
 
-[rule_files]
+[guides]
 tool = [{path = "tool/docker/DOCKER.md"}]

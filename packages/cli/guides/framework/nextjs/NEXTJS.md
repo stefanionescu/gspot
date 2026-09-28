@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: nextjs
+kit: nextjs
 title: Next.js
 ---
 

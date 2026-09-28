@@ -11,9 +11,9 @@ untracked = [
     ".gspot/config/vale/styles/config/dictionaries/",
 ]
 
-[configuration]
+[kit]
 name = "prose"
-kind = "policy"
+kind = "general"
 title = "Prose"
 requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
@@ -105,5 +105,5 @@ direction = "loosening"
 default = []
 summary = "Names Vale accepts as written: products, tools, people."
 
-[rule_files]
+[guides]
 general = [{path = "general/prose/WRITING.md"}, {path = "general/code/COMMENTS.md"}]

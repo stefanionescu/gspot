@@ -1,6 +1,6 @@
 ---
 layer: shared
-configuration: express
+kit: express
 title: HTTP
 ---
 

@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: xctest
+kit: xctest
 title: Swift Tests
 ---
 

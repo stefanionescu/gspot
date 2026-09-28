@@ -1,6 +1,6 @@
 ---
 layer: prose
-configuration: prose
+kit: prose
 title: Documentation Media
 ---
 

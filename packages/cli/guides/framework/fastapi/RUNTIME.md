@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: fastapi
+kit: fastapi
 title: FastAPI Runtime
 ---
 

@@ -121,7 +121,7 @@ export function effectivePolicy(
     surface: ExposedSettings,
     policy: Policy,
     scope: string,
-    manifests: Pick<Manifest, 'configuration' | 'naming'>[] = [],
+    manifests: Pick<Manifest, 'kit' | 'naming'>[] = [],
 ): EffectivePolicy {
     const shipped = shippedPolicy();
     const tables = policyTables(policy, scope).map(({ table }) => table.naming);
@@ -149,7 +149,7 @@ export function effectivePolicy(
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
             (manifest.naming?.rules ?? []).map((rule) =>
-                writtenRule(compact(rule), `the ${manifest.configuration.name} configuration`),
+                writtenRule(compact(rule), `the ${manifest.kit.name} configuration`),
             ),
         ),
         ...naming.rules.map((rule, index) => writtenRule(rule, `[[naming.rules]] entry ${String(index + 1)}`)),

@@ -1,6 +1,6 @@
 ---
 layer: template
-configuration: none
+kit: none
 title: Advanced-Guide Template
 ---
 

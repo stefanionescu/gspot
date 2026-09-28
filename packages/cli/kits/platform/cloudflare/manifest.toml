@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "cloudflare"
 kind = "platform"
 title = "Cloudflare"
@@ -83,5 +83,5 @@ summary = "Checks that a tracked environment types file matches what wrangler wr
 why = "Stale binding types let code compile against a binding the configuration dropped."
 help = "Run wrangler types and commit the file."
 
-[rule_files]
+[guides]
 runtime = [{path = "runtime/workers/WORKERS.md"}]

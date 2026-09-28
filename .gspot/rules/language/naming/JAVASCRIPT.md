@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: javascript
+kit: javascript
 title: JavaScript Naming
 ---
 

@@ -114,12 +114,10 @@ export async function askConfigurations(
     const choices = manifests
         .values()
         .map((manifest) => {
-            const how = selection.how.get(manifest.configuration.name);
+            const how = selection.how.get(manifest.kit.name);
             const hint =
-                how === 'required'
-                    ? 'required by another selected configuration'
-                    : (how ?? manifest.configuration.description);
-            return { value: manifest.configuration.name, label: manifest.configuration.name, hint };
+                how === 'required' ? 'required by another selected configuration' : (how ?? manifest.kit.description);
+            return { value: manifest.kit.name, label: manifest.kit.name, hint };
         })
         .toArray();
     const initial = [...selection.selectedIds];

@@ -4,7 +4,7 @@ import { parseManifest } from '#cli/kits/manifests.ts';
 test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
     'a template pointer rejects the conflicting emission mode %s',
     (mode) => {
-        const source = `[configuration]\nname = "example"\nkind = "policy"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
+        const source = `[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
         expect(() => parseManifest(`${source}${mode}\n`, 'configurations/example')).toThrow(
             'A template pointer cannot also specify body, merge, or copy.',
         );
@@ -14,7 +14,7 @@ test.each(['copy = true', 'body = "include target"', 'merge = { extends = "targe
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const takeoverDefinition = (reader: string) => `
-[configuration]
+[kit]
 name = "example"
 kind = "language"
 title = "Example"
@@ -35,7 +35,7 @@ test('takeover declarations reject unknown readers and accept every declared rea
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const selectorDefinition = (selection: string) => `
-[configuration]
+[kit]
 name = "example"
 kind = "language"
 title = "Example"
@@ -63,9 +63,9 @@ test('shared takeover selectors cannot authorize retiring the containing file', 
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const pinnedSecurity = (pin: string) => `
-[configuration]
+[kit]
 name = "security"
-kind = "policy"
+kind = "general"
 title = "Security"
 description = "Pinned query packs used by security analysis."
 [[tools]]
@@ -84,7 +84,7 @@ test.each(['latest', '^1.2.3', '../pack'])(
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const roleDefinition = (role: string) =>
-    `entry_files = ["src/main.js"]\n[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
+    `entry_files = ["src/main.js"]\n[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
 
 test('a setting names the architecture role of its folder, and only a known role', () => {
     const manifest = parseManifest(roleDefinition('harness'), 'configurations/example');
@@ -95,7 +95,7 @@ test('a setting names the architecture role of its folder, and only a known role
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const toolPageDefinition = (page: string, crash: string) =>
-    `[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
+    `[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
 
 test('a tool names its rule page with the rule placeholder and its crash pattern as a regular expression', () => {
     const manifest = parseManifest(
@@ -116,7 +116,7 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const suppressionDefinition = (inline: string) => `
-[configuration]
+[kit]
 name = "example"
 kind = "language"
 title = "Example"
@@ -147,7 +147,7 @@ test('tool suppression metadata validates an inline pattern without requiring it
 
 test('manifest rule exclusions require a reason and preserve selectors and conditions', () => {
     const base =
-        '[configuration]\nname = "example"\nkind = "framework"\ntitle = "Example"\ndescription = "Framework integration for the example application."\n';
+        '[kit]\nname = "example"\nkind = "framework"\ntitle = "Example"\ndescription = "Framework integration for the example application."\n';
     const declaration =
         '[[rules_off]]\ntool = "eslint"\nrules = ["gspot/no-reexports"]\nfiles = ["**/page.tsx"]\nwhen = {setting = "structure.reexports", value = "index-only"}\n';
     expect(() => parseManifest(base + declaration, 'configurations/example')).toThrow();

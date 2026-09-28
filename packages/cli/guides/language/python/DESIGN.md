@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: python
+kit: python
 title: Python Design
 ---
 

@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: sql
+kit: sql
 title: SQL Naming
 ---
 

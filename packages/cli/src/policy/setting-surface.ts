@@ -13,9 +13,9 @@ function isScalarConflict(
     manifest: Manifest,
     spec: SettingSpec,
 ): boolean {
-    if (previous.configuration === manifest.configuration.name) return false;
+    if (previous.configuration === manifest.kit.name) return false;
     if (JSON.stringify(previous.value) === JSON.stringify(spec.default)) return false;
-    return !OVERRIDING_KINDS.has(manifest.configuration.kind);
+    return !OVERRIDING_KINDS.has(manifest.kit.kind);
 }
 
 function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingSpec): void {
@@ -25,13 +25,13 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
     if (!isList && previous !== undefined && isScalarConflict(previous, manifest, spec)) {
         surface.problems.push({
             key: spec.name,
-            message: messages.conflictingScalars(spec.name, previous.configuration, manifest.configuration.name),
+            message: messages.conflictingScalars(spec.name, previous.configuration, manifest.kit.name),
         });
         return;
     }
     surface.defaults.set(spec.name, {
         value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
-        configuration: manifest.configuration.name,
+        configuration: manifest.kit.name,
     });
 }
 

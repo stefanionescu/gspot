@@ -6,7 +6,7 @@ import type { Manifest, CheckSpec } from '@gspot/cli/src/types/kits.ts';
 // The indentation of the JSON blocks a reference page shows.
 const JSON_INDENT = 2;
 
-function guideSelection(file: Manifest['rule_files'][string][number]): string {
+function guideSelection(file: Manifest['guides'][string][number]): string {
     if (file.when === undefined) return `\`${file.path}\``;
     const labels = {
         extensions: 'file extension',
@@ -99,7 +99,7 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
  * @returns the page
  */
 export function configurationPage(manifest: Manifest): ReferencePage {
-    const { configuration } = manifest;
+    const { kit: configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
@@ -108,7 +108,7 @@ export function configurationPage(manifest: Manifest): ReferencePage {
             ? `\`${config.target}\``
             : `\`${config.target}\` when the [${config.needs} configuration](/reference/configurations/${config.needs}/) is selected`,
     );
-    const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => guideSelection(file)));
+    const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
@@ -158,7 +158,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
     const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name} --no-cache`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.configuration.name} configuration](/reference/configurations/${configuration.configuration.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/configurations/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
         ...checkEnvironment(check),
         section('Defect and correction', check.example),
         check.stage === 'message'
@@ -182,7 +182,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
  * @param checks every check with the configuration that declares it, by name
  * @returns the page
  */
-export function enginesPage(checks: Map<string, { check: CheckSpec; configuration: Manifest }>): ReferencePage {
+export function enginesPage(checks: Map<string, { check: CheckSpec; kit: Manifest }>): ReferencePage {
     const byEngine = new Map<string, CheckSpec[]>();
     for (const { check } of checks.values()) {
         if (check.engine === undefined) continue;

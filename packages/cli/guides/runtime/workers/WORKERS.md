@@ -1,6 +1,6 @@
 ---
 layer: runtime
-configuration: cloudflare
+kit: cloudflare
 title: Workers
 ---
 

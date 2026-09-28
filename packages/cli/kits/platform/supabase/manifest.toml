@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "supabase"
 kind = "platform"
 title = "Supabase"
@@ -168,6 +168,6 @@ direction = "loosening"
 default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]
 summary = "Paths relative to the scope that may name the service role key."
 
-[rule_files]
+[guides]
 platform = [{path = "platform/supabase/SUPABASE.md"}]
 runtime = [{path = "runtime/deno/DENO.md"}]

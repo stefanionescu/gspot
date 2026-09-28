@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "xcode"
 kind = "tool"
 title = "Xcode"
@@ -182,5 +182,5 @@ direction = "tightening"
 default = []
 summary = "The entitlements the app may hold; empty turns the check off."
 
-[rule_files]
+[guides]
 tool = [{path = "tool/xcode/XCODE.md"}]

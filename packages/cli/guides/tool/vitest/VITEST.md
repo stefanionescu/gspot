@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: vitest
+kit: vitest
 title: Vitest
 ---
 

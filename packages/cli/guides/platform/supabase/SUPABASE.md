@@ -1,6 +1,6 @@
 ---
 layer: platform
-configuration: supabase
+kit: supabase
 title: Supabase
 ---
 

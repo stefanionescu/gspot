@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "naming"
-kind = "policy"
+kind = "general"
 title = "Naming"
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
@@ -145,5 +145,5 @@ direction = "ceiling"
 default = 7
 summary = "The most words one SQL identifier may have."
 
-[rule_files]
+[guides]
 general = [{path = "general/code/NAMING.md"}, {path = "general/code/NAMING-FILES.md"}]

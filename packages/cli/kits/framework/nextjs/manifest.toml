@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "nextjs"
 kind = "framework"
 title = "Next.js"
@@ -144,7 +144,7 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[rule_files]
+[guides]
 framework = [{path = "framework/nextjs/NEXTJS.md"}]
 
 [required_rules]

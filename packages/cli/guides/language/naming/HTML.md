@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: html
+kit: html
 title: HTML Naming
 ---
 

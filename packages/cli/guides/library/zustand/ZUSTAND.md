@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: zustand
+kit: zustand
 title: Zustand
 ---
 

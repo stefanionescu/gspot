@@ -20,7 +20,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
         return;
     }
     walk.visiting.push(configurationName);
-    for (const required of manifest.configuration.requires) visit(walk, required);
+    for (const required of manifest.kit.requires) visit(walk, required);
     walk.visiting.pop();
     walk.seen.add(configurationName);
     walk.order.push(manifest);
@@ -35,7 +35,7 @@ function chainFrom(
     if (from === target) return [from];
     if (seen.has(from)) return undefined;
     seen.add(from);
-    const requires = manifests.get(from)?.configuration.requires ?? [];
+    const requires = manifests.get(from)?.kit.requires ?? [];
     for (const required of requires) {
         const rest = chainFrom(target, required, manifests, seen);
         if (rest) return [from, ...rest];
@@ -110,7 +110,7 @@ export function selectForScope(
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The language configurations in a selection. 1 files make 2 calls; one owner keeps that behavior in one place.
 export function languageConfigurations(selected: Manifest[]): Manifest[] {
-    return selected.filter((manifest) => manifest.configuration.kind === 'language');
+    return selected.filter((manifest) => manifest.kit.kind === 'language');
 }
 
 /**
@@ -120,9 +120,7 @@ export function languageConfigurations(selected: Manifest[]): Manifest[] {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Language and framework configurations that contribute source to shared checks. 2 files make 3 calls; one owner keeps that behavior in one place.
 export function sourceConfigurations(selected: Manifest[]): Manifest[] {
-    return selected.filter(
-        (manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework',
-    );
+    return selected.filter((manifest) => manifest.kit.kind === 'language' || manifest.kit.kind === 'framework');
 }
 
 /**
@@ -133,7 +131,6 @@ export function sourceConfigurations(selected: Manifest[]): Manifest[] {
 export function everyManifest(scopes: { selected: Manifest[] }[]): Manifest[] {
     const seen = new Map<string, Manifest>();
     for (const scope of scopes)
-        for (const manifest of scope.selected)
-            if (!seen.has(manifest.configuration.name)) seen.set(manifest.configuration.name, manifest);
+        for (const manifest of scope.selected) if (!seen.has(manifest.kit.name)) seen.set(manifest.kit.name, manifest);
     return seen.values().toArray();
 }

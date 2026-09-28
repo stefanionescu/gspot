@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "svelte"
 kind = "framework"
 title = "Svelte"
@@ -105,7 +105,7 @@ summary = "The languages a component script block declares; empty means plain Ja
 [coverage]
 ".svelte" = ["format", "syntax", "style", "structure", "spelling"]
 
-[rule_files]
+[guides]
 framework = [{path = "framework/svelte/SVELTE.md"}]
 
 [required_rules]

@@ -1,6 +1,6 @@
 ---
 layer: code
-configuration: naming
+kit: naming
 title: Naming
 ---
 

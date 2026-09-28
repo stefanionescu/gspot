@@ -53,9 +53,9 @@ function settingsText(session: Session): CommandResult {
 
 function configurationsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
-    const names = new Set(selected.map((manifest) => manifest.configuration.name));
+    const names = new Set(selected.map((manifest) => manifest.kit.name));
     const installed = selected.map((manifest) => ({
-        name: manifest.configuration.name,
+        name: manifest.kit.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
                 ? manifest.checks.map((spec) => ({
@@ -77,10 +77,8 @@ function configurationsResult(session: Session): CommandResult {
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
         .values()
-        .filter(
-            (manifest) => !names.has(manifest.configuration.name) && !detectedNames.has(manifest.configuration.name),
-        )
-        .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
+        .filter((manifest) => !names.has(manifest.kit.name) && !detectedNames.has(manifest.kit.name))
+        .map((manifest) => ({ name: manifest.kit.name, description: manifest.kit.description }))
         .toArray();
     const lines = ['installed'];
     for (const configuration of installed) {

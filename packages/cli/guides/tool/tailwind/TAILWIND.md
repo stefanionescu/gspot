@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: css
+kit: css
 title: Tailwind CSS
 ---
 

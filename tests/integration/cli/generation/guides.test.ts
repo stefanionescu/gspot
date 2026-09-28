@@ -70,7 +70,7 @@ test('a selected manifest cannot silently omit a missing guide asset', async () 
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
     const session = await openSession(sandbox.path);
     const manifest = parseManifest(
-        '[configuration]\nname = "example"\nkind = "policy"\ntitle = "Example"\ndescription = "Example guide selection for this test."\n[rule_files]\ncode = [{path = "missing.md"}]\n',
+        '[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "Example guide selection for this test."\n[guides]\ncode = [{path = "missing.md"}]\n',
         'configurations/example',
     );
     expect(() => selectRuleFiles(session.policyFiles.policy.rules, [manifest], session.repository)).toThrow(

@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "sql"
 kind = "language"
 title = "SQL"
@@ -138,7 +138,7 @@ summary = "The most code lines a SQL file may have."
 ".pgsql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 ".psql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 
-[rule_files]
+[guides]
 language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
 
 [[checks]]

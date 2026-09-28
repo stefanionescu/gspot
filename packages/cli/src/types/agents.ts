@@ -14,6 +14,6 @@ export type RuleExample = {
 };
 /** The rule lint's result. */
 export type RulesLintReport = { findings: RuleFinding[]; files: number };
-export type RuleFile = { source: string; target: string; layer: string; configuration: string; title: string };
+export type RuleFile = { source: string; target: string; layer: string; kit: string; title: string };
 /** The front matter of a rule file. */
-export type FrontMatter = { layer: string; configuration: string; title: string; fields: Record<string, string> };
+export type FrontMatter = { layer: string; kit: string; title: string; fields: Record<string, string> };

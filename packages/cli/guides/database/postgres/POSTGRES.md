@@ -1,6 +1,6 @@
 ---
 layer: database
-configuration: postgres
+kit: postgres
 title: Postgres
 ---
 

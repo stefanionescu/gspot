@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: react
+kit: react
 title: React
 ---
 

@@ -42,7 +42,7 @@ test('a root project check does not supply a disabled child scope with coverage'
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         scope.selected = [{ ...manifest, checks: scope.scope.path === '' ? [{ ...syntax, runs: 'per-scope' }] : [] }];
     }
@@ -169,7 +169,7 @@ test('a per-scope check runs only where that scope owns a claimed source', async
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
             throw new Error('The fixture requires the shell syntax command.');
@@ -202,7 +202,7 @@ test('a project-wide check covers its claimed sources without claiming unrelated
     });
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
-    const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+    const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
     const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
     if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
         throw new Error('The fixture requires the shell syntax command.');

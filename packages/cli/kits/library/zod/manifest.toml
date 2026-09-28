@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "zod"
 kind = "library"
 title = "Zod"
@@ -20,5 +20,5 @@ target = ".gspot/config/eslint.config.mjs"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[rule_files]
+[guides]
 library = [{path = "library/zod/ZOD.md"}]

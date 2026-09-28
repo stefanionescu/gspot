@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "postgres"
 kind = "database"
 title = "Postgres"
@@ -197,5 +197,5 @@ direction = "neutral"
 default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions", "Row Level Security", "Grants"]
 summary = "The section names a documented migration may box."
 
-[rule_files]
+[guides]
 database = [{path = "database/postgres/POSTGRES.md"}]

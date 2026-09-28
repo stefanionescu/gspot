@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: drizzle
+kit: drizzle
 title: Drizzle
 ---
 

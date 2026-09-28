@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "nginx"
 kind = "tool"
 title = "nginx"
@@ -70,5 +70,5 @@ direction = "neutral"
 default = "nginx:stable-alpine"
 summary = "The image nginx -t runs in; name the one the deployment uses."
 
-[rule_files]
+[guides]
 tool = [{path = "tool/nginx/NGINX.md"}]

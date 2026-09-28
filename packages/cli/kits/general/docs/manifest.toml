@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "docs"
-kind = "policy"
+kind = "general"
 title = "Docs"
 default = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
@@ -155,5 +155,5 @@ direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."
 
-[rule_files]
+[guides]
 general = [{path = "general/prose/DOCS.md"}, {path = "general/prose/DOCS-FORMAT.md"}, {path = "general/prose/DOCS-CONTENT.md"}, {path = "general/prose/DOCS-MEDIA.md"}, {path = "general/prose/DOCS-SURFACES.md"}, {path = "general/prose/DOCS-REVIEW.md"}, {path = "general/prose/WRITING.md"}, {path = "general/code/COMMENTS.md"}]

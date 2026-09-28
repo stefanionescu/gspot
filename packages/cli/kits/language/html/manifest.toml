@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "html"
 kind = "language"
 title = "HTML"
@@ -102,5 +102,5 @@ summary = "Template paths that may hold literal text, each with a reason."
 ".html" = ["format", "syntax", "style", "spelling"]
 ".htm" = ["format", "syntax", "style", "spelling"]
 
-[rule_files]
+[guides]
 language = [{path = "language/HTML.md"}, {path = "language/naming/HTML.md"}]

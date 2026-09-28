@@ -248,8 +248,8 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
         ...(profile ? { profile } : {}),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
         configurations: everySelected.map((manifest) => ({
-            configuration: manifest.configuration.name,
-            how: selection.how.get(manifest.configuration.name) ?? 'required',
+            configuration: manifest.kit.name,
+            how: selection.how.get(manifest.kit.name) ?? 'required',
             checks: manifest.checks.length,
         })),
         write: [

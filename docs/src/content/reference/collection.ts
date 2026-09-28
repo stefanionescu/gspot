@@ -22,7 +22,7 @@ export function referencePages(): Map<string, ReferencePage> {
     const manifests = configurationManifests()
         .values()
         .toArray()
-        .toSorted((a, b) => a.configuration.name.localeCompare(b.configuration.name));
+        .toSorted((a, b) => a.kit.name.localeCompare(b.kit.name));
     const kinds: [string, string][] = [
         ['language', 'Languages'],
         ['framework', 'Frameworks'],
@@ -42,10 +42,10 @@ export function referencePages(): Map<string, ReferencePage> {
                     section(
                         title,
                         manifests
-                            .filter((manifest) => manifest.configuration.kind === kind)
+                            .filter((manifest) => manifest.kit.kind === kind)
                             .map(
                                 (manifest) =>
-                                    `[${manifest.configuration.title}](/reference/configurations/${manifest.configuration.name}/): ${manifest.configuration.description}`,
+                                    `[${manifest.kit.title}](/reference/configurations/${manifest.kit.name}/): ${manifest.kit.description}`,
                             )
                             .map((item) => `- ${item}`)
                             .join('\n'),
@@ -55,10 +55,9 @@ export function referencePages(): Map<string, ReferencePage> {
             'architecture/04-configurations.md',
         ),
     );
-    for (const manifest of manifests)
-        add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest));
+    for (const manifest of manifests) add(`configurations/${manifest.kit.name}.md`, configurationPage(manifest));
     const checks = allChecks();
-    for (const { check, configuration } of checks.values())
+    for (const { check, kit: configuration } of checks.values())
         add(`rules/${check.name}.md`, rulePage(check, configuration));
     add('settings.md', settingsPage(manifests));
     add(

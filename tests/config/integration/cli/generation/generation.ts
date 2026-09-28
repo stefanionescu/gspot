@@ -2,7 +2,7 @@
 
 export const SHARED_SETTINGS_PACKAGE = '{"private":true,"type":"module"}\n';
 export const MANAGED_IGNORES_CONFIGURATION =
-    '\n[configuration]\nname = "local"\nkind = "policy"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
+    '\n[kit]\nname = "local"\nkind = "general"\ntitle = "Local"\ndescription = "Local tool files for the native ignore case."\n';
 export const TAILWIND_AT_RULES = [
     'tailwind',
     'apply',

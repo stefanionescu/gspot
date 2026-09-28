@@ -1,6 +1,6 @@
 ---
 layer: code
-configuration: rules
+kit: rules
 title: Security
 ---
 

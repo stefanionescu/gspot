@@ -10,7 +10,7 @@ test('loading two configurations refuses duplicate executable check ownership', 
         ['first', 'second'].map((name) => [
             name,
             parseManifest(
-                `[configuration]\nname = "${name}"\nkind = "tool"\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
+                `[kit]\nname = "${name}"\nkind = "tool"\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
                 `configurations/${name}`,
             ),
         ]),
@@ -24,7 +24,7 @@ test.each(['reported_by', 'takes_over'] as const)(
     'manifest collection rejects invalid %s ownership and accepts a runnable owner',
     (field) => {
         const project = parseManifest(
-            `[configuration]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+            `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
             `configurations/project`,
         );
         const checks = `
@@ -39,7 +39,7 @@ why = "Invalid input cannot run."
 help = "Correct the reported input."
 `;
         const owner = parseManifest(
-            '[configuration]\nname = "owner"\nkind = "tool"\ntitle = "Owner"\ndescription = "Executes project validation."\n' +
+            '[kit]\nname = "owner"\nkind = "tool"\ntitle = "Owner"\ndescription = "Executes project validation."\n' +
                 checks,
             'configurations/owner',
         );
@@ -69,7 +69,7 @@ help = "Correct the reported input."
 
 test('manifest collection refuses circular replacement before either check can suppress execution', () => {
     const project = parseManifest(
-        `[configuration]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
         `configurations/project`,
     );
     const original = configurationManifests()
@@ -102,11 +102,11 @@ test.each(['missing/check', 'bash/shfmt'])(
 
 test('check references require one standalone built-in owner and preserve its definition', () => {
     const owner = parseManifest(
-        `[configuration]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `[kit]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
         `configurations/owner`,
     );
     const consumer = parseManifest(
-        `[configuration]\nname = "consumer"\nkind = "language"\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `[kit]\nname = "consumer"\nkind = "language"\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
         `configurations/consumer`,
     );
     const spec = configurationManifests()
@@ -114,7 +114,7 @@ test('check references require one standalone built-in owner and preserve its de
         .checks.find((check) => check.name === 'integrity/allowlists-match')!;
     if (spec.engine !== 'integrity') throw new Error('Expected an integrity check fixture.');
     owner.checks = [{ ...spec, name: 'owner/shared' }];
-    consumer.configuration.check_references = ['owner/shared'];
+    consumer.kit.check_references = ['owner/shared'];
     const manifests = new Map([
         ['owner', owner],
         ['consumer', consumer],
@@ -122,11 +122,11 @@ test('check references require one standalone built-in owner and preserve its de
     expect(() => {
         validateManifests(manifests);
     }).not.toThrow();
-    consumer.configuration.check_references = ['missing/shared'];
+    consumer.kit.check_references = ['missing/shared'];
     expect(() => {
         validateManifests(manifests);
     }).toThrow('Referenced check');
-    consumer.configuration.check_references = ['owner/shared'];
+    consumer.kit.check_references = ['owner/shared'];
     owner.checks[0] = { ...owner.checks[0]!, runs: 'per-scope' };
     expect(() => {
         validateManifests(manifests);
@@ -149,7 +149,7 @@ test.each([
 
 // A manifest whose one check reads a setting with an empty default, waiting for whatever the test says.
 const header =
-    '[configuration]\nname = "waiting"\nkind = "tool"\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
+    '[kit]\nname = "waiting"\nkind = "tool"\ntitle = "Waiting"\ndescription = "Reads a setting for the tests."\n';
 const setting =
     '[[settings]]\nname = "tools.waiting.target"\nkind = "string"\ndirection = "neutral"\ndefault = ""\nsummary = "Where the tool looks."\n';
 function waitingManifest(waits: string): void {

@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: commits
+kit: commits
 title: Commit Messages
 ---
 

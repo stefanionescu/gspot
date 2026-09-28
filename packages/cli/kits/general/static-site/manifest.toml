@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "static-site"
-kind = "policy"
+kind = "general"
 title = "Static Site"
 requires = ["html", "css", "javascript"]
 description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap, and its headers."
@@ -255,6 +255,6 @@ direction = "loosening"
 default = []
 summary = "Links the crawl skips: a pattern and the reason."
 
-[rule_files]
+[guides]
 repository = [{path = "repository/static-site/STATIC-SITE.md"}]
 runtime = [{path = "runtime/browser/BROWSER.md"}]

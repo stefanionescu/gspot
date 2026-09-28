@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "typescript"
 kind = "language"
 title = "TypeScript"
@@ -107,7 +107,7 @@ summary = "The languages a component script block declares; empty means plain Ja
 ".mts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".cts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
-[rule_files]
+[guides]
 language = [{path = "language/TYPESCRIPT.md"}, {path = "language/naming/TYPESCRIPT.md"}]
 
 [required_rules]

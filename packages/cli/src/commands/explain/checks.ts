@@ -59,12 +59,12 @@ function toolOf(check: CheckSpec): string | undefined {
 }
 
 // The settings that change the check, and the rule files and crash pattern it carries.
-function checkFacts(check: CheckSpec, configuration: Found['configuration']): Facts {
+function checkFacts(check: CheckSpec, configuration: Found['kit']): Facts {
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
     const settings = (configuration?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(configuration?.rule_files ?? {})
+    const rules = Object.values(configuration?.guides ?? {})
         .flat()
         .map((entry) => entry.path);
     const crashPattern = check.tool_errors ?? pinNamed(toolOf(check))?.crash_pattern;
@@ -75,7 +75,7 @@ function checkFacts(check: CheckSpec, configuration: Found['configuration']): Fa
 function repositoryLines(
     session: Session | undefined,
     own: OwnCheck | undefined,
-    configuration: Found['configuration'],
+    configuration: Found['kit'],
 ): string[] {
     const lines: string[] = [];
     if (own !== undefined)
@@ -86,10 +86,10 @@ function repositoryLines(
     if (session && configuration !== undefined)
         lines.push(
             session.scopes.some((scope) =>
-                scope.selected.some((manifest) => manifest.configuration.name === configuration.configuration.name),
+                scope.selected.some((manifest) => manifest.kit.name === configuration.kit.name),
             )
                 ? 'Selected in this repository: yes'
-                : `Selected in this repository: no (gspot add ${configuration.configuration.name})`,
+                : `Selected in this repository: no (gspot add ${configuration.kit.name})`,
         );
     return lines;
 }
@@ -102,7 +102,7 @@ function checkText(
     facts: Facts,
     owner: string,
 ): string {
-    const { check, configuration } = found;
+    const { check, kit: configuration } = found;
     const { settings, rules, crashPattern } = facts;
     const lines = [
         `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
@@ -137,7 +137,7 @@ function buildCheckExplanation(
     own: OwnCheck | undefined,
     owner: string,
 ): Explanation {
-    const { check, configuration } = found;
+    const { check, kit: configuration } = found;
     const facts = checkFacts(check, configuration);
     return {
         kind: 'check',
@@ -147,7 +147,7 @@ function buildCheckExplanation(
             check: checkName,
             ...(configuration === undefined
                 ? { command: own?.command, paths: own?.paths }
-                : { configuration: configuration.configuration.name }),
+                : { configuration: configuration.kit.name }),
             stage: check.stage,
             level: check.level,
             summary: check.summary,
@@ -190,12 +190,9 @@ export function checkExplanation(session: Session | undefined, checkName: string
     const own = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
     const found: Found | undefined =
         allChecks().get(checkName) ??
-        (own === undefined ? undefined : { check: repositoryCheckSpec(own), configuration: undefined });
+        (own === undefined ? undefined : { check: repositoryCheckSpec(own), kit: undefined });
     if (!found) return undefined;
-    const owner =
-        found.configuration === undefined
-            ? 'repository command'
-            : `${found.configuration.configuration.name} configuration`;
+    const owner = found.kit === undefined ? 'repository command' : `${found.kit.kit.name} configuration`;
     return buildCheckExplanation(session, checkName, found, own, owner);
 }
 

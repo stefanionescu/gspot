@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: xcode
+kit: xcode
 title: Xcode
 ---
 

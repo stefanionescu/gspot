@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: svelte
+kit: svelte
 title: Svelte
 ---
 

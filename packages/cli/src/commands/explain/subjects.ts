@@ -27,19 +27,19 @@ function configurationExplanation(configurationName: string): Explanation | { er
             ),
         };
     const row: ListingRow = {
-        name: manifest.configuration.name,
-        kind: manifest.configuration.kind,
-        title: manifest.configuration.title,
-        description: manifest.configuration.description,
-        requires: manifest.configuration.requires,
+        name: manifest.kit.name,
+        kind: manifest.kit.kind,
+        title: manifest.kit.title,
+        description: manifest.kit.description,
+        requires: manifest.kit.requires,
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
-        rules: Object.values(manifest.rule_files)
+        rules: Object.values(manifest.guides)
             .flat()
             .map((entry) => entry.path),
-        default: manifest.configuration.default,
-        proposed: manifest.configuration.proposed,
+        default: manifest.kit.default,
+        proposed: manifest.kit.proposed,
     };
     const { detect, claims } = manifest;
     const lines = [

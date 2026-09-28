@@ -45,8 +45,8 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
 function getCandidate(context: InitContext, configuration: string, without: Set<string>): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
     if (!manifest || without.has(configuration)) return undefined;
-    if (manifest.configuration.needs_git && !context.hasGit) return undefined;
-    if (manifest.configuration.proposed && !context.options.yes) return undefined;
+    if (manifest.kit.needs_git && !context.hasGit) return undefined;
+    if (manifest.kit.proposed && !context.options.yes) return undefined;
     return manifest;
 }
 
@@ -58,8 +58,8 @@ function rootSelection(context: InitContext, rootProposals: { configuration: str
         .filter((proposal) => {
             const manifest = getCandidate(context, proposal.configuration, without);
             if (!manifest) return false;
-            const { kind } = manifest.configuration;
-            return !hasScopes || kind === 'policy' || kind === 'language';
+            const { kind } = manifest.kit;
+            return !hasScopes || kind === 'general' || kind === 'language';
         })
         .map((proposal) => proposal.configuration);
     return [...new Set([...(named ?? []), ...detected])];
@@ -77,12 +77,12 @@ function scopeSelection(
         detectConfigurations(context.files, context.manifests, context.facts, scope.path)
             .filter((proposal) => {
                 const manifest = getCandidate(context, proposal.configuration, without);
-                return manifest !== undefined && manifest.configuration.kind !== 'policy';
+                return manifest !== undefined && manifest.kit.kind !== 'general';
             })
             .map((proposal) => proposal.configuration);
     // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
     const atRoot = new Set(rootIds);
-    return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.configuration.kind !== 'language');
+    return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.kit.kind !== 'language');
 }
 
 function hasSourceOutsideScopes(context: InitContext, manifest: Manifest, scopes: ScopeEntry[]): boolean {
@@ -102,7 +102,7 @@ function rootLanguagesKept(
 ): string[] {
     return rootIds.filter((id) => {
         const manifest = context.manifests.get(id);
-        if (manifest?.configuration.kind !== 'language' || !inScopes.has(id)) return true;
+        if (manifest?.kit.kind !== 'language' || !inScopes.has(id)) return true;
         return hasSourceOutsideScopes(context, manifest, scopes);
     });
 }
@@ -141,7 +141,7 @@ function listedConfigurations(
 ): string[] {
     if (options.profile?.tables.selection === 'exact' || options.isListExact === true) return ids;
     const without = new Set(options.without);
-    const recommended = ids.flatMap((id) => manifests.get(id)?.configuration.recommends ?? []);
+    const recommended = ids.flatMap((id) => manifests.get(id)?.kit.recommends ?? []);
     return [
         ...new Set([
             ...ids,
@@ -170,7 +170,7 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
     const selected = new Set<string>();
     for (const id of ids) {
         const required = selectConfigurations([id], manifests);
-        for (const manifest of required) selected.add(manifest.configuration.name);
+        for (const manifest of required) selected.add(manifest.kit.name);
     }
     return selected;
 }
@@ -192,11 +192,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     const scopeProposals = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {
         const manifest = manifests.get(id);
-        return (
-            manifest?.configuration.kind !== 'language' ||
-            !hasScopes ||
-            hasSourceOutsideScopes(context, manifest, scopes)
-        );
+        return manifest?.kit.kind !== 'language' || !hasScopes || hasSourceOutsideScopes(context, manifest, scopes);
     });
     for (const scope of scopes)
         if (scope.path !== '')

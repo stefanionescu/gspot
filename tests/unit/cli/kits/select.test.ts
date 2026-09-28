@@ -11,13 +11,13 @@ describe('selectConfigurations', () => {
             ['server', testManifest('server', ['base'])],
             ['base', testManifest('base')],
         ]);
-        const ids = selectConfigurations(['app', 'client'], manifests).map((entry) => entry.configuration.name);
+        const ids = selectConfigurations(['app', 'client'], manifests).map((entry) => entry.kit.name);
         expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
     });
 
     test('a recommended configuration is not pulled in by selection; init adds it and a person can drop it', () => {
         const manifests = configurationManifests();
-        const ids = selectConfigurations(['bash'], manifests).map((entry) => entry.configuration.name);
+        const ids = selectConfigurations(['bash'], manifests).map((entry) => entry.kit.name);
         expect(ids).not.toContain('naming');
     });
 

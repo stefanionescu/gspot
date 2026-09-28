@@ -161,7 +161,7 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
             'source.ts': 'export const count = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.selected.find(({ configuration }) => configuration.name === 'typescript')!;
+        const selected = session.scopes[0]!.selected.find(({ kit }) => kit.name === 'typescript')!;
         const definition = {
             name: 'sandbox/command',
             level: 'recommended',

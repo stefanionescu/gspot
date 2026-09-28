@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: docker
+kit: docker
 title: Docker
 ---
 

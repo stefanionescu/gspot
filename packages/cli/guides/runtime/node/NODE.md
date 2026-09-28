@@ -1,6 +1,6 @@
 ---
 layer: runtime
-configuration: javascript
+kit: javascript
 title: Node
 ---
 

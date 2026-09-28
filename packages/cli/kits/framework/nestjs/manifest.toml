@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "nestjs"
 kind = "framework"
 title = "NestJS"
@@ -64,7 +64,7 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[rule_files]
+[guides]
 framework = [{path = "framework/nestjs/NESTJS.md"}]
 
 [required_rules]

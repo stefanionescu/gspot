@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "spelling"
-kind = "policy"
+kind = "general"
 title = "Spelling"
 default = true
 description = "typos over every text file, with the words this repository allows and the reason for each."

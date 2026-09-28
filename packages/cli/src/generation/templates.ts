@@ -78,7 +78,7 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
                 path: entry.scope.path,
-                configurations: entry.selected.map((manifest) => manifest.configuration.name),
+                configurations: entry.selected.map((manifest) => manifest.kit.name),
             })),
         configurationScopes: (configuration: string) =>
             byDepth(scopes.filter((entry) => entry.view.configurations.includes(configuration))).map((entry) => ({

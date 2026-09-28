@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "pytest"
 kind = "tool"
 title = "pytest"
@@ -63,5 +63,5 @@ direction = "loosening"
 default = ["S101"]
 summary = "Ruff rules and families the test files leave off, such as the assert rule."
 
-[rule_files]
+[guides]
 general = [{path = "general/code/TESTING.md"}]

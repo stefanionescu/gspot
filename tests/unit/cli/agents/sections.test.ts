@@ -14,7 +14,7 @@ test('level filtering respects fenced examples, nested sections, and the next pe
 });
 
 test('named rules follow the same level inventory as generated lint configuration', () => {
-    const header = '---\nlayer: language\nconfiguration: react\ntitle: React\n---\n\n# React\n\n';
+    const header = '---\nlayer: language\nkit: react\ntitle: React\n---\n\n# React\n\n';
     const required = '## Rendering\n\nPreserve `react/no-danger-with-children`.\n\n';
     const convention = '## HTML sinks\n\nPreserve `react/no-danger`.\n';
     const path = 'language/REACT.md';

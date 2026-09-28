@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "ansible"
 kind = "tool"
 title = "Ansible"

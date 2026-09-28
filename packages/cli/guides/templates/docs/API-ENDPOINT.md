@@ -1,6 +1,6 @@
 ---
 layer: template
-configuration: none
+kit: none
 title: API Endpoint Template
 ---
 

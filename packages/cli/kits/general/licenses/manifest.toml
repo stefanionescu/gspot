@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "licenses"
-kind = "policy"
+kind = "general"
 title = "Licenses"
 proposed = true
 check_references = ["integrity/allowlists-match"]

@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "python"
 kind = "language"
 title = "Python"
@@ -533,7 +533,7 @@ summary = "Names vulture treats as used, such as functions a framework calls."
 ".py" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".pyi" = ["format", "syntax", "style", "types"]
 
-[rule_files]
+[guides]
 language = [{path = "language/PYTHON.md"}, {path = "language/python/TYPING.md"}, {path = "language/python/DESIGN.md"}, {path = "language/python/FLOW.md"}, {path = "language/python/PACKAGING.md"}, {path = "language/naming/PYTHON.md"}]
 
 [[settings]]

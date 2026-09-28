@@ -112,7 +112,7 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
         ...manifests.flatMap((manifest) =>
             manifest.settings.map((setting) => ({
                 setting,
-                owner: `[the ${manifest.configuration.name} configuration](/reference/configurations/${manifest.configuration.name}/)`,
+                owner: `[the ${manifest.kit.name} configuration](/reference/configurations/${manifest.kit.name}/)`,
             })),
         ),
     ];

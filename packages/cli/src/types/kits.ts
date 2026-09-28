@@ -52,8 +52,8 @@ export type ListingRow = {
     proposed: boolean;
 };
 export type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
-export type ConfigurationHeader = Omit<RawManifest['configuration'], 'check_references'> & {
-    check_references?: RawManifest['configuration']['check_references'];
+export type ConfigurationHeader = Omit<RawManifest['kit'], 'check_references'> & {
+    check_references?: RawManifest['kit']['check_references'];
 };
 export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> & Partial<Omit<NpmInstallerDefinition, 'name'>>;
 /** A platform a tool pin may name: an operating system alone, or one with an architecture. */
@@ -78,8 +78,8 @@ export type ToolPin = {
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };
-export type Manifest = Omit<RawManifest, 'configuration' | 'tools' | 'checks' | 'settings'> & {
-    configuration: ConfigurationHeader;
+export type Manifest = Omit<RawManifest, 'kit' | 'tools' | 'checks' | 'settings'> & {
+    kit: ConfigurationHeader;
     tools: ToolPin[];
     checks: CheckSpec[];
     settings: SettingSpec[];

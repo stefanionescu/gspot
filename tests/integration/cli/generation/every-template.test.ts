@@ -46,7 +46,7 @@ function parseModule(text: string, path: string): void {
 
 const configurations = [...configurationManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
-    .map((manifest) => manifest.configuration.name);
+    .map((manifest) => manifest.kit.name);
 
 test.each(configurations.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
     'the %s configuration renders files their readers parse at level %s',

@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: configs
+kit: configs
 title: YAML
 ---
 

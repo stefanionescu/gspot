@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "security"
-kind = "policy"
+kind = "general"
 title = "Security"
 proposed = true
 description = "Static analysis for security patterns with Semgrep over every file a selected language claims, and CodeQL on request."
@@ -151,5 +151,5 @@ direction = "loosening"
 default = []
 summary = "Paths Semgrep never scans, each with a reason; they are written into .semgrepignore."
 
-[rule_files]
+[guides]
 code = [{path = "general/code/SECURITY.md"}, {path = "general/code/SECRETS.md"}]

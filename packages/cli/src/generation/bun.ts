@@ -13,9 +13,7 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
     const files = openConfinedRoot(root);
     try {
         const selected = scopes
-            .filter((selection) =>
-                selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'),
-            )
+            .filter((selection) => selection.selected.some((manifest) => manifest.kit.name === 'dependencies'))
             .map((selection) => ({ selection, prefix: selection.scope.path === '' ? '' : `${selection.scope.path}/` }))
             .filter(({ prefix }) =>
                 ['bun.lock', 'bun.lockb'].some((name) => files.stat(`${prefix}${name}`) !== undefined),

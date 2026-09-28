@@ -1,7 +1,7 @@
 # Where a dead-code scan starts when no framework names its own entries.
 entry_files = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "src/plugin.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}", "build.ts", "publish.ts"]
 
-[configuration]
+[kit]
 name = "javascript"
 kind = "language"
 title = "JavaScript"
@@ -377,7 +377,7 @@ summary = "Checks that the configuration ESLint resolves for a file still turns 
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
 
-[rule_files]
+[guides]
 language = [{path = "language/JAVASCRIPT.md"}, {path = "language/naming/JAVASCRIPT.md"}]
 runtime = [{path = "runtime/node/NODE.md"}, {path = "runtime/bun/BUN.md", when = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}}]
 

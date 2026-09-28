@@ -50,7 +50,7 @@ export function detectedSettings(
             const value = detectedValue(spec.detect, dependencies, folders);
             if (value === undefined) return [];
             seen.add(spec.name);
-            return [{ key: spec.name, value, configuration: manifest.configuration.name }];
+            return [{ key: spec.name, value, configuration: manifest.kit.name }];
         }),
     );
 }

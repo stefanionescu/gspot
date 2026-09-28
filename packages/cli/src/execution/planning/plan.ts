@@ -48,7 +48,7 @@ function referencedEntries(session: Session, planned: PlanEntry[]): PlanEntry[] 
     const referenced: PlanEntry[] = [];
     const candidates = session.scopes.flatMap((selected) =>
         selected.selected.flatMap((manifest) => {
-            const references = manifest.configuration.check_references ?? [];
+            const references = manifest.kit.check_references ?? [];
             return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
         }),
     );
@@ -212,7 +212,7 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
             yielded(
                 await Promise.all(
                     checks.map(async (check) =>
-                        check.manifest?.configuration.name === 'formatting' &&
+                        check.manifest?.kit.name === 'formatting' &&
                         check.check === 'formatting/prettier' &&
                         check.skip === undefined &&
                         check.files.length > 0

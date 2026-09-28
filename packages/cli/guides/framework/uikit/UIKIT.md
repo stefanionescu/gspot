@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: swift
+kit: swift
 title: UIKit
 ---
 

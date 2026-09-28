@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: zod
+kit: zod
 title: Zod
 ---
 

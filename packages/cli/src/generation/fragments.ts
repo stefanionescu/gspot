@@ -12,7 +12,7 @@ import type { Fragment, TemplateInputs, ResolvedSelector } from '#cli/types/gene
 function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
     if (owner.per_scope) return selection.selected;
     const every = [selection, ...scopes].flatMap((entry) => entry.selected);
-    return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
+    return new Map(every.map((manifest) => [manifest.kit.name, manifest])).values().toArray();
 }
 
 function scopeFragment(rendered: string, selection: ScopeSelection, scopes: ScopeSelection[]): string {

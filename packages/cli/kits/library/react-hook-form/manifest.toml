@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "react-hook-form"
 kind = "library"
 title = "React Hook Form"
@@ -22,5 +22,5 @@ level = "all"
 selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])"
 message = "A registered field is uncontrolled. Drop the value attribute, or use a Controller."
 
-[rule_files]
+[guides]
 library = [{path = "library/react-hook-form/REACTHOOKFORM.md"}]

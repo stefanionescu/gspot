@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "markdown"
 kind = "language"
 title = "Markdown"
@@ -118,5 +118,5 @@ kind = "table"
 direction = "per-rule"
 summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
 
-[rule_files]
+[guides]
 language = [{path = "general/prose/DOCS-FORMAT.md"}]

@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: bash
+kit: bash
 title: Bash Language
 ---
 

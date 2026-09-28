@@ -228,9 +228,9 @@ const detectionSchema = z
 
 export const manifestSchema = z.strictObject({
     untracked: z.array(z.string().refine(isUntrackedPath, 'Untracked paths must stay inside .gspot.')).default([]),
-    configuration: z.strictObject({
+    kit: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),
-        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'policy']),
+        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),
         title: z.string(),
         requires: stringList,
         check_references: z.array(z.string().min(1)).default([]),
@@ -259,7 +259,7 @@ export const manifestSchema = z.strictObject({
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
     entry_files: stringList,
     coverage: stringListTable.default({}),
-    rule_files: z
+    guides: z
         .record(
             z.string(),
             z.array(

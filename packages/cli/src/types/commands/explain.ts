@@ -22,6 +22,6 @@ export type PathExplanation = {
     unchecked?: string;
     remedy?: string;
 };
-export type Found = { check: CheckSpec; configuration: Manifest | undefined };
+export type Found = { check: CheckSpec; kit: Manifest | undefined };
 export type OwnCheck = Session['policyFiles']['policy']['checks'][number];
 export type Facts = { settings: string[]; rules: string[]; crashPattern: string | undefined };

@@ -115,7 +115,7 @@ function tagEvidence(detect: Manifest['detect'], tree: TreeFacts): string | unde
 const EVIDENCE = [projectEvidence, filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence];
 
 function proposalFor(manifest: Manifest, tree: TreeFacts): ConfigurationEvidence | undefined {
-    const { configuration } = manifest;
+    const { kit: configuration } = manifest;
     const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
         return {
@@ -193,7 +193,7 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
     const known = new Set(
         manifests
             .values()
-            .filter((manifest) => manifest.configuration.kind !== 'policy')
+            .filter((manifest) => manifest.kit.kind !== 'general')
             .flatMap((manifest) => [...manifest.detect.extensions, ...manifest.claims.extensions]),
     );
     const byExtension = languageByExtension();

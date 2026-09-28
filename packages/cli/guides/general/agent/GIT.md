@@ -1,6 +1,6 @@
 ---
 layer: agent
-configuration: rules
+kit: rules
 title: Git
 ---
 

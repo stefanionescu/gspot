@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "vitest"
 kind = "tool"
 title = "Vitest"
@@ -92,6 +92,6 @@ role = "harness"
 default = "tests/support"
 summary = "The folder that holds test support code, which test files import and source files never do."
 
-[rule_files]
+[guides]
 tool = [{path = "tool/vitest/VITEST.md"}, {path = "tool/playwright/PLAYWRIGHT.md", when = {dependencies = ["@playwright/test", "playwright"]}}]
 general = [{path = "general/code/TESTING.md"}]

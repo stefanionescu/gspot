@@ -1,6 +1,6 @@
 // The literal values integration/cli/platform reads: names, patterns, limits, and tables.
 
-export const ASSETS_CONFIGURATION = '[configuration]\nname = "bash"\n';
+export const ASSETS_CONFIGURATION = '[kit]\nname = "bash"\n';
 export const CHECKOUT = 'workspace % café';
 export const SOURCES = [
     'packages/cli/package.json',

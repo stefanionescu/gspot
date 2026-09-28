@@ -14,7 +14,7 @@ import type { ApplyReport, LifecycleOwner } from '#cli/types/lifecycle/lifecycle
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.configuration.name === 'prose'),
+        selection.selected.some((manifest) => manifest.kit.name === 'prose'),
     );
     if (!isProse || hasOwnedPackages(session.root)) return;
     const problem = await installPackages(session.root);
@@ -72,9 +72,7 @@ export async function applyAll(
             rendered,
             report,
             retained: {
-                prose: session.scopes.some((scope) =>
-                    scope.selected.some((manifest) => manifest.configuration.name === 'prose'),
-                ),
+                prose: session.scopes.some((scope) => scope.selected.some((manifest) => manifest.kit.name === 'prose')),
                 packages: session.packageClient !== undefined,
             },
             takeover,

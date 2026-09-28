@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: nginx
+kit: nginx
 title: nginx
 ---
 

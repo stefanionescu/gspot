@@ -37,7 +37,7 @@ describe('conflicting configuration defaults', () => {
         sql,
         {
             ...sql,
-            configuration: { ...sql.configuration, name: 'alternate-sql' },
+            kit: { ...sql.kit, name: 'alternate-sql' },
             settings: sql.settings.map((spec) =>
                 spec.name === 'tools.sqlfluff.dialect' ? { ...spec, default: 'postgres' } : spec,
             ),
@@ -159,7 +159,7 @@ test('the settings surface > list defaults append across configurations before r
     const defaults = exposedSettings(
         [['dispatcher'], ['dispatcher', 'orchestrator']].map((terms, index) => ({
             ...naming,
-            configuration: { ...naming.configuration, name: `naming-${String(index)}` },
+            kit: { ...naming.kit, name: `naming-${String(index)}` },
             settings: naming.settings.map((spec) =>
                 spec.name === 'naming.banned_terms' ? { ...spec, default: terms } : spec,
             ),

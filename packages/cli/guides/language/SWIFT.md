@@ -1,6 +1,6 @@
 ---
 layer: language
-configuration: swift
+kit: swift
 title: Swift
 ---
 

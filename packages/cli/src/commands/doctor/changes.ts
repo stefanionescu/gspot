@@ -21,11 +21,11 @@ import type { ExistingTool, ExistingTooling } from '#cli/types/repository/reposi
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
     const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
     for (const manifest of everyManifest(session.scopes))
-        for (const id of manifest.configuration.recommends)
+        for (const id of manifest.kit.recommends)
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
                     configuration: id,
-                    evidence: `recommended by ${manifest.configuration.name}`,
+                    evidence: `recommended by ${manifest.kit.name}`,
                     command: `gspot add ${id}`,
                 });
     return rows.values().toArray();
@@ -44,7 +44,7 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     return {
         path: config.path,
         note: owner ? `${config.tool} has a configuration` : `${config.tool} has no gspot configuration`,
-        command: owner ? `gspot add ${owner.configuration.name}` : 'none; add a [[check]] entry to run it',
+        command: owner ? `gspot add ${owner.kit.name}` : 'none; add a [[check]] entry to run it',
     };
 }
 
@@ -95,7 +95,7 @@ function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
  */
 export function changeReport(session: Session): ChangeReport {
     const facts = readManifests(session.root, session.repository.files);
-    const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
+    const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
     const tooling = existingTooling(session.root, session.repository.files, facts);
     const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
@@ -107,7 +107,7 @@ export function changeReport(session: Session): ChangeReport {
             .filter((proposal) => !selected.has(proposal.configuration))
             .filter((proposal) => {
                 const manifest = session.manifests.get(proposal.configuration);
-                return manifest?.configuration.default !== true && manifest?.configuration.kind !== 'policy';
+                return manifest?.kit.default !== true && manifest?.kit.kind !== 'general';
             })
             .map((proposal) => ({
                 configuration: proposal.configuration,

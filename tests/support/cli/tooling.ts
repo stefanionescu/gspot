@@ -24,7 +24,7 @@ export const PRETTIER_TOOLING: ExistingTooling = {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two test files build manifests through it ten times; one owner keeps the fixture shape.
 export function testManifest(name: string, requires: string[] = []): Manifest {
     return parseManifest(
-        `[configuration]\nname = "${name}"\nkind = "language"\ntitle = "${name}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A configuration for the tests, long enough."\n`,
+        `[kit]\nname = "${name}"\nkind = "language"\ntitle = "${name}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A configuration for the tests, long enough."\n`,
         `configurations/${name}`,
     );
 }

@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "configs"
-kind = "policy"
+kind = "general"
 title = "Configuration Files"
 default = true
 requires = ["formatting"]
@@ -346,7 +346,7 @@ summary = "The name of the function the code reads environment variables through
 ".entitlements" = ["syntax"]
 ".xml" = ["syntax"]
 
-[rule_files]
+[guides]
 general = [{path = "general/code/CONFIGURATION.md"}]
 language = [{path = "language/YAML.md"}]
 tool = [{path = "tool/tasks/TASKS.md"}, {path = "tool/github-actions/GITHUB-ACTIONS.md"}]

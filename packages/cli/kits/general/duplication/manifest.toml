@@ -1,6 +1,6 @@
-[configuration]
+[kit]
 name = "duplication"
-kind = "policy"
+kind = "general"
 title = "Duplication"
 proposed = true
 description = "Copy-paste detection across every language a selected configuration claims, with a ceiling for the share of duplicated lines."
@@ -67,5 +67,5 @@ direction = "loosening"
 default = []
 summary = "Paths the duplication check skips, each with a reason."
 
-[rule_files]
+[guides]
 agent = [{path = "general/agent/WORKING.md"}]

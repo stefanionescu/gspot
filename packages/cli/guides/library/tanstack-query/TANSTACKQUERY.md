@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: tanstack-query
+kit: tanstack-query
 title: TanStack Query
 ---
 

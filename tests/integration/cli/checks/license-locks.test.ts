@@ -155,7 +155,7 @@ test.each(['root', 'nested', 'combined'])(
         expect(plan).toHaveLength(1);
         const selectsStructure = session.scopes
             .flatMap((scope) => scope.selected)
-            .some((manifest) => manifest.configuration.name === 'structure');
+            .some((manifest) => manifest.kit.name === 'structure');
         expect(selectsStructure).toBe(selection === 'combined');
         const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);

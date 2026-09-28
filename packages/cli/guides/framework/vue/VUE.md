@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: vue
+kit: vue
 title: Vue
 ---
 

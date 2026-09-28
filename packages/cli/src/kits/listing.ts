@@ -6,15 +6,13 @@ import { configurationManifests } from '#cli/kits/manifests.ts';
  * Every check across every manifest, by id, with the configuration that ships it.
  * @returns the checks by id
  */
-export function allChecks(): Map<string, { check: CheckSpec; configuration: Manifest }> {
-    const checks = new Map<string, { check: CheckSpec; configuration: Manifest }>();
+export function allChecks(): Map<string, { check: CheckSpec; kit: Manifest }> {
+    const checks = new Map<string, { check: CheckSpec; kit: Manifest }>();
     for (const manifest of configurationManifests().values()) {
-        const owned = manifest.checks.filter(
-            (check) => manifest.configuration.check_references?.includes(check.name) !== true,
-        );
+        const owned = manifest.checks.filter((check) => manifest.kit.check_references?.includes(check.name) !== true);
         for (const check of owned) {
             if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
-            checks.set(check.name, { check, configuration: manifest });
+            checks.set(check.name, { check, kit: manifest });
         }
     }
     return checks;

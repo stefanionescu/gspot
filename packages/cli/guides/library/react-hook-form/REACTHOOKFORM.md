@@ -1,6 +1,6 @@
 ---
 layer: library
-configuration: react-hook-form
+kit: react-hook-form
 title: React Hook Form
 ---
 

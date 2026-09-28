@@ -65,9 +65,7 @@ function runnerOutputs(
 
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: GeneratedProposal): void {
     if (policy.ci === undefined) return;
-    const swiftScope = scopes.find((selection) =>
-        selection.selected.some((manifest) => manifest.configuration.name === 'swift'),
-    );
+    const swiftScope = scopes.find((selection) => selection.selected.some((manifest) => manifest.kit.name === 'swift'));
     out.files.push(
         (policy.ci.provider === 'github' ? workflowFile : gitlabFile)({
             version,
@@ -166,7 +164,7 @@ export function emitAll(
     runnerOutputs(root, policy, manifests, version, packageClient !== undefined, out);
     workflowOutput(policy, scopes, version, out);
     out.files.push(...assembleRules(policy.rules, manifests, policy.level, repository));
-    if (scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'prose')))
+    if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))
         out.files.push(...styleFiles(policy, rootView(scopes)));
     blockOutputs(repository, policy, manifests, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));

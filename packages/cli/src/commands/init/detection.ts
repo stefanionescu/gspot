@@ -53,8 +53,7 @@ export function detectionText(summary: DetectionSummary): string {
     const languages = summary.proposals
         .filter(
             (proposal) =>
-                proposal.kind === 'language' &&
-                summary.manifests.get(proposal.configuration)?.configuration.default !== true,
+                proposal.kind === 'language' && summary.manifests.get(proposal.configuration)?.kit.default !== true,
         )
         .map((proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
@@ -66,7 +65,7 @@ export function detectionText(summary: DetectionSummary): string {
                     .filter(
                         (proposal) =>
                             proposal.kind === kind &&
-                            summary.manifests.get(proposal.configuration)?.configuration.default !== true,
+                            summary.manifests.get(proposal.configuration)?.kit.default !== true,
                     )
                     .map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
             ),

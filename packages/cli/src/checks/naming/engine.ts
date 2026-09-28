@@ -21,7 +21,7 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
         .filter((file) => file.nature === 'source')
         .map((file) => ({
             file,
-            language: languages.find((manifest) => isClaimed(manifest.claims, file))?.configuration.name,
+            language: languages.find((manifest) => isClaimed(manifest.claims, file))?.kit.name,
         }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
@@ -87,7 +87,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
         const scope = scopeOf(file.path, input.scopeEntries);
         const language = selections.get(scope.path)?.find((manifest) => isClaimed(manifest.claims, file));
         if (language === undefined) continue;
-        const name = language.configuration.name;
+        const name = language.kit.name;
         const identifiers = await identifiersOf(
             file.path,
             readSource(input.root, file.path, input.observations).toString('utf8'),

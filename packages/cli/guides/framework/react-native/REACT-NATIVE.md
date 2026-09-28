@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: react-native
+kit: react-native
 title: React Native
 ---
 

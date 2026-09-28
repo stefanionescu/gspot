@@ -49,13 +49,13 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         scope: scope.path === '' ? 'root' : scope.path,
         nature: file.nature,
         tags: file.tags,
-        configurations: owners.map((manifest) => manifest.configuration.name),
+        configurations: owners.map((manifest) => manifest.kit.name),
         checks: configuredChecks(session)
             .filter((check) => claimedInputs(session, check).some((entry) => entry.path === file.path))
             .map((check) => ({
                 check: check.check,
                 stage: check.spec.stage,
-                ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
+                ...(check.manifest === undefined ? {} : { configuration: check.manifest.kit.name }),
             })),
         ignores: session.policyFiles.policy.ignores
             .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))

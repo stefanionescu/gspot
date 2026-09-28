@@ -1,6 +1,6 @@
 ---
 layer: framework
-configuration: express
+kit: express
 title: OpenAPI
 ---
 

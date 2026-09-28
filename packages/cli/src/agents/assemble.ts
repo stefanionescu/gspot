@@ -11,27 +11,24 @@ import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/config/agents.ts';
 
-function declaredGuides(
-    manifests: Manifest[],
-    repository: Repository,
-): Pick<RuleFile, 'source' | 'layer' | 'configuration'>[] {
+function declaredGuides(manifests: Manifest[], repository: Repository): Pick<RuleFile, 'source' | 'layer' | 'kit'>[] {
     const conditions = manifests.flatMap((manifest) =>
-        Object.values(manifest.rule_files)
+        Object.values(manifest.guides)
             .flat()
             .flatMap((entry) => (entry.when === undefined ? [] : [entry.when])),
     );
     const dependencies = manifests.some((manifest) =>
-        Object.values(manifest.rule_files)
+        Object.values(manifest.guides)
             .flat()
             .some((entry) => entry.when !== undefined && entry.when.dependencies.length > 0),
     );
     const facts = dependencies ? readManifests(repository.root, repository.files) : [];
     const matched = detectConditions(conditions, repository.files, facts);
     return manifests.flatMap((manifest) =>
-        Object.entries(manifest.rule_files).flatMap(([layer, paths]) =>
+        Object.entries(manifest.guides).flatMap(([layer, paths]) =>
             paths
                 .filter((entry) => entry.when === undefined || matched.has(entry.when))
-                .map(({ path: source }) => ({ source, layer, configuration: manifest.configuration.name })),
+                .map(({ path: source }) => ({ source, layer, kit: manifest.kit.name })),
         ),
     );
 }
@@ -47,12 +44,12 @@ export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], r
     const available = new Set(listAssets(RULES_PREFIX));
     const { exclude } = rules;
     const files = new Map<string, RuleFile>();
-    for (const { source, layer, configuration } of [
+    for (const { source, layer, kit } of [
         ...[...AGENT_LAYERS].flatMap((layer) =>
             listAssets(`${RULES_PREFIX}${layer}/`).map((path) => ({
                 source: path.slice(RULES_PREFIX.length),
                 layer: layer.slice(layer.indexOf('/') + 1),
-                configuration: 'rules',
+                kit: 'rules',
             })),
         ),
         ...declaredGuides(manifests, repository),
@@ -68,7 +65,7 @@ export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], r
             source,
             target: `${rules.directory}/${source}`,
             layer,
-            configuration,
+            kit,
             title: TITLE.exec(readAsset(path))?.groups?.['title'] ?? '',
         });
     }
@@ -95,7 +92,7 @@ export function assembleRules(
         content: selectedSections(readAsset(`${RULES_PREFIX}${file.source}`), level),
         readOnly: true,
         kind: 'rules',
-        configuration: file.configuration,
+        kit: file.kit,
     }));
 }
 

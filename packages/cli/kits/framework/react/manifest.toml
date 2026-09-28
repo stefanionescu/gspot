@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "react"
 kind = "framework"
 title = "React"
@@ -64,7 +64,7 @@ categories = ["functions", "methods"]
 structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[rule_files]
+[guides]
 framework = [{path = "framework/react/REACT.md"}]
 
 [required_rules]

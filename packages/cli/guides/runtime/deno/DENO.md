@@ -1,6 +1,6 @@
 ---
 layer: runtime
-configuration: supabase
+kit: supabase
 title: Deno
 ---
 

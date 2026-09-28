@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "jest"
 kind = "tool"
 title = "Jest"
@@ -93,5 +93,5 @@ direction = "neutral"
 default = "@jest/globals"
 summary = "The module supplying test functions for ESLint, including bun:test for Bun tests."
 
-[rule_files]
+[guides]
 general = [{path = "general/code/TESTING.md"}]

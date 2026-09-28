@@ -1,4 +1,4 @@
-[configuration]
+[kit]
 name = "bash"
 kind = "language"
 title = "Bash"
@@ -521,5 +521,5 @@ summary = "The platforms the fourth header line of every script names."
 ".sh" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 ".bash" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 
-[rule_files]
+[guides]
 language = [{path = "language/BASH.md"}, {path = "language/bash/LANGUAGE.md"}, {path = "language/bash/SAFETY.md"}, {path = "language/bash/OPERATIONS.md"}, {path = "language/naming/BASH.md"}]

@@ -52,7 +52,7 @@ function directoryPointers(context: EmitContext, configuration: ConfigurationTar
     );
     const directories = new Set(claimed.flatMap((file) => pointerDirectories(scope, file, matches)));
     return [...directories].map((directory) =>
-        bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version, manifest.configuration.name),
+        bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version, manifest.kit.name),
     );
 }
 
@@ -65,14 +65,14 @@ function pointerFile(
     path: string,
 ): GeneratedFile {
     const { inputs, manifest } = context;
-    const base = { path, readOnly: true, kind: 'pointer', configuration: manifest.configuration.name } as const;
+    const base = { path, readOnly: true, kind: 'pointer', configuration: manifest.kit.name } as const;
     if (pointer.template !== undefined)
         return {
             ...base,
             content: emitTarget(`${manifest.dir}/${pointer.template}`, path, inputs, configuration.header),
         };
     if (pointer.copy === true) return { ...base, content: copyPointerContent(file.content, path) };
-    return bodyPointer(pointer, path, file.path, inputs.version, manifest.configuration.name);
+    return bodyPointer(pointer, path, file.path, inputs.version, manifest.kit.name);
 }
 
 // Adds the pointer a configuration declares for its generated file.
@@ -110,7 +110,7 @@ function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], 
     if (configuration.needs === undefined) return true;
     const wanted = configuration.needs;
     const selectedScopes = configuration.per_scope ? [selection] : scopes;
-    return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.configuration.name === wanted));
+    return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.kit.name === wanted));
 }
 
 // One .editorconfig per adopted directory, rendered as if that directory's adoption were the whole one.
@@ -120,7 +120,7 @@ function nestedEditorconfigs(
     file: GeneratedFile,
 ): GeneratedFile[] {
     const { manifest, selection, inputs } = context;
-    if (manifest.configuration.name !== 'formatting' || configuration.target !== '.editorconfig') return [];
+    if (manifest.kit.name !== 'formatting' || configuration.target !== '.editorconfig') return [];
     const adopted = selection.view.tool('editorconfig')['adopted'] as EditorconfigAdoption | undefined;
     return (adopted?.directories ?? []).map((directory) => {
         const path = `${directory.basePath}/.editorconfig`;
@@ -155,7 +155,7 @@ function emitConfiguration(
         content: emitTarget(`${manifest.dir}/${configuration.template ?? ''}`, target, inputs, configuration.header),
         readOnly: true,
         kind: 'config',
-        configuration: manifest.configuration.name,
+        configuration: manifest.kit.name,
         ...(configuration.rules_path === undefined ? {} : { rulesPath: configuration.rules_path }),
     };
     const templateContext = { ...context, inputs };

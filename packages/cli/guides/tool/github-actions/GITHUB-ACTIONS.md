@@ -1,6 +1,6 @@
 ---
 layer: tool
-configuration: cloudflare
+kit: cloudflare
 title: GitHub Actions
 ---
 

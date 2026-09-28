@@ -45,7 +45,7 @@ function appendReferences(manifests: Map<string, Manifest>): void {
         [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
     );
     for (const manifest of manifests.values())
-        for (const reference of new Set(manifest.configuration.check_references)) {
+        for (const reference of new Set(manifest.kit.check_references)) {
             const check = declared.get(reference);
             if (check !== undefined) manifest.checks.push(check);
         }
@@ -56,13 +56,13 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
     const dir = path.slice(0, -'/manifest.toml'.length);
     const manifest = parseManifest(readAsset(path), dir);
     const folder = dir.slice(dir.lastIndexOf('/') + 1);
-    if (folder !== manifest.configuration.name)
-        throw new ManifestError(manifest.configuration.name, [
-            `the folder is \`${folder}\` and the name is \`${manifest.configuration.name}\`; they must match.`,
+    if (folder !== manifest.kit.name)
+        throw new ManifestError(manifest.kit.name, [
+            `the folder is \`${folder}\` and the name is \`${manifest.kit.name}\`; they must match.`,
         ]);
-    if (manifests.has(manifest.configuration.name))
-        throw new ManifestError(manifest.configuration.name, ['The configuration name is already registered.']);
-    manifests.set(manifest.configuration.name, manifest);
+    if (manifests.has(manifest.kit.name))
+        throw new ManifestError(manifest.kit.name, ['The configuration name is already registered.']);
+    manifests.set(manifest.kit.name, manifest);
 }
 
 /**
@@ -74,7 +74,7 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
 export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
     const result = manifestSchema.safeParse(parsed);
-    const configurationName = result.success ? result.data.configuration.name : dir;
+    const configurationName = result.success ? result.data.kit.name : dir;
     if (!result.success)
         throw new ManifestError(configurationName, [
             ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
@@ -89,11 +89,11 @@ export function parseManifest(text: string, dir: string): Manifest {
             .filter((config) => !config.fragment && (config.code_files.length > 0 || config.selectors.length > 0))
             .map((config) => `config ${config.target} declares code files or selectors, which only a fragment adds.`),
     ];
-    if (raw.checks.some((check) => raw.configuration.check_references.includes(check.name)))
+    if (raw.checks.some((check) => raw.kit.check_references.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');
-    if (problems.length > 0) throw new ManifestError(raw.configuration.name, problems);
+    if (problems.length > 0) throw new ManifestError(raw.kit.name, problems);
     return {
-        configuration: raw.configuration,
+        kit: raw.kit,
         untracked: raw.untracked,
         detect: raw.detect,
         claims: raw.claims,
@@ -114,7 +114,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         entry_files: raw.entry_files,
         naming: raw.naming,
         coverage: raw.coverage,
-        rule_files: raw.rule_files,
+        guides: raw.guides,
         required_rules: raw.required_rules,
         rules_off: raw.rules_off,
         dir,

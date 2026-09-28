@@ -37,14 +37,14 @@ export function parseFrontMatter(text: string): FrontMatter | undefined {
     const fields = fieldsOf(lines.slice(1, end));
     return {
         layer: fields['layer'] ?? '',
-        configuration: fields['configuration'] ?? '',
+        kit: fields['kit'] ?? '',
         title: fields['title'] ?? '',
         fields,
     };
 }
 
 /**
- * Validates required front matter. Checks the layer and configuration identifiers, the layer path, and the title against the H1.
+ * Validates required front matter. Checks the layer and kit identifiers, the layer path, and the title against the H1.
  * @param path the file relative to rules/.
  * @param text the file text.
  * @returns the findings.
@@ -61,11 +61,11 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
             line: 2,
             message: `layer '${matter.layer}' does not match the path ('${expected}')`,
         });
-    if (!CONFIGURATION_ID.test(matter.configuration))
+    if (!CONFIGURATION_ID.test(matter.kit))
         findings.push({
             file: path,
             line: 3,
-            message: `configuration '${matter.configuration}' is not a configuration id or none`,
+            message: `kit '${matter.kit}' is not a kit id or none`,
         });
     const heading =
         text

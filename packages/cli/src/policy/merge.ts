@@ -95,7 +95,7 @@ export function mergeForScope(
     for (const { table } of policyTables(policy, scope)) Object.assign(format, table.format ?? {});
     return {
         scope,
-        configurations: selected.map((manifest) => manifest.configuration.name),
+        configurations: selected.map((manifest) => manifest.kit.name),
         settings,
         reasons,
         format,
