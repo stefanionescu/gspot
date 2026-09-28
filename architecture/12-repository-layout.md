@@ -57,7 +57,7 @@ Do not require a file per
 type, constant, forwarding function, or check. Test locations follow the behavior they exercise;
 source/test directory symmetry is not required.
 
-Use the configuration kind `policy` for cross-language checks. It groups configuration
+Use the kit kind `policy` for cross-language checks. It groups configuration
 selection and planning; it does not prescribe the taxonomy of commands, tests, docs,
 or unrelated source directories. Configurable shipped naming and placement policies remain
 available at their specified levels. They are not blanket instructions to reorganize gspot.
@@ -144,7 +144,7 @@ features. Evaluation request and response schemas form a shared protocol indepen
 evaluators.
 
 Command and check-output validation remain shared boundaries used by both policy
-and configuration manifests. Publication shapes belong to lifecycle application.
+and kit manifests. Publication shapes belong to lifecycle application.
 
 Generation normalizes merge stubs into
 structured edits before publication and retains rendering decisions. Drift compares retained
@@ -502,7 +502,7 @@ Verify emitted integration, a real staged check, and hook invocation in the owni
 
 Private tool installation uses each supported package manager and executes installed checks.
 Share a representative dependency installation where it proves the same boundary; do not repeat
-an expensive install for every configuration solely to satisfy a matrix count. Native configuration
+an expensive install for every kit solely to satisfy a matrix count. Native configuration
 behavior still needs defect and correction evidence at both levels.
 
 ### Acceptance T-3
@@ -556,7 +556,7 @@ Resolve generated ESLint configuration for source, tests, scripts, configuration
 
 ### Acceptance T-36
 
-Test generated behavior with the actual pinned consumer. Preserve exact-byte assertions where serialization, escaping, authored content, or recovery requires them. A snapshot directory for every configuration is not required.
+Test generated behavior with the actual pinned consumer. Preserve exact-byte assertions where serialization, escaping, authored content, or recovery requires them. A snapshot directory for every kit is not required.
 
 ### Acceptance T-12
 
@@ -597,10 +597,10 @@ Do not recreate a standalone registry-harness suite.
 
 ### Acceptance S-1
 
-One repository check writes every template of every configuration into the cache, at both
+One repository check writes every template of every kit into the cache, at both
 levels, and runs the parser and the formatter of each kind over the result.
 
-Render each configuration with its planted policy, then validate the output with its pinned consumer,
+Render each kit with its planted policy, then validate the output with its pinned consumer,
 including Prettier, Taplo, yamllint, and ESLint where applicable. Retain exact serialization
 assertions only for contractual bytes. T-36 requires generated behavior, not a snapshot inventory.
 

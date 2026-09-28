@@ -1,4 +1,4 @@
-// Every template of every configuration renders at both levels into a file its reader parses (S-1).
+// Every template of every kit renders at both levels into a file its reader parses (S-1).
 import ts from 'typescript';
 import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';

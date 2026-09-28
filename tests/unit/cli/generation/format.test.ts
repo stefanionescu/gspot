@@ -13,7 +13,7 @@ const svelte = {
 };
 
 describe('prettierConfig', () => {
-    test('a plugin is loaded from the private installation relative to each configuration file', () => {
+    test('a plugin is loaded from the private installation relative to each kit file', () => {
         expect(
             prettierConfiguration(policy, '.gspot/config/prettier.json', undefined, [svelte])['plugins'],
         ).toStrictEqual(['../../.gspot/node_modules/prettier-plugin-svelte/plugin.js']);

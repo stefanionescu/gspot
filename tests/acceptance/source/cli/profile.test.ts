@@ -127,7 +127,7 @@ test(
 );
 
 test(
-    'profiles > a profile with a wrong value, an unknown configuration and a path stops init before anything is written',
+    'profiles > a profile with a wrong value, an unknown kit and a path stops init before anything is written',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

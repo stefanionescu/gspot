@@ -27,7 +27,7 @@ function prefixed(path: string, pattern: string): string {
     return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
 }
 
-// The entry files of a scope: what its policy declares, then what its selected configurations know.
+// The entry files of a scope: what its policy declares, then what its selected kits know.
 function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): string[] {
     const layers = [
         { path: '', table: policy },

@@ -21,7 +21,7 @@ const CASES: FindingCase[] = [
         check: 'integrity/next-config',
         files: {
             'next.config.mjs':
-                '// The framework configuration.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
+                '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
         },
         expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
     },

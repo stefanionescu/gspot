@@ -2,10 +2,10 @@ import { detectKits } from '#cli/kits/detect.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NO_CONFIGURATIONS } from '#cli/config/commands/init.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import { requireChain, SelectionError, selectConfigurations } from '#cli/kits/select.ts';
+import { selectKits, requireChain, SelectionError } from '#cli/kits/select.ts';
 import type { KitReason, InitInputs, InitContext, InitSelection } from '#cli/types/commands/init.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
@@ -52,7 +52,7 @@ function getCandidate(context: InitContext, configuration: string, without: Set<
 
 function rootSelection(context: InitContext, rootProposals: { configuration: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
-    const named = context.options.kits?.filter((id) => id !== NO_CONFIGURATIONS && !without.has(id));
+    const named = context.options.kits?.filter((id) => id !== NO_KITS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
     const detected = rootProposals
         .filter((proposal) => {
@@ -112,12 +112,12 @@ function assertKnown(
     scopeFlags: Map<string, string[]>,
     manifests: Map<string, Manifest>,
 ): void {
-    const configurations = (options.kits ?? []).filter((id) => id !== NO_CONFIGURATIONS);
+    const configurations = (options.kits ?? []).filter((id) => id !== NO_KITS);
     const without = options.without ?? [];
     const known = manifests.keys().toArray();
     const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
         .filter((id) => !manifests.has(id))
-        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
+        .map((id) => messages.unknownKit(id, nearMatches(id, known)));
     if (unknown.length > 0) throw new SelectionError(unknown);
 }
 
@@ -133,7 +133,7 @@ function assertNoneRequired(options: InitInputs['options'], named: string[], man
 }
 
 // Exact selections retain their list. Other selections gain one level of detected recommendations.
-function listedConfigurations(
+function listedKits(
     options: InitInputs['options'],
     ids: string[],
     manifests: Map<string, Manifest>,
@@ -166,7 +166,7 @@ function reasonFor(id: string, sets: { named: Set<string>; chosen: Set<string>; 
 function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<string> {
     const selected = new Set<string>();
     for (const id of ids) {
-        const required = selectConfigurations([id], manifests);
+        const required = selectKits([id], manifests);
         for (const manifest of required) selected.add(manifest.kit.name);
     }
     return selected;
@@ -174,8 +174,8 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
 
 /**
  * Selects the configurations for init from detection, the --configurations, --without and --scopes flags, and the workspace scopes.
- * @param inputs the root, the tracked files, the manifests read from the repository, the workspace scopes, every configuration manifest, and the init flags.
- * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected.
+ * @param inputs the root, the tracked files, the manifests read from the repository, the workspace scopes, every kit manifest, and the init flags.
+ * @returns the scopes, the root and per-scope kit ids, and the closure of everything selected.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, facts, workspace, manifests, options } = inputs;
@@ -196,7 +196,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
             scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
     const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
-    const rootIds = listedConfigurations(
+    const rootIds = listedKits(
         options,
         [...keptRoot, ...inScopes],
         manifests,

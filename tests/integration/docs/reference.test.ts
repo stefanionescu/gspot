@@ -41,7 +41,7 @@ test('command reference includes inherited options and nested usage while omitti
     }
 });
 
-test('identical setting definitions list every configuration owner and global settings remain visible', () => {
+test('identical setting definitions list every kit owner and global settings remain visible', () => {
     const settings = referencePages().get('settings.md')!.body;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
     expect(shared).toContain('/reference/kits/express/');

@@ -15,7 +15,7 @@ test.each([
         line: 5,
     },
 ])(
-    'unknown configurations in the $scope scope identify their declaration and accept the suggested configuration',
+    'unknown kits in the $scope scope identify their declaration and accept the suggested configuration',
     async ({ policy, line }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });

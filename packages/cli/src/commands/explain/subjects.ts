@@ -1,4 +1,4 @@
-// Explain a check, tool rule, configuration, setting, or file path.
+// Explain a check, tool rule, kit, setting, or file path.
 import { allChecks } from '#cli/kits/listing.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -17,14 +17,11 @@ function listLine(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function configurationExplanation(configurationName: string): Explanation | { error: string } {
-    const manifest = kitManifests().get(configurationName);
+function kitExplanation(kitName: string): Explanation | { error: string } {
+    const manifest = kitManifests().get(kitName);
     if (!manifest)
         return {
-            error: messages.unknownConfiguration(
-                configurationName,
-                nearMatches(configurationName, kitManifests().keys().toArray()),
-            ),
+            error: messages.unknownKit(kitName, nearMatches(kitName, kitManifests().keys().toArray())),
         };
     const row: ListingRow = {
         name: manifest.kit.name,
@@ -53,7 +50,7 @@ function configurationExplanation(configurationName: string): Explanation | { er
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
         ...listLine('Claims', [...claims.extensions, ...claims.filenames, ...claims.paths]),
-        ...(claims.from_languages ? ['Claims: every file a language configuration claims'] : []),
+        ...(claims.from_languages ? ['Claims: every file a language kit claims'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>
@@ -65,7 +62,7 @@ function configurationExplanation(configurationName: string): Explanation | { er
         ...listLine('Settings', row.settings),
         ...listLine('Guides', row.rules),
     ];
-    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
+    return { kind: 'configuration', subject: kitName, text: `${lines.join('\n')}\n`, data: row };
 }
 
 // The lines about one scope: its default, its current value and source, and how to change it.
@@ -156,7 +153,7 @@ export function explain(session: Session | undefined, subject: string): Explanat
     let named: Explanation | { error: string };
     if (subject.includes('/')) named = explainSlashed(session, subject);
     else if (subject.includes('.')) named = explainDotted(session, subject);
-    else named = configurationExplanation(subject);
+    else named = kitExplanation(subject);
     if (!('error' in named)) return named;
     return file ?? named;
 }

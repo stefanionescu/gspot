@@ -218,14 +218,14 @@ strict = false                    # true: a source file no check reads fails the
 - A `reason` is optional on an `[[ignore]]` and on a loosened setting. With
   `require_reasons = true` it is required, and `N/A`, `TBD`, `-`, and an empty string are refused.
   Text fields reject forbidden controls, and every generated value still requires destination-appropriate serialization.
-- `[limits.<language>]` and `[naming.<language>]` take the language configuration names. A key there
+- `[limits.<language>]` and `[naming.<language>]` take the language kit names. A key there
   wins over the root key for the checks of that language.
 - A rule of any tool is turned off by an `[[ignore]]` with `rule`, and nowhere else.
   `[tools.<name>.rules]` holds rule options and rules turned on.
 - The `marketing` and `defensive` term groups cannot be removed as groups.
 - A `[[check]]` has `name`, `command`, `paths`, `stage`, and optionally `inputs`, `help`, `fix_command`, `fix_order`, `output`,
   `requires`, and `platform`. It is cached only when it names `inputs`. Its `output` takes
-  every format a manifest check takes. `help` is explanatory text; `fix_command` is an argument vector and requires `fix_order`, as in a configuration manifest.
+  every format a manifest check takes. `help` is explanatory text; `fix_command` is an argument vector and requires `fix_order`, as in a kit manifest.
 - Unknown configuration names fail validation. gspot is unreleased and has no users; update names directly without aliases or version migrations.
 
 ### Names of settings
@@ -272,7 +272,7 @@ A profile is a TOML file with the schema of `gspot.toml` and three differences:
 | Left out   | `[[scope]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused. An `[[ignore]]` with no `paths` travels |
 | Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                                               |
 
-`selection = "exact"` installs the named configurations and what they require. Detection still runs,
+`selection = "exact"` installs the named kits and what they require. Detection still runs,
 and the plan lists what it found and did not install. `selection = "detect"` adds the detected
 configurations to the named ones. A profile is read through the same schema as the config, so a value
 it carries is held to the same rules.
@@ -301,7 +301,7 @@ For every setting:
 
 ```text
 configuration default
-  → framework or platform configuration, in selection order
+  → framework or platform kit, in selection order
   → root table
   → scope table
 ```
@@ -325,12 +325,12 @@ Every tracked path is one of four kinds: source, generated, vendored, or binary.
 are `[[generated]]` and `[[vendored]]`, `.gitattributes`, a banner the configuration knows, and the
 first bytes of the file, in that order.
 
-| Kind      | Checks that apply                                                 |
-| --------- | ----------------------------------------------------------------- |
-| source    | everything the selected configurations claim for its kind of file |
-| generated | secrets                                                           |
-| vendored  | secrets, licenses, security                                       |
-| binary    | secrets, and the size limit unless the file is under LFS          |
+| Kind      | Checks that apply                                        |
+| --------- | -------------------------------------------------------- |
+| source    | everything the selected kits claim for its kind of file  |
+| generated | secrets                                                  |
+| vendored  | secrets, licenses, security                              |
+| binary    | secrets, and the size limit unless the file is under LFS |
 
 A source file that no check reads is unchecked, and `doctor` lists it. With
 `[coverage] strict = true` it fails `check`. A kind of file that gets no format, syntax, style,
@@ -395,7 +395,7 @@ Unsupported eslintrc configuration, processors,
 inline executable selectors, and unregistered implementations fail conversion and leave the
 original configuration intact. Validate effective configurations with ESLint before adoption.
 
-Use the native Prettier loader for executable root configurations and format parsers for static
+Use the native Prettier loader for executable root kits and format parsers for static
 configuration. Shared base options belong in `[format]`; ordered native overrides belong in
 `tools.prettier.extra.overrides`, including `files`, `excludeFiles`, and options. Preserve native
 ignore lines, including negations, in `tools.prettier.ignore_patterns`. These selectors apply to
@@ -589,8 +589,8 @@ A message says setting, configuration, scope, and default, the words of
 [03-configuration.md](03-configuration.md).
 
 `PolicyScopeLayer` becomes `ScopeSettings`. The settings list prints three columns:
-the key, its value, and where the value comes from. The message that says no selected configuration `exposes` a key says that no
-selected configuration has the setting.
+the key, its value, and where the value comes from. The message that says no selected kit `exposes` a key says that no
+selected kit has the setting.
 
 The message unit tests, and a test that no message function returns one of the words.
 
@@ -813,7 +813,7 @@ gspot line removed holds one.
 
 ### Acceptance K-237
 
-A lint package is a package that a tool of a selected configuration names.
+A lint package is a package that a tool of a selected kit names.
 
 The list is built from the `npm` and `pypi` names of every manifest tool, plus the
 `replaces` names a manifest gives, such as `eslint-config-*` for the javascript configuration.

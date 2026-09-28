@@ -36,7 +36,7 @@ do not distinguish Python distribution names. Versions and reported licenses rem
 
 Selecting `licenses` also selects `integrity/allowlists-match` at commit. This shared check
 verifies that each package exception names a version in the project or workspace lockfile.
-It runs once even when another selected configuration includes it. It does not select the other
+It runs once even when another selected kit includes it. It does not select the other
 checks or tools from `structure`.
 
 Adoption keeps nested license configuration in its directory scope. It retains original

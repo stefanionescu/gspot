@@ -426,7 +426,7 @@ after the first match can create false failures under `pipefail`.
   reviewed for unset positional parameters, optional environment variables, and
   arrays.
 - Use `${name:-}` when an unset variable is acceptable.
-- Use `${name:?message}` for required configuration at a clear boundary.
+- Use `${name:?message}` for required kit at a clear boundary.
 - Do not use unguarded `${1}` when an argument may be missing. Use `${1:-}`.
 - Be careful with arrays under `set -u`; check lengths before indexing.
 - If empty arrays are meaningful, require Bash 4.4+ before relying on

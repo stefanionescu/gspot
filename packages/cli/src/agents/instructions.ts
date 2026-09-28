@@ -35,7 +35,7 @@ function indexLines(rules: Policy['guides'], files: RuleFile[]): string[] {
 /**
  * The managed block text for a session.
  * @param rules the rule policy
- * @param manifests the selected configurations.
+ * @param manifests the selected kits.
  * @param level the selected enforcement level.
  * @param repository the source inventory for conditional guide selection.
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions

@@ -1,4 +1,4 @@
-// A planted repository with its private tools installed: the files, the selected configurations, and the level each framework test starts from.
+// A planted repository with its private tools installed: the files, the selected kits, and the level each framework test starts from.
 import { symlinkSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';

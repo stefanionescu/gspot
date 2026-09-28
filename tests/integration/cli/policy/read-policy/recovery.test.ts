@@ -47,11 +47,11 @@ describe('readPolicyText', () => {
         expect(policy.scopeTables['api']?.limits?.root).toStrictEqual({});
     });
 
-    test('an unknown configuration and a default two configurations disagree on still stop reading', () => {
+    test('an unknown kit and a default two configurations disagree on still stop reading', () => {
         expect(() => readPolicyText(MINIMAL_POLICY.replace('bash', 'bas'), 'gspot.toml')).toThrow('bash');
     });
 
-    test('a table no selected configuration has says so without listing settings that do not exist', () => {
+    test('a table no selected kit has says so without listing settings that do not exist', () => {
         const { problems } = readPolicyText(
             `${MINIMAL_POLICY}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`,
             'gspot.toml',

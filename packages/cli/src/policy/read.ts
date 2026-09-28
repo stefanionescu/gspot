@@ -9,7 +9,7 @@ import { TomlError, parse as parseToml } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
+import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 
 import type {
@@ -56,7 +56,7 @@ function validatedRaw(text: string, path: string): RawPolicy {
 
 function completePolicy(text: string, path: string, raw: RawPolicy): Policy {
     const policy = normalize(raw);
-    const unknown = unknownConfigurationProblems(policy);
+    const unknown = unknownKitProblems(policy);
     if (unknown.length > 0) throw new PolicyError(problemLines(text, path, unknown));
     return policy;
 }
@@ -198,7 +198,7 @@ export function readPolicyText(
  * @param source the parsed policy and its authored text
  */
 export function assertPolicyComplete(source: Pick<PolicyFiles, 'policy' | 'text' | 'path'>): void {
-    const unknown = unknownConfigurationProblems(source.policy);
+    const unknown = unknownKitProblems(source.policy);
     if (unknown.length > 0) throw new PolicyError(problemLines(source.text, source.path, unknown));
     const problems = completenessProblems(source.policy);
     if (problems.length > 0) throw new PolicyError([...new Set(problemLines(source.text, source.path, problems))]);

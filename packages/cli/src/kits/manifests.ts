@@ -74,11 +74,9 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
 export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
     const result = manifestSchema.safeParse(parsed);
-    const configurationName = result.success ? result.data.kit.name : dir;
+    const kitName = result.success ? result.data.kit.name : dir;
     if (!result.success)
-        throw new ManifestError(configurationName, [
-            ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
-        ]);
+        throw new ManifestError(kitName, [...new Set(result.error.issues.flatMap((issue) => issueLines(issue)))]);
     const raw = result.data;
     const problems = [
         ...manifestProblems(raw),

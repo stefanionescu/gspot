@@ -1,5 +1,5 @@
+import { FENCE, KIT_ID, RULE_LAYERS } from '#cli/config/agents.ts';
 import type { FrontMatter, RuleFinding } from '#cli/types/agents.ts';
-import { FENCE, RULE_LAYERS, CONFIGURATION_ID } from '#cli/config/agents.ts';
 
 const LAYERS = new Set(RULE_LAYERS);
 function fieldsOf(lines: string[]): Record<string, string> {
@@ -61,7 +61,7 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
             line: 2,
             message: `layer '${matter.layer}' does not match the path ('${expected}')`,
         });
-    if (!CONFIGURATION_ID.test(matter.kit))
+    if (!KIT_ID.test(matter.kit))
         findings.push({
             file: path,
             line: 3,

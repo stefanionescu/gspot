@@ -742,7 +742,7 @@ Implemented and verified portions of steps 7.1 to 7.4:
 - `CONTRIBUTING.md` explains local verification and how to read CI results (`S-3`).
 - A completion test asks the completion engine for every command and every visible flag of
   the program, and holds that each shell script defers to the program (`T-22`).
-- A generation test renders every configuration at both levels and parses each JSON, TOML,
+- A generation test renders every kit at both levels and parses each JSON, TOML,
   YAML, and JavaScript output with its reader (`S-1`). The formatter pass belongs to the tools lane.
 
 Checked without change: the rules lint tests, the managed block tests, the reference loader

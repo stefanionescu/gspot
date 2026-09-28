@@ -6,7 +6,7 @@ export const MAX_EXIT_CODE = 255;
 export const SENTENCE_MIN = 12;
 export const SHEBANG_TAG = 'shebang:';
 export const GLOB_CHARS = /[*?{]/u;
-/** Strict source coverage applies independently of selected configurations and run filters. */
+/** Strict source coverage applies independently of selected kits and run filters. */
 export const COVERAGE_STRICT = {
     name: 'coverage.strict',
     kind: 'boolean',
@@ -15,7 +15,7 @@ export const COVERAGE_STRICT = {
     summary:
         'Fail checks when a supported source file has no enabled configured check. Message hooks do not enforce source coverage.',
 } as const satisfies SettingSpec;
-/** The execution deadline applies independently of selected language configurations. */
+/** The execution deadline applies independently of selected language kits. */
 export const TOOL_DEADLINE = {
     name: 'limits.tool_seconds',
     kind: 'number',

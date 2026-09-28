@@ -5,7 +5,7 @@ description: Select configurations, adjust settings, and keep exceptions scoped 
 
 Run commands from the configured repository root with the [CLI available](/guides/install/).
 
-Choose language and framework configurations, then change individual settings or record an exception.
+Choose language and framework kits, then change individual settings or record an exception.
 A configuration selects checks and their required tools.
 
 ## Inspect the current choices
@@ -20,7 +20,7 @@ Use `gspot explain <check>` before changing its policy. The generated
 
 ## Select configurations and a level
 
-A complete policy starts with a schema version and selected configurations:
+A complete policy starts with a schema version and selected kits:
 
 ```toml
 version = 1

@@ -32,7 +32,7 @@ async function ruffLint(policy: string): Promise<{ select: string[]; 'per-file-i
     return (parseToml(content) as { lint: { select: string[]; 'per-file-ignores'?: Record<string, string[]> } }).lint;
 }
 
-test('knip starts from the policy entries and the entry files the selected configurations declare', async () => {
+test('knip starts from the policy entries and the entry files the selected kits declare', async () => {
     const policy =
         'version = 1\nkits = ["javascript"]\n[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n';
     const knip = await knipConfiguration(policy);

@@ -1,5 +1,5 @@
+import { sourceKits } from '#cli/kits/select.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { sourceConfigurations } from '#cli/kits/select.ts';
 import { IGNORED_FOLDERS } from '#cli/config/checks/structure.ts';
 import { directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
@@ -17,7 +17,7 @@ function isSkipped(directory: string, isAllowed: (path: string) => boolean): boo
 export const singleFileFolder: Analysis = (context) => {
     const { input } = context;
     const selection = input.selection;
-    const extensions = sourceConfigurations(selection.selected).flatMap((manifest) => manifest.claims.extensions);
+    const extensions = sourceKits(selection.selected).flatMap((manifest) => manifest.claims.extensions);
     // The merged setting: what the repository allows and what a selected framework allows for its own layout.
     const allowed = (input.selection.view.settings['structure.single_file_folder_allowed'] ?? []) as {
         paths: string[];

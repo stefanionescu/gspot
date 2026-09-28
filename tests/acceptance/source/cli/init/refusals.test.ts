@@ -48,7 +48,7 @@ test(
 );
 
 test(
-    'init refusals > an unknown configuration names the near match, and a required configuration cannot be left out',
+    'init refusals > an unknown kit names the near match, and a required kit cannot be left out',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -96,7 +96,7 @@ test(
 );
 
 test(
-    'init refusals > a recommended configuration is installed unless --without names it',
+    'init refusals > a recommended kit is installed unless --without names it',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -112,7 +112,7 @@ test(
         expect(policy).not.toContain('"naming"');
         const check = await run(sandbox.path, ['check', '--only', 'naming/identifiers'], environment);
         expect(check.code).toBe(2);
-        expect(check.stdout).toContain('No selected configuration runs a check called `naming/identifiers`');
+        expect(check.stdout).toContain('No selected kit runs a check called `naming/identifiers`');
     },
     PLANTED_TIMEOUT_MS,
 );

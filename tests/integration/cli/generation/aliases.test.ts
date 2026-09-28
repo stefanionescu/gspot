@@ -193,7 +193,7 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });
 
-test('inherited aliases resolve from the configuration that declares them', async () => {
+test('inherited aliases resolve from the kit that declares them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = ["typescript"]\n',

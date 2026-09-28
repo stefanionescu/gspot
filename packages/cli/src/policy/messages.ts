@@ -61,20 +61,20 @@ export function missingReason(where: string, command: string): string {
 }
 
 /**
- * A configuration id nothing ships.
+ * A kit id nothing ships.
  * @param name the id as written
  * @param near the closest ids that exist
  * @returns the message
  */
-export function unknownConfiguration(name: string, near: string[]): string {
+export function unknownKit(name: string, near: string[]): string {
     const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
-    return `There is no configuration called \`${name}\`.${hint} Run \`gspot explain <configuration>\` to read one.`;
+    return `There is no kit called \`${name}\`.${hint} Run \`gspot explain <kit>\` to read one.`;
 }
 
 /**
- * A configuration named in --without that a selected configuration requires.
+ * A configuration named in --without that a selected kit requires.
  * @param name the configuration the person left out
- * @param chain the configuration ids from the one selected to the one required
+ * @param chain the kit ids from the one selected to the one required
  * @returns the message
  */
 export function withoutRequired(name: string, chain: string[]): string {
@@ -87,7 +87,7 @@ export function withoutRequired(name: string, chain: string[]): string {
  * @param scope the scope the command named, if any
  * @returns the message
  */
-export function configurationNotListed(name: string, scope: string | undefined): string {
+export function kitNotListed(name: string, scope: string | undefined): string {
     const where = scope === undefined ? 'the root kits' : `the kits of scope ${scope}`;
     return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot list settings to see the selection.`;
 }
@@ -103,7 +103,7 @@ export function dirtyTree(count: number): string {
 
 /**
  * Requires that loop back on themselves.
- * @param chain the configuration ids in the order they were followed
+ * @param chain the kit ids in the order they were followed
  * @returns the message
  */
 export function circularRequires(chain: string[]): string {
@@ -120,7 +120,7 @@ export function scopeMissing(path: string): string {
 }
 
 /**
- * A setting key no selected configuration has.
+ * A setting key no selected kit has.
  * @param key the key as written
  * @param known the keys that exist under the same table
  * @returns the message
@@ -130,7 +130,7 @@ export function settingNotExposed(key: string, known: string[]): string {
         known.length === 0
             ? 'No setting exists under that table.'
             : `The settings that exist under that table are ${list(known)}.`;
-    return `No selected configuration has the setting \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
+    return `No selected kit has the setting \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
 }
 
 /**
@@ -165,8 +165,8 @@ export function extraNeedsReason(tool: string): string {
 /**
  * Two kits shipping different defaults for one scalar.
  * @param key the setting key
- * @param a the first configuration id
- * @param b the second configuration id
+ * @param a the first kit id
+ * @param b the second kit id
  * @returns the message
  */
 export function conflictingScalars(key: string, a: string, b: string): string {

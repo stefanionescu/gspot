@@ -140,7 +140,7 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefin
 /**
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @param facts the package manifests read from the tree
  * @param scope the scope path, '' for the root
  * @returns one proposal per configuration with evidence
@@ -186,7 +186,7 @@ export function detectConditions(
  * Languages in the tree that no configuration detects, named through GitHub Linguist's data. A policy such as
  * formatting claims files of many languages without supporting any, so only the other kinds make a language known.
  * @param files the tracked files
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @returns the languages with their extensions and file counts, most files first
  */
 export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Manifest>): UnknownLanguage[] {

@@ -45,7 +45,7 @@ function ownershipRows(summary: DetectionSummary): string[] {
 }
 
 /**
- * The detection header: tracked files, what each configuration kind was found from, scopes, tooling, and what has no configuration.
+ * The detection header: tracked files, what each kit kind was found from, scopes, tooling, and what has no configuration.
  * @param summary what init detected
  * @returns the text, ending with a blank line when tooling was found
  */

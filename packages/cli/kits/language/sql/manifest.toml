@@ -66,7 +66,7 @@ fix_findings_exit_codes = [1]
 coverage = ["format", "style"]
 exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
-summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
+summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database kit names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
 
@@ -116,7 +116,7 @@ name = "tools.sqlfluff.dialect"
 kind = "string"
 direction = "neutral"
 default = "ansi"
-summary = "The sqlfluff dialect; a database configuration sets it."
+summary = "The sqlfluff dialect; a database kit sets it."
 detect = {dependencies = {pg = "postgres", postgres = "postgres", mysql2 = "mysql", "better-sqlite3" = "sqlite"}, folder_values = {supabase = "postgres"}}
 
 [[settings]]

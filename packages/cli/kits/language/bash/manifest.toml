@@ -382,7 +382,7 @@ engine = "structure"
 analysis = "bash-config-guards"
 coverage = ["structure"]
 searched = ["shellcheck"]
-summary = "Checks that every configuration owner opens with one include guard nobody else uses."
+summary = "Checks that every kit owner opens with one include guard nobody else uses."
 why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
 

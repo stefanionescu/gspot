@@ -80,13 +80,13 @@ One word, one meaning, everywhere in this folder, and in the code.
 | test coverage        | Code exercised by tests. Distinct from check coverage.                                                                    |
 | version pin          | The gspot version selected by the repository. Upgrade and recovery exceptions follow the CLI contract.                    |
 | takeover             | Accepted replacement of existing tooling, with configuration carryover and saved originals.                               |
-| setting              | One named configuration choice with a type, scope, and default.                                                           |
+| setting              | One named kit choice with a type, scope, and default.                                                                     |
 | allowed list         | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
 | directory setting    | A single folder uses `_directory`, including `functions_directory`, `migrations_directory`, and `harness_directory`.      |
 | file pattern setting | File globs use `_files`, including `route_files`, `test_files`, `server_files`, and `admin_key_files`.                    |
 | tool option          | An external tool owns its option names, including `tools.knip.ignore` and `tools.typos.exclude`.                          |
 | profile              | Portable config without repository-specific paths.                                                                        |
-| policy               | The manifest configuration kind for checks that span languages; public prose says what the configuration checks.          |
+| policy               | The manifest kit kind for checks that span languages; public prose says what the configuration checks.                    |
 
 [Configuration definitions](04-configurations.md#names-across-the-public-contract) and
 [execution results](05-engines.md#actions-and-their-results) own exact public fields. File ownership and

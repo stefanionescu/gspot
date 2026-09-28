@@ -1,4 +1,4 @@
-// Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
+// Planted repository for the library kits: each ESLint addition fires on a small component, and the two file checks fire on theirs.
 import { symlinkSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { test, expect, describe } from 'bun:test';
@@ -57,7 +57,7 @@ const CASES: FindingCase[] = [
     },
 ];
 
-describe('the library configurations', () => {
+describe('the library kits', () => {
     test.each<FindingCase>([
         ...LINT.map(([rule, path, text]) => ({
             check: 'typescript/eslint',

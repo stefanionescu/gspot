@@ -165,7 +165,7 @@ async function copyDirectory(
 }
 
 /**
- * Copy verified journal-owned Vale packages matching the selected configuration.
+ * Copy verified journal-owned Vale packages matching the selected kit.
  * @param root the repository root
  * @param revisionRoot the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages

@@ -35,7 +35,7 @@ export function routeSegments(input: EngineInput): Finding[] {
 }
 
 /**
- * The framework configuration turns no build check off, and puts no secret into the client environment.
+ * The framework kit turns no build check off, and puts no secret into the client environment.
  * @param input the engine input
  * @returns the findings
  */

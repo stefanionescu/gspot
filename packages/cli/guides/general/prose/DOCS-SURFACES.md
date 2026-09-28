@@ -114,7 +114,7 @@ Do not require readers to inspect source to learn routine public behavior.
 
 <!-- level: all -->
 
-For each configuration key, document:
+For each kit key, document:
 
 - Exact key.
 - Purpose.

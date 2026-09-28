@@ -81,9 +81,10 @@ test.each([true, false])(
         const selection = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
-            expect(
-                await askMany('Which configurations?', '--kits <ids>', [], ['bash', 'markdown'], useDefaults),
-            ).toStrictEqual(['bash', 'markdown']);
+            expect(await askMany('Which kits?', '--kits <ids>', [], ['bash', 'markdown'], useDefaults)).toStrictEqual([
+                'bash',
+                'markdown',
+            ]);
             expect(selection).not.toHaveBeenCalled();
             expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --kits <ids>.');
         } finally {
@@ -103,7 +104,7 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
         try {
             expect(
                 await askMany(
-                    'Which configurations?',
+                    'Which kits?',
                     '--kits <ids>',
                     [{ value: 'markdown', label: 'Markdown' }],
                     ['bash'],

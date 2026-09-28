@@ -118,12 +118,12 @@ Node globals and APIs (`spawnSync`, `setTimeout`, `clearTimeout`, `URLSearchPara
 and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass`, environment
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
 
-The shared policy names no framework. A framework configuration carries the names its framework fixes
+The shared policy names no framework. A framework kit carries the names its framework fixes
 as `[[naming.rules]]` in its manifest. The nextjs configuration holds the exports of Next.js
 and its route file names. The react configuration holds the hooks of React, and PascalCase for a
 component and its file. Vue, Svelte, and React Native do the same.
 
-Each language configuration contributes its external names. A repository adds more under `[naming]
+Each language kit contributes its external names. A repository adds more under `[naming]
 external`.
 
 ### Contract properties

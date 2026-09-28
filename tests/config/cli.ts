@@ -3,8 +3,8 @@ import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** The Next.js configuration enabling Strict Mode. */
 export const NEXT_CONFIG =
-    '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
-/** The framework configuration with the build check on. */
+    '// The framework kit.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
+/** The framework kit with the build check on. */
 export const NEXT_PAGE =
     '// The home page.\n\n/**\n * Renders the home page.\n * @returns the page\n */\nexport default function Page(): string {\n    return "home";\n}\n';
 /** The root layout. */

@@ -42,7 +42,7 @@ A project-wide check triggered by a path can inspect other files in that project
 configuration lives under `.gspot/config/<path>/` when the owning tool needs a separate scope file.
 
 `gspot explain <file>` reports the scope and claims. Use `./` for a filename that also names a
-configuration or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`
+kit or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`
 explains the file.
 
 ## Change a scoped setting
@@ -81,7 +81,7 @@ Editor configuration translates those patterns to its directory. CLI checks and 
 the generated configuration, so an unowned nested typos file cannot add word allowances.
 
 List settings append values from configurations, the root table, and containing scopes, and remove
-repeated values. Scalar settings replace the preceding value. If selected configurations provide
+repeated values. Scalar settings replace the preceding value. If selected kits provide
 conflicting scalar defaults, the error names both configurations. Set that key in the root table to
 settle the conflict for all scopes, or in a containing scope table for that scope and its
 descendants.

@@ -1,6 +1,6 @@
 // Which files a planned check runs over: what it claims, less excluded and child-scope paths, narrowed to a selection.
+import { kitName } from '#cli/kits/targets.ts';
 import { claimedByClaims } from '#cli/kits/claims.ts';
-import { configurationName } from '#cli/kits/targets.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
@@ -114,7 +114,7 @@ export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean
         (config) =>
             config.per_scope &&
             !config.fragment &&
-            command.some((part) => part.includes(`{config:${configurationName(config.target)}}`)),
+            command.some((part) => part.includes(`{config:${kitName(config.target)}}`)),
     );
 }
 

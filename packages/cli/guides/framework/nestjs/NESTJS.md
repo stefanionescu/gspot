@@ -34,7 +34,7 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 
 ## Configuration and security
 
-- Fail startup when required configuration is absent or malformed.
+- Fail startup when required kit is absent or malformed.
 - Use guards for route authorization. Enforce additional permissions at each protected operation
   when one request performs several operations or the service has non-HTTP callers.
 - Guards run before pipes. Do not assume guard inputs have passed DTO transformation or validation.

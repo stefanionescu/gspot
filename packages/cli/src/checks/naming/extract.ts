@@ -11,7 +11,7 @@ import { typescriptIdentifiers } from '#cli/checks/naming/extractors/typescript.
  * The identifiers a file declares, or none when no extractor reads its language.
  * @param file the file path
  * @param text the file text
- * @param language the language configuration the file belongs to
+ * @param language the language kit the file belongs to
  * @param context optional execution observations and their resource owner
  * @returns the identifiers
  */

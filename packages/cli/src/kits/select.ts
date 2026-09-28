@@ -3,26 +3,26 @@ import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Manifest, SelectionWalk } from '#cli/types/kits.ts';
-// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
+// Selection: the configurations named plus every kit they require, dependencies first, in order of first mention.
 
-function visit(walk: SelectionWalk, configurationName: string): void {
-    if (walk.seen.has(configurationName)) return;
-    if (walk.visiting.includes(configurationName)) {
-        const chain = [...walk.visiting.slice(walk.visiting.indexOf(configurationName)), configurationName];
+function visit(walk: SelectionWalk, kitName: string): void {
+    if (walk.seen.has(kitName)) return;
+    if (walk.visiting.includes(kitName)) {
+        const chain = [...walk.visiting.slice(walk.visiting.indexOf(kitName)), kitName];
         walk.problems.push(messages.circularRequires(chain));
         return;
     }
-    const manifest = walk.manifests.get(configurationName);
+    const manifest = walk.manifests.get(kitName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
-        walk.problems.push(messages.unknownConfiguration(configurationName, nearMatches(configurationName, known)));
-        walk.seen.add(configurationName);
+        walk.problems.push(messages.unknownKit(kitName, nearMatches(kitName, known)));
+        walk.seen.add(kitName);
         return;
     }
-    walk.visiting.push(configurationName);
+    walk.visiting.push(kitName);
     for (const required of manifest.kit.requires) visit(walk, required);
     walk.visiting.pop();
-    walk.seen.add(configurationName);
+    walk.seen.add(kitName);
     walk.order.push(manifest);
 }
 
@@ -59,26 +59,26 @@ export class SelectionError extends Error {
 }
 
 /**
- * The chain of requires from one configuration to another, or undefined when the first does not need the second.
+ * The chain of requires from one kit to another, or undefined when the first does not need the second.
  * @param target the configuration that is required
  * @param from the configuration the chain starts at
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @returns the configuration names from `from` to `target`
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The chain of requires from one configuration to another, or undefined when the first does not need the second. 2 files make 2 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The chain of requires from one kit to another, or undefined when the first does not need the second. 2 files make 2 calls; one owner keeps that behavior in one place.
 export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
     return chainFrom(target, from, manifests, new Set());
 }
 
 /**
- * Resolves configuration names to ordered manifests. Throws SelectionError for unknown configurations or circular requirements.
- * @param configurationNames the requested configuration names
- * @param manifests every configuration manifest
+ * Resolves configuration names to ordered manifests. Throws SelectionError for unknown kits or circular requirements.
+ * @param kitNames the requested configuration names
+ * @param manifests every kit manifest
  * @returns the manifests, requirements first, in order of first mention
  */
-export function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
+export function selectKits(kitNames: string[], manifests: Map<string, Manifest>): Manifest[] {
     const walk: SelectionWalk = { manifests, problems: [], order: [], seen: new Set(), visiting: [] };
-    for (const configurationName of configurationNames) visit(walk, configurationName);
+    for (const kitName of kitNames) visit(walk, kitName);
     const { problems } = walk;
     if (problems.length > 0) throw new SelectionError([...new Set(problems)]);
     return walk.order;
@@ -88,7 +88,7 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
  * The root selection and each ancestor scope selection, deduplicated in order.
  * @param policy the declared selections
  * @param scope the scope path
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @returns the manifests in order
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The root selection and each ancestor scope selection, deduplicated in order. 3 files make 5 calls; one owner keeps that behavior in one place.
@@ -97,29 +97,29 @@ export function selectForScope(
     scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {
-    return selectConfigurations(
+    return selectKits(
         [...policy.kits, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.kits)],
         manifests,
     );
 }
 
 /**
- * The language configurations in a selection.
+ * The language kits in a selection.
  * @param selected the selected manifests
  * @returns the manifests whose kind is language
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The language configurations in a selection. 1 files make 2 calls; one owner keeps that behavior in one place.
-export function languageConfigurations(selected: Manifest[]): Manifest[] {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The language kits in a selection. 1 files make 2 calls; one owner keeps that behavior in one place.
+export function languageKits(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.kit.kind === 'language');
 }
 
 /**
- * Language and framework configurations that contribute source to shared checks.
+ * Language and framework kits that contribute source to shared checks.
  * @param selected the selected manifests
  * @returns the source policy owners
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Language and framework configurations that contribute source to shared checks. 2 files make 3 calls; one owner keeps that behavior in one place.
-export function sourceConfigurations(selected: Manifest[]): Manifest[] {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Language and framework kits that contribute source to shared checks. 2 files make 3 calls; one owner keeps that behavior in one place.
+export function sourceKits(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.kit.kind === 'language' || manifest.kit.kind === 'framework');
 }
 

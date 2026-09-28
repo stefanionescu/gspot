@@ -341,7 +341,7 @@ name = "tools.knip.entry"
 kind = "list"
 direction = "neutral"
 default = []
-summary = "Entry points knip starts from beyond the ones the framework configuration declares."
+summary = "Entry points knip starts from beyond the ones the framework kit declares."
 
 [[settings]]
 name = "tools.knip.ignore"

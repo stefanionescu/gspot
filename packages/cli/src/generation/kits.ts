@@ -40,7 +40,7 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
     return directories;
 }
 
-// One pointer per directory the configuration's claimed files sit in, when the pointer names directories.
+// One pointer per directory the kit's claimed files sit in, when the pointer names directories.
 function directoryPointers(context: EmitContext, configuration: ConfigurationTarget, target: string): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
     const pointer = configuration.pointer;
@@ -164,7 +164,7 @@ function emitConfiguration(
 }
 
 /**
- * Emits every configuration file of the manifest in the scope, each target once across scopes.
+ * Emits every kit file of the manifest in the scope, each target once across scopes.
  * @param context the scope, the manifest, and the template inputs
  * @param proposal the proposal the files are added to
  * @param seen the targets already emitted

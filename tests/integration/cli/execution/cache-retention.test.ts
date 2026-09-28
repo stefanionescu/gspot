@@ -97,7 +97,7 @@ test('cache inputs refuse traversal hidden in a glob alternative', async () => {
     expect(() => cacheInputs(sandbox.path, ['{state,..}/**/*.txt'])).toThrow();
 });
 
-test('a check hashes its named configuration even when ignored and retains unrelated cached results', async () => {
+test('a check hashes its named kit even when ignored and retains unrelated cached results', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',

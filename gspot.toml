@@ -356,7 +356,7 @@ names = [
     "version_regex",
 ]
 case = ["snake"]
-reason = "Configuration manifests declare these exact tool and reference keys. The normalized types retain the manifest spelling. Remove an allowance when its manifest key is removed."
+reason = "Kit manifests declare these exact tool and reference keys. The normalized types retain the manifest spelling. Remove an allowance when its manifest key is removed."
 
 [[naming.rules]]
 paths = ["packages/cli/src/types/policy/policy.ts"]
@@ -765,7 +765,7 @@ paths = [
     "tests/support/cli/python",
     "tests/integration/tools/generation/swift",
 ]
-reason = "Each directory owns tests of that named language configuration, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
+reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
 [[structure.folder_name_allowed]]
 paths = ["packages/cli/src/checks/python", "packages/cli/src/checks/swift", "packages/cli/src/checks/typescript"]

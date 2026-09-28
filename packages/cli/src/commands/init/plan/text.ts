@@ -1,7 +1,7 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
 import type { TakeoverPlan } from '#cli/types/commands/init.ts';
-import { COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } from '#cli/config/commands/init.ts';
+import { KIT_WIDTH, COLUMN_GAP, REASON_WIDTH } from '#cli/config/commands/init.ts';
 
 function section(title: string, rows: { path: string; note: string }[]): string[] {
     if (rows.length === 0) return [];
@@ -9,11 +9,11 @@ function section(title: string, rows: { path: string; note: string }[]): string[
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
-function configurationSection(rows: TakeoverPlan['kits']): string[] {
+function kitSection(rows: TakeoverPlan['kits']): string[] {
     if (rows.length === 0) return ['kits', '  none: the guides install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
-        return `  ${row.kit.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+        return `  ${row.kit.padEnd(KIT_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
     });
     return ['kits', ...lines, ''];
 }
@@ -45,7 +45,7 @@ export function initPlanText(plan: TakeoverPlan): string {
     const { dim } = colors;
     const lines = [
         ...profileSection(plan.profile),
-        ...configurationSection(plan.kits),
+        ...kitSection(plan.kits),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('kept active', plan.retained),

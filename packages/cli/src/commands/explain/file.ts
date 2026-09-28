@@ -27,7 +27,7 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.nature === 'source') {
         report.unchecked = 'no enabled check claims this file';
-        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <configuration>';
+        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <kit>';
     }
     return report;
 }

@@ -30,7 +30,7 @@ export const CHECKS_INSTALLED =
 export const RULES_ALONE =
     'These files are installed copies. Change `[rules]` in `gspot.toml` and run `gspot apply`, and never edit files under the rules directory.';
 // A guide names one configuration or none.
-export const CONFIGURATION_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
+export const KIT_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
 export const FENCE = '---';
 /** The layers a guide can declare. */
 export const RULE_LAYERS = [

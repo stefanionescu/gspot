@@ -67,7 +67,7 @@ export async function parseSource(name: GrammarName, text: string, context?: Par
 /**
  * The grammar a file is read with, from its extension.
  * @param path the file path
- * @param language the language configuration the file belongs to
+ * @param language the language kit the file belongs to
  * @returns the grammar, or undefined when no extractor exists for it
  */
 export function grammarFor(path: string, language: string): GrammarName | undefined {

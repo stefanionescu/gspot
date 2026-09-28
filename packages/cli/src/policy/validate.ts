@@ -1,9 +1,9 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import { selectForScope } from '#cli/kits/select.ts';
+import { unknownKit } from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
@@ -52,7 +52,7 @@ function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
  * @param policy the parsed policy
  * @returns one problem per unknown name
  */
-export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
+export function unknownKitProblems(policy: Policy): PolicyProblem[] {
     const manifests = kitManifests();
     const declarations: { name: string; path: PathSegment[] }[] = [
         ...policy.kits.map((name, index) => ({ name, path: ['kits', index] })),
@@ -64,7 +64,7 @@ export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
         .filter(({ name }) => !manifests.has(name))
         .map(({ name, path }) => ({
             path,
-            message: unknownConfiguration(name, nearMatches(name, [...manifests.keys()])),
+            message: unknownKit(name, nearMatches(name, [...manifests.keys()])),
         }));
 }
 
@@ -88,7 +88,7 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
             });
     }
     const rootSelected = selectForScope(policy, '', manifests);
-    // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
+    // A scope table is read against the settings of the configurations that scope selects, the root kits included.
     const scopeSurfaces = new Map(
         policy.scopes.map((scope) => [
             scope.path,

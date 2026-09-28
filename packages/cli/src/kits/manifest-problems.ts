@@ -1,7 +1,7 @@
 // What makes a manifest invalid: a check that contradicts itself, a configuration nothing reads, or references
 // between manifests that do not hold.
 import semver from 'semver';
-import { configurationName } from '#cli/kits/targets.ts';
+import { kitName } from '#cli/kits/targets.ts';
 import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/execution/execution.ts';
 import type { Checks, Manifest, RawCheck, Settings, CheckRule, RawManifest } from '#cli/types/kits.ts';
@@ -115,13 +115,13 @@ function runsTool(check: Manifest['checks'][number] | undefined, tool: string): 
     return (check.tool ?? check.command?.[0]) === tool;
 }
 
-// Refuses a check reference that does not name another configuration's standalone built-in check.
+// Refuses a check reference that does not name another kit's standalone built-in check.
 function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string, string>): void {
     for (const reference of manifest.kit.check_references ?? []) {
         const owner = owners.get(reference);
         if (owner === undefined || owner === manifest.kit.name || !isStandalone(checks.get(reference)))
             throw new ManifestError(manifest.kit.name, [
-                `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,
+                `Referenced check ${reference} must name another kit's standalone built-in check that runs once.`,
             ]);
     }
 }
@@ -212,7 +212,7 @@ export class ManifestError extends Error {
      * @param problems the problems in plain English
      */
     constructor(configuration: string, problems: string[]) {
-        super(`The configuration manifest for \`${configuration}\` is not valid:\n${problems.join('\n')}`);
+        super(`The kit manifest for \`${configuration}\` is not valid:\n${problems.join('\n')}`);
         this.name = 'ManifestError';
     }
 }
@@ -220,7 +220,7 @@ export class ManifestError extends Error {
 /**
  * Contradictory check declarations and generated configurations with no reader or pointer.
  * @param raw the parsed manifest
- * @returns the problems, empty when every configuration is read
+ * @returns the problems, empty when every kit is read
  */
 export function manifestProblems(raw: RawManifest): string[] {
     const checks = raw.checks.flatMap((check) =>
@@ -232,7 +232,7 @@ export function manifestProblems(raw: RawManifest): string[] {
     const configurations = raw.configs
         .filter((config) => !config.fragment && config.pointer === undefined)
         .filter((config) => {
-            const name = configurationName(config.target);
+            const name = kitName(config.target);
             const isReadByTemplate = raw.configs.some(
                 (other) => other !== config && other.template?.includes(name) === true,
             );
@@ -240,13 +240,13 @@ export function manifestProblems(raw: RawManifest): string[] {
         })
         .map(
             (config) =>
-                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no pointer.`,
+                `config ${config.target} has no check that reads it ({config:${kitName(config.target)}}) and no pointer.`,
         );
     return [...checks, ...configurations];
 }
 
 /**
- * Validate required configurations, tool pins, setting waits, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * Validate required kits, tool pins, setting waits, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
  * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {

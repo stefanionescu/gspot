@@ -82,7 +82,7 @@ function hasOverlap(entry: Owned, separate: Owned[]): boolean {
     });
 }
 
-// Records each configuration that overlaps another of the same tool as unread.
+// Records each kit that overlaps another of the same tool as unread.
 function noteOverlaps(owned: Owned[], lists: AdoptionResult): void {
     const separate = owned.filter(({ tool }) => SEPARATE_TOOLS.has(tool));
     for (const entry of separate)
@@ -162,9 +162,9 @@ export const nativeImporters: Record<
 };
 
 /**
- * True when a selected configuration declares adoption for the tool.
+ * True when a selected kit declares adoption for the tool.
  * @param tool the tool a configuration file belongs to
- * @param selected the ids of the selected configurations
+ * @param selected the ids of the selected kits
  * @returns whether takeover replaces the tool's configuration
  */
 export function isOwned(tool: string, selected: Set<string>): boolean {
@@ -179,7 +179,7 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  *
  * @param root the repository root.
  * @param tooling the configuration files, hooks, and lint folders found.
- * @param selected the ids of the selected configurations.
+ * @param selected the ids of the selected kits.
  * @param paths the tracked source paths.
  * @returns the lists to write into gspot.toml and the files takeover replaces.
  */

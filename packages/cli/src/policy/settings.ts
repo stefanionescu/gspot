@@ -288,7 +288,7 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
 
 /**
  * Resolve the directories assigned to a configuration role within one scope.
- * @param selected the selected configurations
+ * @param selected the selected kits
  * @param settings the effective settings
  * @param role the declared directory role
  * @returns the directories relative to the scope root

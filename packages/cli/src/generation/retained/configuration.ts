@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
+import { declaredKits } from '#cli/repository/existing-tooling.ts';
 
 /**
  * Identify authored tool configuration using recorded bytes and permissions.
@@ -20,7 +20,7 @@ export function retainedConfigurationPaths(
     takeover?: ReadonlyMap<string, FileObservation>,
 ): string[] {
     const ownership = new Map(readOwnership(root).files.map((entry) => [entry.path, entry]));
-    const declarations = declaredConfigurations(root, sourcePaths, tools);
+    const declarations = declaredKits(root, sourcePaths, tools);
     const candidates = new Set(declarations.map((entry) => entry.path));
     const shared = new Set(declarations.filter((entry) => entry.shared === true).map((entry) => entry.path));
     const files = openConfinedRoot(root);

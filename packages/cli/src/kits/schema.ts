@@ -165,7 +165,7 @@ const settingDetectSchema = z.strictObject({
     folder_values: z.record(z.string().min(1), z.unknown()).optional(),
 });
 
-// A path-scoped naming rule a configuration ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).
+// A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).
 const manifestNamingRule = z.strictObject({
     paths: z.array(z.string().min(1)).min(1),
     languages: z.array(z.string()).optional(),
@@ -193,7 +193,7 @@ const settingSchema = z.strictObject({
     detect: settingDetectSchema.optional(),
 });
 
-// The shape of a configuration manifest.toml after validation.
+// The shape of a kit manifest.toml after validation.
 
 // An untracked path: .gspot, then one or more names, and at most a trailing slash; no . or .. segment.
 function isUntrackedPath(path: string): boolean {

@@ -14,10 +14,7 @@ const PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
 };
 
-function selectedValue(
-    value: unknown,
-    selector: Parameters<typeof configurationSection>[2],
-): { parsed: unknown } | undefined {
+function selectedValue(value: unknown, selector: Parameters<typeof kitSection>[2]): { parsed: unknown } | undefined {
     const parts = selector.key === undefined ? (selector.table?.split('.') ?? []) : [selector.key];
     let parsed = value;
     for (const part of parts) {
@@ -36,7 +33,7 @@ function selectedValue(
  * @param selector.table the table.
  * @returns the section's text and parsed value, or undefined when the file has none.
  */
-export function configurationSection(
+export function kitSection(
     text: string,
     path: string,
     selector: { key?: string; table?: string },

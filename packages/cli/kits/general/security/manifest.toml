@@ -71,7 +71,7 @@ platform = ["macos", "linux"]
 command = ["semgrep", "scan", "--strict", "--config", "{root}/.gspot/config/{scope}/semgrep", "{each:--config:tools.semgrep.rules}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
 coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}
-summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
+summary = "Runs the Semgrep rule packs of the selected kits, and the repository's own rules, over the changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
 help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason."
 

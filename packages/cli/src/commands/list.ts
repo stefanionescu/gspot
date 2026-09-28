@@ -51,7 +51,7 @@ function settingsText(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras }, exitCode: 0 };
 }
 
-function configurationsResult(session: Session): CommandResult {
+function kitsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
     const names = new Set(selected.map((manifest) => manifest.kit.name));
     const installed = selected.map((manifest) => ({
@@ -139,7 +139,7 @@ export function registerList(program: Command): void {
             const global = command.optsWithGlobals();
             await printCommand(async () => {
                 const session = await openSession(findRoot(directoryOf(global)));
-                return kind === 'settings' ? settingsText(session) : configurationsResult(session);
+                return kind === 'settings' ? settingsText(session) : kitsResult(session);
             }, global);
         });
 }

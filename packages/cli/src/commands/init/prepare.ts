@@ -30,7 +30,7 @@ function assertCleanTree(root: string, options: InitOptions): void {
     if (changed.length > 0) throw new PolicyError([messages.dirtyTree(changed.length)]);
 }
 
-// Asks which configurations to keep, and selects again when the person changed the list.
+// Asks which kits to keep, and selects again when the person changed the list.
 async function chosenSelection(
     inputs: Omit<InitInputs, 'options'>,
     options: InitOptions,

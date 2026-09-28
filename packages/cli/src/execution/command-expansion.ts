@@ -2,8 +2,8 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
+import { kitName, targetInScope } from '#cli/kits/targets.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { targetInScope, configurationName } from '#cli/kits/targets.ts';
 
 import type {
     Session,
@@ -58,9 +58,7 @@ function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarge
 }
 
 function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
-    const target = allConfigs(session, planned).find(
-        (config) => !config.fragment && configurationName(config.target) === name,
-    );
+    const target = allConfigs(session, planned).find((config) => !config.fragment && kitName(config.target) === name);
     if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no configuration renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }

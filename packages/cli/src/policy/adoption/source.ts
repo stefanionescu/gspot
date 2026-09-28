@@ -8,7 +8,7 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
-import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
+import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
@@ -83,8 +83,8 @@ export function parseConfigurationSource(
         if (parsed === undefined) throw new Error('Configuration must contain a settings table.');
         return { original, text, parsed };
     }
-    const selected = configurationSection(text, path, selector);
-    if (selected === undefined) throw new Error('The selected configuration section disappeared.');
+    const selected = kitSection(text, path, selector);
+    if (selected === undefined) throw new Error('The selected kit section disappeared.');
     const source = { original, text: selected.text };
     const parsed = tool === 'sqlfluff' ? parseSource(tool, path, source.text) : selected.parsed;
     const table = asRaw(parsed);

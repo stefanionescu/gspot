@@ -130,7 +130,7 @@ export function registerInit(program: Command): void {
         )
         .option('--yes', 'Take every proposal without asking')
         .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
-        .option('--kits <kits...>', 'The root configurations instead of the detected ones')
+        .option('--kits <kits...>', 'The root kits instead of the detected ones')
         .option('--without <configurations...>', 'Configurations to leave out of the proposal')
         .option('--scope <path=configurations...>', 'Scopes and their comma-separated configurations')
         .option('--no-install', 'Skip the install step and print the command instead')

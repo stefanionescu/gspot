@@ -112,7 +112,7 @@ folders (`SA eslint/local/`, `LA shared/eslint/plugin/rules/`, `SS shared/eslint
 | import path styles `js`, `ts`, `extensionless` per file class                                                                                                                                                                                                     | SA                                     | `gspot/import-path-style` with `[tools.eslint] import_style`                                                                                                            |
 | call-through allowlist keyed `file:function`                                                                                                                                                                                                                      | SA                                     | `[structure] call_through_allowed` entries carry `file`, `name`, `reason`                                                                                               |
 | Deno file class: `n/*` and `n/prefer-promises/*` off, Deno globals                                                                                                                                                                                                | SA                                     | supabase configuration override for `functions/**`                                                                                                                      |
-| plugin floor versions (`UNICORN_ESLINT_MIN` 9.38.0)                                                                                                                                                                                                               | SA, LA `version-policy.js`             | `doctor` floors in the configuration manifests                                                                                                                          |
+| plugin floor versions (`UNICORN_ESLINT_MIN` 9.38.0)                                                                                                                                                                                                               | SA, LA `version-policy.js`             | `doctor` floors in the kit manifests                                                                                                                                    |
 | exports last, private declarations first                                                                                                                                                                                                                          | new                                    | `import-x/exports-last`, `gspot/private-before-public`                                                                                                                  |
 | `process.env` only in the configuration owner                                                                                                                                                                                                                     | SS `no-client-environment` generalized | `gspot/env-access-owner` with `[architecture] roles.env`                                                                                                                |
 
@@ -263,7 +263,7 @@ Source: `SA quality/sql/`, `SA .squawk.toml`, `SA supabase/`, SA.
 
 | Rule                                                                                                                                                                                                                      | gspot                                                             |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| sqlfluff over every SQL file with `sql_file_exts` covering `.pgsql` and `.psql`, dialect from the database configuration                                                                                                  | `sql/sqlfluff`                                                    |
+| sqlfluff over every SQL file with `sql_file_exts` covering `.pgsql` and `.psql`, dialect from the database kit                                                                                                            | `sql/sqlfluff`                                                    |
 | squawk over migrations, `assume_in_transaction`, excluded rules, scoped to migrations after a baseline version                                                                                                            | `postgres/squawk`                                                 |
 | migration filename `YYYYMMDDHHMMSS_snake_case.sql`                                                                                                                                                                        | naming engine `snake-migration`                                   |
 | migration header: boxed separators, `-- Migration: <file>`, `-- Purpose:`; section headings boxed; entities under their section; entity labels with purpose and separators; trigger comments; generated statements marked | `postgres/migration-docs`                                         |
@@ -317,7 +317,7 @@ Source: `SS quality/`.
 | manifests sorted, four-space indentation                                                                                                                                                        | `package-json/order-properties` through eslint-plugin-package-json with `[tools.package-json] indent`; sort-package-json is cut |
 | docs: every Markdown link and anchor resolves                                                                                                                                                   | lychee `--offline --include-fragments`                                                                                          |
 | task policy: required runner tasks exist, no runtime-named folders, no stale paths                                                                                                              | `integrity/task-policy`                                                                                                         |
-| zod rules (13), react-hook-form, tanstack-query, zustand, drizzle, trpc rule files                                                                                                              | library configurations                                                                                                          |
+| zod rules (13), react-hook-form, tanstack-query, zustand, drizzle, trpc rule files                                                                                                              | library kits                                                                                                                    |
 | framework entry files retain mandatory structural rules                                                                                                                                         | nextjs configuration overrides                                                                                                  |
 
 ## 11. Repository-wide
@@ -516,7 +516,7 @@ Implement the agreed React, Next.js, React Native, NestJS, Vue, and Svelte integ
 
 ### Acceptance K-50
 
-A framework configuration carries its naming rules as `[[naming.rules]]` in its manifest
+A framework kit carries its naming rules as `[[naming.rules]]` in its manifest
 . The engine knows no framework.
 
 `policy.ts` merges the rules of the selected manifests after the shared policy. The
@@ -1214,12 +1214,12 @@ slot; no other check reads notebooks.
 
 ### Configuration structure
 
-Kind: policy. Requires: nothing. Required by every language configuration, because it owns the `limits.*`
+Kind: policy. Requires: nothing. Required by every language kit, because it owns the `limits.*`
 settings their configurations read. It runs the structural rules no standard linter ships.
 
 Claims:
 
-Every file a language configuration claims. The engine dispatches by grammar.
+Every file a language kit claims. The engine dispatches by grammar.
 
 Checks:
 
@@ -1997,9 +1997,9 @@ sqlfluff; `libpg-query` (WASM, inside gspot) for parsing and naming extraction.
 
 Generated configuration:
 
-| Target                       | Stub                                                                        | Holds                                                                                                                                                                                                                 |
-| ---------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/config/sqlfluff.cfg` | no root file: sqlfluff has no include form, and the check passes `--config` | `sql_file_exts` covering all three extensions, dialect from the database configuration (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
+| Target                       | Stub                                                                        | Holds                                                                                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/config/sqlfluff.cfg` | no root file: sqlfluff has no include form, and the check passes `--config` | `sql_file_exts` covering all three extensions, dialect from the database kit (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
 
 sqlfluff never reads a `.sqlfluffignore`; gspot passes the file list.
 
@@ -2033,7 +2033,7 @@ Checks:
 
 Settings:
 
-`tools.sqlfluff.dialect` (set by the database configuration), `tools.sqlfluff.rules` (per-rule options; a rule turned off
+`tools.sqlfluff.dialect` (set by the database kit), `tools.sqlfluff.rules` (per-rule options; a rule turned off
 is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 Rule files:
@@ -2131,7 +2131,7 @@ Checks:
 
 Settings:
 
-`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform configuration claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform kit claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
@@ -2513,7 +2513,7 @@ where a playbook exists.
 
 ### Configuration spelling
 
-Kind: policy. Requires: nothing. Recommended by every language configuration.
+Kind: policy. Requires: nothing. Recommended by every language kit.
 
 Claims:
 
@@ -2775,7 +2775,7 @@ Rule files:
 
 ### Configuration formatting
 
-Kind: policy. Requires: nothing. Recommended by every language configuration. One `[format]` block that every formatter
+Kind: policy. Requires: nothing. Recommended by every language kit. One `[format]` block that every formatter
 reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
 Settings:
@@ -2865,7 +2865,7 @@ Rule files:
 
 ### Configuration naming
 
-Kind: policy. Requires: nothing. Recommended by every language configuration. Runs the naming engine over every language
+Kind: policy. Requires: nothing. Recommended by every language kit. Runs the naming engine over every language
 with the shipped policy in [08-naming-policy.md](08-naming-policy.md).
 
 Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
@@ -2873,7 +2873,7 @@ Banned terms and reserved-word restrictions are level `all`. The shipped policy 
 
 Claims:
 
-Every file a language configuration claims, plus every directory name, and file name in the tree
+Every file a language kit claims, plus every directory name, and file name in the tree
 outside build output and vendored paths.
 
 Checks:
@@ -2927,7 +2927,7 @@ Generated configuration:
 | ----------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.gspot/config/eslint.config.mjs`   | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | the flat config: ignores by nature; typescript-eslint `strictTypeChecked` over typed files; sonarjs and unicorn `recommended` bases with the listed exceptions; the rule sets from the ledger section 3 and the additions (`strict-boolean-expressions`, `explicit-module-boundary-types`, `no-unnecessary-condition`, `only-throw-error`, `prefer-optional-chain`, `no-magic-numbers`, `eqeqeq`, `no-param-reassign`, `prefer-const`, `max-depth` 3, `complexity`, `max-statements` from `[limits]`, `no-console` in source); `@gspot/eslint-plugin` with limits from `[limits]`, `types-placement` from `[architecture] types_directory`, `import-direction` from `[architecture] roles`, `no-reexports` from `[structure] reexports`, `env-access-owner` from `roles.env`, `private-before-public`, `import-path-style` per file class from `[tools.eslint] import_style`; `import-x/exports-last`; `boundaries/element-types` from `[architecture] elements` and `allow`; test overrides; prettier last |
 | `.gspot/config/tsconfig.check.json` | none; it extends the `tsconfig.json` of the repository                         | `strict` at `recommended`, and four more flags at `all`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `.gspot/config/knip.json`           | none                                                                           | entry points from the framework configuration or `[tools.knip] entry`; project globs from claims                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `.gspot/config/knip.json`           | none                                                                           | entry points from the framework kit or `[tools.knip] entry`; project globs from claims                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 Checks:
 
@@ -2966,7 +2966,7 @@ Settings:
 | `tools.eslint.import_style`                           | neutral                                                                | `js` for TypeScript compiled to ESM, `ts` for Deno, `extensionless` for bundled code; per file class. Aliases come from tsconfig `paths` and `package.json` `imports` |
 | `tools.eslint.test_files`                             | neutral                                                                | `**/*.{test,spec}.{ts,tsx}`, `**/tests/**`                                                                                                                            |
 | `tools.typescript.paths`                              | neutral                                                                | from the existing tsconfig at init                                                                                                                                    |
-| `tools.knip.entry`                                    | neutral                                                                | from the framework configuration                                                                                                                                      |
+| `tools.knip.entry`                                    | neutral                                                                | from the framework kit                                                                                                                                                |
 | `architecture.types_directory`                        | neutral                                                                | `types`                                                                                                                                                               |
 | `architecture.config_directory`                       | neutral                                                                | `constants`                                                                                                                                                           |
 | `architecture.elements`, `architecture.edges_allowed` | tightening                                                             | one element; the default roles                                                                                                                                        |
@@ -2980,7 +2980,7 @@ Rule files:
 Not covered here:
 
 Runtime-specific rules (Node, browser, workers) come from the runtime detected in
-`package.json` and the framework configuration. React rules come from the react configuration.
+`package.json` and the framework kit. React rules come from the react configuration.
 
 ### Configuration bash
 
@@ -3059,7 +3059,7 @@ Kind: policy. Requires: nothing. Static analysis for security patterns, per lang
 
 Claims:
 
-Every file a language configuration claims.
+Every file a language kit claims.
 
 Tools:
 
@@ -3071,10 +3071,10 @@ ignore entries carried at init become Semgrep rule ignores.
 
 Generated configuration:
 
-| Target                   | Holds                                                                                                                                                                                                             |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/config/semgrep/` | one pack per selected configuration: `node.yml` (9 rules) and `secrets.yml` (1) from this configuration; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
-| `.semgrepignore`         | build output, dependencies, lockfiles, and the paths in `tools.semgrep.ignore`                                                                                                                                    |
+| Target                   | Holds                                                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/config/semgrep/` | one pack per selected kit: `node.yml` (9 rules) and `secrets.yml` (1) from this configuration; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
+| `.semgrepignore`         | build output, dependencies, lockfiles, and the paths in `tools.semgrep.ignore`                                                                                                                          |
 
 Checks:
 

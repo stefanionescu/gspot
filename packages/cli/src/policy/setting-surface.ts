@@ -1,4 +1,4 @@
-// Settings exposed by gspot and selected manifests. Later configurations override defaults.
+// Settings exposed by gspot and selected manifests. Later kits override defaults.
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
 import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
@@ -7,7 +7,7 @@ import type { ExposedSettings } from '#cli/types/policy/policy.ts';
 import { TOOL_DEADLINE, COVERAGE_STRICT } from '#cli/config/kits.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 
-// Whether another configuration's scalar default disagrees with this one, and this one may not override it.
+// Whether another kit's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(
     previous: { value: unknown; configuration: string },
     manifest: Manifest,
@@ -42,7 +42,7 @@ function kindOf(value: unknown): SettingSpec['kind'] {
 }
 
 /**
- * Builds the surface in selection order; framework, platform, library, and database configurations override scalar defaults.
+ * Builds the surface in selection order; framework, platform, library, and database kits override scalar defaults.
  * @param selected the manifests of the selection, in order.
  * @param level the enforcement level whose defaults apply.
  * @returns the specs, their defaults and the conflicts found on the way

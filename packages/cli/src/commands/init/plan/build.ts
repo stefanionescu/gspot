@@ -223,7 +223,7 @@ export function buildProposal(
 
 /**
  * Builds the plan init prints before asking to continue.
- * @param planning the selected configuration and adoption observations
+ * @param planning the selected kit and adoption observations
  * @param policy the validated proposed policy
  * @param policyText the proposed policy text
  * @returns the plan

@@ -2,7 +2,7 @@
 import type { InitAnswers } from '#cli/types/commands/init.ts';
 
 export const DETECTION_LABEL_WIDTH = 13;
-export const NO_CONFIGURATIONS = 'none';
+export const NO_KITS = 'none';
 export const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 export const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'kits']);
 export const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
@@ -23,7 +23,7 @@ export const SCHEME_SUFFIX = '.xcscheme';
 export const PERIPHERY_FILE = '.periphery.yml';
 export const INCOMPLETE_INSTALL_EXIT = 2;
 export const COLUMN_GAP = 2;
-export const CONFIGURATION_WIDTH = 16;
+export const KIT_WIDTH = 16;
 export const REASON_WIDTH = 12;
 export const UNREADABLE_EXIT = 2;
 export const ALREADY_INSTALLED =

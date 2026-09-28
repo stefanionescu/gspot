@@ -29,7 +29,7 @@ function detectedValue(detect: Detect, dependencies: Set<string>, folders: Set<s
 
 /**
  * The settings init can fill from what the repository holds, each with the value its detect table gives.
- * @param manifests the selected configurations
+ * @param manifests the selected kits
  * @param facts the project manifests read from the tree
  * @param files the tracked files
  * @returns the detected settings in manifest order, one per setting

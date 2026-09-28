@@ -31,7 +31,7 @@ export function scopeFile(scope: string, name: string): string {
  * @param target the target path
  * @returns the name
  */
-export function configurationName(target: string): string {
+export function kitName(target: string): string {
     const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);

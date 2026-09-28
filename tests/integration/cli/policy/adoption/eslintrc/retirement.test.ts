@@ -9,7 +9,7 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import type { InitOptions } from '#cli/types/commands/init.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
+import { declaredKits } from '#cli/repository/existing-tooling.ts';
 import { rejection, containing, containingAll } from '#tests/support/expectations.ts';
 import { mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -110,7 +110,7 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
     const carried = await collectCarried(
         directory.path,
         {
-            configs: declaredConfigurations(directory.path, ['.eslintrc.cjs', '.eslintignore']),
+            configs: declaredKits(directory.path, ['.eslintrc.cjs', '.eslintignore']),
             hooks: [],
             ci: [],
             agentFiles: [],

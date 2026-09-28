@@ -6,17 +6,17 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { CASE_NAMES } from '#cli/checks/naming/cases.ts';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
+import { languageKits, selectForScope } from '#cli/kits/select.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
 import { TEST_FILE, REACT_FILE } from '#cli/config/checks/naming.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { selectForScope, languageConfigurations } from '#cli/kits/select.ts';
 import { shippedPolicy, effectivePolicy } from '#cli/checks/naming/policy.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/naming/paths.ts';
 import type { Identifier, NamingContext, EffectivePolicy } from '#cli/types/checks/naming.ts';
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
-    const languages = languageConfigurations(input.selection.selected);
+    const languages = languageKits(input.selection.selected);
     return input.files
         .filter((file) => file.nature === 'source')
         .map((file) => ({
@@ -78,7 +78,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
     const selections = new Map(
         input.scopeEntries.map((scope) => [
             scope.path,
-            languageConfigurations(selectForScope(policy, scope.path, input.manifests)),
+            languageKits(selectForScope(policy, scope.path, input.manifests)),
         ]),
     );
     const observed: { path: string; names: string[] }[] = [];

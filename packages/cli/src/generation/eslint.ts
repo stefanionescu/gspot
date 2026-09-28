@@ -80,7 +80,7 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
 
 /**
  * Applies reasoned manifest exclusions after structural defaults and before authored policy.
- * @param scopes the selected configurations and their owning scopes.
+ * @param scopes the selected kits and their owning scopes.
  * @param policy the effective root policy.
  * @returns scoped rule blocks that exclude every nested scope.
  */

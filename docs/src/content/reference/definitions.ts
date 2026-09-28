@@ -98,7 +98,7 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
  * @param manifest the configuration's manifest
  * @returns the page
  */
-export function configurationPage(manifest: Manifest): ReferencePage {
+export function kitPage(manifest: Manifest): ReferencePage {
     const { kit: configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
@@ -179,7 +179,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
 
 /**
  * The page that lists every engine with the checks it runs.
- * @param checks every check with the configuration that declares it, by name
+ * @param checks every check with the kit that declares it, by name
  * @returns the page
  */
 export function enginesPage(checks: Map<string, { check: CheckSpec; kit: Manifest }>): ReferencePage {

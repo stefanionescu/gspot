@@ -24,11 +24,11 @@ async function installChangedSelection(
     const session = await openSession(root);
     const installed = await installTools(session, true);
     const note = installed === '' ? '' : `${installed}\n`;
-    return { ...result, text: `${result.text}${note}Run gspot check to check the selected configurations.\n` };
+    return { ...result, text: `${result.text}${note}Run gspot check to check the selected kits.\n` };
 }
 
 /**
- * gspot add: appends configurations to the root list or to one scope's list.
+ * gspot add: appends kits to the root list or to one scope's list.
  * @param o the parsed flags
  * @returns the command result
  */
@@ -39,7 +39,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
-            throw new PolicyError([messages.unknownConfiguration(id, nearMatches(id, known))]);
+            throw new PolicyError([messages.unknownKit(id, nearMatches(id, known))]);
         }
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);
@@ -68,7 +68,7 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
         const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.kit);
         const chain = kept.map((id) => requireChain(o.kit, id, manifests)).find((found) => found !== undefined);
         if (chain) throw new PolicyError([messages.withoutRequired(o.kit, chain)]);
-        if (!list.includes(o.kit)) throw new PolicyError([messages.configurationNotListed(o.kit, o.scope)]);
+        if (!list.includes(o.kit)) throw new PolicyError([messages.kitNotListed(o.kit, o.scope)]);
         holder['kits'] = list.filter((id) => id !== o.kit);
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;
@@ -82,12 +82,12 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
  */
 export function registerAdd(program: Command): void {
     program
-        .command('add <configuration...>')
+        .command('add <kit...>')
         .summary('Add configurations')
         .description('Add configurations to the root selection, or to one scope')
         .addHelpText(
             'after',
-            '\nEffects:\nAdds the named configurations to the root or --scope selection, applies generated configuration, and installs the changed tool selection. Required configurations remain part of the selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: configurations were added, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot add bash --dry-run',
+            '\nEffects:\nAdds the named kits to the root or --scope selection, applies generated configuration, and installs the changed tool selection. Required configurations remain part of the selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: configurations were added, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot add bash --dry-run',
         )
         .option('--scope <path>', 'The scope to add them to')
         .option('--dry-run', 'Print what would be written and write nothing')
@@ -112,12 +112,12 @@ export function registerAdd(program: Command): void {
  */
 export function registerRemove(program: Command): void {
     program
-        .command('remove <configuration>')
+        .command('remove <kit>')
         .summary('Remove configurations')
         .description('Remove a configuration from the root selection, or from one scope')
         .addHelpText(
             'after',
-            '\nEffects:\nRemoves the named configuration from the root or --scope selection and applies configuration. Removal is refused when another selected configuration requires it. Installs the tools required by the remaining selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: the configuration was removed, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot remove bash --dry-run',
+            '\nEffects:\nRemoves the named kit from the root or --scope selection and applies configuration. Removal is refused when another selected kit requires it. Installs the tools required by the remaining selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: the configuration was removed, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot remove bash --dry-run',
         )
         .option('--scope <path>', 'The scope to remove it from')
         .option('--dry-run', 'Print what would be written and write nothing')

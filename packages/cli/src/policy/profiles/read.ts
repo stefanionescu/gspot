@@ -87,7 +87,7 @@ export function parseProfile(text: string, source: string): Profile {
     const known = kitManifests().keys().toArray();
     const configurations = (Array.isArray(named) ? named.map(String) : [])
         .filter((id) => !known.includes(id))
-        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
+        .map((id) => messages.unknownKit(id, nearMatches(id, known)));
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new ProfileError(problems);
     return { source, digest: new Bun.CryptoHasher('sha256').update(text).digest('hex'), tables: result.data };

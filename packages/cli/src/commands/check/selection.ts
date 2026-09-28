@@ -74,7 +74,7 @@ export function selectedPaths(session: Session, options: CheckOptions, changed: 
 }
 
 /**
- * The refusal for an --only check no selected configuration runs here.
+ * The refusal for an --only check no selected kit runs here.
  * @param session the open session
  * @param only the checks named on the command line
  * @returns the refusal, or undefined when every named check is known
@@ -89,7 +89,7 @@ export function unknownSelection(session: Session, only: string[] | undefined): 
     const unknown = only?.find((check) => !known.has(check));
     if (unknown === undefined) return undefined;
     return {
-        text: `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
+        text: `No selected kit runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
         json: { error: 'unknown-check' },
         exitCode: INVALID_INPUT_EXIT,
     };

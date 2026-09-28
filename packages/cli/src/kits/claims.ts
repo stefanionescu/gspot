@@ -1,7 +1,7 @@
-// Which selected configuration claims which file, per scope.
+// Which selected kit claims which file, per scope.
 import { GLOB_CHARS } from '#cli/config/kits.ts';
+import { sourceKits } from '#cli/kits/select.ts';
 import type { Claims, Manifest } from '#cli/types/kits.ts';
-import { sourceConfigurations } from '#cli/kits/select.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
@@ -42,7 +42,7 @@ export function claimedByClaims(
 ): TrackedFile[] {
     const candidates = files.filter((file) => isInScope(file.path, scope) && claims.natures.includes(file.nature));
     if (claims.from_languages) {
-        const languages = sourceConfigurations(selected);
+        const languages = sourceKits(selected);
         return candidates.filter(
             (file) => isClaimed(claims, file) || languages.some((language) => isClaimed(language.claims, file)),
         );
@@ -51,13 +51,13 @@ export function claimedByClaims(
 }
 
 /**
- * Every configuration that claims a file, from the selection.
+ * Every kit that claims a file, from the selection.
  * @param file the file
  * @param selected the selected manifests
  * @returns the claimants
  */
 export function claimants(file: TrackedFile, selected: Manifest[]): Manifest[] {
-    const languages = sourceConfigurations(selected);
+    const languages = sourceKits(selected);
     return selected.filter((manifest) => {
         if (manifest.claims.from_languages)
             return isClaimed(manifest.claims, file) || languages.some((language) => isClaimed(language.claims, file));

@@ -144,7 +144,7 @@ export function effectivePolicy(
             .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
         ...compileTerms(naming.banned_terms, 'naming.banned_terms'),
     ];
-    // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
+    // The shipped rules first, then what the selected kits know about their own files, then the repository's.
     const rules = [
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>

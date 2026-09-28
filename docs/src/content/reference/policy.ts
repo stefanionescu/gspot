@@ -10,7 +10,7 @@ const SETTINGS_INTRO = `Every key \`gspot set\` writes and \`gspot list settings
 
 ## Scope and precedence
 
-Configuration defaults apply first. At all, a level-specific default replaces the recommended default when provided. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected configuration determines which tool settings are available in each scope.
+Configuration defaults apply first. At all, a level-specific default replaces the recommended default when provided. Explicit root values follow, then matching ancestor scopes from outermost to innermost. Scalars replace inherited values. Lists append and deduplicate. Language and naming-category settings refine their general setting. The selected kit determines which tool settings are available in each scope.
 
 Use \`gspot set <key> <value> --scope <path>\` to write an existing scope. Without \`--scope\`, the command writes the root. \`--default\` removes a written override; an inherited value can still apply. Integration settings such as hooks, CI, rules, and runner configuration belong to the repository root. See [configuration fields](/reference/configuration/) for the fields accepted inside a scope.
 
@@ -91,18 +91,18 @@ function comparable(setting: SettingSpec): Record<string, unknown> {
  * Render all policy fields from the schema used by the production reader.
  * @returns Markdown reference tables
  */
-export function configurationReference(): string {
+export function kitReference(): string {
     const schema: JSONSchema.JSONSchema = policyJsonSchema();
     const sections = Object.entries(schema.properties ?? {}).map(
         ([name, node]) =>
             `## ${name}\n\n| Field | Presence | Accepted structure and defaults | Meaning |\n| --- | --- | --- | --- |\n${schemaRows(node, name, schema.required?.includes(name) === true).join('\n')}\n`,
     );
-    return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected configurations, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for configuration-owned values.\n\n${sections.join('\n')}`;
+    return `The [machine-readable configuration schema](/schema/gspot.schema.json) defines these fields. Required means required within the containing table or array item. An optional table does not make its required children mandatory at the repository root.\n\n\`[]\` identifies an array item; \`*\` identifies a user-defined key. Alternative forms describe different accepted values for the same field. Constraints use JSON Schema notation, including \`enum\` for accepted values, \`default\` for schema defaults, and \`additionalProperties: false\` for tables that reject unknown keys.\n\nThe policy reader also validates selected kits, exposed settings, cross-field relationships, and required reasons. Use version 1 policies. See [scopes](/guides/scopes/) for inheritance and [settings](/reference/settings/) for configuration-owned values.\n\n${sections.join('\n')}`;
 }
 
 /**
  * The settings page: every exposed setting with its owners and the default each owner gives it.
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @returns the page
  */
 export function settingsPage(manifests: Manifest[]): ReferencePage {

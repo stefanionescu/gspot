@@ -1,13 +1,13 @@
+import { selectKits } from '#cli/kits/select.ts';
 import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { selectConfigurations } from '#cli/kits/select.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 
-const selected = selectConfigurations(['bash', 'naming', 'formatting', 'spelling'], kitManifests());
+const selected = selectKits(['bash', 'naming', 'formatting', 'spelling'], kitManifests());
 const surface = exposedSettings(selected);
 
 test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[sqlfluff]', 'postgres # comment'])(
@@ -91,7 +91,7 @@ test.each([
 ] as const)(
     'the settings surface > the %s transaction default is overridden by an explicit false value',
     (configuration, expected) => {
-        const settings = exposedSettings(selectConfigurations([configuration], kitManifests()));
+        const settings = exposedSettings(selectKits([configuration], kitManifests()));
         const source = `version = 1\nkits = ["${configuration}"]\n`;
         const policy = parsePolicyText(source, 'gspot.toml');
         expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
@@ -113,7 +113,7 @@ test.each([
 ])(
     'the settings surface > the %s dialect default identifies its owning configuration',
     (configuration, dialect, owner) => {
-        const settings = exposedSettings(selectConfigurations([configuration], kitManifests()));
+        const settings = exposedSettings(selectKits([configuration], kitManifests()));
         const policy = parsePolicyText(`version = 1\nkits = ["${configuration}"]\n`, 'gspot.toml');
         expect(validateAgainstSurface(settings, policy)).toStrictEqual([]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
@@ -176,7 +176,7 @@ test('the settings surface > list defaults append across configurations before r
 });
 
 test('the settings surface > scoped rules inherit unrelated rules and replace complete options for the same rule', () => {
-    const settings = exposedSettings(selectConfigurations(['css'], kitManifests()));
+    const settings = exposedSettings(selectKits(['css'], kitManifests()));
     const policy = parsePolicyText(
         'version = 1\nkits = ["css"]\n[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "warning" }]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
         'gspot.toml',
@@ -211,7 +211,7 @@ test('the settings surface > a setting no configuration has is refused with the 
         'gspot.toml',
     );
     expect(validateAgainstSurface(surface, policy)[0]?.message).toContain(
-        'No selected configuration has the setting `tools.shellcheck.severity`',
+        'No selected kit has the setting `tools.shellcheck.severity`',
     );
 });
 
@@ -226,7 +226,7 @@ test('the settings surface > the marketing group cannot be removed', () => {
 test.each(['min_lines', 'min_tokens'])(
     'raising duplication %s requires a reason, while lowering it tightens detection',
     (name) => {
-        const selected = selectConfigurations(['duplication'], kitManifests());
+        const selected = selectKits(['duplication'], kitManifests());
         const settings = exposedSettings(selected);
         const key = `limits.duplication.${name}`;
         const shipped = settings.defaults.get(key)!.value as number;

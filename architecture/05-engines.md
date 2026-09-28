@@ -183,7 +183,7 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **Parsing.** `web-tree-sitter` with WASM grammars embedded in the binary: bash, python, swift,
   css, html, and the JavaScript family for the naming extractors. SQL parses through
   `libpg-query` compiled to WASM. No native modules.
-- **Declarative rules.** ast-grep YAML files under each configuration, executed through the ast-grep
+- **Declarative rules.** ast-grep YAML files under each kit, executed through the ast-grep
   CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's.
 - **Counted rules.** Rules that need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and gspot counts the matches per file or per enclosing function.
 - **One parse for a scope.** A source file is parsed once for a scope and a run. The naming
@@ -333,7 +333,7 @@ The list of code files holds the endings a framework claims, and one ESLint chec
 reads it. A framework turns a shared rule off in its manifest, with a reason.
 Type check, format, style, and names reach a component file.
 
-`CODE` in the template is built from the `claims.extensions` of the selected configurations.
+`CODE` in the template is built from the `claims.extensions` of the selected kits.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
 
 `vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue configuration

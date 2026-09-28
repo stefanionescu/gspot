@@ -37,7 +37,7 @@ test('doctor and list name unsupported endings and retain different coverage wit
     ).toStrictEqual([{ ending: '.sh', scope: '', files: 2, kinds: containingAll(['syntax']) }]);
 });
 
-test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
+test('list shows selected policy states, detected kits, and setting values without writing', async () => {
     await using directory = await testdir();
     const policy =
         'version = 1\nkits = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';

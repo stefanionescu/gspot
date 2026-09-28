@@ -228,7 +228,7 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
  * @param root the repository root
  * @param files the tracked files
  * @param facts the manifests read from the tree
- * @param manifests every configuration manifest
+ * @param manifests every kit manifest
  * @returns the scopes in path order, and the lint-only manifests left out
  */
 export function proposedScopes(

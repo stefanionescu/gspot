@@ -36,7 +36,7 @@ function declaredGuides(manifests: Manifest[], repository: Repository): Pick<Rul
 /**
  * The guides the selection installs, in layer order, deduplicated.
  * @param rules the rule policy
- * @param manifests the selected configurations
+ * @param manifests the selected kits
  * @param repository the source inventory for conditional guide selection.
  * @returns the guides with their targets and titles
  */
@@ -75,7 +75,7 @@ export function selectRuleFiles(rules: Policy['guides'], manifests: Manifest[], 
 /**
  * The selected guides with sections filtered to the enforcement level.
  * @param rules the rule policy
- * @param manifests the selected configurations
+ * @param manifests the selected kits
  * @param level the selected enforcement level.
  * @param repository the source inventory for conditional guide selection.
  * @returns the files to write under the rules directory

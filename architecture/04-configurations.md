@@ -6,7 +6,7 @@ combine, and the available configurations.
 ## Policy ownership
 
 Shared language policies cover Swift, JavaScript, TypeScript, Python, and their supported
-frameworks. `from_languages` includes source claims contributed by framework configurations, such
+frameworks. `from_languages` includes source claims contributed by framework kits, such
 as Vue and Svelte components. Selecting a framework must not drop language rules. See
 [shared enforcement](05-engines.md#shared-enforcement-across-languages-and-frameworks).
 
@@ -46,7 +46,7 @@ aliases, or forwarding files duplicate that ownership.
 The public `configs` configuration lives at `packages/cli/kits/general/files/` and is titled Configuration
 Files. It covers JSON, YAML, TOML, workflows, environment files, XML, and related formats.
 Its templates configure the tools that inspect those files; the configuration is not a generic
-owner for every configuration's configuration assets.
+owner for every kit's configuration assets.
 
 | Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                          |
 | --------- | ---------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -159,10 +159,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - `name` is a bare kebab-case name and matches the folder name.
 - `requires` pulls configurations in, and a person cannot drop them. It holds what the configuration cannot
   work without: `typescript` requires `javascript`, because its configuration is a fragment of
-  the JavaScript one. A required configuration that is missing fails to load.
+  the JavaScript one. A required kit that is missing fails to load.
 - `recommends` names configurations that `init` selects with this one and a person can drop.
-  Every language configuration recommends `naming`, `formatting` and `spelling`. `structure` stays
-  required, because it owns the `limits.*` settings the language configurations read.
+  Every language kit recommends `naming`, `formatting` and `spelling`. `structure` stays
+  required, because it owns the `limits.*` settings the language kits read.
   `gspot remove naming`, `init --without naming` and a profile that leaves `naming` out all work.
 - A check whose engine belongs to a dropped configuration does not run. `doctor` lists the recommended
   configurations that are not selected.
@@ -184,10 +184,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   that ending. `javascript/required-rules` reads it.
 - A check name is `<family>/<name>`. The family is the engine or the tool family that produces the
   finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the configuration's own name), not
-  always the configuration. `gspot explain <check>` prints the configuration that ships it.
+  always the configuration. `gspot explain <check>` prints the kit that ships it.
 - `detect` proposes the configuration at `init` and in `doctor`. Detection never selects.
 - `claims` decides which files the configuration's checks receive. A `filenames` claim matches at any
-  depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected configuration is unchecked.
+  depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected kit is unchecked.
 - `claims` may also name `tags`, computed the way the pre-commit `identify` library does from extension, shebang, executable bit, and content (`shell`, `python`, `node`, `executable`, `text`, `binary`). Hooks and task files with no extension are then claimed without a filename list.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
   and the name under each ecosystem gspot knows (`npm`, `pypi`, `mise`, `brew`, `cargo`,
@@ -307,11 +307,11 @@ being written.
 
 ```text
 selected = configurations in gspot.toml
-         + every configuration they require, transitively
+         + every kit they require, transitively
 
 at init   = proposed configurations, or the configurations of the profile
-         + every configuration they recommend whose own detection matches, or that has no detection
-         + every configuration they require, transitively
+         + every kit they recommend whose own detection matches, or that has no detection
+         + every kit they require, transitively
          - what --without names and what the person cleared
 ```
 
@@ -324,7 +324,7 @@ over that scope's files. Root-only configurations (policy kind) run once over th
 ## Detection
 
 A language with a project file is proposed from that file, as a scope is. A language with
-no project file is proposed from its files. A tool, framework, or library configuration is proposed
+no project file is proposed from its files. A tool, framework, or library kit is proposed
 only where the repository holds the thing. The plan lists what was found and not proposed, each
 with its `gspot add` line. A configuration whose checks all need git is not proposed in a folder that
 is no git repository.
@@ -346,7 +346,7 @@ Signals, in the order `init` prints them:
 | `nginx.conf`                                                                                                                          | nginx                                                                                         |
 | `vitest` in dependencies                                                                                                              | vitest                                                                                        |
 | `pytest` in dependencies or `[tool.pytest]`                                                                                           | pytest                                                                                        |
-| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library configuration                                                                     |
+| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library kit                                                                               |
 | `*.sql` files                                                                                                                         | sql; postgres where a migrations folder, `pg`, or Supabase is found                           |
 | `*.html` files; `index.html`, `_headers`, or a web manifest at the root                                                               | html; static-site                                                                             |
 | `.md` files                                                                                                                           | markdown                                                                                      |
@@ -362,13 +362,13 @@ A framework changes which plugins run. It does not change the rules of the langu
 .
 
 - Every shared rule reads every code file: `js`, `ts`, `jsx`, `tsx`, and the component endings
-  a framework configuration claims (`.vue`, `.svelte`, `.svelte.ts`).
+  a framework kit claims (`.vue`, `.svelte`, `.svelte.ts`).
 - A limit is the same number in every framework: lines for each file, lines for each function,
   parameters, depth, statements, and complexity. No configuration may change one.
 - A framework turns a shared rule off only in its manifest, with a reason. A test compares the
   final ESLint config of a component file with that of a plain `ts` file, and fails on a
   difference that is not on the list.
-- A framework configuration holds every linter written for the framework. That is the recommended set
+- A framework kit holds every linter written for the framework. That is the recommended set
   of each plugin, an accessibility plugin, the type checker that reads its files, and the test
   rules of its runner.
 
@@ -384,12 +384,12 @@ A framework changes which plugins run. It does not change the rules of the langu
 ## Available configurations
 
 The [enforcement ledger](06-enforcement-ledger.md#configuration-enforcement-contracts) preserves
-the detection, settings, and checks of each agreed configuration. The v1 set is every configuration the four reference repositories need. That covers a Python API, a Swift
+the detection, settings, and checks of each agreed configuration. The v1 set is every kit the four reference repositories need. That covers a Python API, a Swift
 app, an Express API, a Supabase project, a static site on Cloudflare, and a Next.js app.
 
 ## What a configuration never does
 
-- Hard-code a directory layout. A framework configuration claims only the paths the framework itself
+- Hard-code a directory layout. A framework kit claims only the paths the framework itself
   dictates (`app/`, `supabase/migrations/`, `functions/`).
 - Read a product value into its own configuration. A check that needs the nginx image tag reads
   the compose file at run time.
@@ -623,7 +623,7 @@ setting a fragment needs from another configuration is declared by both manifest
 knip entry list comes from the `entry_files` of each selected framework manifest, and this
 repository keeps its own entries in `tools.knip.entry`.
 
-Render selected configuration combinations and execute their pinned consumers. Verify
+Render selected kit combinations and execute their pinned consumers. Verify
 that merged selectors retain each intended library defect and that changed settings reach
 the actual rule. Assert valid and corrected cases too.
 
@@ -716,7 +716,7 @@ its dotted configuration address.
 | Check name                               | `Finding.check`, `CheckResult.check`, `IgnoreEntry.check`    | `checkName`, plural `checkNames`                          |
 | Planned execution of a check             | `PlannedCheck`                                               | `plannedCheck`                                            |
 | Configuration definition                 | `manifest.configuration.name`                                | `configuration`; `manifest` for the complete manifest     |
-| Configuration name                       | `configuration` when referenced; `configurations` for a list | `configurationName`, plural `configurationNames`          |
+| Configuration name                       | `configuration` when referenced; `configurations` for a list | `kitName`, plural `kitNames`                              |
 | Tool rule name                           | `rule` on a finding or ignore                                | `ruleName`, plural `ruleNames`                            |
 | Setting definition and its name          | `SettingSpec.name`                                           | `setting` for the definition, `settingName` for its name  |
 | Scope definition and its path            | `scope.path`; `scope` in a serialized result                 | `scope` for the object, `scopePath` for the relative path |

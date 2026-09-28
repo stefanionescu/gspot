@@ -84,7 +84,7 @@ runs = "once"
 engine = "integrity"
 analysis = "next-config"
 coverage = ["security"]
-summary = "Checks that the framework configuration turns no build check off and puts no secret into the client environment."
+summary = "Checks that the framework kit turns no build check off and puts no secret into the client environment."
 why = "A build that ignores lint and type errors ships them, and a key under env is readable by every visitor."
 help = "Remove the switch, and read the secret on the server."
 

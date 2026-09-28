@@ -8,9 +8,9 @@ const cases = {
     unknownKey: () => messages.unknownKey('tools.example', 'unknown', ['rules']),
     refusedReason: () => messages.refusedReason('example/check', ''),
     missingReason: () => messages.missingReason('example/check', 'gspot ignore example/check'),
-    unknownConfiguration: () => messages.unknownConfiguration('example', ['python']),
+    unknownKit: () => messages.unknownKit('example', ['python']),
     withoutRequired: () => messages.withoutRequired('typescript', ['react', 'typescript']),
-    configurationNotListed: () => messages.configurationNotListed('python', 'api'),
+    kitNotListed: () => messages.kitNotListed('python', 'api'),
     dirtyTree: () => messages.dirtyTree(2),
     circularRequires: () => messages.circularRequires(['first', 'second', 'first']),
     scopeMissing: () => messages.scopeMissing('api'),
@@ -38,7 +38,7 @@ test.each(Object.entries(cases))('%s uses configuration vocabulary', (_name, des
 
 test('an unknown setting names the setting the reader wrote and where to see every one', () => {
     const text = messages.settingNotExposed('tools.shellcheck.severity', ['tools.shellcheck.rules']);
-    expect(text).toContain('No selected configuration has the setting `tools.shellcheck.severity`.');
+    expect(text).toContain('No selected kit has the setting `tools.shellcheck.severity`.');
     expect(text).toContain('`tools.shellcheck.rules`');
     expect(text).toContain('gspot list settings');
 });

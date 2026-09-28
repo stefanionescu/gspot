@@ -9,7 +9,7 @@ import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
+import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
 import type { TrackedFile, ExistingTool, ManifestFacts, ExistingTooling } from '#cli/types/repository/repository.ts';
 
@@ -103,7 +103,7 @@ function hasConfigurationSection(
     const source = files.read(path);
     if (source === undefined) return false;
     return (
-        configurationSection(source.bytes.toString('utf8'), path, {
+        kitSection(source.bytes.toString('utf8'), path, {
             ...(takeover.table === undefined ? {} : { table: takeover.table }),
             ...(takeover.key === undefined ? {} : { key: takeover.key }),
         }) !== undefined
@@ -168,10 +168,10 @@ function takeoverTools(
  * Discover configuration sections declared by the tools that own them.
  * @param root the repository root
  * @param paths the tracked file paths
- * @param selected the selected configurations, when only their tools count
+ * @param selected the selected kits, when only their tools count
  * @returns tool configurations with their containing files and sections
  */
-export function declaredConfigurations(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
+export function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
     );
@@ -202,7 +202,7 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
-    const configurations = declaredConfigurations(
+    const configurations = declaredKits(
         root,
         files.filter((file) => file.nature === 'source').map((file) => file.path),
     );

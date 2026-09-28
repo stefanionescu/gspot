@@ -43,7 +43,7 @@ function coverSource(
         report.unchecked.push({
             path: file.path,
             reason: 'no enabled check claims it',
-            remedy: 'gspot set generated <path>, gspot set vendored <path>, or gspot add <configuration>',
+            remedy: 'gspot set generated <path>, gspot set vendored <path>, or gspot add <kit>',
         });
         return;
     }

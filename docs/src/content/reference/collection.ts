@@ -2,11 +2,11 @@ import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands.ts';
 import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
+import { kitReference, settingsPage } from './policy.ts';
 import { allChecks } from '@gspot/cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { kitManifests } from '@gspot/cli/src/kits/manifests.ts';
-import { settingsPage, configurationReference } from './policy.ts';
-import { rulePage, enginesPage, configurationPage, pluginReferencePages } from './definitions.ts';
+import { kitPage, rulePage, enginesPage, pluginReferencePages } from './definitions.ts';
 
 /**
  * Every generated reference page, keyed by its Markdown path: commands, configurations, rules, settings, and engines.
@@ -55,14 +55,14 @@ export function referencePages(): Map<string, ReferencePage> {
             'architecture/04-configurations.md',
         ),
     );
-    for (const manifest of manifests) add(`kits/${manifest.kit.name}.md`, configurationPage(manifest));
+    for (const manifest of manifests) add(`kits/${manifest.kit.name}.md`, kitPage(manifest));
     const checks = allChecks();
     for (const { check, kit: configuration } of checks.values())
         add(`rules/${check.name}.md`, rulePage(check, configuration));
     add('settings.md', settingsPage(manifests));
     add(
         'configuration.md',
-        referencePage('Configuration file', 'All policy fields from the validated schema.', configurationReference()),
+        referencePage('Configuration file', 'All policy fields from the validated schema.', kitReference()),
     );
     add('engines.md', enginesPage(checks));
     for (const [path, page] of pluginReferencePages()) add(path, page);

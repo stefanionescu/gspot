@@ -3,7 +3,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 
 /**
- * Every check across every manifest, by id, with the configuration that ships it.
+ * Every check across every manifest, by id, with the kit that ships it.
  * @returns the checks by id
  */
 export function allChecks(): Map<string, { check: CheckSpec; kit: Manifest }> {

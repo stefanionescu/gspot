@@ -111,7 +111,7 @@ without passing individual filenames. Existing repository entries and comments r
 An authored hook already named `gspot` must be renamed before selecting the integration.
 
 Installed hooks distinguish gspot findings (`1`) from setup failures (`2`). Missing gspot or
-framework executables and invalid framework configuration report setup failure. A successful
+framework executables and invalid framework kit report setup failure. A successful
 framework run that omits gspot also reports setup failure. Before a commit, stage the framework
 configuration and resolve index conflicts. Authored hook failures remain failures, including
 with the framework's `fail_fast` setting.

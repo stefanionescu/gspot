@@ -99,11 +99,11 @@ async function askFormat(
 }
 
 /**
- * Asks which configurations to install: what init selected starts selected, every other shipped configuration is offered.
+ * Asks which kits to install: what init selected starts selected, every other shipped configuration is offered.
  * @param options the init flags
  * @param selection what init selected from detection and recommendations
- * @param manifests every configuration manifest
- * @returns the configuration ids the person kept, or undefined when the question was not asked
+ * @param manifests every kit manifest
+ * @returns the kit ids the person kept, or undefined when the question was not asked
  */
 export async function askKits(
     options: InitOptions,
@@ -115,8 +115,7 @@ export async function askKits(
         .values()
         .map((manifest) => {
             const how = selection.how.get(manifest.kit.name);
-            const hint =
-                how === 'required' ? 'required by another selected configuration' : (how ?? manifest.kit.description);
+            const hint = how === 'required' ? 'required by another selected kit' : (how ?? manifest.kit.description);
             return { value: manifest.kit.name, label: manifest.kit.name, hint };
         })
         .toArray();

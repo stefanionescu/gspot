@@ -17,12 +17,12 @@ gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
 gspot list       [settings]
-gspot explain    <check> | <tool>/<rule> | <configuration> | <setting> | <path>
+gspot explain    <check> | <tool>/<rule> | <kit> | <setting> | <path>
 gspot doctor
 gspot ignore     <check> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
 gspot set        <setting> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
-gspot add        <configuration>... [--scope <path>] [--dry-run]
-gspot remove     <configuration> [--scope <path>] [--dry-run]
+gspot add        <kit>... [--scope <path>] [--dry-run]
+gspot remove     <kit> [--scope <path>] [--dry-run]
 gspot uninstall  [--dry-run] [--yes]
 gspot export     <file>
 gspot completion <bash|zsh|fish|powershell>
@@ -200,7 +200,7 @@ exit 2 and nothing written, in these cases:
 - A choice flag holds a value outside its list. The message names the flag and the values.
 - `--kits` or `--without` names a configuration that does not exist, and the message names near
   matches.
-- `--without` names a configuration that a selected configuration requires, and the message prints the chain.
+- `--without` names a configuration that a selected kit requires, and the message prints the chain.
 - The working tree has uncommitted changes and `--allow-dirty` is absent.
 - `--from` names a profile that does not load.
 
@@ -359,7 +359,7 @@ One verb that says what a thing is. It takes:
 | a tool rule (`markdownlint/MD024`)          | the summary of the tool where it has one, the page of the rule, and the check that runs it                   |
 | a configuration name (`python`)             | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files           |
 | a setting name (`limits.function_lines`)    | meaning, default, the value in every scope that holds it, and the `set` line that changes it                 |
-| a path (`api/src/routes/turn.ts`)           | the configurations that claim the file, and the checks that read it at each stage                            |
+| a path (`api/src/routes/turn.ts`)           | the kits that claim the file, and the checks that read it at each stage                                      |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
 page of the manual.
@@ -428,7 +428,7 @@ A suppression without a reason is a finding, in every comment style gspot reads.
 
 ## `add`, `remove`
 
-`gspot add nextjs vitest` appends configurations to the root selection, or to a scope with `--scope`.
+`gspot add nextjs vitest` appends kits to the root selection, or to a scope with `--scope`.
 It runs `apply` and `install`, and runs no check. `gspot set level all`, a rule turned
 back on, and an upgrade that brings new rules work the same way: the checks are on from the next
 run. `gspot remove vitest`
@@ -498,11 +498,11 @@ beside `--from` win over the profile.
 
 ## Exit codes
 
-| Code | Meaning                                                                                                                       |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 0    | every check ran and passed, or the command completed                                                                          |
-| 1    | findings, a generated file that drifted, or a missing tool                                                                    |
-| 2    | gspot did not run: unreadable `gspot.toml`, unknown configuration, unknown command, unanswered question, version pin mismatch |
+| Code | Meaning                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------- |
+| 0    | every check ran and passed, or the command completed                                                                |
+| 1    | findings, a generated file that drifted, or a missing tool                                                          |
+| 2    | gspot did not run: unreadable `gspot.toml`, unknown kit, unknown command, unanswered question, version pin mismatch |
 
 ## Acceptance contracts
 
@@ -685,7 +685,7 @@ second repository with that rule off. A tool with every check ignored is absent 
 
 The exact definition/reference mappings of [public vocabulary](README.md#glossary) (K-308).
 
-Usage lines show `<check>`, `<configuration>`, `<rule>`, and `<setting>`. `install`, `apply`, `add`,
+Usage lines show `<check>`, `<kit>`, `<rule>`, and `<setting>`. `install`, `apply`, `add`,
 and `remove` take `--dry-run`, and each prints its plan and writes nothing,
 through the plan text `init` already has. `reason` is optional in the schema. `loosening.ts` and the
 refused reasons of `reasons.ts` apply only where `require_reasons = true`.

@@ -166,7 +166,7 @@ so every kind gets a check.
 
 A pattern joins this document when a reviewer finds an instance in a real repository that no
 existing check caught. The entry names the instance class, the mechanism, and the configuration. If a
-maintained tool ships the rule, the mechanism is configuration. If not, the configuration manifest
+maintained tool ships the rule, the mechanism is configuration. If not, the kit manifest
 records the tools searched before original code was written.
 
 ## Behavioral test assertions
