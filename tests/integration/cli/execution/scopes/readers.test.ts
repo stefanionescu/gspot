@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';

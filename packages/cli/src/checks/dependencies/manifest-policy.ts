@@ -2,14 +2,14 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import type { Reporter } from '#cli/types/checks/dependencies.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { LOCKFILES } from '#cli/constants/repository/repository.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
 
 import {
-    DEPENDENCY_TABLES,
-    EXACT_VERSION,
-    NON_REGISTRY_VERSION,
     NPM_MANIFEST,
+    EXACT_VERSION,
+    DEPENDENCY_TABLES,
+    NON_REGISTRY_VERSION,
 } from '#cli/constants/checks/dependencies.ts';
 
 function rootFindings(report: Reporter, root: PackageManifest | undefined): Finding[] {
@@ -27,27 +27,30 @@ function rootFindings(report: Reporter, root: PackageManifest | undefined): Find
 function installerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
-    const report: Reporter = (file, rule, text) => ({
-        check: input.spec.name,
-        file,
-        line: 1,
-        rule,
-        message: text,
-        fixable: false,
-    });
     const differing = manifests
         .entries()
         .filter(([, manifest]) => wanted !== undefined && (manifest.packageManager ?? wanted) !== wanted)
         .toArray();
     return [
-        ...rootFindings(report, root),
-        ...differing.map(([path, manifest]) =>
-            report(
-                path,
-                'package-manager',
-                `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
-            ),
+        ...rootFindings(
+            (file, rule, text) => ({
+                check: input.spec.name,
+                file,
+                line: 1,
+                rule,
+                message: text,
+                fixable: false,
+            }),
+            root,
         ),
+        ...differing.map(([path, manifest]) => ({
+            check: input.spec.name,
+            file: path,
+            line: 1,
+            rule: 'package-manager',
+            message: `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
+            fixable: false,
+        })),
     ];
 }
 
@@ -57,7 +60,7 @@ function lockfileFindings(input: EngineInput): Finding[] {
         const kind = LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)];
         if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
     }
-    if (kinds.size < 2) return [];
+    if (kinds.size <= 1) return [];
     const listed = kinds.values().toArray().join(', ');
     return kinds
         .values()

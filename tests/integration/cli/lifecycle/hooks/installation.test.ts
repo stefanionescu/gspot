@@ -1,7 +1,7 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
@@ -11,8 +11,8 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external'] as const)(
     'nested uninstall reports the retained hook and original backup in the %s Git boundary',

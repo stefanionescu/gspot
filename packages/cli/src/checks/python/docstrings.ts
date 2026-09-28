@@ -5,7 +5,7 @@ import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { DOCSTRING_COMMAND } from '#cli/constants/checks/python.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 const projectSchema = z.object({
     tool: z

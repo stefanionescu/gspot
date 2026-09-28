@@ -1,17 +1,17 @@
 // Bash defects have independent diagnostics and corrected execution under the same policy.
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { BASH_CASES } from '#tests/support/cli/bash-cases.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { BASH_CASES_MAIN as MAIN, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { script, runPlanted } from '#tests/support/cli/planted.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS, BASH_CASES_MAIN as MAIN } from '#tests/constants/cli.ts';
 
 describe('the bash configuration', () => {
     test.each(BASH_CASES)(
@@ -70,18 +70,17 @@ test.each([
 ] as const)('Bash %s requires only the strict-mode options its version supports', async (version, isInherited) => {
     const base = `#!/usr/bin/env bash\n#\n# Prints a greeting.\n# Runtime: Bash ${version}+, macOS and Linux.\nset -euo pipefail\n`;
     const inherited = 'shopt -s inherit_errexit\n';
-    const source = (isEnabled: boolean): string => base + (isEnabled ? inherited : '') + MAIN;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
-        'greet.sh': source(isInherited),
+        'greet.sh': base + (isInherited ? inherited : '') + MAIN,
     });
     const path = join(sandbox.path, 'greet.sh');
     chmodSync(path, 0o755);
     const command = ['check', '--only', 'structure/bash-interpreter', '--no-cache', '--json'];
     const clean = await run(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-    writeFileSync(path, source(!isInherited));
+    writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(reportSchema.parse(JSON.parse(broken.stdout)).checks).toMatchObject([
@@ -90,7 +89,7 @@ test.each([
     expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toContainEqual(
         containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
-    writeFileSync(path, source(isInherited));
+    writeFileSync(path, base + (isInherited ? inherited : '') + MAIN);
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([

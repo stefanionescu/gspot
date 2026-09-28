@@ -1,11 +1,11 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { rmSync, mkdtempSync } from 'node:fs';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { isEmbedded, readAsset } from '#cli/platform/assets.ts';
+import { readAsset, isEmbedded } from '#cli/platform/assets.ts';
 import type { configurationRequest } from '#cli/evaluation/protocol.ts';
 
 /**

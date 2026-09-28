@@ -1,18 +1,18 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import type { OriginalFile, PlantedInput } from '#tests/types/cli.ts';
 
 import {
-    chmodSync,
-    mkdirSync,
-    readFileSync,
-    readdirSync,
-    rmdirSync,
     rmSync,
     statSync,
+    chmodSync,
     lstatSync,
-    readlinkSync,
-    symlinkSync,
+    mkdirSync,
+    rmdirSync,
     unlinkSync,
+    readdirSync,
+    symlinkSync,
+    readFileSync,
+    readlinkSync,
     writeFileSync,
 } from 'node:fs';
 
@@ -101,6 +101,7 @@ export function plant(cwd: string, planted: PlantedInput): () => void {
     for (const path of gone)
         if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
     const parents = absentParents(cwd, paths);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The caller receives this function and the failure path runs it; both need the same value.
     const restore = (): void => {
         restoreFiles(cwd, originals);
         removeParents(parents);

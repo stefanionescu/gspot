@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
-import { prepareHookClone, installHookClone } from '#tests/support/cli/hooks/clone.ts';
+import { installHookClone, prepareHookClone } from '#tests/support/cli/hooks/clone.ts';
 
 test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'] as const)(
     'fresh clones install repeatedly without tracked changes with %s',

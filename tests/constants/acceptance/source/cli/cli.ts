@@ -1,5 +1,5 @@
 // The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
-import type { AuthoredState, Retention } from '#tests/types/acceptance/source/cli.ts';
+import type { Retention, AuthoredState } from '#tests/types/acceptance/source/cli.ts';
 
 export const PRETTIER_CARRY_SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 export const SCOPES_SOURCE =

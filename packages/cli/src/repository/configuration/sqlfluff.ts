@@ -1,3 +1,5 @@
+import type { SqlfluffLine } from '#cli/types/repository/repository.ts';
+
 function value(text: string): unknown {
     const [mantissa = '', ...exponents] = text.toLowerCase().split('e');
     if (
@@ -10,6 +12,45 @@ function value(text: string): unknown {
     const literals: Record<string, boolean | null> = { true: true, false: false, none: null };
     const keyword = text.toLowerCase();
     return Object.hasOwn(literals, keyword) ? literals[keyword] : text;
+}
+
+// Physical continuation lines join the option above them before section names and assignments are read.
+function joinContinuations(lines: SqlfluffLine[]): SqlfluffLine[] {
+    const logical: SqlfluffLine[] = [];
+    for (const line of lines) {
+        const previous = logical.at(-1);
+        const isOption = previous !== undefined && previous.heading === undefined;
+        const isDeeper = previous !== undefined && (line.text === '' || line.indentation > previous.indentation);
+        if (isOption && isDeeper) previous.continuation += `\n${line.text}`;
+        else if (line.text !== '') logical.push(line);
+    }
+    return logical;
+}
+
+// One option line joins the section that is open, once per key.
+function addOption(section: Map<string, string> | undefined, line: SqlfluffLine): void {
+    const separator = line.text.indexOf('=');
+    if (section === undefined || separator <= 0)
+        throw new Error(`Invalid SQLFluff configuration on line ${String(line.number)}.`);
+    const key = line.text.slice(0, separator).trimEnd();
+    if (section.has(key)) throw new Error(`Duplicate SQLFluff option on line ${String(line.number)}.`);
+    section.set(key, line.text.slice(separator + 1).trimStart() + line.continuation);
+}
+
+// The sections of the file with their options. A duplicate section, a duplicate option, and an option outside a section are refused.
+function parseSections(logical: SqlfluffLine[]): Map<string, Map<string, string>> {
+    const sections = new Map<string, Map<string, string>>();
+    let current: Map<string, string> | undefined;
+    for (const line of logical) {
+        if (line.heading === undefined) {
+            addOption(current, line);
+            continue;
+        }
+        if (sections.has(line.heading)) throw new Error(`Duplicate SQLFluff section on line ${String(line.number)}.`);
+        current = new Map<string, string>();
+        sections.set(line.heading, current);
+    }
+    return sections;
 }
 
 /**
@@ -29,42 +70,7 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
         }))
         .filter((line) => !/^[#;]/u.test(line.text));
     // Join physical continuations before interpreting section names or option assignments.
-    const logical = lines.reduce<typeof lines>((joined, line) => {
-        const previous = joined.at(-1);
-        if (
-            previous !== undefined &&
-            previous.heading === undefined &&
-            (line.text === '' || line.indentation > previous.indentation)
-        ) {
-            previous.continuation += `\n${line.text}`;
-            return joined;
-        }
-        if (line.text !== '') joined.push(line);
-        return joined;
-    }, []);
-    const parsed = logical.reduce<{
-        sections: Map<string, Map<string, string>>;
-        current: Map<string, string> | undefined;
-    }>(
-        (state, line) => {
-            if (line.heading !== undefined) {
-                if (state.sections.has(line.heading))
-                    throw new Error(`Duplicate SQLFluff section on line ${String(line.number)}.`);
-                const section = new Map<string, string>();
-                state.sections.set(line.heading, section);
-                return { sections: state.sections, current: section };
-            }
-            const separator = line.text.indexOf('=');
-            if (state.current === undefined || separator <= 0)
-                throw new Error(`Invalid SQLFluff configuration on line ${String(line.number)}.`);
-            const key = line.text.slice(0, separator).trimEnd();
-            if (state.current.has(key)) throw new Error(`Duplicate SQLFluff option on line ${String(line.number)}.`);
-            state.current.set(key, line.text.slice(separator + 1).trimStart() + line.continuation);
-            return state;
-        },
-        { sections: new Map(), current: undefined },
-    );
-    return parsed.sections;
+    return parseSections(joinContinuations(lines));
 }
 
 /**

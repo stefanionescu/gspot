@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { copyFileSync, readFileSync, symlinkSync } from 'node:fs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
 import {
-    ASSETS_CONFIGURATION,
+    SOURCES,
     CHECKOUT,
     ASSET_READER_SCRIPT,
-    SOURCES,
+    ASSETS_CONFIGURATION,
 } from '#tests/constants/integration/cli/platform.ts';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -26,17 +26,19 @@ describe('development assets', () => {
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
-        const execute = () =>
-            Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
-                cwd,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            });
-        const missing = execute();
+        const missing = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
+            cwd,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
         expect(missing.exitCode).toBe(1);
         expect(missing.stderr.toString()).toContain('run mise run prepare:grammar');
         copyFileSync(join(ROOT, 'packages/cli/.build/swift.wasm'), join(cwd, 'packages/cli/.build/swift.wasm'));
-        const result = execute();
+        const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
+            cwd,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toStrictEqual({
             text: ASSETS_CONFIGURATION,

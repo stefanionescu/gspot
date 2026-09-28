@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';

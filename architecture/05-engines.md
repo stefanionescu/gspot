@@ -138,30 +138,32 @@ listed owner to avoid duplicate findings; standalone plugin coverage remains req
 | `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file across Swift, JavaScript, TypeScript, Python, and framework source |
 | `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                             |
 
-| Rule                                   | Reports                                                                                                                                                           |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gspot/no-trivial-functions`           | Every implemented function at or below the executable statement threshold                                                                                         |
-| `gspot/no-trivial-files`               | A file containing only forwarding, aliases, re-exports, or trivial functions                                                                                      |
-| `gspot/no-export-only-files`           | A non-index file that only re-exports                                                                                                                             |
-| `gspot/no-exported-alias-constants`    | `export const A = B` where B is an identifier or member                                                                                                           |
-| `import-x/export`                      | A name exported twice, including through two `export *`                                                                                                           |
-| `gspot/max-barrel-reexports`           | More than the limit of re-exports in one index                                                                                                                    |
-| `gspot/no-index-imports`               | An import path that names an index file or a barrel                                                                                                               |
-| `gspot/header-comments-before-imports` | A file comment placed after the import block                                                                                                                      |
-| `gspot/import-layout`                  | Imports not grouped and sorted by statement shape and length                                                                                                      |
-| `gspot/import-path-style`              | An internal import using the wrong suffix or alias style for its runtime boundary                                                                                 |
-| `gspot/no-cross-folder-imports`        | A relative import that crosses a sibling top-level folder; use the alias                                                                                          |
-| `gspot/no-cross-project-imports`       | A relative import that escapes the scope                                                                                                                          |
-| `gspot/tests-directory-contents`       | A file that is not a test beside test files                                                                                                                       |
-| `gspot/no-harness-barrel-imports`      | An import from a test-harness barrel                                                                                                                              |
-| `gspot/registry-instance-only`         | An exported `new` instance outside a `registry.ts` or the `[architecture] constants_directory`                                                                    |
-| `gspot/require-server-only`            | A server module without `import 'server-only'` (Next.js)                                                                                                          |
-| `gspot/no-client-environment`          | `process.env` in a client module beyond `NEXT_PUBLIC_*` and `NODE_ENV` (Next.js)                                                                                  |
-| `gspot/private-before-public`          | An exported declaration above a non-exported one                                                                                                                  |
-| `gspot/types-placement`                | A type alias, `interface`, or enum-replacement object outside the `[architecture] types_directory`; a runtime export, default export or non-type import inside it |
-| `gspot/import-direction`               | An import that breaks one of the four shipped direction rules (types, runtime, tests and support, config and env)                                                 |
-| `gspot/no-reexports`                   | Any re-export in application source when `[structure] reexports = "none"`                                                                                         |
-| `gspot/env-access-owner`               | `process.env` read outside the declared configuration owner                                                                                                       |
+| Rule                                   | Reports                                                                                                                                                                                                                                         |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gspot/no-trivial-functions`           | Every function whose statements, including nested callbacks, stay at or below the threshold. Only an inline value, recursion, a type predicate, an accessor, an override, a decorated or stateful constructor, or an inherited member is exempt |
+| `gspot/no-trivial-files`               | A file containing only forwarding, aliases, re-exports, or trivial functions                                                                                                                                                                    |
+| `gspot/no-export-only-files`           | A non-index file that only re-exports                                                                                                                                                                                                           |
+| `gspot/no-exported-alias-constants`    | `export const A = B` where B is an identifier or member                                                                                                                                                                                         |
+| `import-x/export`                      | A name exported twice, including through two `export *`                                                                                                                                                                                         |
+| `gspot/max-barrel-reexports`           | More than the limit of re-exports in one index                                                                                                                                                                                                  |
+| `gspot/no-index-imports`               | An import path that names an index file or a barrel                                                                                                                                                                                             |
+| `gspot/header-comments-before-imports` | A file comment placed after the import block                                                                                                                                                                                                    |
+| `gspot/import-layout`                  | Imports not grouped and sorted by statement shape and length                                                                                                                                                                                    |
+| `gspot/export-layout`                  | Export statements and the names inside export braces not sorted by length                                                                                                                                                                       |
+| `gspot/no-import-comments`             | A comment inside the import block that is not a suppression directive                                                                                                                                                                           |
+| `gspot/import-path-style`              | An internal import using the wrong suffix or alias style for its runtime boundary                                                                                                                                                               |
+| `gspot/no-cross-folder-imports`        | A relative import that crosses a sibling top-level folder; use the alias                                                                                                                                                                        |
+| `gspot/no-cross-project-imports`       | A relative import that escapes the scope                                                                                                                                                                                                        |
+| `gspot/tests-directory-contents`       | A file that is not a test beside test files                                                                                                                                                                                                     |
+| `gspot/no-harness-barrel-imports`      | An import from a test-harness barrel                                                                                                                                                                                                            |
+| `gspot/registry-instance-only`         | An exported `new` instance outside a `registry.ts` or the `[architecture] constants_directory`                                                                                                                                                  |
+| `gspot/require-server-only`            | A server module without `import 'server-only'` (Next.js)                                                                                                                                                                                        |
+| `gspot/no-client-environment`          | `process.env` in a client module beyond `NEXT_PUBLIC_*` and `NODE_ENV` (Next.js)                                                                                                                                                                |
+| `gspot/private-before-public`          | An exported declaration above a non-exported one                                                                                                                                                                                                |
+| `gspot/types-placement`                | A type alias, `interface`, or enum-replacement object outside the `[architecture] types_directory`; a runtime export, default export or non-type import inside it                                                                               |
+| `gspot/import-direction`               | An import that breaks one of the four shipped direction rules (types, runtime, tests and support, config and env)                                                                                                                               |
+| `gspot/no-reexports`                   | Any re-export in application source when `[structure] reexports = "none"`                                                                                                                                                                       |
+| `gspot/env-access-owner`               | `process.env` read outside the declared configuration owner                                                                                                                                                                                     |
 
 `gspot/newline-after-imports` and `gspot/no-imports-after-statements` are expressed by
 `import-x/newline-after-import` and `import-x/first`, which the generated config enables. The
@@ -169,6 +171,10 @@ ledger records both.
 
 Each rule has options for its limits and allowlists. The generated config sets them from
 `[limits]` and `[[ignore]]`.
+
+The trivial-function rule keeps no exemption for shared computation, contextual signatures,
+callback properties, or repeated references. A kept function needs a line suppression whose
+reason names the external contract. Unused parameters report in every position by default.
 
 ## 3. Structure engine
 

@@ -1,10 +1,11 @@
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import type { StructureReader } from '#cli/types/checks/python.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { importCycles, singletons } from '#cli/checks/python/imports.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { singletons, importCycles } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
-import { placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';
-import { exportsAtBottom, packageExports, privateBeforePublic, privatePrefixes } from '#cli/checks/python/exports.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
+import { packageExports, exportsAtBottom, privatePrefixes, privateBeforePublic } from '#cli/checks/python/exports.ts';
 
 import {
     DEFINITIONS,
@@ -12,10 +13,6 @@ import {
     DEFAULT_FUNCTION_LINES,
     DEFAULT_PACKAGE_EXPORTS,
 } from '#cli/constants/checks/python.ts';
-
-function codeLines(lines: string[], from: number, to: number): number {
-    return lines.slice(from, to).filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
-}
 
 function analysis(read: StructureReader): (input: EngineInput) => Promise<Finding[]> {
     return async (input) => {
@@ -41,7 +38,9 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
     'python-file-length': analysis(({ modules }, input) => {
         const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
         return modules.flatMap((module) => {
-            const count = codeLines(module.lines, 0, module.lines.length);
+            const count = [...module.lines].filter(
+                (line) => line.trim() !== '' && !line.trimStart().startsWith('#'),
+            ).length;
             return count <= ceiling
                 ? []
                 : [
@@ -58,7 +57,9 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
         const ceiling = input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES;
         const lines = new Map(modules.map((module) => [module.path, module.lines]));
         return functions.flatMap((fn) => {
-            const count = codeLines(lines.get(fn.path) ?? [], fn.node.startPosition.row, fn.node.endPosition.row + 1);
+            const count = (lines.get(fn.path) ?? [])
+                .slice(fn.node.startPosition.row, fn.node.endPosition.row + 1)
+                .filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
             return count <= ceiling
                 ? []
                 : [
@@ -72,7 +73,7 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
         });
     }),
     'python-trivial-function': analysis(({ functions, modules }, input) => {
-        const threshold = input.view.limit('trivial_statements', 'python') ?? 2;
+        const threshold = input.view.limit('trivial_statements', 'python') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
             ...modules

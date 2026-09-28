@@ -1,7 +1,10 @@
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { bullets, cell, referencePage, section, table } from './page.ts';
-import type { CheckSpec, Manifest } from '@gspot/cli/src/types/configurations.ts';
+import { cell, table, section, referencePage } from './page.ts';
+import type { Manifest, CheckSpec } from '@gspot/cli/src/types/configurations.ts';
+
+// The indentation of the JSON blocks a reference page shows.
+const JSON_INDENT = 2;
 
 function guideSelection(file: Manifest['rule_files'][string][number]): string {
     if (file.when === undefined) return `\`${file.path}\``;
@@ -21,8 +24,8 @@ function guideSelection(file: Manifest['rule_files'][string][number]): string {
 }
 
 function ruleExclusions(manifest: Manifest): string {
-    return bullets(
-        manifest.rules_off.map((exclusion) => {
+    return manifest.rules_off
+        .map((exclusion) => {
             const rules = exclusion.rules.map((rule) => `\`${rule}\``).join(', ');
             const files = exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'all files in the scope';
             const condition =
@@ -30,8 +33,9 @@ function ruleExclusions(manifest: Manifest): string {
                     ? ''
                     : ` when \`${exclusion.when.setting}\` is \`${JSON.stringify(exclusion.when.value)}\``;
             return `${rules} (${exclusion.tool}) for ${files}${condition}. ${exclusion.reason}`;
-        }),
-    );
+        })
+        .map((item) => `- ${item}`)
+        .join('\n');
 }
 
 function checkEnvironment(check: CheckSpec): string[] {
@@ -80,7 +84,7 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
                 configurations.length === 0
                     ? 'Select this rule explicitly for the files it governs.'
                     : `Enabled by ${configurations.join(' and ')}.`;
-            const body = `Rule: \`gspot/${name}\`.\n\n${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, 2)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, 2)}\n\`\`\`\n`;
+            const body = `Rule: \`gspot/${name}\`.\n\n${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, JSON_INDENT)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, JSON_INDENT)}\n\`\`\`\n`;
             return [
                 `plugin/${name}.md`,
                 referencePage(docs.title, docs.summary, body, `packages/eslint-plugin/src/rules/${name}.ts`),
@@ -115,9 +119,15 @@ export function configurationPage(manifest: Manifest): ReferencePage {
     ].join('');
     const body = [
         opening,
-        section('Tools', bullets(tools)),
-        section('Generated tool files', bullets(targets)),
-        section('Untracked tool files', bullets(manifest.untracked.map((path) => `\`${path}\``))),
+        section('Tools', tools.map((item) => `- ${item}`).join('\n')),
+        section('Generated tool files', targets.map((item) => `- ${item}`).join('\n')),
+        section(
+            'Untracked tool files',
+            manifest.untracked
+                .map((path) => `\`${path}\``)
+                .map((item) => `- ${item}`)
+                .join('\n'),
+        ),
         section(
             'Checks',
             table(
@@ -129,9 +139,9 @@ export function configurationPage(manifest: Manifest): ReferencePage {
                 ]),
             ),
         ),
-        section('Settings', bullets(settings)),
+        section('Settings', settings.map((item) => `- ${item}`).join('\n')),
         section('Rule exclusions', ruleExclusions(manifest)),
-        section('Rule files', bullets(rules)),
+        section('Rule files', rules.map((item) => `- ${item}`).join('\n')),
     ].join('');
     return referencePage(configuration.title, configuration.description, body, `${manifest.dir}/manifest.toml`);
 }

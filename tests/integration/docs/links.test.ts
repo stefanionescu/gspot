@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { validateSiteLinks } from '#docs/scripts/links.ts';
 

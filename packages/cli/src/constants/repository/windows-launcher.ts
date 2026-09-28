@@ -70,3 +70,7 @@ export const RESOURCE_PAYLOAD_SIZE_FIELD = 4;
 export const RCDATA_TYPE = 10;
 
 export const WORD_SIZE = 4;
+/** A little-endian 16-bit field, and one UTF-16 unit of a resource name. */
+export const SHORT_SIZE = 2;
+/** The trampoline kind byte that marks a host launcher. */
+export const HOST_KIND = 2;

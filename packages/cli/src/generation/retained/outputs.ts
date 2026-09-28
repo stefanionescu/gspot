@@ -1,7 +1,7 @@
 // Generated files withdrawn where the repository keeps its own editor or ESLint configuration.
 import { posix } from 'node:path';
 import type { Retention, GeneratedProposal } from '#cli/types/generation.ts';
-import type { EditorconfigAdoption, Policy } from '#cli/types/policy/policy.ts';
+import type { Policy, EditorconfigAdoption } from '#cli/types/policy/policy.ts';
 import { retainedConfigurationPaths } from '#cli/generation/retained/configuration.ts';
 
 // The authored configuration files of the tools that the repository keeps.

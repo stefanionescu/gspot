@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { existsSync, chmodSync, statSync } from 'node:fs';
+import { statSync, chmodSync, existsSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { JAVASCRIPT_AUTHORED_FILES } from '#tests/constants/integration/tools/generation.ts';

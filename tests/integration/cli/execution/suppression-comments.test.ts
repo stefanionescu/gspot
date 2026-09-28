@@ -1,10 +1,10 @@
 import { ESLint } from 'eslint';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { applyInlineIgnores, inlineIgnores } from '#cli/execution/ignores.ts';
+import { inlineIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 
 test.each([
     ['source.html', '<!-- gspot-ignore structure/custom -- Required interface. --!>', 'Required interface.'],

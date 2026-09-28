@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';

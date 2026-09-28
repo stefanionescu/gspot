@@ -4,7 +4,7 @@ import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { AREA_BY_LAYER, CHECKS_INSTALLED, RULES_ALONE } from '#cli/constants/agents.ts';
+import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/constants/agents.ts';
 
 function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();

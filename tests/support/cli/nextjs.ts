@@ -1,8 +1,8 @@
-import { spyOn } from 'bun:test';
 // Next.js projects for installed consumers and disposable build verification.
+import { spyOn } from 'bun:test';
 import { randomUUID } from 'node:crypto';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -13,17 +13,11 @@ import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { NextjsObserved } from '#tests/types/integration/cli/checks.ts';
-import { NEXT_CONFIG, NEXT_LAYOUT, NEXT_PAGE } from '#tests/constants/cli.ts';
-import { chmodSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/constants/cli.ts';
+import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
-const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']);
-
-/** The home page. */
-
-export const nextManifest = (reactDom: string): string =>
-    `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "${reactDom}"\n    }\n}\n`;
-/**
+const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']); /**
  * Plants the project beside this repository's node_modules, initializes it, and sets the all level.
  * @returns the sandbox and the environment its commands run with
  */
@@ -39,7 +33,7 @@ export async function installedNextProject(): Promise<{
     try {
         await createFileTree(sandbox.path, {
             '.gitignore': 'node_modules\n.next\n',
-            'package.json': nextManifest('19.1.1'),
+            'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,
             'tsconfig.json':
                 '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "DOM.Iterable", "ES2022"],\n        "noEmit": true,\n        "plugins": [{ "name": "next" }]\n    },\n    "include": ["app"]\n}\n',
             'next.config.mjs': NEXT_CONFIG,
@@ -72,19 +66,18 @@ export async function installedNextProject(): Promise<{
  * @returns the check input with repository observations
  */
 export async function prepareNextjsBuild(root: string, scope: string, check: string): Promise<EngineInput> {
-    const path = (file: string) => join(scope, file);
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(root, {
         'gspot.toml': `version = 1\nconfigurations = ["nextjs"]\n${scopeTable}`,
-        [path('package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
-        [path('tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
-        [path('next-env.d.ts')]: '// Authored type declaration\n',
-        [path('.next/types/routes.d.ts')]: '// Retained route types\n',
-        [path('src/page.ts')]: 'bad input\n',
+        [join(scope, 'package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
+        [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
+        [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',
+        [join(scope, '.next/types/routes.d.ts')]: '// Retained route types\n',
+        [join(scope, 'src/page.ts')]: 'bad input\n',
         'unrelated/private.txt': 'Preserve unrelated scope\n',
     });
     commitAll(root);
-    writeFileSync(join(root, path('.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
+    writeFileSync(join(root, join(scope, '.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
     const session = await openSession(root);
     const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === check)!;
     const input: EngineInput = engineInput(session, {
@@ -92,7 +85,7 @@ export async function prepareNextjsBuild(root: string, scope: string, check: str
         spec: spec,
         files: session.repository.files,
     });
-    chmodSync(join(root, path('tsconfig.json')), 0o640);
+    chmodSync(join(root, join(scope, 'tsconfig.json')), 0o640);
     return input;
 }
 

@@ -1,20 +1,20 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
+    statSync,
     chmodSync,
+    lstatSync,
     // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
     lchmodSync,
-    lstatSync,
+    unlinkSync,
+    symlinkSync,
     readFileSync,
     readlinkSync,
-    statSync,
-    symlinkSync,
-    unlinkSync,
     writeFileSync,
 } from 'node:fs';
 

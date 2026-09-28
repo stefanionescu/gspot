@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { sarifText } from '#cli/output/report.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';

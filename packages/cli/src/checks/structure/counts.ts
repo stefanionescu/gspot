@@ -1,23 +1,22 @@
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-import { OUTER_LEVELS, RULES } from '#cli/constants/checks/structure.ts';
-import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/types/checks/structure.ts';
+import { RULES, OUTER_LEVELS } from '#cli/constants/checks/structure.ts';
+import type { ScriptIndex, AstGrepMatch, StructureContext } from '#cli/types/checks/structure.ts';
 
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
     if (!isDepth) return matches.length;
-    return matches.reduce(
-        (deepest, match) => {
-            const containing = matches.filter(
-                (other) =>
-                    other !== match &&
-                    other.range.start.line <= match.range.start.line &&
-                    other.range.end.line >= match.range.end.line,
-            );
-            return Math.max(deepest, containing.length + OUTER_LEVELS);
-        },
-        matches.length === 0 ? 0 : 1,
-    );
+    let deepest = matches.length === 0 ? 0 : 1;
+    for (const match of matches) {
+        const containing = matches.filter(
+            (other) =>
+                other !== match &&
+                other.range.start.line <= match.range.start.line &&
+                other.range.end.line >= match.range.end.line,
+        );
+        deepest = Math.max(deepest, containing.length + OUTER_LEVELS);
+    }
+    return deepest;
 }
 
 /**

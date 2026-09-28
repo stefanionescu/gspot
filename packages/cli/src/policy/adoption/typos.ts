@@ -3,8 +3,8 @@ import { posix } from 'node:path';
 import { policySchema } from '#cli/policy/schema.ts';
 import { COMMENT_MARK } from '#cli/constants/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import { asRaw, asText, asStrings } from '#cli/policy/adoption/source.ts';
+import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());

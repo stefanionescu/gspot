@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
@@ -20,7 +20,7 @@ test.each([
         const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
         expect(carried.unread).toStrictEqual([]);
         expect(carried.tools.get(tool)?.settings[key]).toStrictEqual([
-            { paths: ['nested/**/fixtures/**'], reason: expect.any(String) },
+            { paths: ['nested/**/fixtures/**'], reason: expect.any(String) as string },
         ]);
         expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
         const unsupported = `${original}!fixtures/checked.sql\n`;

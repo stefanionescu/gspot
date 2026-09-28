@@ -1,7 +1,7 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import { LOCKFILES } from '#cli/constants/repository/repository.ts';
 import { LOCKFILE_URL } from '#cli/constants/checks/dependencies.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

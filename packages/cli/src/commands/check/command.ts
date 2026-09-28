@@ -4,11 +4,14 @@ import type { Stage } from '#cli/types/configurations.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { Command, InvalidArgumentError, Option } from 'commander';
+import { Option, Command, InvalidArgumentError } from 'commander';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
 import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/constants/commands/check.ts';
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+
+// Git gives the pre-push hook the remote name and the remote URL.
+const PUSH_ARGUMENTS = 2;
 
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {
@@ -55,6 +58,7 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
 async function readPushInput(signal: AbortSignal): Promise<string> {
     const reader = Bun.stdin.stream().getReader();
     let cancellation: Promise<void> | undefined;
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: removeEventListener needs the same function value that addEventListener received.
     const stopReading = (): void => {
         cancellation = reader.cancel();
     };
@@ -79,7 +83,7 @@ async function readPushInput(signal: AbortSignal): Promise<string> {
 
 // Turns the pre-push invocation into check options: Git's remote name and the object updates on standard input.
 async function pushOptions(options: CheckOptions, paths: string[], signal: AbortSignal): Promise<CheckOptions> {
-    if (paths.length > 0 && paths.length !== 2)
+    if (paths.length > 0 && paths.length !== PUSH_ARGUMENTS)
         throw new InvalidArgumentError('Pre-push expects the remote name and URL supplied by Git.');
     const input = await readPushInput(signal);
     return { ...options, paths: [], push: { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
@@ -114,6 +118,7 @@ async function runCheck(
     const options = optionsFrom(paths, flags, global);
     if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
     const controller = new AbortController();
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The signal handlers and the finally block all call this one cancellation.
     const cancel = (): void => {
         controller.abort();
     };

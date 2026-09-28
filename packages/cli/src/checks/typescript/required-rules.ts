@@ -1,6 +1,6 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
 import { ESLINT_FILE, LINT_CHECKS } from '#cli/constants/checks/typescript.ts';

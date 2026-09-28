@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
@@ -11,8 +11,8 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
-import { containingAll, rejection } from '#tests/support/expectations.ts';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { rejection, containingAll } from '#tests/support/expectations.ts';
+import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

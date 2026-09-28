@@ -1,10 +1,28 @@
 import { z } from 'zod';
 import semver from 'semver';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
 import { runToolCommand } from '#cli/tools/command.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
+
+// The first package manager a candidate manifest declares, reading each manifest that exists on the way.
+async function detectedTool(
+    root: string,
+    files: ConfinedRoot,
+    candidates: string[],
+): Promise<Awaited<ReturnType<typeof detectPackageManager>>> {
+    for (const path of candidates) {
+        if (files.read(path) !== undefined) readPackageManifest(root, path);
+        const detected = await detectPackageManager(join(root, dirname(path)), {
+            ignoreArgv: true,
+            includeParentDirs: false,
+        });
+        if (detected !== undefined) return detected;
+    }
+    return undefined;
+}
 
 /**
  * Validate an exact package-manager identity at the manifest boundary.
@@ -33,18 +51,7 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
                 .toSorted((left, right) => left.localeCompare(right))
                 .slice(0, 1),
         ];
-        const detected = await candidates.reduce<Promise<Awaited<ReturnType<typeof detectPackageManager>>>>(
-            async (previous, path) => {
-                const found = await previous;
-                if (found !== undefined) return found;
-                if (files.read(path) !== undefined) readPackageManifest(root, path);
-                return detectPackageManager(join(root, dirname(path)), {
-                    ignoreArgv: true,
-                    includeParentDirs: false,
-                });
-            },
-            Promise.resolve(undefined),
-        );
+        const detected = await detectedTool(root, files, candidates);
         const { name, version } = detected ?? {
             name: Bun.which('bun') === null ? 'npm' : 'bun',
             version: undefined,

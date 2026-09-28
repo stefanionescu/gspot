@@ -1,10 +1,10 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -46,31 +46,27 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     writeFileSync(join(sandbox.path, 'changed.txt'), 'bad\n');
     commit();
     writeFileSync(join(sandbox.path, 'changed.txt'), 'working tree correction\n');
-    const execute = (comparison: string) =>
-        run(['bash', '-euo', 'pipefail', '-c', step.run!], {
-            cwd: sandbox.path,
-            env: {
-                GSPOT_CI_BASE: comparison,
-                MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
-                PATH: `${join(root, '.mise/gspot')}${delimiter}${toolsPath([])}`,
-            },
-            timeoutMs: 30_000,
-        });
-    const failed = await execute(base);
+    const environment = {
+        MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
+        PATH: `${join(root, '.mise/gspot')}${delimiter}${toolsPath([])}`,
+    };
+    const argv = ['bash', '-euo', 'pipefail', '-c', step.run!];
+    const settings = { cwd: sandbox.path, timeoutMs: 30_000 };
+    const failed = await run(argv, { ...settings, env: { ...environment, GSPOT_CI_BASE: base } });
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.stdout).toContain('changed.txt');
+    expect(failed.stdout, failed.stdout + failed.stderr).toContain('changed.txt');
     expect(failed.stdout).not.toContain('legacy.txt');
     const report = join(sandbox.path, '.gspot/reports/report.json');
     const held = readFileSync(report);
     for (const invalid of ['$(touch injected)', 'f'.repeat(40)]) {
-        const refused = await execute(invalid);
+        const refused = await run(argv, { ...settings, env: { ...environment, GSPOT_CI_BASE: invalid } });
         expect(refused.code).toBe(2);
         expect(readFileSync(report)).toStrictEqual(held);
     }
     commit();
-    const corrected = await execute(base);
+    const corrected = await run(argv, { ...settings, env: { ...environment, GSPOT_CI_BASE: base } });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const firstPush = await execute('0'.repeat(40));
+    const firstPush = await run(argv, { ...settings, env: { ...environment, GSPOT_CI_BASE: '0'.repeat(40) } });
     expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
     expect(firstPush.stdout).toContain('legacy.txt');
 });

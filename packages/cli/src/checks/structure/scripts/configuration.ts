@@ -5,8 +5,8 @@ import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/constants/checks/script.ts
 import type {
     CodeLine,
     ScriptFile,
-    StructureAnalysis as Analysis,
     StructureContext,
+    StructureAnalysis as Analysis,
 } from '#cli/types/checks/structure.ts';
 
 function markProblems(

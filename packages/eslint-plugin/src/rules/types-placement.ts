@@ -2,8 +2,8 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TYPE_DECLARATIONS } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
-import type { TypesPlacementMessages, TypesPlacementOptions, TypesPlacementReporter } from '#plugin/types/rules.ts';
+import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
+import type { TypesPlacementOptions, TypesPlacementMessages, TypesPlacementReporter } from '#plugin/types/rules.ts';
 
 function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TSAsExpression {
     return (
@@ -164,11 +164,16 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         if (isAnyGlobMatch(relative, options.exempt ?? [])) return {};
         const directory = options.typesDirectory.replace(/\/$/u, '');
         const isInside = relative.startsWith(`${directory}/`) || relative.includes(`/${directory}/`);
-        const report: TypesPlacementReporter = (node, id, extra = {}) => {
-            context.report({ node, messageId: id, data: { directory, ...extra } });
-        };
         return isInside
-            ? insideListeners(report, context.sourceCode)
-            : outsideListeners(report, options.allowInterface === true, context.sourceCode);
+            ? insideListeners((node, id, extra = {}) => {
+                  context.report({ node, messageId: id, data: { directory, ...extra } });
+              }, context.sourceCode)
+            : outsideListeners(
+                  (node, id, extra = {}) => {
+                      context.report({ node, messageId: id, data: { directory, ...extra } });
+                  },
+                  options.allowInterface === true,
+                  context.sourceCode,
+              );
     },
 });

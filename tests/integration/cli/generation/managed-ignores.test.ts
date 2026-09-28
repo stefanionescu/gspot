@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { configurationManifests, gitignoreBlock, parseManifest } from '#cli/configurations/manifests.ts';
+import { parseManifest, gitignoreBlock, configurationManifests } from '#cli/configurations/manifests.ts';
 import { MANAGED_IGNORES_CONFIGURATION } from '#tests/constants/integration/cli/generation/generation.ts';
 
 test.each([true, false])(

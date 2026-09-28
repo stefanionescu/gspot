@@ -2,7 +2,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
@@ -10,12 +10,15 @@ import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.t
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
 
 import {
+    NEWLINE,
+    FILE_MODE,
     ENTRY_MODES,
     EXECUTABLE_MODE,
-    FILE_MODE,
     MATERIALIZATION_BATCH_SIZE,
-    NEWLINE,
 } from '#cli/constants/repository/revisions.ts';
+
+// A frame ends its header line and its blob with a newline each.
+const FRAME_NEWLINES = 2;
 
 const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
 
@@ -159,7 +162,7 @@ export async function gitBlobs(
     for (const gitHash of objects) {
         const { end, size } = blobFrame(output, cursor, gitHash);
         blobs.set(gitHash, output.subarray(end + 1, end + size + 1));
-        cursor = end + size + 2;
+        cursor = end + size + FRAME_NEWLINES;
     }
     if (cursor !== output.length) throw new SelectionError(['The Git object stream contains unexpected data.']);
     return blobs;

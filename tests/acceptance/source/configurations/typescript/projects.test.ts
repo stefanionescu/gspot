@@ -1,7 +1,7 @@
 // Source CLI journeys for TypeScript project references, authored compiler settings, and confined build output.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
@@ -9,7 +9,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 import {
     PROJECTS_POLICY,
@@ -73,13 +73,6 @@ for (const scope of ['', 'api/']) {
         PLANTED_TIMEOUT_MS,
     );
 }
-
-const project = (outDir: string): string =>
-    JSON.stringify({
-        compilerOptions: { composite: true, types: [], outDir },
-        include: ['*.ts'],
-    });
-
 test.each(['', 'apps/web'])(
     'Vite initialization in %s preserves authored compiler settings while both levels enforce type safety',
     async (scope) => {
@@ -153,7 +146,14 @@ test.each(['absolute', 'symlink'])(
             'gspot.toml': PROJECTS_POLICY,
             '.gitignore': 'node_modules\n.gspot\n',
             'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
-            'app/tsconfig.json': project(kind === 'absolute' ? outside.path : '../node_modules'),
+            'app/tsconfig.json': JSON.stringify({
+                compilerOptions: {
+                    composite: true,
+                    types: [],
+                    outDir: kind === 'absolute' ? outside.path : '../node_modules',
+                },
+                include: ['*.ts'],
+            }),
             'app/value.ts': 'export const count = 1;\n',
         });
         symlinkSync(kind === 'symlink' ? outside.path : INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
@@ -164,7 +164,13 @@ test.each(['absolute', 'symlink'])(
         expect(failed.code, failed.stdout + failed.stderr).toBe(kind === 'absolute' ? 2 : 0);
         expect((failed.stdout + failed.stderr).includes('Unsafe lifecycle path')).toBe(kind === 'absolute');
         expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
-        writeFileSync(join(sandbox.path, 'app/tsconfig.json'), project('./dist'));
+        writeFileSync(
+            join(sandbox.path, 'app/tsconfig.json'),
+            JSON.stringify({
+                compilerOptions: { composite: true, types: [], outDir: './dist' },
+                include: ['*.ts'],
+            }),
+        );
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');

@@ -30,6 +30,7 @@ export async function gitText(root: string, argv: string[], cancelSignal?: Abort
  * @param cancelSignal cancellation for the command
  * @returns the trimmed output
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A Git command's output as one value: the text with surrounding whitespace removed. 2 files make 6 calls; one owner keeps that behavior in one place.
 export async function gitValue(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
     const text = await gitText(root, argv, cancelSignal);
     return text.trim();
@@ -65,6 +66,7 @@ export async function gitPaths(root: string, argv: string[], cancelSignal?: Abor
  * @param cancelSignal cancellation for the command
  * @returns true for a shallow repository
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Whether the repository's history is cut by a shallow clone. 2 files make 2 calls; one owner keeps that behavior in one place.
 export async function isShallow(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
     const answer = await gitValue(root, ['rev-parse', '--is-shallow-repository'], cancelSignal);
     return answer === 'true';

@@ -1,8 +1,8 @@
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import packageManifest from '#plugin-package' with { type: 'json' };
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const distribution = join(here, 'dist');

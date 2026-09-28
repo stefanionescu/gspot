@@ -5,15 +5,15 @@ import { expandedPaths } from '#cli/repository/paths.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/constants/generation.ts';
-import type { FormatSettings, Policy } from '#cli/types/policy/policy.ts';
+import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
 
 import type {
-    NativeOverride,
-    EditorconfigOverride,
-    FormatOverride,
-    PrettierPlugin,
     ScopeFormat,
+    FormatOverride,
+    NativeOverride,
+    PrettierPlugin,
+    EditorconfigOverride,
 } from '#cli/types/generation.ts';
 
 function formatEntries(policy: Policy): ScopeFormat[] {
@@ -72,6 +72,7 @@ function editorconfigSelector(pattern: string, scope: string): string {
  * @param format the format settings, each optional
  * @returns the options Prettier reads, only for the settings given
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),
@@ -99,6 +100,7 @@ export function prettierConfiguration(
     plugins: PrettierPlugin[],
 ): Record<string, unknown> {
     const prefix = relative(dirname(targetPath), '.').replaceAll('\\', '/');
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
     // The reason documents the policy override; it is not a Prettier option.
     const { overrides: nativeOverrides = [], ...extras } = extra ?? {};

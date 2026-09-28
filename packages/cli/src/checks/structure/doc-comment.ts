@@ -1,16 +1,19 @@
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 import {
-    SHELLCHECK_COMMENT,
     WORD,
-    BASH_DOC_SECTIONS as DOC_SECTIONS,
     ENTRY_FUNCTIONS,
+    SHELLCHECK_COMMENT,
     VAGUE_SUMMARY_WORDS,
+    BASH_DOC_SECTIONS as DOC_SECTIONS,
 } from '#cli/constants/checks/structure.ts';
+
+// From a one-based line to the zero-based index of the line above it.
+const LINE_ABOVE = 2;
 
 function blockAbove(lines: string[], start: number): string[] {
     const block: string[] = [];
-    let index = start - 2;
+    let index = start - LINE_ABOVE;
     while (index >= 0) {
         const trimmed = (lines[index] ?? '').trim();
         if (!trimmed.startsWith('#')) break;

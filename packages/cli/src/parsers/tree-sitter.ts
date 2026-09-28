@@ -1,7 +1,7 @@
+// The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
-// The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
-import { Language, Parser, type Tree } from 'web-tree-sitter';
+import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_FILE } from '#cli/constants/parsers/parsers.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';

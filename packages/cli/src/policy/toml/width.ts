@@ -1,10 +1,10 @@
-import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 // Keeping every line of gspot.toml readable: an array that runs past the width goes one item per line.
+import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import { expandLongTables } from '#cli/policy/toml/tables.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
-import { DEFAULT_INDENT_WIDTH, POLICY_LINE_WIDTH } from '#cli/constants/policy/policy.ts';
+import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/constants/policy/policy.ts';
 
 function keyAssignments(blocks: TomlBlock[]): KeyValue[] {
     return blocks.flatMap((block) => {

@@ -1,6 +1,6 @@
-import { delimiter, join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
@@ -11,7 +11,7 @@ import { installTools } from '#cli/tools/install/execution.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
-import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

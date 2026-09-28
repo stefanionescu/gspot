@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { applyInlineIgnores, inlineIgnores } from '#cli/execution/ignores.ts';
+import { inlineIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {
     await using sandbox = await testdir();

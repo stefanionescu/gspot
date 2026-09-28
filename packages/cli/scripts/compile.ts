@@ -2,12 +2,12 @@ import { execaSync } from 'execa';
 import { fileURLToPath } from 'node:url';
 import { prepareInput } from './inputs.ts';
 import { releaseTargets } from './targets.ts';
-import { dirname, join, relative } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { grammarPath } from '#cli/platform/assets.ts';
-import { grammarAssets, writeEntry } from './assets.ts';
+import { writeEntry, grammarAssets } from './assets.ts';
 import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
 import { binaryNotices, dependencyNotices } from './notices.ts';
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');

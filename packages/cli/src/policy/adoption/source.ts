@@ -1,6 +1,6 @@
 import JSON5 from 'json5';
 import { parse as parseYaml } from 'yaml';
-import { extname, posix } from 'node:path';
+import { posix, extname } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
@@ -97,6 +97,7 @@ export function parseConfigurationSource(
  * @param value the parsed value
  * @returns the table, or undefined when the value is not one
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A parsed value as a table. 6 files make 15 calls; one owner keeps that behavior in one place.
 export function asRaw(value: unknown): TomlTable | undefined {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : undefined;
 }
@@ -106,6 +107,7 @@ export function asRaw(value: unknown): TomlTable | undefined {
  * @param value the parsed value
  * @returns the list, or an empty one when the value is not a list
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A parsed value as a list. 4 files make 4 calls; one owner keeps that behavior in one place.
 export function asList(value: unknown): unknown[] {
     return Array.isArray(value) ? (value as unknown[]) : [];
 }
@@ -115,6 +117,7 @@ export function asList(value: unknown): unknown[] {
  * @param value the parsed value
  * @returns the items as strings, or an empty list when the value is not a list
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A parsed value as a list of strings. 5 files make 9 calls; one owner keeps that behavior in one place.
 export function asStrings(value: unknown): string[] {
     return Array.isArray(value) ? value.map(String) : [];
 }
@@ -124,6 +127,7 @@ export function asStrings(value: unknown): string[] {
  * @param value the parsed value
  * @returns the string, or undefined when the value is not one
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A parsed value as text. 4 files make 7 calls; one owner keeps that behavior in one place.
 export function asText(value: unknown): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }

@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { symlinkSync, unlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { unlinkSync, symlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -11,15 +11,11 @@ import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { install, toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { XCODE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
-import { HOME, IMAGES, PLAN, XCODE_PROJECT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { HOME, PLAN, IMAGES, XCODE_PROJECT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const plist = (body: string): string =>
-    `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n${body}</dict>\n</plist>\n`;
-const STRINGS_FILE = (german: string): string =>
-    `{\n    "sourceLanguage": "en",\n    "strings": {\n        "hello": { "localizations": { "de": {}, "en": {} } },\n        "bye": { "localizations": { ${german}"en": {} } }\n    },\n    "version": "1.0"\n}\n`;
-const ENTITLED = plist('    <key>com.apple.developer.healthkit</key>\n    <true/>\n');
+const ENTITLED = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>com.apple.developer.healthkit</key>\n    <true/>\n</dict>\n</plist>\n`;
 
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
@@ -37,7 +33,9 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
         corrected: {},
         check: 'xcode/xcstrings',
-        files: { 'App/Localizable.xcstrings': STRINGS_FILE('') },
+        files: {
+            'App/Localizable.xcstrings': `{\n    "sourceLanguage": "en",\n    "strings": {\n        "hello": { "localizations": { "de": {}, "en": {} } },\n        "bye": { "localizations": { "en": {} } }\n    },\n    "version": "1.0"\n}\n`,
+        },
         expected: { file: 'App/Localizable.xcstrings', rule: 'missing-translation', line: 1 },
     },
     {
@@ -94,21 +92,17 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
         policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nentitlements_allowed = ["aps-environment"]\n'],
         expected: { file: 'App/App.entitlements', rule: 'entitlement', line: 5 },
         corrected: {
-            'App/App.entitlements': plist('    <key>aps-environment</key>\n    <string>development</string>\n'),
+            'App/App.entitlements': `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>aps-environment</key>\n    <string>development</string>\n</dict>\n</plist>\n`,
         },
     },
     {
         check: 'xcode/ats',
         files: {
-            'App/Info.plist': plist(
-                '    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <true/>\n    </dict>\n',
-            ),
+            'App/Info.plist': `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <true/>\n    </dict>\n</dict>\n</plist>\n`,
         },
         expected: { file: 'App/Info.plist', rule: 'arbitrary-loads', line: 7 },
         corrected: {
-            'App/Info.plist': plist(
-                '    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <false/>\n    </dict>\n',
-            ),
+            'App/Info.plist': `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <false/>\n    </dict>\n</dict>\n</plist>\n`,
         },
     },
 ];
@@ -122,10 +116,10 @@ async function installedXcodeProject() {
                 '<Scheme>\n    <TestAction>\n        <TestPlans><TestPlanReference reference="container:App.xctestplan"/></TestPlans>\n    </TestAction>\n</Scheme>\n',
             'App.xctestplan': PLAN,
             'App/Home.swift': HOME,
-            'App/Info.plist': plist('    <key>CFBundleName</key>\n    <string>App</string>\n'),
+            'App/Info.plist': `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n    <key>CFBundleName</key>\n    <string>App</string>\n</dict>\n</plist>\n`,
             'App/Base.xcconfig': '// The base settings.\nSWIFT_VERSION = 5.9\n#include "Shared.xcconfig"\n',
             'App/Shared.xcconfig': 'OTHER[sdk=iphoneos*] = value\n',
-            'App/Localizable.xcstrings': STRINGS_FILE('"de": {}, '),
+            'App/Localizable.xcstrings': `{\n    "sourceLanguage": "en",\n    "strings": {\n        "hello": { "localizations": { "de": {}, "en": {} } },\n        "bye": { "localizations": { "de": {}, "en": {} } }\n    },\n    "version": "1.0"\n}\n`,
             'App/Assets.xcassets/Contents.json': '{\n    "info": { "author": "xcode", "version": 1 }\n}\n',
             'App/Assets.xcassets/Logo.imageset/Contents.json': IMAGES,
             'App/Assets.xcassets/Logo.imageset/logo.png': 'png',

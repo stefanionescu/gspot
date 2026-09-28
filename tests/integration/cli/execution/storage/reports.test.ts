@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
 

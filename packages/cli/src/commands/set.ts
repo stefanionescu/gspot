@@ -8,16 +8,17 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { TOOL_KEY_DEPTH } from '#cli/constants/policy/policy.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
-import { directoryOf, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
+import { textEntry, directoryOf, quoteArgument } from '#cli/platform/arguments.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
-import { DECIMAL, INTEGER, RULE_KEY_DEPTH, SET_NEAR_LIMIT, STRUCTURED } from '#cli/constants/commands/commands.ts';
+import { setKey, deleteKey, appendList, scopeHolder, removeFromList } from '#cli/policy/write.ts';
+import { DECIMAL, INTEGER, STRUCTURED, RULE_KEY_DEPTH, SET_NEAR_LIMIT } from '#cli/constants/commands/commands.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
@@ -45,7 +46,7 @@ function unknownSetting(session: Session, selection: ScopeSelection, key: string
     // A setting of a configuration that lives in a scope is set in that scope; say which one.
     const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
     if (holder !== undefined) return new PolicyError([messages.settingInScope(key, holder.scope.path)]);
-    const depth = key.startsWith('tools.') ? 2 : 1;
+    const depth = key.startsWith('tools.') ? TOOL_KEY_DEPTH : 1;
     const prefix = key.split('.').slice(0, depth).join('.');
     const all = selection.surface.specs.keys().toArray();
     const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
@@ -120,7 +121,7 @@ function describeSet(
 
 function refuseRuleOff(spec: SettingSpec, o: SetOptions): void {
     if (spec.direction !== 'per-rule' || !o.items.includes('off')) return;
-    const tool = o.key.split('.', 2)[1] ?? '';
+    const tool = o.key.split('.', TOOL_KEY_DEPTH)[1] ?? '';
     const rule = o.key.split('.').slice(RULE_KEY_DEPTH).join('.');
     throw new PolicyError([messages.ruleOffRefused(`<the check that runs ${tool}>`, rule)]);
 }
@@ -194,10 +195,14 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     refuseRuleOff(match.spec, o);
     if (!o.toDefault) return writeValue(root, session, selection, o, match.spec);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    const mutation: Mutation = (raw) => {
-        deleteKey(o.key)(scopeHolder(raw, o.scope));
-    };
-    return commitPolicy(root, mutation, false, `${shown} back to the shipped default`);
+    return commitPolicy(
+        root,
+        (raw) => {
+            deleteKey(o.key)(scopeHolder(raw, o.scope));
+        },
+        false,
+        `${shown} back to the shipped default`,
+    );
 }
 
 /**

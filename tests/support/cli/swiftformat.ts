@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { rmSync, mkdtempSync, copyFileSync } from 'node:fs';
 import { emitTarget, templateInputs } from '#cli/generation/templates.ts';
 
 async function output(command: string[]): Promise<string> {

@@ -1,5 +1,8 @@
 import type { DirectiveScan } from '#cli/types/checks/nginx.ts';
-import { NGINX_ESCAPES, NGINX_PUNCTUATION, WORD_START_STOPS, WORD_STOPS } from '#cli/constants/checks/nginx.ts';
+import { WORD_STOPS, NGINX_ESCAPES, WORD_START_STOPS, NGINX_PUNCTUATION } from '#cli/constants/checks/nginx.ts';
+
+// A backslash and the character it protects.
+const ESCAPE_PAIR = 2;
 
 // The closing quote of an argument that opens at start, or `-1` when the quote never closes.
 function quotedEnd(text: string, start: number, quote: string): number {
@@ -13,9 +16,9 @@ function quotedEnd(text: string, start: number, quote: string): number {
 // The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
 function protectedUnitEnd(text: string, at: number): number {
     const char = text[at];
-    if (char === '\\') return at + 1 < text.length ? at + 2 : -1;
+    if (char === '\\') return at + 1 < text.length ? at + ESCAPE_PAIR : -1;
     if (char !== '$' || text[at + 1] !== '{') return -1;
-    const close = text.indexOf('}', at + 2);
+    const close = text.indexOf('}', at + '${'.length);
     return close === -1 ? -1 : close + 1;
 }
 

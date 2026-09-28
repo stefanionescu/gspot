@@ -5,7 +5,10 @@ import { run } from '#cli/platform/spawn.ts';
 import type { RegistryPackage } from '#tests/types/registry.ts';
 
 /** Packs actual npm packages and serves their bytes from an authenticated, isolated registry. */
-export async function createPackageRegistry(work: string, declarations: RegistryPackage[]) {
+export async function createPackageRegistry(
+    work: string,
+    declarations: RegistryPackage[],
+): Promise<{ token: string; url: string; readonly requests: number; [Symbol.asyncDispose](): Promise<void> }> {
     const packages = new Map<string, RegistryPackage & { archive: Buffer; integrity: string }>();
     for (const declaration of declarations) {
         const packed = await run(

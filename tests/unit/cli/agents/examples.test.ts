@@ -1,6 +1,6 @@
 import { parse } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { allRuleExamples, ruleExamples } from '#cli/agents/examples.ts';
+import { test, expect } from 'bun:test';
+import { ruleExamples, allRuleExamples } from '#cli/agents/examples.ts';
 
 test('every shipped Good fence has a native language owner or is explanatory text', () => {
     const examples = allRuleExamples();

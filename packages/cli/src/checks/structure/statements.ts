@@ -3,11 +3,11 @@ import type { Node } from 'web-tree-sitter';
 import type { Language, Substance } from '#cli/types/checks/structure.ts';
 
 import {
-    CONTAINERS,
-    CONTAINER_NOISE,
-    FUNCTIONS,
     NAMES,
+    FUNCTIONS,
+    CONTAINERS,
     TYPE_ALIASES,
+    CONTAINER_NOISE,
     TYPE_REFERENCES,
 } from '#cli/constants/checks/structure.ts';
 
@@ -50,13 +50,6 @@ function isSubstantialAssignment(node: Node, language: Language, threshold: numb
     const value = node.childForFieldName('right');
     return node.childForFieldName('type') !== null || (value !== null && isSubstantial(value, language, threshold));
 }
-
-// Whether a type alias names more than another type.
-function isSubstantialAlias(node: Node): boolean {
-    const value = node.childForFieldName('value') ?? node.namedChildren.at(-1);
-    return value !== undefined && !TYPE_REFERENCES.has(value.type);
-}
-
 // What each kind of node must hold to count as substantial, by node type.
 const SUBSTANCE: Record<string, Substance> = {
     expression_statement: (node, language, threshold) => {
@@ -68,19 +61,23 @@ const SUBSTANCE: Record<string, Substance> = {
         const computed = node.childForFieldName('computed_value');
         return computed === null || isSubstantial(computed, language, threshold);
     },
-    type_alias_statement: isSubstantialAlias,
-    typealias_declaration: isSubstantialAlias,
+    type_alias_statement: (node: Node): boolean => {
+        const value = node.childForFieldName('value') ?? node.namedChildren.at(-1);
+        return value !== undefined && !TYPE_REFERENCES.has(value.type);
+    },
+    typealias_declaration: (node: Node): boolean => {
+        const value = node.childForFieldName('value') ?? node.namedChildren.at(-1);
+        return value !== undefined && !TYPE_REFERENCES.has(value.type);
+    },
 };
-
-// Whether a Bash command does more than source another file.
-function isRealCommand(node: Node): boolean {
-    const name = node.childForFieldName('name')?.text;
-    return name !== 'source' && name !== '.';
-}
-
 // The node kinds one language reads differently from the others.
 const LANGUAGE_SUBSTANCE: Record<Language, Record<string, Substance>> = {
-    bash: { command: isRealCommand },
+    bash: {
+        command: (node: Node): boolean => {
+            const name = node.childForFieldName('name')?.text;
+            return name !== 'source' && name !== '.';
+        },
+    },
     python: {},
     swift: {},
 };

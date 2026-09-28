@@ -4,7 +4,7 @@ import type * as DetectLibc from 'detect-libc';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
 import releaseTargets from '#npm-targets' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { sep, join, dirname, resolve, relative, delimiter, isAbsolute } from 'node:path';
 
 // The C library of a Linux host, which selects its release target; other platforms have none.
 function hostLibc(): string | null {

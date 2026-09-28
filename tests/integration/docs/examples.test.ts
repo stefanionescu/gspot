@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';

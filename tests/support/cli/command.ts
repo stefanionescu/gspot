@@ -17,6 +17,7 @@ export const gspot = join(root, 'packages', 'cli', 'src', 'main.ts');
  * @param environment extra variables
  * @returns the exit code and both streams
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Runs gspot in a directory with color off and CI set. 143 files make 779 calls; one owner keeps that behavior in one place.
 export async function run(
     cwd: string,
     argv: string[],

@@ -1,7 +1,7 @@
+// Validate suppression comments against the repository reason policy; reporting owns the census.
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-// Validate suppression comments against the repository reason policy; reporting owns the census.
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { claimedByClaims } from '#cli/configurations/claims.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -9,8 +9,8 @@ import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import { GSPOT_SUPPRESSION } from '#cli/constants/checks/repository.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/constants/execution/execution.ts';
-import type { SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { EngineInput, Finding, SuppressionComment, SuppressionForm } from '#cli/types/checks/checks.ts';
+import type { TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
+import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks/checks.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';

@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven cases parse a migration fixture; one owner keeps its shape.
 async function migration(name: string, text: string): Promise<Migration> {
     const parsed = await sqlFile(text);
     return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };

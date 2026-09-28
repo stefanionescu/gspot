@@ -1,7 +1,7 @@
 // Planted Testing Library defects in component repositories: a debugging call fails in a test file and nowhere else.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';

@@ -3,13 +3,13 @@ import { jsonText } from '#cli/generation/json-format.ts';
 import type { JsonFormat } from '#cli/types/generation.ts';
 
 import {
-    GENERATED_JSON_KEY,
-    GENERATED_HEADER_LINE,
-    GENERATED_HEADER_LINES,
-    HEADER_LINES_CHECKED,
+    JSON_HEADER,
     HTML_EXTENSIONS,
     JSON_EXTENSIONS,
-    JSON_HEADER,
+    GENERATED_JSON_KEY,
+    HEADER_LINES_CHECKED,
+    GENERATED_HEADER_LINE,
+    GENERATED_HEADER_LINES,
     SLASH_COMMENT_EXTENSIONS,
 } from '#cli/constants/generation.ts';
 

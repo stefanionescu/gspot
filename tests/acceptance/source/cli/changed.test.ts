@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/execution/report.ts';
@@ -12,6 +12,7 @@ function git(root: string, ...argv: string[]): string {
     return result.stdout.trim();
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five commits in these journeys stage and commit the same way.
 function commit(root: string): void {
     git(root, 'add', '.');
     git(root, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Update');

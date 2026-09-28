@@ -1,33 +1,33 @@
+// Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { join } from 'node:path';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
-import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { collect, missingNote } from '#cli/execution/tool/findings.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-// Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { FILES_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import { MissingToolError, inspectTool, toolPin } from '#cli/tools/inspect.ts';
+import { toolPin, inspectTool, MissingToolError } from '#cli/tools/inspect.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
-import type { CheckResult, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
-    commandConfigurations,
-    perFileCommands,
     substitute,
+    perFileCommands,
     substituteValue,
+    commandConfigurations,
 } from '#cli/execution/command-expansion.ts';
 import type {
-    PreparedCommand,
+    Session,
     ToolRun,
     PlannedCheck,
-    Session,
+    ToolRunState,
     Substitutions,
     ToolInvocation,
-    ToolRunState,
+    PreparedCommand,
 } from '#cli/types/execution/execution.ts';
 
 function workingDirectory(session: Session, planned: PlannedCheck): string {

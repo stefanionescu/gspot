@@ -1,6 +1,6 @@
 import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { Edit, KeyValue, TomlBlock, Value } from '#cli/types/policy/policy.ts';
+import type { Edit, Value, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
 
 function isInlineTable(value: { type: string }): value is Extract<Value, { type: 'InlineTable' }> {
     return value.type === 'InlineTable';

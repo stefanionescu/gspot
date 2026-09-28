@@ -3,18 +3,16 @@ import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { CAUSE_MARKS, SHOWN_LINES, TSC_LINE } from '#cli/constants/checks/nextjs.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
 
-function inScope(input: EngineInput, path: string): string {
-    return input.scope === '' ? path : `${input.scope}/${path}`;
-}
-
+// The marked line and the one after it.
+const MARKED_LINES = 2;
 // Next.js puts the cause and its detail above the longer stack trace.
 function lastLines(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');
     const marked = lines.findIndex((line) => CAUSE_MARKS.some((mark) => line.includes(mark)));
-    const shown = marked === -1 ? lines.slice(-SHOWN_LINES) : lines.slice(marked, marked + 2);
+    const shown = marked === -1 ? lines.slice(-SHOWN_LINES) : lines.slice(marked, marked + MARKED_LINES);
     return shown.join(' ').trim();
 }
 
@@ -42,7 +40,7 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
     return [
         {
             check: input.spec.name,
-            file: inScope(input, file),
+            file: input.scope === '' ? file : `${input.scope}/${file}`,
             line: Number(groups['line']),
             column: Number(groups['column']),
             rule,
@@ -100,7 +98,7 @@ export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
         return [
             {
                 check: input.spec.name,
-                file: inScope(input, 'package.json'),
+                file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`,
                 line: 1,
                 rule: 'build',
                 message: `next build failed: ${said}`,

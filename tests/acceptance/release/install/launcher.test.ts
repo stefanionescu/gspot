@@ -1,14 +1,14 @@
-import prettier from 'prettier';
 // Installs built packages from an isolated registry: the launcher stops its owned process on a signal and uninstall restores adopted files.
+import prettier from 'prettier';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
-import { existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs';
+import { lstatSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
 
 const release = getPublishedRelease();

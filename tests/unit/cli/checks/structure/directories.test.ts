@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { directoryOf, prefixOf, stemOf } from '#cli/checks/structure/directories.ts';
+import { test, expect, describe } from 'bun:test';
+import { stemOf, prefixOf, directoryOf } from '#cli/checks/structure/directories.ts';
 
 describe('the tracked directory tree', () => {
     test('stems, prefixes and directories', () => {

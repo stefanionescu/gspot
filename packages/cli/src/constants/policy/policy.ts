@@ -77,3 +77,5 @@ export const TOOL_PREFIX = 'tools.';
 export const RESERVED_SLOTS = new Set(['extra']);
 // A module specifier that names a location on disk rather than a package, unless it is repository-relative.
 export const LOCATION_SPECIFIER = /^(?:\.|\/|\\|[A-Za-z]:)/u;
+/** A tool setting key is tools.<tool>.<slot>: two segments before the slot. */
+export const TOOL_KEY_DEPTH = 2;

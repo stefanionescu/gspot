@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { SarifReport } from '#tests/types/cli.ts';
@@ -8,14 +8,14 @@ import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
-    chmodSync,
-    existsSync,
-    mkdirSync,
-    readdirSync,
-    readFileSync,
     statSync,
-    symlinkSync,
+    chmodSync,
+    mkdirSync,
+    existsSync,
     unlinkSync,
+    readdirSync,
+    symlinkSync,
+    readFileSync,
     writeFileSync,
 } from 'node:fs';
 
@@ -238,7 +238,7 @@ test('GitLab reports retain located findings, stable fingerprints, and correctio
         (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport).runs[0]!
             .invocations[0]!.executionSuccessful,
     ).toBe(true);
-    expect(quality.map(({ fingerprint, ...entry }) => entry)).toStrictEqual(
+    expect(quality.map(({ fingerprint: _fingerprint, ...entry }) => entry)).toStrictEqual(
         findings
             .filter((finding) => finding.file !== '')
             .map((finding) => ({

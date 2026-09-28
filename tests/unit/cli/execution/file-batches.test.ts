@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 
 describe('file batches', () => {

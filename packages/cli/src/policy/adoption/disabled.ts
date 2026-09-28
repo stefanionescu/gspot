@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
+import { asRaw, asText, asStrings } from '#cli/policy/adoption/source.ts';
 import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
-import { appendSetting, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
-import type { AdoptionResult, CarryPush, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import { reasonFor, adoptedTool, appendSetting } from '#cli/policy/adoption/results.ts';
+import type { CarryPush, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 function pushCodes(push: CarryPush, codes: string): void {
     for (const code of codes.split(',')) if (code.trim() !== '') push(code.trim());

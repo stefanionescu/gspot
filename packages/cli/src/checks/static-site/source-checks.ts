@@ -2,19 +2,14 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
-    ASSET_FOLDER,
-    REPORTED_SAVINGS_SHARE,
-    REQUIRED_HEADERS,
     TEXT_SUFFIX,
+    ASSET_FOLDER,
+    REQUIRED_HEADERS,
+    REPORTED_SAVINGS_SHARE,
 } from '#cli/constants/checks/static-site.ts';
-
-function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
-
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.observations).toString('utf8');
@@ -27,7 +22,18 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     const saved = originalBytes - Buffer.byteLength(result.stdout);
     const exceeds =
         input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
-    return exceeds ? [finding(input, path, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)] : [];
+    return exceeds
+        ? [
+              {
+                  check: input.spec.name,
+                  file: path,
+                  line: 1,
+                  rule: 'svg',
+                  message: `svgo makes this file ${String(saved)} bytes smaller.`,
+                  fixable: false,
+              },
+          ]
+        : [];
 }
 
 /**
@@ -46,7 +52,14 @@ export function deadAssets(input: EngineInput): Finding[] {
             const name = file.path.slice(file.path.lastIndexOf('/') + 1);
             return texts.every((text) => !text.includes(name));
         })
-        .map((file) => finding(input, file.path, 'dead-asset', 'No page, stylesheet or script names this file.'));
+        .map((file) => ({
+            check: input.spec.name,
+            file: file.path,
+            line: 1,
+            rule: 'dead-asset',
+            message: 'No page, stylesheet or script names this file.',
+            fixable: false,
+        }));
 }
 
 /**
@@ -79,19 +92,30 @@ export function webManifest(input: EngineInput): Finding[] {
             parsed = JSON.parse(text) as typeof parsed;
         } catch (error) {
             return [
-                finding(
-                    input,
-                    file.path,
-                    'parse',
-                    error instanceof Error ? error.message : 'The manifest is not JSON.',
-                ),
+                {
+                    check: input.spec.name,
+                    file: file.path,
+                    line: 1,
+                    rule: 'parse',
+                    message: error instanceof Error ? error.message : 'The manifest is not JSON.',
+                    fixable: false,
+                },
             ];
         }
         const folder = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';
         const unnamed =
             typeof parsed.name === 'string' && parsed.name !== ''
                 ? []
-                : [finding(input, file.path, 'name', 'The manifest has no name.')];
+                : [
+                      {
+                          check: input.spec.name,
+                          file: file.path,
+                          line: 1,
+                          rule: 'name',
+                          message: 'The manifest has no name.',
+                          fixable: false,
+                      },
+                  ];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
             .filter(
@@ -100,7 +124,14 @@ export function webManifest(input: EngineInput): Finding[] {
                     statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) ===
                         undefined,
             )
-            .map((src) => finding(input, file.path, 'icon', `The icon ${src} does not exist.`));
+            .map((src) => ({
+                check: input.spec.name,
+                file: file.path,
+                line: 1,
+                rule: 'icon',
+                message: `The icon ${src} does not exist.`,
+                fixable: false,
+            }));
         return [...unnamed, ...missing];
     });
 }
@@ -138,8 +169,13 @@ export function securityHeaders(input: EngineInput): Finding[] {
                 ([name, pattern]) =>
                     !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
             )
-            .map(([name]) =>
-                finding(input, file.path, 'missing-header', `The block for /* sets no valid ${name} header.`),
-            );
+            .map(([name]) => ({
+                check: input.spec.name,
+                file: file.path,
+                line: 1,
+                rule: 'missing-header',
+                message: `The block for /* sets no valid ${name} header.`,
+                fixable: false,
+            }));
     });
 }

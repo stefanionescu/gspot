@@ -4,7 +4,7 @@ import { headerFor } from '#cli/generation/headers.ts';
 import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
-import { CACHE, CHECKOUT, DOWNLOAD, MISE, RELEASES, RUNNERS, SARIF, UPLOAD } from '#cli/constants/generation.ts';
+import { MISE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, RELEASES } from '#cli/constants/generation.ts';
 
 const ASSET_CASES = releaseTargets
     .filter((target) => target.os !== 'win32')

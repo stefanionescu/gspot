@@ -5,33 +5,36 @@ import { functionAt } from '#cli/checks/structure/parser.ts';
 
 import {
     codeLines,
-    isDirectoryConstant,
     withoutComment,
     withoutDeclaration,
+    isDirectoryConstant,
 } from '#cli/checks/structure/code-lines.ts';
 import type {
     CodeLine,
     ScriptFile,
     ScriptReport,
-    StructureAnalysis as Analysis,
     StructureContext,
+    StructureAnalysis as Analysis,
 } from '#cli/types/checks/structure.ts';
 import {
     EXIT_CALL,
-    READONLY_WORD,
+    MAIN_CALL,
     REMOVE_CALL,
+    STRICT_MODE,
+    HEADER_LINES,
     BASH_FEATURES,
     BASH_SHEBANGS,
-    DIRECTORY_CONSTANT_PIECES,
-    HEADER_LINES,
-    INHERITED_ERREXIT,
-    MAIN_CALL,
-    OTHER_INTERPRETER_SHEBANG,
+    READONLY_WORD,
     RUNTIME_HEADER,
     SOURCE_STATEMENT,
-    STRICT_MODE,
+    INHERITED_ERREXIT,
     TOP_LEVEL_ASSIGNMENT,
+    DIRECTORY_CONSTANT_PIECES,
+    OTHER_INTERPRETER_SHEBANG,
 } from '#cli/constants/checks/script.ts';
+
+// The line that must be a bare comment marker.
+const HEADER_LINE = 2;
 
 function headerProblems(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
@@ -42,7 +45,7 @@ function headerProblems(file: ScriptFile, report: ScriptReport): void {
         file.lines.length < HEADER_LINES ||
         !(third.startsWith('# ') && third.slice('# '.length).trim() !== '')
     )
-        report(2, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
+        report(HEADER_LINE, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
 }
 
 function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptReport): string | undefined {
@@ -172,18 +175,32 @@ function fileProblems(
     isConfigOwner: boolean,
 ): Finding[] {
     const findings: Finding[] = [];
-    const report: ScriptReport = (line, rule, text) => {
+    headerProblems(file, (line, rule, text) => {
         findings.push(context.report(file.path, line, rule, text));
-    };
-    headerProblems(file, report);
-    const version = runtimeVersion(file, platforms, report);
-    versionProblems(file, version, report);
+    });
+    const version = runtimeVersion(file, platforms, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
+    versionProblems(file, version, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
     const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
-    directoryProblems(code, report);
-    readonlyProblems(file, code, report);
-    if (file.isExecutable) strictModeProblems(code, version, report);
-    roleProblems(file, code, isConfigOwner, report);
-    cleanupProblems(code, report);
+    directoryProblems(code, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
+    readonlyProblems(file, code, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
+    if (file.isExecutable)
+        strictModeProblems(code, version, (line, rule, text) => {
+            findings.push(context.report(file.path, line, rule, text));
+        });
+    roleProblems(file, code, isConfigOwner, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
+    cleanupProblems(code, (line, rule, text) => {
+        findings.push(context.report(file.path, line, rule, text));
+    });
     return findings;
 }
 

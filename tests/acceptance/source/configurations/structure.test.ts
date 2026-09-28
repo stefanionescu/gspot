@@ -1,15 +1,15 @@
+// Planted repository for the structure configuration: each repository-shape check fires on its planted defect.
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-// Planted repository for the structure configuration: each repository-shape check fires on its planted defect.
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { script, runPlanted } from '#tests/support/cli/planted.ts';
 import { STRUCTURE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { KILOBYTE, OVER_LIMIT_KB } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

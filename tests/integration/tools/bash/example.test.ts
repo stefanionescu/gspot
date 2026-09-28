@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '#docs/src/components/home/bash-syntax.json';

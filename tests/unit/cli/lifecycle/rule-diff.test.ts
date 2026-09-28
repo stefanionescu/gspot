@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 

@@ -1,9 +1,10 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/constants/rules.ts';
+import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import type { ContentCheck, ImplementedFunction } from '#plugin/types/rules.ts';
-import { hasConstructorState, hasSharedComputation, statementCount } from '#plugin/syntax.ts';
-import { FORWARDING_NODES, FUNCTIONS, STRUCTURED_EXPRESSIONS } from '#plugin/constants/plugin.ts';
+import { FUNCTIONS, FORWARDING_NODES, STRUCTURED_EXPRESSIONS } from '#plugin/constants/plugin.ts';
 
 // Declarations own their schemas or the implementations they contain.
 function declarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
@@ -106,7 +107,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Entry filenames do not exempt forwarding code.',
             level: 'all',
             summary:
-                'Finds files containing only forwarding, aliases, re-exports, or trivial functions. Shared computations and fixed call arguments retain their owner. Owned structures, nested implementations, and type predicates remain substantive.',
+                'Finds files containing only forwarding, aliases, re-exports, or trivial functions. Owned structures, nested implementations, and type predicates remain substantive.',
             why: 'A file needs substantial behavior or a meaningful owned schema.',
             fix: 'Move unnecessary wrappers and aliases to their owner. Keep substantial implementations and schemas together.',
         },
@@ -118,7 +119,7 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
     },
     defaultOptions: [{ maxStatements: 2 }],
     create(context, [options]) {
-        const max = options.maxStatements ?? 2;
+        const max = options.maxStatements ?? DEFAULT_TRIVIAL_STATEMENTS;
         let hasImplementation = false;
         const substantial: ContentCheck = (node) => {
             if (FORWARDING_NODES.has(node.type) || FUNCTIONS.has(node.type)) return false;
@@ -135,10 +136,8 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                 if (
                     node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
                     hasConstructorState(node) ||
-                    (node.body.type === AST_NODE_TYPES.BlockStatement
-                        ? statementCount(node.body, context.sourceCode.visitorKeys) > max
-                        : ownsStructuredValue(node.body)) ||
-                    hasSharedComputation(node, context.sourceCode)
+                    totalStatements(node, context.sourceCode.visitorKeys) > max ||
+                    (node.body.type !== AST_NODE_TYPES.BlockStatement && ownsStructuredValue(node.body))
                 )
                     hasImplementation = true;
             },

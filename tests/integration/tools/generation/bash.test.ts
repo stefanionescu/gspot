@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
 import { containing } from '#tests/support/expectations.ts';

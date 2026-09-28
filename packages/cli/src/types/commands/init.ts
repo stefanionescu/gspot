@@ -5,18 +5,18 @@ import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
 import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 
 import type {
-    ConfigurationEvidence as Proposal,
     Manifest,
     SettingSpec,
     UnknownLanguage,
+    ConfigurationEvidence as Proposal,
 } from '#cli/types/configurations.ts';
 import type {
-    ExistingTooling,
-    ManifestFacts,
+    TomlTable,
     Repository,
     ScopeEntry,
-    TomlTable,
     TrackedFile,
+    ManifestFacts,
+    ExistingTooling,
 } from '#cli/types/repository/repository.ts';
 
 export type Planning = {

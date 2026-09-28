@@ -5,10 +5,10 @@ import { allChecks } from '#cli/configurations/listing.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/constants/commands/explain.ts';
-import type { Explanation, Facts, Found, OwnCheck } from '#cli/types/commands/explain.ts';
+import type { Facts, Found, OwnCheck, Explanation } from '#cli/types/commands/explain.ts';
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {
@@ -53,6 +53,7 @@ function rulePage(check: CheckSpec, tool: string, rule: string): string | undefi
 }
 
 // The tool a check runs: the declared tool, or the first word of its command.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }

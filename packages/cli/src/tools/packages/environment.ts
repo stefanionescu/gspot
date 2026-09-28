@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { CONNECTION_KEYS } from '#cli/constants/tools/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 // eslint-disable-next-line gspot/no-index-imports -- reason: The package defines flatten and shorthands in this file, and Vite reads the named exports only from the explicit path.
-import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
+import { flatten, shorthands, definitions } from '@npmcli/config/lib/definitions/index.js';
 
 /**
  * Read npm-compatible connection settings through npm's configuration owner, keeping credentials in memory.

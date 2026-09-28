@@ -1,20 +1,22 @@
 // Vale runs once for each extension over paths: ten Python files are one route group and one command line (K-176).
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
-const file = (path: string): TrackedFile => ({
-    path,
-    prefix: Buffer.alloc(0),
-    nature: 'source',
-    tags: ['text'],
-    executable: false,
-    size: 1,
-});
-
 test('ten Python files form one path group and one Vale command line', () => {
-    const files = Array.from({ length: 10 }, (_, index) => file(`src/module_${String(index)}.py`));
+    const files = Array.from(
+        { length: 10 },
+        (_, index) =>
+            ({
+                path: `src/module_${String(index)}.py`,
+                prefix: Buffer.alloc(0),
+                nature: 'source',
+                tags: ['text'],
+                executable: false,
+                size: 1,
+            }) satisfies TrackedFile,
+    );
     const groups = routeGroups(files);
     const python = groups.filter((group) => group.some((route) => route.path.endsWith('.py')));
     expect(python).toHaveLength(1);
@@ -29,6 +31,23 @@ test('ten Python files form one path group and one Vale command line', () => {
 });
 
 test('a CSS file and a Python file take separate groups, each with its own extension', () => {
-    const groups = routeGroups([file('site.css'), file('main.py')]);
+    const groups = routeGroups([
+        {
+            path: 'site.css',
+            prefix: Buffer.alloc(0),
+            nature: 'source',
+            tags: ['text'],
+            executable: false,
+            size: 1,
+        } satisfies TrackedFile,
+        {
+            path: 'main.py',
+            prefix: Buffer.alloc(0),
+            nature: 'source',
+            tags: ['text'],
+            executable: false,
+            size: 1,
+        } satisfies TrackedFile,
+    ]);
     expect(groups.map((group) => group.map((route) => route.path))).toStrictEqual([['site.css'], ['main.py']]);
 });

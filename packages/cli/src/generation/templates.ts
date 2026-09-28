@@ -44,6 +44,7 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
     return [...new Set([...authored, ...declared])];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
     return scopes.toSorted(
         (left, right) =>

@@ -1,7 +1,7 @@
 // The types of commands/explain in this package.
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ResolvedSetting } from '#cli/types/policy/policy.ts';
-import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 
 export type SettingScope = { scope: string; shipped: unknown; current: ResolvedSetting | undefined };
 export type Explanation = {

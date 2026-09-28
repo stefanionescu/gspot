@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { REQUIREMENT_NAME_END, SWIFT_PACKAGE_URL } from '#cli/constants/repository/repository.ts';
+import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/constants/repository/repository.ts';
 import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {
@@ -200,6 +200,7 @@ const workspacePackages = z.object({ packages: stringList });
  * @param name the name as written
  * @returns the name in lower case with one hyphen between words
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Normalize a Python distribution name for package identity comparisons. 4 files make 3 calls; one owner keeps that behavior in one place.
 export function normalizedPythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(/[._-]+/gu, '-');
 }

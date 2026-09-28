@@ -1,26 +1,27 @@
+// Findings from a tool's output: one parser per output format a manifest can declare.
 import { z } from 'zod';
 import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
-// Findings from a tool's output: one parser per output format a manifest can declare.
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/constants/evaluation.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 import {
-    markdownlintFindings,
+    typosFindings,
     ToolOutputError,
     trufflehogFindings,
-    typosFindings,
+    markdownlintFindings,
 } from '#cli/execution/output/tool-formats.ts';
 import {
-    DEFAULT_FILE_PATTERN,
-    DEFAULT_GROUPED_PATTERN,
-    DEFAULT_OUTPUT_FORMAT,
     DEFAULT_PATTERN,
-    TRAILING_BRACKET_RULE,
     TRAILING_PAREN_RULE,
+    DEFAULT_FILE_PATTERN,
+    DEFAULT_OUTPUT_FORMAT,
+    TRAILING_BRACKET_RULE,
+    DEFAULT_GROUPED_PATTERN,
 } from '#cli/constants/execution/output.ts';
 
 const eslintEntry = z.object({
@@ -29,16 +30,18 @@ const eslintEntry = z.object({
     column: z.number().int().positive().optional(),
     message: z.string(),
     fix: z.unknown().optional(),
-    severity: z.union([z.literal(1), z.literal(2)]),
+    severity: z.union([z.literal(ESLINT_WARN), z.literal(ESLINT_ERROR)]),
 });
 const eslintFiles = z.array(z.object({ filePath: z.string().min(1), messages: z.array(eslintEntry) }));
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function compiled(source: string | undefined, standard: string): RegExp {
     return new RegExp(source ?? standard, 'u');
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function stripDotSlash(path: string): string {
-    return path.startsWith('./') ? path.slice(2) : path;
+    return path.startsWith('./') ? path.slice('./'.length) : path;
 }
 
 function positioned(finding: Finding, groups: Record<string, string | undefined>): Finding {
@@ -203,6 +206,7 @@ function relativeTo(root: string, file: string): string {
  * @param cwd the tool working directory, for native relative source paths.
  * @returns the findings.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd = root): Finding[] {
     return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({
         ...finding,

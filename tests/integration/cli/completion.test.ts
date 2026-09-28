@@ -1,5 +1,5 @@
 // Shell completion knows every command and every flag the program declares (T-22).
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { buildProgram } from '#cli/commands/program.ts';

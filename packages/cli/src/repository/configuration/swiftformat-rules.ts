@@ -30,7 +30,7 @@ function option(line: string, number: number): { key: string; value: string } {
     if (line.startsWith('[') || /^--filter(?:\s|$)/iu.test(line))
         throw new Error('SwiftFormat rule comparison does not support configuration sections or filters.');
     const gap = line.search(/\s/u);
-    const key = (gap === -1 ? line.slice(2) : line.slice(2, gap)).toLowerCase();
+    const key = (gap === -1 ? line.slice('--'.length) : line.slice('--'.length, gap)).toLowerCase();
     if (!line.startsWith('--') || !/^[a-z-]+$/u.test(key))
         throw new Error(`Invalid SwiftFormat option on line ${String(number)}.`);
     return { key, value: gap === -1 ? '' : line.slice(gap).trim() };

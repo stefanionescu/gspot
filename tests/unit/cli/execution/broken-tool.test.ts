@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { hasToolError, isToolBroken, toolOutputDetail } from '#cli/execution/broken-tool.ts';
 

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { afterEach, expect, spyOn, test } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
+import { test, spyOn, expect, describe, afterEach } from 'bun:test';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
-import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
-import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { statSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 afterEach(() => {
     removeBuildFolders();
@@ -49,6 +49,7 @@ test('Swift build side effects stay in the source copy and do not become later i
     }
 });
 
+describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -77,7 +78,9 @@ test('Periphery build side effects stay in its source copy and findings name ori
         run.mockRestore();
     }
 });
+});
 
+describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
@@ -100,7 +103,9 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
         run.mockRestore();
     }
 });
+});
 
+describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj', String.raw`..\External.xcodeproj`])(
     'Xcode project %s cannot redirect an isolated build outside the scope',
     async (project) => {
@@ -130,3 +135,4 @@ test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj
         }
     },
 );
+});

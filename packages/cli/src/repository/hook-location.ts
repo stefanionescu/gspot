@@ -3,7 +3,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { STATE_DIRECTORY } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
-import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
+import { dirname, resolve, basename, relative, isAbsolute } from 'node:path';
 
 // One line of Git plumbing output, or a failure that names the unresolved reference.
 function gitOutput(cwd: string, argv: string[], description: string): string {

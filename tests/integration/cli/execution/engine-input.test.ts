@@ -1,8 +1,8 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { existsSync, rmSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { rmSync, existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -10,7 +10,7 @@ import { containing } from '#tests/support/expectations.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
-import { claimedInputs, planRun } from '#cli/execution/planning/plan.ts';
+import { planRun, claimedInputs } from '#cli/execution/planning/plan.ts';
 
 test.each([
     {

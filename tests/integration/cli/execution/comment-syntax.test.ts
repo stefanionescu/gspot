@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { inlineIgnores } from '#cli/execution/ignores.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';

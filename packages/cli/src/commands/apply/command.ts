@@ -11,7 +11,7 @@ import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import type { ApplyReport, DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { ApplyOptions, ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

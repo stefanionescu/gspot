@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { chmodSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { prepareSupabaseCheck } from '#tests/support/cli/supabase/check.ts';

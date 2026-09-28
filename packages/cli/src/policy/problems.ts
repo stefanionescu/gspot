@@ -1,7 +1,7 @@
 import * as messages from '#cli/policy/messages.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { PathSegment, PolicyProblem, Policy, Reasoned, ToolTable } from '#cli/types/policy/policy.ts';
+import type { Policy, Reasoned, ToolTable, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -13,6 +13,7 @@ function reasonedProblem(where: string, value: Reasoned<unknown> | undefined): s
     return messages.refusedReason(where, value.reason);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Eight validators turn an optional message into a located problem; one owner keeps the shape.
 function located(path: PathSegment[], text: string | undefined): PolicyProblem[] {
     return text === undefined ? [] : [{ path, message: text }];
 }
@@ -66,24 +67,23 @@ function limitProblems(policy: Policy): PolicyProblem[] {
     return problems;
 }
 
-// The command that records a reason for one naming entry.
-function namingCommand(table: string, entry: Record<string, string>): string {
-    return `gspot set naming.${table} ${quoteArgument(JSON.stringify(entry))} --reason "..."`;
-}
-
 function namingProblems(policy: Policy): PolicyProblem[] {
     if (!policy.requireReasons) return [];
     const allowed = policy.naming.allowed.flatMap((entry, index) => {
         const text = needReason(
             `naming.allowed ${entry.name}`,
             entry.reason,
-            namingCommand('allowed', { name: entry.name }),
+            `gspot set naming.allowed ${quoteArgument(JSON.stringify({ name: entry.name }))} --reason "..."`,
         );
         return located(['naming', 'allowed', index, 'reason'], text);
     });
     const removed = policy.naming.remove_groups.flatMap((entry, index) => {
         const where = `naming.remove_groups ${entry.group}`;
-        const text = needReason(where, entry.reason, namingCommand('remove_groups', { group: entry.group }));
+        const text = needReason(
+            where,
+            entry.reason,
+            `gspot set naming.remove_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
+        );
         return located(['naming', 'remove_groups', index, 'reason'], text);
     });
     const excluded = policy.naming.rules.flatMap((rule, index) => {

@@ -1,6 +1,7 @@
-import { describe, expect, test } from 'bun:test';
-import { isRulePath, lintRules } from '#cli/agents/lint.ts';
+import { test, expect, describe } from 'bun:test';
+import { lintRules, isRulePath } from '#cli/agents/lint.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 function file(path: string, body: string): { path: string; text: string } {
     return { path, text: `---\nlayer: code\nconfiguration: naming\ntitle: T\n---\n\n# T\n\n${body}` };
 }

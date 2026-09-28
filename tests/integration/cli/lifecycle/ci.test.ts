@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
 import type { TakeoverPlan } from '#cli/types/commands/init.ts';

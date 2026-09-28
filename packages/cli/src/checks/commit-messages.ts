@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
     if (planned.commits !== undefined) return planned.commits;

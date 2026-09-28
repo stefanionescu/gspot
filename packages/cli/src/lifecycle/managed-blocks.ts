@@ -1,4 +1,4 @@
-import type { BlockStyle, BlockSpan } from '#cli/types/lifecycle/lifecycle.ts';
+import type { BlockSpan, BlockStyle } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     HASH_BLOCK_END,

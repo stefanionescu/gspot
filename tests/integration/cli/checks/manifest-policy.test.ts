@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { describe, expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect, describe } from 'bun:test';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
-import { DEPENDENCIES_POLICY, MANIFEST } from '#tests/constants/integration/cli/checks.ts';
+import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/constants/integration/cli/checks.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

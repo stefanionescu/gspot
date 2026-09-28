@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
@@ -47,7 +47,7 @@ test('nested SQLFluff exclusions stay inside their configuration directory', asy
     );
     expect(carried.unread).toStrictEqual([]);
     expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([
-        { check: 'sql/sqlfluff', rule: 'LT01', paths: ['database/**'], reason: expect.any(String) },
+        { check: 'sql/sqlfluff', rule: 'LT01', paths: ['database/**'], reason: expect.any(String) as string },
     ]);
     expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
 });

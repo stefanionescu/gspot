@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
@@ -26,6 +26,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
     });
     const config = configs.find((file) => file.path === '.gspot/config/sqlfluff.cfg')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two native runs differ only in the dialect flag; one owner keeps the command line.
     const run = (dialect?: string) =>
         Bun.spawnSync(
             [

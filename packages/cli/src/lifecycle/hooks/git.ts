@@ -5,16 +5,16 @@ import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { basename, posix, relative, resolve } from 'node:path';
+import { posix, resolve, basename, relative } from 'node:path';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks/scripts.ts';
-import { EXECUTABLE_FILE, EXECUTE_BITS } from '#cli/constants/platform.ts';
+import { EXECUTE_BITS, EXECUTABLE_FILE } from '#cli/constants/platform.ts';
 import { hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
-import type { HookLocation, Repository } from '#cli/types/repository/repository.ts';
+import type { Repository, HookLocation } from '#cli/types/repository/repository.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/constants/repository/repository.ts';
-import type { PreparedHook, Installation, Restorations } from '#cli/types/lifecycle/hooks.ts';
+import type { Installation, PreparedHook, Restorations } from '#cli/types/lifecycle/hooks.ts';
 
 function rejectDifferingNativeHook(
     path: string,

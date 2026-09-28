@@ -1,10 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const versionScript = (version: string, slow: boolean): string => `#!${process.execPath}
 if (process.argv.includes('--version')) { console.log(${JSON.stringify(version)}); }
 else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_000);' : ''} }
@@ -64,6 +65,7 @@ test.each(['outdated', 'timeout', 'canceled'] as const)(
     },
 );
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const versionCommand = (version: string): string =>
     `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
 
@@ -91,6 +93,7 @@ test('an adapter observes a changed executable version on the next command inste
     expect(executed.report.exitCode).toBe(0);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
 test('cached results observe executable replacement and permissions in a reused session', async () => {

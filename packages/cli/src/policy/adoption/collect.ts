@@ -12,11 +12,11 @@ import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
 import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-import { IGNORE_PATH_KEYS, SEPARATE_TOOLS } from '#cli/constants/policy/adoption.ts';
-import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
+import { SEPARATE_TOOLS, IGNORE_PATH_KEYS } from '#cli/constants/policy/adoption.ts';
+import { carryPyright, carryDisabled, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
 import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
-import type { CarryRequest, Carrier, Owned, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import type { Owned, Carrier, CarryRequest, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 

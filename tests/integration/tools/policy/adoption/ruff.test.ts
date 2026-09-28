@@ -1,8 +1,8 @@
 import { stringify } from 'smol-toml';
 import { realpathSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
@@ -20,6 +20,7 @@ const tooling: ExistingTooling = {
 };
 
 // The findings ruff printed as JSON, with each file relative to the sandbox.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 function diagnostics(
     root: string,
     result: Pick<Bun.SyncSubprocess<'pipe', 'pipe'>, 'stdout'>,
@@ -61,6 +62,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
         packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
     const run = () =>
         Bun.spawnSync(
             [
@@ -101,6 +103,7 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
         'backend/kept.py': 'import os\n',
         'backend/statements.py': 'values = []\nif True: values.append(1); values.append(2)\n',
     });
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
     const run = (config: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', ...paths], {
             cwd: sandbox.path,
@@ -153,6 +156,7 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     await using sandbox = await testdir();
     const paths = Object.keys(INHERITED_FILES.sources);
     await createFileTree(sandbox.path, { ...INHERITED_FILES.configs, ...INHERITED_FILES.sources });
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
     const run = (config?: string) =>
         Bun.spawnSync(
             [

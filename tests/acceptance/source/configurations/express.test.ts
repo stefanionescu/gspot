@@ -1,24 +1,25 @@
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the express configuration: an OpenAPI document with a hole, a stale document, and a route with no test.
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the express configuration: an OpenAPI document with a hole, a stale document, and a route with no test.
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { EXPRESS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 import {
-    DOCUMENT,
-    EXPRESS_PACKAGE,
-    EXPRESS_POLICY,
     HEALTH,
+    DOCUMENT,
+    EXPRESS_POLICY,
+    EXPRESS_PACKAGE,
 } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 const WRITER = (text: string): string => `await Bun.write('openapi.yaml', ${JSON.stringify(text)});\n`;
 const CASES: FindingCase[] = [
     {

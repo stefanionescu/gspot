@@ -1,7 +1,7 @@
 // A planted Svelte component with loose markup: Prettier reads it through prettier-plugin-svelte, reports it, and corrects it.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';

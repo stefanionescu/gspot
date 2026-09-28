@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { symlinkSync, readFileSync } from 'node:fs';
 import { MINIMAL_POLICY } from '#tests/constants/cli.ts';
 import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 

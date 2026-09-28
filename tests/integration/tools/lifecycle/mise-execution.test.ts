@@ -1,8 +1,8 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { delimiter, dirname, join } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
+import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';

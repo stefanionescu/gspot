@@ -6,22 +6,16 @@ import type { CloneReport } from '#cli/types/checks/docs.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { FULL_PERCENTAGE } from '#cli/constants/checks/jest.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
-import { DEFAULT_CEILING, JSCPD_TOOL } from '#cli/constants/checks/docs.ts';
+import { rmSync, statSync, mkdtempSync, writeFileSync } from 'node:fs';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { JSCPD_TOOL, DEFAULT_CEILING } from '#cli/constants/checks/docs.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),
     start: z.number().int().positive(),
     end: z.number().int().positive(),
 });
-function relativePlace(root: string, place: z.infer<typeof clonePlaceSchema>): string {
-    return toPosix(
-        isAbsolute(place.name) ? relative(toNamespacedPath(root), toNamespacedPath(place.name)) : place.name,
-    );
-}
-
 export const cloneReportSchema = z.object({
     statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(FULL_PERCENTAGE) }) }),
     duplicates: z.array(
@@ -46,9 +40,18 @@ export function cloneFindings(
     const share = report.statistics.total.percentage;
     if (share <= shape.ceiling) return [];
     return report.duplicates.flatMap((clone): Finding[] => {
-        const file = relativePlace(shape.root, clone.secondFile);
+        const file = toPosix(
+            isAbsolute(clone.secondFile.name)
+                ? relative(toNamespacedPath(shape.root), toNamespacedPath(clone.secondFile.name))
+                : clone.secondFile.name,
+        );
         if (!shape.claimed.has(file)) return [];
-        const other = `${relativePlace(shape.root, clone.firstFile)}:${String(clone.firstFile.start)}`;
+        const first = toPosix(
+            isAbsolute(clone.firstFile.name)
+                ? relative(toNamespacedPath(shape.root), toNamespacedPath(clone.firstFile.name))
+                : clone.firstFile.name,
+        );
+        const other = `${first}:${String(clone.firstFile.start)}`;
         return [
             {
                 check: shape.check,

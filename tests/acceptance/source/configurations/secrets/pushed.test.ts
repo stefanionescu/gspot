@@ -1,7 +1,7 @@
 // Gitleaks and pinned TruffleHog scan pushed history for secrets removed by later commits.
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
@@ -13,8 +13,8 @@ import { containing, containingAll } from '#tests/support/expectations.ts';
 import {
     PLANTED_KEY_ID,
     PLANTED_SETTINGS,
-    prepareSecretHistory,
     createSecretVerifier,
+    prepareSecretHistory,
 } from '#tests/support/cli/secrets.ts';
 
 test(

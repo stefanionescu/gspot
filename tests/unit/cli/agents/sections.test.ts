@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { lintRules } from '#cli/agents/lint.ts';
 import { selectedSections } from '#cli/agents/sections.ts';
 

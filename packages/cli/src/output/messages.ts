@@ -2,8 +2,8 @@
 import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
+import { LEVELS } from '#cli/constants/output.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
-import { LEVELS, OUTPUT_JSON_INDENT } from '#cli/constants/output.ts';
 import { isCi, environmentVariables } from '#cli/platform/environment.ts';
 
 const state: { options: OutputOptions; instance: ConsolaInstance | undefined } = {
@@ -11,6 +11,7 @@ const state: { options: OutputOptions; instance: ConsolaInstance | undefined } =
     instance: undefined,
 };
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The instance is created once, on first use; the state object owns it.
 function consola(): ConsolaInstance {
     state.instance ??= createConsola({
         level: LEVELS.normal,
@@ -67,6 +68,7 @@ export function warn(text: string): void {
  * An error message on stderr. Always printed.
  * @param text the message
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: An error message on stderr. Always printed. 4 files make 3 calls; one owner keeps that behavior in one place.
 export function fail(text: string): void {
     process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
 }
@@ -76,6 +78,7 @@ export function fail(text: string): void {
  * @param path the output that was not saved
  * @param error the filesystem error
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reports an operational storage failure without changing the established check verdict. 2 files make 3 calls; one owner keeps that behavior in one place.
 export function reportStorageFailure(path: string, error: unknown): void {
     const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/[\r\n]+/gu, ' ');
     fail(`Could not write ${JSON.stringify(path)}: ${detail}`);
@@ -85,14 +88,7 @@ export function reportStorageFailure(path: string, error: unknown): void {
  * Output that is the command's record: stdout.
  * @param text the text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output that is the command's record: stdout. 5 files make 4 calls; one owner keeps that behavior in one place.
 export function print(text: string): void {
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
-}
-
-/**
- * Prints one object as JSON on stdout.
- * @param value the documented object of the command
- */
-export function printJson(value: unknown): void {
-    process.stdout.write(`${JSON.stringify(value, null, OUTPUT_JSON_INDENT)}\n`);
 }

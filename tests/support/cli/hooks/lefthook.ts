@@ -1,15 +1,16 @@
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PrepareLefthookResult } from '#tests/types/results.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LEFTHOOK_PUSH_ARGS } from '#tests/constants/integration/tools/hooks.ts';
 
 /** Prepares authored Lefthook configuration and existing Git hooks for native installation. */
-export async function prepareLefthook(root: string, existing: string) {
+export async function prepareLefthook(root: string, existing: string): Promise<PrepareLefthookResult> {
     await createFileTree(root, {
         'scratch/.keep': '',
         'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',

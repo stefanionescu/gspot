@@ -9,8 +9,8 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
-import type { EditorconfigAdoption, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { EmitContext, Pointer, GeneratedFile, GeneratedProposal } from '#cli/types/generation.ts';
+import type { ScopeSelection, EditorconfigAdoption } from '#cli/types/policy/policy.ts';
+import type { Pointer, EmitContext, GeneratedFile, GeneratedProposal } from '#cli/types/generation.ts';
 
 // A copied JSON pointer without the generated marker the body carries.
 function copyPointerContent(content: string, pointerPath: string): string {

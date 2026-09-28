@@ -1,9 +1,9 @@
-import { join, sep } from 'node:path';
+import { sep, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { normalizePath, readDirectory } from '#plugin/files.ts';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 describe('plugin file paths', () => {
     test('a file URL resolves the original file through spaces, percent signs, and Unicode', async () => {

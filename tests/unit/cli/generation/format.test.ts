@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 

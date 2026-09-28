@@ -1,3 +1,4 @@
+// What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
 import { pathMatcher } from '#cli/repository/paths.ts';
@@ -6,22 +7,24 @@ import type { ToolPin } from '#cli/types/configurations.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
-// What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/constants/repository/patterns.ts';
-import type { ManifestFacts, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import type { TrackedFile, ExistingTool, ManifestFacts, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import {
-    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
     LINT_PAIRS,
     LINT_WORDS,
     MISE_FILES,
-    OTHER_CI_FILES,
     RUNNER_LOCKS,
     TASK_RUNNERS,
+    OTHER_CI_FILES,
+    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/constants/repository/repository.ts';
+
+// In "<runner> run <task>", the task sits two words after the runner.
+const TASK_AFTER_RUN = 2;
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function runsLint(command: string): boolean {
@@ -31,7 +34,7 @@ function runsLint(command: string): boolean {
         const next = words[index + 1];
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
         if (!TASK_RUNNERS.has(word)) return false;
-        const task = next === 'run' ? words[index + 2] : next;
+        const task = next === 'run' ? words[index + TASK_AFTER_RUN] : next;
         return task === 'lint' || task === 'gspot:check';
     });
 }

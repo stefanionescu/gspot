@@ -1,14 +1,14 @@
 // Package publication and installation retain target completeness, version identity, and legal payloads.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import type { PublishedManifest } from '#tests/types/release.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
-import { copyFileSync, lstatSync, readFileSync, rmSync } from 'node:fs';
+import { rmSync, lstatSync, copyFileSync, readFileSync } from 'node:fs';
 import { getPublishedRelease } from '#tests/support/release/published.ts';
 import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { environment, host, preparePackages, root } from '#tests/support/release/packages.ts';
+import { host, root, environment, preparePackages } from '#tests/support/release/packages.ts';
 
 test(
     'publication refuses a missing target before upload and accepts the restored target',

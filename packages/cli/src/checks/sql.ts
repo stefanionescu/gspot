@@ -1,16 +1,17 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
-import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
+import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import type { EngineInput, Finding, FunctionOption, SqlAnalysis, SqlSource } from '#cli/types/checks/checks.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import type { Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks/checks.ts';
 
 import {
-    BLOCK_COMMENT,
+    SQL_TOKENS,
     LINE_COMMENT,
+    BLOCK_COMMENT,
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
     SHIPPED_PARAMETER_LIMIT,
-    SQL_TOKENS,
 } from '#cli/constants/checks/checks.ts';
 
 function sources(input: EngineInput): SqlSource[] {
@@ -77,6 +78,7 @@ async function bodyStatements(
 }
 
 // A finding at a statement of the source.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two function checks build the finding with its statement position; one owner keeps that shape.
 function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, text: string): Finding {
     const { input, source } = analysis;
     return {
@@ -221,7 +223,7 @@ export function sqlFileLength(input: EngineInput): Finding[] {
  */
 export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const threshold = input.view.limit('trivial_statements', 'sql') ?? 2;
+    const threshold = input.view.limit('trivial_statements', 'sql') ?? DEFAULT_TRIVIAL_STATEMENTS;
     const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
     for (const source of sources(input)) {
         const parsed = await sqlFile(source.text, input.observations);

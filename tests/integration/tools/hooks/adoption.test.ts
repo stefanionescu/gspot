@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';

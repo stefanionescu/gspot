@@ -5,7 +5,9 @@ import { run } from '#cli/platform/spawn.ts';
 import { RUFF_WHEEL } from '#tests/constants/integration/tools/python.ts';
 
 /** Serves a wheel containing the pinned Ruff executable and a relocatable console entry point. */
-export async function createPythonRegistry(work: string) {
+export async function createPythonRegistry(
+    work: string,
+): Promise<{ pinned: string; url: string; [Symbol.asyncDispose](): Promise<void> }> {
     const binary = Bun.which('ruff');
     if (binary === null) throw new Error('The pinned Ruff executable is unavailable.');
     const version = await run([binary, '--version'], { cwd: work });

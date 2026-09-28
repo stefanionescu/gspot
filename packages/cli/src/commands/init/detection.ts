@@ -1,18 +1,11 @@
 // The header init prints: what it found in the repository, one row per kind.
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
-import type { ConfigurationEvidence as Proposal } from '#cli/types/configurations.ts';
-import { DETECTION_LABEL_WIDTH, GAP_WIDTH, KIND_ROWS } from '#cli/constants/commands/init.ts';
+import { GAP_WIDTH, KIND_ROWS, DETECTION_LABEL_WIDTH } from '#cli/constants/commands/init.ts';
 
 const GAP = ' '.repeat(GAP_WIDTH);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten detection rows share this shape; one owner keeps the column layout.
 function row(label: string, items: string[]): string | undefined {
     return items.length === 0 ? undefined : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(GAP)}`;
-}
-
-function proposalsOfKind(summary: DetectionSummary, kind: string): Proposal[] {
-    return summary.proposals.filter(
-        (proposal) =>
-            proposal.kind === kind && summary.manifests.get(proposal.configuration)?.configuration.default !== true,
-    );
 }
 
 function scopesRow(summary: DetectionSummary): string | undefined {
@@ -57,15 +50,25 @@ function ownershipRows(summary: DetectionSummary): string[] {
  * @returns the text, ending with a blank line when tooling was found
  */
 export function detectionText(summary: DetectionSummary): string {
-    const languages = proposalsOfKind(summary, 'language').map(
-        (proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`,
-    );
+    const languages = summary.proposals
+        .filter(
+            (proposal) =>
+                proposal.kind === 'language' &&
+                summary.manifests.get(proposal.configuration)?.configuration.default !== true,
+        )
+        .map((proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`);
     const rows = [
         row('languages', languages),
         ...KIND_ROWS.map(({ label, kind }) =>
             row(
                 label,
-                proposalsOfKind(summary, kind).map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
+                summary.proposals
+                    .filter(
+                        (proposal) =>
+                            proposal.kind === kind &&
+                            summary.manifests.get(proposal.configuration)?.configuration.default !== true,
+                    )
+                    .map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
             ),
         ),
         scopesRow(summary),

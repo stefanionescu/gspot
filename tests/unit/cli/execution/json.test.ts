@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parseJson } from '#cli/execution/output/json.ts';
 
 test('parseJson > a flat list maps its fields to a finding', () => {

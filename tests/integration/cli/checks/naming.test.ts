@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -27,11 +27,6 @@ configurations = ["python"]
 allowed = [{name = "remote_record", reason = "The external Python interface fixes this name."}]
 `;
 const MISMATCHED_POLICY = SCOPE_POLICY.replace('name = "remote_record"', 'name = "remoteRecord"');
-
-function namingCasePolicy(name: string): string {
-    return `version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["${name}"]\n`;
-}
-
 test('external property allowances retain adjacent local signature findings through the CLI', async () => {
     await using sandbox = await testdir();
     const source =
@@ -147,7 +142,7 @@ test.each(['constructor', 'toString', '__proto__'])(
     async (caseName) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': namingCasePolicy(caseName),
+            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["${caseName}"]\n`,
             'source.ts': 'export const bad_name = 1;\n',
         });
         const command = ['check', '--no-cache', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
@@ -156,7 +151,10 @@ test.each(['constructor', 'toString', '__proto__'])(
         const report = reportSchema.parse(JSON.parse(failed.stdout));
         expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail', 'fail']);
         expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
-        await Bun.write(join(sandbox.path, 'gspot.toml'), namingCasePolicy('camel'));
+        await Bun.write(
+            join(sandbox.path, 'gspot.toml'),
+            `version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["camel"]\n`,
+        );
         const neighbor = await run(sandbox.path, command);
         expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);
         expect(

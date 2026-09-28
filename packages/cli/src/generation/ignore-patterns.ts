@@ -57,17 +57,15 @@ function suffixes(pattern: string, scope: string): string[] {
     const anchored = bare.startsWith('/') || bare.includes('/');
     const parts = bare.replace(/^\//u, '').split('/');
     if (!anchored) parts.unshift('**');
-    const states = scope.split('/').reduce(
-        (current, name) => {
-            const next = [...current].flatMap((index) => {
-                const part = parts[index];
-                if (part === undefined || part === '**') return [index];
-                return picomatch.isMatch(name, part, { dot: true, noext: true, nonegate: true }) ? [index + 1] : [];
-            });
-            return closure(new Set(next), parts);
-        },
-        closure(new Set([0]), parts),
-    );
+    let states = closure(new Set([0]), parts);
+    for (const name of scope.split('/')) {
+        const next = [...states].flatMap((index) => {
+            const part = parts[index];
+            if (part === undefined || part === '**') return [index];
+            return picomatch.isMatch(name, part, { dot: true, noext: true, nonegate: true }) ? [index + 1] : [];
+        });
+        states = closure(new Set(next), parts);
+    }
     if (states.has(parts.length)) return ['/**'];
     return [...states].map((index) => `/${parts.slice(index).join('/')}${directory ? '/' : ''}`);
 }

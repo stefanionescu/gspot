@@ -1,16 +1,16 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 
 import {
     EDITORCONFIG,
-    EDITORCONFIG_CARRY_FILES,
     PRETTIER_CARRY_SOURCE,
+    EDITORCONFIG_CARRY_FILES,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test.each([false, true])(

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
@@ -14,6 +14,7 @@ const JAVASCRIPT_LANGUAGES = JSON.stringify({
     extractors: { javascript: [{}] },
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const policy = (value: string) =>
     `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
 

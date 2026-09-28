@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { prepareLefthook } from '#tests/support/cli/hooks/lefthook.ts';
 import { readHookStatus, installHookTool } from '#tests/support/cli/hooks/projects.ts';
-import { existsSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, renameSync, unlinkSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['custom', 'native'])(
     'Lefthook refuses malformed settings before installation and installs offline after correction with %s hooks',

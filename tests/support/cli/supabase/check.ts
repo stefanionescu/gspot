@@ -5,13 +5,14 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
+import type { PrepareSupabaseCheckResult } from '#tests/types/results.ts';
 
 /** Isolates the external Supabase executable while preserving real freshness planning and execution. */
 export async function prepareSupabaseCheck(
     root: string,
     scope: string,
     outcome: Awaited<ReturnType<typeof processes.run>>,
-) {
+): Promise<PrepareSupabaseCheckResult> {
     const prefix = scope === '' ? '' : `${scope}/`;
     const policy =
         scope === ''

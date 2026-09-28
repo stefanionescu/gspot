@@ -1,12 +1,13 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { shebangInterpreter } from '#cli/repository/shebang.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { claimedByClaims, isClaimed } from '#cli/configurations/claims.ts';
-import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';
+import { isClaimed, claimedByClaims } from '#cli/configurations/claims.ts';
+import { unknownLanguages, detectConfigurations } from '#cli/configurations/detect.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     path,
     prefix: Buffer.alloc(0),

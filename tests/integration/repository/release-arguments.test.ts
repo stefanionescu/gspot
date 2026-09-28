@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { preparePublication, runPublication } from '#tests/support/release/arguments.ts';
+import { runPublication, preparePublication } from '#tests/support/release/arguments.ts';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 describe('build script arguments', () => {
@@ -135,13 +135,6 @@ describe('plugin build arguments', () => {
             'packages/eslint-plugin/dist/plugin.js': '// existing plugin\n',
         });
         const before = treeContents(sandbox.path);
-        const execute = (args: string[]) =>
-            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/eslint-plugin/build.ts'), ...args], {
-                cwd: sandbox.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-                timeout: 10_000,
-            });
         for (const args of [
             ['--checks'],
             ['unexpected'],
@@ -149,12 +142,28 @@ describe('plugin build arguments', () => {
             ['--version=true'],
             ['--help', 'unexpected'],
         ]) {
-            const result = execute(args);
+            const result = Bun.spawnSync(
+                [process.execPath, join(sandbox.path, 'packages/eslint-plugin/build.ts'), ...args],
+                {
+                    cwd: sandbox.path,
+                    stdout: 'pipe',
+                    stderr: 'pipe',
+                    timeout: 10_000,
+                },
+            );
             expect(result.exitCode, result.stderr.toString()).toBe(2);
             expect(treeContents(sandbox.path)).toStrictEqual(before);
         }
         for (const flag of ['--help', '--version']) {
-            const result = execute([flag]);
+            const result = Bun.spawnSync(
+                [process.execPath, join(sandbox.path, 'packages/eslint-plugin/build.ts'), flag],
+                {
+                    cwd: sandbox.path,
+                    stdout: 'pipe',
+                    stderr: 'pipe',
+                    timeout: 10_000,
+                },
+            );
             expect(result.exitCode, result.stderr.toString()).toBe(0);
             expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
             expect(treeContents(sandbox.path)).toStrictEqual(before);

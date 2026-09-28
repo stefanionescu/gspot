@@ -5,20 +5,16 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
-    COMPATIBILITY_DATE,
-    HTTP_HEADER_LINE,
-    REDIRECT_PARTS,
-    STATUS_CODES,
     TYPES_FILE,
+    STATUS_CODES,
+    REDIRECT_PARTS,
+    HTTP_HEADER_LINE,
+    COMPATIBILITY_DATE,
 } from '#cli/constants/checks/checks.ts';
-
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
 
 function named(input: EngineInput, name: string): string[] {
     return input.files
@@ -124,9 +120,14 @@ export function redirectProblems(entries: { text: string; number: number }[]): {
  */
 export function headersSyntax(input: EngineInput): Finding[] {
     return named(input, '_headers').flatMap((path) =>
-        headerProblems(lines(input, path)).map((entry) =>
-            finding(input, path, entry.number, 'headers-syntax', entry.text),
-        ),
+        headerProblems(lines(input, path)).map((entry) => ({
+            check: input.spec.name,
+            file: path,
+            line: entry.number,
+            rule: 'headers-syntax',
+            message: entry.text,
+            fixable: false,
+        })),
     );
 }
 
@@ -137,9 +138,14 @@ export function headersSyntax(input: EngineInput): Finding[] {
  */
 export function redirectsSyntax(input: EngineInput): Finding[] {
     return named(input, '_redirects').flatMap((path) =>
-        redirectProblems(lines(input, path)).map((entry) =>
-            finding(input, path, entry.number, 'redirects-syntax', entry.text),
-        ),
+        redirectProblems(lines(input, path)).map((entry) => ({
+            check: input.spec.name,
+            file: path,
+            line: entry.number,
+            rule: 'redirects-syntax',
+            message: entry.text,
+            fixable: false,
+        })),
     );
 }
 
@@ -152,23 +158,35 @@ export function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
-        if (problem !== undefined) return [finding(input, path, 1, 'parse', problem)];
+        if (problem !== undefined)
+            return [{ check: input.spec.name, file: path, line: 1, rule: 'parse', message: problem, fixable: false }];
         const unnamed =
             typeof table['name'] === 'string'
                 ? []
-                : [finding(input, path, 1, 'name', 'The configuration names no worker.')];
+                : [
+                      {
+                          check: input.spec.name,
+                          file: path,
+                          line: 1,
+                          rule: 'name',
+                          message: 'The configuration names no worker.',
+                          fixable: false,
+                      },
+                  ];
         const date = table['compatibility_date'];
         const undated =
             typeof date === 'string' && COMPATIBILITY_DATE.test(date)
                 ? []
                 : [
-                      finding(
-                          input,
-                          path,
-                          1,
-                          'compatibility-date',
-                          'The configuration pins no compatibility_date, so the runtime behavior changes under it.',
-                      ),
+                      {
+                          check: input.spec.name,
+                          file: path,
+                          line: 1,
+                          rule: 'compatibility-date',
+                          message:
+                              'The configuration pins no compatibility_date, so the runtime behavior changes under it.',
+                          fixable: false,
+                      },
                   ];
         return [...unnamed, ...undated];
     });
@@ -192,15 +210,14 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
         const findings: Finding[] = [];
         for (const path of paths)
             if (await isTypesFileStale(isolated, path))
-                findings.push(
-                    finding(
-                        input,
-                        path,
-                        1,
-                        'stale-types',
-                        'wrangler types writes this file differently. Run it and commit the result.',
-                    ),
-                );
+                findings.push({
+                    check: input.spec.name,
+                    file: path,
+                    line: 1,
+                    rule: 'stale-types',
+                    message: 'wrangler types writes this file differently. Run it and commit the result.',
+                    fixable: false,
+                });
         return findings;
     } finally {
         await rm(scratch, { recursive: true, force: true });

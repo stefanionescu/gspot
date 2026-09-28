@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
@@ -239,9 +239,10 @@ test.each([
         code === 2 ? await run(directory.path, [...args, '--reason', 'Repository requirements changed.']) : result;
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const parsed = Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8'));
-    const written = key.split('.').reduce<unknown>((value, part) => {
-        expect(value).toBeObject();
-        return (value as Record<string, unknown>)[part];
-    }, parsed);
+    let written: unknown = parsed;
+    for (const part of key.split('.')) {
+        expect(written).toBeObject();
+        written = (written as Record<string, unknown>)[part];
+    }
     expect(written).toStrictEqual(expected);
 });

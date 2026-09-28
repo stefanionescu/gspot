@@ -1,10 +1,10 @@
+// Planted repositories: what init refuses before it writes.
 import { existsSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-// Planted repositories: what init refuses before it writes.
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';

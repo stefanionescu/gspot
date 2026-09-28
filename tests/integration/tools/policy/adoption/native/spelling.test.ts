@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { prepareSpelling } from '#tests/support/cli/spelling.ts';
 
 test.each([false, true])(
@@ -14,6 +14,7 @@ test.each([false, true])(
         expect(session.policyFiles.policy.scopes).toStrictEqual([
             { path: 'nested', configurations: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
         const run = (config: string, path: string) =>
             Bun.spawnSync(
                 [
@@ -49,6 +50,7 @@ test.each([false, true])(
     async (existing) => {
         await using sandbox = await testdir();
         const { outputs } = await prepareSpelling(sandbox.path, existing);
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
         const native = (path: string) =>
             Bun.spawnSync(['typos', '--force-exclude', path], {
                 cwd: join(sandbox.path, 'nested'),

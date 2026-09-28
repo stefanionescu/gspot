@@ -1,5 +1,5 @@
-import { parseSql } from '#cli/parsers/sql/parser.ts';
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
+import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { sqlSource } from '#cli/parsers/sql/source.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';

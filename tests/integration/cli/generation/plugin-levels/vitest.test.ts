@@ -1,6 +1,6 @@
 import type { ESLint } from 'eslint';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { VITEST_FILES } from '#tests/constants/integration/cli/generation/plugin-levels.ts';

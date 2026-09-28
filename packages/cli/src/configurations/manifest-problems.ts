@@ -4,13 +4,7 @@ import semver from 'semver';
 import { configurationName } from '#cli/configurations/targets.ts';
 import { SETTING_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
 import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/constants/configurations.ts';
-import type { CheckRule, Checks, Settings, Manifest, RawCheck, RawManifest } from '#cli/types/configurations.ts';
-
-// Whether a check command carries a placeholder.
-function commandHas(check: RawCheck, placeholder: string): boolean {
-    return check.command?.includes(placeholder) === true;
-}
-
+import type { Checks, Manifest, RawCheck, Settings, CheckRule, RawManifest } from '#cli/types/configurations.ts';
 // Each way a check declaration contradicts itself, with the sentence that reports it.
 const CHECK_RULES: CheckRule[] = [
     {
@@ -19,15 +13,16 @@ const CHECK_RULES: CheckRule[] = [
     },
     {
         applies: (check) =>
-            check.file_prefix !== undefined && (check.runs !== 'per-file-list' || !commandHas(check, '{files}')),
+            check.file_prefix !== undefined &&
+            (check.runs !== 'per-file-list' || check.command?.includes('{files}') !== true),
         problem: (check) =>
             `check ${check.name} prefixes file arguments and requires a per-file-list command with {files}.`,
     },
     {
         applies: (check) => {
             if (check.isolated_files !== true) return false;
-            const perFile = check.runs === 'per-file-list' && commandHas(check, '{files}');
-            const perScope = check.runs === 'per-scope' && commandHas(check, '{root}');
+            const perFile = check.runs === 'per-file-list' && check.command?.includes('{files}') === true;
+            const perScope = check.runs === 'per-scope' && check.command?.includes('{root}') === true;
             return !perFile && !perScope;
         },
         problem: (check) =>

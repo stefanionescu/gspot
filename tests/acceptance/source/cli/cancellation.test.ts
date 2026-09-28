@@ -1,14 +1,14 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { delimiter, dirname, join } from 'node:path';
+import { join, dirname, delimiter } from 'node:path';
 import type { SarifReport } from '#tests/types/cli.ts';
 import { git, gitOutput } from '#tests/support/cli/git.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
+import { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/support/cli/process.ts';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
 const CHILD_OPTIONS = { stdout: 'pipe', stderr: 'pipe', timeout: 12_000, killSignal: 'SIGKILL' } as const;

@@ -1,7 +1,7 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
@@ -10,7 +10,7 @@ import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { getPublishedRelease } from '#tests/support/release/published.ts';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { prepareFormatterConsumer, prepareNativeConsumer } from '#tests/support/release/tools.ts';
+import { prepareNativeConsumer, prepareFormatterConsumer } from '#tests/support/release/tools.ts';
 
 const release = getPublishedRelease();
 

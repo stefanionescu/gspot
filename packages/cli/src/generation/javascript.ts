@@ -2,7 +2,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { TRAILING_STAR } from '#cli/constants/generation.ts';
-import { dirname, join, relative, resolve } from 'node:path';
+import { join, dirname, resolve, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 
@@ -26,7 +26,7 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
         const found = importTarget(target);
         if (found === undefined) continue;
         if (!found.startsWith('./')) continue;
-        const alias = found.slice(2).replace(TRAILING_STAR, '');
+        const alias = found.slice('./'.length).replace(TRAILING_STAR, '');
         aliases[pattern.replace(TRAILING_STAR, '')] = `${prefix}${alias}`;
     }
     return aliases;

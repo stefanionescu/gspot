@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import type { Folder, Plist, ProjectEntry, Token, XcodeProject } from '#cli/types/checks/xcode.ts';
-import { BUILD_SETTING, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION, WORD_CHARACTER } from '#cli/constants/checks/xcode.ts';
+import type { Plist, Token, Folder, ProjectEntry, XcodeProject } from '#cli/types/checks/xcode.ts';
+import { BUILD_SETTING, WORD_CHARACTER, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION } from '#cli/constants/checks/xcode.ts';
 
 const entrySchema = z.object({
     isa: z.string(),
@@ -49,9 +49,9 @@ function skippedEnd(text: string, at: number): number {
         return end === -1 ? text.length : end + 1;
     }
     if (text[at + 1] !== '*') return at;
-    const end = text.indexOf('*/', at + 2);
+    const end = text.indexOf('*/', at + '/*'.length);
     if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
-    return end + 2;
+    return end + '*/'.length;
 }
 
 // The quoted text, punctuation, or word at at, with the index past it.
@@ -88,6 +88,7 @@ function tokens(text: string): Token[] {
 function parse(text: string): Plist {
     const input = tokens(text);
     let at = 0;
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
     const is = (value: string): boolean => input[at]?.quoted === false && input[at]?.text === value;
     const take = (value: string): void => {
         if (!is(value))

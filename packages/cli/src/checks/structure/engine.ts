@@ -18,11 +18,11 @@ import { scriptBoundaries } from '#cli/checks/structure/scripts/boundaries.ts';
 import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
 import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
 import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts';
-import { privateBeforePublic, privatePrefix } from '#cli/checks/structure/visibility.ts';
-import type { StructureAnalysis, StructureContext } from '#cli/types/checks/structure.ts';
-import { fileDirectoryCollision, fileLength } from '#cli/checks/structure/file-layout.ts';
-import { scriptConfigDefaults, scriptConfigGuards } from '#cli/checks/structure/scripts/configuration.ts';
-import { DOCUMENT_EXTENSIONS, COUNT_ANALYSES, GSPOT_DIRECTORY, SCRIPT_TAG } from '#cli/constants/checks/structure.ts';
+import { privatePrefix, privateBeforePublic } from '#cli/checks/structure/visibility.ts';
+import type { StructureContext, StructureAnalysis } from '#cli/types/checks/structure.ts';
+import { fileLength, fileDirectoryCollision } from '#cli/checks/structure/file-layout.ts';
+import { scriptConfigGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
+import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/constants/checks/structure.ts';
 
 const ANALYSES: Record<string, StructureAnalysis> = {
     'single-file-folder': singleFileFolder,
@@ -82,7 +82,8 @@ function contextFor(input: EngineInput): StructureContext {
 export function structureEngine(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';
     const analysis: StructureAnalysis | undefined = COUNT_ANALYSES.has(name)
-        ? async (context, scripts) => countFindings(name, context, await scripts())
+        ? // eslint-disable-next-line gspot/no-trivial-functions -- reason: The count analyses share one adapter, and the ternary needs a function value for it.
+          async (context, scripts) => countFindings(name, context, await scripts())
         : ANALYSES[name];
     if (analysis === undefined) throw new Error(`No structure analysis is called ${name}.`);
     return async (input) => {

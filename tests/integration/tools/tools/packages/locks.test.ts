@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
@@ -10,9 +10,9 @@ import { gspot as CLI } from '#tests/support/cli/command.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { chmodSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, PACKAGE_PROJECTS } from '#tests/constants/integration/tools/packages.ts';
-import { createPackageProject, readPackageInputs } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s refuses stale locks without changing ownership and reports drift',

@@ -1,11 +1,6 @@
 import type { SwiftFunction } from '#cli/types/checks/swift.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
-
-function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {
-    return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
-}
-
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -17,11 +12,12 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
         const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'swift');
         return count <= threshold
             ? [
-                  problem(
-                      fn,
-                      'trivial-function',
-                      `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
-                  ),
+                  {
+                      file: fn.path,
+                      line: fn.node.startPosition.row + 1,
+                      rule: 'trivial-function',
+                      text: `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
+                  },
               ]
             : [];
     });
@@ -53,7 +49,14 @@ export function duplicateFunctions(functions: SwiftFunction[], minimum: number):
             const [first] = group;
             if (first === undefined) return [];
             const places = group.map((fn) => `${fn.path}:${String(fn.node.startPosition.row + 1)} (${fn.name})`);
-            return [problem(first, 'same-body', `These functions have the same body: ${places.join(', ')}.`)];
+            return [
+                {
+                    file: first.path,
+                    line: first.node.startPosition.row + 1,
+                    rule: 'same-body',
+                    text: `These functions have the same body: ${places.join(', ')}.`,
+                },
+            ];
         })
         .toArray();
 }

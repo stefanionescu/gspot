@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, writeFileSync } from 'node:fs';
 
 describe('natures', () => {
     test('declarations win, then .gitattributes, then banners, then vendored directories, then the sniff', async () => {

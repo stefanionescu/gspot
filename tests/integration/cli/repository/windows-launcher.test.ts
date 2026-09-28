@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';
 import { INTERPRETERS, WINDOWS_LAUNCHER_LAYOUTS } from '#tests/constants/integration/cli/repository.ts';

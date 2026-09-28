@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { chmodSync, copyFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 
 test('source launcher preserves directory, arguments, input, and exit status', async () => {
     await using sandbox = await testdir();

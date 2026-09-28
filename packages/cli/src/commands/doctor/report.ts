@@ -12,7 +12,7 @@ import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
-import { CHANGE_SECTIONS, COLUMN_WIDTHS, DISPLAY_LIMITS, VERSION_GAP } from '#cli/constants/commands/doctor.ts';
+import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/constants/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;
@@ -83,26 +83,20 @@ function partialLines(report: DoctorReport): string[] {
     return [`partly checked files     ${String(partial.length)}`, ...lines, ''];
 }
 
-function sectionLines(title: string, rows: string[]): string[] {
-    return rows.length === 0 ? [] : [title, ...rows, ''];
-}
-
 function changeLines(changes: ChangeReport): string[] {
-    const sections = CHANGE_SECTIONS.map(({ key, title }) =>
-        sectionLines(
-            title,
-            changes[key].map((entry) => {
-                const name = ('configuration' in entry ? entry.configuration : entry.path).padEnd(COLUMN_WIDTHS.name);
-                const detail = ('evidence' in entry ? entry.evidence : entry.note).padEnd(COLUMN_WIDTHS.note);
-                return `  ${name} ${detail} ${entry.command}`;
-            }),
-        ),
-    );
+    const sections = CHANGE_SECTIONS.map(({ key, title }) => {
+        const rows = changes[key].map((entry) => {
+            const name = ('configuration' in entry ? entry.configuration : entry.path).padEnd(COLUMN_WIDTHS.name);
+            const detail = ('evidence' in entry ? entry.evidence : entry.note).padEnd(COLUMN_WIDTHS.note);
+            return `  ${name} ${detail} ${entry.command}`;
+        });
+        return rows.length === 0 ? [] : [title, ...rows, ''];
+    });
     const pinned = changes.pinnedTwice.map((entry) => {
         const name = `${entry.tool} ${entry.version}`.padEnd(COLUMN_WIDTHS.name);
         return `  ${name} ${entry.places.join(' and ').padEnd(COLUMN_WIDTHS.path)} ${entry.command}`;
     });
-    return [...sections.flat(), ...sectionLines('pinned twice', pinned)];
+    return [...sections.flat(), ...(pinned.length === 0 ? [] : ['pinned twice', ...pinned, ''])];
 }
 
 function versionLine(report: DoctorReport): string {

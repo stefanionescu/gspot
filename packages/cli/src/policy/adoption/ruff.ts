@@ -4,16 +4,16 @@ import { posix } from 'node:path';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
-import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
-import { UNSAFE_GLOB_CHARACTERS, GLOB_MAGIC, UNSAFE_EXTEND } from '#cli/constants/policy/adoption.ts';
+import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
+import { GLOB_MAGIC, UNSAFE_EXTEND, UNSAFE_GLOB_CHARACTERS } from '#cli/constants/policy/adoption.ts';
 import { asRaw, asStrings, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 import type {
-    Inheritance,
     PerFile,
     RuffLint,
-    AdoptionResult,
     CarryPush,
+    Inheritance,
+    AdoptionResult,
     ConfigurationSource,
 } from '#cli/types/policy/adoption.ts';
 
@@ -59,11 +59,6 @@ function disabledRuff(parsed: TomlTable, push: CarryPush, path: string): void {
     for (const { pattern, codes } of perFile) for (const code of codes) push(code, [pattern]);
 }
 
-// Adds rules under a pattern, keeping each rule once.
-function addRules(result: PerFile, pattern: string, rules: string[]): void {
-    result[pattern] = [...new Set([...(result[pattern] ?? []), ...rules])];
-}
-
 // Whether an inherited selector's fixed prefix reaches the folder of the adopting configuration.
 function reachesBase(target: string, base: string): boolean {
     const parts = target.split('/');
@@ -104,7 +99,8 @@ function scopePatterns(owner: string, path: string, base: string, table: PerFile
             continue;
         }
         const scopePattern = inheritedPattern(owner, pattern, base);
-        if (scopePattern !== undefined) addRules(result, scopePattern, rules);
+        if (scopePattern !== undefined)
+            result[scopePattern] = [...new Set([...(result[scopePattern] ?? []), ...rules])];
     }
     return result;
 }
@@ -129,7 +125,8 @@ function extendedSource(
 function mergedPerFile(tables: (PerFile | undefined)[]): PerFile {
     const merged: PerFile = {};
     for (const table of tables)
-        for (const [pattern, rules] of Object.entries(table ?? {})) addRules(merged, pattern, rules);
+        for (const [pattern, rules] of Object.entries(table ?? {}))
+            merged[pattern] = [...new Set([...(merged[pattern] ?? []), ...rules])];
     return merged;
 }
 

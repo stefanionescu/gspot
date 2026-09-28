@@ -1,12 +1,12 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import * as promises from 'node:fs/promises';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();

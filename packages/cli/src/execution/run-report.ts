@@ -3,17 +3,17 @@ import { writeReport } from '#cli/output/report.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { claimedInputs } from '#cli/execution/planning/plan.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { FAILED_STATUSES, POLICY_CHECK, RAN_STATUSES, UNABLE_EXIT } from '#cli/constants/execution/execution.ts';
+import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/constants/execution/execution.ts';
 
 import type {
-    ReportInput,
-    RunReportOptions,
-    FixReport,
-    PlannedCheck,
-    RunReport,
     Session,
+    FixReport,
+    RunReport,
+    ReportInput,
+    PlannedCheck,
+    RunReportOptions,
 } from '#cli/types/execution/execution.ts';
 
 // How often each suppression form appears in the checked sources.

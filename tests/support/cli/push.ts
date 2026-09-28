@@ -6,7 +6,9 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { gspot } from '#tests/support/cli/command.ts';
 
 /** Creates reviewed and broken commits beneath conflicting working-tree bytes for push selection. */
-export async function preparePushRepository(root: string) {
+export async function preparePushRepository(
+    root: string,
+): Promise<{ base: string; reviewed: string; broken: string; command: string[]; zero: string }> {
     await createFileTree(root, {
         'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
         'changed.sh': 'echo base\n',

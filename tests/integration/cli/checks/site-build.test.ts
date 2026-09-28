@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { SITE_BUILD } from '#tests/constants/cli.ts';
@@ -8,24 +8,24 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { describe, expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect, describe } from 'bun:test';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import type { SiteReportCase } from '#tests/types/integration/cli/checks.ts';
-import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';
-import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
+import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/static-site/build.ts';
+import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/static-site/output-checks.ts';
 
 import {
-    readFileSync,
-    existsSync,
-    writeFileSync,
-    chmodSync,
     statSync,
+    chmodSync,
     mkdirSync,
-    symlinkSync,
+    existsSync,
     unlinkSync,
+    symlinkSync,
+    readFileSync,
+    writeFileSync,
 } from 'node:fs';
 
 const SITE_REPORTS: SiteReportCase[] = [

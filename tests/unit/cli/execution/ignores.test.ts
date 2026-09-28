@@ -1,27 +1,44 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { applyIgnores } from '#cli/execution/ignores.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
-
-const finding = (file: string, rule = 'r1', check = 'c/x'): Finding => ({
-    check,
-    file,
-    rule,
-    message: 'm',
-    fixable: false,
-});
 
 describe('ignores', () => {
     test('match by check, rule and paths and count what they matched', () => {
         const findings = [
-            finding('scripts/a.sh', 'SC2312', 'bash/shellcheck'),
-            finding('src/b.sh', 'SC2312', 'bash/shellcheck'),
-            finding('src/b.sh', 'SC2086', 'bash/shellcheck'),
+            {
+                check: 'bash/shellcheck',
+                file: 'scripts/a.sh',
+                rule: 'SC2312',
+                message: 'm',
+                fixable: false,
+            },
+            {
+                check: 'bash/shellcheck',
+                file: 'src/b.sh',
+                rule: 'SC2312',
+                message: 'm',
+                fixable: false,
+            },
+            {
+                check: 'bash/shellcheck',
+                file: 'src/b.sh',
+                rule: 'SC2086',
+                message: 'm',
+                fixable: false,
+            },
         ];
         const result = applyIgnores(findings, [
             { check: 'bash/shellcheck', rule: 'SC2312', paths: ['scripts/**'], reason: 'why' },
             { check: 'bash/shellcheck', rule: 'SC2086', reason: 'why' },
         ]);
-        expect(result.kept).toStrictEqual([finding('src/b.sh', 'SC2312', 'bash/shellcheck')]);
+        expect(result.kept).toStrictEqual([
+            {
+                check: 'bash/shellcheck',
+                file: 'src/b.sh',
+                rule: 'SC2312',
+                message: 'm',
+                fixable: false,
+            },
+        ]);
         expect(result.uses.map((use) => use.matched)).toStrictEqual([1, 1]);
     });
 });

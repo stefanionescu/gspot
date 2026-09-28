@@ -10,6 +10,7 @@ import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
  * @param owner the source file the page is generated from
  * @returns the page with its edit link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Preserve definition attribution and build provenance without serializing metadata into Markdown. 4 files make 8 calls; one owner keeps that behavior in one place.
 export function referencePage(
     title: string,
     description: string,
@@ -22,22 +23,13 @@ export function referencePage(
         body: `\ngspot ${packageManifest.version} · [Source definition](${source})\n\n${body}`,
     };
 }
-
-/**
- * A Markdown bullet list.
- * @param items one line per bullet
- * @returns the list
- */
-export function bullets(items: string[]): string {
-    return items.map((item) => `- ${item}`).join('\n');
-}
-
 /**
  * A level-two section, or nothing when the body is empty.
  * @param title the heading
  * @param body the Markdown body
  * @returns the section
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A level-two section, or nothing when the body is empty. 3 files make 11 calls; one owner keeps that behavior in one place.
 export function section(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
@@ -57,6 +49,7 @@ export function table(header: string[], rows: string[][]): string {
  * @param text the cell text
  * @returns the escaped text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Text safe inside a table cell: pipes escaped and line breaks flattened. 3 files make 7 calls; one owner keeps that behavior in one place.
 export function cell(text: string): string {
     return text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 }

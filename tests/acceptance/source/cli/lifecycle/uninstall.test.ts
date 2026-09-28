@@ -1,7 +1,7 @@
 // uninstall removes what gspot owns, restores originals, and preserves everything else, including after interruption.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { run, runProcess as spawn } from '#tests/support/cli/command.ts';
-import { existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { statSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
 

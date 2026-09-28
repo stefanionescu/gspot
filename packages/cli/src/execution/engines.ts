@@ -1,3 +1,4 @@
+// Dispatch to the built-in engines by `engine =` in the manifest.
 import { join } from 'node:path';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { checkActions } from '#cli/checks/actions.ts';
@@ -15,15 +16,15 @@ import { checkDependencies } from '#cli/checks/python/project.ts';
 import { structureEngine } from '#cli/checks/structure/engine.ts';
 import { checkDocstrings } from '#cli/checks/python/docstrings.ts';
 import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
-// Dispatch to the built-in engines by `engine =` in the manifest.
 import { checkCommitMessages } from '#cli/checks/commit-messages.ts';
 import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
-import type { Executable, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import type { CheckResult, Engine, EngineInput, EngineOutcome, Finding } from '#cli/types/checks/checks.ts';
+import type { Session, Executable, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks/checks.ts';
 
 // The executable contract includes staged state, while native commands use the check definition.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 const nativeCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {

@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { SwiftFunction, SwiftSource } from '#cli/types/checks/swift.ts';
+import type { SwiftSource, SwiftFunction } from '#cli/types/checks/swift.ts';
 
 /**
  * The visibility word a declaration carries, or internal when it carries none.

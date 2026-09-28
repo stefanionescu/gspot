@@ -4,13 +4,13 @@ import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { basename, dirname, join, relative } from 'node:path';
+import { join, dirname, basename, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { STYLES_DIRECTORY, VALE_CONFIG } from '#cli/constants/configurations.ts';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/constants/configurations.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { rmSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 
 // Harper also installs dictionaries beside its styles.
 function packageDirectories(files: ConfinedRoot): string[] | undefined {
@@ -54,11 +54,13 @@ export function hasOwnedPackages(root: string): boolean {
         if (needed === undefined) return false;
         if (!needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true)) return false;
         if (needed.length === 0) return true;
-        const selected = (path: string) =>
-            isValePackageFile(path) && needed.some((name) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`));
         const recorded = new Map(
             readOwnership(root)
-                .files.filter((entry) => selected(entry.path))
+                .files.filter(
+                    (entry) =>
+                        isValePackageFile(entry.path) &&
+                        needed.some((name) => entry.path.startsWith(`${STYLES_DIRECTORY}/${name}/`)),
+                )
                 .map((entry) => [entry.path, entry.installed]),
         );
         const installed: string[] = [];
@@ -66,7 +68,11 @@ export function hasOwnedPackages(root: string): boolean {
             for (const name of files.list(directory)) {
                 const path = `${directory}/${name}`;
                 if (files.stat(path)?.isDirectory() === true) visit(path);
-                else if (selected(path)) installed.push(path);
+                else if (
+                    isValePackageFile(path) &&
+                    needed.some((name) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`))
+                )
+                    installed.push(path);
             }
         };
         for (const name of needed) visit(`${STYLES_DIRECTORY}/${name}`);
@@ -140,10 +146,10 @@ export async function installPackages(root: string): Promise<string | undefined>
                 const conflict = proposals.find((proposal) => proposal.status === 'preserved');
                 if (conflict !== undefined) return `preserved edited or unowned ${conflict.path}`;
                 owner.applyProposals(proposals);
+                return undefined;
             } finally {
                 staged.close();
             }
-            return undefined;
         } finally {
             rmSync(work, { recursive: true, force: true });
         }

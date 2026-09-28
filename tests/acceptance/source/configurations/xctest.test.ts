@@ -1,7 +1,7 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -9,31 +9,39 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { XCTEST_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { XCTEST_TESTS } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const suite = (body: string): string =>
-    `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n${body}    }\n}\n`;
-const CLEAN = suite('        XCTAssertEqual("Home", "Home")\n');
+const CLEAN = `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        XCTAssertEqual("Home", "Home")\n    }\n}\n`;
 const CASES: (FindingCase & { correction: Record<string, string> })[] = [
     {
         check: 'xctest/disabled',
-        files: { [XCTEST_TESTS]: suite('        throw XCTSkip()\n') },
+        files: {
+            [XCTEST_TESTS]: `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        throw XCTSkip()\n    }\n}\n`,
+        },
         expected: { file: XCTEST_TESTS, rule: 'disabled', line: 7 },
-        correction: { [XCTEST_TESTS]: suite('        throw XCTSkip("Requires a physical device")\n') },
+        correction: {
+            [XCTEST_TESTS]: `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        throw XCTSkip("Requires a physical device")\n    }\n}\n`,
+        },
     },
     {
         check: 'xctest/no-sleep',
-        files: { [XCTEST_TESTS]: suite('        Thread.sleep(forTimeInterval: 2)\n') },
+        files: {
+            [XCTEST_TESTS]: `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        Thread.sleep(forTimeInterval: 2)\n    }\n}\n`,
+        },
         expected: { file: XCTEST_TESTS, rule: 'sleep', line: 7 },
         correction: { [XCTEST_TESTS]: CLEAN },
     },
     {
         check: 'xctest/recording',
-        files: { [XCTEST_TESTS]: suite('        isRecording = true\n') },
+        files: {
+            [XCTEST_TESTS]: `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        isRecording = true\n    }\n}\n`,
+        },
         expected: { file: XCTEST_TESTS, rule: 'recording', line: 7 },
-        correction: { [XCTEST_TESTS]: suite('        isRecording = false\n') },
+        correction: {
+            [XCTEST_TESTS]: `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        isRecording = false\n    }\n}\n`,
+        },
     },
     {
         check: 'xctest/reference-images',
@@ -51,9 +59,7 @@ describe('the xctest configuration', () => {
             await createFileTree(sandbox.path, {
                 [XCTEST_TESTS]: CLEAN,
                 'AppTests/__Snapshots__/HomeTests/testTitle.1.png': 'png',
-                'AppTests/SkippedTests.swift': suite(
-                    '        throw XCTSkip("Waits for the new design of the header, issue 12.")\n',
-                ),
+                'AppTests/SkippedTests.swift': `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        throw XCTSkip("Waits for the new design of the header, issue 12.")\n    }\n}\n`,
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };

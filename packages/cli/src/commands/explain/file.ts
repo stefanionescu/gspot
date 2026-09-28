@@ -32,10 +32,6 @@ function annotated(report: PathExplanation, file: TrackedFile): PathExplanation 
     return report;
 }
 
-function section(title: string, rows: string[]): string[] {
-    return rows.length === 0 ? [] : [title, ...rows];
-}
-
 /**
  * Explains one file.
  * @param session the session
@@ -80,21 +76,17 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
  */
 function pathText(report: PathExplanation): string {
     const by = report.natureSource === undefined ? '' : ` by ${report.natureSource}`;
+    const checks = report.checks.map(
+        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
+    );
+    const ignores = report.ignores.map((entry) => ignoreLine(entry));
     const lines = [
         `${report.path}  (scope ${report.scope}, ${report.nature}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
         ...(report.configurations.length === 0 ? [] : [`claimed by: ${report.configurations.join(', ')}`]),
-        ...section(
-            'checks:',
-            report.checks.map(
-                (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
-            ),
-        ),
-        ...section(
-            'ignores:',
-            report.ignores.map((entry) => ignoreLine(entry)),
-        ),
+        ...(checks.length === 0 ? [] : ['checks:', ...checks]),
+        ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
         ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;

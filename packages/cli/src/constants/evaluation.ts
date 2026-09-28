@@ -13,7 +13,10 @@ export const MODELED_OPTIONS = new Set([
 export const MODULE_CONFIGURATION = /\.[cm]?[jt]s$/u;
 export const PACKAGE_CONFIGURATION = /^package\.(?:json|yaml)$/u;
 // The ESLint severities that switch a rule on.
-export const ACTIVE_LEVELS = new Set<unknown>([1, 2, 'warn', 'error']);
+/** The numeric severities ESLint accepts beside warn and error. */
+export const ESLINT_WARN = 1;
+export const ESLINT_ERROR = 2;
+export const ACTIVE_LEVELS = new Set<unknown>([ESLINT_WARN, ESLINT_ERROR, 'warn', 'error']);
 export const CONFIG_KEYS = [
     'env',
     'globals',

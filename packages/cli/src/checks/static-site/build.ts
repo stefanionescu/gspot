@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
+import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -9,18 +10,13 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { SiteBuild } from '#cli/types/checks/static-site.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEFAULT_BUILD, DEFAULT_BUILD_OUTPUT, SHOWN_DIFFERENCES } from '#cli/constants/checks/static-site.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/constants/checks/static-site.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
-function text(input: EngineInput, key: string, otherwise: string): string {
-    const found = input.view.tool('site')[key];
-    return typeof found === 'string' && found !== '' ? found : otherwise;
-}
-
 async function built(input: EngineInput): Promise<SiteBuild> {
-    const outputPath = text(input, 'output', DEFAULT_BUILD_OUTPUT);
+    const outputPath = (asText(input.view.tool('site')['output']) ?? '') || DEFAULT_BUILD_OUTPUT;
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
     const scratch = await scratchCopy(
@@ -32,7 +28,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
         rmSync(scratch, { recursive: true, force: true });
     });
     const cwd = join(scratch, input.scope);
-    const command = text(input, 'build', DEFAULT_BUILD);
+    const command = (asText(input.view.tool('site')['build']) ?? '') || DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
     const files = openConfinedRoot(scratch);
@@ -45,12 +41,6 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     }
     const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_DIFFERENCES).join(' | ');
     return { cwd, command, output, isBuilt, said };
-}
-
-function digests(folder: string): Map<string, string> {
-    return new Map(
-        filesUnder(folder).map((path) => [path, createHash('sha256').update(readSource(folder, path)).digest('hex')]),
-    );
 }
 
 /**
@@ -130,10 +120,20 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireSiteBuild(input);
-    const before = digests(first.output);
+    const before = new Map(
+        filesUnder(first.output).map((path) => [
+            path,
+            createHash('sha256').update(readSource(first.output, path)).digest('hex'),
+        ]),
+    );
     const second = await built(input);
     if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
-    const after = digests(second.output);
+    const after = new Map(
+        filesUnder(second.output).map((path) => [
+            path,
+            createHash('sha256').update(readSource(second.output, path)).digest('hex'),
+        ]),
+    );
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),
     );

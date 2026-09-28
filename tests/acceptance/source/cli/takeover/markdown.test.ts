@@ -1,15 +1,15 @@
 // Takeover at init: an adopted Markdown configuration keeps its native defaults through checks, fixes, and uninstall.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import type { MarkdownAdoption } from '#tests/types/acceptance/source/cli.ts';
 
 async function expectMarkdownCorrections({

@@ -1,15 +1,15 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
     EXPECTED,
-    FORMAT_PRESERVATION_POLICY,
     PRETTIER_CARRY_SOURCE,
+    FORMAT_PRESERVATION_POLICY,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test.each([

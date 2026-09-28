@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { prepareCommand, runToolCheck } from '#cli/execution/tool/runner.ts';
+import { runToolCheck, prepareCommand } from '#cli/execution/tool/runner.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 
 test('splits 20,000 correction paths without losing or reordering arguments', async () => {

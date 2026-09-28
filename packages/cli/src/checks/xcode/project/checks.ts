@@ -2,12 +2,13 @@ import { posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { TestPlan } from '#cli/types/checks/xcode.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/revisions/contents.ts';
 import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/constants/checks/xcode.ts';
-import { projectTestTargets, readProject } from '#cli/checks/xcode/project/reader.ts';
+import { readProject, projectTestTargets } from '#cli/checks/xcode/project/reader.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two checks find the folder of a project bundle; the bundle boundary is computed in one place.
 function folderOf(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf('.xcodeproj'));
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
@@ -162,6 +163,7 @@ export function trackedEnding(input: EngineInput, endings: string[]): string[] {
  * @param text the message
  * @returns the finding
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding of an xcode check. 4 files make 11 calls; one owner keeps that behavior in one place.
 export function xcodeFinding(
     input: EngineInput,
     at: { file: string; line: number },

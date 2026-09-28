@@ -7,7 +7,7 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { hasOwnedPackages, installPackages } from '#cli/tools/vale.ts';
+import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import { CONFLICT_MARKERS } from '#cli/constants/lifecycle/lifecycle.ts';
 import type { ApplyReport, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -10,7 +10,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { CORRECT, DEFECT } from '#tests/constants/integration/tools/generation.ts';
+import { DEFECT, CORRECT } from '#tests/constants/integration/tools/generation.ts';
 
 // Configuration edits invalidate cached findings and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {

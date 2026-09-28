@@ -1,9 +1,9 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
-import { symlink, readlink, unlink } from 'node:fs/promises';
+import { unlink, symlink, readlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project/reader.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PBXPROJ_PROJECT } from '#tests/constants/integration/cli/repository.ts';
@@ -67,12 +67,6 @@ test('quoted project strings preserve escapes and ignore comment-like text', () 
         ][0],
     ).toBe('/repo/First é Group/Shared.swift');
 });
-
-const smallProject = (source: string): string =>
-    PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
-        .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
-        .replace('path = Root.swift;', `path = ${source};`);
-
 test.each([
     PBXPROJ_PROJECT.slice(0, -3),
     PBXPROJ_PROJECT.replace('B1, B2,', 'MISSING, B2,'),
@@ -96,11 +90,17 @@ test('membership combines projects in a scope and checks nested scopes independe
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\n',
-        'One.xcodeproj/project.pbxproj': smallProject('One.swift'),
-        'Two.xcodeproj/project.pbxproj': smallProject('Two.swift'),
+        'One.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
+            .replace('path = Root.swift;', `path = One.swift;`),
+        'Two.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
+            .replace('path = Root.swift;', `path = Two.swift;`),
         'One.swift': 'let one = 1\n',
         'Two.swift': 'let two = 2\n',
-        'nested/App.xcodeproj/project.pbxproj': smallProject('Nested.swift'),
+        'nested/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
+            .replace('path = Root.swift;', `path = Nested.swift;`),
         'nested/Nested.swift': 'let nested = 1\n',
         'nested/Extra.swift': 'let extra = 1\n',
     });

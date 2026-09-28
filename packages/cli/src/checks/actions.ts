@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import type { Document, Scalar } from 'yaml';
+import type { Scalar, Document } from 'yaml';
 import { readSource } from '#cli/repository/tracked.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { ACTIONLINT_COMMAND } from '#cli/constants/checks/checks.ts';
-import { isAlias, isMap, isScalar, isSeq, parseDocument } from 'yaml';
+import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 function stepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];
@@ -35,9 +35,9 @@ function replaceReference(text: string, reference: Scalar): string {
     if (token === undefined || !('source' in token)) return text;
     const start =
         token.type === 'block-scalar'
-            ? token.props.reduce(
-                  (end, part) => ('source' in part ? Math.max(end, part.offset + part.source.length) : end),
+            ? Math.max(
                   token.offset,
+                  ...token.props.map((part) => ('source' in part ? part.offset + part.source.length : token.offset)),
               )
             : token.offset;
     const source = token.source;

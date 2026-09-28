@@ -2,8 +2,9 @@ import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { PythonFunction, PythonModule } from '#cli/types/checks/python.ts';
+import type { PythonModule, PythonFunction } from '#cli/types/checks/python.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two readers ask whether a statement is a docstring, and both callers sit at the complexity limit.
 function isDocstring(statement: Node | undefined): boolean {
     return statement?.type === 'expression_statement' && statement.namedChildren[0]?.type === 'string';
 }
@@ -50,6 +51,7 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
  * @param statement the module statement
  * @returns the assignment, or undefined for other statements
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Read an assignment from an expression statement. 1 files make 1 calls; one owner keeps that behavior in one place.
 export function assignmentOf(statement: Node): Node | undefined {
     const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
     return first?.type === 'assignment' ? first : undefined;

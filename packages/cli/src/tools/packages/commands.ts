@@ -13,8 +13,8 @@ import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import type { PackageTool, PackageExecution } from '#cli/types/tools/packages.ts';
-import { LOCKS, CREDENTIAL_KEY, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
-import { MissingToolError, observeToolVersion, toolVersionState } from '#cli/tools/inspect.ts';
+import { MissingToolError, toolVersionState, observeToolVersion } from '#cli/tools/inspect.ts';
+import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
 const COMMANDS: Record<Exclude<PackageTool['name'], 'yarn'>, (frozen: boolean) => string[]> = {
@@ -39,11 +39,6 @@ const COMMANDS: Record<Exclude<PackageTool['name'], 'yarn'>, (frozen: boolean) =
 function yarnCommand(client: PackageTool, frozen: boolean): string[] {
     if (semver.major(client.version) === 1) return ['yarn', 'install', ...(frozen ? ['--frozen-lockfile'] : [])];
     return ['yarn', 'install', ...(frozen ? ['--immutable'] : ['--mode=update-lockfile'])];
-}
-
-// Whether a package manager is Yarn Berry, which reads its own settings file instead of npm's.
-function isYarnBerry(client: PackageTool): boolean {
-    return client.name === 'yarn' && semver.major(client.version) >= 2;
 }
 
 // Every secret the environment carries: token and password settings, and passwords embedded in registry URLs.
@@ -142,9 +137,10 @@ export async function packageCommand(root: string, work: string, client: Package
     const execution: PackageExecution = { root, work, client, frozen, env };
     const credentials = credentialsOf(env);
     writeSettings(work, env);
-    if (isYarnBerry(client)) delete env['YARN_REGISTRY'];
+    if (client.name === 'yarn' && semver.major(client.version) >= YARN_BERRY_MAJOR) delete env['YARN_REGISTRY'];
     await assertPackageToolVersion(execution);
-    if (isYarnBerry(client)) credentials.push(...(await yarnSettings(root, work, env)));
+    if (client.name === 'yarn' && semver.major(client.version) >= YARN_BERRY_MAJOR)
+        credentials.push(...(await yarnSettings(root, work, env)));
     await runPackageTool(execution);
     const lockPath = join(work, LOCKS[client.name]);
     const lock = readFileSync(lockPath, 'utf8');

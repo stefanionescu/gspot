@@ -1,6 +1,6 @@
-import { expect, test } from 'bun:test';
 import { join, win32 } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';

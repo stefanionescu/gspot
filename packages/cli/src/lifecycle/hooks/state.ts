@@ -5,7 +5,7 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
-import { simpleGitHookCommand, hookBody, hookCommand, hookPrefix } from '#cli/generation/hooks/scripts.ts';
+import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
 import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 /**

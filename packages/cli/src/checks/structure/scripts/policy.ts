@@ -3,12 +3,12 @@ import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 import {
+    INLINE_NODE,
+    FORWARDER_STEM,
     DEPRECATED_ALIAS,
     FORWARDED_SCRIPT,
-    FORWARDER_STEM,
-    FORWARDING_INTERPRETER,
     FORWARDING_MAX_LINES,
-    INLINE_NODE,
+    FORWARDING_INTERPRETER,
 } from '#cli/constants/checks/script.ts';
 
 /**

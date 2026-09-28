@@ -1,5 +1,5 @@
 // check: open the session, honor the pin, run, render, decide the exit code.
-import { relative, resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';

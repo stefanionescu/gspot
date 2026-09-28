@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { sarifFindings } from '#cli/checks/security/codeql.ts';
 
 const sourceRoot = resolve('selected-source');

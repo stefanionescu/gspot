@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { BLOCKING_MODULES, BLOCKING_NAMES } from '#cli/constants/checks/python.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { BLOCKING_NAMES, BLOCKING_MODULES } from '#cli/constants/checks/python.ts';
 
 // The calls that run on the event loop of this function: a nested plain function runs wherever it is called, so its body is left out.
 function callsOf(node: Node): Node[] {

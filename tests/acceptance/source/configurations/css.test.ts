@@ -1,16 +1,16 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-// Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel, installPrivateTools } from '#tests/support/cli/tools.ts';
 import { CSS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { CODE, SHEET } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

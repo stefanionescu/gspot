@@ -1,14 +1,15 @@
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { rmSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { readHookStatus, installHookTool, prepareSimpleGitHooks } from '#tests/support/cli/hooks/projects.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const captured = (root: string, name: string) =>
     existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
 

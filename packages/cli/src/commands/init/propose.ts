@@ -1,11 +1,12 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
+import { asRaw } from '#cli/policy/adoption/source.ts';
 import type { InitProposal } from '#cli/types/commands/init.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import { PROFILE_HEAD, SCHEMA_LINE } from '#cli/constants/commands/init.ts';
+import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/constants/commands/init.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -71,15 +72,11 @@ function headTables(proposal: InitProposal): TomlTable {
     return document;
 }
 
-function asTable(value: unknown): TomlTable {
-    return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};
-}
-
 // Repository keys override each tool setting without dropping profile siblings.
 function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
-    const tools = { ...asTable(base) };
-    for (const [tool, settings] of Object.entries(asTable(overrides)))
-        tools[tool] = { ...asTable(tools[tool]), ...asTable(settings) };
+    const tools = { ...asRaw(base) };
+    for (const [tool, settings] of Object.entries(asRaw(overrides) ?? {}))
+        tools[tool] = { ...asRaw(tools[tool]), ...asRaw(settings) };
     return tools;
 }
 
@@ -102,7 +99,7 @@ function applyDetectedArchitecture(document: TomlTable, detected: InitProposal['
     for (const { key, value } of detected ?? []) {
         const [table, first, second] = key.split('.');
         if (table === 'architecture' && first !== undefined && second === undefined)
-            document['architecture'] = { ...asTable(document['architecture']), [first]: value };
+            document['architecture'] = { ...asRaw(document['architecture']), [first]: value };
     }
 }
 
@@ -115,23 +112,24 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
             document[key] = mergeToolSettings(value, existing);
             continue;
         }
-        const isBothTables = Object.keys(asTable(existing)).length > 0 && Object.keys(asTable(value)).length > 0;
-        document[key] = isBothTables ? { ...asTable(value), ...asTable(existing) } : value;
+        const isBothTables =
+            Object.keys(asRaw(existing) ?? {}).length > 0 && Object.keys(asRaw(value) ?? {}).length > 0;
+        document[key] = isBothTables ? { ...asRaw(value), ...asRaw(existing) } : value;
     }
 }
 
 // Initialization selects enabled integrations; profile task names retain precedence.
 function applyIntegrations(document: TomlTable, proposal: InitProposal): void {
     if (proposal.hooks === 'none') delete document['hooks'];
-    else document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
+    else document['hooks'] = { ...asRaw(document['hooks']), tool: proposal.hooks };
     if (proposal.ci === 'none') delete document['ci'];
-    else document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
-    document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
-    document['coverage'] = { strict: false, ...asTable(document['coverage']) };
+    else document['ci'] = { ...asRaw(document['ci']), provider: proposal.ci };
+    document['rules'] = { directory: '.gspot/rules', ...asRaw(document['rules']), install: proposal.rules };
+    document['coverage'] = { strict: false, ...asRaw(document['coverage']) };
     if (proposal.runner === 'none') delete document['runner'];
     else {
-        const runner = asTable(document['runner']);
-        const tasks = { ...proposal.runnerTasks, ...asTable(runner['tasks']) };
+        const runner = asRaw(document['runner']) ?? {};
+        const tasks = { ...proposal.runnerTasks, ...asRaw(runner['tasks']) };
         document['runner'] = {
             ...runner,
             tool: proposal.runner,

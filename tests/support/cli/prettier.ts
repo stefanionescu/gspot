@@ -5,11 +5,12 @@ import { createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { ResolveConfigOptions } from 'prettier';
 import { initArgs } from '#tests/support/cli/init.ts';
+import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 
 import {
-    PRETTIER_IGNORE_RULES,
     PRETTIER_IGNORE_FILES,
+    PRETTIER_IGNORE_RULES,
     PRETTIER_IGNORE_SOURCE,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
@@ -37,7 +38,9 @@ export async function formatSources(
 }
 
 /** Prepares a formatter project with authored ignore rules and the all-level policy. */
-export async function prepareIgnoredFormatter(root: string) {
+export async function prepareIgnoredFormatter(
+    root: string,
+): Promise<{ initialized: SpawnOutcome; level: SpawnOutcome }> {
     await createFileTree(root, {
         '.prettierignore': PRETTIER_IGNORE_RULES,
         '.prettierrc.json': '{"semi":false}\n',

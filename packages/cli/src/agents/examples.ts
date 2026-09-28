@@ -3,8 +3,8 @@ import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { guideSections } from '#cli/agents/sections.ts';
-import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import type { RuleExample, RuleText } from '#cli/types/agents.ts';
+import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import type { RuleText, RuleExample } from '#cli/types/agents.ts';
 
 function exampleBlock(file: string, node: Code, sections: { start: number; end: number }[]): RuleExample {
     if (node.position === undefined) throw new Error('A parsed example has no source position.');

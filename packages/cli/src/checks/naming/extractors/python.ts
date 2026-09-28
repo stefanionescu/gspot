@@ -1,14 +1,14 @@
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
 
 import {
     DUNDER,
-    EXCEPTION_BASE,
-    IMPLICIT_PARAMETERS,
-    PYTHON_LABELS,
-    PYTHON_PARAMETER_NODES,
-    PYTHON_UPPER_SHAPE,
     SPLAT_NODES,
+    PYTHON_LABELS,
+    EXCEPTION_BASE,
+    PYTHON_UPPER_SHAPE,
+    IMPLICIT_PARAMETERS,
+    PYTHON_PARAMETER_NODES,
 } from '#cli/constants/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
@@ -26,6 +26,7 @@ function add(sink: ExtractSink, node: Node, category: string): void {
 }
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two extractors ask which block holds a definition, and the answer reads that block twice.
 function holderOf(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';

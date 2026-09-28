@@ -1,24 +1,19 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { ANSIBLE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const play = (task: string): string => `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n${task}`;
-const CLEAN = play(
-    '    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n',
-);
-const SHELLED = play(
-    '    - name: Restart the service\n      ansible.builtin.command: systemctl restart planted\n      changed_when: true\n',
-);
+const CLEAN = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n`;
+const SHELLED = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.command: systemctl restart planted\n      changed_when: true\n`;
 
 describe('the ansible configuration', () => {
     test(

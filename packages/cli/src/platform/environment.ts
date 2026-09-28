@@ -1,18 +1,14 @@
-import { homedir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
 // Owns reads from the process environment and normalizes variables for tool execution.
 
-function isSet(name: string): boolean {
-    const value = process.env[name];
-    return value !== undefined && value !== '';
-}
-
+import { homedir } from 'node:os';
+import { join, isAbsolute } from 'node:path';
 /**
  * True under a CI runner, which sets CI.
  * @returns whether CI is set
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True under a CI runner, which sets CI. 3 files make 2 calls; one owner keeps that behavior in one place.
 export function isCi(): boolean {
-    return isSet('CI');
+    return (process.env['CI'] ?? '') !== '';
 }
 
 /**
@@ -20,8 +16,8 @@ export function isCi(): boolean {
  * @returns the directory, or undefined for the default under the home directory
  */
 export function miseHome(): string | undefined {
-    if (isSet('MISE_DATA_DIR')) return process.env['MISE_DATA_DIR'];
-    return isSet('XDG_DATA_HOME') ? `${process.env['XDG_DATA_HOME'] ?? ''}/mise` : undefined;
+    if ((process.env['MISE_DATA_DIR'] ?? '') !== '') return process.env['MISE_DATA_DIR'];
+    return (process.env['XDG_DATA_HOME'] ?? '') === '' ? undefined : `${process.env['XDG_DATA_HOME'] ?? ''}/mise`;
 }
 
 /**

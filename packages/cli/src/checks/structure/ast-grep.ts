@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { isAbsolute, join, relative } from 'node:path';
+import { join, relative, isAbsolute } from 'node:path';
 import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';

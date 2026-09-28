@@ -1,7 +1,7 @@
 // Source CLI journeys for the TypeScript ESLint rules the generated configuration enables.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';

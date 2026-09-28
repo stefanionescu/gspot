@@ -5,14 +5,14 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NO_CONFIGURATIONS } from '#cli/constants/commands/init.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
-import type { ConfigurationReason, InitContext, InitInputs, InitSelection } from '#cli/types/commands/init.ts';
+import { requireChain, SelectionError, selectConfigurations } from '#cli/configurations/select.ts';
+import type { InitInputs, InitContext, InitSelection, ConfigurationReason } from '#cli/types/commands/init.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
     const map = new Map<string, string[]>();
     const list = flags ?? [];
     for (const flag of list) {
-        const [path = '', ids = ''] = flag.split('=', 2);
+        const [path = '', ids = ''] = flag.split('=');
         const items = ids
             .split(',')
             .map((id) => id.trim())

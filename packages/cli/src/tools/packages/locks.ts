@@ -4,9 +4,9 @@ import semver from 'semver';
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
-import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
-import type { BunPackage, Dependencies, LockName } from '#cli/types/tools/packages.ts';
-import { CONFLICT_MARKER, HTTP_URL, INTEGRITY } from '#cli/constants/tools/packages.ts';
+import { modify, applyEdits, parse as parseJsonc } from 'jsonc-parser';
+import type { LockName, BunPackage, Dependencies } from '#cli/types/tools/packages.ts';
+import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/constants/tools/packages.ts';
 
 const DEV_DEPENDENCIES = z.object({ devDependencies: z.record(z.string(), z.string()).optional() });
 const NPM_LOCK = z.object({ packages: z.record(z.string(), DEV_DEPENDENCIES) });
@@ -18,19 +18,7 @@ const YARN_LOCK = z.record(
     z.looseObject({ version: z.string().optional(), resolved: z.string().optional() }),
 );
 const BUN_LOCK_PACKAGES = z.looseObject({ packages: z.record(z.string(), z.array(z.unknown())) });
-const BUN_PACKAGE = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
-
-// The root dev dependencies an npm lock records.
-function npmDependencies(content: string): unknown {
-    return NPM_LOCK.parse(JSON.parse(content)).packages['']?.devDependencies;
-}
-
-// The root dev dependencies a Bun lock records.
-function bunDependencies(content: string): unknown {
-    return BUN_LOCK.parse(parseJsonc(content)).workspaces['']?.devDependencies;
-}
-
-// The root dev dependencies a pnpm lock records, each as the specifier it was requested with.
+const BUN_PACKAGE = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]); // The root dev dependencies a pnpm lock records, each as the specifier it was requested with.
 function pnpmDependencies(content: string): unknown {
     const pinned = PNPM_LOCK.parse(parseYaml(content)).importers['.']?.devDependencies;
     const entries = PNPM_SPECIFIERS.parse(pinned);
@@ -50,8 +38,12 @@ function yarnMatches(content: string, dependencies: Dependencies): boolean {
 }
 
 const ROOT_DEPENDENCIES: Record<Exclude<LockName, 'yarn'>, (content: string) => unknown> = {
-    npm: npmDependencies,
-    bun: bunDependencies,
+    npm: (content: string): unknown => {
+        return NPM_LOCK.parse(JSON.parse(content)).packages['']?.devDependencies;
+    },
+    bun: (content: string): unknown => {
+        return BUN_LOCK.parse(parseJsonc(content)).workspaces['']?.devDependencies;
+    },
     pnpm: pnpmDependencies,
 };
 

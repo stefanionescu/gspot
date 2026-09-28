@@ -8,7 +8,7 @@ import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { IgnoreUse, InlineIgnore } from '#cli/types/execution/execution.ts';
-import { COMMENT_STYLE_BY_EXTENSION, INLINE_IGNORE, REASON_INTRODUCER } from '#cli/constants/execution/execution.ts';
+import { INLINE_IGNORE, REASON_INTRODUCER, COMMENT_STYLE_BY_EXTENSION } from '#cli/constants/execution/execution.ts';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;

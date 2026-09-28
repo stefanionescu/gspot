@@ -1,8 +1,8 @@
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { MINIMAL_POLICY } from '#tests/constants/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
+import { readPolicyText, parsePolicyText } from '#cli/policy/read.ts';
 import { GOOD_IGNORE } from '#tests/constants/integration/cli/policy/read-policy.ts';
 
 describe('readPolicyText', () => {

@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PrepareCiProjectResult } from '#tests/types/results.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
-import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
+import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 
 /** Commits authored CI inputs and returns the exact object checked by the generated job. */
 export function commitCiSource(root: string, text: string): string {
@@ -15,7 +17,7 @@ export function commitCiSource(root: string, text: string): string {
 }
 
 /** Creates authored provider jobs and a changed object with a deliberate shell syntax error. */
-export async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
+export async function prepareCiProject(root: string, provider: 'gitlab' | 'github'): Promise<PrepareCiProjectResult> {
     gitOutput(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
     const pipeline =
@@ -53,7 +55,9 @@ format = "lines"
 }
 
 /** Serves a checksum-controlled CLI download through the job's actual curl command. */
-export async function createCiDownload(directory: string) {
+export async function createCiDownload(
+    directory: string,
+): Promise<{ directory: string; corrupt: boolean; [Symbol.asyncDispose](): Promise<void> }> {
     const binary = `#!/usr/bin/env bun
 const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
 process.exit(child.exitCode);
@@ -110,7 +114,7 @@ export async function runCiJob(
     directory: string,
     comparison: string,
     provider: 'gitlab' | 'github',
-) {
+): Promise<SpawnOutcome> {
     const script =
         provider === 'gitlab'
             ? generated.gspot.script

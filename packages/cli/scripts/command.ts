@@ -6,6 +6,9 @@ import { releaseTargets } from './targets.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
 
+// The exit of a build step that did not finish.
+const ERROR_EXIT = 2;
+
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));
@@ -52,5 +55,5 @@ try {
     await build(options.target, options.out);
 } catch (error) {
     if (!(error instanceof CommanderError)) throw error;
-    process.exitCode = error.exitCode === 0 ? 0 : 2;
+    process.exitCode = error.exitCode === 0 ? 0 : ERROR_EXIT;
 }

@@ -7,15 +7,15 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { FencedBlock } from '#cli/types/checks/docs.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
-    ANGLE_PLACEHOLDER,
-    ELLIPSIS_ARGUMENTS,
+    TREE_PARSERS,
     ELLIPSIS_LINE,
     FENCE_PARSERS,
+    ANGLE_PLACEHOLDER,
+    ELLIPSIS_ARGUMENTS,
     STRUCTURED_PARSERS,
-    TREE_PARSERS,
 } from '#cli/constants/checks/docs.ts';
 
 function fencesOf(text: string): FencedBlock[] {

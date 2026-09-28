@@ -1,7 +1,7 @@
 // File arguments, stages, and scope paths select the checks a run executes.
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 

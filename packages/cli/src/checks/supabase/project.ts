@@ -3,8 +3,8 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEFAULT_FUNCTIONS, SHARED_PREFIX, SUPABASE_CONFIG } from '#cli/constants/checks/supabase.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { SHARED_PREFIX, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/constants/checks/supabase.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),
@@ -55,6 +55,7 @@ export function functionFolders(input: EngineInput): string[] {
  * @param text the message
  * @returns the finding
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding of a supabase check. 4 files make 10 calls; one owner keeps that behavior in one place.
 export function supabaseFinding(
     input: EngineInput,
     at: { file: string; line: number },

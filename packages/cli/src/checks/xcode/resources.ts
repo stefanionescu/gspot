@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { AssetContents, StringsFile } from '#cli/types/checks/xcode.ts';
-import { IMAGE_SET, NAMED_SETS, NOT_WORD } from '#cli/constants/checks/xcode.ts';
-import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { StringsFile, AssetContents } from '#cli/types/checks/xcode.ts';
+import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/constants/checks/xcode.ts';
+import { xcodeFinding, trackedEnding } from '#cli/checks/xcode/project/checks.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
@@ -81,6 +81,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The findings of every string catalog: it parses, and every string has every locale the catalog uses. 1 files make 0 calls; one owner keeps that behavior in one place.
 export function stringFiles(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path));
 }

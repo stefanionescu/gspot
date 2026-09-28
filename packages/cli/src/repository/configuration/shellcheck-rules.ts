@@ -1,5 +1,8 @@
-import type { Directive, Rules } from '#cli/types/repository/repository.ts';
+import type { Rules, Directive } from '#cli/types/repository/repository.ts';
 import { DIRECTIVE, RULE_CODE, RULE_NAME } from '#cli/constants/repository/repository.ts';
+
+// A rule entry is one code, or a range of two.
+const RANGE_PARTS = 2;
 
 // Whether a directive key names a rule list.
 function isRuleKey(key: string): key is keyof Rules {
@@ -39,7 +42,7 @@ function readDirective(text: string, lineNumber: number): Directive {
 function isDisableEntry(entry: string): boolean {
     if (entry === 'all') return true;
     const codes = entry.split('-');
-    return codes.length <= 2 && codes.every((code) => RULE_CODE.test(code));
+    return codes.length <= RANGE_PARTS && codes.every((code) => RULE_CODE.test(code));
 }
 
 // The entries of a rule list, checked against the form the key accepts.

@@ -1,6 +1,9 @@
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#cli/constants/checks/script.ts';
+import { SSH_HEREDOC, RUN_SSH_START, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/constants/checks/script.ts';
+
+// Quotes close in pairs.
+const PAIR = 2;
 
 function unescapedQuotes(text: string, quote: string): number {
     let count = 0;
@@ -14,7 +17,7 @@ function isBlockStart(line: string): boolean {
     const quote = match?.groups?.['quote'];
     if (match === null || quote === undefined) return false;
     const after = line.slice(line.indexOf(match[0]) + match[0].length);
-    return unescapedQuotes(after, quote) % 2 === 0;
+    return unescapedQuotes(after, quote) % PAIR === 0;
 }
 
 function quotedBlocks(file: ScriptFile): { start: number; length: number }[] {

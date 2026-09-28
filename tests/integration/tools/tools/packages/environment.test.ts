@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 
 test('native registry settings authenticate from an isolated project and preserve authored configuration', async () => {

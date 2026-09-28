@@ -3,44 +3,47 @@ import { SelectionError } from '#cli/configurations/select.ts';
 import type { WindowsImage, WindowsResource } from '#cli/types/repository/revisions.ts';
 
 import {
-    CERTIFICATE_DIRECTORY,
+    HOST_KIND,
+    WORD_SIZE,
+    PE32_MAGIC,
+    SHORT_SIZE,
+    OFFSET_MASK,
+    RCDATA_TYPE,
+    SECTION_SIZE,
     CHECKSUM_FIELD,
-    COFF_HEADER_SIZE,
-    DIRECTORY_ENTRY_SIZE,
     DIRECTORY_FLAG,
     DOS_HEADER_SIZE,
-    FILE_ALIGNMENT_FIELD,
-    OFFSET_MASK,
-    OPTIONAL_HEADER_SIZE_FIELD,
-    PE32_DIRECTORIES_OFFSET,
-    PE32_MAGIC,
-    PE32_PLUS_DIRECTORIES_OFFSET,
     PE32_PLUS_MAGIC,
     PE_OFFSET_FIELD,
+    COFF_HEADER_SIZE,
     PE_SIGNATURE_SIZE,
-    RCDATA_TYPE,
-    READABLE_INITIALIZED_SECTION,
-    RESOURCE_PAYLOAD_SIZE_FIELD,
     RESOURCE_DIRECTORY,
+    SIZE_OF_CODE_FIELD,
     RESOURCE_ENTRY_SIZE,
-    RESOURCE_ENTRY_TARGET_FIELD,
+    SECTION_COUNT_FIELD,
+    SIZE_OF_IMAGE_FIELD,
+    DIRECTORY_ENTRY_SIZE,
+    FILE_ALIGNMENT_FIELD,
+    CERTIFICATE_DIRECTORY,
+    SIZE_OF_HEADERS_FIELD,
+    SECTION_RAW_SIZE_FIELD,
+    PE32_DIRECTORIES_OFFSET,
     RESOURCE_ID_COUNT_FIELD,
+    SECTION_ALIGNMENT_FIELD,
+    SECTION_RAW_POINTER_FIELD,
+    OPTIONAL_HEADER_SIZE_FIELD,
     RESOURCE_NAMED_COUNT_FIELD,
     RESOURCE_TABLE_HEADER_SIZE,
-    SECTION_ALIGNMENT_FIELD,
-    SECTION_CHARACTERISTICS_FIELD,
-    SECTION_COUNT_FIELD,
-    SECTION_RAW_POINTER_FIELD,
-    SECTION_RAW_SIZE_FIELD,
-    SECTION_SIZE,
-    SECTION_VIRTUAL_ADDRESS_FIELD,
     SECTION_VIRTUAL_SIZE_FIELD,
-    SIZE_OF_CODE_FIELD,
-    SIZE_OF_HEADERS_FIELD,
-    SIZE_OF_IMAGE_FIELD,
-    WORD_SIZE,
+    RESOURCE_ENTRY_TARGET_FIELD,
+    RESOURCE_PAYLOAD_SIZE_FIELD,
+    PE32_PLUS_DIRECTORIES_OFFSET,
+    READABLE_INITIALIZED_SECTION,
+    SECTION_CHARACTERISTICS_FIELD,
+    SECTION_VIRTUAL_ADDRESS_FIELD,
 } from '#cli/constants/repository/windows-launcher.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A throw cannot sit in an expression, and eleven parser branches return this one.
 function fail(): never {
     throw new SelectionError([
         'Cannot relocate installed Windows Python launcher metadata. Reinstall dependencies for the selected revision.',
@@ -48,7 +51,7 @@ function fail(): never {
 }
 
 function readImage(bytes: Buffer): WindowsImage | undefined {
-    if (bytes.length < DOS_HEADER_SIZE || bytes.toString('ascii', 0, 2) !== 'MZ') return undefined;
+    if (bytes.length < DOS_HEADER_SIZE || bytes.toString('ascii', 0, 'MZ'.length) !== 'MZ') return undefined;
     const pe = bytes.readUInt32LE(PE_OFFSET_FIELD);
     const coff = pe + PE_SIGNATURE_SIZE;
     const optional = coff + COFF_HEADER_SIZE;
@@ -57,25 +60,38 @@ function readImage(bytes: Buffer): WindowsImage | undefined {
         if (offset < 0 || length < 0 || offset + length > bytes.length) fail();
         return offset;
     };
-    const short = (offset: number): number => bytes.readUInt16LE(range(offset, 2));
-    const word = (offset: number): number => bytes.readUInt32LE(range(offset, WORD_SIZE));
-    const count = short(coff + SECTION_COUNT_FIELD);
-    const magic = short(optional);
+    const count = bytes.readUInt16LE(range(coff + SECTION_COUNT_FIELD, SHORT_SIZE));
+    const magic = bytes.readUInt16LE(range(optional, SHORT_SIZE));
     if (magic !== PE32_MAGIC && magic !== PE32_PLUS_MAGIC) return undefined;
     const directories = optional + (magic === PE32_PLUS_MAGIC ? PE32_PLUS_DIRECTORIES_OFFSET : PE32_DIRECTORIES_OFFSET);
-    const sectionTable = optional + short(coff + OPTIONAL_HEADER_SIZE_FIELD);
+    const sectionTable = optional + bytes.readUInt16LE(range(coff + OPTIONAL_HEADER_SIZE_FIELD, SHORT_SIZE));
     range(sectionTable, count * SECTION_SIZE);
     const sections = Array.from({ length: count }, (_, index) => sectionTable + index * SECTION_SIZE);
     const location = (rva: number, size: number): number => {
         for (const section of sections) {
-            const address = word(section + SECTION_VIRTUAL_ADDRESS_FIELD);
-            const rawSize = word(section + SECTION_RAW_SIZE_FIELD);
+            const address = bytes.readUInt32LE(range(section + SECTION_VIRTUAL_ADDRESS_FIELD, WORD_SIZE));
+            const rawSize = bytes.readUInt32LE(range(section + SECTION_RAW_SIZE_FIELD, WORD_SIZE));
             if (rva >= address && rva + size <= address + rawSize)
-                return range(word(section + SECTION_RAW_POINTER_FIELD) + rva - address, size);
+                return range(
+                    bytes.readUInt32LE(range(section + SECTION_RAW_POINTER_FIELD, WORD_SIZE)) + rva - address,
+                    size,
+                );
         }
         return fail();
     };
-    return { bytes, coff, optional, directories, sectionTable, count, sections, short, word, range, location };
+    return {
+        bytes,
+        coff,
+        optional,
+        directories,
+        sectionTable,
+        count,
+        sections,
+        short: (offset: number): number => bytes.readUInt16LE(range(offset, SHORT_SIZE)),
+        word: (offset: number): number => bytes.readUInt32LE(range(offset, WORD_SIZE)),
+        range,
+        location,
+    };
 }
 
 function readResources(image: WindowsImage): { isHost: boolean; path: WindowsResource } | undefined {
@@ -94,9 +110,9 @@ function readResources(image: WindowsImage): { isHost: boolean; path: WindowsRes
             let name: string | number = key;
             if ((key & DIRECTORY_FLAG) !== 0) {
                 const start = resources + (key & OFFSET_MASK);
-                const size = short(start) * 2;
-                range(start + 2, size);
-                name = bytes.toString('utf16le', start + 2, start + 2 + size);
+                const size = short(start) * SHORT_SIZE;
+                range(start + SHORT_SIZE, size);
+                name = bytes.toString('utf16le', start + SHORT_SIZE, start + SHORT_SIZE + size);
             }
             return { name, target: target & OFFSET_MASK, directory: (target & DIRECTORY_FLAG) !== 0 };
         });
@@ -116,7 +132,7 @@ function readResources(image: WindowsImage): { isHost: boolean; path: WindowsRes
     const kind = resource('UV_TRAMPOLINE_KIND');
     if (kind === undefined) return undefined;
     if (kind.size !== 1) return fail();
-    const isHost = bytes[kind.offset] === 2;
+    const isHost = bytes[kind.offset] === HOST_KIND;
     if (!isHost && bytes[kind.offset] !== 1) return fail();
     const path = resource('UV_PYTHON_PATH');
     if (path === undefined) return fail();
@@ -134,25 +150,24 @@ function appendPath(image: WindowsImage, path: WindowsResource, destination: str
         word(directories + CERTIFICATE_DIRECTORY * DIRECTORY_ENTRY_SIZE) !== 0
     )
         return fail();
-    const align = (value: number, alignment: number): number => Math.ceil(value / alignment) * alignment;
     const header = sectionTable + count * SECTION_SIZE;
     const firstRaw = Math.min(
         ...sections.map((section) => word(section + SECTION_RAW_POINTER_FIELD)).filter((offset) => offset !== 0),
     );
     if (header + SECTION_SIZE > firstRaw || header + SECTION_SIZE > word(optional + SIZE_OF_HEADERS_FIELD))
         return fail();
-    const address = align(
-        Math.max(
-            ...sections.map(
-                (section) =>
-                    word(section + SECTION_VIRTUAL_ADDRESS_FIELD) +
-                    Math.max(word(section + SECTION_VIRTUAL_SIZE_FIELD), word(section + SECTION_RAW_SIZE_FIELD)),
-            ),
-        ),
-        sectionAlignment,
-    );
-    const rawOffset = align(bytes.length, fileAlignment);
-    const rawSize = align(value.length, fileAlignment);
+    const address =
+        Math.ceil(
+            Math.max(
+                ...sections.map(
+                    (section) =>
+                        word(section + SECTION_VIRTUAL_ADDRESS_FIELD) +
+                        Math.max(word(section + SECTION_VIRTUAL_SIZE_FIELD), word(section + SECTION_RAW_SIZE_FIELD)),
+                ),
+            ) / sectionAlignment,
+        ) * sectionAlignment;
+    const rawOffset = Math.ceil(bytes.length / fileAlignment) * fileAlignment;
+    const rawSize = Math.ceil(value.length / fileAlignment) * fileAlignment;
     const result = Buffer.alloc(rawOffset + rawSize);
     bytes.copy(result);
     value.copy(result, rawOffset);
@@ -165,7 +180,10 @@ function appendPath(image: WindowsImage, path: WindowsResource, destination: str
     result.writeUInt32LE(READABLE_INITIALIZED_SECTION, header + SECTION_CHARACTERISTICS_FIELD);
     result.writeUInt16LE(count + 1, coff + SECTION_COUNT_FIELD);
     result.writeUInt32LE(word(optional + SIZE_OF_CODE_FIELD) + rawSize, optional + SIZE_OF_CODE_FIELD);
-    result.writeUInt32LE(align(address + value.length, sectionAlignment), optional + SIZE_OF_IMAGE_FIELD);
+    result.writeUInt32LE(
+        Math.ceil((address + value.length) / sectionAlignment) * sectionAlignment,
+        optional + SIZE_OF_IMAGE_FIELD,
+    );
     result.writeUInt32LE(0, optional + CHECKSUM_FIELD);
     result.writeUInt32LE(address, path.descriptor);
     result.writeUInt32LE(value.length, path.descriptor + RESOURCE_PAYLOAD_SIZE_FIELD);
@@ -190,6 +208,7 @@ export function relocateWindowsLauncher(
     if (metadata === undefined) return undefined;
     const { isHost, path } = metadata;
     const source = win32.normalize(bytes.toString('utf8', path.offset, path.offset + path.size)).toLowerCase();
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Both lookups compare a resolved candidate the same way; the closure carries the source path.
     const matches = (candidate: string, directory: string): boolean => {
         const resolved = win32.isAbsolute(source) ? source : win32.join(directory, source);
         return win32.normalize(candidate).toLowerCase() === resolved.toLowerCase();

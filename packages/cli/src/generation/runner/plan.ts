@@ -6,8 +6,8 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import type { Field, KeyPath } from '#cli/types/lifecycle/lifecycle.ts';
-import type { ConfigurationOutput, RunnerPlan } from '#cli/types/generation.ts';
-import { PACKAGE_LIFECYCLE, RUNNER_TASKS } from '#cli/constants/policy/policy.ts';
+import type { RunnerPlan, ConfigurationOutput } from '#cli/types/generation.ts';
+import { RUNNER_TASKS, PACKAGE_LIFECYCLE } from '#cli/constants/policy/policy.ts';
 
 function readRunnerTasks(
     root: string,
@@ -38,11 +38,13 @@ function readRunnerTasks(
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function ownedTaskFields(root: string, path: string): Field[] {
     return readOwnership(root).files.find((entry) => entry.path === path)?.configuration?.fields ?? [];
 }
 
 // An existing unowned task needs consent unless it already contains the proposed command.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function needsConsent(
     body: unknown,
     expected: string,

@@ -1,7 +1,10 @@
 import type { Command } from 'commander';
 import type { ReferencePage } from '../../types/reference.ts';
-import { referencePage, section, table, cell } from './page.ts';
+import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspot/cli/src/commands/program.ts';
+
+// The help text splits into the usage and the effects.
+const HELP_PARTS = 2;
 
 const COMMAND_OWNERS = new Map([
     ['init', 'commands/init/command.ts'],
@@ -45,7 +48,7 @@ function commandPage(command: Command, name: string): ReferencePage {
     } finally {
         command.configureOutput(output);
     }
-    const contractText = help.split('\nEffects:\n', 2)[1];
+    const contractText = help.split('\nEffects:\n', HELP_PARTS)[1];
     if (
         contractText === undefined ||
         !contractText.includes('\n\nExit codes:\n') ||

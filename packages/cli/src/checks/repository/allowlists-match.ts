@@ -1,4 +1,4 @@
-import { basename, dirname } from 'node:path';
+import { dirname, basename } from 'node:path';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { POLICY_FILE } from '#cli/constants/checks/repository.ts';
@@ -6,7 +6,7 @@ import { referencedPaths } from '#cli/checks/docs/stale-paths.ts';
 import type { PathPattern } from '#cli/types/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { EngineInput, Finding, LicenseException } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, LicenseException } from '#cli/types/checks/checks.ts';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];
@@ -30,17 +30,24 @@ function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPatte
 function policyPatterns(input: EngineInput): PathPattern[] {
     const { policy } = input.policyFiles;
     const { structure, naming } = policy;
-    const named = (value: unknown, where: string): PathPattern[] =>
-        listed(value, 'paths').map((pattern) => ({ pattern, where }));
     return [
         ...policy.ignores.flatMap((entry) => (entry.paths ?? []).map((pattern) => ({ pattern, where: '[[ignore]]' }))),
         ...policy.declarations.flatMap((entry) =>
             entry.paths.map((pattern) => ({ pattern, where: `[[${entry.nature}]]` })),
         ),
-        ...named(structure.single_file_folder_allowed, 'structure.single_file_folder_allowed'),
-        ...named(structure.prefix_collision_allowed, 'structure.prefix_collision_allowed'),
-        ...named(structure.folder_name_allowed, 'structure.folder_name_allowed'),
-        ...named(naming.rules, '[[naming.rules]]'),
+        ...listed(structure.single_file_folder_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.single_file_folder_allowed',
+        })),
+        ...listed(structure.prefix_collision_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.prefix_collision_allowed',
+        })),
+        ...listed(structure.folder_name_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.folder_name_allowed',
+        })),
+        ...listed(naming.rules, 'paths').map((pattern) => ({ pattern, where: '[[naming.rules]]' })),
         ...toolPatterns(policy.tools),
     ];
 }

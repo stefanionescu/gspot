@@ -4,13 +4,13 @@ import { tmpdir } from 'node:os';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
-import { statSync, mkdtempSync, rmSync } from 'node:fs';
+import { rmSync, statSync, mkdtempSync } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { LICENSE_CHECKER_TOOL } from '#cli/constants/checks/checks.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { LicenseException, LicensedPackage, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks/checks.ts';
 
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);

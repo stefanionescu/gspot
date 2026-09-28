@@ -1,36 +1,19 @@
+import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ImplementedFunction } from '#plugin/types/rules.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES, ASTUtils } from '@typescript-eslint/utils';
-import { functionUsage, isCallbackValue } from '#plugin/function-references.ts';
-import { COMPUTATION_NODES, EXECUTABLE_STATEMENTS, FUNCTIONS, TYPE_ONLY } from '#plugin/constants/plugin.ts';
+import { FUNCTIONS, TYPE_ONLY, EXECUTABLE_STATEMENTS } from '#plugin/constants/plugin.ts';
 
-// A captured argument fixes part of a shared call contract; the function's own parameters only forward it.
-function isCapturedArgument(
-    argument: TSESTree.CallExpression['arguments'][number],
-    implementation: ImplementedFunction,
-    source: TSESLint.SourceCode,
-): boolean {
-    if (argument.type !== AST_NODE_TYPES.Identifier) return false;
-    const binding = ASTUtils.findVariable(source.getScope(argument), argument.name);
-    return (
-        binding?.defs.some(
-            (definition) =>
-                definition.name.range[0] < implementation.range[0] ||
-                definition.name.range[1] > implementation.range[1],
-        ) === true
-    );
+// Count executable statements under a node, entering the functions written inside it.
+function count(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;
+    const isExpressionBody =
+        FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
+    const own = isExpressionBody || EXECUTABLE_STATEMENTS.has(node.type) ? 1 : 0;
+    return childNodes(node, visitorKeys).reduce((total, child) => total + count(child, visitorKeys), own);
 }
 
-/**
- * Read syntax children through the parser visitor keys. Metadata and parent links are excluded.
- * @param node the parent node
- * @param visitorKeys the child keys for each node type
- * @returns the direct syntax children
- */
-export function childNodes(
-    node: TSESTree.Node,
-    visitorKeys: Readonly<Record<string, readonly string[]>>,
-): TSESTree.Node[] {
+// Read syntax children through the parser visitor keys. Metadata and parent links are excluded.
+function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): TSESTree.Node[] {
     return (visitorKeys[node.type] ?? []).flatMap((key) => {
         const child: unknown = node[key as keyof TSESTree.Node];
         if (Array.isArray(child)) return child.filter((item: unknown) => item !== null) as TSESTree.Node[];
@@ -39,66 +22,18 @@ export function childNodes(
 }
 
 /**
- * Count executable statements without entering nested functions or type declarations.
- * @param node the node to count under
+ * Count the executable statements of a function, including those of the functions written inside it.
+ * An expression body counts as one statement.
+ * @param node the function implementation
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns the count
  */
-export function statementCount(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
-    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare)) return 0;
-    if (FUNCTIONS.has(node.type)) return node.type === AST_NODE_TYPES.FunctionDeclaration ? 1 : 0;
-    const own = EXECUTABLE_STATEMENTS.has(node.type) ? 1 : 0;
-    return childNodes(node, visitorKeys).reduce((count, child) => count + statementCount(child, visitorKeys), own);
-}
-
-/**
- * Identify calculations, constructed values, and fixed call arguments without entering unused nested functions.
- * @param node the function implementation
- * @param source the parser source and lexical bindings
- * @returns whether sharing the body preserves computation or fixed arguments beyond a forwarding call
- */
-export function hasComputation(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    const expressions: TSESTree.Node[] = [];
-    const visit = (current: TSESTree.Node): void => {
-        if (current.type === AST_NODE_TYPES.FunctionDeclaration || TYPE_ONLY.has(current.type)) return;
-        if (
-            current.type === AST_NODE_TYPES.FunctionExpression ||
-            current.type === AST_NODE_TYPES.ArrowFunctionExpression
-        ) {
-            if (isCallbackValue(current)) visit(current.body);
-            return;
-        }
-        expressions.push(current);
-        for (const child of childNodes(current, source.visitorKeys)) visit(child);
-    };
-    visit(node.body);
-    const calls = expressions.filter(
-        (expression): expression is TSESTree.CallExpression | TSESTree.NewExpression =>
-            expression.type === AST_NODE_TYPES.CallExpression || expression.type === AST_NODE_TYPES.NewExpression,
-    );
-    return (
-        expressions.some(
-            (expression) =>
-                COMPUTATION_NODES.has(expression.type) ||
-                (expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length > 0),
-        ) ||
-        calls.length > 1 ||
-        calls.some((call) =>
-            call.arguments.some(
-                (argument) => argument.type === AST_NODE_TYPES.Literal || isCapturedArgument(argument, node, source),
-            ),
-        )
-    );
-}
-
-/**
- * Identify implementations whose computation is shared by distinct call sites.
- * @param node the function implementation
- * @param source the parser source and type services
- * @returns whether inlining duplicates a computation
- */
-export function hasSharedComputation(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    return functionUsage(node, source).calls > 1 && hasComputation(node, source);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Count the executable statements of a function, including those of the functions written inside it. 2 files make 2 calls; one owner keeps that behavior in one place.
+export function totalStatements(
+    node: ImplementedFunction,
+    visitorKeys: Readonly<Record<string, readonly string[]>>,
+): number {
+    return count(node, visitorKeys);
 }
 
 /**

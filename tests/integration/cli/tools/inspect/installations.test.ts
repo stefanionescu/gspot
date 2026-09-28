@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { RUNS } from '#tests/constants/cli.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { failure } from '#tests/support/expectations.ts';
 import * as environment from '#cli/platform/environment.ts';
-import { inspectTool, locateTool } from '#cli/tools/inspect.ts';
+import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
+import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
 if (process.platform !== 'win32')
     test('the tool inspection > version inspections and tool execution prefer helpers from the selected installation', async () => {

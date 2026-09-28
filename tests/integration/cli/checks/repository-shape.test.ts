@@ -1,13 +1,13 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // The repository-shape integrity analyses: suppressions, policy patterns, large files, and configuration purity.
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
-import { suppressionComments, suppressions } from '#cli/checks/repository/suppressions.ts';
+import { suppressions, suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
 const policy = {
     configurations: ['typescript', 'docs'],

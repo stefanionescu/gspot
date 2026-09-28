@@ -3,11 +3,6 @@ import { PLACEHOLDERS } from '#cli/constants/checks/python.ts';
 import type { PythonFunction } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
-
-function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {
-    return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
-}
-
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -19,11 +14,12 @@ export function trivialFunctions(functions: PythonFunction[], threshold: number)
         const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'python');
         return count <= threshold
             ? [
-                  problem(
-                      fn,
-                      'trivial-function',
-                      `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
-                  ),
+                  {
+                      file: fn.path,
+                      line: fn.node.startPosition.row + 1,
+                      rule: 'trivial-function',
+                      text: `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
+                  },
               ]
             : [];
     });
@@ -45,11 +41,12 @@ export function placeholderDocstrings(functions: PythonFunction[]): StructurePro
         const isName = plain === fn.name.toLowerCase().replaceAll('_', ' ').trim();
         if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
         return [
-            problem(
-                fn,
-                'placeholder-docstring',
-                `The docstring of ${fn.name} says nothing the name does not. Say what the function does, or for whom.`,
-            ),
+            {
+                file: fn.path,
+                line: fn.node.startPosition.row + 1,
+                rule: 'placeholder-docstring',
+                text: `The docstring of ${fn.name} says nothing the name does not. Say what the function does, or for whom.`,
+            },
         ];
     });
 }

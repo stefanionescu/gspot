@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -58,18 +58,16 @@ async function helpText(executable: string, subcommands: string[], flags: string
     return text.replaceAll(/.\u0008/gu, '');
 }
 
-const commands: ToolCommand[] = manifests.flatMap((manifest) =>
-    manifest.checks.flatMap((check) =>
-        [check.command, check.fix_command]
-            .filter((argv): argv is string[] => argv !== undefined)
-            .flatMap((argv) => {
-                const tool = manifest.tools.find((entry) => entry.name === (check.tool ?? argv[0]));
-                if (tool === undefined || tool.provider === 'host') return [];
-                const flags = flagsOf(argv);
-                return flags.length === 0 ? [] : [{ tool, argv, subcommands: subcommandsOf(argv), flags }];
-            }),
-    ),
-);
+const commands: ToolCommand[] = [];
+const checks = manifests.flatMap((manifest) => manifest.checks.map((check) => ({ manifest, check })));
+for (const { manifest, check } of checks)
+    for (const argv of [check.command, check.fix_command]) {
+        if (argv === undefined) continue;
+        const tool = manifest.tools.find((entry) => entry.name === (check.tool ?? argv[0]));
+        if (tool === undefined || tool.provider === 'host') continue;
+        const flags = flagsOf(argv);
+        if (flags.length > 0) commands.push({ tool, argv, subcommands: subcommandsOf(argv), flags });
+    }
 
 const seen = new Set<string>();
 const distinct = commands.filter((command) => {
@@ -110,11 +108,12 @@ beforeAll(async () => {
 }, PLANTED_TIMEOUT_MS);
 
 test('every pinned tool a manifest command names is defined in that manifest', () => {
+    const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const undefinedTools = manifests.flatMap((manifest) =>
         manifest.checks
             .filter((check) => check.command !== undefined)
             .map((check) => check.tool ?? check.command[0]!)
-            .filter((name) => !manifests.some((other) => other.tools.some((tool) => tool.name === name))),
+            .filter((name) => !declared.has(name)),
     );
     expect([...new Set(undefinedTools)]).toStrictEqual([]);
 });

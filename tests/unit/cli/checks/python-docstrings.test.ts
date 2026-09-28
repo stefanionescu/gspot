@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { docstringStyle } from '#cli/checks/python/docstrings.ts';
 
 test.each(['google', 'numpy'] as const)('Ruff %s docstrings carry into an unconfigured pydoclint style', (style) => {

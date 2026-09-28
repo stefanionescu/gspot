@@ -1,18 +1,14 @@
+// Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { readFileSync, rmSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { rmSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
-
-function installed(name: string, license: string): string {
-    return `{\n    "name": "${name}",\n    "version": "1.0.0",\n    "license": "${license}"\n}\n`;
-}
 
 const LICENSE_CHECK = ['check', '--only', 'licenses/packages', '--no-cache', '--json'];
 test(
@@ -26,7 +22,10 @@ test(
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
         for (const license of ['GPL-3.0-only', '(MIT OR Apache-2.0) AND GPL-3.0-only']) {
-            await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', license));
+            await Bun.write(
+                join(sandbox.path, 'node_modules/strict/package.json'),
+                `{\n    "name": "strict",\n    "version": "1.0.0",\n    "license": "${license}"\n}\n`,
+            );
             const refused = await run(sandbox.path, LICENSE_CHECK, environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
             expect(reportSchema.parse(JSON.parse(refused.stdout)).checks).toMatchObject([
@@ -53,12 +52,16 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareLicenseProject(sandbox.path);
-        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'GPL-3.0-only'));
+        await Bun.write(
+            join(sandbox.path, 'node_modules/strict/package.json'),
+            `{\n    "name": "strict",\n    "version": "1.0.0",\n    "license": "GPL-3.0-only"\n}\n`,
+        );
         const policy = join(sandbox.path, 'gspot.toml');
         const before = await Bun.file(policy).text();
-        const exception = (license: string): string =>
-            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
-        await Bun.write(policy, exception('GPL-3.0-only'));
+        await Bun.write(
+            policy,
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Used at build time only, never shipped."\n`,
+        );
         const appliedGpl = await run(sandbox.path, ['apply'], environment);
         expect(appliedGpl.code).toBe(0);
         const gplAllowance = await run(sandbox.path, LICENSE_CHECK, environment);
@@ -66,7 +69,10 @@ test(
         expect(reportSchema.parse(JSON.parse(gplAllowance.stdout)).checks).toMatchObject([
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
-        await Bun.write(policy, exception('LGPL-3.0-only'));
+        await Bun.write(
+            policy,
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "LGPL-3.0-only"\nreason = "Used at build time only, never shipped."\n`,
+        );
         const appliedLgpl = await run(sandbox.path, ['apply'], environment);
         expect(appliedLgpl.code).toBe(0);
         const stale = await run(sandbox.path, LICENSE_CHECK, environment);
@@ -94,15 +100,22 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareLicenseProject(sandbox.path);
-        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'GPL-3.0-only'));
+        await Bun.write(
+            join(sandbox.path, 'node_modules/strict/package.json'),
+            `{\n    "name": "strict",\n    "version": "1.0.0",\n    "license": "GPL-3.0-only"\n}\n`,
+        );
         const policy = join(sandbox.path, 'gspot.toml');
         const before = await Bun.file(policy).text();
-        const exception = (license: string): string =>
-            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
-        await Bun.write(policy, exception('LGPL-3.0-only'));
+        await Bun.write(
+            policy,
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "LGPL-3.0-only"\nreason = "Used at build time only, never shipped."\n`,
+        );
         const applied = await run(sandbox.path, ['apply'], environment);
         expect(applied.code).toBe(0);
-        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'MIT'));
+        await Bun.write(
+            join(sandbox.path, 'node_modules/strict/package.json'),
+            `{\n    "name": "strict",\n    "version": "1.0.0",\n    "license": "MIT"\n}\n`,
+        );
         const changedToAllowed = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(changedToAllowed.code, changedToAllowed.stdout + changedToAllowed.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(changedToAllowed.stdout)).checks).toMatchObject([
@@ -119,7 +132,10 @@ test(
                 ],
             },
         ]);
-        await Bun.write(policy, exception('MIT'));
+        await Bun.write(
+            policy,
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "MIT"\nreason = "Used at build time only, never shipped."\n`,
+        );
         const appliedMIT = await run(sandbox.path, ['apply'], environment);
         expect(appliedMIT.code).toBe(0);
         const correctedLicense = await run(sandbox.path, LICENSE_CHECK, environment);
@@ -185,13 +201,10 @@ test.each(['recommended', 'all'])(
         );
         expect(located.code, located.stderr).toBe(0);
         const metadata = join(located.stdout.trim(), 'licensed_example-1.0.0.dist-info/METADATA');
-        const writeLicense = async (license: string): Promise<void> => {
-            await Bun.write(
-                metadata,
-                `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: ${license}\n`,
-            );
-        };
-        await writeLicense('GPL-3.0-only');
+        await Bun.write(
+            metadata,
+            `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`,
+        );
         const rejected = await run(root, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(rejected.stdout)).checks).toMatchObject([
@@ -202,7 +215,7 @@ test.each(['recommended', 'all'])(
                 findings: [{ file: 'app/pyproject.toml', rule: 'license' }],
             },
         ]);
-        await writeLicense('MIT');
+        await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT\n`);
         const corrected = await run(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([

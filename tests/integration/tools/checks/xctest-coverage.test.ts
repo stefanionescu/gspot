@@ -1,16 +1,16 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rmSync, readFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 
 import {
-    XCTEST_COVERAGE_PROJECT,
-    XCTEST_COVERAGE_SOURCE,
     XCTEST_COVERAGE_TESTS,
+    XCTEST_COVERAGE_SOURCE,
+    XCTEST_COVERAGE_PROJECT,
 } from '#tests/constants/integration/tools/checks.ts';
 
 if (process.platform === 'darwin')
@@ -25,8 +25,8 @@ if (process.platform === 'darwin')
             'Value.swift': XCTEST_COVERAGE_SOURCE,
             'ValueTests.swift': XCTEST_COVERAGE_TESTS,
         });
-        const check = async () =>
-            await executeRun(await openSession(sandbox.path), {
+        try {
+            const failed = await executeRun(await openSession(sandbox.path), {
                 stage: 'push',
                 only: ['xctest/coverage'],
                 skips: [],
@@ -34,8 +34,6 @@ if (process.platform === 'darwin')
                 isDryRun: true,
                 noCache: true,
             });
-        try {
-            const failed = await check();
             expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
             expect(failed.report.checks).toMatchObject([
                 {
@@ -51,7 +49,14 @@ if (process.platform === 'darwin')
                     'XCTAssertEqual(first(), 1)\n        XCTAssertEqual(second(), 2)',
                 ),
             );
-            const corrected = await check();
+            const corrected = await executeRun(await openSession(sandbox.path), {
+                stage: 'push',
+                only: ['xctest/coverage'],
+                skips: [],
+                fix: false,
+                isDryRun: true,
+                noCache: true,
+            });
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);
             expect(readFileSync(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);

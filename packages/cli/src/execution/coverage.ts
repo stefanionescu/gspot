@@ -1,7 +1,7 @@
+// Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-// Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
 import { SOURCE_COVERAGE_KINDS } from '#cli/constants/execution/execution.ts';
 import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';

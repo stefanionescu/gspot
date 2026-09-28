@@ -1,16 +1,16 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { statSync, existsSync, readFileSync } from 'node:fs';
 import { setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PACKAGE_PROJECTS } from '#tests/constants/integration/tools/packages.ts';
-import { createPackageProject, readPackageInputs } from '#tests/support/cli/package-project.ts';
+import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s preserves authored and locked inputs while installing and correcting source',

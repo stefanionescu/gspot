@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';

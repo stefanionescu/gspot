@@ -4,10 +4,10 @@ import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_PATHS } from '#cli/constants/platform.ts';
 import { INSTALLER_KEYS } from '#cli/configurations/tools.ts';
 import { manifestSchema } from '#cli/configurations/schema.ts';
-import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import { OPTIONAL_TOOL_KEYS } from '#cli/constants/configurations.ts';
-import type { Manifest, ToolPin, CheckSpec, RawCheck, RawTool } from '#cli/types/configurations.ts';
-import { manifestProblems, ManifestError, validateManifests } from '#cli/configurations/manifest-problems.ts';
+import type { RawTool, ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/configurations.ts';
+import { ManifestError, manifestProblems, validateManifests } from '#cli/configurations/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
@@ -142,6 +142,7 @@ export function configurationManifests(): Map<string, Manifest> {
  * @param manifests the manifests whose untracked paths count, every one by default
  * @returns the block body
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The .gitignore block: the paths gspot writes that git never tracks. 5 files make 5 calls; one owner keeps that behavior in one place.
 export function gitignoreBlock(
     manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values(),
 ): string {

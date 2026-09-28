@@ -2,9 +2,9 @@
 import type { z } from 'zod';
 import type { parseDocument } from '@decimalturn/toml-patch';
 import type { runnerTasksSchema } from '#cli/policy/runner.ts';
-import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
+import type { scopeSchema, policySchema } from '#cli/policy/schema.ts';
 import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import type { ScopeEntry, TomlTable } from '#cli/types/repository/repository.ts';
+import type { TomlTable, ScopeEntry } from '#cli/types/repository/repository.ts';
 
 export type PolicyFiles = {
     policy: Policy;

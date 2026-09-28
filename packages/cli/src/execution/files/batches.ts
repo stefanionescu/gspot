@@ -1,11 +1,12 @@
 // Batches file arguments within the process and npm wrapper command limits.
 import {
     UNIX_COMMAND_LIMIT,
-    WINDOWS_ARGUMENT_OVERHEAD,
     WINDOWS_COMMAND_LIMIT,
     WINDOWS_ESCAPE_EXPANSION,
+    WINDOWS_ARGUMENT_OVERHEAD,
 } from '#cli/constants/execution/execution.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function argumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'
         ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD

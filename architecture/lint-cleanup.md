@@ -497,6 +497,26 @@ accepting only the explicitly named duplicate. Other rules remain enabled in bot
 The combined JavaScript-generation and grammar suite passes seven tests with
 65 assertions. Git mapping validation passes three cases with nine assertions.
 
+## Full-force enforcement
+
+The trivial-function rule lost every exemption the language does not force: shared computation,
+contextual signatures, callback properties, and repeated references. Nested callbacks now count
+toward a function's statements. Two plugin rules were added, `gspot/export-layout` and
+`gspot/no-import-comments`, both at level `all`. Unused parameters report in every position in
+TypeScript, JavaScript, and Python. Every switched-off ESLint rule in the generated template
+carries its reason; `n/no-sync` and `unicorn/no-null` stay off by decision. Test files keep only
+`no-magic-numbers` and `no-non-null-assertion` off, with reasons.
+
+Under those rules the tree reached zero ESLint findings. Functions called once were inlined.
+Functions whose shape an external contract fixes carry a suppression with a named reason.
+The remaining magic numbers became named constants. The message catalog under
+`packages/cli/src/policy/messages.ts` holds one policy ignore because each entry is a distinct message. The build scripts keep a local exit constant
+because release tests copy them without the alias.
+
+CodeQL passed after `installed-files.ts` reads a link target before opening a file and
+`locate.ts` reads a manifest without a preceding stat. Types, 961 unit tests, 1,441 integration
+tests, 463 plugin tests, 141 normal checks, and seven manual checks pass on the current tree.
+
 ## Verification
 
 Bun 1.4.2 owns all accepted runtime evidence. Detailed reports and failed diagnostic history

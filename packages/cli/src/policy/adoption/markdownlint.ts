@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { extname, posix } from 'node:path';
+import { posix, extname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
-import { adoptedScope, adoptedTool } from '#cli/policy/adoption/results.ts';
+import { adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { asRaw, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 

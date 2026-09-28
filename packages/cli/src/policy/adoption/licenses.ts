@@ -6,7 +6,7 @@ import { asList, asStrings } from '#cli/policy/adoption/source.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
-import { adoptedScope, appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
+import { reasonFor, adoptedScope, appendSetting } from '#cli/policy/adoption/results.ts';
 
 const strings = z.array(z.string());
 

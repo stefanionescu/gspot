@@ -1,14 +1,15 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { containingAll } from '#tests/support/expectations.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 
 import {
     PYTHON,
-    SHARED_SETTINGS_PACKAGE,
     TAILWIND_AT_RULES,
+    SHARED_SETTINGS_PACKAGE,
 } from '#tests/constants/integration/cli/generation/generation.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases read the generated knip configuration; one owner parses it.
 async function knipConfiguration(
     policy: string,
 ): Promise<{ entry: string[]; workspaces: Record<string, { entry: string[] }> }> {
@@ -19,11 +20,13 @@ async function knipConfiguration(
     return JSON.parse(content) as { entry: string[]; workspaces: Record<string, { entry: string[] }> };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases read the generated stylelint at-rules; one owner parses them.
 async function stylelintAtRules(policy: string): Promise<unknown> {
     const content = await generatedFile(policy, '.gspot/config/stylelint.json');
     return (JSON.parse(content) as { rules: Record<string, unknown> }).rules['at-rule-no-unknown'];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four cases read the generated Ruff lint table; one owner parses it.
 async function ruffLint(policy: string): Promise<{ select: string[]; 'per-file-ignores'?: Record<string, string[]> }> {
     const content = await generatedFile(policy, '.gspot/config/ruff.toml');
     return (parseToml(content) as { lint: { select: string[]; 'per-file-ignores'?: Record<string, string[]> } }).lint;
@@ -61,10 +64,10 @@ test('Ruff selects the families the test runner and the framework declare, and i
     expect(tested.select).toContain('PT009');
     expect(tested.select).not.toContain('PT001');
     expect(tested['per-file-ignores']).toStrictEqual({
-        '**/tests/**': ['S101', 'ARG', 'PLR2004'],
-        '**/test_*.py': ['S101', 'ARG', 'PLR2004'],
-        '**/*_test.py': ['S101', 'ARG', 'PLR2004'],
-        '**/conftest.py': ['S101', 'ARG', 'PLR2004'],
+        '**/tests/**': ['S101'],
+        '**/test_*.py': ['S101'],
+        '**/*_test.py': ['S101'],
+        '**/conftest.py': ['S101'],
     });
     const served = await ruffLint('version = 1\nconfigurations = ["python", "fastapi"]\n');
     expect(served.select).toContain('FAST003');
@@ -75,5 +78,5 @@ test('a policy ignore joins the runner ignores of the same test path', async () 
     const lint = await ruffLint(
         'version = 1\nconfigurations = ["python", "pytest"]\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/conftest.py"]\nreason = "Fixtures document themselves through their names."\n',
     );
-    expect(lint['per-file-ignores']?.['**/conftest.py']).toStrictEqual(['S101', 'ARG', 'PLR2004', 'D103']);
+    expect(lint['per-file-ignores']?.['**/conftest.py']).toStrictEqual(['S101', 'D103']);
 });

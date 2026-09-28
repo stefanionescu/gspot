@@ -12,7 +12,7 @@ import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { PolicyFiles, ScopeSelection, Policy } from '#cli/types/policy/policy.ts';
+import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // Resolves every scope: its selected configurations, settings surface, and merged view.
 function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<string, Manifest>): ScopeSelection[] {

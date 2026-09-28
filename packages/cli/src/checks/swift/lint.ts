@@ -10,7 +10,7 @@ import type { InlineDocumentation } from '#cli/types/checks/swift.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/constants/checks/swift.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.
 function isSourceComment(node: Node): boolean {

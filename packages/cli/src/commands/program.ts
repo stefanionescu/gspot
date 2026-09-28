@@ -12,11 +12,11 @@ import { registerApply } from '#cli/commands/apply/command.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerUninstall } from '#cli/commands/uninstall.ts';
 import { installCompletion } from '#cli/commands/completion.ts';
-import { HELP_CODES } from '#cli/constants/commands/commands.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
+import { ERROR_EXIT, HELP_CODES } from '#cli/constants/commands/commands.ts';
 import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
-import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
+import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -44,10 +44,10 @@ function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity
 }
 
 function exitCodeFor(error: unknown): number {
-    if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : 2;
+    if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : ERROR_EXIT;
     if (error instanceof PromptError) fail(error.message);
     else fail(`gspot did not run: ${error instanceof Error ? error.message : String(error)}`);
-    return 2;
+    return ERROR_EXIT;
 }
 
 /**

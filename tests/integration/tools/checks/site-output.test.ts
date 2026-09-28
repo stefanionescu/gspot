@@ -1,16 +1,13 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { SITE_BUILD } from '#tests/constants/cli.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { siteBuild } from '#cli/checks/static-site/build.ts';
-import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
-
-const page = (body: string) =>
-    `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`;
+import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/static-site/output-checks.ts';
 
 test.each([
     {
@@ -57,7 +54,10 @@ test.each([
     await createFileTree(sandbox.path, {
         '.gspot/config/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
     });
-    writeFileSync(join(build.output, 'index.html'), page(body));
+    writeFileSync(
+        join(build.output, 'index.html'),
+        `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`,
+    );
     writeFileSync(join(build.output, 'style.css'), '.unused { color: red; }');
     const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async (_input, argv, options) =>
         processes.run([join(import.meta.dir, '../../../../node_modules/.bin', argv[0]!), ...argv.slice(1)], {
@@ -68,7 +68,10 @@ test.each([
     try {
         const findings = await analyze(request);
         expect(findings).toMatchObject([finding]);
-        writeFileSync(join(build.output, 'index.html'), page('<p class="unused">Example</p>'));
+        writeFileSync(
+            join(build.output, 'index.html'),
+            `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>`,
+        );
         expect(await analyze(request)).toStrictEqual([]);
     } finally {
         command.mockRestore();

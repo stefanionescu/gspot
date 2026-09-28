@@ -2,7 +2,7 @@ import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { join, relative } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { GRAMMAR_NAMES, grammarPath } from '#cli/platform/assets.ts';
+import { grammarPath, GRAMMAR_NAMES } from '#cli/platform/assets.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');

@@ -6,11 +6,11 @@ import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { isRepositoryPath, profileSchema } from '#cli/policy/profiles/schema.ts';
-import { GITHUB_PREFIX, PROFILE_FILE, RAW_HOST, REQUEST_TIMEOUT_MS } from '#cli/constants/policy/profiles.ts';
+import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
+import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/constants/policy/profiles.ts';
 
 function githubUrl(reference: string): string {
-    const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@', 2);
+    const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@');
     const [owner = '', repository = '', ...rest] = location.split('/');
     const file = rest.length === 0 ? PROFILE_FILE : rest.join('/');
     return `${RAW_HOST}/${owner}/${repository}/${ref}/${file}`;
@@ -99,6 +99,7 @@ export function parseProfile(text: string, source: string): Profile {
  * @param cwd the directory a relative path starts from
  * @returns the validated profile
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 export async function readProfile(source: string, cwd: string): Promise<Profile> {
     return parseProfile(await profileText(source, cwd), source);
 }

@@ -2,13 +2,8 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { BASELINE } from '#cli/constants/checks/security.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';
-
-function finding(input: EngineInput, rule: string, text: string): Finding {
-    return { check: input.spec.name, file: BASELINE, line: 1, rule, message: text, fixable: false };
-}
-
 /**
  * One finding for each baseline entry with no reason, and one for each whose file is gone.
  * @param input the engine input
@@ -29,17 +24,29 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
     return entries.flatMap((entry) => [
         ...(explained.has(entry.Fingerprint)
             ? []
-            : [finding(input, 'no-reason', `The baseline entry ${entry.Fingerprint} has no reason.`)]),
+            : [
+                  {
+                      check: input.spec.name,
+                      file: BASELINE,
+                      line: 1,
+                      rule: 'no-reason',
+                      message: `The baseline entry ${entry.Fingerprint} has no reason.`,
+                      fixable: false,
+                  },
+              ]),
         // An entry with a commit is a finding in history: the file may be gone, and the commit still holds the value.
         ...((entry.Commit ?? '') !== '' ||
         statSync(join(input.root, entry.File), { throwIfNoEntry: false }) !== undefined
             ? []
             : [
-                  finding(
-                      input,
-                      'stale-entry',
-                      `The baseline entry ${entry.Fingerprint} names ${entry.File}, which is gone.`,
-                  ),
+                  {
+                      check: input.spec.name,
+                      file: BASELINE,
+                      line: 1,
+                      rule: 'stale-entry',
+                      message: `The baseline entry ${entry.Fingerprint} names ${entry.File}, which is gone.`,
+                      fixable: false,
+                  },
               ]),
     ]);
 }

@@ -2,23 +2,23 @@ import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { guideSections } from '#cli/agents/sections.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
+import { layerOfPath, frontMatterFindings } from '#cli/agents/metadata.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
-import type { RuleFinding, RuleText, RulesLintReport } from '#cli/types/agents.ts';
+import type { RuleText, RuleFinding, RulesLintReport } from '#cli/types/agents.ts';
 
 import {
     EM_DASH,
-    INLINE_CODE_SPANS,
     ITEM_END,
     LIST_ITEM,
     RULE_LINK,
-    BOUNDARY_LAYERS,
+    RULE_LAYERS,
     BOUNDARY_TERMS,
-    CORRUPTION_TERMS,
+    BOUNDARY_LAYERS,
     FENCE_LANGUAGES,
+    CORRUPTION_TERMS,
+    INLINE_CODE_SPANS,
     INDEPENDENCE_TERMS,
     RULE_FILE_LINE_CEILING,
-    RULE_LAYERS,
 } from '#cli/constants/agents.ts';
 
 const layerNames = new Set(RULE_LAYERS);
@@ -179,6 +179,7 @@ if (import.meta.main) {
  * @param path the path relative to rules/
  * @returns whether the lint reads it
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a path under rules/ is a rule file: Markdown in a known layer folder. 1 files make 3 calls; one owner keeps that behavior in one place.
 export function isRulePath(path: string): boolean {
     const top = path.split('/', 1)[0] ?? '';
     return path.endsWith('.md') && (top === 'general' || top === 'templates' || layerNames.has(top));

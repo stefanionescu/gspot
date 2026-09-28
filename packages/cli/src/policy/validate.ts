@@ -6,8 +6,8 @@ import { unknownConfiguration } from '#cli/policy/messages.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { asRecord, policyTables, policyValue } from '#cli/policy/settings.ts';
-import type { PathSegment, Policy, PolicyProblem } from '#cli/types/policy/policy.ts';
+import { asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
+import type { Policy, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
     const selected = policyValue(table, 'tools.ruff.select')?.value;

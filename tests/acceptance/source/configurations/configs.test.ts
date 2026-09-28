@@ -1,15 +1,15 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import type { FindingCase } from '#tests/types/cli.ts';
 // The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { script, runPlanted } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { install, toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { CONFIGS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { WORKFLOW_HEAD } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

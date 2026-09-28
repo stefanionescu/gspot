@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/constants/checks/checks.ts';
-import type { Importer, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, Importer, EngineInput } from '#cli/types/checks/checks.ts';
 
 // CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
 function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefined {
@@ -86,18 +86,23 @@ function bindingReads(checker: ts.TypeChecker, symbol: ts.Symbol, source: ts.Nod
     return reads;
 }
 
-function camel(name: string): string {
-    return name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase());
-}
-
 function sheetFindings(input: EngineInput, sheet: string, defined: string[], importers: Importer[]): Finding[] {
     const name = sheet.slice(sheet.lastIndexOf('/') + 1);
     if (importers.length === 0) return [];
-    const known = new Set(defined.flatMap((entry) => [entry, camel(entry)]));
+    const known = new Set(
+        defined.flatMap((entry) => [
+            entry,
+            entry.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase()),
+        ]),
+    );
     const read = new Set(importers.flatMap((file) => file.read));
     const base = { check: input.spec.name, line: 1, fixable: false };
     const unused = defined
-        .filter((entry) => !read.has(entry) && !read.has(camel(entry)))
+        .filter(
+            (entry) =>
+                !read.has(entry) &&
+                !read.has(entry.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase())),
+        )
         .map((entry) => ({
             ...base,
             file: sheet,

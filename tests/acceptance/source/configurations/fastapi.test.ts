@@ -1,7 +1,7 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repositories for the pytest and fastapi configurations: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/types/cli.ts';
@@ -11,10 +11,12 @@ import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { INIT_SELECTION_QUIET } from '#tests/constants/acceptance/source/cli/cli.ts';
-import { FASTAPI_TESTS, MATH } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { MATH, FASTAPI_TESTS } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const PROJECT = (dependency: string): string =>
     `[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["${dependency}"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const ROUTE = (body: string): string =>
     `"""The health route."""\n\nimport asyncio\nimport time\n\n\nasync def health() -> dict[str, str]:\n    """Say the service is up."""\n${body}    return {"status": "up"}\n\n\n__all__ = ["asyncio", "health", "time"]\n`;
 

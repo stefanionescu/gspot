@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { svelteCheck } from '#cli/checks/svelte.ts';
 import { engineInput } from '#cli/execution/engines.ts';

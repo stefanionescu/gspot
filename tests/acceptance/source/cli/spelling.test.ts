@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
+import { statSync, chmodSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
 
 // Edited generated configuration is preserved; recovery restores the authored source and mode.
 async function expectSpellingRestoration(

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 

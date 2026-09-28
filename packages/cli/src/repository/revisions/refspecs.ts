@@ -2,8 +2,11 @@
 import { run } from '#cli/platform/spawn.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
-import { gitLines, gitText } from '#cli/repository/revisions/git-queries.ts';
+import { gitText, gitLines } from '#cli/repository/revisions/git-queries.ts';
 import type { RefRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
+
+// A refspec is a source and a destination.
+const REFSPEC_FIELDS = 2;
 
 // The text a wildcard pattern captures from a ref, '' for an exact match, or undefined when the ref does not match.
 function capturedRef(pattern: string, ref: string): string | undefined {
@@ -15,17 +18,12 @@ function capturedRef(pattern: string, ref: string): string | undefined {
     return isMatch ? ref.slice(prefix.length, ref.length - suffix.length) : undefined;
 }
 
-// Asks Git whether a pattern is a valid refspec, failing the selection when it is not.
-async function assertRefspec(root: string, pattern: string, cancelSignal?: AbortSignal): Promise<void> {
-    await gitText(root, ['check-ref-format', '--refspec-pattern', pattern], cancelSignal);
-}
-
 // A fetch mapping split into its source and destination, or why it cannot be used.
 function splitMapping(raw: string): ParsedMapping {
     const fields = raw.replace(/^\+/u, '').split(':');
     const [source, destination] = fields;
     if (destination === undefined || destination === '') return { kind: 'skip' };
-    if (fields.length !== 2 || source === undefined) return { kind: 'unusable' };
+    if (fields.length !== REFSPEC_FIELDS || source === undefined) return { kind: 'unusable' };
     if (!source.startsWith('refs/') || !destination.startsWith('refs/')) return { kind: 'unusable' };
     return { kind: 'mapping', source, destination };
 }
@@ -34,7 +32,7 @@ function splitMapping(raw: string): ParsedMapping {
 async function addExclusion(root: string, raw: string, rules: RefRules, cancelSignal?: AbortSignal): Promise<boolean> {
     const source = raw.slice(1);
     if (!source.startsWith('refs/')) return false;
-    await assertRefspec(root, source, cancelSignal);
+    await gitText(root, ['check-ref-format', '--refspec-pattern', source], cancelSignal);
     rules.excluded.push(source);
     return true;
 }
@@ -50,8 +48,8 @@ async function addMapping(
     const parsed = splitMapping(raw);
     if (parsed.kind === 'skip') return true;
     if (parsed.kind === 'unusable') return false;
-    await assertRefspec(root, parsed.source, cancelSignal);
-    await assertRefspec(root, parsed.destination, cancelSignal);
+    await gitText(root, ['check-ref-format', '--refspec-pattern', parsed.source], cancelSignal);
+    await gitText(root, ['check-ref-format', '--refspec-pattern', parsed.destination], cancelSignal);
     if (parsed.source.includes('*') !== parsed.destination.includes('*'))
         throw new SelectionError([`Invalid fetch mapping for ${remote}: ${raw}`]);
     rules.mappings.push({ source: parsed.source, destination: parsed.destination });

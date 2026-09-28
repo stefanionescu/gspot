@@ -1,6 +1,6 @@
+// The types of support/release in this package.
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
-// The types of support/release in this package.
 import type { createConsumer } from '#tests/support/release/consumer.ts';
 
 export type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };

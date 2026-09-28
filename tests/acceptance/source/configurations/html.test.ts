@@ -1,43 +1,47 @@
+// Planted repository for the html configuration: an image with no text alternative, an inline handler, and copy written into a template.
 import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the html configuration: an image with no text alternative, an inline handler, and copy written into a template.
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { HTML_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { TEMPLATES } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const page = (body: string): string =>
-    `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n${body}    </body>\n</html>\n`;
-const CLEAN = page(
-    '        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" alt="{{ logo_alt }}" />\n        <script type="application/ld+json">{"@type": "Thing"}</script>\n        <script src="/app.js"></script>\n',
-);
+const CLEAN = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" alt="{{ logo_alt }}" />\n        <script type="application/ld+json">{"@type": "Thing"}</script>\n        <script src="/app.js"></script>\n    </body>\n</html>\n`;
 const CASES: FindingCase[] = [
     {
         check: 'html/html-validate',
-        files: { 'pages/home.html': page('        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" />\n') },
+        files: {
+            'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" />\n    </body>\n</html>\n`,
+        },
         expected: { file: 'pages/home.html', rule: 'wcag/h37', line: 9 },
     },
     {
         check: 'html/scripts',
-        files: { 'pages/home.html': page('        <button type="button" onclick="go()">{{ label }}</button>\n') },
+        files: {
+            'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <button type="button" onclick="go()">{{ label }}</button>\n    </body>\n</html>\n`,
+        },
         expected: { file: 'pages/home.html', rule: 'handler-attribute', line: 8 },
     },
     {
         check: 'html/scripts',
-        files: { 'pages/home.html': page('        <script>window.go = 1;</script>\n') },
+        files: {
+            'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <script>window.go = 1;</script>\n    </body>\n</html>\n`,
+        },
         expected: { file: 'pages/home.html', rule: 'inline-script', line: 8 },
     },
     {
         check: 'html/copy',
-        files: { 'pages/home.html': page('        <h1>Welcome to the shop</h1>\n') },
+        files: {
+            'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>Welcome to the shop</h1>\n    </body>\n</html>\n`,
+        },
         policy: TEMPLATES,
         expected: { file: 'pages/home.html', rule: 'literal-text', line: 8 },
     },

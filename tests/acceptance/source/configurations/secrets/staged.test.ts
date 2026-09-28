@@ -1,7 +1,7 @@
 // Planted repository for the secrets configuration: a staged key, a tracked environment file, and a baseline with no reason.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';

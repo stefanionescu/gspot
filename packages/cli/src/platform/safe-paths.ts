@@ -3,13 +3,13 @@ import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
 
 import {
-    OWNER_WRITE_BIT,
-    READ_ONLY_FILE,
-    WRITABLE_FILE,
     DEVICE_NAME,
-    LIFECYCLE_PRIVATE_PATH,
+    WRITABLE_FILE,
+    READ_ONLY_FILE,
+    OWNER_WRITE_BIT,
     UNSAFE_PATH_END,
     UNSAFE_CHARACTERS,
+    LIFECYCLE_PRIVATE_PATH,
 } from '#cli/constants/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
@@ -72,6 +72,7 @@ export function nativePath(path: string): string[] {
  * Refuses a path inside the lifecycle's own metadata.
  * @param path the proposed path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Refuses a path inside the lifecycle's own metadata. 1 files make 1 calls; one owner keeps that behavior in one place.
 export function privateTarget(path: string): void {
     if (LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC')))
         throw new Error(`Lifecycle metadata is not a generated target: ${path}`);
@@ -81,6 +82,7 @@ export function privateTarget(path: string): void {
  * Public mutation proposals cannot target the owner's journal, lock, or recovery files.
  * @param path the proposed path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation proposals cannot target the owner's journal, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);

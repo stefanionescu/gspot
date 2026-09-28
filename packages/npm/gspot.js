@@ -42,6 +42,7 @@ const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
  * @param {NodeJS.Signals} signal The process signal received by the launcher.
  * @returns Whether the signal was sent to the child process.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: removeListener needs the same function value that process.on received.
 const forward = (signal) => child.kill(signal);
 for (const signal of signals) process.on(signal, forward);
 child.on('error', (error) => {

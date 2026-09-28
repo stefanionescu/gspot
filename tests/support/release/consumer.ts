@@ -3,19 +3,25 @@ import { testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
+import type { CreateConsumerResult } from '#tests/types/results.ts';
 import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/constants/release.ts';
 
-export async function createConsumer(registry: { url: string; npmrc: string }, version: string) {
+// The authored configuration the consumer starts from.
+const EDITORCONFIG = 'root = true\n[*]\nindent_size = 2\n[*.json]\nindent_size = 4\n';
+const FORMATTER =
+    'console.log("formatter stdout"); console.error("formatter stderr"); export default { semi: false };\n';
+
+export async function createConsumer(
+    registry: { url: string; npmrc: string },
+    version: string,
+): Promise<CreateConsumerResult> {
     const workspace = await testdir();
     try {
         const consumer = join(workspace.path, 'consumer');
         mkdirSync(consumer);
         writeFileSync(join(consumer, 'package.json'), '{"name":"consumer","private":true}\n');
-        const editorconfig = 'root = true\n[*]\nindent_size = 2\n[*.json]\nindent_size = 4\n';
-        writeFileSync(join(consumer, '.editorconfig'), editorconfig, { mode: 0o640 });
-        const formatter =
-            'console.log("formatter stdout"); console.error("formatter stderr"); export default { semi: false };\n';
-        writeFileSync(join(consumer, 'prettier.config.mjs'), formatter);
+        writeFileSync(join(consumer, '.editorconfig'), EDITORCONFIG, { mode: 0o640 });
+        writeFileSync(join(consumer, 'prettier.config.mjs'), FORMATTER);
         writeFileSync(join(consumer, 'source.js'), 'const greeting="hello";');
         writeFileSync(join(consumer, 'broken.sh'), 'if then\n');
         writeFileSync(join(consumer, 'authored.txt'), 'Preserve this authored file.\n');
@@ -55,8 +61,8 @@ export async function createConsumer(registry: { url: string; npmrc: string }, v
             command,
             options,
             setupOptions,
-            editorconfig,
-            formatter,
+            editorconfig: EDITORCONFIG,
+            formatter: FORMATTER,
             workspace: workspace.path,
             [Symbol.asyncDispose]: workspace[Symbol.asyncDispose].bind(workspace),
         };

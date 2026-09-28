@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { ANSIBLE_PROJECT_FILE, LINT_LINE } from '#cli/constants/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/constants/checks/checks.ts';
 
 async function linted(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];

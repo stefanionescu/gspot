@@ -1,3 +1,4 @@
+// Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
 import { nearMatches } from '#cli/policy/near.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -5,16 +6,10 @@ import { selectedSections } from '#cli/agents/sections.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-// Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
-import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import { detectConditions } from '#cli/configurations/detect.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { AGENT_LAYERS, FIRST_READ, RULES_PREFIX, TITLE } from '#cli/constants/agents.ts';
-
-// An entry is a file path under the rules folder, or a folder that holds a layer or a configuration's files.
-function isExcluded(source: string, exclude: string[]): boolean {
-    return exclude.some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`));
-}
+import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/constants/agents.ts';
 
 function declaredGuides(
     manifests: Manifest[],
@@ -64,7 +59,11 @@ export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], r
     ]) {
         const path = `${RULES_PREFIX}${source}`;
         if (!available.has(path)) throw new Error(`The selected rule guide does not exist: ${source}`);
-        if (files.has(source) || isExcluded(source, exclude)) continue;
+        if (
+            files.has(source) ||
+            exclude.some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`))
+        )
+            continue;
         files.set(source, {
             source,
             target: `${rules.directory}/${source}`,
@@ -108,11 +107,20 @@ export function assembleRules(
 export function excludeProblems(exclude: string[]): string[] {
     const sources = listAssets(RULES_PREFIX).map((path) => path.slice(RULES_PREFIX.length));
     return exclude.flatMap((entry) => {
-        if (FIRST_READ.some((file) => isExcluded(file, [entry])))
+        if (
+            FIRST_READ.some((file) =>
+                [entry].some((entry) => file === entry || file.startsWith(`${entry.replace(/\/$/u, '')}/`)),
+            )
+        )
             return [
                 `[rules] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
             ];
-        if (sources.some((source) => isExcluded(source, [entry]))) return [];
+        if (
+            sources.some((source) =>
+                [entry].some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`)),
+            )
+        )
+            return [];
         const near = nearMatches(entry, sources);
         const names = near.map((name) => `\`${name}\``).join(', ');
         const hint = near.length > 0 ? ` Did you mean ${names}?` : '';

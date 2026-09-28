@@ -14,7 +14,7 @@ import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/constants/commands/doctor.ts';
-import type { ChangeReport, ChangeRow } from '#cli/types/commands/doctor.ts';
+import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 

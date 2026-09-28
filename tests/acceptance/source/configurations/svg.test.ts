@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { install } from '#tests/support/cli/tools.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { runProcess, run } from '#tests/support/cli/command.ts';
+import { run, runProcess } from '#tests/support/cli/command.ts';
 
 const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--no-cache', '--json'];
 

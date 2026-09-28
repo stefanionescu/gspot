@@ -5,15 +5,15 @@ import type { Finding } from '#cli/types/checks/checks.ts';
 import type {
     ScriptFile,
     ScriptIndex,
-    StructureAnalysis as Analysis,
     StructureContext,
+    StructureAnalysis as Analysis,
 } from '#cli/types/checks/structure.ts';
 import {
     BOUNDARY_HEADER,
-    BOUNDARY_HEADER_WINDOW,
-    BOUNDARY_MIN_WORDS,
-    SOURCE_ANNOTATION,
     SOURCE_STATEMENT,
+    SOURCE_ANNOTATION,
+    BOUNDARY_MIN_WORDS,
+    BOUNDARY_HEADER_WINDOW,
 } from '#cli/constants/checks/script.ts';
 
 function resolvedSource(owner: string, annotation: string): string {

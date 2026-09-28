@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -49,13 +49,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     );
     expect(location.code, location.stderr).toBe(0);
     const metadata = join(location.stdout.trim(), 'licensed_example-1.0.0.dist-info/METADATA');
-    const writeLicense = async (license: string): Promise<void> => {
-        await Bun.write(
-            metadata,
-            `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: ${license}\n`,
-        );
-    };
-    await writeLicense('GPL-3.0-only');
+    await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`);
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({
             file: 'pyproject.toml',
@@ -68,13 +62,13 @@ test('native Python license scanning ignores project scanner exclusions and veri
         'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
-    await writeLicense('MIT');
+    await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT\n`);
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({ rule: 'license', message: textContaining('exception no longer holds') }),
     ]);
     await Bun.write(join(root, 'gspot.toml'), 'version = 1\nlevel = "all"\nconfigurations = ["licenses"]\n');
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
-    await writeLicense('MIT-0');
+    await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT-0\n`);
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({ message: textContaining('reports MIT-0, which is not an allowed license') }),
     ]);

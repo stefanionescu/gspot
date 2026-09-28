@@ -1,6 +1,6 @@
 import { isTomlValue } from '#cli/policy/toml/nodes.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { PathSegment, KeyValue, Position, Value } from '#cli/types/policy/policy.ts';
+import type { Value, KeyValue, Position, PathSegment } from '#cli/types/policy/policy.ts';
 
 function valueLocations(value: Value, path: PathSegment[], locations: Map<string, Position>): void {
     locations.set(JSON.stringify(path), value.loc.start);
@@ -15,6 +15,7 @@ function valueLocations(value: Value, path: PathSegment[], locations: Map<string
     for (const [index, item] of items.entries()) valueLocations(item, [...path, index], locations);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three walkers descend through a key; it and valueLocations call each other.
 function keyLocations(node: KeyValue, parent: PathSegment[], locations: Map<string, Position>): void {
     const path = [...parent, ...node.key.value];
     valueLocations(node.value, path, locations);
@@ -75,6 +76,7 @@ export function sourceLocations(text: string): Map<string, Position> {
  * @param path the key path
  * @returns the position as line:column
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Locate a value or, for an absent required value, its nearest authored container. 1 files make 4 calls; one owner keeps that behavior in one place.
 export function policyLocation(locations: Map<string, Position>, path: PathSegment[]): string {
     const { line, column } = policyPosition(locations, path);
     return `${String(line)}:${String(column)}`;

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { statSync, readFileSync, writeFileSync } from 'node:fs';
+import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
@@ -71,6 +71,7 @@ try {
 }
 
 // What recovery leaves behind: the file's bytes and mode, and what the owner still records as installed.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four recovery cases compare the same three fields of the restored file.
 function recovered(owner: ReturnType<typeof openLifecycleOwner>, { destination }: Published) {
     return {
         bytes: readFileSync(destination),

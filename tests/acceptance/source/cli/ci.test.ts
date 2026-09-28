@@ -1,18 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import type { Generated, Retention, Step } from '#tests/types/acceptance/source/cli.ts';
-import { CODEQUALITY_REPORT, RETENTION } from '#tests/constants/acceptance/source/cli/cli.ts';
-import { commitCiSource, prepareCiProject, createCiDownload, runCiJob } from '#tests/support/cli/ci.ts';
-
-function runsManual(steps: Step[]): boolean {
-    return steps.some((step) => step.run?.includes('--stage manual') === true);
-}
-
+import type { Generated, Retention } from '#tests/types/acceptance/source/cli.ts';
+import { RETENTION, CODEQUALITY_REPORT } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { runCiJob, commitCiSource, createCiDownload, prepareCiProject } from '#tests/support/cli/ci.ts';
 // What the generated job says about keeping reports and running the manual stage, in one shape per provider.
 function retention(provider: 'gitlab' | 'github', generated: Generated): Retention {
     if (provider === 'gitlab')
@@ -26,7 +21,11 @@ function retention(provider: 'gitlab' | 'github', generated: Generated): Retenti
     return {
         always: artifact.if?.includes('always()') === true,
         keepsCodequality: artifact.with?.['path']?.includes(CODEQUALITY_REPORT) === true,
-        manualStage: runsManual(manual) && !runsManual(check) ? 'manual job only' : 'every job',
+        manualStage:
+            manual.some((step) => step.run?.includes('--stage manual') === true) &&
+            !check.some((step) => step.run?.includes('--stage manual') === true)
+                ? 'manual job only'
+                : 'every job',
     };
 }
 
@@ -37,9 +36,7 @@ test.each(['gitlab', 'github'] as const)(
         await using executables = await testdir();
         const { base, target, generated } = await prepareCiProject(repository.path, provider);
         await using download = await createCiDownload(executables.path);
-        const execute = async (comparison: string) =>
-            await runCiJob(repository.path, generated, download.directory, comparison, provider);
-        const invalid = await execute(base);
+        const invalid = await runCiJob(repository.path, generated, download.directory, base, provider);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         const reportPath = join(repository.path, '.gspot/reports/report.json');
         const failed = pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
@@ -56,12 +53,12 @@ test.each(['gitlab', 'github'] as const)(
         expect(retention(provider, generated)).toMatchObject(RETENTION[provider]);
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
         const corrected = commitCiSource(repository.path, 'correct syntax');
-        const valid = await execute(base);
+        const valid = await runCiJob(repository.path, generated, download.directory, base, provider);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect(pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).revisions[0]!.object).toBe(
             corrected,
         );
-        const firstPush = await execute('0'.repeat(40));
+        const firstPush = await runCiJob(repository.path, generated, download.directory, '0'.repeat(40), provider);
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
         expect(firstPush.stdout).toContain('legacy.sh');
     },
@@ -75,28 +72,26 @@ test.each(['gitlab', 'github'] as const)(
         await using executables = await testdir();
         const { base, generated } = await prepareCiProject(repository.path, provider);
         await using download = await createCiDownload(executables.path);
-        const execute = async (comparison: string) =>
-            await runCiJob(repository.path, generated, download.directory, comparison, provider);
-        const initial = await execute(base);
+        const initial = await runCiJob(repository.path, generated, download.directory, base, provider);
         expect(initial.code).toBe(1);
         const reportPath = join(repository.path, '.gspot/reports/report.json');
         const held = readFileSync(reportPath);
-        const malformed = await execute('$(touch injected)');
+        const malformed = await runCiJob(repository.path, generated, download.directory, '$(touch injected)', provider);
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
         expect(malformed.stderr).toContain('Invalid CI comparison object');
         expect(readFileSync(reportPath)).toStrictEqual(held);
-        const missing = await execute('f'.repeat(40));
+        const missing = await runCiJob(repository.path, generated, download.directory, 'f'.repeat(40), provider);
         expect(missing.code).not.toBe(0);
         expect(readFileSync(reportPath)).toStrictEqual(held);
         download.corrupt = true;
-        const refused = await execute(base);
+        const refused = await runCiJob(repository.path, generated, download.directory, base, provider);
         expect(refused.code).toBe(1);
         expect(refused.stderr).toContain('checksum does not match');
         expect(readFileSync(reportPath)).toStrictEqual(held);
         download.corrupt = false;
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
         commitCiSource(repository.path, 'correct syntax');
-        const corrected = await execute(base);
+        const corrected = await runCiJob(repository.path, generated, download.directory, base, provider);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
     120_000,

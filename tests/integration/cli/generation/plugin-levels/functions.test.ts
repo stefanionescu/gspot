@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 const CALLBACK_SOURCE = [
@@ -87,44 +87,47 @@ test.each(['recommended', 'all'])('generated %s lint preserves required class me
     ).toMatchObject(level === 'all' ? [6, 7].map((line) => ({ line, messageId: 'trivial' })) : []);
 });
 
-test.each(['recommended', 'all'])('generated %s lint preserves required callback signatures', async (level) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
-        'package.json': '{"private":true,"type":"module"}\n',
-        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
-        'callbacks.ts': CALLBACK_SOURCE,
-        'consumer.ts': [
-            'import { observed, invoked, typeOnly, parenthesized } from "./callbacks";',
-            'import * as callbacks from "./callbacks";',
-            'import { aliasedCallback as callback } from "./callbacks";',
-            'export const listeners = { observed, namespaceCallback: callbacks.namespaceCallback, callback };',
-            'observed(1); invoked(1); (parenthesized)(1);',
-            'export type Signature = typeof typeOnly;',
-            'import { area as size, forward } from "./callbacks";',
-            'size(2, 3); callbacks.area(4, 5); forward(1); callbacks.forward(2);',
-            'import { bounded } from "./callbacks";',
-            'bounded(1); callbacks.bounded(2);',
-        ].join('\n'),
-    });
-    const eslint = await generatedEslint(sandbox.path);
-    const results = await eslint.lintFiles(['callbacks.ts']);
-    expect(
-        results.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
-    ).toMatchObject(
-        level === 'all'
-            ? [
-                  ...[3, 12, 13, 14].map((line) => ({ line, column: 8, messageId: 'trivial' })),
-                  { line: 17, column: 1, messageId: 'trivial' },
-                  { line: 19, column: 1, messageId: 'trivial' },
-                  { line: 27, column: 8, messageId: 'trivial' },
-              ]
-            : [],
-    );
-});
+test.each(['recommended', 'all'])(
+    'generated %s lint reports named small functions and keeps inline callbacks',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+            'package.json': '{"private":true,"type":"module"}\n',
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+            'callbacks.ts': CALLBACK_SOURCE,
+            'consumer.ts': [
+                'import { observed, invoked, typeOnly, parenthesized } from "./callbacks";',
+                'import * as callbacks from "./callbacks";',
+                'import { aliasedCallback as callback } from "./callbacks";',
+                'export const listeners = { observed, namespaceCallback: callbacks.namespaceCallback, callback };',
+                'observed(1); invoked(1); (parenthesized)(1);',
+                'export type Signature = typeof typeOnly;',
+                'import { area as size, forward } from "./callbacks";',
+                'size(2, 3); callbacks.area(4, 5); forward(1); callbacks.forward(2);',
+                'import { bounded } from "./callbacks";',
+                'bounded(1); callbacks.bounded(2);',
+            ].join('\n'),
+        });
+        const eslint = await generatedEslint(sandbox.path);
+        const results = await eslint.lintFiles(['callbacks.ts']);
+        // A name, a caller count, a typed position, or a value use does not keep a small function. Inline callbacks,
+        // recursion, and the callbacks a function writes inside itself do.
+        expect(
+            results
+                .flatMap((file) => file.messages)
+                .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
+                .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),
+        ).toStrictEqual(
+            level === 'all'
+                ? [2, 3, 11, 12, 13, 14, 15, 16, 17, 19, 20, 26, 27, 30].map((line) => ({ line, messageId: 'trivial' }))
+                : [],
+        );
+    },
+);
 
 test.each(['recommended', 'all'])(
-    'generated %s file ownership preserves shared calculations and rejects forwarding',
+    'generated %s file ownership keeps constructor state and rejects small calculations and forwarding',
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -142,51 +145,50 @@ test.each(['recommended', 'all'])(
                 'import { area } from "./area"; import { forward } from "./forward"; import { render } from "./render"; area(2, 3); area(4, 5); forward(1); forward(2); render("{{file}}", "one"); render("{{file}}", "two");\n',
         });
         const eslint = await generatedEslint(sandbox.path);
-        const area = await eslint.lintFiles(['area.ts', 'render.ts', 'parameter-state.ts', 'assigned-state.ts']);
+        const state = await eslint.lintFiles(['parameter-state.ts', 'assigned-state.ts']);
         expect(
-            area
+            state
                 .flatMap(({ messages }) => messages)
                 .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions'),
         ).toStrictEqual([]);
-        const forward = await eslint.lintFiles(['forward.ts']);
-        expect(
-            forward
+        const trivial = (name: string, results: Awaited<ReturnType<typeof eslint.lintFiles>>) =>
+            results
                 .flatMap(({ messages }) => messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
-                .map(({ line, column, messageId: diagnostic }) => ({ line, column, messageId: diagnostic })),
-        ).toStrictEqual(level === 'all' ? [{ line: 1, column: 8, messageId: 'trivial' }] : []);
-        expect(
-            forward
-                .flatMap(({ messages }) => messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-files')
-                .map(({ line, column, messageId: diagnostic }) => ({ line, column, messageId: diagnostic })),
-        ).toStrictEqual(level === 'all' ? [{ line: 1, column: 1, messageId: 'trivial' }] : []);
+                .filter(({ ruleId }) => ruleId === name)
+                .map(({ line, column, messageId: diagnostic }) => ({ line, column, messageId: diagnostic }));
+        // Two callers and a multiplication do not keep a one-statement function or its file.
+        for (const file of ['area.ts', 'render.ts', 'forward.ts']) {
+            const results = await eslint.lintFiles([file]);
+            expect(trivial('gspot/no-trivial-functions', results)).toStrictEqual(
+                level === 'all' ? [{ line: 1, column: 8, messageId: 'trivial' }] : [],
+            );
+            expect(trivial('gspot/no-trivial-files', results)).toStrictEqual(
+                level === 'all' ? [{ line: 1, column: 1, messageId: 'trivial' }] : [],
+            );
+        }
     },
 );
 
-test.each(['recommended', 'all'])(
-    'generated %s lint preserves callbacks carried through option spreads',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
-            'options.ts': [
-                'declare function consume(options: { onValue(value: number): void }): void;',
-                'declare function write(value: number): void;',
-                'const options = { onValue: (value: number) => write(value) };',
-                'const copied = { ...options };',
-                'consume({ ...copied });',
-                'options.onValue(1);',
-                'const local = { onValue: (value: number) => write(value) };',
-                'local.onValue(1);',
-            ].join('\n'),
-        });
-        const eslint = await generatedEslint(sandbox.path);
-        const results = await eslint.lintFiles(['options.ts']);
-        expect(
-            results.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
-        ).toMatchObject(level === 'all' ? [{ line: 7, column: 26, messageId: 'trivial' }] : []);
-    },
-);
+test.each(['recommended', 'all'])('generated %s lint keeps callbacks written as object properties', async (level) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+        'options.ts': [
+            'declare function consume(options: { onValue(value: number): void }): void;',
+            'declare function write(value: number): void;',
+            'const options = { onValue: (value: number) => write(value) };',
+            'const copied = { ...options };',
+            'consume({ ...copied });',
+            'options.onValue(1);',
+            'const local = { onValue: (value: number) => write(value) };',
+            'local.onValue(1);',
+        ].join('\n'),
+    });
+    const eslint = await generatedEslint(sandbox.path);
+    const results = await eslint.lintFiles(['options.ts']);
+    expect(
+        results.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
+    ).toStrictEqual([]);
+});

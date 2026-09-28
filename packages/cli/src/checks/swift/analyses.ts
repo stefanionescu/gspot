@@ -1,10 +1,11 @@
 import type { SwiftReader } from '#cli/types/checks/swift.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { DEFAULT_DUPLICATE_LINES } from '#cli/constants/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
-import { duplicateFunctions, trivialFunctions } from '#cli/checks/swift/bodies.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
 import { environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
+import { trivialFunctions, duplicateFunctions } from '#cli/checks/swift/bodies.ts';
 
 function ownerPaths(input: EngineInput): string[] {
     const env = input.policyFiles.policy.architecture.roles['env'];
@@ -34,7 +35,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 /** The analyses by the name a manifest gives them. */
 export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
     'swift-trivial-function': analysis(({ functions, sources }, input) => {
-        const threshold = input.view.limit('trivial_statements', 'swift') ?? 2;
+        const threshold = input.view.limit('trivial_statements', 'swift') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
             ...sources

@@ -7,8 +7,8 @@ import type { Mutation } from '#cli/types/policy/policy.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
 
 /**
  * Applies one mutation to gspot.toml and runs apply, or prints the change on a dry run.

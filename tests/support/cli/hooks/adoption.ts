@@ -1,11 +1,12 @@
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { VERSIONS } from '#tests/constants/integration/tools/hooks.ts';
+import type { PrepareHookAdoptionResult } from '#tests/types/results.ts';
 
 const NATIVE_INSTALL = {
     'pre-commit': [
@@ -24,7 +25,10 @@ const NATIVE_INSTALL = {
 } as const;
 
 /** Prepares existing native launchers before gspot takes ownership of hook dispatch. */
-export async function prepareHookAdoption(root: string, hookTool: keyof typeof VERSIONS) {
+export async function prepareHookAdoption(
+    root: string,
+    hookTool: keyof typeof VERSIONS,
+): Promise<PrepareHookAdoptionResult> {
     await createFileTree(root, {
         'gspot.toml': `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "${hookTool}"\n`,
         'package.json': JSON.stringify({

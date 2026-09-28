@@ -5,7 +5,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import type { Pruning } from '#cli/types/checks/swift.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 

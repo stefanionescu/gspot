@@ -7,14 +7,14 @@ import { openJournal } from '#cli/lifecycle/ownership/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { applyProposal, applyProposals } from '#cli/lifecycle/ownership/apply.ts';
-import type { LifecycleOwner, Journal, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
-import { OWNER_WRITABLE_FILE, READ_ONLY_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
+import type { Journal, LifecycleOwner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
+import { READ_ONLY_FILE, STATE_DIRECTORY, OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 
 import {
     proposeBlock,
-    proposeConfiguration,
-    proposeReplacement,
     proposeRetirement,
+    proposeReplacement,
+    proposeConfiguration,
 } from '#cli/lifecycle/ownership/proposals.ts';
 
 const activeMutation = new AsyncLocalStorage<Map<string, LifecycleOwner>>();

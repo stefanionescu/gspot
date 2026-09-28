@@ -2,15 +2,15 @@
 
 import type { Manifest } from '#cli/types/configurations.ts';
 import { shippedFormat } from '#cli/configurations/listing.ts';
-import { RESERVED_SLOTS, TOOL_PREFIX } from '#cli/constants/policy/policy.ts';
+import { TOOL_PREFIX, RESERVED_SLOTS } from '#cli/constants/policy/policy.ts';
 import { listSettings, policyTables, settingValue } from '#cli/policy/settings.ts';
 
 import type {
-    MergedView,
-    ExposedSettings,
-    FormatSettings,
-    IgnoreEntry,
     Policy,
+    MergedView,
+    IgnoreEntry,
+    FormatSettings,
+    ExposedSettings,
     PolicyScopeLayer,
 } from '#cli/types/policy/policy.ts';
 
@@ -37,10 +37,6 @@ function limitOf(layer: PolicyScopeLayer, key: string, language?: string): numbe
         if (perLanguage !== undefined) return perLanguage as number;
     }
     return settingValue(layer.surface, layer.policy, `limits.${key}`, layer.scope)?.value as number | undefined;
-}
-
-function toolTables(policy: Policy, scope: string, name: string): Record<string, unknown>[] {
-    return policyTables(policy, scope).map(({ table }) => table.tools?.[name] ?? {});
 }
 
 function settingSlots(settings: Record<string, unknown>, name: string): Record<string, unknown> {
@@ -97,7 +93,6 @@ export function mergeForScope(
     const layer: PolicyScopeLayer = { surface, policy, scope };
     const format = shippedFormat() as FormatSettings;
     for (const { table } of policyTables(policy, scope)) Object.assign(format, table.format ?? {});
-    const ignoresFor = (check: string): IgnoreEntry[] => policy.ignores.filter((entry) => entry.check === check);
     return {
         scope,
         configurations: selected.map((manifest) => manifest.configuration.name),
@@ -105,19 +100,26 @@ export function mergeForScope(
         reasons,
         format,
         limit: (key, language) => limitOf(layer, key, language),
-        tool: (name) => toolSlots(settings, toolTables(policy, scope, name), name),
-        ignoresFor,
+        tool: (name) =>
+            toolSlots(
+                settings,
+                policyTables(policy, scope).map(({ table }) => table.tools?.[name] ?? {}),
+                name,
+            ),
+        ignoresFor: (check: string): IgnoreEntry[] => policy.ignores.filter((entry) => entry.check === check),
         rulesOff: (check) =>
-            ignoresFor(check)
+            policy.ignores
+                .filter((entry) => entry.check === check)
                 .filter(
                     (entry) => entry.paths === undefined || entry.paths.length === 0 || coversScope(entry.paths, scope),
                 )
                 .map((entry) => entry.rule)
                 .filter((rule) => rule !== undefined),
         extra: (name) => {
-            const found = toolTables(policy, scope, name)
+            const found = policyTables(policy, scope)
+                .map(({ table }) => table.tools?.[name] ?? {})
                 .map((table) => table['extra'])
-                .filter((value): value is Record<string, unknown> => typeof value === 'object' && value !== null);
+                .filter((value): value is Record<string, unknown> => typeof value === 'object');
             return found.length === 0 ? undefined : (Object.assign({}, ...found) as Record<string, unknown>);
         },
     };

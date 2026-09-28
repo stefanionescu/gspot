@@ -1,8 +1,8 @@
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
 import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
-import { ERROR_POSITION_OFFSET, POINTER_BYTES } from '#cli/constants/parsers/sql.ts';
-import type { PgModule, SqlNode, SqlParse, SqlTree } from '#cli/types/parsers/sql.ts';
+import { POINTER_BYTES, ERROR_POSITION_OFFSET } from '#cli/constants/parsers/sql.ts';
+import type { SqlNode, SqlTree, PgModule, SqlParse } from '#cli/types/parsers/sql.ts';
 
 const state: { module: Promise<PgModule> | undefined } = { module: undefined };
 
@@ -85,6 +85,7 @@ export function nodesOf(list: unknown, kind: string): SqlNode[] {
  * @param field the field
  * @returns the text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The text of a field, or an empty string when the field holds something else. 2 files make 18 calls; one owner keeps that behavior in one place.
 export function textOf(field: unknown): string {
     return typeof field === 'string' ? field : '';
 }
@@ -94,6 +95,7 @@ export function textOf(field: unknown): string {
  * @param list the field
  * @returns each part
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The texts of a list of String nodes, such as a qualified name. 2 files make 4 calls; one owner keeps that behavior in one place.
 export function partsOf(list: unknown): string[] {
     return nodesOf(list, 'String').map((node) => textOf(node['sval']));
 }

@@ -2,16 +2,16 @@ import { join } from 'node:path';
 import type { Linter } from 'eslint';
 import plugin from '#plugin/plugin.ts';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { assertPolicyComplete, parsePolicyText } from '#cli/policy/read.ts';
+import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 const review = readFileSync(new URL('../../../../architecture/levels/inventory.csv', import.meta.url), 'utf8');
 
@@ -30,7 +30,7 @@ test('the accepted inventory assigns every check and public plugin rule', () => 
     expect(rows.filter((row) => row[2] === 'recommended')).toHaveLength(144);
     for (const row of rows) expect(String(checks.get(row[1]!))).toBe(row[2]!);
     const rules = Object.entries(plugin.rules);
-    expect(rules).toHaveLength(25);
+    expect(rules).toHaveLength(27);
     expect(
         rules
             .filter(([, rule]) => rule.meta.docs?.level === 'recommended')

@@ -1,8 +1,8 @@
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { publicationObservation, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
+import { readOwnership, publicationObservation } from '#cli/lifecycle/ownership/owner.ts';
+import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {

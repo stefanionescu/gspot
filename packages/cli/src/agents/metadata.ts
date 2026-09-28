@@ -1,5 +1,5 @@
 import type { FrontMatter, RuleFinding } from '#cli/types/agents.ts';
-import { RULE_LAYERS, CONFIGURATION_ID, FENCE } from '#cli/constants/agents.ts';
+import { FENCE, RULE_LAYERS, CONFIGURATION_ID } from '#cli/constants/agents.ts';
 
 const LAYERS = new Set(RULE_LAYERS);
 function fieldsOf(lines: string[]): Record<string, string> {
@@ -71,7 +71,7 @@ export function frontMatterFindings(path: string, text: string): RuleFinding[] {
         text
             .split('\n')
             .find((line) => line.startsWith('# '))
-            ?.slice(2) ?? '';
+            ?.slice('# '.length) ?? '';
     if (heading !== matter.title)
         findings.push({ file: path, line: 4, message: `title '${matter.title}' does not equal the H1 '${heading}'` });
     return findings;

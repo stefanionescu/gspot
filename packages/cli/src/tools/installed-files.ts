@@ -2,15 +2,15 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { basename, dirname, join, posix, relative, sep } from 'node:path';
+import { sep, join, posix, dirname, basename, relative } from 'node:path';
 import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 
 import {
+    openSync,
     closeSync,
     constants,
     fstatSync,
     lstatSync,
-    openSync,
     readFileSync,
     readlinkSync,
     realpathSync,

@@ -3,8 +3,8 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { originalSchema } from '#cli/lifecycle/journal.ts';
-import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
-import type { Outcome, PreparedWrite, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
+import type { Journal, Outcome, FileProposal, PreparedWrite } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the proposal is a link.
 function foundObservation(

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
-import { isAbsolute, join, resolve } from 'node:path';
+import { join, resolve, isAbsolute } from 'node:path';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
@@ -13,17 +13,17 @@ import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { INDEX_SETTINGS, LOCK, SETUP, TOOL_PYTHON_PROJECT } from '#cli/constants/tools/tools.ts';
+import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/constants/tools/tools.ts';
 
 import {
+    rmSync,
     chmodSync,
-    copyFileSync,
     lstatSync,
+    unlinkSync,
     mkdtempSync,
+    copyFileSync,
     readFileSync,
     realpathSync,
-    rmSync,
-    unlinkSync,
     writeFileSync,
 } from 'node:fs';
 
@@ -90,19 +90,23 @@ function writePythonSettings(root: string, owner: LifecycleOwner, work: string):
                   .object({ tool: z.object({ uv: z.record(z.string(), z.unknown()).default({}) }).default({ uv: {} }) })
                   .parse(parsed).tool.uv
             : parsed;
-    const location = (value: string): string =>
-        /^[a-z][a-z0-9+.-]*:/iu.test(value) || isAbsolute(value) ? value : resolve(root, value);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (selected['find-links'] !== undefined)
         selected['find-links'] = z
             .array(z.string())
             .parse(selected['find-links'])
-            .map((value) => location(value));
+            .map((value) => (/^[a-z][a-z0-9+.-]*:/iu.test(value) || isAbsolute(value) ? value : resolve(root, value)));
     if (selected['index'] !== undefined)
         selected['index'] = z
             .array(z.looseObject({ url: z.string() }))
             .parse(selected['index'])
-            .map((index) => ({ ...index, url: location(index.url) }));
+            .map((index) => ({
+                ...index,
+                url:
+                    /^[a-z][a-z0-9+.-]*:/iu.test(index.url) || isAbsolute(index.url)
+                        ? index.url
+                        : resolve(root, index.url),
+            }));
     if (Object.keys(selected).length > 0)
         writeFileSync(join(work, 'uv.toml'), stringify(selected), { mode: PRIVATE_FILE });
     return Object.entries(selected).flatMap(([key, value]) => {

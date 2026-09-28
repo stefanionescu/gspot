@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { asList, asRaw, asText } from '#cli/policy/adoption/source.ts';
-import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
+import { asRaw, asList, asText } from '#cli/policy/adoption/source.ts';
+import { reasonFor, appendSetting } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 function carryOsv(source: ConfigurationSource, path: string, lists: AdoptionResult): void {

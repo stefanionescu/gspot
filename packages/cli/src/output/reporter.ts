@@ -1,31 +1,35 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { ERROR_EXIT } from '#cli/constants/commands/commands.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
-import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 
 import {
     FILES_WIDTH,
-    FINDINGS_SHOWN,
+    QUIET_HIDES,
     ID_WIDTH_MIN,
+    STATUS_WIDTH,
     MS_PER_SECOND,
     NOTE_STATUSES,
-    QUIET_HIDES,
+    FINDINGS_SHOWN,
     SCOPE_WIDTH_MIN,
-    STATUS_WIDTH,
 } from '#cli/constants/output.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines print a duration; inlining it nests a template inside a template.
 function seconds(ms: number): string {
     return `${(ms / MS_PER_SECOND).toFixed(1)}s`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines count files; inlining it nests a template inside a template.
 function fileCount(count: number): string {
     return `${String(count)} file${count === 1 ? '' : 's'}`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two readers name the root scope; the caller sits at the complexity limit.
 function scopeName(scope: string): string {
     return scope === '' ? 'root' : scope;
 }
@@ -130,6 +134,7 @@ function tailLines(report: RunReport, options: ReporterOptions, colors: Colors):
     return lines;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four summary lines count a noun; inlining it nests a template inside a template.
 function counted(value: number, noun: string): string {
     return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
 }
@@ -143,7 +148,7 @@ function summaryLine(report: RunReport, colors: Colors): string {
         report.coverage.findings.length,
     );
     const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
-    if (report.exitCode === 2) return colors.red(`${summary} (incomplete)`);
+    if (report.exitCode === ERROR_EXIT) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 

@@ -7,6 +7,9 @@ import { isDeepStrictEqual } from 'node:util';
 import type { PageLinks } from '#docs/src/types/links.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
+// The runtime and the script come before the arguments.
+const ARGUMENT_START = 2;
+
 function inspectPage(path: string, content: string): PageLinks {
     const ids = new Set<string>();
     const links: string[] = [];
@@ -53,7 +56,7 @@ function pageProblems(page: PageLinks, origin: string, files: Set<string>, pages
 }
 
 if (import.meta.main) {
-    if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
+    if (process.argv.length > ARGUMENT_START) throw new Error('The built-site link check accepts no arguments.');
     await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
     const schema: unknown = JSON.parse(
         await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'),

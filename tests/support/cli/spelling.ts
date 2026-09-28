@@ -4,11 +4,17 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
+import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 /** Authors nested spelling inputs and renders their adopted configuration without retiring the originals. */
-export async function prepareSpelling(root: string, existing: boolean) {
+export async function prepareSpelling(
+    root: string,
+    existing: boolean,
+): Promise<{ original: string; carried: AdoptionResult; session: Session; outputs: GeneratedFile[] }> {
     const original =
         '[default]\nlocale = "en-gb"\n[default.extend-words]\n# An imported name requires its exact spelling.\nteh = "teh"\n[files]\nextend-exclude = ["src/**", "*.skip", "!keep.skip"]\n';
     await createFileTree(root, {

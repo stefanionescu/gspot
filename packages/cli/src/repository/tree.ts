@@ -4,14 +4,14 @@ import { swiftSourceTags } from '#cli/repository/swift-source.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import { FILE_PREFIX_BYTES } from '#cli/constants/repository/repository.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
-import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
+import { readPrefix, readSource, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 import type {
-    Repository,
-    TrackedFile,
-    ScopeEntry,
-    RawEntry,
     Tagged,
+    RawEntry,
+    Repository,
+    ScopeEntry,
+    TrackedFile,
     NatureVerdict,
 } from '#cli/types/repository/repository.ts';
 

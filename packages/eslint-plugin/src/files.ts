@@ -3,8 +3,8 @@ import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { DirectoryEntry, RuleContextOf } from '#plugin/types/plugin.ts';
-import { DECLARATION_SUFFIX, FILE_SCHEME, INDEX_BASENAMES, STDIN_NAMES } from '#plugin/constants/plugin.ts';
+import type { RuleContextOf, DirectoryEntry } from '#plugin/types/plugin.ts';
+import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES, DECLARATION_SUFFIX } from '#plugin/constants/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
 
@@ -48,6 +48,7 @@ export function lintedRoot(context: RuleContextOf): string {
  * @param path a file path
  * @returns whether the base name is an index file
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True for an index module. 6 files make 6 calls; one owner keeps that behavior in one place.
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
 }
@@ -119,6 +120,7 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
  * @param path an absolute path
  * @returns the relative path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The path relative to the root, or the path itself when outside it. 10 files make 10 calls; one owner keeps that behavior in one place.
 export function relativeToRoot(root: string, path: string): string {
     return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
 }
@@ -128,6 +130,7 @@ export function relativeToRoot(root: string, path: string): string {
  * @param node any node
  * @returns the string when the node is a string literal
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The static string of a literal node, or undefined. 7 files make 7 calls; one owner keeps that behavior in one place.
 export function staticString(node: unknown): string | undefined {
     const literal = node as { type?: string; value?: unknown } | null | undefined;
     return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;

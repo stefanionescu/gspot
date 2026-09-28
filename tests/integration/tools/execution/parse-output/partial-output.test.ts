@@ -1,10 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {
@@ -72,7 +74,9 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
         const planned = plans[0]!;
         const command = ['vulture', '--min-confidence', '80', 'sample.py', 'broken.py'];
         const roots: [string, string] = [sandbox.path, sandbox.path];
-        const broken = Bun.spawnSync(command, { cwd: sandbox.path });
+        // The tool comes from the installation gspot made, which a runner does not put on PATH.
+        const env = { ...environmentVariables(), PATH: toolsPath(['vulture']) };
+        const broken = Bun.spawnSync(command, { cwd: sandbox.path, env });
         expect(broken.exitCode, broken.stderr.toString()).toBe(3);
         expect(broken.stdout.toString()).toContain("unused import 'os'");
         const result = {
@@ -85,7 +89,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
         expect(() => checkedFindings(planned, result, roots)).toThrow(ToolOutputError);
         expect(await Bun.file(join(sandbox.path, 'broken.py')).text()).toBe(brokenSource);
         await Bun.write(join(sandbox.path, 'broken.py'), 'print("Ready")\n');
-        const defect = Bun.spawnSync(command, { cwd: sandbox.path });
+        const defect = Bun.spawnSync(command, { cwd: sandbox.path, env });
         expect(defect.exitCode).toBe(3);
         expect(
             checkedFindings(

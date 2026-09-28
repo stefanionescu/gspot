@@ -1,116 +1,105 @@
+// Planted repository for the Python structure checks: one module shaped wrong for each check.
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the Python structure checks: one module shaped wrong for each check.
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 
 import {
-    STRUCTURE_CLEAN,
     STRUCTURE_INIT,
+    STRUCTURE_CLEAN,
     STRUCTURE_PROJECT,
 } from '#tests/constants/acceptance/source/configurations/python.ts';
 
-const module = (body: string): string => `"""A planted module."""\n\n\n${body}`;
 const LONG_BODY = Array.from({ length: 61 }, (_, index) => `    step_${String(index)} = ${String(index)}`).join('\n');
 const LONG_FILE = Array.from({ length: 301 }, (_, index) => `VALUE_${String(index)} = ${String(index)}`).join('\n');
 
 const CASES: FindingCase[] = [
     {
         check: 'python/file-length',
-        files: { 'planted/big.py': module(`${LONG_FILE}\n`) },
+        files: { 'planted/big.py': `"""A planted module."""\n\n\n${LONG_FILE}\n` },
         expected: { file: 'planted/big.py', rule: 'file-lines', line: 1 },
     },
     {
         check: 'python/function-length',
-        files: { 'planted/long.py': module(`def long_one() -> None:\n    """Hold many steps."""\n${LONG_BODY}\n`) },
+        files: {
+            'planted/long.py': `"""A planted module."""\n\n\ndef long_one() -> None:\n    """Hold many steps."""\n${LONG_BODY}\n`,
+        },
         expected: { file: 'planted/long.py', rule: 'function-lines', line: 4 },
     },
     {
         check: 'python/trivial-function',
         files: {
-            'planted/tiny.py': module(
-                'def tiny(value: int) -> int:\n    """Add one to a number."""\n    return value + 1\n\n\ndef caller() -> int:\n    """Call the tiny one, then do more."""\n    first = tiny(1)\n    second = first * 2\n    return second - 1\n',
-            ),
+            'planted/tiny.py': `"""A planted module."""\n\n\ndef tiny(value: int) -> int:\n    """Add one to a number."""\n    return value + 1\n\n\ndef caller() -> int:\n    """Call the tiny one, then do more."""\n    first = tiny(1)\n    second = first * 2\n    return second - 1\n`,
         },
         expected: { file: 'planted/tiny.py', rule: 'trivial-function', line: 4 },
     },
     {
         check: 'python/trivial-function',
         files: {
-            'planted/forward.py': module(
-                'def forward(left: int, right: int) -> int:\n    """Forward to the builtin."""\n    return max(left, right)\n',
-            ),
+            'planted/forward.py': `"""A planted module."""\n\n\ndef forward(left: int, right: int) -> int:\n    """Forward to the builtin."""\n    return max(left, right)\n`,
         },
         expected: { file: 'planted/forward.py', rule: 'trivial-function', line: 4 },
     },
     {
         check: 'python/placeholder-docstring',
         files: {
-            'planted/empty.py': module(
-                'def load_orders() -> None:\n    """Load orders."""\n    first = 1\n    second = first\n    third = second\n    print(third)\n',
-            ),
+            'planted/empty.py': `"""A planted module."""\n\n\ndef load_orders() -> None:\n    """Load orders."""\n    first = 1\n    second = first\n    third = second\n    print(third)\n`,
         },
         expected: { file: 'planted/empty.py', rule: 'placeholder-docstring', line: 4 },
     },
     {
         check: 'python/private-prefix',
         files: {
-            'planted/leaky.py': module(
-                'def shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n',
-            ),
+            'planted/leaky.py': `"""A planted module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n`,
         },
         expected: { file: 'planted/leaky.py', rule: 'private-prefix', line: 9 },
     },
     {
         check: 'python/private-before-public',
         files: {
-            'planted/order.py': module(
-                'def shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n',
-            ),
+            'planted/order.py': `"""A planted module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n`,
         },
         expected: { file: 'planted/order.py', rule: 'private-before-public', line: 9 },
     },
     {
         check: 'python/exports-at-bottom',
         files: {
-            'planted/top.py': module(
-                '__all__ = ["shown"]\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n',
-            ),
+            'planted/top.py': `"""A planted module."""\n\n\n__all__ = ["shown"]\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n`,
         },
         expected: { file: 'planted/top.py', rule: 'exports-at-bottom', line: 4 },
     },
     {
         check: 'python/no-lazy-exports',
         files: {
-            'planted/lazy.py': module(
-                'def __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n',
-            ),
+            'planted/lazy.py': `"""A planted module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,
         },
         expected: { file: 'planted/lazy.py', rule: 'no-lazy-exports', line: 4 },
     },
     {
         check: 'python/package-exports',
-        files: { 'planted/__init__.py': module('__all__ = ["a", "b", "c"]\n') },
+        files: { 'planted/__init__.py': `"""A planted module."""\n\n\n__all__ = ["a", "b", "c"]\n` },
         policy: '[structure.python]\nmax_package_exports = 2\n',
         expected: { file: 'planted/__init__.py', rule: 'package-exports', line: 4 },
     },
     {
         check: 'python/import-cycles',
         files: {
-            'planted/left.py': module('from planted import right\n\nVALUE = right\n'),
-            'planted/right.py': module('from planted import left\n\nVALUE = left\n'),
+            'planted/left.py': `"""A planted module."""\n\n\nfrom planted import right\n\nVALUE = right\n`,
+            'planted/right.py': `"""A planted module."""\n\n\nfrom planted import left\n\nVALUE = left\n`,
         },
         expected: { file: 'planted/left.py', rule: 'import-cycle', line: 1 },
     },
     {
         check: 'python/no-singletons',
-        files: { 'planted/shared.py': module('class Store:\n    """Holds things."""\n\n\nstore = Store()\n') },
+        files: {
+            'planted/shared.py': `"""A planted module."""\n\n\nclass Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
+        },
         expected: { file: 'planted/shared.py', rule: 'no-singletons', line: 8 },
     },
 ];

@@ -4,13 +4,13 @@ import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { allChecks } from '#cli/configurations/listing.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { PolicyError, readPolicy } from '#cli/policy/read.ts';
+import { readPolicy, PolicyError } from '#cli/policy/read.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
 import type { CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
-import { directoryOf, listFlag, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
+import { listFlag, textEntry, directoryOf, quoteArgument } from '#cli/platform/arguments.ts';
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
@@ -48,11 +48,19 @@ function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
 async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
     const counter = { removed: 0 };
     const paths = JSON.stringify(o.paths ?? []);
-    const isMatch = (entry: TomlTable): boolean =>
-        entry['check'] === o.check &&
-        (entry['rule'] ?? undefined) === o.rule &&
-        JSON.stringify(entry['paths'] ?? []) === paths;
-    const result = await commitPolicy(root, removeEntries('ignore', isMatch, counter), false, '');
+    const result = await commitPolicy(
+        root,
+        removeEntries(
+            'ignore',
+            (entry: TomlTable): boolean =>
+                entry['check'] === o.check &&
+                (entry['rule'] ?? undefined) === o.rule &&
+                JSON.stringify(entry['paths'] ?? []) === paths,
+            counter,
+        ),
+        false,
+        '',
+    );
     const noun = counter.removed === 1 ? 'entry' : 'entries';
     const text =
         counter.removed === 0

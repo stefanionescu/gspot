@@ -1,7 +1,7 @@
 // Saves a reusable policy profile.
 import type { Command } from 'commander';
 import { readPolicy } from '#cli/policy/read.ts';
-import { relative, resolve, sep } from 'node:path';
+import { sep, resolve, relative } from 'node:path';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';

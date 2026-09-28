@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type { Node } from 'web-tree-sitter';
 import type { matchSchema } from '#cli/checks/structure/ast-grep.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /** One analysis: a function over the context that returns findings. */
 export type StructureAnalysis = (

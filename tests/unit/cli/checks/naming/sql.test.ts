@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import { SQL_SOURCE } from '#tests/constants/unit/cli/checks/naming.ts';

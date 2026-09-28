@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
@@ -12,6 +12,7 @@ import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { writeAdoptedMarkdown } from '#tests/support/cli/markdown.ts';
 
 // Runs the pinned markdownlint over the planted sample with one configuration file.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six native runs of markdownlint share the command line; one owner keeps its flags.
 function native(root: string, config: string): Bun.SyncSubprocess<'pipe', 'pipe'> {
     return Bun.spawnSync(['markdownlint-cli2', '--no-globs', '--config', config, 'sample.md'], {
         cwd: root,
@@ -63,6 +64,7 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
         ['guide/deep', 'MD033'],
         ['reference', 'MD041'],
     ]) {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two runs per case share the command line; one owner keeps its flags.
         const native = () =>
             Bun.spawnSync(['markdownlint-cli2', '--no-globs', 'sample.md'], {
                 cwd: join(sandbox.path, scope!),

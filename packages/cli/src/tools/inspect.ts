@@ -11,15 +11,15 @@ import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
-import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, Manifest } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/constants/tools/tools.ts';
-import { locateCandidates, miseVersion, packageVersion } from '#cli/tools/locate.ts';
+import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
 
 import type {
-    PackageFacts,
     Inspected,
     ToolContext,
+    PackageFacts,
     ToolInspection,
     VersionObservation,
 } from '#cli/types/tools/tools.ts';
@@ -81,6 +81,7 @@ function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
 }
 
 // The inspection of a tool that is not installed anywhere gspot looks.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two inspections report a missing tool; the caller sits at the complexity limit.
 function missingInspection(tool: ToolPin, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     return { name: tool.name, state: 'missing', hint, ...want };
@@ -117,6 +118,7 @@ function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: stri
 }
 
 // Only the selected private installation can make its tool unavailable while installation is pending.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two inspections ask whether the private installation of a tool is still pending; one owner keeps the kind lookup.
 function isInstallationPending(pending: string[] | undefined, tool: ToolPin, runner?: string): boolean {
     const installation = privateToolInstallation(tool, runner);
     return installation !== undefined && pending?.includes(installation.kind) === true;

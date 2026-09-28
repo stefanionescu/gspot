@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('Python workspace detection uses captured manifest facts', async () => {
     await using sandbox = await testdir();

@@ -2,9 +2,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { isAlias, isCollection, isNode, isMap, parseDocument } from 'yaml';
-import type { ConfigurationDocument, ConfigurationFormat, KeyPath } from '#cli/types/lifecycle/lifecycle.ts';
-import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
+import { isMap, isNode, isAlias, isCollection, parseDocument } from 'yaml';
+import type { KeyPath, ConfigurationFormat, ConfigurationDocument } from '#cli/types/lifecycle/lifecycle.ts';
+import { modify, parseTree, applyEdits, getNodeValue, type ParseError, findNodeAtLocation } from 'jsonc-parser';
 
 function jsonDocument(text: string) {
     const errors: ParseError[] = [];

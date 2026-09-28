@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import type { HookCapture } from '#tests/types/cli.ts';
 import { installHookTool } from '#tests/support/cli/hooks/projects.ts';
 import { prepareLefthook } from '#tests/support/cli/hooks/lefthook.ts';
-import { existsSync, readFileSync, readdirSync, rmSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
+import { rmSync, existsSync, unlinkSync, utimesSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['custom', 'native'])(
     'Lefthook forwards direct push input and findings without editing authored configuration with %s hooks',

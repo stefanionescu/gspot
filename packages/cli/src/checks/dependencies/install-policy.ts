@@ -4,7 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { SECONDS_PER_DAY } from '#cli/constants/generation.ts';
 import type { Reporter } from '#cli/types/checks/dependencies.ts';
 import { LOCKFILES } from '#cli/constants/repository/repository.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/constants/checks/dependencies.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
@@ -46,16 +46,42 @@ export function installPolicy(input: EngineInput): Finding[] {
     const tool = input.view.tool('install');
     const days = (tool['min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
     const scanner = (tool['security_scanner'] as string | undefined) ?? '';
-    const report: Reporter = (file, rule, text) => ({
-        check: input.spec.name,
-        file,
-        line: 1,
-        rule,
-        message: text,
-        fixable: false,
-    });
     const install = installTable(input.root);
     if (install === undefined)
-        return [report('bun.lock', 'release-age', `No ${BUNFIG} sets [install] minimumReleaseAge.`)];
-    return [...ageFindings(report, install, days), ...scannerFindings(report, install, scanner)];
+        return [
+            {
+                check: input.spec.name,
+                file: 'bun.lock',
+                line: 1,
+                rule: 'release-age',
+                message: `No ${BUNFIG} sets [install] minimumReleaseAge.`,
+                fixable: false,
+            },
+        ];
+    return [
+        ...ageFindings(
+            (file, rule, text) => ({
+                check: input.spec.name,
+                file,
+                line: 1,
+                rule,
+                message: text,
+                fixable: false,
+            }),
+            install,
+            days,
+        ),
+        ...scannerFindings(
+            (file, rule, text) => ({
+                check: input.spec.name,
+                file,
+                line: 1,
+                rule,
+                message: text,
+                fixable: false,
+            }),
+            install,
+            scanner,
+        ),
+    ];
 }

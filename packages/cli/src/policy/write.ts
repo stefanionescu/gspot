@@ -4,7 +4,7 @@ import { stringify as stringifyToml } from 'smol-toml';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import { assertPolicyComplete, parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
+import { PolicyError, parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

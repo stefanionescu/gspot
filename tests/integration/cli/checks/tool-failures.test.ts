@@ -1,7 +1,7 @@
 import { chmodSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';

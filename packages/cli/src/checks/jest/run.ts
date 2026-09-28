@@ -5,13 +5,13 @@ import { mkdtempSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { sep, join, relative, isAbsolute } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { JestRun, Suite, TestReport } from '#cli/types/checks/jest.ts';
-import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Suite, JestRun, TestReport } from '#cli/types/checks/jest.ts';
+import { jestPercentage, jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
 const metric = z.object({ pct: jestPercentage });

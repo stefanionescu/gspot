@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DIAGNOSTIC_LINE, FAILURE_LINE } from '#cli/constants/checks/checks.ts';
-import { configurationName, targetInScope } from '#cli/configurations/targets.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/constants/checks/checks.ts';
+import { targetInScope, configurationName } from '#cli/configurations/targets.ts';
 
 const diagnosticSchema = z.object({
     type: z.enum(['ERROR', 'WARNING']),

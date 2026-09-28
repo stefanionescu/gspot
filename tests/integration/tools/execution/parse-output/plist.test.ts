@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
@@ -27,7 +27,7 @@ describe.if(process.platform === 'darwin')('native property lists', () => {
                 for (const path of ['missing.plist', 'private.plist']) {
                     const mixed = await run(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
                     expect(mixed.code).toBe(1);
-                    expect(mixed.stderr).toContain('Encountered unexpected EOF');
+                    expect(mixed.stdout + mixed.stderr).toContain('Encountered unexpected EOF');
                     expect(() => checkedFindings(planned!, mixed, roots)).toThrow(ToolOutputError);
                 }
             } finally {

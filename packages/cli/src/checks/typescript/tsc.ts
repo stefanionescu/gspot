@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { rm } from 'node:fs/promises';
-import { join, relative, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
@@ -12,7 +12,7 @@ import { targetInScope } from '#cli/configurations/targets.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
 function validateOutputs(root: string, config: ts.ParsedCommandLine, files: ConfinedRoot): void {

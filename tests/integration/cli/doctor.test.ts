@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
@@ -93,7 +93,7 @@ test('doctor reports local configuration and version', async () => {
     });
     const result = await doctorCommand({ cwd: sandbox.path });
     expect(result.exitCode).toBe(0);
-    expect(result.json).toMatchObject({ version: { running: expect.any(String) } });
+    expect(result.json).toMatchObject({ version: { running: expect.any(String) as unknown } });
 });
 
 test('doctor identifies unowned generated-directory files that apply and uninstall preserve', async () => {

@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test.each([true, false])(
     'uninstall describes only owned hooks and preserves hooksPath when an original exists: %s',

@@ -2,20 +2,20 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
-import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
-import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
+import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
-    ReplacementRequest,
-    OwnedBlock,
-    PlannedBlock,
+    Journal,
     BlockSpan,
     BlockStyle,
-    ConfigurationFormat,
+    OwnedBlock,
     FileProposal,
-    Journal,
+    PlannedBlock,
     OwnershipEntry,
+    ReplacementRequest,
+    ConfigurationFormat,
 } from '#cli/types/lifecycle/lifecycle.ts';
 
 // Whether the current file must stay: an edited owned file without review, or an unowned file without takeover.

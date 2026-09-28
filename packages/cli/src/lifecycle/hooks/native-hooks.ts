@@ -11,6 +11,7 @@ import { hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks/scripts.
 import type { HookTool, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
 
 // The lines every gspot hook starts with: a work directory that is removed on exit, and signal exits.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 const WORK_LINES = (name: string): string[] => [
     `gspot_work=$(mktemp -d "\${TMPDIR:-/tmp}/gspot-${name}.XXXXXXXX") || exit 2`,
     `trap 'rm -rf "\${gspot_work}"' EXIT`,
@@ -20,16 +21,19 @@ const WORK_LINES = (name: string): string[] => [
 ];
 
 // A value quoted for a POSIX shell.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 function quoted(value: string): string {
     return `'${value.replaceAll("'", "'\"'\"'")}'`;
 }
 
 // The redirection that hands a pre-push hook its saved input.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 function pushInput(name: string, path: string): string {
     return name === 'pre-push' ? ` < "${path}"` : '';
 }
 
 // The stage a hook name is, or undefined when the manager generated a hook gspot has no stage for.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 function stageOf(name: string): HookName | undefined {
     return HOOK_FILES.find((hook) => hook === name);
 }
@@ -97,7 +101,7 @@ function simpleGitHook(preparation: Preparation, name: string, generated: string
     const { root, policy } = preparation;
     const stage = stageOf(name);
     const invocation = simpleGitHookCommand(hookPrefix(root), name);
-    if (stage === undefined || generated.split(invocation).length !== 2)
+    if (stage === undefined || generated.split(invocation).length - 1 !== 1)
         throw new Error(`Unsupported simple-git-hooks launcher for ${name}. No hooks were changed.`);
     const input = pushInput(name, '$GSPOT_SIMPLE_INPUT');
     const native = generated.replace(invocation, () =>
@@ -170,7 +174,7 @@ function huskyHook(preparation: Preparation, name: string): string {
 // Lefthook's native hook with its resolver pointed at the repository executable and auto-install turned off.
 function lefthookNative(preparation: Preparation, name: string, generated: string): string {
     const invocation = `call_lefthook run "${name}" "$@"`;
-    if (generated.split(invocation).length !== 2)
+    if (generated.split(invocation).length - 1 !== 1)
         throw new Error(`Unsupported Lefthook hook format for ${name}. No hooks were changed.`);
     const resolver = /call_lefthook\(\)\n\{[\s\S]*?\n\}\n/u;
     if (!resolver.test(generated)) throw new Error(`Unsupported Lefthook resolver for ${name}. No hooks were changed.`);

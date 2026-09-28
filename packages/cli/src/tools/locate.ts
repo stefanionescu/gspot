@@ -1,30 +1,16 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
 import { homedir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { miseHome } from '#cli/platform/environment.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { MANAGED_PREFIX } from '#cli/constants/tools/tools.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
-import type { PackageFacts, PrivateKind } from '#cli/types/tools/tools.ts';
+import { statSync, readFileSync, realpathSync } from 'node:fs';
+import type { PrivateKind, PackageFacts } from '#cli/types/tools/tools.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
-// A path relative to the repository root with forward slashes, the form the confined root reads.
-function localPath(root: string, path: string): string {
-    return relative(root, path).replaceAll('\\', '/');
-}
-
-// Whether a file exists on disk, without following the repository's confinement rules.
-function existsOnDisk(path: string): boolean {
-    return statSync(path, { throwIfNoEntry: false }) !== undefined;
-}
-
-// The folder mise keeps its shims and installs in.
-function miseRoot(): string {
-    return miseHome() ?? join(homedir(), '.local', 'share', 'mise');
-}
 
 // The folders a tool of the private kind, or a host tool, is searched in.
 function searchDirectories(root: string, roots: string[], privateKind: PrivateKind | undefined): string[] {
@@ -39,8 +25,8 @@ function searchDirectories(root: string, roots: string[], privateKind: PrivateKi
 
 // Whether a candidate exists: a managed path must resolve through the confined root, any other is read from disk.
 function candidateExists(files: ConfinedRoot, root: string, path: string): boolean {
-    const local = localPath(root, path);
-    if (!local.startsWith(MANAGED_PREFIX)) return existsOnDisk(path);
+    const local = relative(root, path).replaceAll('\\', '/');
+    if (!local.startsWith(MANAGED_PREFIX)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.source(local);
         return true;
@@ -64,16 +50,24 @@ function repositoryCandidates(root: string, directories: string[], names: string
 // The executables of the name on PATH and among mise's shims.
 function hostCandidates(name: string, names: string[]): string[] {
     const onPath = Bun.which(name);
-    const launcherDirectory = join(miseRoot(), 'shims');
-    const found = names.map((file) => join(launcherDirectory, file)).filter((path) => existsOnDisk(path));
+    const launcherDirectory = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
+    const found = names
+        .map((file) => join(launcherDirectory, file))
+        .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     return onPath === null ? found : [onPath, ...found];
 }
 
 // The parsed package.json at a path, or undefined when there is none or it lies outside the managed tree.
 function packageFacts(files: ConfinedRoot | undefined, root: string, manifest: string): PackageFacts | undefined {
-    if (files === undefined)
-        return existsOnDisk(manifest) ? (JSON.parse(readFileSync(manifest, 'utf8')) as PackageFacts) : undefined;
-    const text = files.read(localPath(root, manifest))?.bytes.toString('utf8');
+    if (files === undefined) {
+        try {
+            return JSON.parse(readFileSync(manifest, 'utf8')) as PackageFacts;
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+            throw error;
+        }
+    }
+    const text = files.read(relative(root, manifest).replaceAll('\\', '/'))?.bytes.toString('utf8');
     return text === undefined ? undefined : (JSON.parse(text) as PackageFacts);
 }
 
@@ -81,7 +75,8 @@ function packageFacts(files: ConfinedRoot | undefined, root: string, manifest: s
 function versionAbove(files: ConfinedRoot | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
-        if (files !== undefined && !localPath(root, manifest).startsWith(MANAGED_PREFIX)) return undefined;
+        if (files !== undefined && !relative(root, manifest).replaceAll('\\', '/').startsWith(MANAGED_PREFIX))
+            return undefined;
         const parsed = packageFacts(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
@@ -112,12 +107,16 @@ export function locateCandidates(root: string, roots: string[], name: string, pr
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const files = localPath(root, path).startsWith(MANAGED_PREFIX) ? openConfinedRoot(root) : undefined;
+    const files = relative(root, path).replaceAll('\\', '/').startsWith(MANAGED_PREFIX)
+        ? openConfinedRoot(root)
+        : undefined;
     try {
         return versionAbove(
             files,
             root,
-            dirname(files === undefined ? realpathSync(path) : files.source(localPath(root, path))),
+            dirname(
+                files === undefined ? realpathSync(path) : files.source(relative(root, path).replaceAll('\\', '/')),
+            ),
             name,
         );
     } finally {
@@ -135,8 +134,8 @@ export function packageVersion(root: string, path: string, name: string | undefi
 export function miseVersion(path: string, tool: ToolPin): string | undefined {
     const npm = tool.installers['npm'];
     if (npm?.version === undefined || npm.version !== tool.version) return undefined;
-    const home = miseRoot();
+    const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
     if (!path.startsWith(join(home, 'shims'))) return undefined;
     const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
-    return existsOnDisk(installed) ? npm.version : undefined;
+    return statSync(installed, { throwIfNoEntry: false }) === undefined ? undefined : npm.version;
 }

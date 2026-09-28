@@ -1,15 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { PREREQUISITES_POLICY, WAITING } from '#tests/constants/integration/cli/execution/execution.ts';
-
-const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
+import { WAITING, PREREQUISITES_POLICY } from '#tests/constants/integration/cli/execution/execution.ts';
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();
@@ -91,11 +89,13 @@ test('a failed site build skips every output consumer and a new session rebuilds
             message: result.findings[0]?.message,
         });
     }
-    expect(outcomes.toSorted(byCheck)).toMatchObject(
+    expect(
+        outcomes.toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
+    ).toMatchObject(
         [
             { check: 'static-site/build', status: 'fail', message: textContaining('Planted build failure') },
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
-        ].toSorted(byCheck),
+        ].toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     );
     writeFileSync(
         join(sandbox.path, 'build.js'),

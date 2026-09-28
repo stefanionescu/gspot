@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { hasOwnedPackages } from '#cli/tools/vale.ts';
-import { readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test.each(['configuration', 'package', 'nested directory'])(
     'Vale package detection rejects a linked %s without reading outside styles',

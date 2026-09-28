@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { chmodSync, statSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { statSync, chmodSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
@@ -72,13 +72,11 @@ if (process.platform !== 'win32') {
             const root = sandbox.path;
             const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n`;
             await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
-            const native = async () =>
-                await runProcess(
-                    ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
-                    { cwd: root },
-                );
             await writeSwiftlint(root);
-            const broken = await native();
+            const broken = await runProcess(
+                ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
+                { cwd: root },
+            );
             expect(broken.code, broken.stdout + broken.stderr).toBe(level === 'all' ? 2 : 0);
             expect(JSON.parse(broken.stdout)).toStrictEqual(
                 level === 'all' ? [containing({ rule_id: 'doc_comment_style', line: 1, character: 1 })] : [],
@@ -95,7 +93,10 @@ if (process.platform !== 'win32') {
                 join(root, 'Value.swift'),
                 SWIFT_DOCS_SOURCE.replace('/** Parses a fixture value. */', '/// Parses a fixture value.'),
             );
-            const corrected = await native();
+            const corrected = await runProcess(
+                ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
+                { cwd: root },
+            );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
             await Bun.write(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
@@ -104,7 +105,10 @@ if (process.platform !== 'win32') {
                 `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "doc_comment_style"\nreason = "The fixture preserves an external documentation format."\n`,
             );
             await writeSwiftlint(root);
-            const excepted = await native();
+            const excepted = await runProcess(
+                ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
+                { cwd: root },
+            );
             expect(excepted.code, excepted.stdout + excepted.stderr).toBe(0);
             expect(JSON.parse(excepted.stdout)).toStrictEqual([]);
         },

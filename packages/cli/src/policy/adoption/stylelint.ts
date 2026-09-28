@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { extname, posix } from 'node:path';
+import { posix, extname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toolPin } from '#cli/tools/inspect.ts';
 import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
-import { stylelintResponse, stylelintSource } from '#cli/evaluation/protocol.ts';
-import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import { stylelintSource, stylelintResponse } from '#cli/evaluation/protocol.ts';
+import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 

@@ -1,6 +1,6 @@
 import { format } from 'prettier';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { managedBlock } from '#cli/agents/instructions.ts';
 import { everyManifest } from '#cli/configurations/select.ts';

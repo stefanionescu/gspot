@@ -1,7 +1,7 @@
+// React fixtures cover hook order, keyed lists, unsafe markup, and image accessibility. Additional cases check export boundaries, element syntax, and test debugging calls.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-// React fixtures cover hook order, keyed lists, unsafe markup, and image accessibility. Additional cases check export boundaries, element syntax, and test debugging calls.
+import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
@@ -13,10 +13,11 @@ import type { LintCase } from '#tests/types/acceptance/source/configurations/rea
 import {
     REPORT,
     TESTED,
-    WEB_DEPENDENCIES,
     WEB_TSCONFIG,
+    WEB_DEPENDENCIES,
 } from '#tests/constants/acceptance/source/configurations/react.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;
 const CLEAN = head(
     '/**\n * Greets one person.\n * @param props the person\n * @param props.name the name\n * @returns the greeting\n */\n// eslint-disable-next-line gspot/no-trivial-functions -- reason: React calls this component through its rendering API.\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n',
@@ -88,6 +89,7 @@ const LINT: LintCase[] = [
     },
 ];
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const installReact = (root: string, level: 'recommended' | 'all'): Promise<Record<string, string>> =>
     installSandbox(root, {
         configurations: ['typescript', 'react'],

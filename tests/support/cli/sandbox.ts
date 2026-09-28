@@ -1,7 +1,7 @@
 // A planted repository with its private tools installed: the files, the selected configurations, and the level each framework test starts from.
 import { symlinkSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { QUIET_INIT } from '#tests/constants/cli.ts';

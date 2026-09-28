@@ -1,10 +1,10 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded configurations, rules and grammars, not the source tree.
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import type * as DetectLibc from 'detect-libc';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
@@ -14,8 +14,8 @@ import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import releaseTargets from '#npm-targets' with { type: 'json' };
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { BUILD_CHECKOUT_PATHS, EMBEDDED_PARSER_SOURCES, EMBEDDED_INIT_ARGS } from '#tests/constants/release.ts';
+import { cpSync, rmSync, mkdirSync, existsSync, copyFileSync, writeFileSync } from 'node:fs';
+import { EMBEDDED_INIT_ARGS, BUILD_CHECKOUT_PATHS, EMBEDDED_PARSER_SOURCES } from '#tests/constants/release.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -31,6 +31,7 @@ if (host === undefined)
 // The explicit release suite requires a built binary under dist/.
 const BINARY = join(root, 'dist', host.binary);
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five runs of the installed binary share the environment and the tool PATH; one owner keeps them.
 async function binary(cwd: string, argv: string[]) {
     const environment = Object.fromEntries(Object.entries(environmentVariables()));
     return await runProcess([BINARY, ...argv], {

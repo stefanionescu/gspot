@@ -1,18 +1,18 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import type { CheckSpec, OutputFormat, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 import {
-    FILELESS_FORMATS,
     TAIL_LINES,
-    TRUFFLEHOG_FINDINGS,
+    FILELESS_FORMATS,
     FINDING_EXIT_CODES,
+    TRUFFLEHOG_FINDINGS,
 } from '#cli/constants/execution/execution.ts';
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
@@ -106,6 +106,7 @@ export function executionFailure(
  * @param result the completed process.
  * @returns true when the output says the tool fell over.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Match declared fatal diagnostics from a check or its tool during checks and corrections. 2 files make 6 calls; one owner keeps that behavior in one place.
 export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
     const pattern = spec.tool_errors ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);

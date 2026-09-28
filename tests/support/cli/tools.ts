@@ -1,11 +1,11 @@
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { delimiter, dirname, join } from 'node:path';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
-import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

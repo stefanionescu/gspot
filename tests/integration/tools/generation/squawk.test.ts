@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
@@ -28,18 +28,33 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/child/squawk.toml': true,
     });
     for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
-    const run = (config: string) =>
-        Bun.spawnSync(['squawk', '--config', config, '--reporter', 'json', 'migration.sql'], {
+    const transactional = Bun.spawnSync(
+        ['squawk', '--config', '.gspot/config/transactional/child/squawk.toml', '--reporter', 'json', 'migration.sql'],
+        {
             cwd: sandbox.path,
             stdout: 'pipe',
             stderr: 'pipe',
-        });
-    const transactional = run('.gspot/config/transactional/child/squawk.toml');
+        },
+    );
     expect(transactional.exitCode, transactional.stderr.toString()).toBe(0);
-    const failed = run('.gspot/config/squawk.toml');
+    const failed = Bun.spawnSync(
+        ['squawk', '--config', '.gspot/config/squawk.toml', '--reporter', 'json', 'migration.sql'],
+        {
+            cwd: sandbox.path,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        },
+    );
     expect(failed.exitCode, failed.stderr.toString()).toBe(1);
     expect(JSON.parse(failed.stdout.toString())).toMatchObject([{ rule_name: 'prefer-robust-stmts' }]);
     await Bun.write(join(sandbox.path, 'migration.sql'), defect.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '));
-    const corrected = run('.gspot/config/squawk.toml');
+    const corrected = Bun.spawnSync(
+        ['squawk', '--config', '.gspot/config/squawk.toml', '--reporter', 'json', 'migration.sql'],
+        {
+            cwd: sandbox.path,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        },
+    );
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
 });

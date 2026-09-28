@@ -1,16 +1,16 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { exportCommand } from '#cli/commands/export.ts';
-import { describe, expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect, describe } from 'bun:test';
 import { readProfile } from '#cli/policy/profiles/read.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
+import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
+import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {

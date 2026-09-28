@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
 const source =

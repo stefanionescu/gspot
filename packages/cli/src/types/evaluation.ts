@@ -4,12 +4,12 @@ import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/types/policy/policy.ts';
 
 import type {
-    configurationRequest,
-    eslintRequest,
     formatFields,
+    eslintRequest,
     formatRequest,
-    prettierSettings,
     prettierSource,
+    prettierSettings,
+    configurationRequest,
 } from '#cli/evaluation/protocol.ts';
 
 export type PrettierOverride = NonNullable<z.infer<typeof prettierSource>['overrides']>[number];

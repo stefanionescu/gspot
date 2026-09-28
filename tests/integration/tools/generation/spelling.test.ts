@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
@@ -91,6 +91,7 @@ test.each(['recommended', 'all'])(
             'typos.toml',
         ]);
         for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
         const run = (config: string, path: string) =>
             Bun.spawnSync(['typos', '--config', config, '--format', 'brief', '--color', 'never', path], {
                 cwd: sandbox.path,

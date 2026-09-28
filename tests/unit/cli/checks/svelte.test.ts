@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { svelteFindings } from '#cli/checks/svelte.ts';
 
 const LINES = [

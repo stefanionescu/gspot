@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
-import { chmodSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');

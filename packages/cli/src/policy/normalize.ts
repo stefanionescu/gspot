@@ -1,17 +1,17 @@
 import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/constants/policy/policy.ts';
 
 import type {
-    Defined,
-    RawPolicy,
-    RawScope,
     Limits,
-    NamingCategoryTable,
-    NamingLanguageTable,
-    NamingSettings,
     Policy,
+    Defined,
+    RawScope,
+    Reasoned,
     RawLimits,
     RawNaming,
-    Reasoned,
+    RawPolicy,
+    NamingSettings,
+    NamingCategoryTable,
+    NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
 function isTable(value: unknown): value is Record<string, unknown> {
@@ -48,6 +48,7 @@ function normalizeScopeTables(raw: RawScope): Partial<Policy> {
     return table;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two normalizers fill defaults over the written keys; the generic keeps the table type.
 function defaulted<T extends object>(raw: object | undefined, defaults: T): T {
     const written: Partial<T> = compact(raw ?? {});
     return { ...defaults, ...written };
@@ -64,6 +65,7 @@ function trimTrailingSlashes(path: string): string {
  * @param value any object
  * @returns the same object without its undefined entries
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Drops the undefined entries of an object, so exact optional types hold. 11 files make 15 calls; one owner keeps that behavior in one place.
 export function compact<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
 }
@@ -73,6 +75,7 @@ export function compact<T extends object>(value: T): Defined<T> {
  * @param entries the entries as written
  * @returns the compacted objects
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Compacts every object of a list; a missing list is empty. 0 files make 0 calls; one owner keeps that behavior in one place.
 export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
     return (entries ?? []).map((entry) => compact(entry));
 }
@@ -144,6 +147,7 @@ export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @param raw the table as written, if any
  * @returns the architecture configuration
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Fills the architecture table's lists and keeps its optional keys only when written. 0 files make 0 calls; one owner keeps that behavior in one place.
 export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
     const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [] });
     return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
@@ -154,6 +158,7 @@ export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['a
  * @param raw the table as written, if any
  * @returns the structure configuration
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Fills the structure table's defaults. 0 files make 0 calls; one owner keeps that behavior in one place.
 export function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
     return defaulted<Policy['structure']>(raw, {
         reexports: 'none',

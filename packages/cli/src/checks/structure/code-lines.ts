@@ -1,8 +1,8 @@
 import type { CodeLine } from '#cli/types/checks/structure.ts';
 
 import {
-    DECLARATION_WORDS,
     QUOTES,
+    DECLARATION_WORDS,
     DIRECTORY_CONSTANT_SIGNS,
     DIRECTORY_CONSTANT_START,
 } from '#cli/constants/checks/structure.ts';
@@ -33,6 +33,7 @@ function commentStart(line: string): number {
  * @param line the line
  * @returns the code part
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The line without its trailing comment. A `#` inside quotes or after a backslash is kept. 6 files make 10 calls; one owner keeps that behavior in one place.
 export function withoutComment(line: string): string {
     const start = commentStart(line);
     return start === -1 ? line : line.slice(0, start);
@@ -68,6 +69,7 @@ export function withoutDeclaration(code: string): string {
  * @param code a code line
  * @returns whether it is the shape `NAME=$(cd <the directory of BASH_SOURCE[0]> && pwd)`
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a code line computes a directory constant from the script's own location. 1 files make 3 calls; one owner keeps that behavior in one place.
 export function isDirectoryConstant(code: string): boolean {
     return (
         DIRECTORY_CONSTANT_START.test(withoutDeclaration(code)) &&

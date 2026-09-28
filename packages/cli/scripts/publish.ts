@@ -4,11 +4,14 @@
 import { valid } from 'semver';
 import { execaSync } from 'execa';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { releaseTargets } from './targets.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
+
+// The exit of a build step that did not finish.
+const ERROR_EXIT = 2;
 
 const JSON_INDENT = 4;
 const EXECUTABLE_MODE = 0o755;
@@ -151,5 +154,5 @@ if (import.meta.main)
         }
     } catch (error) {
         if (!(error instanceof CommanderError)) throw error;
-        process.exitCode = error.exitCode === 0 ? 0 : 2;
+        process.exitCode = error.exitCode === 0 ? 0 : ERROR_EXIT;
     }

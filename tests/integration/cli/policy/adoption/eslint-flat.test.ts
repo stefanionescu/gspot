@@ -1,15 +1,15 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
 
@@ -238,7 +238,7 @@ test.each([
         });
         expect(native.stderr).toBe('');
         expect(native.code).toBe(0);
-        const [nativeFailures, nativeCorrected] = JSON.parse(native.stdout);
+        const [nativeFailures, nativeCorrected] = JSON.parse(native.stdout) as [unknown, unknown];
         expect(nativeFailures).toMatchObject([{ ruleId: 'inherited/sentinel', line: 1, column: 14 }]);
         expect(nativeCorrected).toStrictEqual([]);
     },

@@ -13,7 +13,7 @@ const VERSION = z.object({ version: z.string().optional(), name: z.string().opti
 function pnpmIdentity(key: string): string | undefined {
     const identity = key.startsWith('/') ? key.slice(1) : key;
     const scopeEnd = identity.startsWith('@') ? identity.indexOf('/') : -1;
-    if (identity.startsWith('@') && scopeEnd < 2) return undefined;
+    if (identity.startsWith('@') && scopeEnd <= 1) return undefined;
     const separator = identity.slice(scopeEnd + 1).search(/[@/]/u);
     if (separator < 1) return undefined;
     const nameEnd = scopeEnd + 1 + separator;

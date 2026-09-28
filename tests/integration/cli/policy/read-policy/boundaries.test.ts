@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync } from 'node:fs';
-import { parsePolicyText, PolicyError } from '#cli/policy/read.ts';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { symlinkSync, readFileSync } from 'node:fs';
+import { PolicyError, parsePolicyText } from '#cli/policy/read.ts';
 import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
 describe('configuration directory boundaries', () => {
@@ -54,6 +54,7 @@ for (const scoped of [false, true]) {
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const configured = (adopted: unknown[]) =>
     stringify({ version: 1, configurations: ['javascript'], tools: { eslint: { adopted } } });
 

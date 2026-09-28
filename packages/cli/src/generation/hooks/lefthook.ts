@@ -1,7 +1,8 @@
+import { RUNNER_EXEC } from '#cli/constants/generation.ts';
+import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
-import { hookPrefix, runnerExec } from '#cli/generation/hooks/scripts.ts';
-import type { ConfigurationOutput, HookName } from '#cli/types/generation.ts';
+import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
 /**
  * Preserve the gspot verdict before the native manager combines job results.
  * @param name the hook
@@ -19,7 +20,10 @@ export function lefthookCommand(name: HookName, runner: string | undefined, bina
             'check --stage message --message-file "${GSPOT_LEFTHOOK_MESSAGE:?Run gspot install, then use the Git hook}"';
     return [
         'gspot_status=0',
-        `${runnerExec(runner, binaryPath)} ${args} || gspot_status=$?`,
+        `${
+            RUNNER_EXEC[runner ?? ''] ??
+            (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
+        } ${args} || gspot_status=$?`,
         String.raw`if [ "$gspot_status" -eq 126 ] || [ "$gspot_status" -eq 127 ]; then printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; gspot_status=2; fi`,
         'if [ -n "${GSPOT_LEFTHOOK_RESULT:-}" ]; then printf "%s\\n" "$gspot_status" > "$GSPOT_LEFTHOOK_RESULT"; fi',
         'exit "$gspot_status"',

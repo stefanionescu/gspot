@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
@@ -9,16 +9,16 @@ import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { AuthoredState } from '#tests/types/acceptance/source/cli.ts';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
+    YAML,
     AUTHORED,
     PRETTIER_FIX_ARGS,
-    PRETTIER_NATIVE_FORMATS,
-    PRETTIER_CARRY_CONFIG,
     PRETTIER_CARRY_FILES,
+    PRETTIER_CARRY_CONFIG,
     PRETTIER_CARRY_SOURCE,
-    YAML,
+    PRETTIER_NATIVE_FORMATS,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 // What became of the authored file after init: its text and mode as they were, another text, or nothing.

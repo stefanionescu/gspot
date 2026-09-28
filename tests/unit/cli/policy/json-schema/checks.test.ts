@@ -1,5 +1,5 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 

@@ -50,3 +50,5 @@ export const YARN_ENVIRONMENT_SETTINGS = [
         defaults: { npmAlwaysAuth: true },
     },
 ];
+/** The first Yarn major that reads .yarnrc.yml and drops the classic flags. */
+export const YARN_BERRY_MAJOR = 2;

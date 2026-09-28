@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -22,16 +22,14 @@ test('native Supabase freshness rejects drift and accepts regenerated database t
     await using sandbox = await testdir();
     await using database = await prepareSupabaseDatabase(sandbox.path);
     const { options, configPath, authored } = database;
-    const check = async () =>
-        await executeRun(await openSession(sandbox.path), {
-            stage: 'push',
-            only: ['supabase/types-fresh'],
-            skips: [],
-            fix: false,
-            isDryRun: true,
-            noCache: true,
-        });
-    const stale = await check();
+    const stale = await executeRun(await openSession(sandbox.path), {
+        stage: 'push',
+        only: ['supabase/types-fresh'],
+        skips: [],
+        fix: false,
+        isDryRun: true,
+        noCache: true,
+    });
     expect(stale.report.exitCode, JSON.stringify(stale.report)).toBe(1);
     expect(stale.report.checks).toMatchObject([
         {
@@ -45,7 +43,14 @@ test('native Supabase freshness rejects drift and accepts regenerated database t
     expect(generated.code, generated.stderr).toBe(0);
     expect(generated.stdout).toContain('export type Database');
     await Bun.write(join(sandbox.path, 'database.ts'), generated.stdout);
-    const corrected = await check();
+    const corrected = await executeRun(await openSession(sandbox.path), {
+        stage: 'push',
+        only: ['supabase/types-fresh'],
+        skips: [],
+        fix: false,
+        isDryRun: true,
+        noCache: true,
+    });
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);
     expect(readFileSync(configPath)).toStrictEqual(authored);

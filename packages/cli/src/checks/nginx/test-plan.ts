@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
-import { HOST_PATTERNS, LOCAL_NAMES } from '#cli/constants/checks/nginx.ts';
+import { LOCAL_NAMES, HOST_PATTERNS } from '#cli/constants/checks/nginx.ts';
 
 /**
  * The docker arguments that run nginx -t over one configuration file.

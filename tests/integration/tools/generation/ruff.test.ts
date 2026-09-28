@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -114,6 +114,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
     expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT001']) } });
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
     const run = (config: string, path: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,

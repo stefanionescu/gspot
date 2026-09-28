@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { symlinkSync, unlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { unlinkSync, symlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';

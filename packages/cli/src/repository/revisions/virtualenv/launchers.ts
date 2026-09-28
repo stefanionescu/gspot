@@ -1,7 +1,7 @@
 // A copied virtual environment names working-tree interpreters in its launchers; these read its facts and move them.
 import { EXECUTE_BITS } from '#cli/constants/platform.ts';
-import { readdir, realpath, stat } from 'node:fs/promises';
-import { basename, isAbsolute, join, posix } from 'node:path';
+import { stat, readdir, realpath } from 'node:fs/promises';
+import { join, posix, basename, isAbsolute } from 'node:path';
 import { SelectionError } from '#cli/configurations/select.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
@@ -52,7 +52,7 @@ async function launcherKind(
     path: string,
     name: string,
 ): Promise<'windows' | 'shell' | undefined> {
-    const signature = await Bun.file(selected.source(path)).slice(0, 2).text();
+    const signature = await Bun.file(selected.source(path)).slice(0, 'MZ'.length).text();
     if (signature === '#!') return 'shell';
     return signature === 'MZ' && name.endsWith('.exe') ? 'windows' : undefined;
 }

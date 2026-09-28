@@ -1,11 +1,7 @@
 import { policyValue } from '#cli/policy/settings.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
-import type { EslintSettings, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { EslintRuleBlock, ResolvedSelector, SelectorGroup } from '#cli/types/generation.ts';
-
-function shape(entry: ResolvedSelector): { selector: string; message: string } {
-    return { selector: entry.selector, message: entry.message };
-}
+import type { Policy, EslintSettings, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { SelectorGroup, EslintRuleBlock, ResolvedSelector } from '#cli/types/generation.ts';
 
 function distinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
@@ -122,7 +118,10 @@ export function manifestRuleBlocks(scopes: ScopeSelection[], policy: Policy): Es
  */
 export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
     const general = selectors.filter((entry) => entry.files === undefined);
-    const groups: SelectorGroup[] = general.length === 0 ? [] : [{ selectors: general.map((entry) => shape(entry)) }];
+    const groups: SelectorGroup[] =
+        general.length === 0
+            ? []
+            : [{ selectors: general.map((entry) => ({ selector: entry.selector, message: entry.message })) }];
     for (const paths of distinctLists(
         general.flatMap((entry) => (entry.except === undefined || entry.except.length === 0 ? [] : [entry.except])),
     ))
@@ -130,7 +129,7 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
             files: paths,
             selectors: general
                 .filter((entry) => JSON.stringify(entry.except) !== JSON.stringify(paths))
-                .map((entry) => shape(entry)),
+                .map((entry) => ({ selector: entry.selector, message: entry.message })),
         });
     for (const files of distinctLists(selectors.flatMap((entry) => (entry.files === undefined ? [] : [entry.files]))))
         groups.push({
@@ -138,7 +137,7 @@ export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
             selectors: [
                 ...general,
                 ...selectors.filter((entry) => JSON.stringify(entry.files) === JSON.stringify(files)),
-            ].map((entry) => shape(entry)),
+            ].map((entry) => ({ selector: entry.selector, message: entry.message })),
         });
     return groups;
 }

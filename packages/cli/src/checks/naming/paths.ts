@@ -1,5 +1,5 @@
 import type { Identifier } from '#cli/types/checks/naming.ts';
-import { DECLARATION_SUFFIXES, MIGRATION_DIRECTORY, WRAPPERS } from '#cli/constants/checks/naming.ts';
+import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/constants/checks/naming.ts';
 
 function stemOf(base: string): string {
     const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));

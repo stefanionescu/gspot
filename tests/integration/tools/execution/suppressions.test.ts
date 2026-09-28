@@ -1,7 +1,7 @@
 import stylelint from 'stylelint';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { HtmlValidate } from 'html-validate';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';

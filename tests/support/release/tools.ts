@@ -1,10 +1,11 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import type { InstalledConsumer, PublishedRelease } from '#tests/types/release.ts';
+import type { PublishedRelease, InstalledConsumer } from '#tests/types/release.ts';
+import type { PrepareNativeConsumerResult, PrepareFormatterConsumerResult } from '#tests/types/results.ts';
 
 const FORMATTER_INIT = [
     'init',
@@ -21,7 +22,10 @@ const FORMATTER_INIT = [
 ];
 
 /** Prepares authored package data and private formatter inputs beneath an outdated host runner. */
-export async function prepareFormatterConsumer(installation: InstalledConsumer, release: PublishedRelease) {
+export async function prepareFormatterConsumer(
+    installation: InstalledConsumer,
+    release: PublishedRelease,
+): Promise<PrepareFormatterConsumerResult> {
     const { command } = installation;
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const hostTools = join(installation.workspace, 'host-tools');
@@ -69,7 +73,7 @@ export async function prepareFormatterConsumer(installation: InstalledConsumer, 
 }
 
 /** Initializes and installs native check wrappers through the published CLI. */
-export async function prepareNativeConsumer(installation: InstalledConsumer) {
+export async function prepareNativeConsumer(installation: InstalledConsumer): Promise<PrepareNativeConsumerResult> {
     const authoredPackage = JSON.stringify({ private: true, scripts: { test: 'authored-command' } });
     const nativeConsumer = join(installation.workspace, 'wrapper-consumer');
     mkdirSync(nativeConsumer);

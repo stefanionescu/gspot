@@ -1,6 +1,6 @@
 // A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { PAGE } from '#tests/constants/integration/cli/execution/execution.ts';

@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { OPENAPI_FRESH_GENERATOR, OPENAPI_FRESH_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { OPENAPI_FRESH_POLICY, OPENAPI_FRESH_GENERATOR } from '#tests/constants/integration/cli/checks.ts';
 
 // A planted Express project whose generator writes the document from schema.json and fails when the schema says so.
 async function plant(schema: string): Promise<Planted> {

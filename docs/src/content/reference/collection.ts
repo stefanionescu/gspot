@@ -1,12 +1,12 @@
 import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands.ts';
+import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { bullets, referencePage, section } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { configurationReference, settingsPage } from './policy.ts';
+import { settingsPage, configurationReference } from './policy.ts';
 import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
 import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
-import { configurationPage, enginesPage, pluginReferencePages, rulePage } from './definitions.ts';
+import { rulePage, enginesPage, configurationPage, pluginReferencePages } from './definitions.ts';
 
 /**
  * Every generated reference page, keyed by its Markdown path: commands, configurations, rules, settings, and engines.
@@ -41,14 +41,14 @@ export function referencePages(): Map<string, ReferencePage> {
                 .map(([kind, title]) =>
                     section(
                         title,
-                        bullets(
-                            manifests
-                                .filter((manifest) => manifest.configuration.kind === kind)
-                                .map(
-                                    (manifest) =>
-                                        `[${manifest.configuration.title}](/reference/configurations/${manifest.configuration.name}/): ${manifest.configuration.description}`,
-                                ),
-                        ),
+                        manifests
+                            .filter((manifest) => manifest.configuration.kind === kind)
+                            .map(
+                                (manifest) =>
+                                    `[${manifest.configuration.title}](/reference/configurations/${manifest.configuration.name}/): ${manifest.configuration.description}`,
+                            )
+                            .map((item) => `- ${item}`)
+                            .join('\n'),
                     ),
                 )
                 .join(''),

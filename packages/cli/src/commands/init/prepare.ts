@@ -14,12 +14,12 @@ import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { collectCarried, isOwned } from '#cli/policy/adoption/collect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { isOwned, collectCarried } from '#cli/policy/adoption/collect.ts';
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan/build.ts';
-import type { ExistingTooling, TomlTable } from '#cli/types/repository/repository.ts';
-import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
-import { assertPolicyComplete, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
+import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
+import { askInitQuestions, askConfigurations } from '#cli/commands/init/questions.ts';
+import { PolicyError, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {

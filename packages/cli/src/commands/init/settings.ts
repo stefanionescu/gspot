@@ -1,7 +1,7 @@
 // What init fills in from the repository: every setting whose manifest says where to look (K-93).
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Detect, DetectedSetting } from '#cli/types/commands/init.ts';
-import type { ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
 function folderNames(files: TrackedFile[]): Set<string> {
     const folders = new Set<string>();
@@ -13,6 +13,7 @@ function folderNames(files: TrackedFile[]): Set<string> {
 }
 
 // Ordered mappings can select a false or undefined value, so retain the matching entry itself.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function firstMatch(mapping: Record<string, unknown> | undefined, names: Set<string>): [string, unknown] | undefined {
     return Object.entries(mapping ?? {}).find(([name]) => names.has(name));
 }

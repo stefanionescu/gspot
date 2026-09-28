@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { rejection } from '#tests/support/expectations.ts';
 

@@ -1,15 +1,11 @@
 import { globbySync } from 'globby';
 import { rm } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import { TABLE } from '#cli/constants/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
     const paths = globbySync(['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], {
@@ -45,15 +41,14 @@ export function drizzleRelations(input: EngineInput): Finding[] {
                     !new RegExp(String.raw`relations\(\s*${name}\b`, 'u').test(everything)
                 );
             })
-            .map((match) =>
-                finding(
-                    input,
-                    file.path,
-                    file.text.slice(0, match.index).split('\n').length,
-                    'relations',
-                    `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
-                ),
-            )
+            .map((match) => ({
+                check: input.spec.name,
+                file: file.path,
+                line: file.text.slice(0, match.index).split('\n').length,
+                rule: 'relations',
+                message: `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
+                fixable: false,
+            }))
             .toArray(),
     );
 }
@@ -91,15 +86,15 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
                 return was === undefined || now === undefined || !was.equals(now);
             })
             .toSorted((left, right) => left.localeCompare(right));
-        return changed.map((path) =>
-            finding(
-                input,
-                input.scope === '' ? path : `${input.scope}/${path}`,
-                1,
-                'missing-migration',
+        return changed.map((path) => ({
+            check: input.spec.name,
+            file: input.scope === '' ? path : `${input.scope}/${path}`,
+            line: 1,
+            rule: 'missing-migration',
+            message:
                 'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
-            ),
-        );
+            fixable: false,
+        }));
     } finally {
         await rm(scratch, { recursive: true, force: true });
     }

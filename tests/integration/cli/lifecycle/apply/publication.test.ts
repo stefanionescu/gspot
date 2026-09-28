@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };

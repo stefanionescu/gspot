@@ -1,6 +1,6 @@
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { directoryOf, directoryTree, stemOf } from '#cli/checks/structure/directories.ts';
+import { stemOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 
 /**
  * One finding per script whose code lines exceed limits.bash.file_lines.

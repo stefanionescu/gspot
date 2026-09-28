@@ -805,6 +805,9 @@ splitting scenarios and verify checker repairs beside neighboring real violation
 
 Repair naming, placement, structure, and trivial-function/file findings in their behavior owners.
 
+Done on 2026-09-28 under the full-force rules recorded in [the cleanup record](lint-cleanup.md#full-force-enforcement).
+Zero ESLint, naming, structure, and prose findings remain at level `all`.
+
 ### Step 8.3
 
 Remove confirmed duplication without introducing forwarding or configurable generic services.
@@ -970,6 +973,10 @@ Owner: platform/release verification. Execute Linux glibc and musl,
 macOS x64, and Windows journeys on the supported platform. Cross-compilation and a Rosetta
 version smoke test do not establish native acceptance. Verify Windows permissions, links,
 replacement/recovery, Python launchers, uninstall, Git attributes, and process termination.
+
+The CI matrix of this repository holds x64 and arm64 Linux, macOS arm64, and Windows x64. Each
+Linux job runs its musl binary on Alpine after the build. macOS x64 has a Rosetta smoke step
+and no native runner; native macOS x64 evidence needs an Intel host and stays deferred.
 
 Completion: exact-candidate native results. Depends on available hosts. Acceptance: `K-263`,
 `K-298`, `K-299`, `K-72`, `K-273`, `K-280`.

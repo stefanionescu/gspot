@@ -1,20 +1,18 @@
+// Planted repository for the nginx configuration: a proxy target the request chooses.
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-// Planted repository for the nginx configuration: a proxy target the request chooses.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { NGINX_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const server = (location: string): string =>
-    `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n${location}    }\n}\n`;
-const CLEAN = server('        location / {\n            return 204;\n        }\n');
-const FORGED = server('        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n');
+const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
+const FORGED = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
 
 test(
     'nginx follows repository include globs and reports the included source line',

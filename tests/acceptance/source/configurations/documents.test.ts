@@ -1,8 +1,8 @@
 // Public CLI journeys for document findings and tool failure recovery.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -11,13 +11,13 @@ import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { cpSync, rmSync, mkdirSync, readdirSync, symlinkSync } from 'node:fs';
 
 import {
     GUIDE,
+    README,
     LICENSE,
     OWN_STYLES,
-    README,
     REPORTED_ELSEWHERE,
 } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

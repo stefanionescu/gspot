@@ -1,8 +1,8 @@
 // Source CLI journey: the javascript configuration lints a repository with no TypeScript.
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
@@ -12,7 +12,7 @@ import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 test(
     'javascript/eslint lints a project that has no TypeScript',

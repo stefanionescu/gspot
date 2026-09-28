@@ -1,17 +1,17 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+// Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
-// Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { SCOPES_SOURCE } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

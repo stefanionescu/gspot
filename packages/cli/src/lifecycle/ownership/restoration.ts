@@ -2,17 +2,17 @@
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
 import { currentObservation } from '#cli/lifecycle/ownership/proposals.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
-    ConfigurationOwnership,
+    Journal,
     Restoration,
     FileProposal,
-    Journal,
     OwnershipEntry,
+    ConfigurationOwnership,
 } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.

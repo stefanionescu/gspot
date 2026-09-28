@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 
 test.each([

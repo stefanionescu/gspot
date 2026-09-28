@@ -4,25 +4,26 @@ import type { TSESTree } from '@typescript-eslint/utils';
 import { CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
+import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 import {
-    CONFIG_ROLES,
-    DEFAULT_CONTRACTS,
-    DEFAULT_ROLES,
     ROLE_ORDER,
     TEST_ROLES,
+    CONFIG_ROLES,
+    DEFAULT_ROLES,
+    DEFAULT_CONTRACTS,
 } from '#plugin/constants/import-direction.ts';
 import type {
-    ImportDirectionMessages,
-    ImportDirectionOptions,
-    ImportDirectionRole,
-    ImportDirectionRoles,
     ImportEdge,
     ImportNode,
     ImportVerdict,
+    ImportDirectionRole,
+    ImportDirectionRoles,
+    ImportDirectionOptions,
+    ImportDirectionMessages,
 } from '#plugin/types/rules.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function roleOf(path: string, roles: Required<ImportDirectionRoles>): ImportDirectionRole {
     return ROLE_ORDER.find((role) => role !== 'other' && isAnyGlobMatch(path, roles[role])) ?? 'other';
 }
@@ -106,6 +107,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const root = lintedRoot(context);
         const scope = (options.scope ?? '').replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
         const relativeOf = (absolute: string): string => {
             const rel = relativeToRoot(root, absolute);
             return prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;

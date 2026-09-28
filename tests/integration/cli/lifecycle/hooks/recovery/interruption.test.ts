@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['before', 'after'] as const)(
     'hook installation recovers interruption %s dispatcher publication',

@@ -3,18 +3,25 @@ import { decodeHTMLAttribute } from 'entities';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { MarkupAttribute, MarkupProblem, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, MarkupProblem, MarkupAttribute } from '#cli/types/checks/checks.ts';
 
 import {
-    COPY_ATTRIBUTES,
-    ACTIVE_DOCUMENT_TYPES,
-    DOCUMENT_URL_ATTRIBUTES,
-    INERT_SCRIPT_TYPES,
     LETTERS,
-    PLACEHOLDER_MARKS,
     SHOWN_TEXT,
     URL_ATTRIBUTES,
+    COPY_ATTRIBUTES,
+    PLACEHOLDER_MARKS,
+    INERT_SCRIPT_TYPES,
+    ACTIVE_DOCUMENT_TYPES,
+    DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/constants/checks/checks.ts';
+
+// The text with every placeholder mark pair removed.
+function withoutPlaceholders(text: string): string {
+    let rest = text;
+    for (const [open, close] of PLACEHOLDER_MARKS) rest = withoutMarks(rest, open, close);
+    return rest;
+}
 
 function attributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
@@ -115,14 +122,10 @@ function withoutMarks(text: string, open: string, close: string): string {
     return rest;
 }
 
-function isLiteral(text: string): boolean {
-    return LETTERS.test(PLACEHOLDER_MARKS.reduce((rest, [open, close]) => withoutMarks(rest, open, close), text));
-}
-
 function copyProblems(root: Node): MarkupProblem[] {
     const texts = root
         .descendantsOfType('text')
-        .filter((node) => isLiteral(node.text))
+        .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
         .map((node) => ({
             node,
             rule: 'literal-text',
@@ -130,7 +133,7 @@ function copyProblems(root: Node): MarkupProblem[] {
         }));
     const held = root.descendantsOfType('element').flatMap((element) =>
         attributes(element)
-            .filter((entry) => COPY_ATTRIBUTES.has(entry.name) && isLiteral(entry.value))
+            .filter((entry) => COPY_ATTRIBUTES.has(entry.name) && LETTERS.test(withoutPlaceholders(entry.value)))
             .map((entry) => ({
                 node: entry.node,
                 rule: 'literal-attribute',

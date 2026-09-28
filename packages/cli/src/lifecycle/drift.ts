@@ -1,3 +1,4 @@
+// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -9,10 +10,9 @@ import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
-import { CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT, NEVER_STRAY } from '#cli/constants/lifecycle/lifecycle.ts';
+import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/constants/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith('.gspot/state/')) return false;
@@ -21,6 +21,7 @@ function isStrayCandidate(path: string, policy: Policy): boolean {
     return !(path.startsWith(`${CACHE_DIRECTORY}/`) || NEVER_STRAY.has(path));
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two drift entries carry a patch; the caller sits at the complexity limit.
 function patch(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(`a/${path}`, `b/${path}`, before, after, beforeName, 'rendered', {
         context: DRIFT_DIFF_CONTEXT,
@@ -68,6 +69,7 @@ function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two generated files can be missing or changed; the caller sits at the complexity limit.
 function presenceDrift(root: string, path: string): DriftEntry {
     return { path, kind: openConfinedRoot(root).read(path) === undefined ? 'missing' : 'changed' };
 }

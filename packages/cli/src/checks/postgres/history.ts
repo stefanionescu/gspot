@@ -1,12 +1,7 @@
-import type { Migration } from '#cli/types/checks/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/constants/checks/postgres.ts';
-import { committedEntries, gitBlobs } from '#cli/repository/revisions/contents.ts';
-
-function report(input: EngineInput, migration: Migration, rule: string, text: string): Finding {
-    return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };
-}
+import { gitBlobs, committedEntries } from '#cli/repository/revisions/contents.ts';
 
 const history = new WeakMap<object, Promise<Map<string, string>>>();
 
@@ -50,17 +45,24 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
     const seen = new Map<string, string>();
     for (const migration of migrations) {
         if (migration.version === '')
-            findings.push(report(input, migration, 'version', 'The file name starts with no version number.'));
+            findings.push({
+                check: input.spec.name,
+                file: migration.path,
+                line: 1,
+                rule: 'version',
+                message: 'The file name starts with no version number.',
+                fixable: false,
+            });
         const earlier = seen.get(migration.version);
         if (earlier !== undefined && migration.version !== '')
-            findings.push(
-                report(
-                    input,
-                    migration,
-                    'duplicate-version',
-                    `${earlier} already has the version ${migration.version}.`,
-                ),
-            );
+            findings.push({
+                check: input.spec.name,
+                file: migration.path,
+                line: 1,
+                rule: 'duplicate-version',
+                message: `${earlier} already has the version ${migration.version}.`,
+                fixable: false,
+            });
         seen.set(migration.version, migration.name);
     }
     const texts = await committedText(input);
@@ -70,14 +72,14 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
     const late = migrations.filter((migration) => migration.version < newest.version && !texts.has(migration.path));
     return [
         ...findings,
-        ...late.map((migration) =>
-            report(
-                input,
-                migration,
-                'order',
-                `A new migration sorts before ${newest.name}, which is already committed.`,
-            ),
-        ),
+        ...late.map((migration) => ({
+            check: input.spec.name,
+            file: migration.path,
+            line: 1,
+            rule: 'order',
+            message: `A new migration sorts before ${newest.name}, which is already committed.`,
+            fixable: false,
+        })),
     ];
 }
 
@@ -98,12 +100,14 @@ export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
             const committed = texts.get(migration.path);
             if (committed === undefined || committed === migration.text) return [];
             return [
-                report(
-                    input,
-                    migration,
-                    'frozen',
-                    'This migration has run, and its text changed. Write a new migration.',
-                ),
+                {
+                    check: input.spec.name,
+                    file: migration.path,
+                    line: 1,
+                    rule: 'frozen',
+                    message: 'This migration has run, and its text changed. Write a new migration.',
+                    fixable: false,
+                },
             ];
         });
 }

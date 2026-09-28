@@ -1,7 +1,7 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -12,10 +12,10 @@ import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { prepareIgnoredFormatter } from '#tests/support/cli/prettier.ts';
 
 import {
-    PRETTIER_IGNORE_FILES,
-    PRETTIER_IGNORE_SOURCE,
-    PRETTIER_IGNORE_RULES,
     PRETTIER_FIX_ARGS,
+    PRETTIER_IGNORE_FILES,
+    PRETTIER_IGNORE_RULES,
+    PRETTIER_IGNORE_SOURCE,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 test(

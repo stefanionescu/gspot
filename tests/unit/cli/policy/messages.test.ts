@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import * as messages from '#cli/policy/messages.ts';
 import { INTERNAL_WORDS } from '#tests/constants/unit/cli/policy.ts';
 

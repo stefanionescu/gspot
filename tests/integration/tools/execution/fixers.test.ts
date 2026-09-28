@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { dirname, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -9,7 +9,7 @@ import { explain } from '#cli/commands/explain/subjects.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 if (!(process.platform === 'win32' || process.getuid?.() === 0))
     test('SQLFluff write failures remain execution errors when its exit code also means findings', async () => {

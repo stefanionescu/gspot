@@ -4,8 +4,9 @@ import { chmodSync, writeFileSync } from 'node:fs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { gitOutput, commitAll } from '#tests/support/cli/git.ts';
+import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import type { CreateSecretVerifierResult } from '#tests/types/results.ts';
 
 // A planted credential for the secrets tests, built from halves so no scanner of this repository reads a key here.
 export const PLANTED_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
@@ -14,7 +15,7 @@ export const PLANTED_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
 export const PLANTED_SETTINGS = `aws_access_key_id = "${PLANTED_KEY_ID}"\n`;
 
 /** Generates staged secret checks in a clean repository using its selected native tools. */
-export async function prepareStagedSecrets(root: string) {
+export async function prepareStagedSecrets(root: string): Promise<{ PATH: string }> {
     await createFileTree(root, { 'scripts/a.sh': script });
     commitAll(root);
     const environment = { PATH: toolsPath(['gitleaks']) };
@@ -23,7 +24,10 @@ export async function prepareStagedSecrets(root: string) {
 }
 
 /** Creates independent clean and leaked histories whose final trees contain no planted files. */
-export async function prepareSecretHistory(root: string, files: Record<string, string>) {
+export async function prepareSecretHistory(
+    root: string,
+    files: Record<string, string>,
+): Promise<{ base: string; tree: string; good: string; leaked: string; removed: string }> {
     await createFileTree(root, {
         'gspot.toml': 'version = 1\nconfigurations = ["secrets"]\n[rules]\ninstall = false\n',
     });
@@ -46,7 +50,7 @@ export async function prepareSecretHistory(root: string, files: Record<string, s
 }
 
 /** Routes pinned TruffleHog custom-detector verification to a local provider and simulates process failures. */
-export async function createSecretVerifier(directory: string) {
+export async function createSecretVerifier(directory: string): Promise<CreateSecretVerifierResult> {
     const firstToken = ['gspot-acceptance-', 'token-first'].join('');
     const secondToken = ['gspot-acceptance-', 'token-second'].join('');
     const requests: unknown[] = [];

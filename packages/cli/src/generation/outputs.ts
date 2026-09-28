@@ -23,7 +23,7 @@ import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { simpleGitHookOutputs } from '#cli/generation/hooks/simple-git-hooks.ts';
 import type { GeneratedProposal, GenerationOptions } from '#cli/types/generation.ts';
-import type { MergedView, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // Integrations for the selected hook tool. Native gspot hooks need no integration.
 const HOOK_OUTPUTS: Record<

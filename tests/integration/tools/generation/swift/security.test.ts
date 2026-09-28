@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
@@ -8,10 +8,10 @@ import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSemgrep } from '#tests/support/cli/tools.ts';
 
 import {
-    SWIFT_SECURITY_FINDINGS,
-    SWIFT_SECURITY_ARGS,
     PLIST,
     SCRIPTS,
+    SWIFT_SECURITY_ARGS,
+    SWIFT_SECURITY_FINDINGS,
 } from '#tests/constants/integration/tools/generation.ts';
 
 const SWIFT =
@@ -45,15 +45,13 @@ test.each(['recommended', 'all'])(
             'Info.plist': PLIST,
         });
         await installSemgrep(root);
-        const native = () =>
-            runProcess(
-                [
-                    join(root, '.gspot/.venv', process.platform === 'win32' ? 'Scripts/semgrep.exe' : 'bin/semgrep'),
-                    ...SWIFT_SECURITY_ARGS,
-                ],
-                { cwd: root },
-            );
-        const broken = await native();
+        const broken = await runProcess(
+            [
+                join(root, '.gspot/.venv', process.platform === 'win32' ? 'Scripts/semgrep.exe' : 'bin/semgrep'),
+                ...SWIFT_SECURITY_ARGS,
+            ],
+            { cwd: root },
+        );
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = JSON.parse(broken.stdout) as {
             errors: unknown[];
@@ -80,7 +78,13 @@ test.each(['recommended', 'all'])(
             'scripts/build.js': 'execFileSync("build", [input]);\n',
             'Info.plist': '<plist><dict><key>CFBundleName</key><string>Fixture</string></dict></plist>\n',
         });
-        const corrected = await native();
+        const corrected = await runProcess(
+            [
+                join(root, '.gspot/.venv', process.platform === 'win32' ? 'Scripts/semgrep.exe' : 'bin/semgrep'),
+                ...SWIFT_SECURITY_ARGS,
+            ],
+            { cwd: root },
+        );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as { results: unknown[] }).results).toStrictEqual([]);
         const clean = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);

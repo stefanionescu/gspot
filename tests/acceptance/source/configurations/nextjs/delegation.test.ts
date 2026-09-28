@@ -1,7 +1,7 @@
 // The framework rules stay enforced, and type checking delegates to the Next.js check only when that check runs.
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';

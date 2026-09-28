@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { chmodSync, lstatSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 
 test('installation publishes internal directory aliases as owned files without following external links', async () => {
     await using repository = await testdir();

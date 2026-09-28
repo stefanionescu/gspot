@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import prettier, { type Options } from 'prettier';
-import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { parse as parseToml, stringify } from 'smol-toml';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { stringify, parse as parseToml } from 'smol-toml';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
 
 test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {

@@ -13,6 +13,7 @@ export const relativeDirectory = z
  * @param inner the schema for the setting value
  * @returns the schema for either supported setting form
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Accepts a setting directly or paired with an exception reason. 2 files make 11 calls; one owner keeps that behavior in one place.
 export const reasoned = <T extends z.ZodType>(
     inner: T,
 ): z.ZodUnion<[T, z.ZodObject<{ value: T; reason: z.ZodString }, z.core.$strict>]> =>

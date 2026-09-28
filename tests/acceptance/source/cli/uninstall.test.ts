@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { existsSync, readFileSync } from 'node:fs';
 // Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';

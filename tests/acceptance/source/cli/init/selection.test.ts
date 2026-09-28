@@ -1,12 +1,12 @@
 // A recommended configuration joins the selection only when the repository holds what it detects (K-182).
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { COMPONENT, INIT_SELECTION_QUIET, SELECTION_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { COMPONENT, SELECTION_INIT, INIT_SELECTION_QUIET } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 async function selected(root: string): Promise<string[]> {
     const result = await run(root, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);

@@ -1,7 +1,7 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { sep, resolve, relative, isAbsolute } from 'node:path';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';

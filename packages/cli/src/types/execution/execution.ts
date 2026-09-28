@@ -1,13 +1,13 @@
 // The types of execution in this package.
 import type { z } from 'zod';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
-import type { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
-import type { CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
+import type { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import type { ToolPin, Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Repository, SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { Repository, TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
 
 /** What one tool run accumulates across its spawns. */
 export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

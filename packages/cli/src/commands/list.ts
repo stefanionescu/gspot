@@ -13,7 +13,12 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/constants/commands/commands.ts';
-import type { Policy, ScopeSelection, ExtraRow, SettingsListing, ToolTables } from '#cli/types/policy/policy.ts';
+import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.
+function scopeTag(scope: string | undefined): string {
+    return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
+}
 
 function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
     return Object.entries(tools).flatMap(([tool, table]) => {
@@ -27,10 +32,6 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
             },
         ];
     });
-}
-
-function scopeTag(scope: string | undefined): string {
-    return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
 function settingsText(session: Session): CommandResult {

@@ -1,6 +1,6 @@
 // Findings from the structured reports of specific tools: markdownlint, typos, and TruffleHog.
 import { z } from 'zod';
-import { relative, resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';

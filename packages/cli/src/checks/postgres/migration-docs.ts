@@ -2,18 +2,21 @@
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import { HEADER_LINES } from '#cli/constants/checks/script.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { DocProblem, Migration } from '#cli/types/checks/postgres.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Migration, DocProblem } from '#cli/types/checks/postgres.ts';
 
 import {
-    BLOCK_REACH,
-    DOC_SEPARATOR,
-    MIGRATION_DOC_LABELS,
-    MIGRATION_DOC_SECTIONS,
     PURPOSE,
     SECTION,
+    BLOCK_REACH,
+    DOC_SEPARATOR,
     STATEMENT_WORDS,
+    MIGRATION_DOC_LABELS,
+    MIGRATION_DOC_SECTIONS,
 } from '#cli/constants/checks/postgres.ts';
+
+// From a one-based line to the zero-based index of the line above it.
+const LINE_ABOVE = 2;
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
     const problems: DocProblem[] = [];
@@ -48,7 +51,7 @@ function sectionAbove(lines: string[], line: number, sections: Set<string>): str
 // The comment lines directly above a statement, nearest first, reaching past blank lines.
 function commentsAbove(lines: string[], line: number): string[] {
     const found: string[] = [];
-    for (let index = line - 2; index >= Math.max(0, line - 2 - BLOCK_REACH); index -= 1) {
+    for (let index = line - LINE_ABOVE; index >= Math.max(0, line - LINE_ABOVE - BLOCK_REACH); index -= 1) {
         const text = (lines[index] ?? '').trim();
         if (text === '') continue;
         if (!text.startsWith('--')) break;

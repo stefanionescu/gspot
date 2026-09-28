@@ -5,7 +5,7 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/constants/checks/script.ts';
 import { functionAt, scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { withoutComment, withoutDeclaration } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptFile, ScriptFunction, ScriptIndex } from '#cli/types/checks/structure.ts';
+import type { ScriptFile, ScriptIndex, ScriptFunction } from '#cli/types/checks/structure.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();
 

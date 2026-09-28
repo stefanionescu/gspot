@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import * as programDefinition from '#cli/commands/program.ts';
 import packageManifest from '#cli-package' with { type: 'json' };

@@ -1,5 +1,4 @@
 // The literal values plugin reads: names, patterns, limits, and tables.
-import { SyntaxKind } from 'typescript';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /** Executable statements exclude block containers and empty syntax. */
@@ -15,29 +14,11 @@ export const EXECUTABLE_STATEMENTS = new Set([
     AST_NODE_TYPES.ClassDeclaration,
 ]);
 
-/** Expression wrappers preserve the use of a referenced function value. */
-export const FUNCTION_REFERENCE_WRAPPERS = new Set([
-    SyntaxKind.ParenthesizedExpression,
-    SyntaxKind.AsExpression,
-    SyntaxKind.TypeAssertionExpression,
-    SyntaxKind.SatisfiesExpression,
-    SyntaxKind.NonNullExpression,
-]);
 export const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
 /** Object and array literals own the structure they construct. */
 export const STRUCTURED_EXPRESSIONS = new Set<AST_NODE_TYPES>([
     AST_NODE_TYPES.ObjectExpression,
     AST_NODE_TYPES.ArrayExpression,
-]);
-/** Operations whose reuse centralizes a calculation or constructed value. */
-export const COMPUTATION_NODES = new Set<AST_NODE_TYPES>([
-    AST_NODE_TYPES.BinaryExpression,
-    AST_NODE_TYPES.LogicalExpression,
-    AST_NODE_TYPES.ConditionalExpression,
-    AST_NODE_TYPES.UnaryExpression,
-    AST_NODE_TYPES.UpdateExpression,
-    AST_NODE_TYPES.AssignmentExpression,
-    ...STRUCTURED_EXPRESSIONS,
 ]);
 /** Nodes that introduce no implementation or owned schema. */
 export const FORWARDING_NODES = new Set([

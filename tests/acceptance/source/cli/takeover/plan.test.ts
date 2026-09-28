@@ -1,9 +1,9 @@
 // Takeover at init: the plan names hand-written hooks, refuses unreadable files, carries exception lists with a reason, and lists the lint folder.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
@@ -12,7 +12,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { PLAN_INIT } from '#tests/constants/acceptance/source/cli/takeover.ts';
 
 test.each(['', 'hooks', '.husky'])(

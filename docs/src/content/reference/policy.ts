@@ -1,6 +1,6 @@
 import type { JSONSchema } from 'zod/v4/core';
 import { isDeepStrictEqual } from 'node:util';
-import { cell, referencePage, table } from './page.ts';
+import { cell, table, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
 import { exposedSettings } from '@gspot/cli/src/policy/setting-surface.ts';
@@ -35,6 +35,7 @@ Files outside app use 200 lines. Files in app inherit the JavaScript configurati
 
 `;
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function schemaCell(value: string): string {
     return value
         .replaceAll('&', '&amp;')
@@ -79,6 +80,7 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
     ];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function comparable(setting: SettingSpec): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'default_all' && key !== 'detect'),

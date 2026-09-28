@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { afterEach, expect, spyOn, test } from 'bun:test';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
-import { containing, rejection, textContaining } from '#tests/support/expectations.ts';
+import { test, spyOn, expect, describe, afterEach } from 'bun:test';
+import { swiftBuild, swiftAnalyze } from '#cli/checks/swift/build.ts';
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { rejection, containing, textContaining } from '#tests/support/expectations.ts';
 
 afterEach(() => {
     removeBuildFolders();
@@ -31,6 +31,7 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
     }
 });
 
+describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test('a failed Swift build without source diagnostics returns execution exit 2 and recovers', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -75,6 +76,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
     } finally {
         run.mockRestore();
     }
+});
 });
 
 test('a later Swift session observes a failed build after an earlier successful build', async () => {

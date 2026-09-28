@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { afterEach, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, afterEach } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { swiftBuild } from '#cli/checks/swift/build.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import { rmSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { rmSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const caches = new Set<string>();
 afterEach(() => {
@@ -15,6 +15,7 @@ afterEach(() => {
 });
 
 // The check input of a sandbox whose build folder the run afterwards removes.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Eight build cases open a session and register its cache folder the same way.
 async function inputFor(root: string, check: string): Promise<EngineInput> {
     caches.add(buildFolder(root));
     return sessionInput(root, check);

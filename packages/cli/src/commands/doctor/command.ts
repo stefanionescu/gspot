@@ -6,7 +6,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { DoctorOptions } from '#cli/types/commands/doctor.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
+import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
 
 /**
  * Reports configuration, tool, and coverage problems.

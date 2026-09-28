@@ -1,8 +1,8 @@
 // Policy errors name their gspot.toml location and accept the suggested correction.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';

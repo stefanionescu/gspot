@@ -1,5 +1,5 @@
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/constants/repository/repository.ts';
 
 function dependencyFolder(path: string): string | undefined {

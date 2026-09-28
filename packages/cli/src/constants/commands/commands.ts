@@ -18,3 +18,5 @@ export const KNOWN_ERRORS = new Set([
 ]);
 export const KEY_GAP = 2;
 export const VALUE_WIDTH = 28;
+/** The exit of a command that did not finish: an error, a refusal, or a cancellation. */
+export const ERROR_EXIT = 2;

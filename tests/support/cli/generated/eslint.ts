@@ -1,6 +1,6 @@
 // The ESLint instance a planted repository's generated configuration produces, for tests of the emitted rules.
 import { ESLint } from 'eslint';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';

@@ -1,5 +1,6 @@
 {
     "gspot/env-access-owner": "all",
+    "gspot/export-layout": "all",
     "gspot/header-comments-before-imports": "all",
     "gspot/import-direction": "all",
     "gspot/import-layout": "all",
@@ -12,6 +13,7 @@
     "gspot/no-export-only-files": "all",
     "gspot/no-exported-alias-constants": "all",
     "gspot/no-harness-barrel-imports": "all",
+    "gspot/no-import-comments": "all",
     "gspot/no-index-imports": "all",
     "gspot/no-prefix-collisions": "all",
     "gspot/no-reexports": "all",

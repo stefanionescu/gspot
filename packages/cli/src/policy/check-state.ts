@@ -1,5 +1,5 @@
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { Policy, RepositoryCheck, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { Policy, ScopeSelection, RepositoryCheck } from '#cli/types/policy/policy.ts';
 
 /**
  * Describe the persistent policy selection independently of files or tool availability.
@@ -41,6 +41,7 @@ export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string |
  * @param entry the check the policy declares
  * @returns the check in manifest form
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Normalize a repository command into the check definition used by planning and explanations. 2 files make 2 calls; one owner keeps that behavior in one place.
 export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;
     return {

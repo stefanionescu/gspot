@@ -1,17 +1,17 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { ESLint, loadESLint } from 'eslint';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { EslintAdoption } from '#tests/types/acceptance/source/cli.ts';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
-    ESLINT_CARRY_CONFIG,
     ESLINT_CARRY_FILES,
+    ESLINT_CARRY_CONFIG,
     ESLINT_CARRY_SOURCE,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 

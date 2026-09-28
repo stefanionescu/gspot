@@ -1,12 +1,18 @@
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PrepareDispatcherResult } from '#tests/types/results.ts';
 
 /** Creates authored executable hooks in the Git-resolved default, external, or linked-worktree location. */
-export async function prepareDispatcher(sandbox: string, external: string, launcher: string, kind: string) {
+export async function prepareDispatcher(
+    sandbox: string,
+    external: string,
+    launcher: string,
+    kind: string,
+): Promise<PrepareDispatcherResult> {
     const policy = 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n';
     await createFileTree(sandbox, { 'gspot.toml': policy });
     for (const args of [

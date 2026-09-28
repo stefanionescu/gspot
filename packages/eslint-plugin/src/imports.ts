@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { normalizePath } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { LEADING_STAR, TS_DIRECTIVE, DIRECTIVE_PREFIXES } from '#plugin/constants/rules.ts';
 
 function aliasTarget(source: string, prefix: string, target: string): string | undefined {
     const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
@@ -13,6 +14,7 @@ function aliasTarget(source: string, prefix: string, target: string): string | u
     return posix.join(base, rest);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two shapes of require statement share this test of the call.
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&
@@ -67,4 +69,15 @@ export function isImportLike(node: TSESTree.Statement, isRequireAllowed: boolean
         node.declarations.length === 1 &&
         isRequireCall(node.declarations[0].init)
     );
+}
+
+/**
+ * True for a comment that is a tool directive rather than prose: a suppression, a global declaration, a coverage mark.
+ * @param value the comment text without its markers
+ * @returns whether a tool reads the comment
+ */
+export function isDirective(value: string): boolean {
+    const text = value.replace(LEADING_STAR, '').trim();
+    if (TS_DIRECTIVE.test(text)) return true;
+    return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
 }

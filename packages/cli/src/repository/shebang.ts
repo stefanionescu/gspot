@@ -14,7 +14,7 @@ function withoutTrailingVersion(word: string): string {
  */
 export function shebangExecutable(firstLine: string): string | undefined {
     if (!firstLine.startsWith('#!')) return undefined;
-    const tokens = firstLine.slice(2).trim().split(/\s+/u);
+    const tokens = firstLine.slice('#!'.length).trim().split(/\s+/u);
     let index = 0;
     if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
     if (tokens[index] === '-S') index += 1;

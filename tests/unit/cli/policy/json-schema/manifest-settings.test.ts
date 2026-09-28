@@ -1,5 +1,5 @@
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';

@@ -8,13 +8,13 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { LOCATION_SPECIFIER } from '#cli/constants/policy/policy.ts';
 
 import type {
+    Policy,
     Located,
+    PathSegment,
+    PolicyProblem,
+    EslintAdoption,
     ModuleReference,
     EditorconfigAdoption,
-    EslintAdoption,
-    PathSegment,
-    Policy,
-    PolicyProblem,
 } from '#cli/types/policy/policy.ts';
 
 // The problems a reader finds, or the error it threw, attributed to the policy value being read.
@@ -68,7 +68,7 @@ function eslintReferences(entry: EslintAdoption): Located<ModuleReference>[] {
 function referenceProblem(files: ConfinedRoot, reference: ModuleReference, location: PathSegment[]): PolicyProblem[] {
     const { module } = reference;
     if (module.startsWith('./')) {
-        if (files.read(module.slice(2)) !== undefined) return [];
+        if (files.read(module.slice('./'.length)) !== undefined) return [];
         return [{ path: location, message: `ESLint executable module is missing: ${module}` }];
     }
     if (!LOCATION_SPECIFIER.test(module)) return [];

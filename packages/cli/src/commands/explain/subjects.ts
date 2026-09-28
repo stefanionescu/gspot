@@ -4,14 +4,15 @@ import * as messages from '#cli/policy/messages.ts';
 import { allChecks } from '#cli/configurations/listing.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { explainPath } from '#cli/commands/explain/file.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { DIRECTIONS, STAGES } from '#cli/constants/commands/explain.ts';
+import { STAGES, DIRECTIONS } from '#cli/constants/commands/explain.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven rows of the subject listing share this shape; one owner keeps the label format.
 function listLine(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }

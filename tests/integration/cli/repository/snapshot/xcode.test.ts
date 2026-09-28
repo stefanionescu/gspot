@@ -1,25 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
-
-const sourceProject = (path: string): string => `{
-    rootObject = P;
-    objects = {
-        P = {isa = PBXProject; mainGroup = G; targets = (T,); };
-        G = {isa = PBXGroup; children = (F,); sourceTree = "<group>"; };
-        F = {isa = PBXFileReference; path = "${path}"; sourceTree = "<group>"; };
-        B = {isa = PBXBuildFile; fileRef = F; };
-        S = {isa = PBXSourcesBuildPhase; files = (B,); };
-        T = {isa = PBXNativeTarget; buildPhases = (S,); };
-    };
-}`;
 
 test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
     await using sandbox = await testdir();
@@ -80,9 +68,29 @@ test('Xcode source membership does not mix independent nested projects', async (
     await createFileTree(sandbox.path, {
         'gspot.toml':
             'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\nconfigurations = ["xcode"]\n',
-        'Root.xcodeproj/project.pbxproj': sourceProject('Root.swift'),
+        'Root.xcodeproj/project.pbxproj': `{
+    rootObject = P;
+    objects = {
+        P = {isa = PBXProject; mainGroup = G; targets = (T,); };
+        G = {isa = PBXGroup; children = (F,); sourceTree = "<group>"; };
+        F = {isa = PBXFileReference; path = "Root.swift"; sourceTree = "<group>"; };
+        B = {isa = PBXBuildFile; fileRef = F; };
+        S = {isa = PBXSourcesBuildPhase; files = (B,); };
+        T = {isa = PBXNativeTarget; buildPhases = (S,); };
+    };
+}`,
         'Root.swift': 'let root = 1\n',
-        'nested/Nested.xcodeproj/project.pbxproj': sourceProject('Nested.swift'),
+        'nested/Nested.xcodeproj/project.pbxproj': `{
+    rootObject = P;
+    objects = {
+        P = {isa = PBXProject; mainGroup = G; targets = (T,); };
+        G = {isa = PBXGroup; children = (F,); sourceTree = "<group>"; };
+        F = {isa = PBXFileReference; path = "Nested.swift"; sourceTree = "<group>"; };
+        B = {isa = PBXBuildFile; fileRef = F; };
+        S = {isa = PBXSourcesBuildPhase; files = (B,); };
+        T = {isa = PBXNativeTarget; buildPhases = (S,); };
+    };
+}`,
         'nested/Nested.swift': 'let nested = 1\n',
         'nested/Extra.swift': 'let extra = 1\n',
     });

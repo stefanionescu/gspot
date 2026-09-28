@@ -1,22 +1,22 @@
 // Replacing files under a confined root atomically, and the lock that keeps one lifecycle writer at a time.
 import { randomUUID } from 'node:crypto';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
-import { OWNER_WRITE_BIT, PRIVATE_FILE } from '#cli/constants/platform.ts';
+import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/constants/platform.ts';
 import type { Staging, Confinement, FileObservation } from '#cli/types/platform.ts';
 import { readEntry, parentPath, validateObservation } from '#cli/platform/confined/reads.ts';
 
 import {
+    openSync,
     closeSync,
-    fchmodSync,
     fsyncSync,
+    fchmodSync,
     // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
     lchmodSync,
-    openSync,
     renameSync,
-    symlinkSync,
     unlinkSync,
+    symlinkSync,
     writeFileSync,
 } from 'node:fs';
 

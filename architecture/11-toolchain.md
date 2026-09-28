@@ -284,7 +284,11 @@ The macOS binaries are signed ad hoc at build, and the guide names `xattr -d` fo
 download. Document quarantine behavior for the verified delivery route; do not promise a host security
 policy solely from the package manager name. Recommend only published, verified install routes.
 
-The release job runs `gspot --version` in an Alpine container for both musl targets.
+The release job runs `gspot --version` in an Alpine container for both musl targets. The
+acceptance job of this repository runs on x64 and arm64 Linux runners, and each runs the musl
+binary of its own architecture in an Alpine container after the build. GitHub hosts no Intel
+macOS runner, so the macOS job runs the x64 binary under Rosetta, which is a smoke test and not
+native evidence.
 
 ### Acceptance K-281
 

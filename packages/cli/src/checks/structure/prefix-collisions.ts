@@ -2,17 +2,17 @@
 
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/checks/structure/directories.ts';
+import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 
 import {
-    HOOK_PREFIX,
-    IGNORED_FOLDERS,
-    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-    DEFAULT_THRESHOLD,
-    INDEX_STEMS,
     NEST_KINDS,
+    HOOK_PREFIX,
+    INDEX_STEMS,
     SCRIPT_ENDING,
     TOOL_PREFIXES,
+    IGNORED_FOLDERS,
+    DEFAULT_THRESHOLD,
+    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/constants/checks/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.

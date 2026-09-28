@@ -4,16 +4,19 @@ import { LANGUAGE_GROUP_TABLES } from '#cli/constants/policy/policy.ts';
 import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 
 import type {
-    NamingLanguageTable,
     Policy,
     Reasoned,
-    ExposedSettings,
-    PolicyLayer,
-    ResolvedSetting,
-    SettingState,
     SpecMatch,
+    PolicyLayer,
+    SettingState,
     WrittenValue,
+    ExposedSettings,
+    ResolvedSetting,
+    NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
+
+// A category setting is naming.<language>.<category>.
+const CATEGORY_KEY_PARTS = 2;
 
 function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (
@@ -30,6 +33,7 @@ function plain(value: unknown): WrittenValue {
     return value.reason === undefined ? { value: value.value } : { value: value.value, reason: value.reason };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six readers turn an absent value into undefined before plain(); one owner keeps that rule.
 function plainIfPresent(value: unknown): WrittenValue | undefined {
     return value === undefined ? undefined : plain(value);
 }
@@ -68,7 +72,7 @@ function groupedSpec(
     const [first, second] = rest;
     if (first === undefined) return undefined;
     if (second === undefined) return languageSpec(surface, key, table, language, first);
-    if (table !== 'naming' || rest.length !== 2) return undefined;
+    if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
     return categorySpec(surface, language, first, second);
 }
 
@@ -191,6 +195,7 @@ export function policyTables(policy: Policy, scope: string | undefined): PolicyL
  * @param value anything
  * @returns the value as a record, or undefined for primitives and null
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Narrows a value to a plain object. 3 files make 6 calls; one owner keeps that behavior in one place.
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
     return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
 }

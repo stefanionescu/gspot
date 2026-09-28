@@ -21,6 +21,7 @@ export function splitParts(name: string): string[] {
  * @param name the identifier
  * @returns the words
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The words of an identifier: its parts without the digit runs. 2 files make 2 calls; one owner keeps that behavior in one place.
 export function wordsOf(name: string): string[] {
     return splitParts(name).filter((part) => !DIGIT.test(part));
 }

@@ -965,6 +965,12 @@ reason = "The required Bash runtime header is a version followed by two platform
 
 [[ignore]]
 check = "typescript/eslint"
+rule = "gspot/no-trivial-functions"
+paths = ["packages/cli/src/policy/messages.ts"]
+reason = "Every policy message has one builder here, and tests/unit/cli/policy/messages.test.ts reads each builder for the shared vocabulary. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalog moves out of functions."
+
+[[ignore]]
+check = "typescript/eslint"
 rule = "package-json/require-exports"
 paths = ["packages/npm/package.json"]
 reason = "The npm package exposes a command through bin and has no importable module API. An exports map would change existing package subpath resolution. Remove this exception if the launcher gains a module API."

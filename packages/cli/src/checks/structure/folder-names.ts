@@ -2,7 +2,7 @@ import { roleFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { directoryOf } from '#cli/checks/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { BANNED_FOLDER_NAMES, IGNORED_FOLDERS } from '#cli/constants/checks/structure.ts';
+import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/constants/checks/structure.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.

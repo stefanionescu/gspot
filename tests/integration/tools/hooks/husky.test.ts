@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import type { HookCapture } from '#tests/types/cli.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { existsSync, readFileSync, readdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
-import { readHookStatus, installHookTool, prepareHusky } from '#tests/support/cli/hooks/projects.ts';
+import { rmSync, existsSync, unlinkSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { prepareHusky, readHookStatus, installHookTool } from '#tests/support/cli/hooks/projects.ts';
 
 test.each(['default', 'native', 'nested'])(
     'Husky retains authored configuration across repeat installs and forwards exact push failures in a %s installation',

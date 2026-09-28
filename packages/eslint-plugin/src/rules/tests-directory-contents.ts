@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { CODE_EXTENSION, DEFAULT_TEST } from '#plugin/constants/rules.ts';
+import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import type { TestsDirectoryContentsOptions } from '#plugin/types/rules.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
+import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 'misplaced'>({
     name: 'tests-directory-contents',

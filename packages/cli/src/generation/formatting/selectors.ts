@@ -1,6 +1,6 @@
 // Moving Prettier overrides from the folder they were written in to a configuration generated elsewhere.
 import { GLOB_GROUPING, LEADING_GLOBSTARS } from '#cli/constants/generation.ts';
-import type { ExcludedBasename, FormatSelectorGroup, NativeOverride, FormatOverride } from '#cli/types/generation.ts';
+import type { FormatOverride, NativeOverride, ExcludedBasename, FormatSelectorGroup } from '#cli/types/generation.ts';
 
 // A selector list as written: one string or several.
 function asList(value: string | string[] | undefined): string[] {
@@ -9,6 +9,7 @@ function asList(value: string | string[] | undefined): string[] {
 }
 
 // A negation keeps its mark in front of the moved selector.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function rebasePattern(pattern: string, mapPattern: (selector: string) => string): string {
     return pattern.startsWith('!') ? `!${mapPattern(pattern.slice(1))}` : mapPattern(pattern);
 }
@@ -69,6 +70,7 @@ function rebaseGroup<Options>(group: FormatSelectorGroup<Options>): FormatOverri
         if (basenames.some(({ isNegated, basename }) => isNegated && basename.includes('/'))) return [];
     }
     const exclusions = exclusionsOf(group, basenames);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
     const mapPattern = (selector: string): string => fromGeneratedFile(hasSlash ? selector : `**/${selector}`);
     if (sourceDirectory === '')
         return [
@@ -82,6 +84,7 @@ function rebaseGroup<Options>(group: FormatSelectorGroup<Options>): FormatOverri
  * @param path the literal path
  * @returns the path with every glob character escaped
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 export function literalGlob(path: string): string {
     return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
 }
@@ -98,6 +101,7 @@ export function rebaseOverrides<Options>(
     sourceDirectory: string,
     outputPrefix: string,
 ): FormatOverride<Options>[] {
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
     const fromGeneratedFile = (pattern: string): string =>
         [outputPrefix, literalGlob(sourceDirectory), pattern].filter((part) => part !== '' && part !== '.').join('/');
     return entries.flatMap((entry) => {

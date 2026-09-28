@@ -1,13 +1,13 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
+import { runFixer, applyFixers } from '#cli/execution/fixers.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, existsSync, readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('dependency copies let concurrent native process output drain', async () => {
     await using repository = await testdir();

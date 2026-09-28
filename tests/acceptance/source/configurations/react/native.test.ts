@@ -1,7 +1,7 @@
+// React Native fixtures cover environment access, styling, and keyed lists. Additional cases check token storage, import boundaries, and text placement.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-// React Native fixtures cover environment access, styling, and keyed lists. Additional cases check token storage, import boundaries, and text placement.
+import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
@@ -11,60 +11,46 @@ import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 import {
-    NATIVE_DEPENDENCIES,
-    NATIVE_TSCONFIG,
     REPORT,
+    NATIVE_TSCONFIG,
+    NATIVE_DEPENDENCIES,
 } from '#tests/constants/acceptance/source/configurations/react.ts';
-
-const head = (text: string): string => `// A planted file.\n\n${text}`;
 
 const LINT: { rule: string; path: string; text: string; line: number }[] = [
     {
         rule: 'expo/no-env-var-destructuring',
         path: 'src/address.ts',
-        text: head(
-            'const { EXPO_PUBLIC_URL } = process.env;\n\n/** Where the service lives. */\nexport const address = EXPO_PUBLIC_URL;\n',
-        ),
+        text: `// A planted file.\n\nconst { EXPO_PUBLIC_URL } = process.env;\n\n/** Where the service lives. */\nexport const address = EXPO_PUBLIC_URL;\n`,
         line: 3,
     },
     {
         rule: 'react-native/no-inline-styles',
         path: 'src/Box.tsx',
-        text: head(
-            '/**\n * Draws a box.\n * @returns the box\n */\nexport function Box(): unknown {\n    return <View style={{ padding: 8 }} />;\n}\n',
-        ),
+        text: `// A planted file.\n\n/**\n * Draws a box.\n * @returns the box\n */\nexport function Box(): unknown {\n    return <View style={{ padding: 8 }} />;\n}\n`,
         line: 8,
     },
     {
         rule: 'no-restricted-syntax',
         path: 'src/Rows.tsx',
-        text: head(
-            '/**\n * Lists rows.\n * @returns the list\n */\nexport function Rows(): unknown {\n    return <FlatList data={[]} renderItem={undefined} />;\n}\n',
-        ),
+        text: `// A planted file.\n\n/**\n * Lists rows.\n * @returns the list\n */\nexport function Rows(): unknown {\n    return <FlatList data={[]} renderItem={undefined} />;\n}\n`,
         line: 8,
     },
     {
         rule: 'no-restricted-syntax',
         path: 'src/session.ts',
-        text: head(
-            "/**\n * Keeps the session.\n * @param value the session\n * @returns when it is kept\n */\nexport async function keep(value: string): Promise<void> {\n    await AsyncStorage.setItem('auth_token', value);\n}\n",
-        ),
+        text: `// A planted file.\n\n/**\n * Keeps the session.\n * @param value the session\n * @returns when it is kept\n */\nexport async function keep(value: string): Promise<void> {\n    await AsyncStorage.setItem('auth_token', value);\n}\n`,
         line: 9,
     },
     {
         rule: '@react-native/no-deep-imports',
         path: 'src/frame.ts',
-        text: head(
-            "import View from 'react-native/Libraries/Components/View/View';\n\n/** The view each screen draws in. */\nexport const Frame = View;\n",
-        ),
+        text: `// A planted file.\n\nimport View from 'react-native/Libraries/Components/View/View';\n\n/** The view each screen draws in. */\nexport const Frame = View;\n`,
         line: 3,
     },
     {
         rule: 'react-native/no-raw-text',
         path: 'src/Label.tsx',
-        text: head(
-            '/**\n * Labels a row.\n * @returns the label\n */\nexport function Label(): unknown {\n    return <View>label</View>;\n}\n',
-        ),
+        text: `// A planted file.\n\n/**\n * Labels a row.\n * @returns the label\n */\nexport function Label(): unknown {\n    return <View>label</View>;\n}\n`,
         line: 8,
     },
 ];

@@ -3,10 +3,10 @@ import { join, relative } from 'node:path';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
-import { DIAGNOSTIC, PRIVATE_PREFIX, RESPONSE_FILE, RULE_SUFFIX } from '#cli/constants/checks/swift.ts';
+import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/constants/checks/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 

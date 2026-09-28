@@ -1,10 +1,10 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { prepareHookClone, installHookClone } from '#tests/support/cli/hooks/clone.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { installHookClone, prepareHookClone } from '#tests/support/cli/hooks/clone.ts';
 import { readHookStatus, installHookTool } from '#tests/support/cli/hooks/projects.ts';
-import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('edited cloned integrations refuse install and apply until restored', async () => {
     await using repository = await testdir();
@@ -64,7 +64,7 @@ test('cloned runner switches refuse edited originals and restore clean dispatch 
     });
     expect({
         status: dispatched.code,
-        args: JSON.parse(readFileSync(join(clonePath, 'runner-observed'), 'utf8')),
+        args: JSON.parse(readFileSync(join(clonePath, 'runner-observed'), 'utf8')) as unknown,
         original: readFileSync(originalPath),
     }).toStrictEqual({ status: 0, args: ['check', '--staged'], original });
     unlinkSync(join(clonePath, 'runner-observed'));

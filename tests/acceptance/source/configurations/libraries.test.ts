@@ -1,7 +1,8 @@
+// Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
 import { symlinkSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -9,41 +10,32 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/constants/acceptance/source/cli/cli.ts';
 import { LIBRARIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
-const head = (text: string): string => `// A planted file.\n\n${text}`;
-
 const LINT: [string, string, string][] = [
     [
         'zod/no-any-schema',
         'src/schema.ts',
-        head("import { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.any();\n"),
+        `// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.any();\n`,
     ],
     [
         'drizzle/enforce-delete-with-where',
         'src/purge.ts',
-        head(
-            "import { db, users } from './db.ts';\n\n/** Deletes every user. */\nexport const purged = db.delete(users);\n",
-        ),
+        `// A planted file.\n\nimport { db, users } from './db.ts';\n\n/** Deletes every user. */\nexport const purged = db.delete(users);\n`,
     ],
     [
         'no-restricted-imports',
         'src/widget.ts',
-        head(
-            "import { create } from 'zustand';\n\n/** A store made outside a store file. */\nexport const useWidgetStore = create(() => ({ open: false }));\n",
-        ),
+        `// A planted file.\n\nimport { create } from 'zustand';\n\n/** A store made outside a store file. */\nexport const useWidgetStore = create(() => ({ open: false }));\n`,
     ],
     [
         'no-restricted-syntax',
         'src/routers/users.ts',
-        head(
-            "import { publicProcedure } from './trpc.ts';\n\n/** A procedure with no input schema. */\nexport const list = publicProcedure.query(() => []);\n",
-        ),
+        `// A planted file.\n\nimport { publicProcedure } from './trpc.ts';\n\n/** A procedure with no input schema. */\nexport const list = publicProcedure.query(() => []);\n`,
     ],
 ];
 
@@ -52,18 +44,14 @@ const CASES: FindingCase[] = [
         check: 'trpc/router-boundaries',
         files: {
             'src/server/router.ts': 'export const appRouter = {};\n',
-            'src/client/page.ts': head(
-                "import { appRouter } from '../server/router.ts';\n\n/** The router, pulled into client code. */\nexport const leaked = appRouter;\n",
-            ),
+            'src/client/page.ts': `// A planted file.\n\nimport { appRouter } from '../server/router.ts';\n\n/** The router, pulled into client code. */\nexport const leaked = appRouter;\n`,
         },
         expected: { file: 'src/client/page.ts', rule: 'server-import', line: 3 },
     },
     {
         check: 'drizzle/relations-complete',
         files: {
-            'src/tables.ts': head(
-                "import { pgTable, uuid } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n",
-            ),
+            'src/tables.ts': `// A planted file.\n\nimport { pgTable, uuid } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n`,
         },
         expected: { file: 'src/tables.ts', rule: 'relations', line: 9 },
     },

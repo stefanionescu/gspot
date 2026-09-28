@@ -1,19 +1,20 @@
+// Corrections run in order; dry runs use a scratch copy and return diffs.
 import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { runToolCommand } from '#cli/tools/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
+import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
-// Corrections run in order; dry runs use a scratch copy and return diffs.
-import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import type { ConfinedRoot, SpawnResult } from '#cli/types/platform.ts';
+import { TOOL_DEADLINE } from '#cli/constants/configurations.ts';
+import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import type { SpawnResult, ConfinedRoot } from '#cli/types/platform.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import { executionFailure, hasToolError } from '#cli/execution/broken-tool.ts';
-import { FIX_DIFF_CONTEXT, FIX_ORDER } from '#cli/constants/execution/execution.ts';
-import { createFileWorkspace, scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { FixReport, FixResult, PlannedCheck, PreparedCommand, Session } from '#cli/types/execution/execution.ts';
+import { hasToolError, executionFailure } from '#cli/execution/broken-tool.ts';
+import { FIX_ORDER, FIX_DIFF_CONTEXT } from '#cli/constants/execution/execution.ts';
+import { scratchCopy, createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import type { Session, FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
 
 function sourceBytes(files: ConfinedRoot, path: string): Buffer | undefined {
     try {
@@ -52,7 +53,11 @@ function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin |
 }
 
 function correctionFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
-    const failure = executionFailure(result, planned.check, toolDeadlineSeconds(planned.scope.view));
+    const failure = executionFailure(
+        result,
+        planned.check,
+        planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default,
+    );
     if (failure !== undefined) return failure.note;
     const hasRemainingFindings = planned.spec.fix_findings_exit_codes?.includes(result.code) === true;
     if ((result.code === 0 || hasRemainingFindings) && !hasToolError(planned.spec, planned.tool, result))

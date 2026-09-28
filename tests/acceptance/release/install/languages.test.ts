@@ -1,6 +1,6 @@
 // Installs built packages from an isolated registry: the pinned language tools report defects and accept corrections.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';

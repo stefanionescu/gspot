@@ -1,5 +1,6 @@
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
@@ -9,7 +10,7 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.
  * @returns the findings
  */
 export const trivialFunction: Analysis = async (context, scripts) => {
-    const threshold = context.limit('trivial_statements', 'bash') ?? 2;
+    const threshold = context.limit('trivial_statements', 'bash') ?? DEFAULT_TRIVIAL_STATEMENTS;
     const index = await scripts();
     const findings = index.files.flatMap((file) =>
         file.functions.flatMap((entry) =>

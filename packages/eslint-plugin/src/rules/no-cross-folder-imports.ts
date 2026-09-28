@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { CrossFolderImportsOptions } from '#plugin/types/rules.ts';
-import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
+import { lintedFile, lintedRoot, staticString, normalizePath, relativeToRoot } from '#plugin/files.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
     for (const [prefix, directory] of Object.entries(aliases)) {

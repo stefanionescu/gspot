@@ -1,8 +1,8 @@
+// Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-// Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -10,18 +10,12 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { STATIC_SITE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
-import { BUILD, STATIC_SITE_HEADERS, SVG } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { SVG, BUILD, STATIC_SITE_HEADERS } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
-const page = (body: string): string =>
-    `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n${body}    </body>\n</html>\n`;
-const HOME = page(
-    '        <h1 class="title">Planted</h1>\n        <a href="/about.html">About</a>\n        <img src="/assets/logo.svg" alt="The logo" />\n',
-);
-const ABOUT = page('        <h1 class="title">About</h1>\n        <a href="/">Home</a>\n');
-const SITEMAP = (extra: string): string =>
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n${extra}</urlset>\n`;
+const HOME = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">Planted</h1>\n        <a href="/about.html">About</a>\n        <img src="/assets/logo.svg" alt="The logo" />\n    </body>\n</html>\n`;
+const ABOUT = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <a href="/">Home</a>\n    </body>\n</html>\n`;
 const FILES = {
     '.gitignore': 'node_modules\ndist\n',
     'package.json':
@@ -30,7 +24,7 @@ const FILES = {
     'index.html': HOME,
     'about.html': ABOUT,
     'site.css': '.title {\n    color: #333;\n}\n',
-    'sitemap.xml': SITEMAP(''),
+    'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n</urlset>\n`,
     _headers: STATIC_SITE_HEADERS,
     'site.webmanifest': '{\n    "name": "Planted",\n    "icons": [{ "src": "/assets/logo.svg" }]\n}\n',
     'assets/logo.svg': SVG,
@@ -49,7 +43,9 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'static-site/html-validate-built',
-        files: { 'about.html': page('        <h1 class="title">About</h1>\n        <img src="/assets/logo.svg" />\n') },
+        files: {
+            'about.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <img src="/assets/logo.svg" />\n    </body>\n</html>\n`,
+        },
         expected: { file: 'dist/about.html', rule: 'wcag/h37', line: 10 },
     },
     {
@@ -59,7 +55,9 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'static-site/links-internal',
-        files: { 'about.html': page('        <h1 class="title">About</h1>\n        <a href="/gone.html">Gone</a>\n') },
+        files: {
+            'about.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <a href="/gone.html">Gone</a>\n    </body>\n</html>\n`,
+        },
         expected: { file: 'about.html', rule: 'broken-link', line: 1 },
     },
     {
@@ -70,7 +68,9 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'static-site/sitemap',
-        files: { 'sitemap.xml': SITEMAP('    <url><loc>https://planted.test/pricing.html</loc></url>\n') },
+        files: {
+            'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n    <url><loc>https://planted.test/pricing.html</loc></url>\n</urlset>\n`,
+        },
         expected: { file: 'sitemap.xml', rule: 'missing-page', line: 1 },
     },
     {

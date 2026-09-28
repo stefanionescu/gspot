@@ -1,19 +1,19 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the security configuration: an eval the shipped pack finds, and a rule of the repository's own.
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { SECURITY_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 import {
-    EVALUATED,
     OWN_RULE,
+    EVALUATED,
     SECURITY_CLEAN,
 } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

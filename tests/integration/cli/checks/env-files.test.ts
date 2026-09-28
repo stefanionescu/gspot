@@ -1,6 +1,6 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
 import { envFiles } from '#cli/checks/security/env/files.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';

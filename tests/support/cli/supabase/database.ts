@@ -6,6 +6,7 @@ import { createFileTree } from 'testdirs';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
 import { tableAt } from '#cli/policy/write.ts';
+import type { PrepareSupabaseDatabaseResult } from '#tests/types/results.ts';
 
 const DATABASE_START = [
     'supabase',
@@ -15,7 +16,7 @@ const DATABASE_START = [
 ];
 
 /** Starts an isolated native database and retains the authored configuration for preservation checks. */
-export async function prepareSupabaseDatabase(root: string) {
+export async function prepareSupabaseDatabase(root: string): Promise<PrepareSupabaseDatabaseResult> {
     const project = `gspot-types-${randomUUID().replaceAll('-', '').slice(0, 28)}`;
     const options = { cwd: root, timeoutMs: 180_000 };
     const version = await run(['supabase', '--version'], options);

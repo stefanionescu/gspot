@@ -1,5 +1,5 @@
 // The files a planted repository's policy generates, for tests of what its selected configurations put in them.
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 

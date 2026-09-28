@@ -1,7 +1,7 @@
 // Component type checks report planted errors and own TypeScript checking. JavaScript scopes skip Vue type checks but retain Svelte warnings.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';

@@ -1,10 +1,10 @@
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { renameSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { readHookStatus, preparePreCommit } from '#tests/support/cli/hooks/projects.ts';
 
 test.each(['', "apps/worker's tools"])(

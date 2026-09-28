@@ -1,6 +1,7 @@
+// Planted repository for the supabase configuration: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
@@ -8,8 +9,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the supabase configuration: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { SUPABASE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { GREET, MIGRATION, SUPABASE_CONFIG } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 

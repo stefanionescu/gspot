@@ -1,6 +1,6 @@
-import parser from '@typescript-eslint/parser';
 // The rule tester every rule test uses: the TypeScript parser, bun's describe and it.
-import { afterAll, describe, it } from 'bun:test';
+import parser from '@typescript-eslint/parser';
+import { it, afterAll, describe } from 'bun:test';
 import { RuleTester } from '@typescript-eslint/rule-tester';
 
 RuleTester.afterAll = afterAll;
@@ -17,6 +17,7 @@ RuleTester.describeSkip = describe.skip;
  * @param root the repository root the rules resolve paths against
  * @returns the tester
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: A rule tester using the TypeScript parser and a fixed repository root. 27 files make 28 calls; one owner keeps that behavior in one place.
 export function tester(root = '/repo'): RuleTester {
     return new RuleTester({
         languageOptions: {

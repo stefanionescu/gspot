@@ -12,17 +12,17 @@ import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { Policy, RunnerTaskNames } from '#cli/types/policy/policy.ts';
-import { CI_SETUP, CURSOR_RULE, HOOKS_ROW } from '#cli/constants/commands/init.ts';
-import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/constants/generation.ts';
+import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/constants/commands/init.ts';
+import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/constants/generation.ts';
 
 import type {
-    InstallSettings,
-    TakeoverPlan,
-    DetectedSetting,
-    InitAnswers,
     Planning,
-    InitProposal as Proposal,
+    InitAnswers,
+    TakeoverPlan,
     InitSelection,
+    DetectedSetting,
+    InstallSettings,
+    InitProposal as Proposal,
 } from '#cli/types/commands/init.ts';
 
 // How many values a carried setting holds: the entries of a list or table, or one scalar.

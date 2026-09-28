@@ -4,14 +4,14 @@ import { readFile } from 'node:fs/promises';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-import { ABSENT_HASH, DIFF_PATHS, LOG_PATHS, GIT_HASH } from '#cli/constants/repository/revisions.ts';
+import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/constants/repository/revisions.ts';
 
 import type {
-    PushRevision,
-    PushSelection,
+    PushLine,
     Comparison,
     PushContext,
-    PushLine,
+    PushRevision,
+    PushSelection,
 } from '#cli/types/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.

@@ -3,14 +3,14 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
-    CONFIG_CALL_ALLOWED,
-    CONFIG_IMPORT_PREFIXES,
-    CONFIG_LOGIC_NODES,
     CONFIG_STATEMENTS,
+    CONFIG_LOGIC_NODES,
+    CONFIG_CALL_ALLOWED,
     LANGUAGE_BY_EXTENSION,
+    CONFIG_IMPORT_PREFIXES,
 } from '#cli/constants/checks/repository.ts';
 
 function configurationRolePaths(input: EngineInput): string[] {

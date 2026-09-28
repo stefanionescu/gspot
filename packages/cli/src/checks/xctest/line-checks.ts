@@ -3,7 +3,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/constants/checks/xctest.ts';
 
 function hasReason(value: Node | undefined): boolean {

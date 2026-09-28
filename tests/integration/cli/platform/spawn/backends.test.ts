@@ -1,8 +1,8 @@
 // Exercise the shared process contract through real child processes.
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 
 const backends = [
@@ -14,12 +14,13 @@ for (const backend of backends) {
     test(`${backend.name}: a selected executable resolves its sibling commands before unrelated PATH tools`, async () => {
         await using sandbox = await testdir();
         const extension = process.platform === 'win32' ? '.cmd' : '';
-        const script = (command: string) =>
-            process.platform === 'win32' ? `@echo off\r\n${command}\r\n` : `#!/bin/sh\n${command}\n`;
         await createFileTree(sandbox.path, {
-            [`selected/parent${extension}`]: script('sibling'),
-            [`selected/sibling${extension}`]: script('echo selected'),
-            [`unrelated/sibling${extension}`]: script('echo unrelated'),
+            [`selected/parent${extension}`]:
+                process.platform === 'win32' ? `@echo off\r\nsibling\r\n` : `#!/bin/sh\nsibling\n`,
+            [`selected/sibling${extension}`]:
+                process.platform === 'win32' ? `@echo off\r\necho selected\r\n` : `#!/bin/sh\necho selected\n`,
+            [`unrelated/sibling${extension}`]:
+                process.platform === 'win32' ? `@echo off\r\necho unrelated\r\n` : `#!/bin/sh\necho unrelated\n`,
         });
         for (const path of ['selected/parent', 'selected/sibling', 'unrelated/sibling'])
             chmodSync(join(sandbox.path, path + extension), 0o755);

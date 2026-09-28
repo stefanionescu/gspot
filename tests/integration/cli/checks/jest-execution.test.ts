@@ -1,7 +1,7 @@
-import { dirname, join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { join, dirname } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { engineInput } from '#cli/execution/engines.ts';

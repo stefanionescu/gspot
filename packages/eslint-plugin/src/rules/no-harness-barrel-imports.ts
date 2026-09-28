@@ -1,6 +1,6 @@
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { HarnessBarrelImportsOptions } from '#plugin/types/rules.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
+import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'barrel'>({
     name: 'no-harness-barrel-imports',

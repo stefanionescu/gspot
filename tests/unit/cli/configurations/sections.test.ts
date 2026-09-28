@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { iniSection } from '#cli/repository/configuration/ini.ts';
 import { gixyRules } from '#cli/repository/configuration/gixy-rules.ts';
 import { javascriptRules } from '#cli/repository/configuration/javascript-rules.ts';

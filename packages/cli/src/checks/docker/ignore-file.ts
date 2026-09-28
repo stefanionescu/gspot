@@ -2,7 +2,7 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import { DOCKERIGNORE_ENTRIES } from '#cli/constants/checks/docker.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.

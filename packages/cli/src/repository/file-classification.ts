@@ -1,24 +1,24 @@
-import { pathMatcher } from '#cli/repository/paths.ts';
 // Every tracked path has one nature: source, generated, vendored, binary.
+import { pathMatcher } from '#cli/repository/paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.ts';
 
 import {
-    GENERATED_BANNERS,
-    INSTALLED_PREFIXES,
     LICENSE_FILE,
+    GENERATED_BANNERS,
     VALE_OWN_PREFIXES,
+    INSTALLED_PREFIXES,
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
 } from '#cli/constants/repository/patterns.ts';
 import {
     BANNER_BYTES,
+    BINARY_ATTRIBUTES,
     ENV_FILE_PATTERNS,
     ENV_TEMPLATE_NAMES,
-    BINARY_ATTRIBUTES,
-    GENERATED_ATTRIBUTES,
     VENDORED_ATTRIBUTES,
+    GENERATED_ATTRIBUTES,
 } from '#cli/constants/repository/repository.ts';
 
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
@@ -69,6 +69,7 @@ function managedNature(path: string): NatureVerdict | undefined {
  * @param path the file, relative to the root
  * @returns true for a package file
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Whether a path is a Vale package file: under the styles folder and not the gspot style or vocabulary. 4 files make 7 calls; one owner keeps that behavior in one place.
 export function isValePackageFile(path: string): boolean {
     return path.startsWith(VALE_STYLES_PREFIX) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
 }
@@ -131,6 +132,7 @@ export function readAttributes(root: string): Attribute[] {
  * @param path the repository-relative path.
  * @returns whether the file contains environment values.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Identify environment files that contain machine values rather than templates. 2 files make 0 calls; one owner keeps that behavior in one place.
 export function isEnvironmentFile(path: string): boolean {
     return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1));
 }

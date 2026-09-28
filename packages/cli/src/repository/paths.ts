@@ -44,6 +44,7 @@ export function pathExpressions(patterns: string[]): PathExpressions {
  * @param scope the scope path
  * @returns whether the file is in the scope
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a file is inside a scope path ('' is the root and matches everything). 4 files make 6 calls; one owner keeps that behavior in one place.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }

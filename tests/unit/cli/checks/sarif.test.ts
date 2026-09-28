@@ -1,6 +1,6 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { resolve, sep } from 'node:path';
+import { sep, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { sarifFindings } from '#cli/checks/security/codeql.ts';
 

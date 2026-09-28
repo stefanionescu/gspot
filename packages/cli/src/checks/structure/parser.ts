@@ -43,6 +43,7 @@ export async function scriptFunctions(
  * @param line the one-based line
  * @returns the function, or undefined at the top level
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The function whose lines include a line number. 4 files make 5 calls; one owner keeps that behavior in one place.
 export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions.find((entry) => entry.start <= line && line <= entry.end);
 }

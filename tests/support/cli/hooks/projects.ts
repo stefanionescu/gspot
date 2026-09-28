@@ -1,21 +1,25 @@
-import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
 // The hook manager and hook status of a sandbox, driven from its session the way the install command drives them.
+import { createFileTree } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import type { PrepareHuskyResult } from '#tests/types/results.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
-import { SIMPLE_GIT_HOOKS_POLICY, PRE_COMMIT_POLICY } from '#tests/constants/integration/tools/hooks.ts';
+import type { HookLocation } from '#cli/types/repository/repository.ts';
+import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/constants/integration/tools/hooks.ts';
 
 /**
  * Read hook readiness and diagnostics from a fresh sandbox session.
  * @param root the sandbox repository
  * @returns the current hook status
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Eight test files read the hook status through it; one owner opens the session.
 export async function readHookStatus(root: string): Promise<ReturnType<typeof hookStatus>> {
     const session = await openSession(root);
     return hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
@@ -26,13 +30,17 @@ export async function readHookStatus(root: string): Promise<ReturnType<typeof ho
  * @param root the sandbox
  * @returns the line that says what was installed
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six test files install the hook tool through it; one owner opens the session.
 export async function installHookTool(root: string): Promise<string> {
     const session = await openSession(root);
     return installNativeHooks({ policy: session.policyFiles.policy, repository: session.repository, tools: session });
 }
 
 /** Prepares authored package and local hooks for native simple-git-hooks adoption. */
-export async function prepareSimpleGitHooks(root: string, repository: string) {
+export async function prepareSimpleGitHooks(
+    root: string,
+    repository: string,
+): Promise<{ originalManifest: string; originalHook: string; location: HookLocation }> {
     await createFileTree(root, {
         'gspot.toml': SIMPLE_GIT_HOOKS_POLICY,
         'package.json':
@@ -69,7 +77,10 @@ export async function prepareSimpleGitHooks(root: string, repository: string) {
 }
 
 /** Prepares a committed native pre-commit project and installs its dispatcher. */
-export async function preparePreCommit(root: string, repository: string) {
+export async function preparePreCommit(
+    root: string,
+    repository: string,
+): Promise<{ session: Session; env: Record<string, string> }> {
     await createFileTree(root, {
         'gspot.toml': PRE_COMMIT_POLICY,
         '.gitignore': '.venv/\nbin/\npre-commit-cache/\nobserved\nfailed\n',
@@ -108,7 +119,7 @@ export async function preparePreCommit(root: string, repository: string) {
 }
 
 /** Prepares authored Husky commands and either an existing native or local Git hook. */
-export async function prepareHusky(root: string, top: string, kind: string) {
+export async function prepareHusky(root: string, top: string, kind: string): Promise<PrepareHuskyResult> {
     const authored = 'cat > authored-input\nprintf "%s\\n" "$@" > authored-args\nexit 0\n';
     await createFileTree(root, {
         'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "husky"\n',

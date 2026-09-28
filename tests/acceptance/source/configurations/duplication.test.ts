@@ -1,12 +1,12 @@
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the duplication configuration: one block copied into a second file.
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { DUPLICATION_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
@@ -15,15 +15,14 @@ const STEPS = Array.from(
     { length: 30 },
     (_, index) => `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
 ).join('\n');
-const copied = (name: string): string =>
-    `#!/usr/bin/env bash\nset -euo pipefail\n\n${name}() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\n${name}\n`;
-
 describe('the duplication configuration', () => {
     test(
         'a block copied between two files is a finding on the file that holds it',
         async () => {
             await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'scripts/first.sh': copied('count_first') });
+            await createFileTree(sandbox.path, {
+                'scripts/first.sh': `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`,
+            });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
             await installAtLevel(sandbox.path, DUPLICATION_INIT, environment);
@@ -33,7 +32,10 @@ describe('the duplication configuration', () => {
                 environment,
             );
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            await Bun.write(`${sandbox.path}/scripts/second.sh`, copied('count_second'));
+            await Bun.write(
+                `${sandbox.path}/scripts/second.sh`,
+                `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_second() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_second\n`,
+            );
             commitAll(sandbox.path);
             const found = await run(
                 sandbox.path,

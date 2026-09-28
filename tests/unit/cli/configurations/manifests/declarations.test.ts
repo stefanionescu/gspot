@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parseManifest } from '#cli/configurations/manifests.ts';
 
 test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
@@ -12,6 +12,7 @@ test.each(['copy = true', 'body = "include target"', 'merge = { extends = "targe
     },
 );
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const takeoverDefinition = (reader: string) => `
 [configuration]
 name = "example"
@@ -32,6 +33,7 @@ test('takeover declarations reject unknown readers and accept every declared rea
         expect(() => parseManifest(takeoverDefinition(reader), 'configurations/example')).not.toThrow();
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const selectorDefinition = (selection: string) => `
 [configuration]
 name = "example"
@@ -59,6 +61,7 @@ test('shared takeover selectors cannot authorize retiring the containing file', 
     ).not.toThrow();
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const pinnedSecurity = (pin: string) => `
 [configuration]
 name = "security"
@@ -81,6 +84,7 @@ test.each(['latest', '^1.2.3', '../pack'])(
     },
 );
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const roleDefinition = (role: string) =>
     `entry_files = ["src/main.js"]\n[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
 
@@ -91,6 +95,7 @@ test('a setting names the architecture role of its folder, and only a known role
     expect(() => parseManifest(roleDefinition('helpers'), 'configurations/example')).toThrow('role');
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const toolPageDefinition = (page: string, crash: string) =>
     `[configuration]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
 
@@ -111,6 +116,7 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
     ).toThrow('regular expression');
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const suppressionDefinition = (inline: string) => `
 [configuration]
 name = "example"

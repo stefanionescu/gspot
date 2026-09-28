@@ -1,11 +1,11 @@
 // A reader and writer confined to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
-import { isAbsolute, relative, sep } from 'node:path';
+import { sep, relative, isAbsolute } from 'node:path';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { acquireLock, writeObservation } from '#cli/platform/confined/writes.ts';
-import type { Confinement, ConfinedRoot, FileObservation, PathFormat } from '#cli/types/platform.ts';
-import { confinementOf, readEntry, parentPath, validateObservation } from '#cli/platform/confined/reads.ts';
-import { chmodSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, type Stats, unlinkSync } from 'node:fs';
+import type { PathFormat, Confinement, ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
+import { readEntry, parentPath, confinementOf, validateObservation } from '#cli/platform/confined/reads.ts';
+import { chmodSync, lstatSync, mkdirSync, rmdirSync, type Stats, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 // The real path of a confined entry, refusing one whose link chain leaves the root.
 function sourceOf(confinement: Confinement, path: string): string {

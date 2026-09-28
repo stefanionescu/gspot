@@ -1,5 +1,4 @@
 // The init command: its flags, the profile's answers, and the run from detection to the written setup.
-import type { z } from 'zod';
 import { Option } from 'commander';
 import type { Command } from 'commander';
 import { hasPolicy } from '#cli/policy/read.ts';
@@ -16,9 +15,9 @@ import { readProfile } from '#cli/policy/profiles/read.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
-import { ALREADY_INSTALLED, UNREADABLE_EXIT } from '#cli/constants/commands/init.ts';
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
-import type { InitOptions, InitPrepared, InitResult } from '#cli/types/commands/init.ts';
+import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/constants/commands/init.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
 function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
@@ -40,14 +39,6 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
     });
 }
 
-function integrationChoice<Value extends string>(
-    flags: Record<string, unknown>,
-    name: string,
-    schema: z.ZodType<Value>,
-): Value | 'none' | undefined {
-    return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
-}
-
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
     const lists = {
         configurations: listFlag(flags, 'configurations'),
@@ -55,9 +46,10 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
-        hooks: integrationChoice(flags, 'hooks', hooksSchema.shape.tool),
-        ci: integrationChoice(flags, 'ci', ciSchema.shape.provider),
-        runner: integrationChoice(flags, 'runner', runnerSchema.shape.tool),
+        hooks: flags['hooks'] === false ? 'none' : hooksSchema.shape.tool.optional().parse(textFlag(flags, 'hooks')),
+        ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
+        runner:
+            flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
         rules: flags['rules'] === false ? ('no' as const) : undefined,
         format: textFlag(flags, 'format') as InitOptions['format'],
     };

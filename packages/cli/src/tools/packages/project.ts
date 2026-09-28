@@ -15,8 +15,8 @@ import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { LOCKS, TOOL_PACKAGE_PROJECT, YARN_SETTINGS } from '#cli/constants/tools/packages.ts';
+import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/constants/tools/packages.ts';
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
 const packageSchema = z.strictObject({
@@ -39,6 +39,7 @@ function projectOf(manifest: string): ToolProject {
 }
 
 // Whether a recorded lock pins the project's dependencies.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four steps of apply and install ask whether the recorded lock is current; one owner keeps the comparison.
 function isCurrentLock(project: ToolProject, recorded: FileObservation | undefined): boolean {
     return (
         recorded !== undefined &&

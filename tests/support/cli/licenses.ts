@@ -1,15 +1,15 @@
-import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
+import { createFileTree } from 'testdirs';
+import { join, delimiter } from 'node:path';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { ROOT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { LICENSES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 
 /** Creates installed license metadata and selects the package license check. */
-export async function prepareLicenseProject(root: string) {
+export async function prepareLicenseProject(root: string): Promise<{ PATH: string }> {
     await createFileTree(root, {
         'package.json': ROOT,
         '.gitignore': 'node_modules/\n',

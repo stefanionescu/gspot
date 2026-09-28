@@ -1,8 +1,9 @@
 import type { SqlNode } from '#cli/types/parsers/sql.ts';
-import { nodesOf, partsOf, textOf } from '#cli/parsers/sql/parser.ts';
-import { CONSTRAINT_SUFFIXES, DEFAULT_SCHEMA, KEY_KINDS } from '#cli/constants/checks/postgres.ts';
-import type { Migration, SchemaFacts, FactReader, Location, SchemaState } from '#cli/types/checks/postgres.ts';
+import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/parser.ts';
+import { KEY_KINDS, DEFAULT_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/constants/checks/postgres.ts';
+import type { Location, Migration, FactReader, SchemaFacts, SchemaState } from '#cli/types/checks/postgres.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers qualify a relation name, and the default schema is applied in one place.
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;
     return `${textOf(node['schemaname']) || DEFAULT_SCHEMA}.${textOf(node['relname'])}`;

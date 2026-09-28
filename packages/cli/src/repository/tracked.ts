@@ -1,19 +1,19 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import ignore from 'ignore';
 import type { Dirent } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/constants/platform.ts';
 import type { RawEntry, PathIgnore, SourceObservations } from '#cli/types/repository/repository.ts';
-import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
+import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 
 import {
-    DEPENDENCY_FOLDERS,
     EXECUTABLE_BITS,
     NATURE_HEAD_BYTES,
+    DEPENDENCY_FOLDERS,
     NOT_REPOSITORY_CODE,
 } from '#cli/constants/repository/repository.ts';
 
@@ -62,6 +62,7 @@ function hasGitEntry(directory: string): boolean {
     return parent !== directory && hasGitEntry(parent);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five readers ask git once; the default parameter carries the inspection for the caller that has it.
 function isOutsideGit(
     root: string,
     inspection: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
@@ -265,6 +266,7 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
  * @returns the text
  * @throws when required content cannot be read
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Required file prefixes decoded as text for shebang and banner checks. 3 files make 6 calls; one owner keeps that behavior in one place.
 export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
     return readPrefix(root, path, bytes).toString('utf8');
 }

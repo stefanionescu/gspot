@@ -5,28 +5,28 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { isActive, planRun } from '#cli/execution/planning/plan.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import { DOCKER, FAILED_STATUSES, RAN_STATUSES } from '#cli/constants/execution/execution.ts';
-import { cachedResult, cacheKeyFor, runHashes, storeResult } from '#cli/execution/result-cache.ts';
+import { runHashes, cacheKeyFor, storeResult, cachedResult } from '#cli/execution/result-cache.ts';
+import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/constants/execution/execution.ts';
 
 import type {
-    Executable,
     Pass,
-    RunOptions,
-    RunOutcome,
+    Session,
     FixReport,
     IgnoreUse,
-    PlannedCheck,
     RunReport,
-    Session,
+    Executable,
+    RunOptions,
+    RunOutcome,
+    PlannedCheck,
 } from '#cli/types/execution/execution.ts';
 
 // The plan and, for each planned check, the function that runs it.
@@ -197,7 +197,13 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         staged: options.staged ? new Set(options.staged) : undefined,
         uses: new Map(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }])),
     };
-    const active = executables.filter(({ check }) => isActive(check));
+    const active = executables.filter(
+        ({ check }) =>
+            check.files.length > 0 ||
+            check.triggerPaths.length > 0 ||
+            check.spec.stage === 'message' ||
+            (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0),
+    );
     const ran = await runChecks(pass, active);
     const report = await assembleReport({
         session,

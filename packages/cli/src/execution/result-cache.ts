@@ -1,13 +1,13 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { sep, join, relative, isAbsolute } from 'node:path';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
 import { RAN_STATUSES } from '#cli/constants/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from 'node:fs';
-import type { RunHashes, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
+import { openSync, closeSync, fstatSync, readFileSync, realpathSync } from 'node:fs';
+import type { Session, RunHashes, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { cacheKey, fileHash, readCached, cacheInputs, writeCached } from '#cli/execution/cache.ts';
 
 // The path a tool is recorded under: inside the cache root when it lies inside the repository.
 function identityPath(session: Session, path: string): string {
@@ -104,7 +104,7 @@ function portableResult(session: Session, result: CheckResult): CheckResult {
  * @returns empty file and tool tables under the policy hash
  */
 export function runHashes(session: Session): RunHashes {
-    const policy = textHash(session.policyFiles.text);
+    const policy = new Bun.CryptoHasher('sha256').update(session.policyFiles.text).digest('hex');
     const files = new Map<string, string>();
     return { policy, files, tools: new Map<string, string>() };
 }

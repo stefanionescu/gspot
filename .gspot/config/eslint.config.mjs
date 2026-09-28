@@ -115,6 +115,7 @@ const coreRules = {
     'no-useless-return': 'error',
     'no-useless-call': 'error',
     'no-useless-rename': 'error',
+    // import-x/no-duplicates owns duplicate imports and can merge them.
     'no-duplicate-imports': 'off',
     eqeqeq: ['error', 'always'],
     'no-param-reassign': 'error',
@@ -136,7 +137,9 @@ const gspotRules = {
     'gspot/no-exported-alias-constants': 'error',
     'gspot/no-index-imports': 'error',
     'gspot/header-comments-before-imports': 'error',
+    'gspot/no-import-comments': 'error',
     'gspot/import-layout': 'error',
+    'gspot/export-layout': 'error',
     'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
     'gspot/no-cross-project-imports': ['error', { scopes: [
     "packages/cli",
@@ -179,6 +182,7 @@ const gspotRules = {
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
 const sonarRules = {
+    // A file that plants only fixtures beside tests has no test in it by design.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/cognitive-complexity': ['error', limits.cognitive],
     'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
@@ -220,18 +224,20 @@ const sonarRules = {
     'sonarjs/no-redundant-assignments': 'error',
 };
 
-// Naming checks own abbreviations and filename case. Platform APIs can return null.
-// Explicit undefined returns satisfy noImplicitReturns. Import shape is not a naming defect.
-// Conditional expressions remain on one line.
 const unicornRules = {
+    // The naming check owns abbreviations and filename case; two owners would give two answers.
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/filename-case': 'off',
+    // Platform APIs and syntax trees return null; replacing it everywhere is churn without a defect.
     'unicorn/no-null': 'off',
+    // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
+    // removes both.
     'unicorn/no-useless-undefined': 'off',
+    // gspot/import-path-style owns the import shape.
     'unicorn/import-style': 'off',
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
-    'unicorn/no-array-reduce': 'off',
+    'unicorn/no-array-reduce': 'error',
     'unicorn/no-array-for-each': 'error',
     'unicorn/prefer-node-protocol': 'error',
     'unicorn/no-useless-spread': 'error',
@@ -262,6 +268,8 @@ const securityRules = {
     'security/detect-possible-timing-attacks': 'error',
     'security/detect-pseudoRandomBytes': 'error',
     'security/detect-unsafe-regex': 'error',
+    // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
+    // variable; neither names a defect a linter of file paths can avoid.
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
 };
@@ -271,6 +279,7 @@ const nodeRules = {
     'n/no-process-exit': 'error',
     'n/no-unsupported-features/node-builtins': ['error', { version: ">=24.2.0", allowExperimental: true }],
     'n/no-unsupported-features/es-builtins': ['error', { version: ">=24.2.0" }],
+    // TypeScript owns syntax support.
     'n/no-unsupported-features/es-syntax': 'off',
     'n/prefer-global/buffer': ['error', 'always'],
     'n/prefer-global/console': ['error', 'always'],
@@ -279,16 +288,18 @@ const nodeRules = {
     'n/prefer-global/url-search-params': ['error', 'always'],
     'n/prefer-promises/dns': 'error',
     'n/prefer-promises/fs': 'error',
+    // A command-line tool reads and writes files synchronously by design.
     'n/no-sync': 'off',
     'n/no-callback-literal': 'error',
     'n/no-new-require': 'error',
     'n/no-path-concat': 'error',
+    // TypeScript and import-x resolve imports; a second resolver disagrees on aliases.
     'n/no-missing-import': 'off',
     'n/no-missing-require': 'off',
-    'n/no-unpublished-import': 'off',
-    'n/no-unpublished-require': 'off',
-    'n/no-extraneous-import': 'off',
-    'n/no-extraneous-require': 'off',
+    'n/no-unpublished-import': 'error',
+    'n/no-unpublished-require': 'error',
+    'n/no-extraneous-import': 'error',
+    'n/no-extraneous-require': 'error',
 };
 
 const jsdocRules = {
@@ -297,6 +308,7 @@ const jsdocRules = {
     'jsdoc/require-param': 'error',
     'jsdoc/require-param-description': 'error',
     'jsdoc/require-param-name': 'error',
+    // TypeScript owns the types, so JSDoc carries none.
     'jsdoc/require-param-type': 'off',
     'jsdoc/require-returns': 'error',
     'jsdoc/require-returns-description': 'error',
@@ -337,9 +349,9 @@ const importRules = {
     'import-x/newline-after-import': ['error', { count: 1 }],
     'import-x/exports-last': 'error',
 
-    'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
+    'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: false }],
     'import-x/no-self-import': 'error',
-    'import-x/no-useless-path-segments': ['error', { noUselessIndex: false }],
+    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
     'import-x/no-empty-named-blocks': 'error',
     'import-x/no-duplicates': 'error',
 };
@@ -744,6 +756,17 @@ const policyRules = [
     {
         "scope": "",
         "includes": [
+            "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts)$",
+            "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
+        ],
+        "excludes": [],
+        "rules": {
+            "gspot/no-trivial-functions": "off"
+        }
+    },
+    {
+        "scope": "",
+        "includes": [
             "^(?:packages\\/npm\\/package\\.json)$",
             "^(?:packages\\/npm\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
         ],
@@ -835,7 +858,7 @@ const defaults = [
         settings: { node: { version: ">=24.2.0" }, gspot: { root } },
         rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
     },
-    { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
+    { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
     ...importStyleOverrides,
     ...scopeRules,
     ...runtimeOverrides,
@@ -1450,7 +1473,7 @@ const defaults = [
             '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-non-null-assertion': 'error',
             '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
             '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/strict-boolean-expressions': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -1459,14 +1482,16 @@ const defaults = [
             '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
             '@typescript-eslint/only-throw-error': 'error',
             '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreDefaultValues: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1, 2] }],
+            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
             '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
             'sonarjs/no-duplicate-in-composite': 'error',
             'sonarjs/redundant-type-aliases': 'error',
             'no-unused-vars': 'off',
         },
     },
-    { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
+    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
+    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
+    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["packages/cli/**","packages/eslint-plugin/**","docs/**"]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1494,7 +1519,7 @@ const defaults = [
             '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-non-null-assertion': 'error',
             '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
             '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/strict-boolean-expressions': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -1503,14 +1528,16 @@ const defaults = [
             '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
             '@typescript-eslint/only-throw-error': 'error',
             '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreDefaultValues: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1, 2] }],
+            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
             '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
             'sonarjs/no-duplicate-in-composite': 'error',
             'sonarjs/redundant-type-aliases': 'error',
             'no-unused-vars': 'off',
         },
     },
-    { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
+    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
+    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
+    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/cli/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1538,7 +1565,7 @@ const defaults = [
             '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-non-null-assertion': 'error',
             '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
             '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/strict-boolean-expressions': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -1547,14 +1574,16 @@ const defaults = [
             '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
             '@typescript-eslint/only-throw-error': 'error',
             '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreDefaultValues: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1, 2] }],
+            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
             '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
             'sonarjs/no-duplicate-in-composite': 'error',
             'sonarjs/redundant-type-aliases': 'error',
             'no-unused-vars': 'off',
         },
     },
-    { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
+    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
+    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
+    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/eslint-plugin/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1582,7 +1611,7 @@ const defaults = [
             '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/no-non-null-assertion': 'error',
             '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
-            '@typescript-eslint/no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
+            '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
             '@typescript-eslint/no-require-imports': 'off',
             '@typescript-eslint/strict-boolean-expressions': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'error',
@@ -1591,14 +1620,16 @@ const defaults = [
             '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'error',
             '@typescript-eslint/only-throw-error': 'error',
             '@typescript-eslint/prefer-optional-chain': 'error',
-            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreDefaultValues: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1, 2] }],
+            '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true, ignoreArrayIndexes: true, ignoreReadonlyClassProperties: true, ignoreTypeIndexes: true, ignore: [-1, 0, 1] }],
             '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description', 'ts-ignore': true, 'ts-nocheck': true, minimumDescriptionLength: 10 }],
             'sonarjs/no-duplicate-in-composite': 'error',
             'sonarjs/redundant-type-aliases': 'error',
             'no-unused-vars': 'off',
         },
     },
-    { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
+    // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
+    // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
+    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
@@ -1606,6 +1637,7 @@ const defaults = [
         files: SCRIPTS,
         rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
+    // A test needs no documentation and imports development dependencies.
     {
         files: TESTS,
         rules: {
@@ -1615,8 +1647,8 @@ const defaults = [
             'jsdoc/require-description': 'off',
             'jsdoc/require-param-description': 'off',
             'jsdoc/require-returns-description': 'off',
-            'gspot/no-trivial-files': 'off',
-            'max-nested-callbacks': ['error', limits.nestedCallbacks + 2],
+            'n/no-unpublished-import': 'off',
+            'n/no-unpublished-require': 'off',
             'gspot/no-harness-barrel-imports': ['error', { barrels: [
     "#tests"
 ] }],
@@ -1628,6 +1660,7 @@ const defaults = [
 ];
 const ruleLevels = {
     "gspot/env-access-owner": "all",
+    "gspot/export-layout": "all",
     "gspot/header-comments-before-imports": "all",
     "gspot/import-direction": "all",
     "gspot/import-layout": "all",
@@ -1640,6 +1673,7 @@ const ruleLevels = {
     "gspot/no-export-only-files": "all",
     "gspot/no-exported-alias-constants": "all",
     "gspot/no-harness-barrel-imports": "all",
+    "gspot/no-import-comments": "all",
     "gspot/no-index-imports": "all",
     "gspot/no-prefix-collisions": "all",
     "gspot/no-reexports": "all",

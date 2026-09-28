@@ -1,8 +1,8 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -236,15 +236,24 @@ test.each(['min_lines', 'min_tokens'])(
         const settings = exposedSettings(selected);
         const key = `limits.duplication.${name}`;
         const shipped = settings.defaults.get(key)!.value as number;
-        const policy = (value: number) =>
-            parsePolicyText(
-                `version = 1\nrequire_reasons = true\nconfigurations = ["duplication"]\n[limits.duplication]\n${name} = ${String(value)}\n`,
-                'gspot.toml',
-            );
         expect(
-            validateAgainstSurface(settings, policy(shipped + 1)).some((problem) => problem.message.includes(key)),
+            validateAgainstSurface(
+                settings,
+                parsePolicyText(
+                    `version = 1\nrequire_reasons = true\nconfigurations = ["duplication"]\n[limits.duplication]\n${name} = ${String(shipped + 1)}\n`,
+                    'gspot.toml',
+                ),
+            ).some((problem) => problem.message.includes(key)),
         ).toBe(true);
-        expect(validateAgainstSurface(settings, policy(shipped - 1))).toStrictEqual([]);
+        expect(
+            validateAgainstSurface(
+                settings,
+                parsePolicyText(
+                    `version = 1\nrequire_reasons = true\nconfigurations = ["duplication"]\n[limits.duplication]\n${name} = ${String(shipped - 1)}\n`,
+                    'gspot.toml',
+                ),
+            ),
+        ).toStrictEqual([]);
     },
 );
 

@@ -3,7 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { Command, CommanderError } from 'commander';
 import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, existsSync, renameSync, readFileSync, writeFileSync } from 'node:fs';
+
+// The exit of a build step that did not finish.
+const ERROR_EXIT = 2;
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
@@ -17,7 +20,7 @@ if (import.meta.main) {
         await prepareInput(fileURLToPath(new URL('../.build/swift.wasm', import.meta.url)), SWIFT_GRAMMAR);
     } catch (error) {
         if (!(error instanceof CommanderError)) throw error;
-        process.exitCode = error.exitCode === 0 ? 0 : 2;
+        process.exitCode = error.exitCode === 0 ? 0 : ERROR_EXIT;
     }
 }
 

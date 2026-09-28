@@ -22,6 +22,7 @@ export function hookPrefix(root: string): string {
  * @param binaryPath the pinned executable when no runner resolves gspot
  * @returns the shell text that runs gspot
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 export function runnerExec(runner: string | undefined, binaryPath?: string): string {
     return (
         RUNNER_EXEC[runner ?? ''] ?? (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
@@ -95,6 +96,7 @@ export function hookBody(name: HookName, original: boolean, commands: string[]):
  * @param name the hook
  * @returns the simple-git-hooks command text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 export function simpleGitHookCommand(prefix: string, name: string): string {
     const program = `${prefix}${DIRECTORY}/${name}`.replaceAll("'", "'\"'\"'");
     return `bash '${program}' "$@"`;

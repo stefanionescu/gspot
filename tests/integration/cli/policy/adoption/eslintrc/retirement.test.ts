@@ -1,8 +1,8 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
@@ -10,8 +10,8 @@ import type { InitOptions } from '#cli/types/commands/init.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { declaredConfigurations } from '#cli/repository/existing-tooling.ts';
-import { containing, containingAll, rejection } from '#tests/support/expectations.ts';
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { rejection, containing, containingAll } from '#tests/support/expectations.ts';
+import { mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT_OPTIONS = {
     yes: true,
@@ -53,7 +53,7 @@ test('legacy adoption proposes retirement only after native configuration valida
     expect(accepted.unread).toStrictEqual([]);
     expect(accepted.removed.map((entry) => entry.path)).toStrictEqual(['.eslintrc.yaml']);
     expect(accepted.tools.get('eslint')?.settings['adopted']).toStrictEqual(
-        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() }) })]),
+        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() as unknown }) })]),
     );
     expect(existsSync(join(directory.path, '.eslintrc.yaml'))).toBe(true);
 });
@@ -86,7 +86,7 @@ test('legacy package ESLint adoption preserves shared manifest bytes', async () 
     expect(carried.removed).toStrictEqual([]);
     expect(carried.retained.map((entry) => entry.path)).toStrictEqual(['package.json']);
     expect(carried.tools.get('eslint')?.settings['adopted']).toStrictEqual(
-        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() }) })]),
+        containingAll([containing({ rules: containing({ eqeqeq: expect.anything() as unknown }) })]),
     );
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
 });

@@ -26,7 +26,7 @@ import { dockerignore } from '#cli/checks/docker/ignore-file.ts';
 import { envExample } from '#cli/checks/security/env/example.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
-import { denoCheck, denoLint } from '#cli/checks/supabase/deno.ts';
+import { denoLint, denoCheck } from '#cli/checks/supabase/deno.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import { readmePresent } from '#cli/checks/docs/readme/present.ts';
 import { referenceOwners } from '#cli/checks/xctest/references.ts';
@@ -35,46 +35,46 @@ import { suppressions } from '#cli/checks/repository/suppressions.ts';
 import { migrationDocs } from '#cli/checks/postgres/migration-docs.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import { assetFolders, stringFiles } from '#cli/checks/xcode/resources.ts';
 import { generatedDrift } from '#cli/checks/repository/generated-drift.ts';
 import { installPolicy } from '#cli/checks/dependencies/install-policy.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/dependencies/lockfile/hosts.ts';
-import { openapiFresh, openapiLint } from '#cli/checks/express/openapi.ts';
+import { openapiLint, openapiFresh } from '#cli/checks/express/openapi.ts';
 import { pythonBlockingCalls } from '#cli/checks/python/blocking-calls.ts';
+import { stringFiles, assetFolders } from '#cli/checks/xcode/resources.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
-import { drizzleMigrations, drizzleRelations } from '#cli/checks/drizzle.ts';
+import { drizzleRelations, drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { gitleaksBaseline } from '#cli/checks/security/gitleaks-baseline.ts';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
-import { buildReproducible, siteBuilds } from '#cli/checks/static-site/build.ts';
+import { siteBuilds, buildReproducible } from '#cli/checks/static-site/build.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/repository/tracked-dependencies.ts';
-import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
-import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-checks.ts';
-import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
-import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/project/checks.ts';
+import { swiftBuild, swiftAnalyze, swiftPeriphery } from '#cli/checks/swift/build.ts';
+import { noSleep, disabledTests, recordingMode } from '#cli/checks/xctest/line-checks.ts';
+import { sqlSyntax, sqlFunctions, sqlFileLength, sqlBlockComments } from '#cli/checks/sql.ts';
+import { testPlans, orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
-import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
-import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/checks/python/project.ts';
-import { envTypesFresh, headersSyntax, redirectsSyntax, wranglerFile } from '#cli/checks/cloudflare.ts';
-import { entitlementsPolicy, transportSecurity, xcconfigLines } from '#cli/checks/xcode/settings-files.ts';
-import { deadAssets, securityHeaders, svgCompressed, webManifest } from '#cli/checks/static-site/source-checks.ts';
+import { importLinter, dependencyOwnership, typecheckMembership } from '#cli/checks/python/project.ts';
+import { routeSegments, dependencyAlignment, nextjsConfiguration } from '#cli/checks/nextjs/source.ts';
+import { wranglerFile, envTypesFresh, headersSyntax, redirectsSyntax } from '#cli/checks/cloudflare.ts';
+import { xcconfigLines, transportSecurity, entitlementsPolicy } from '#cli/checks/xcode/settings-files.ts';
+import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/checks/static-site/source-checks.ts';
 
 import {
-    definerSearchPath,
-    explicitGrants,
-    foreignKeyIndexes,
     rlsPresent,
+    explicitGrants,
+    definerSearchPath,
+    foreignKeyIndexes,
 } from '#cli/checks/postgres/schema/checks.ts';
 import {
+    sizeLimits,
     builtMarkup,
     deadSelectors,
     externalLinks,
     internalLinks,
     sitemapMatches,
-    sizeLimits,
 } from '#cli/checks/static-site/output-checks.ts';
 
 const checks: Record<string, Engine> = {

@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleExamples } from '#cli/agents/examples.ts';
 import { runProcess } from '#tests/support/cli/command.ts';

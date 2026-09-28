@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { hasPackages } from '#cli/tools/vale.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { isAbsolute, join, relative } from 'node:path';
+import { join, relative, isAbsolute } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { ValeAlert, ProseRoute } from '#cli/types/checks/prose.ts';
-import { VALE_CONFIG, VALE_STDIN } from '#cli/constants/configurations.ts';
+import { VALE_STDIN, VALE_CONFIG } from '#cli/constants/configurations.ts';
 
 const alertsSchema = z.record(
     z.string().min(1),

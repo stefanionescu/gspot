@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
+import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import { committedEntries, gitBlobs, gitEntries, useRevision } from '#cli/repository/revisions/contents.ts';
+import { gitBlobs, gitEntries, useRevision, committedEntries } from '#cli/repository/revisions/contents.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s snapshot retains gitlinks without reading submodule contents',

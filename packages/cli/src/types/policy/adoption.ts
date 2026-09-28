@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { RUFF_SOURCE } from '#cli/policy/adoption/ruff.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
-import type { ExistingTool, ExistingTooling, TomlTable } from '#cli/types/repository/repository.ts';
+import type { TomlTable, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 export type ConfigurationSource = { text: string; parsed: TomlTable; original: FileObservation };
 export type RuffLint = Extract<z.infer<typeof RUFF_SOURCE>, { lint: unknown }>['lint'];

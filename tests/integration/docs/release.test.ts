@@ -1,10 +1,10 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -40,6 +40,7 @@ test('site release validation accepts a published tag and docs correction but re
     };
     const base = commit();
     expect(git(sandbox.path, ['tag', `v${GSPOT_VERSION}`]).code).toBe(0);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
     const execute = (source: string) =>
         run([process.execPath, entry], {
             cwd: sandbox.path,

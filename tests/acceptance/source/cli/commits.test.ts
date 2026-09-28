@@ -1,17 +1,17 @@
-import { expect, test } from 'bun:test';
+// The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, readFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
-import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
+import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { COMMITS_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 // Message checks preserve prior reports and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {

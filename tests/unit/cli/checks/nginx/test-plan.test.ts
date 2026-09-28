@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
 import { NGINX_TEST_PLAN_CONFIG } from '#tests/constants/unit/cli/checks/checks.ts';
 

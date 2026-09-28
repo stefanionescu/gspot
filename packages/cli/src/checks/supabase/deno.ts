@@ -4,7 +4,7 @@ import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { CHECK_LOCATION } from '#cli/constants/checks/supabase.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({
@@ -18,11 +18,13 @@ const lintReport = z.object({
     ),
     errors: z.array(z.object({ file_path: z.string(), message: z.string() })),
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Lint and check both pass the folder configuration when it exists; one owner keeps the flag.
 function denoFileArguments(root: string, folder: string): string[] {
     const path = join(root, folder, 'deno.json');
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : ['--config', path];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three readers turn a Deno locator into a repository path; one owner keeps the file scheme handling.
 function relative(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
     return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;

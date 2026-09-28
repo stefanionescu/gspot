@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
 
 test.each(['{file}', '{files}'])(
     'declared findings exits distinguish partial reports from fatal %s execution',

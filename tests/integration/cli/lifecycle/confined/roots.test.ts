@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
-import { linkSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();

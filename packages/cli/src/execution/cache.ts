@@ -1,34 +1,25 @@
+// .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
 import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
-import { readdirSync, statSync, type Dirent } from 'node:fs';
+import { statSync, readdirSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-// .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
-
-/**
- * The SHA-256 hex digest of a text.
- * @param text the text
- * @returns the digest
- */
-export function textHash(text: string): string {
-    return new Bun.CryptoHasher('sha256').update(text).digest('hex');
-}
-
 /**
  * The cache key for one check run.
  * @param input the check name, scope, tool version, configuration hash and file hashes
  * @returns the key
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cache key for one check run. 2 files make 3 calls; one owner keeps that behavior in one place.
 export function cacheKey(input: CacheKeyInput): string {
-    return textHash(JSON.stringify({ format: CACHE_FORMAT, ...input }));
+    return new Bun.CryptoHasher('sha256').update(JSON.stringify({ format: CACHE_FORMAT, ...input })).digest('hex');
 }
 
 /**
@@ -38,6 +29,7 @@ export function cacheKey(input: CacheKeyInput): string {
  * @param observations the source bytes observed during the run, when there are any
  * @returns the digest
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The content hash of a required file. 3 files make 3 calls; one owner keeps that behavior in one place.
 export function fileHash(root: string, path: string, observations?: SourceObservations): string {
     return new Bun.CryptoHasher('sha256').update(readSource(root, path, observations)).digest('hex');
 }
@@ -50,11 +42,10 @@ export function fileHash(root: string, path: string, observations?: SourceObserv
  */
 export function cacheInputs(root: string, patterns: string[]): string[] {
     const files = openConfinedRoot(root, 'native');
-    const localPath = (path: string): string => relative(root, path).replaceAll('\\', '/');
     function readDirectory(path: string): string[];
     function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
     function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
-        const local = localPath(path);
+        const local = relative(root, path).replaceAll('\\', '/');
         if (local !== '') files.stat(local);
         return options === undefined ? readdirSync(path) : readdirSync(path, options);
     }
@@ -69,7 +60,12 @@ export function cacheInputs(root: string, patterns: string[]): string[] {
             expandDirectories: false,
             fs: {
                 readdirSync: readDirectory,
-                statSync: (path) => statSync(localPath(path) === '' ? root : files.source(localPath(path))),
+                statSync: (path) =>
+                    statSync(
+                        relative(root, path).replaceAll('\\', '/') === ''
+                            ? root
+                            : files.source(relative(root, path).replaceAll('\\', '/')),
+                    ),
             },
         });
     } finally {

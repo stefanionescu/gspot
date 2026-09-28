@@ -4,10 +4,10 @@ import type { WriteResult } from '#cli/types/policy/policy.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 import type {
-    configurationFieldsSchema,
     identitySchema,
     originalSchema,
     ownershipSchema,
+    configurationFieldsSchema,
 } from '#cli/lifecycle/journal.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;

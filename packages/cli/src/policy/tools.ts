@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/constants/evaluation.ts';
 
 const text = z.string();
 const flag = z.boolean();
@@ -12,7 +13,12 @@ const extraTable = z.object({ reason: text.optional() }).catchall(z.unknown());
 
 const toolTable = z.object({ extra: extraTable.optional() }).catchall(z.unknown());
 
-const enabledSeverity = z.union([z.literal('warn'), z.literal('error'), z.literal(1), z.literal(2)]);
+const enabledSeverity = z.union([
+    z.literal('warn'),
+    z.literal('error'),
+    z.literal(ESLINT_WARN),
+    z.literal(ESLINT_ERROR),
+]);
 const enabledRule = z.union([enabledSeverity, z.tuple([enabledSeverity]).rest(z.unknown())], {
     error: (issue) =>
         `Use an enabled severity (error, warn, 2, or 1), optionally followed by rule options. To disable this rule, use gspot ignore <check> --rule ${quoteArgument(String(issue.path?.at(-1) ?? '<rule>'))}.`,

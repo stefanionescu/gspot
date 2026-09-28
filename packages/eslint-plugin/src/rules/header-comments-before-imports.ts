@@ -1,15 +1,9 @@
-import { isImportLike } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
 import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
-import { BLANK, DIRECTIVE_PREFIXES, LEADING_STAR, TS_DIRECTIVE, WHITESPACE } from '#plugin/constants/rules.ts';
-
-function isDirective(value: string): boolean {
-    const text = value.replace(LEADING_STAR, '').trim();
-    if (TS_DIRECTIVE.test(text)) return true;
-    return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
-}
+import { BLANK, WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/constants/rules.ts';
 
 // Adjacent prose lines form one comment so fixes preserve their attachment and order.
 function commentBlocks(text: string, comments: TSESTree.Comment[]): TSESTree.Comment[] {
@@ -89,7 +83,7 @@ function isLeading(
     }
     if (!BLANK.test(between)) return false;
     const distance = between.split('\n').length - 1;
-    if (distance > (isBlankLineAllowed ? 2 : 1)) return false;
+    if (distance > (isBlankLineAllowed ? BLANK_LINE_DISTANCE : ATTACHED_DISTANCE)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
     return BLANK.test(text.slice(lineStart, comment.range[0]));
 }

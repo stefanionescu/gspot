@@ -2,8 +2,8 @@
 // Configuration values retain their module and export names instead of being serialized.
 import ts from 'typescript';
 import { pathToFileURL } from 'node:url';
-import { isAbsolute, relative } from 'node:path';
-import { createRequire, isBuiltin } from 'node:module';
+import { relative, isAbsolute } from 'node:path';
+import { isBuiltin, createRequire } from 'node:module';
 import type { PendingModule } from '#cli/types/evaluation.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 

@@ -1,30 +1,27 @@
 import {
-    MIGRATION_TIMESTAMP_DIGITS,
+    TIMESTAMP,
     CAMEL_WORD,
     LOWER_WORD,
-    PASCAL_WORD,
-    TIMESTAMP,
     UPPER_WORD,
+    PASCAL_WORD,
+    MIGRATION_TIMESTAMP_DIGITS,
 } from '#cli/constants/checks/naming.ts';
-
-function isJoined(name: string, separator: string, pattern: RegExp): boolean {
-    return name !== '' && name.split(separator).every((word) => pattern.test(word));
-}
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_TIMESTAMP_DIGITS);
     const rest = name.slice(MIGRATION_TIMESTAMP_DIGITS);
     if (!TIMESTAMP.test(stamp) || !rest.startsWith('_') || !rest.endsWith('.sql')) return false;
-    return isJoined(rest.slice(1, -'.sql'.length), '_', LOWER_WORD);
+    const stem = rest.slice(1, -'.sql'.length);
+    return stem !== '' && stem.split('_').every((word) => LOWER_WORD.test(word));
 }
 
 const CHECKS = new Map<string, (name: string) => boolean>([
     ['camel', (name) => CAMEL_WORD.test(name)],
     ['pascal', (name) => PASCAL_WORD.test(name)],
-    ['pascal-plus', (name) => name.includes('+') && isJoined(name, '+', PASCAL_WORD)],
-    ['kebab', (name) => isJoined(name, '-', LOWER_WORD)],
-    ['snake', (name) => isJoined(name, '_', LOWER_WORD)],
-    ['upper-snake', (name) => isJoined(name, '_', UPPER_WORD)],
+    ['pascal-plus', (name) => name.includes('+') && name.split('+').every((word) => PASCAL_WORD.test(word))],
+    ['kebab', (name) => name !== '' && name.split('-').every((word) => LOWER_WORD.test(word))],
+    ['snake', (name) => name !== '' && name.split('_').every((word) => LOWER_WORD.test(word))],
+    ['upper-snake', (name) => name !== '' && name.split('_').every((word) => UPPER_WORD.test(word))],
     ['snake-migration', isSnakeMigration],
 ]);
 
@@ -37,6 +34,7 @@ export const CASE_NAMES = [...CHECKS.keys()];
  * @param caseName one of camel, pascal, pascal-plus, kebab, snake, upper-snake, snake-migration.
  * @returns whether it matches; an unknown case name never matches.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when the name has the case. 2 files make 5 calls; one owner keeps that behavior in one place.
 export function hasCase(name: string, caseName: string): boolean {
     return CHECKS.get(caseName)?.(name) ?? false;
 }

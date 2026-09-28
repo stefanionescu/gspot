@@ -1,14 +1,14 @@
 // The built packages published into an isolated registry, and a fresh consumer that installed them from it.
 import { writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { publishTo } from '#tests/support/registry/lifecycle.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { environment, host, preparePackages, requireCli, root } from '#tests/support/release/packages.ts';
-import type { ConsumerInitialization, InstalledConsumer, PublishedRelease } from '#tests/types/release.ts';
+import { host, root, requireCli, environment, preparePackages } from '#tests/support/release/packages.ts';
+import type { PublishedRelease, InstalledConsumer, ConsumerInitialization } from '#tests/types/release.ts';
 
 /**
  * Publishes the built packages and their dependency into the caller-owned registry.

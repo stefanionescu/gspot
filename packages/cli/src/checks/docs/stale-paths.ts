@@ -7,14 +7,14 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
+    RUN_TOKEN,
+    PATH_CHARS,
     FILE_EXTENSION,
     FREE_TEXT_FENCES,
-    PATH_CHARS,
     PATH_TOKEN_SKIPS,
-    RUN_TOKEN,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
 } from '#cli/constants/checks/docs.ts';

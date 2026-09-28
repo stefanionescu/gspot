@@ -1,7 +1,7 @@
 // Planted style blocks of component files: stylelint reads them through postcss-html and knows the scoping pseudo-classes of each framework.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';

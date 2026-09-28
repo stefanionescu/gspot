@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { commandConfigurations, substitute } from '#cli/execution/command-expansion.ts';
+import { substitute, commandConfigurations } from '#cli/execution/command-expansion.ts';
 
 test('nested configuration inputs stop at the declared scope and reject linked ancestors', async () => {
     await using sandbox = await testdir();

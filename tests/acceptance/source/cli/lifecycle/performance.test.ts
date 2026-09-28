@@ -1,12 +1,12 @@
 // Initialization and staged checks over a large repository stay within the performance limits.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 
 test('initialization and cold and warm staged checks stay within the 5000-file performance limits', async () => {
     await using directory = await testdir();

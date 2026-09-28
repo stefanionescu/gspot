@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';

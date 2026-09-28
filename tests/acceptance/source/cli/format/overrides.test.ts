@@ -1,12 +1,12 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 const CASES = [

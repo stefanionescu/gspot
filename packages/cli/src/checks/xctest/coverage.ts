@@ -4,7 +4,7 @@ import { PERCENT } from '#cli/constants/checks/xctest.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 import type { CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks/xcode.ts';
 

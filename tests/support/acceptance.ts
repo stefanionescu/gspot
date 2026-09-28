@@ -1,6 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join, resolve, relative, isAbsolute } from 'node:path';
 import { runSourceCommand } from '#tests/support/registry/plugin.ts';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));

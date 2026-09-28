@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import plugin from '#plugin/plugin.ts';
 import parser from '@typescript-eslint/parser';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import clientExample from '#docs/src/components/home/client-environment.json';
 
 describe('the plugin', () => {
@@ -53,22 +53,32 @@ test.each(['recommended', 'all'] as const)(
         const config: object[] = [{ ...plugin.configs[level], files: ['**/*.ts'], languageOptions: { parser } }];
         const filename = join(sandbox.path, 'feature/only.ts');
         const findings = linter.verify('interface Order { total: number }', config, { filename });
-        // The layout rules belong to the all level alone; the types file is placed where it is allowed at both.
-        const shape = (list: typeof findings) =>
-            list.map(({ ruleId, messageId: diagnosticId, line, column }) => ({
-                ruleId,
-                messageId: diagnosticId,
-                line,
-                column,
-            }));
-        expect(shape(findings).filter((entry) => entry.ruleId !== 'gspot/no-trivial-files')).toStrictEqual(
+        expect(
+            findings
+                .map(({ ruleId, messageId: diagnosticId, line, column }) => ({
+                    ruleId,
+                    messageId: diagnosticId,
+                    line,
+                    column,
+                }))
+                .filter((entry) => entry.ruleId !== 'gspot/no-trivial-files'),
+        ).toStrictEqual(
             level === 'recommended'
                 ? []
                 : [{ ruleId: 'gspot/no-single-file-folders', messageId: 'lone', line: 1, column: 1 }],
         );
         const card = join(sandbox.path, 'cards/asset-card.ts');
         const collisions = linter.verify('export const value = 1;', config, { filename: card });
-        expect(shape(collisions).filter((entry) => entry.ruleId !== 'gspot/no-trivial-files')).toStrictEqual(
+        expect(
+            collisions
+                .map(({ ruleId, messageId: diagnosticId, line, column }) => ({
+                    ruleId,
+                    messageId: diagnosticId,
+                    line,
+                    column,
+                }))
+                .filter((entry) => entry.ruleId !== 'gspot/no-trivial-files'),
+        ).toStrictEqual(
             level === 'recommended'
                 ? []
                 : [{ ruleId: 'gspot/no-prefix-collisions', messageId: 'collision', line: 1, column: 1 }],

@@ -1,8 +1,8 @@
+// Vue and Svelte fixtures cover unsafe markup and unkeyed lists. Component scripts retain shared JavaScript and TypeScript checks.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-// Vue and Svelte fixtures cover unsafe markup and unkeyed lists. Component scripts retain shared JavaScript and TypeScript checks.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
@@ -11,7 +11,7 @@ import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { ComponentShape } from '#tests/types/acceptance/source/configurations/configurations.ts';
-import { SVELTE_CLEAN, VUE_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
+import { VUE_CLEAN, SVELTE_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const VUE_CASES: [string, string][] = [
     [

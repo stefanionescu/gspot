@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isAbsolute, relative, sep } from 'node:path';
+import { sep, relative, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';

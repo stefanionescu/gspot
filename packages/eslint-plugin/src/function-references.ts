@@ -1,186 +1,13 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { ImplementedFunction } from '#plugin/types/rules.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { FUNCTION_REFERENCE_WRAPPERS } from '#plugin/constants/plugin.ts';
-import type { FunctionUsage, ImplementedFunction } from '#plugin/types/rules.ts';
-import type { Identifier, Node, Program, Symbol, TypeChecker } from 'typescript';
 
-import {
-    forEachChild,
-    getNameOfDeclaration,
-    isCallExpression,
-    isIdentifier,
-    isImportOrExportSpecifier,
-    isTypeNode,
-    isPropertyAccessExpression,
-    isShorthandPropertyAssignment,
-    isVariableDeclaration,
-    SymbolFlags,
-} from 'typescript';
-
-const referenceIndex = new WeakMap<Program, Map<Symbol, FunctionUsage>>();
-
-// Type assertions and parentheses do not change whether the consumer immediately invokes a value.
-function isDirectCall(node: Node): boolean {
-    let value = node;
-    while (FUNCTION_REFERENCE_WRAPPERS.has(value.parent.kind)) value = value.parent;
-    return isCallExpression(value.parent) && value.parent.expression === value;
-}
-
-// Declarations, type queries, and direct calls do not require a separately observable function value.
-function isValueUse(node: Identifier): boolean {
-    const parent = node.parent;
-    if (isImportOrExportSpecifier(parent)) return false;
-    if (
-        'name' in parent &&
-        parent.name === node &&
-        !isPropertyAccessExpression(parent) &&
-        !isShorthandPropertyAssignment(parent)
-    )
-        return false;
-    const value = isPropertyAccessExpression(parent) && parent.name === node ? parent : node;
-    return !isDirectCall(value);
-}
-
-// Alias identity belongs to its declaration, including shorthand object properties.
-function resolvedSymbol(node: Identifier, checker: TypeChecker): Symbol | undefined {
-    const symbol = isShorthandPropertyAssignment(node.parent)
-        ? checker.getShorthandAssignmentValueSymbol(node.parent)
-        : checker.getSymbolAtLocation(node);
-    if (symbol === undefined) return undefined;
-    return (symbol.flags & SymbolFlags.Alias) === 0 ? symbol : checker.getAliasedSymbol(symbol);
-}
-
-function recordProgramReference(node: Identifier, checker: TypeChecker, references: Map<Symbol, FunctionUsage>): void {
-    const value = isPropertyAccessExpression(node.parent) && node.parent.name === node ? node.parent : node;
-    const call = isDirectCall(value);
-    if (!call && !isValueUse(node)) return;
-    const target = resolvedSymbol(node, checker);
-    if (target === undefined) return;
-    const usage = references.get(target) ?? { required: false, calls: 0 };
-    if (call) usage.calls += 1;
-    else usage.required = true;
-    references.set(target, usage);
-}
-
-// Resolve imported aliases once for every source file in the type-checked program.
-function programReferences(program: Program): Map<Symbol, FunctionUsage> {
-    const cached = referenceIndex.get(program);
-    if (cached !== undefined) return cached;
-    const checker = program.getTypeChecker();
-    const references = new Map<Symbol, FunctionUsage>();
-    const visit = (node: Node): void => {
-        if (isTypeNode(node)) return;
-        forEachChild(node, visit);
-        if (!isIdentifier(node)) return;
-        recordProgramReference(node, checker, references);
-    };
-    for (const source of program.getSourceFiles())
-        if (!source.isDeclarationFile && !program.isSourceFileFromExternalLibrary(source)) visit(source);
-    referenceIndex.set(program, references);
-    return references;
-}
-
-function programUsage(node: ImplementedFunction, source: TSESLint.SourceCode): FunctionUsage | undefined {
-    const { program, esTreeNodeToTSNodeMap: mapping } = source.parserServices ?? {};
-    if (!program || !mapping) return undefined;
-    const implementation = mapping.get(node);
-    const declaration = isVariableDeclaration(implementation.parent) ? implementation.parent : implementation;
-    const name = getNameOfDeclaration(declaration);
-    if (name === undefined || !isIdentifier(name)) return undefined;
-    const symbol = resolvedSymbol(name, program.getTypeChecker());
-    return symbol === undefined ? undefined : programReferences(program).get(symbol);
-}
-
-// Direct self-calls require the lexical binding; type references and exports do not consume it.
-function lexicalReferenceKind(
-    node: ImplementedFunction,
-    identifier: TSESTree.Identifier | TSESTree.JSXIdentifier,
-): 'ignored' | 'required' | 'call' {
-    if (identifier.type === AST_NODE_TYPES.JSXIdentifier) return 'required';
-    const value = functionValue(identifier);
-    const use = value.parent;
-    if (use.type === AST_NODE_TYPES.ExportSpecifier || use.type === AST_NODE_TYPES.TSTypeQuery) return 'ignored';
-    if (use.type !== AST_NODE_TYPES.CallExpression || use.callee !== value) return 'required';
-    const within = identifier.range[0] >= node.range[0] && identifier.range[1] <= node.range[1];
-    return within ? 'required' : 'call';
-}
-
-function lexicalUsage(node: ImplementedFunction, source: TSESLint.SourceCode): FunctionUsage {
-    const declarations = node.parent.type === AST_NODE_TYPES.VariableDeclarator ? [node.parent, node] : [node];
-    const references = declarations.flatMap((declaration) => {
-        if (!('id' in declaration) || declaration.id?.type !== AST_NODE_TYPES.Identifier) return [];
-        const identifier = declaration.id;
-        return source
-            .getDeclaredVariables(declaration)
-            .filter((entry) => entry.identifiers.includes(identifier))
-            .flatMap((entry) => entry.references);
-    });
-    const usage: FunctionUsage = { required: false, calls: 0 };
-    for (const reference of references.filter((entry) => entry.isRead())) {
-        const kind = lexicalReferenceKind(node, reference.identifier);
-        if (kind === 'required') usage.required = true;
-        if (kind === 'call') usage.calls += 1;
-    }
-    return usage;
-}
-
-// Destructuring binds selected properties rather than forwarding the complete object value.
-function bindingReferences(
-    declaration: TSESTree.VariableDeclarator,
-    source: TSESLint.SourceCode,
-): TSESTree.Expression[] {
-    if (declaration.id.type !== AST_NODE_TYPES.Identifier) return [];
-    return source
-        .getDeclaredVariables(declaration)
-        .flatMap((variable) =>
-            variable.references
-                .filter((reference) => reference.isRead())
-                .flatMap(({ identifier }) => (identifier.type === AST_NODE_TYPES.Identifier ? [identifier] : [])),
-        );
-}
-
-// Follow object values through lexical aliases and literal containers, without treating member calls as escapes.
-function forwardedExpressions(value: TSESTree.Expression, source: TSESLint.SourceCode): TSESTree.Expression[] {
-    const parent = value.parent;
-    switch (parent.type) {
-        case AST_NODE_TYPES.VariableDeclarator: {
-            return bindingReferences(parent, source);
-        }
-        case AST_NODE_TYPES.Property: {
-            return parent.value === value && parent.parent.type === AST_NODE_TYPES.ObjectExpression
-                ? [parent.parent]
-                : [];
-        }
-        case AST_NODE_TYPES.SpreadElement: {
-            return parent.parent.type === AST_NODE_TYPES.ObjectExpression ? [parent.parent] : [];
-        }
-        case AST_NODE_TYPES.ArrayExpression: {
-            return [parent];
-        }
-        default: {
-            return [];
-        }
-    }
-}
-
-// Consumers outside direct member invocation can observe each callback's signature and identity.
-function isConsumedExpression(
-    value: TSESTree.Expression,
-    source: TSESLint.SourceCode,
-    seen: Set<TSESTree.Expression>,
-): boolean {
-    const expression = functionValue(value);
-    if (seen.has(expression)) return false;
-    seen.add(expression);
-    const parent = expression.parent;
-    if (parent.type === AST_NODE_TYPES.ReturnStatement || parent.type === AST_NODE_TYPES.JSXExpressionContainer)
-        return true;
-    if (parent.type === AST_NODE_TYPES.CallExpression || parent.type === AST_NODE_TYPES.NewExpression)
-        return parent.arguments.includes(expression);
-    return forwardedExpressions(expression, source).some((next) => isConsumedExpression(next, source, seen));
-}
-
-// A literal array index used as a call target does not preserve the selected function identity.
+// Positions whose parent always takes a function value.
+const VALUE_PARENTS = new Set<AST_NODE_TYPES>([
+    AST_NODE_TYPES.ReturnStatement,
+    AST_NODE_TYPES.JSXExpressionContainer,
+    AST_NODE_TYPES.ArrowFunctionExpression,
+]); // A literal array index used as a call target does not preserve the selected function identity.
 function isArrayElementCall(node: TSESTree.ArrayExpression): boolean {
     const array = functionValue(node);
     const reference = array.parent;
@@ -192,6 +19,44 @@ function isArrayElementCall(node: TSESTree.ArrayExpression): boolean {
     const consumer = member.parent;
     return consumer.type === AST_NODE_TYPES.CallExpression && consumer.callee === member;
 }
+
+// The bindings a function can be called through: its own name, and the variable it is assigned to.
+function bindings(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
+    const owners: { node: TSESTree.Node; id: TSESTree.Node | null }[] = [];
+    if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
+    if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
+    return owners.flatMap(({ node: owner, id }) =>
+        source
+            .getDeclaredVariables(owner)
+            .filter((variable) => variable.identifiers.some((entry) => entry.range[0] === id?.range[0])),
+    );
+}
+
+// Parents that hold a function value in one of their positions, with the test for that position.
+const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.Node) => boolean][] = [
+    [AST_NODE_TYPES.ArrayExpression, (parent) => !isArrayElementCall(parent as TSESTree.ArrayExpression)],
+    [
+        AST_NODE_TYPES.Property,
+        (parent, value) =>
+            (parent as TSESTree.Property).value === value && parent.parent?.type === AST_NODE_TYPES.ObjectExpression,
+    ],
+    [
+        AST_NODE_TYPES.AssignmentExpression,
+        (parent, value) =>
+            (parent as TSESTree.AssignmentExpression).right === value &&
+            (parent as TSESTree.AssignmentExpression).left.type === AST_NODE_TYPES.MemberExpression,
+    ],
+    [
+        AST_NODE_TYPES.CallExpression,
+        (parent, value) =>
+            (parent as TSESTree.CallExpression).arguments.some((argument) => argument.range[0] === value.range[0]),
+    ],
+    [
+        AST_NODE_TYPES.NewExpression,
+        (parent, value) =>
+            (parent as TSESTree.NewExpression).arguments.some((argument) => argument.range[0] === value.range[0]),
+    ],
+];
 
 // Assertions change static types without introducing an observable function-value use.
 export function functionValue(node: TSESTree.Expression): TSESTree.Expression;
@@ -224,47 +89,33 @@ export function functionValue(
 }
 
 /**
- * Resolve value uses, self-calls, and distinct call sites through lexical bindings and imported aliases.
+ * Identify a function written where a function value is needed: an argument, a returned value, an element,
+ * a property, an assigned member, or JSX. Nothing can be inlined there, because the consumer takes a function.
  * @param node the function implementation
- * @param source the parser source and available type services
- * @returns required identity and the number of direct call sites
+ * @returns whether the function is an inline value
  */
-export function functionUsage(node: ImplementedFunction, source: TSESLint.SourceCode): FunctionUsage {
-    const local = lexicalUsage(node, source);
-    const program = programUsage(node, source);
-    return {
-        required: local.required || program?.required === true,
-        calls: Math.max(local.calls, program?.calls ?? 0),
-    };
-}
-
-/**
- * Identify syntax whose consumer requires a function value rather than an immediate call.
- * @param node the function implementation
- * @returns whether the function is passed or returned as a value
- */
-export function isCallbackValue(node: ImplementedFunction): boolean {
+export function isInlineValue(node: ImplementedFunction): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
     const value = functionValue(node);
     const parent = value.parent;
-    if (parent.type === AST_NODE_TYPES.ArrayExpression) return !isArrayElementCall(parent);
-    if (parent.type === AST_NODE_TYPES.ReturnStatement || parent.type === AST_NODE_TYPES.JSXExpressionContainer)
-        return true;
-    if (parent.type !== AST_NODE_TYPES.CallExpression && parent.type !== AST_NODE_TYPES.NewExpression) return false;
-    return parent.arguments.includes(value);
+    if (VALUE_PARENTS.has(parent.type)) return true;
+    return VALUE_HOLDERS.find(([type]) => type === parent.type)?.[1](parent, value) ?? false;
 }
 
 /**
- * Identify callbacks carried by objects that are passed or returned to a consumer.
+ * Identify a function that calls itself. It cannot be inlined, because the body names the binding.
  * @param node the function implementation
  * @param source the parser source and lexical bindings
- * @returns whether the containing object has an observable value use
+ * @returns whether a reference to the function sits inside its own body
  */
-export function isCallbackProperty(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
-    const value = functionValue(node);
-    const property = value.parent;
-    if (property.type !== AST_NODE_TYPES.Property || property.value !== value) return false;
-    if (property.parent.type !== AST_NODE_TYPES.ObjectExpression) return false;
-    return isConsumedExpression(property.parent, source, new Set());
+export function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
+    return bindings(node, source)
+        .flatMap((variable) => variable.references)
+        .some(
+            (reference) =>
+                reference.isRead() &&
+                reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery &&
+                reference.identifier.range[0] >= node.range[0] &&
+                reference.identifier.range[1] <= node.range[1],
+        );
 }

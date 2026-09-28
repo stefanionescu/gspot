@@ -4,9 +4,9 @@ import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import type { GeneratedProposal, HookName } from '#cli/types/generation.ts';
-import { requirePackageConfiguration, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-import { hookBody, hookCommand, hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
+import type { HookName, GeneratedProposal } from '#cli/types/generation.ts';
+import { simpleGitHooksReady, requirePackageConfiguration } from '#cli/lifecycle/hooks/state.ts';
+import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
 import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 const manifestSchema = z.object({
@@ -45,24 +45,6 @@ function retainedContent(
         throw new Error(`Retained non-UTF-8 simple-git-hooks original: ${path}.gspot-original`);
     return content;
 }
-
-/**
- * Run only gspot when native initialization exits before the package command.
- * @param root the repository root
- * @param name the hook
- * @param runner the task runner the policy names, or undefined
- * @param binary the pinned executable when no runner resolves gspot
- * @returns the hook script
- */
-export function simpleGitDirectHook(
-    root: string,
-    name: HookName,
-    runner: string | undefined,
-    binary: string | undefined,
-): string {
-    return hookBody(name, false, [hookCommand(name, runner, binary, hookPrefix(root))]);
-}
-
 /**
  * Preserve each authored command in a subprocess before running the gspot check.
  * @param root the repository root.
@@ -123,4 +105,22 @@ export function simpleGitHookOutputs(
     } finally {
         files.close();
     }
+}
+
+/**
+ * Run only gspot when native initialization exits before the package command.
+ * @param root the repository root
+ * @param name the hook
+ * @param runner the task runner the policy names, or undefined
+ * @param binary the pinned executable when no runner resolves gspot
+ * @returns the hook script
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two hook generators build the direct hook through it; one owner keeps its shape.
+export function simpleGitDirectHook(
+    root: string,
+    name: HookName,
+    runner: string | undefined,
+    binary: string | undefined,
+): string {
+    return hookBody(name, false, [hookCommand(name, runner, binary, hookPrefix(root))]);
 }

@@ -1,6 +1,6 @@
+// Which selected configuration claims which file, per scope.
 import { GLOB_CHARS } from '#cli/constants/configurations.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-// Which selected configuration claims which file, per scope.
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import type { Claims, Manifest } from '#cli/types/configurations.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';

@@ -17,7 +17,7 @@ import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/constants/commands/init.ts';
 import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
-import type { Installed, Written, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
+import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 // Retire explicitly replaced files after saving recoverable originals; retain directories.

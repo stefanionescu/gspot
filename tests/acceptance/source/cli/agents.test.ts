@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { TakeoverPlan } from '#cli/types/commands/init.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 
 test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {
     await using sandbox = await testdir();

@@ -1,11 +1,11 @@
 import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
-import { dirname, join, relative } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { isInScope } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import { IMPORT_KINDS, SOURCE } from '#cli/constants/checks/structure.ts';
+import { SOURCE, IMPORT_KINDS } from '#cli/constants/checks/structure.ts';
 import type { Edge, EdgeSource, ImportIndex } from '#cli/types/checks/structure.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();

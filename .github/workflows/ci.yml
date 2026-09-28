@@ -59,7 +59,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-24.04, macos-15, windows-2025]
+                os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, windows-2025]
         runs-on: ${{ matrix.os }}
         timeout-minutes: 180
         env:
@@ -107,6 +107,18 @@ jobs:
               run: mise run --skip-tools gspot:check -- --stage manual
             - run: mise run --skip-tools doctor
             - run: mise run --skip-tools build -- --all
+            - name: Run the musl binary of this architecture on Alpine
+              if: runner.os == 'Linux'
+              run: |
+                  case "$(uname -m)" in
+                      x86_64) binary=gspot-linux-x64-musl ;;
+                      aarch64) binary=gspot-linux-arm64-musl ;;
+                      *) echo "::error::No musl target for $(uname -m)"; exit 1 ;;
+                  esac
+                  docker run --rm --volume "$PWD/dist:/dist:ro" alpine:3.22 sh -ec "/dist/$binary --version && /dist/$binary --help"
+            - name: Run the x64 binary under Rosetta, which is not native evidence
+              if: runner.os == 'macOS'
+              run: arch -x86_64 dist/gspot-darwin-x64 --version && arch -x86_64 dist/gspot-darwin-x64 --help
             - run: mise run --skip-tools test:release
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.manual.outcome != 'skipped'

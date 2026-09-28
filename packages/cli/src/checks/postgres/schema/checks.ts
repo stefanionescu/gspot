@@ -1,13 +1,14 @@
+// The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/types/checks/postgres.ts';
-// The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { DEFAULT_SCHEMA } from '#cli/constants/checks/postgres.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four checks build the finding with its statement position; one owner keeps that shape.
 function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
     return {
         check: input.spec.name,
@@ -17,14 +18,6 @@ function finding(input: EngineInput, at: Declared, rule: string, text: string): 
         message: text,
         fixable: false,
     };
-}
-
-function isGrantAll(statement: SqlStatementView): boolean {
-    return (
-        statement.kind === 'GrantStmt' &&
-        statement.fields['is_grant'] === true &&
-        statement.fields['privileges'] === undefined
-    );
 }
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
@@ -106,12 +99,19 @@ export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> 
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding for each grant of every privilege. 1 files make 0 calls; one owner keeps that behavior in one place.
 export function explicitGrants(input: EngineInput): Promise<Finding[]> {
     return statementFindings(
         input,
         'grant-all',
         'GRANT ALL gives every privilege, present and future; name the privileges.',
-        isGrantAll,
+        (statement: SqlStatementView): boolean => {
+            return (
+                statement.kind === 'GrantStmt' &&
+                statement.fields['is_grant'] === true &&
+                statement.fields['privileges'] === undefined
+            );
+        },
     );
 }
 
@@ -120,6 +120,7 @@ export function explicitGrants(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding for each SECURITY DEFINER function that sets no search_path. 1 files make 0 calls; one owner keeps that behavior in one place.
 export function definerSearchPath(input: EngineInput): Promise<Finding[]> {
     const text =
         'A SECURITY DEFINER function sets no search_path, so a caller chooses which objects its names resolve to.';

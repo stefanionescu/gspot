@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
-import type { InstallerPin, Manifest, ToolPin } from '#cli/types/configurations.ts';
-import { HOST_ONLY, MISE_BACKENDS, UV_INSTALLER } from '#cli/constants/tools/tools.ts';
+import type { ToolPin, Manifest, InstallerPin } from '#cli/types/configurations.ts';
+import { HOST_ONLY, UV_INSTALLER, MISE_BACKENDS } from '#cli/constants/tools/tools.ts';
 
 /**
  * The mise package and version, using the backend the manifest names.

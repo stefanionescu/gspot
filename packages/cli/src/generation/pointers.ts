@@ -4,8 +4,8 @@ import { headerFor } from '#cli/generation/headers.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { PointerSpec } from '#cli/types/configurations.ts';
 import { TARGET_PLACEHOLDER } from '#cli/constants/generation.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import type { GeneratedFile, ConfigurationOutput } from '#cli/types/generation.ts';
 
 function parsePointer(text: string, pointerPath: string): Record<string, unknown> {
     const errors: ParseError[] = [];

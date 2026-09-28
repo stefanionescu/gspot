@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { afterEach, expect, spyOn, test } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { test, spyOn, expect, afterEach } from 'bun:test';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
+import { swiftBuild, swiftAnalyze } from '#cli/checks/swift/build.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { removeBuildFolders, swiftInput } from '#tests/support/cli/swift.ts';
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
 
 afterEach(() => {
     removeBuildFolders();

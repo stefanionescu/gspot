@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { settingRows } from '#cli/commands/list.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/execute.ts';

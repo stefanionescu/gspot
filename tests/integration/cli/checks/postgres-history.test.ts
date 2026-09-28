@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -10,7 +10,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-import { ORIGINAL, PATH, POSTGRES_HISTORY_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/constants/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });

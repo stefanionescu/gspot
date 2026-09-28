@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -130,9 +130,6 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         { scope: 'integration', findings: [] },
     ]);
 });
-
-const testSource = (body: string): string => `import Testing\n@Test func checks() {\n    ${body}\n}\n`;
-
 test.each([
     { check: 'xctest/no-sleep', body: 'let example = "Task.sleep(1)"', count: 0 },
     { check: 'xctest/no-sleep', body: '/* Thread.sleep(forTimeInterval: 1) */', count: 0 },
@@ -146,23 +143,34 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n',
-        'Examples/Checks.swift': testSource(body),
+        'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
-    const inspect = async () =>
-        await executeRun(await openSession(sandbox.path), {
-            stage: 'all',
-            only: [check],
-            skips: [],
-            fix: false,
-            isDryRun: false,
-        });
-    const result = await inspect();
+    const result = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        only: [check],
+        skips: [],
+        fix: false,
+        isDryRun: false,
+    });
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
     // A reported body is corrected and inspected again; a clean body already stands as the corrected run.
-    if (count > 0) await Bun.write(`${sandbox.path}/Examples/Checks.swift`, testSource('#expect(true)'));
-    const corrected = count > 0 ? await inspect() : result;
+    if (count > 0)
+        await Bun.write(
+            `${sandbox.path}/Examples/Checks.swift`,
+            `import Testing\n@Test func checks() {\n    #expect(true)\n}\n`,
+        );
+    const corrected =
+        count > 0
+            ? await executeRun(await openSession(sandbox.path), {
+                  stage: 'all',
+                  only: [check],
+                  skips: [],
+                  fix: false,
+                  isDryRun: false,
+              })
+            : result;
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
 });

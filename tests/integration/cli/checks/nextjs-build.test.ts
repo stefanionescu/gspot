@@ -1,23 +1,22 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { observeNextjsCommands, prepareNextjsBuild } from '#tests/support/cli/nextjs.ts';
+import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { prepareNextjsBuild, observeNextjsCommands } from '#tests/support/cli/nextjs.ts';
 
 for (const scope of ['', 'apps/web'])
     for (const check of ['nextjs/typecheck', 'nextjs/build'])
         test(`Next.js output preservation in ${scope || 'root'}: ${check} reports a defect, accepts its correction, and preserves source output`, async () => {
             await using directory = await testdir();
-            const path = (file: string) => join(scope, file);
             const input = await prepareNextjsBuild(directory.path, scope, check);
-            const untracked = join(directory.path, path('.next/local-cache.bin'));
-            const config = join(directory.path, path('tsconfig.json'));
+            const untracked = join(directory.path, join(scope, '.next/local-cache.bin'));
+            const config = join(directory.path, join(scope, 'tsconfig.json'));
             const original = readFileSync(config);
             const mode = statSync(config).mode;
             using observed = observeNextjsCommands(check);
@@ -27,13 +26,13 @@ for (const scope of ['', 'apps/web'])
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
-                file: path(check === 'nextjs/typecheck' ? 'src/page.ts' : 'package.json').replaceAll('\\', '/'),
+                file: join(scope, check === 'nextjs/typecheck' ? 'src/page.ts' : 'package.json').replaceAll('\\', '/'),
                 line: 1,
             });
             expect(found[0]!.message).toBe(
                 check === 'nextjs/typecheck' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
             );
-            writeFileSync(join(directory.path, path('src/page.ts')), 'corrected input\n');
+            writeFileSync(join(directory.path, join(scope, 'src/page.ts')), 'corrected input\n');
             expect(await execute(input)).toStrictEqual([]);
             expect(directories).toHaveLength(check === 'nextjs/typecheck' ? 4 : 2);
             expect(directories).not.toContain(join(directory.path, scope));
@@ -43,10 +42,10 @@ for (const scope of ['', 'apps/web'])
             expect(readFileSync(config)).toStrictEqual(original);
             expect(statSync(config).mode).toBe(mode);
             expect(readFileSync(untracked)).toStrictEqual(Buffer.from([0, 255, 1, 2]));
-            expect(readFileSync(join(directory.path, path('next-env.d.ts')), 'utf8')).toBe(
+            expect(readFileSync(join(directory.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
                 '// Authored type declaration\n',
             );
-            expect(readFileSync(join(directory.path, path('.next/types/routes.d.ts')), 'utf8')).toBe(
+            expect(readFileSync(join(directory.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
                 '// Retained route types\n',
             );
             expect(readFileSync(join(directory.path, 'unrelated/private.txt'), 'utf8')).toBe(

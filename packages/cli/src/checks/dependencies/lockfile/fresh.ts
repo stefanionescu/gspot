@@ -1,9 +1,9 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/constants/checks/dependencies.ts';
 

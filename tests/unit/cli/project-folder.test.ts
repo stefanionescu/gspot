@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { projectFolder } from '#cli/repository/scopes.ts';
 
 test.each([

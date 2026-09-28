@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { dependencyNotices } from '#scripts/notices.ts';
 import { rejection } from '#tests/support/expectations.ts';
 

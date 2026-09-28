@@ -5,13 +5,18 @@ import { toString } from 'mdast-util-to-string';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { ShapeProblem } from '#cli/types/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/constants/checks/docs.ts';
+
+// A README section is a second-level heading.
+const SECTION_DEPTH = 2;
 
 function openingProblem(nodes: RootContent[]): ShapeProblem[] {
     const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
     const start = title === -1 ? 0 : title;
-    const section = nodes.findIndex((node, index) => index >= start && node.type === 'heading' && node.depth === 2);
+    const section = nodes.findIndex(
+        (node, index) => index >= start && node.type === 'heading' && node.depth === SECTION_DEPTH,
+    );
     const opening = nodes.slice(start, section === -1 ? nodes.length : section);
     return opening.some((node) => node.type === 'paragraph')
         ? []
@@ -26,7 +31,7 @@ function openingProblem(nodes: RootContent[]): ShapeProblem[] {
 
 function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: boolean): ShapeProblem[] {
     const sections = nodes
-        .filter((node) => node.type === 'heading' && node.depth === 2)
+        .filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH)
         .map((node) => toString(node).trim().toLowerCase());
     const problems: ShapeProblem[] = [];
     if (sections.length > threshold && !sections.includes(CONTENTS_HEADING))

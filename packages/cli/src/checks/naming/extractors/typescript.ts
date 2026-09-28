@@ -1,14 +1,14 @@
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#cli/types/checks/naming.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
 
 import {
-    METHOD_NODES,
-    NAMED_DECLARATIONS,
     NAME_NODES,
-    PATTERN_FIELDS,
+    METHOD_NODES,
     PATTERN_LISTS,
-    TYPESCRIPT_FUNCTION_NODES,
+    PATTERN_FIELDS,
     TYPESCRIPT_LABELS,
+    NAMED_DECLARATIONS,
+    TYPESCRIPT_FUNCTION_NODES,
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/constants/checks/naming.ts';
 

@@ -1,5 +1,5 @@
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DRIFT_HELP, MESSAGES } from '#cli/constants/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { MESSAGES, DRIFT_HELP } from '#cli/constants/checks/repository.ts';
 
 /**
  * One finding per generated file that differs from its render, is missing, or is a stray gspot file.

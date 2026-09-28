@@ -3,7 +3,7 @@ import { DEFAULT_IGNORED } from '#plugin/constants/rules.ts';
 import { CODE_EXTENSIONS } from '#plugin/constants/plugin.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { SingleFileFoldersOptions } from '#plugin/types/rules.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
+import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 function isIgnored(relative: string, ignored: string[], allow: string[]): boolean {
     if (ignored.some((segment) => relative.split('/').includes(segment))) return true;

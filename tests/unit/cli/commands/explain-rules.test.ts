@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { explain } from '#cli/commands/explain/subjects.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 

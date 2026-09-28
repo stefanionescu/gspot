@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { SWIFT_EXTRACTOR_SOURCE } from '#tests/constants/unit/cli/checks/naming.ts';
 

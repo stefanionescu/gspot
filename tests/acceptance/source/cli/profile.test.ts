@@ -1,8 +1,8 @@
+// Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-// Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
@@ -12,11 +12,6 @@ import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
-
-async function tables(root: string): Promise<Record<string, unknown>> {
-    return Bun.TOML.parse(await Bun.file(join(root, 'gspot.toml')).text()) as Record<string, unknown>;
-}
-
 // Export retains a pathless rule allowance and reports the repository-specific omission.
 async function expectProfileExport(root: string): Promise<void> {
     await createFileTree(root, { 'scripts/a.sh': script });
@@ -102,7 +97,10 @@ test(
         const init = await run(second.path, ['init', '--yes', '--from', from, '--no-install'], TOOLS);
         expect(init.stdout).toContain('profile    house');
         expect(init.stdout).toContain('detected, not in the profile: typescript');
-        const [one, two] = [await tables(first.path), await tables(second.path)];
+        const [one, two] = [
+            Bun.TOML.parse(await Bun.file(join(first.path, 'gspot.toml')).text()) as Record<string, unknown>,
+            Bun.TOML.parse(await Bun.file(join(second.path, 'gspot.toml')).text()) as Record<string, unknown>,
+        ];
         expect(two['configurations']).toStrictEqual(one['configurations']);
         expect(two['format']).toStrictEqual({ indent_width: 2 });
         expect(two['hooks']).toStrictEqual(one['hooks']);
@@ -158,7 +156,7 @@ test(
             TOOLS,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const read = await tables(sandbox.path);
+        const read = Bun.TOML.parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as Record<string, unknown>;
         expect(read['configurations']).toStrictEqual(['bash']);
     },
     PLANTED_TIMEOUT_MS,
@@ -198,7 +196,10 @@ test(
             TOOLS,
         );
         expect(filled.code, filled.stderr).toBe(0);
-        const policy = await tables(sandbox.path);
+        const policy = Bun.TOML.parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as Record<
+            string,
+            unknown
+        >;
         const written = policy['tools'] as {
             typos: { exclude: { paths: string[]; reason: string }[] };
         };

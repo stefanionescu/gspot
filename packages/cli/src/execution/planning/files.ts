@@ -4,8 +4,8 @@ import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { configurationName } from '#cli/configurations/targets.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
-import type { PlanContext, PlanEntry, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import type { Session, PlanEntry, PlanContext, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
@@ -21,10 +21,17 @@ function projectClaimed(context: PlanContext, spec: CheckSpec, scopeForFiles: st
         spec.claims === undefined
             ? undefined
             : claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
-    const owned = isPerScope ? claimed?.filter((file) => isOutsideChildren(file, children)) : claimed;
+    const owned = isPerScope
+        ? claimed?.filter((file) =>
+              children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+          )
+        : claimed;
     if (owned?.length === 0) return [];
     const files = projectFiles(context, scopeForFiles);
-    if (isPerScope) return files.filter((file) => isOutsideChildren(file, children));
+    if (isPerScope)
+        return files.filter((file) =>
+            children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+        );
     return files.filter((file) => file.nature !== 'binary');
 }
 
@@ -57,7 +64,9 @@ function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSele
 function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
     const files = claimedFor(context, entry, scope.scope.path);
-    return entry.manifest === undefined ? files : files.filter((file) => isOutsideChildren(file, children));
+    return entry.manifest === undefined
+        ? files
+        : files.filter((file) => children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)));
 }
 
 // The files narrowed to the selection: a project check keeps everything when the selection touches it.
@@ -92,17 +101,6 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
         .map((entry) => entry.scope.path)
         .filter((path) => path !== '' && path !== own && (own === '' || path.startsWith(`${own}/`)));
 }
-
-/**
- * Whether a file lies outside every child scope.
- * @param file the tracked file
- * @param children the child scope paths
- * @returns true when no child scope holds the file
- */
-export function isOutsideChildren(file: TrackedFile, children: string[]): boolean {
-    return children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`));
-}
-
 /**
  * A policy check that reads a scoped configuration must run against that scope's file partition.
  * @param manifest the manifest that declares the check
@@ -139,7 +137,21 @@ export function filesFor(
     const triggerPaths = missingTriggers(context, spec, scopePath);
     const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
     let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
-    if (!isWhole && manifest !== undefined) files = files.filter((file) => isOutsideChildren(file, children));
+    if (!isWhole && manifest !== undefined)
+        files = files.filter((file) =>
+            children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+        );
     const selected = withoutExcluded(files, spec, scope);
     return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
+}
+
+/**
+ * Whether a file lies outside every child scope.
+ * @param file the tracked file
+ * @param children the child scope paths
+ * @returns true when no child scope holds the file
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The planner and the scope walker both read it; one owner keeps the containment test.
+export function isOutsideChildren(file: TrackedFile, children: string[]): boolean {
+    return children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`));
 }

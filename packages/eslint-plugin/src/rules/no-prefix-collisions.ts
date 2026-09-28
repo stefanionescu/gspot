@@ -4,14 +4,14 @@ import type { NoPrefixCollisionsOptions } from '#plugin/types/rules.ts';
 import { DEFAULT_IGNORED, DEFAULT_THRESHOLD } from '#plugin/constants/rules.ts';
 
 import {
-    isIndexFile,
+    stemOf,
+    prefixOf,
     lintedFile,
     lintedRoot,
-    isAnyGlobMatch,
-    prefixOf,
+    isIndexFile,
     readDirectory,
+    isAnyGlobMatch,
     relativeToRoot,
-    stemOf,
 } from '#plugin/files.ts';
 
 function isInScope(relative: string, scope: string[], ignored: string[]): boolean {

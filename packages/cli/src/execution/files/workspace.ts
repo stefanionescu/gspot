@@ -1,33 +1,27 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { tmpdir } from 'node:os';
-import { cp, readdir, rm } from 'node:fs/promises';
+import { cp, rm, readdir } from 'node:fs/promises';
 import { PERMISSION_BITS } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { sep, join, dirname, relative, isAbsolute } from 'node:path';
 import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
-import { SCRATCH_DIRECTORIES, SCRATCH_EXTRAS } from '#cli/constants/execution/execution.ts';
+import { SCRATCH_EXTRAS, SCRATCH_DIRECTORIES } from '#cli/constants/execution/execution.ts';
 
 import {
-    constants,
-    type Dirent,
-    mkdirSync,
-    mkdtempSync,
-    readFileSync,
-    realpathSync,
     rmSync,
     statSync,
-    symlinkSync,
+    constants,
+    mkdirSync,
     unlinkSync,
+    mkdtempSync,
+    symlinkSync,
+    type Dirent,
+    readFileSync,
+    realpathSync,
     writeFileSync,
 } from 'node:fs';
 
 const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE } as const;
-
-// Whether a path exists, without following the repository's confinement rules.
-function exists(path: string): boolean {
-    return statSync(path, { throwIfNoEntry: false }) !== undefined;
-}
-
 // Copies each selected file that exists, resolving it through the confined root.
 async function copySelected(context: Scratch, paths: string[], dependencies: string[]): Promise<void> {
     const copied = new Set(
@@ -36,7 +30,7 @@ async function copySelected(context: Scratch, paths: string[], dependencies: str
         ),
     );
     for (const path of copied) {
-        if (!exists(join(context.root, path))) continue;
+        if (statSync(join(context.root, path), { throwIfNoEntry: false }) === undefined) continue;
         const resolved = context.files.source(path);
         mkdirSync(dirname(join(context.scratch, path)), { recursive: true });
         await cp(resolved, join(context.scratch, path), { dereference: true });
@@ -46,7 +40,7 @@ async function copySelected(context: Scratch, paths: string[], dependencies: str
 // Clones each installed dependency folder that exists, and queues it for link repair.
 async function copyDependencies(context: Scratch, dependencies: string[]): Promise<void> {
     for (const dir of dependencies) {
-        if (!exists(join(context.root, dir))) continue;
+        if (statSync(join(context.root, dir), { throwIfNoEntry: false }) === undefined) continue;
         const source = realpathSync(join(context.root, dir));
         const target = join(context.scratch, dir);
         context.copies.set(source, target);
@@ -68,7 +62,7 @@ function relocated(copies: Map<string, string>, source: string): string | undefi
 async function relinkDirectory(context: Scratch, original: string, target: string): Promise<void> {
     const destination = relocated(context.copies, original);
     unlinkSync(target);
-    if (destination !== undefined && exists(destination)) {
+    if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined) {
         symlinkSync(relative(dirname(target), destination), target, 'dir');
         return;
     }
@@ -96,7 +90,7 @@ async function relinkFiles(context: Scratch): Promise<void> {
     for (const { source, target } of context.fileLinks) {
         const destination = relocated(context.copies, source);
         unlinkSync(target);
-        if (destination !== undefined && exists(destination))
+        if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined)
             symlinkSync(relative(dirname(target), destination), target, 'file');
         else await cp(source, target);
     }

@@ -1,5 +1,5 @@
 import { codePoints } from '#cli/platform/code-points.ts';
-import { NEAR_DISTANCE_LIMIT, TYPO_FRACTION, TYPO_MIN } from '#cli/constants/policy/policy.ts';
+import { TYPO_MIN, TYPO_FRACTION, NEAR_DISTANCE_LIMIT } from '#cli/constants/policy/policy.ts';
 
 function distance(a: string, b: string): number {
     const right = codePoints(b);

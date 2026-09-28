@@ -54,3 +54,9 @@ export const DEFAULT_PATTERNS = [
 // Barrel size and trivial statement limits.
 export const DEFAULT_MAX = 20;
 export const DEFAULT_THRESHOLD = 2;
+
+/** The statement count at or under which a function is trivial, when no option is set. */
+export const DEFAULT_TRIVIAL_STATEMENTS = 2;
+/** Lines a comment may sit above its declaration: one, or two when a blank line is allowed. */
+export const ATTACHED_DISTANCE = 1;
+export const BLANK_LINE_DISTANCE = 2;

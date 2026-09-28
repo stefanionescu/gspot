@@ -1,7 +1,7 @@
+// Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { z } from 'zod';
 import JSON5 from 'json5';
 import picomatch from 'picomatch';
-// Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { globbySync } from 'globby';
 import { relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
@@ -12,10 +12,11 @@ import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
-import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
+import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/constants/repository/patterns.ts';
-import type { ScopeEntry, ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { ScopeEntry, TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
     const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
     return {
@@ -259,9 +260,11 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
         configurations: [],
         source: 'root',
     };
-    return scopes
-        .filter((scope) => scope.path !== '' && (path === scope.path || path.startsWith(`${scope.path}/`)))
-        .reduce((best, scope) => (scope.path.length > best.path.length ? scope : best), root);
+    return (
+        scopes
+            .filter((scope) => scope.path !== '' && (path === scope.path || path.startsWith(`${scope.path}/`)))
+            .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
+    );
 }
 
 /**

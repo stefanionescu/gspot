@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';

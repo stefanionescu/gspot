@@ -100,3 +100,11 @@ export type TreeFacts = {
     scope: string;
 };
 export type Tagged = { tags: string[]; binary: boolean; shebang?: string };
+/** One line of a SQLFluff configuration file: the section it opens, or the continuation it carries. */
+export type SqlfluffLine = {
+    number: number;
+    text: string;
+    continuation: string;
+    indentation: number;
+    heading: string | undefined;
+};

@@ -1,5 +1,5 @@
 import { parse } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/constants/unit/cli/commands.ts';

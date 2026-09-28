@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
 import { routeFor, routeGroups } from '#cli/checks/prose/grammars.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 function tracked(path: string, tags: string[] = ['text']): TrackedFile {
     return { path, prefix: Buffer.alloc(0), nature: 'source', tags, executable: false, size: 1 };
 }
@@ -52,11 +53,8 @@ describe('prose routes', () => {
             tracked('e.sh'),
             tracked('hooks/pre-commit', ['shell', 'text']),
         ]);
-        expect(groups.map((group) => group.map((route) => route.path))).toStrictEqual([
-            ['a.md', 'b.md'],
-            ['c.ts'],
-            ['d.sh', 'e.sh'],
-            ['hooks/pre-commit'],
-        ]);
+        const paths = [];
+        for (const group of groups) paths.push(group.map((route) => route.path));
+        expect(paths).toStrictEqual([['a.md', 'b.md'], ['c.ts'], ['d.sh', 'e.sh'], ['hooks/pre-commit']]);
     });
 });

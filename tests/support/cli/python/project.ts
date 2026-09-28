@@ -8,17 +8,30 @@ import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
+import type { PreparePythonInstallationResult } from '#tests/types/results.ts';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
+// The authored files every Python fixture starts from.
+const AUTHORED_FILES = {
+    'pyproject.toml': '[project]\nname = "authored"\nversion = "1.0.0"\ndependencies = ["authored-dependency"]\n',
+    '.venv/authored.txt': 'keep the project environment',
+    'source.py': 'import os\n',
+};
+// The uv variables the fixture points at the sandbox.
+const REDIRECTED = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'];
+
 /** Creates an authored Python project, generated lock, and isolated uv environment selectors. */
-export async function preparePythonInstallation(root: string, configuration: string, runner: string, url: string) {
+export async function preparePythonInstallation(
+    root: string,
+    configuration: string,
+    runner: string,
+    url: string,
+): Promise<PreparePythonInstallationResult> {
     const runnerTable = runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`;
     await createFileTree(root, {
         '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
         'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["python"]\n${runnerTable}[rules]\ninstall = false\n`,
-        'pyproject.toml': '[project]\nname = "authored"\nversion = "1.0.0"\ndependencies = ["authored-dependency"]\n',
-        '.venv/authored.txt': 'keep the project environment',
-        'source.py': 'import os\n',
+        ...AUTHORED_FILES,
     });
     const session = await openSession(root);
     // This native installation journey selects one shipped Python executable.
@@ -31,16 +44,13 @@ export async function preparePythonInstallation(root: string, configuration: str
     }));
     const proposals = toolEnvironment(everyManifest(scopes));
     if (runner === 'mise') proposals.push(miseTasks(everyManifest(scopes), session.version, false));
-    const previous = environmentVariables()['UV_DEFAULT_INDEX'];
-    const redirected = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'];
-    const previousProjects = redirected.map((name) => [name, environmentVariables()[name]] as const);
+    const previous = ['UV_DEFAULT_INDEX', ...REDIRECTED].map((name) => [name, environmentVariables()[name]] as const);
     const resources = new AsyncDisposableStack();
     resources.defer(() => {
-        setEnvironmentVariable('UV_DEFAULT_INDEX', previous);
-        for (const [name, value] of previousProjects) setEnvironmentVariable(name, value);
+        for (const [name, value] of previous) setEnvironmentVariable(name, value);
     });
     try {
-        for (const name of redirected)
+        for (const name of REDIRECTED)
             setEnvironmentVariable(name, name === 'UV_PROJECT_ENVIRONMENT' ? join(root, '.venv') : root);
         setEnvironmentVariable('UV_DEFAULT_INDEX', undefined);
         const index = `[[${configuration === 'pyproject.toml' ? 'tool.uv.' : ''}index]]\nname = "gspot-test"\nurl = "${url}"\ndefault = true\n`;

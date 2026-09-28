@@ -1,8 +1,8 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
 import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { readFileSync, statSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { statSync, readFileSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { EmbeddedIndex } from '#cli/types/platform.ts';
 import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/constants/platform.ts';
@@ -25,6 +25,7 @@ function findRepoRoot(): string {
     throw new Error('The configurations folder is not beside the source tree.');
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The embedded index is read from the global once; the state object owns the answer.
 function embeddedIndex(): EmbeddedIndex | undefined {
     state.embedded ??= (globalThis as { gspotEmbedded?: EmbeddedIndex }).gspotEmbedded ?? null;
     return state.embedded ?? undefined;
@@ -38,6 +39,7 @@ function embeddedAsset(path: string, missingDescription: string): string | undef
     return file;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The repository root is found once; the state object owns the answer.
 function developmentRoot(): string {
     state.developmentRoot ??= findRepoRoot();
     return state.developmentRoot;
@@ -49,6 +51,7 @@ export const GRAMMAR_NAMES = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'];
  * The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source.
  * @returns the path, or undefined
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source. 5 files make 10 calls; one owner keeps that behavior in one place.
 export function binaryPath(): string | undefined {
     return isEmbedded() ? process.execPath : undefined;
 }
@@ -57,6 +60,7 @@ export function binaryPath(): string | undefined {
  * True when running from a compiled binary with embedded assets.
  * @returns whether the assets are embedded
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when running from a compiled binary with embedded assets. 1 files make 1 calls; one owner keeps that behavior in one place.
 export function isEmbedded(): boolean {
     return embeddedIndex() !== undefined;
 }

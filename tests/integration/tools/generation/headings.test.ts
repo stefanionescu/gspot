@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {

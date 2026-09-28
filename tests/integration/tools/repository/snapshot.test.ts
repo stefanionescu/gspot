@@ -1,11 +1,11 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { preparePythonSnapshot } from '#tests/support/cli/python/snapshot.ts';
-import { readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 
 test.each([
     ['index', 'plain'],

@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import type { PrepareEditableSnapshotResult } from '#tests/types/results.ts';
 
 const HATCHLING_BUILD =
     '[build-system]\nrequires = ["hatchling==1.27.0"]\nbuild-backend = "hatchling.build"\n[tool.hatch.build.targets.wheel]\npackages = ["src/editable_fixture"]\n';
@@ -21,7 +22,10 @@ const EDITABLE_BACKENDS = {
 };
 
 /** Installs the pinned native package and records an index or committed source revision. */
-export async function preparePythonSnapshot(root: string, kind: 'index' | 'commit') {
+export async function preparePythonSnapshot(
+    root: string,
+    kind: 'index' | 'commit',
+): Promise<{ source: { kind: 'index'; hash?: never } | { kind: 'commit'; hash: string }; python: string }> {
     await createFileTree(root, {
         '.gitignore': '.venv/\n',
         'pyproject.toml':
@@ -48,7 +52,7 @@ export async function prepareEditableSnapshot(
     root: string,
     kind: 'index' | 'commit',
     backend: keyof typeof EDITABLE_BACKENDS,
-) {
+): Promise<PrepareEditableSnapshotResult> {
     const { packageDirectory, build, dependencies } = EDITABLE_BACKENDS[backend];
     await createFileTree(root, {
         '.gitignore': '.venv/\n',

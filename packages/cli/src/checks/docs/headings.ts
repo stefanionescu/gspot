@@ -3,7 +3,7 @@ import { toString } from 'mdast-util-to-string';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import { BANNED_HEADINGS } from '#cli/constants/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding per heading that matches the banned list or [tools.docs] banned_headings.

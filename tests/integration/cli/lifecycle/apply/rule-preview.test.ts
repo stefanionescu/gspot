@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -8,21 +8,21 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
-const policy = (dialect: string) =>
-    `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify(dialect)}\n`;
-
 test('apply rejects injected SQLFluff dialect directives with exit 2 before changing configuration', async () => {
     await using sandbox = await testdir();
     const original = '[sqlfluff]\ndialect = postgres\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': policy('sqlite\nexclude_rules = ALL'),
+        'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite\nexclude_rules = ALL')}\n`,
         '.gspot/config/sqlfluff.cfg': original,
     });
     const refused = await run(sandbox.path, ['apply']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain('Use a SQLFluff dialect label');
     expect(await Bun.file(join(sandbox.path, '.gspot/config/sqlfluff.cfg')).text()).toBe(original);
-    await Bun.write(join(sandbox.path, 'gspot.toml'), policy('sqlite'));
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite')}\n`,
+    );
     const corrected = await run(sandbox.path, ['apply', '--dry-run']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/sqlfluff.cfg')).text()).toBe(original);

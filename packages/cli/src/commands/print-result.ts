@@ -1,15 +1,19 @@
-import { fail, print, printJson } from '#cli/output/messages.ts';
+import { fail, print } from '#cli/output/messages.ts';
+import { OUTPUT_JSON_INDENT } from '#cli/constants/output.ts';
 import { KNOWN_ERRORS } from '#cli/constants/commands/commands.ts';
-import type { CommandFailureJson, CommandResult } from '#cli/types/commands/commands.ts';
+import type { CommandResult, CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 function printResult(result: CommandResult, isJson: boolean): void {
-    if (isJson) printJson(result.json);
+    if (isJson) process.stdout.write(`${JSON.stringify(result.json, null, OUTPUT_JSON_INDENT)}\n`);
     else if (result.text !== '') print(result.text);
     process.exitCode = result.exitCode;
 }
 
 function printError(error: Error, isJson: boolean): void {
-    if (isJson) printJson({ error: error.name, message: error.message } satisfies CommandFailureJson);
+    if (isJson)
+        process.stdout.write(
+            `${JSON.stringify({ error: error.name, message: error.message } satisfies CommandFailureJson, null, OUTPUT_JSON_INDENT)}\n`,
+        );
     else fail(error.message);
     process.exitCode = 2;
 }

@@ -11,9 +11,9 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { requireChain } from '#cli/configurations/select.ts';
 import { installTools } from '#cli/tools/install/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { directoryOf, textEntry } from '#cli/platform/arguments.ts';
+import { textEntry, directoryOf } from '#cli/platform/arguments.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { CommandResult, AddOptions, RemoveOptions } from '#cli/types/commands/commands.ts';
+import type { AddOptions, CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
 
 async function installChangedSelection(
     root: string,

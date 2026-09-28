@@ -1,5 +1,5 @@
 import { FORMAT_PREFIX } from '#cli/constants/configurations.ts';
-import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**

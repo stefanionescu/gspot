@@ -1,5 +1,5 @@
 // The problems a policy text raises, for tests that plant a defect and its correction.
-import { parsePolicyText, PolicyError } from '#cli/policy/read.ts';
+import { PolicyError, parsePolicyText } from '#cli/policy/read.ts';
 
 /**
  * Parses a policy text and returns its problems, or none when it parses.

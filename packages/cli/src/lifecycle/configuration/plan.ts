@@ -6,12 +6,12 @@ import { configurationFieldsSchema } from '#cli/lifecycle/journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 
 import type {
-    ConfigurationDocument,
-    ConfigurationWriteRequest,
     Field,
     KeyPath,
     ConfigurationPlan,
+    ConfigurationDocument,
     ConfigurationOwnership,
+    ConfigurationWriteRequest,
 } from '#cli/types/lifecycle/lifecycle.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.

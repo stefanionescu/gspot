@@ -1,8 +1,8 @@
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { chmodSync, readFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';

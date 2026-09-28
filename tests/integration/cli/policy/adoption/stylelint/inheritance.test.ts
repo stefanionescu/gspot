@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import stylelint from 'stylelint';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { STYLELINT_TOOLING } from '#tests/constants/cli.ts';
-import { readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { rmSync, symlinkSync, readFileSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 

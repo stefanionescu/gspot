@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import * as processes from '#cli/platform/spawn.ts';
 import type { HookCapture } from '#tests/types/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -10,7 +10,7 @@ import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
 import { prepareDispatcher } from '#tests/support/cli/hooks/dispatchers.ts';
-import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { rmSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external', 'worktree'] as const)(
     'dispatcher previews and repeated installation preserve original bytes, modes, and Git configuration in %s Git locations',

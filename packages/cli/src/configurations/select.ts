@@ -65,6 +65,7 @@ export class SelectionError extends Error {
  * @param manifests every configuration manifest
  * @returns the configuration names from `from` to `target`
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The chain of requires from one configuration to another, or undefined when the first does not need the second. 2 files make 2 calls; one owner keeps that behavior in one place.
 export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
     return chainFrom(target, from, manifests, new Set());
 }
@@ -90,6 +91,7 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
  * @param manifests every configuration manifest
  * @returns the manifests in order
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The root selection and each ancestor scope selection, deduplicated in order. 3 files make 5 calls; one owner keeps that behavior in one place.
 export function selectForScope(
     policy: Pick<Policy, 'configurations' | 'scopes'>,
     scope: string,
@@ -106,6 +108,7 @@ export function selectForScope(
  * @param selected the selected manifests
  * @returns the manifests whose kind is language
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The language configurations in a selection. 1 files make 2 calls; one owner keeps that behavior in one place.
 export function languageConfigurations(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.configuration.kind === 'language');
 }
@@ -115,6 +118,7 @@ export function languageConfigurations(selected: Manifest[]): Manifest[] {
  * @param selected the selected manifests
  * @returns the source policy owners
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Language and framework configurations that contribute source to shared checks. 2 files make 3 calls; one owner keeps that behavior in one place.
 export function sourceConfigurations(selected: Manifest[]): Manifest[] {
     return selected.filter(
         (manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework',

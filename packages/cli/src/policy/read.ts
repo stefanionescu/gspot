@@ -5,7 +5,7 @@ import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems } from '#cli/policy/problems.ts';
-import { parse as parseToml, TomlError } from 'smol-toml';
+import { TomlError, parse as parseToml } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { FIELD_PROBLEMS } from '#cli/constants/policy/policy.ts';
@@ -13,12 +13,12 @@ import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 
 import type {
+    Policy,
+    RawPolicy,
+    PathSegment,
     PolicyFiles,
     PolicyFinding,
-    PathSegment,
-    Policy,
     PolicyProblem,
-    RawPolicy,
 } from '#cli/types/policy/policy.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
@@ -54,15 +54,6 @@ function validatedRaw(text: string, path: string): RawPolicy {
     return result.data;
 }
 
-function semanticProblems(policy: Policy, root: string | undefined): PolicyProblem[] {
-    return [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
-}
-
-// What check reads around: every problem an edit command refuses a policy for, other than its shape.
-function recoverableProblems(policy: Policy, root: string | undefined): PolicyProblem[] {
-    return [...semanticProblems(policy, root), ...completenessProblems(policy)];
-}
-
 function completePolicy(text: string, path: string, raw: RawPolicy): Policy {
     const policy = normalize(raw);
     const unknown = unknownConfigurationProblems(policy);
@@ -75,6 +66,7 @@ function problemLines(text: string, path: string, problems: PolicyProblem[]): st
     return problems.map((problem) => `${path}:${policyLocation(locations, problem.path)}: ${problem.message}`);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three steps of recovery find the entry that owns a field problem; the field set is applied in one place.
 function ownerOf(path: PathSegment[]): PathSegment[] {
     const last = path.at(-1);
     return typeof last === 'string' && FIELD_PROBLEMS.has(last) ? path.slice(0, -1) : path;
@@ -151,7 +143,7 @@ export class PolicyError extends Error {
  */
 export function parsePolicyText(text: string, path: string, root?: string): Policy {
     const policy = normalize(validatedRaw(text, path));
-    const problems = semanticProblems(policy, root);
+    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
     if (problems.length > 0) throw new PolicyError(problemLines(text, path, problems));
     return policy;
 }
@@ -175,7 +167,11 @@ export function readPolicyText(
     // One finding per wrong value: a refused reason is also a loosening without one, and the line is the same.
     const found = [
         ...new Map(
-            recoverableProblems(complete, root).map((problem) => [JSON.stringify(ownerOf(problem.path)), problem]),
+            [
+                ...reasonProblems(complete),
+                ...(root === undefined ? [] : pathProblems(root, complete)),
+                ...completenessProblems(complete),
+            ].map((problem) => [JSON.stringify(ownerOf(problem.path)), problem]),
         ).values(),
     ];
 
@@ -188,7 +184,11 @@ export function readPolicyText(
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));
     for (const owner of [...owners.values()].toSorted(byRemovalOrder)) dropOwner(raw, owner);
     const policy = completePolicy(text, path, raw);
-    const remaining = recoverableProblems(policy, root);
+    const remaining = [
+        ...reasonProblems(policy),
+        ...(root === undefined ? [] : pathProblems(root, policy)),
+        ...completenessProblems(policy),
+    ];
     if (remaining.length > 0) throw new PolicyError(problemLines(text, path, remaining));
     return { policy, problems };
 }
@@ -222,6 +222,7 @@ export function assertNoProblems(files: PolicyFiles): void {
  * @param root the repository root
  * @returns whether the file is there
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a root has a gspot.toml. 3 files make 3 calls; one owner keeps that behavior in one place.
 export function hasPolicy(root: string): boolean {
     return openConfinedRoot(root).read('gspot.toml') !== undefined;
 }

@@ -1,5 +1,5 @@
 import { parseBuffer } from 'editorconfig';
-import { basename, dirname } from 'node:path';
+import { dirname, basename } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';

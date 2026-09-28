@@ -2,13 +2,14 @@
 // the backups it takes before a file changes hands.
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { OUTPUT_JSON_INDENT } from '#cli/constants/output.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
-import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/constants/platform.ts';
+import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
 
 import type {
-    Identity,
     Journal,
+    Identity,
     Original,
     OwnershipEntry,
     OwnershipState,
@@ -50,11 +51,6 @@ function recoverPending(
         );
 }
 
-// The key a path is recorded under, so two spellings of one path cannot both be recorded.
-function normalizedKey(path: string): string {
-    return path.normalize('NFC').toLowerCase();
-}
-
 // The recorded ownership state, or an empty one when nothing was recorded yet.
 function readState(recorded: FileObservation | undefined): OwnershipState {
     if (recorded === undefined) return { version: 1, files: [] };
@@ -76,7 +72,7 @@ function recoverAll(
 
 // The recorded entry of a path, refusing a record under another spelling of the same path.
 function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): OwnershipEntry | undefined {
-    const entry = entries.get(normalizedKey(path));
+    const entry = entries.get(path.normalize('NFC').toLowerCase());
     if (entry !== undefined && entry.path !== path)
         throw new Error(`Lifecycle path aliases recorded ${entry.path}: ${path}`);
     return entry;
@@ -109,6 +105,7 @@ function backupWriter(confined: ConfinedRoot, recovery: string): Journal['backup
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The identity a snapshot is recorded and compared by. 3 files make 9 calls; one owner keeps that behavior in one place.
 export function identity(file: FileObservation): Identity {
     return {
         hash: createHash('sha256').update(file.bytes).digest('hex'),
@@ -141,16 +138,16 @@ export function openJournal(confined: ConfinedRoot, stateDirectory: string): Jou
     const recovery = `${stateDirectory}/recovery`;
     let recorded = confined.read(record);
     const state = readState(recorded);
-    const entries = new Map(state.files.map((entry) => [normalizedKey(entry.path), entry]));
+    const entries = new Map(state.files.map((entry) => [entry.path.normalize('NFC').toLowerCase(), entry]));
     const save = (): void => {
         state.files = [...entries.values()];
         ownershipSchema.parse(state);
-        const next = { bytes: Buffer.from(`${JSON.stringify(state, null, 2)}\n`), mode: PRIVATE_FILE };
+        const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
         confined.write(record, next, recorded);
         recorded = next;
     };
     const accept = (pending: PendingOwnership): void => {
-        const key = normalizedKey(pending.path);
+        const key = pending.path.normalize('NFC').toLowerCase();
         if (pending.entry === undefined) entries.delete(key);
         else entries.set(key, pending.entry);
     };

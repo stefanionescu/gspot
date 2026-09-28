@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { basename, dirname } from 'node:path';
+import { dirname, basename } from 'node:path';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { evaluateLicenses } from '#cli/evaluation/license.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -11,13 +11,13 @@ import { evaluateFormat, evaluateIgnoredPaths } from '#cli/evaluation/format.ts'
 
 import {
     eslintResponse,
-    eslintPreviewResponse,
+    formatResponse,
     licenseResponse,
     stylelintResponse,
     configurationRequest,
-    eslintCoverageResponse,
-    formatResponse,
     ignoredPathsResponse,
+    eslintPreviewResponse,
+    eslintCoverageResponse,
 } from '#cli/evaluation/protocol.ts';
 
 // Evaluates the operation the request names and checks the answer against its response shape.

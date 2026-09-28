@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import { frontMatterFindings, layerOfPath, parseFrontMatter } from '#cli/agents/metadata.ts';
+import { test, expect, describe } from 'bun:test';
+import { layerOfPath, parseFrontMatter, frontMatterFindings } from '#cli/agents/metadata.ts';
 
 describe('front matter', () => {
     test('parses the fields between the fences', () => {

@@ -10,9 +10,12 @@ import type { SecretScan } from '#cli/types/checks/secrets.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { gitBlobs } from '#cli/repository/revisions/contents.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
-import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import { CHANGE_LINE, COMMIT_METADATA, DIFF_TREE, GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
+import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/constants/checks/secrets.ts';
+
+// The fields come as key and value pairs.
+const PAIR = 2;
 
 // The commits under review: the ones the run supplies, or every commit after the push base.
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
@@ -47,7 +50,7 @@ async function changeFields(session: Session, commit: string): Promise<string[]>
 // The blob each changed file holds after the commit, by path.
 function changedObjects(fields: string[]): Map<string, string> {
     const entries = new Map<string, string>();
-    for (let position = 0; position < fields.length; position += 2) {
+    for (let position = 0; position < fields.length; position += PAIR) {
         const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
         const file = fields[position + 1];
         if (blobId === undefined || file === undefined)
@@ -57,11 +60,6 @@ function changedObjects(fields: string[]): Map<string, string> {
     return entries;
 }
 
-// Appends one enumerator record.
-function appendRecord(input: string, record: Record<string, unknown>): void {
-    appendFileSync(input, `${JSON.stringify(record)}\n`);
-}
-
 // Appends every changed blob of a commit to the enumerator input.
 async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const entries = changedObjects(await changeFields(scan.session, commit));
@@ -69,7 +67,10 @@ async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     for (const [file, blobId] of entries) {
         const blob = blobs.get(blobId);
         if (blob === undefined) throw new SelectionError(['A selected history blob is missing.']);
-        appendRecord(scan.input, { metadata: { commit, file }, data_b64: blob.toString('base64') });
+        appendFileSync(
+            scan.input,
+            `${JSON.stringify({ metadata: { commit, file }, data_b64: blob.toString('base64') })}\n`,
+        );
     }
 }
 
@@ -84,7 +85,7 @@ async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
     );
     if (commitResult.code !== 0)
         throw new SelectionError(['Cannot read selected commit metadata for verified secret scanning.']);
-    appendRecord(scan.input, { metadata: { commit, file: '' }, data: commitResult.stdout });
+    appendFileSync(scan.input, `${JSON.stringify({ metadata: { commit, file: '' }, data: commitResult.stdout })}\n`);
 }
 
 // Writes the enumerator input for every commit, then runs TruffleHog over it.

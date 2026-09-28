@@ -1,12 +1,12 @@
 // Installed hooks run staged checks in both the current repository and a fresh clone.
 import { chmodSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { delimiter, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { gspot, run } from '#tests/support/cli/command.ts';
+import { run, gspot } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.

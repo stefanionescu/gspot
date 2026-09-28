@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
@@ -17,13 +17,17 @@ test.each([
     });
     const eslint = await generatedEslint(sandbox.path);
     const args = ['value', '"A custom failure message."', '"Unexpected argument."'];
-    const source = (count: number) =>
-        `import { test, expect } from '${runtime}';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, count).join(', ')}).toBe(1); });\n`;
-    const defect = await eslint.lintText(source(maximum + 1), { filePath: 'sample.test.js' });
+    const defect = await eslint.lintText(
+        `import { test, expect } from '${runtime}';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, maximum + 1).join(', ')}).toBe(1); });\n`,
+        { filePath: 'sample.test.js' },
+    );
     expect(
         defect.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
     ).toHaveLength(1);
-    const corrected = await eslint.lintText(source(maximum), { filePath: 'sample.test.js' });
+    const corrected = await eslint.lintText(
+        `import { test, expect } from '${runtime}';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, maximum).join(', ')}).toBe(1); });\n`,
+        { filePath: 'sample.test.js' },
+    );
     expect(
         corrected.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
     ).toStrictEqual([]);

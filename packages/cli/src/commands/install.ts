@@ -13,7 +13,7 @@ import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { CommandResult, InstallJson, InstallOptions } from '#cli/types/commands/commands.ts';
+import type { InstallJson, CommandResult, InstallOptions } from '#cli/types/commands/commands.ts';
 
 function preparation(session: Session): { steps: string[][]; failures: string[]; hooks: string | undefined } {
     const failures: string[] = [];

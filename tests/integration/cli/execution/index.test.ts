@@ -1,12 +1,13 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...args: string[]): void {
     const result = runBlocking(['git', ...args], { cwd: root });
     expect(result.code, result.stderr).toBe(0);

@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
-import { chmodSync, readFileSync, symlinkSync } from 'node:fs';
+import { join, delimiter } from 'node:path';
+import { chmodSync, symlinkSync, readFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
@@ -65,6 +65,7 @@ appendFileSync(join(import.meta.dir, '..', 'publisher.jsonl'), JSON.stringify(ar
  * @param args the publishing arguments
  * @returns the process status and captured output
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Run the publishing script with the fixture recording command ahead of inherited executables. 1 files make 2 calls; one owner keeps that behavior in one place.
 export function runPublication(cwd: string, args: string[]): Bun.SyncSubprocess<'pipe', 'pipe'> {
     return Bun.spawnSync([process.execPath, join(cwd, 'packages/cli/scripts/publish.ts'), ...args], {
         cwd,

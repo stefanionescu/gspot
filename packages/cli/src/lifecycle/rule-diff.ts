@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { GENERATED_JSON_KEY } from '#cli/constants/generation.ts';
-import { parse as parseJson, type ParseError } from 'jsonc-parser';
+import { type ParseError, parse as parseJson } from 'jsonc-parser';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { gixyRules } from '#cli/repository/configuration/gixy-rules.ts';
 import { valeRules } from '#cli/repository/configuration/vale-rules.ts';
@@ -47,24 +47,38 @@ function document(path: string, text: string): unknown {
     throw new Error(`Rule comparison does not support ${extension} configurations.`);
 }
 
+// The string id of a rule record, or an error naming the path that holds something else.
+function ruleId(entry: unknown, path: string): string {
+    const id: unknown = typeof entry === 'object' && entry !== null ? Reflect.get(entry, 'id') : undefined;
+    if (typeof id !== 'string') throw new Error(`Rule path ${path} must contain records with string IDs.`);
+    return id;
+}
+
+// The value at a dotted path inside parsed configuration, or undefined once a segment is absent.
+function tableAt(parsed: unknown, segments: string[], path: string): unknown {
+    let value: unknown = parsed;
+    for (const part of segments) {
+        if (value === undefined) break;
+        if (typeof value !== 'object' || value === null) throw new Error(`Rule path ${path} is not a table.`);
+        value = Reflect.get(value, part);
+    }
+    return value;
+}
+
 function ruleList(value: unknown[], path: string): Map<string, unknown> {
     if (value.every((entry) => typeof entry === 'string')) return new Map(value.map((rule: string) => [rule, true]));
-    return value.reduce<Map<string, unknown>>((rules, entry) => {
-        const id: unknown = typeof entry === 'object' && entry !== null ? Reflect.get(entry, 'id') : undefined;
-        if (typeof id !== 'string') throw new Error(`Rule path ${path} must contain records with string IDs.`);
+    const rules = new Map<string, unknown>();
+    for (const entry of value) {
+        const id = ruleId(entry, path);
         if (rules.has(id)) throw new Error(`Rule path ${path} contains duplicate ID ${id}.`);
         rules.set(id, entry);
-        return rules;
-    }, new Map());
+    }
+    return rules;
 }
 
 function rulesAt(parsed: unknown, path: string): Map<string, unknown> {
     const segments = path === '' ? [] : path.split('.');
-    const value = segments.reduce<unknown>((table, part) => {
-        if (table === undefined) return undefined;
-        if (typeof table !== 'object' || table === null) throw new Error(`Rule path ${path} is not a table.`);
-        return Reflect.get(table, part);
-    }, parsed);
+    const value = tableAt(parsed, segments, path);
     if (value === undefined || value === null) return new Map();
     if (Array.isArray(value)) return ruleList(value, path);
     if (typeof value === 'object') return new Map(Object.entries(value).filter(([key]) => key !== GENERATED_JSON_KEY));

@@ -3,22 +3,22 @@ import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
-import { configurationName, targetInScope } from '#cli/configurations/targets.ts';
+import { targetInScope, configurationName } from '#cli/configurations/targets.ts';
 
 import type {
-    PlannedCheck,
     Session,
     CommandPart,
+    PlannedCheck,
     Substitutions,
     ToolInvocation,
 } from '#cli/types/execution/execution.ts';
 import {
-    COMMAND_CONFIG_PLACEHOLDER,
     EACH_PLACEHOLDER,
-    EXISTING_PLACEHOLDER,
+    WORKSPACE_PREFIX,
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
-    WORKSPACE_PREFIX,
+    EXISTING_PLACEHOLDER,
+    COMMAND_CONFIG_PLACEHOLDER,
 } from '#cli/constants/execution/execution.ts';
 
 /**
@@ -63,10 +63,6 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     );
     if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no configuration renders it.`);
     return targetInScope(planned.scope.scope.path, target);
-}
-
-function pointerPath(name: string, scope: string): string {
-    return scope === '' ? name : `${scope}/${name}`;
 }
 
 function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
@@ -140,7 +136,7 @@ export function commandConfigurations(
                 const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => pointerPath(name, scope));
+                    .map((name) => (scope === '' ? name : `${scope}/${name}`));
                 const existing = EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'];
                 return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
             }),
@@ -166,7 +162,9 @@ export function substituteValue(session: Session, planned: PlannedCheck, part: s
         .replaceAll(COMMAND_CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
-        .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(pointerPath(name, sub.scope)))
+        .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
+            toPlatform(sub.scope === '' ? name : `${sub.scope}/${name}`),
+        )
         .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
         .replaceAll('{root}', () => sub.root)
         .replaceAll('{indent}', () => String(sub.indent))

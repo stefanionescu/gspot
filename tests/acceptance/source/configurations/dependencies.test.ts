@@ -1,14 +1,14 @@
+// Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-// Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { INVALID } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { DEPENDENCIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
@@ -16,12 +16,6 @@ import { DEPENDENCIES_INIT } from '#tests/constants/acceptance/source/configurat
 const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
 const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
 const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
-
-// The scheme arrives as an argument, because a fixer rewrites a plain-text URL without TLS into one with it.
-function lockfileFrom(scheme: string): string {
-    return `{\n    "packages": { "node_modules/a": { "resolved": "${scheme}://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`;
-}
-
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
         check: 'integrity/install-policy',
@@ -43,21 +37,29 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
         check: 'integrity/lockfile-hosts',
         files: {
-            'package-lock.json': lockfileFrom('http'),
+            'package-lock.json': `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`,
         },
         expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
         corrected: {
-            'package-lock.json': lockfileFrom('https').replace('registry.example.test', 'registry.npmjs.org'),
+            'package-lock.json':
+                `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`.replace(
+                    'registry.example.test',
+                    'registry.npmjs.org',
+                ),
         },
     },
     {
         check: 'integrity/lockfile-hosts',
         files: {
-            'package-lock.json': lockfileFrom('https'),
+            'package-lock.json': `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`,
         },
         expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
         corrected: {
-            'package-lock.json': lockfileFrom('https').replace('registry.example.test', 'registry.npmjs.org'),
+            'package-lock.json':
+                `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`.replace(
+                    'registry.example.test',
+                    'registry.npmjs.org',
+                ),
         },
     },
     {

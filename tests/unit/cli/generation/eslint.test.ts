@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { selectorGroups } from '#cli/generation/eslint.ts';
 
 const store = { selector: 'CallExpression[callee.name=/Store$/]', message: 'Pass a selector to the store hook.' };

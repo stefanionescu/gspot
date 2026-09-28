@@ -10,10 +10,10 @@ import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { CHANGED_SHOWN } from '#cli/constants/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
-import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
-import type { Revision, Selections, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
-import type { FixReport, RunOptions, RunReport, Session, StageFilter } from '#cli/types/execution/execution.ts';
-import { refusalFor, revisionSelection, selectedPaths, unknownSelection } from '#cli/commands/check/selection.ts';
+import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
+import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
+import type { Session, FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/execution.ts';
+import { refusalFor, selectedPaths, unknownSelection, revisionSelection } from '#cli/commands/check/selection.ts';
 
 function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
     const failures = fixes.results.filter((result) => result.status === 'failed');

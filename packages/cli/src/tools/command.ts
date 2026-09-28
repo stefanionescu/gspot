@@ -1,18 +1,8 @@
 import { run } from '#cli/platform/spawn.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { TOOL_DEADLINE } from '#cli/constants/configurations.ts';
-import { MILLISECONDS, TOOL_ENV } from '#cli/constants/tools/tools.ts';
-import type { SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
-
-/**
- * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
- * @param view the policy view whose limits apply, or undefined for the default
- * @returns the deadline in seconds
- */
-export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
-    return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
-}
-/**
+import { TOOL_ENV, MILLISECONDS } from '#cli/constants/tools/tools.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts'; /**
  * Runs a tool command with the shared output environment and configured deadline.
  * @param view the policy view whose limits apply
  * @param command the expanded argument vector
@@ -35,11 +25,21 @@ export async function runToolCommand(
             duration: 0,
             isCanceled: true,
         };
-    const seconds = toolDeadlineSeconds(view);
+    const seconds = view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
     return run(command, {
         ...prepared,
         env: { ...TOOL_ENV, ...prepared.env },
         timeoutMs: seconds * MILLISECONDS,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
+}
+
+/**
+ * Resolve the shared deadline for checks, adapters, corrections, and installation commands.
+ * @param view the policy view whose limits apply, or undefined for the default
+ * @returns the deadline in seconds
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two modules read the deadline through it; one owner keeps the default.
+export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
+    return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
 }

@@ -1,10 +1,12 @@
 import { chmodSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PrepareHookCloneResult } from '#tests/types/results.ts';
 
 const CLONE_HOOK_FILES = {
     'pre-commit': {
@@ -48,7 +50,11 @@ format = "lines"
 `;
 
 /** Creates a committed hook project and a fresh clone with no local installation state. */
-export async function prepareHookClone(repository: string, clonePath: string, hookTool: keyof typeof CLONE_HOOK_FILES) {
+export async function prepareHookClone(
+    repository: string,
+    clonePath: string,
+    hookTool: keyof typeof CLONE_HOOK_FILES,
+): Promise<PrepareHookCloneResult> {
     const main = cliSource('main.ts');
     await createFileTree(repository, {
         '.gitignore': 'node_modules/\n.venv/\npre-commit-cache/\n.hook-observed\n',
@@ -100,7 +106,7 @@ export async function prepareHookClone(repository: string, clonePath: string, ho
 }
 
 /** Installs the clone's locked dependencies before invoking the public hook installation command. */
-export async function installHookClone(clone: Awaited<ReturnType<typeof prepareHookClone>>) {
+export async function installHookClone(clone: Awaited<ReturnType<typeof prepareHookClone>>): Promise<SpawnResult> {
     const { hookTool, main, clonePath } = clone;
     const installed = await run(
         hookTool === 'pre-commit'

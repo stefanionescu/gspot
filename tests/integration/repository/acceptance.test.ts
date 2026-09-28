@@ -1,8 +1,8 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { delimiter, join } from 'node:path';
+import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { chmodSync, readdirSync, symlinkSync } from 'node:fs';
 import { acceptanceArguments } from '#tests/support/acceptance.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';

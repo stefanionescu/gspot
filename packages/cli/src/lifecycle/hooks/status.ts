@@ -1,5 +1,5 @@
 // Whether the installed Git hooks still match what the journal recorded, with the line that says so.
-import { basename, posix } from 'node:path';
+import { posix, basename } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
 import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -11,15 +11,14 @@ import { hookLocation } from '#cli/repository/hook-location.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import type { Readiness, Status } from '#cli/types/lifecycle/hooks.ts';
+import type { Status, Readiness } from '#cli/types/lifecycle/hooks.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
-import { simpleGitDirectHook } from '#cli/generation/hooks/simple-git-hooks.ts';
-
+import { hookBody, hookPrefix, hookCommand } from '#cli/generation/hooks/scripts.ts';
 // Whether each native manager's integration is in place, by the tool that owns the hooks.
 const INTEGRATIONS: Record<string, Readiness> = {
     'pre-commit': (root, runner, binary) => hasConfiguration(root, preCommitConfiguration(root, runner, binary)),
@@ -50,7 +49,9 @@ function expectedCommand(status: Status, name: HookName): string | undefined {
     const fromHusky = status.husky?.get(name);
     if (fromHusky !== undefined) return fromHusky;
     if (status.policy.hooks?.tool !== 'simple-git-hooks') return undefined;
-    const directCommand = simpleGitDirectHook(status.root, name, status.policy.runner?.tool, binaryPath());
+    const directCommand = hookBody(name, false, [
+        hookCommand(name, status.policy.runner?.tool, binaryPath(), hookPrefix(status.root)),
+    ]);
     return directCommand.replaceAll("'", "'\"'\"'");
 }
 

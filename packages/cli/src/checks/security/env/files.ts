@@ -1,5 +1,5 @@
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { isEnvironmentFile } from '#cli/repository/file-classification.ts';
 
 /**

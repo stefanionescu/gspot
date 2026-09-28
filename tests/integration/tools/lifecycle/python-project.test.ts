@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -13,13 +13,13 @@ import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
 import { PYTHON_PROJECTS } from '#tests/constants/integration/tools/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
-import { readFileSync, writeFileSync, chmodSync, cpSync, realpathSync, existsSync } from 'node:fs';
+import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 import {
-    preparePythonProject,
-    installPythonProject,
-    pythonInstallSteps,
     pythonLockDrift,
+    pythonInstallSteps,
+    installPythonProject,
+    preparePythonProject,
 } from '#cli/tools/python-project.ts';
 
 test.each(PYTHON_PROJECTS)(

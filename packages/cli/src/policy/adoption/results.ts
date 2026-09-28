@@ -1,13 +1,14 @@
 import { asList } from '#cli/policy/adoption/source.ts';
 import { CARRIED_REASON } from '#cli/constants/policy/policy.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import type { AdoptionResult, AdoptedScope, AdoptedIgnore } from '#cli/types/policy/adoption.ts';
+import type { AdoptedScope, AdoptedIgnore, AdoptionResult } from '#cli/types/policy/adoption.ts';
 
 /**
  * The reason written on every entry carried from one authored file.
  * @param file the authored file
  * @returns the reason
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The reason written on every entry carried from one authored file. 7 files make 9 calls; one owner keeps that behavior in one place.
 export function reasonFor(file: string): string {
     return CARRIED_REASON.replaceAll('{{file}}', () => file);
 }

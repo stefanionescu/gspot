@@ -1,18 +1,18 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitPolicy } from '#cli/commands/policy.ts';
-import { preparePolicy, writePolicy } from '#cli/lifecycle/policy.ts';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
+import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
-    appendEntry,
-    appendIgnore,
-    appendList,
-    deleteKey,
-    removeEntries,
-    scopeHolder,
     setKey,
+    deleteKey,
+    appendList,
+    appendEntry,
+    scopeHolder,
+    appendIgnore,
+    removeEntries,
 } from '#cli/policy/write.ts';
 
 const text =
@@ -133,9 +133,25 @@ test('writePolicy > an ignore joins the entry with the same check, rule, and rea
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': text });
     const reason = 'Generated fixtures repeat on purpose.';
-    const same = (paths: string[]) => ({ check: 'bash/shellcheck', rule: 'SC2312', paths, reason });
-    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendIgnore(same(['fixtures/a.sh']))));
-    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendIgnore(same(['fixtures/b.sh', 'fixtures/a.sh']))));
+    writePolicy(
+        sandbox.path,
+        preparePolicy(
+            sandbox.path,
+            appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['fixtures/a.sh'], reason }),
+        ),
+    );
+    writePolicy(
+        sandbox.path,
+        preparePolicy(
+            sandbox.path,
+            appendIgnore({
+                check: 'bash/shellcheck',
+                rule: 'SC2312',
+                paths: ['fixtures/b.sh', 'fixtures/a.sh'],
+                reason,
+            }),
+        ),
+    );
     const merged = preparePolicy(
         sandbox.path,
         appendIgnore({ check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' }),
@@ -164,7 +180,7 @@ test.each([
         file_lines: { value: 100 },
         function_lines: { value: 20 },
     });
-    expect(preparePolicy(sandbox.path, () => undefined).policy.scopeTables['api']?.limits?.root).toMatchObject({
+    expect(preparePolicy(sandbox.path, () => {}).policy.scopeTables['api']?.limits?.root).toMatchObject({
         function_lines: { value: 20 },
     });
 });
@@ -177,7 +193,7 @@ test('writePolicy > a list that runs past 120 characters is written one item per
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(written.split('\n').every((line) => line.length <= 120)).toBe(true);
     expect(written).toContain('banned_terms = [\n    "forbidden-term-0",\n');
-    expect(preparePolicy(sandbox.path, () => undefined).policy.naming.banned_terms).toHaveLength(16);
+    expect(preparePolicy(sandbox.path, () => {}).policy.naming.banned_terms).toHaveLength(16);
 });
 
 test('writePolicy > a dry run writes nothing', async () => {

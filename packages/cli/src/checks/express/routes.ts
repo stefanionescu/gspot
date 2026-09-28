@@ -1,6 +1,6 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { scopeImports } from '#cli/checks/structure/imports.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**
  * Reports routes without a test that imports their resolved module in the same scope.
@@ -15,19 +15,20 @@ export async function routesTested(input: EngineInput): Promise<Finding[]> {
     const isRoute = pathMatcher(routes);
     const isTest = pathMatcher(tests);
     const index = await scopeImports(input);
-    const local = (path: string): string => (input.scope === '' ? path : path.slice(input.scope.length + 1));
     const untested = index.paths.filter(
         (path) =>
-            isRoute(local(path)) &&
-            !isTest(local(path)) &&
-            [...(index.importers.get(path) ?? [])].every((importer) => !isTest(local(importer))),
+            isRoute(input.scope === '' ? path : path.slice(input.scope.length + 1)) &&
+            !isTest(input.scope === '' ? path : path.slice(input.scope.length + 1)) &&
+            [...(index.importers.get(path) ?? [])].every(
+                (importer) => !isTest(input.scope === '' ? importer : importer.slice(input.scope.length + 1)),
+            ),
     );
     return untested.map((path) => ({
         check: input.spec.name,
         file: path,
         line: 1,
         rule: 'untested-route',
-        message: `No test in this scope imports ${local(path)}.`,
+        message: `No test in this scope imports ${input.scope === '' ? path : path.slice(input.scope.length + 1)}.`,
         fixable: false,
     }));
 }

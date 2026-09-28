@@ -1,11 +1,11 @@
 import { createRule } from '#plugin/definition.ts';
-import { dirname, join, resolve } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { EXTENSIONS } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { isIndexFile, lintedFile } from '#plugin/files.ts';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { lintedFile, isIndexFile } from '#plugin/files.ts';
 import { parse } from '@typescript-eslint/typescript-estree';
+import { statSync, existsSync, readFileSync } from 'node:fs';
 
 function moduleFile(importer: string, source: string): string | undefined {
     if (!source.startsWith('.')) return undefined;

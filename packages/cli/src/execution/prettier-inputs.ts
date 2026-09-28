@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { ignoredPathsResponse } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 /**
  * Resolve native ignore patterns before either the checker or its fixer receives file arguments.

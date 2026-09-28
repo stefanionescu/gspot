@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { statSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
-import { findRoot, head, isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
+import { head, findRoot, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 test('repository file discovery > excluded links are omitted before resolving external targets', async () => {
     await using sandbox = await testdir();

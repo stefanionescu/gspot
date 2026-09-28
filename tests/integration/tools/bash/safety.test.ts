@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('the Bash port example accepts decimal values and rejects syntax and range errors', async () => {
     const source = readFileSync(

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
-import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { readFileSync, symlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import { symlinkSync, readFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';

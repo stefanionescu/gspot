@@ -6,7 +6,7 @@ import { SkippedCheckError } from '#cli/checks/result.ts';
 import { FAILED_CHECK } from '#cli/constants/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

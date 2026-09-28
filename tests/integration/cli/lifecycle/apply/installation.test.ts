@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a proposal whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();

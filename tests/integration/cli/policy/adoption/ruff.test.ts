@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
@@ -47,7 +47,7 @@ test('Ruff adoption reads its declared pyproject table without retiring project 
     expect(carried.unread).toStrictEqual([]);
     expect(carried.removed).toStrictEqual([]);
     expect(carried.tools.get('ruff')?.ignores).toStrictEqual([
-        { check: 'python/ruff', rule: 'F401', paths: ['backend/**'], reason: expect.any(String) },
+        { check: 'python/ruff', rule: 'F401', paths: ['backend/**'], reason: expect.any(String) as string },
     ]);
     expect(carried.retained).toStrictEqual([{ path, note: textContaining('tool.ruff') }]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
@@ -135,6 +135,6 @@ test.each([
         tools: { ruff: { docstring_convention: convention } },
     });
     expect(carried.tools.get('ruff')?.settings).toBeUndefined();
-    expect(carried.retained).toContainEqual({ path: 'config/base.toml', note: expect.any(String) });
+    expect(carried.retained).toContainEqual({ path: 'config/base.toml', note: expect.any(String) as string });
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
 });

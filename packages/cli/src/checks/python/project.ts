@@ -7,14 +7,14 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { runCheckCommand, runToolCheck } from '#cli/execution/tool/runner.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import type { CheckResult, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { runToolCheck, runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
+    PIP_INSTALL,
     BROKEN_CONTRACT,
     INSTALL_HOLDERS,
-    PIP_INSTALL,
     PYTHON_MANIFEST,
     REQUIREMENTS_FILE,
 } from '#cli/constants/checks/python.ts';
@@ -29,6 +29,7 @@ const dependencyConfiguration = z.object({
         })
         .default({ deptry: { extend_exclude: [] } }),
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four checks build the finding record; one owner keeps its shape.
 function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
     return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }

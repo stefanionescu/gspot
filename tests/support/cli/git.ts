@@ -8,6 +8,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
  * @param environment extra variables
  * @returns the exit code and both streams
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Runs git with a throwaway identity. 90 files make 142 calls; one owner keeps that behavior in one place.
 export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = Bun.spawnSync(
         [

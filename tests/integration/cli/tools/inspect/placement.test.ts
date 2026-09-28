@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { RUNS } from '#tests/constants/cli.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { chmodSync, existsSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
+import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
 test('managed executable discovery refuses an external link before inspecting and accepts an internal replacement', async () => {
     await using directory = await testdir();

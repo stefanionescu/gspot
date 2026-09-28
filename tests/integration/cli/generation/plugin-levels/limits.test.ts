@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test.each(['recommended', 'all'])(
@@ -122,7 +122,7 @@ test.each(['recommended', 'all'])(
                 callbacks
                     .flatMap((file) => file.messages)
                     .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
-            ).toStrictEqual([]);
+            ).toMatchObject(level === 'all' ? [{ line: 1, column: 17, messageId: 'trivial' }] : []);
             const nested = await eslint.lintText(
                 'export function start(items) { return items.map(item => { inspect(item); validate(item); return item; }); }',
                 { filePath },

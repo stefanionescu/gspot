@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-import { testManifest } from '#tests/support/cli/tooling.ts';
+import { test, expect } from 'bun:test';
 import { PINNED_HEADER } from '#tests/constants/unit/cli/configurations.ts';
 import { validateManifests } from '#cli/configurations/manifest-problems.ts';
-import { configurationManifests, parseManifest } from '#cli/configurations/manifests.ts';
+import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('loading two configurations refuses duplicate executable check ownership', () => {
     const definition =
@@ -24,7 +23,10 @@ test('loading two configurations refuses duplicate executable check ownership', 
 test.each(['reported_by', 'takes_over'] as const)(
     'manifest collection rejects invalid %s ownership and accepts a runnable owner',
     (field) => {
-        const project = testManifest('project');
+        const project = parseManifest(
+            `[configuration]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+            `configurations/project`,
+        );
         const checks = `
 [[checks]]
 example = "A rejected input is corrected before rerunning the parser."
@@ -66,7 +68,10 @@ help = "Correct the reported input."
 );
 
 test('manifest collection refuses circular replacement before either check can suppress execution', () => {
-    const project = testManifest('project');
+    const project = parseManifest(
+        `[configuration]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `configurations/project`,
+    );
     const original = configurationManifests()
         .get('bash')!
         .checks.find((check) => check.command !== undefined)!;
@@ -96,8 +101,14 @@ test.each(['missing/check', 'bash/shfmt'])(
 );
 
 test('check references require one standalone built-in owner and preserve its definition', () => {
-    const owner = testManifest('owner');
-    const consumer = testManifest('consumer');
+    const owner = parseManifest(
+        `[configuration]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `configurations/owner`,
+    );
+    const consumer = parseManifest(
+        `[configuration]\nname = "consumer"\nkind = "language"\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `configurations/consumer`,
+    );
     const spec = configurationManifests()
         .get('structure')!
         .checks.find((check) => check.name === 'integrity/allowlists-match')!;

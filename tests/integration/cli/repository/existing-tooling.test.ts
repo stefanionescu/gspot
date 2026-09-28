@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test('hook discovery preserves path whitespace and refuses malformed Git configuration', async () => {

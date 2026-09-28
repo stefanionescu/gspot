@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { LICENSE_NAMES } from '#cli/constants/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding per scope without a README.md, and one when the root has no license file.

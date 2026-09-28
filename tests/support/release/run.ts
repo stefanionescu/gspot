@@ -5,16 +5,14 @@ import { publishRelease } from '#tests/support/release/published.ts';
 import { startRegistry, settleRegistry } from '#tests/support/registry/lifecycle.ts';
 
 const controller = new AbortController();
-const interrupt = () => {
+process.on('SIGINT', () => {
     process.exitCode = 130;
     controller.abort();
-};
-const terminate = () => {
+});
+process.on('SIGTERM', () => {
     process.exitCode = 143;
     controller.abort();
-};
-process.on('SIGINT', interrupt);
-process.on('SIGTERM', terminate);
+});
 try {
     const registry = await startRegistry(0, undefined, controller.signal);
     let executionError: unknown;
@@ -42,6 +40,12 @@ try {
     }
     await settleRegistry(registry, executionError);
 } finally {
-    process.removeListener('SIGINT', interrupt);
-    process.removeListener('SIGTERM', terminate);
+    process.removeListener('SIGINT', () => {
+        process.exitCode = 130;
+        controller.abort();
+    });
+    process.removeListener('SIGTERM', () => {
+        process.exitCode = 143;
+        controller.abort();
+    });
 }

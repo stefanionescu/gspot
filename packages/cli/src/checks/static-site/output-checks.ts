@@ -4,15 +4,11 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { isAbsolute, join, relative as relativePath } from 'node:path';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { join, isAbsolute, relative as relativePath } from 'node:path';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { SiteBuild, SizeLimit } from '#cli/types/checks/static-site.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/constants/checks/static-site.ts';
-
-function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
 
 function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
     const path = relativePath(build.cwd, absolute).replaceAll('\\', '/');
@@ -56,9 +52,14 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
     return report.links
         .filter((link) => link.state === 'BROKEN')
-        .map((link) =>
-            finding(input, link.parent ?? '', 'broken-link', `${link.url} answers ${String(link.status ?? 0)}.`),
-        );
+        .map((link) => ({
+            check: input.spec.name,
+            file: link.parent ?? '',
+            line: 1,
+            rule: 'broken-link',
+            message: `${link.url} answers ${String(link.status ?? 0)}.`,
+            fixable: false,
+        }));
 }
 
 function pageOf(url: string): string[] {
@@ -98,9 +99,14 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
     if (result.code === 1 && files.every((file) => file.messages.length === 0))
         throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
     return files.flatMap((file) =>
-        file.messages.map((entry) =>
-            finding(input, relative(input, build, file.filePath), entry.ruleId, entry.message, entry.line),
-        ),
+        file.messages.map((entry) => ({
+            check: input.spec.name,
+            file: relative(input, build, file.filePath),
+            line: entry.line,
+            rule: entry.ruleId,
+            message: entry.message,
+            fixable: false,
+        })),
     );
 }
 
@@ -133,14 +139,14 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
         .parse(JSON.parse(result.stdout));
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
     return report.flatMap((sheet) =>
-        sheet.rejected.map((selector) =>
-            finding(
-                input,
-                relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
-                'dead-selector',
-                `No built page uses the selector ${selector.trim()}.`,
-            ),
-        ),
+        sheet.rejected.map((selector) => ({
+            check: input.spec.name,
+            file: relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
+            line: 1,
+            rule: 'dead-selector',
+            message: `No built page uses the selector ${selector.trim()}.`,
+            fixable: false,
+        })),
     );
 }
 
@@ -149,6 +155,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each broken link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The links between the built pages, their stylesheets, and their fragments. 3 files make 0 calls; one owner keeps that behavior in one place.
 export function internalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, false);
 }
@@ -158,6 +165,7 @@ export function internalLinks(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each broken link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every link of the built pages, the ones that leave the site included. 1 files make 0 calls; one owner keeps that behavior in one place.
 export function externalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, true);
 }
@@ -180,12 +188,14 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
         return weight <= limit.kb
             ? []
             : [
-                  finding(
-                      input,
-                      limit.paths.join(', '),
-                      'size',
-                      `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
-                  ),
+                  {
+                      check: input.spec.name,
+                      file: limit.paths.join(', '),
+                      line: 1,
+                      rule: 'size',
+                      message: `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
+                      fixable: false,
+                  },
               ];
     });
 }
@@ -209,18 +219,23 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
-        .map((url) =>
-            finding(
-                input,
-                'sitemap.xml',
-                'missing-page',
-                `The sitemap lists ${url}, and the build wrote no such page.`,
-            ),
-        );
+        .map((url) => ({
+            check: input.spec.name,
+            file: 'sitemap.xml',
+            line: 1,
+            rule: 'missing-page',
+            message: `The sitemap lists ${url}, and the build wrote no such page.`,
+            fixable: false,
+        }));
     const unlisted = [...files]
         .filter((path) => path.endsWith('.html') && !listed.has(path) && !isLeftOut(path))
-        .map((path) =>
-            finding(input, path, 'unlisted-page', 'The build wrote this page, and the sitemap does not list it.'),
-        );
+        .map((path) => ({
+            check: input.spec.name,
+            file: path,
+            line: 1,
+            rule: 'unlisted-page',
+            message: 'The build wrote this page, and the sitemap does not list it.',
+            fixable: false,
+        }));
     return [...missing, ...unlisted];
 }

@@ -1,26 +1,22 @@
 // Planted repository for the swift configuration: a force cast, doubled spaces, a snake case function, and the structural defects.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { SWIFT_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
-import { BELOW, COPIES, FORWARD, STRUCTURAL, TINY } from '#tests/constants/acceptance/source/configurations/swift.ts';
+import { TINY, BELOW, COPIES, FORWARD, STRUCTURAL } from '#tests/constants/acceptance/source/configurations/swift.ts';
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
 const SNAKE = CLEAN_SWIFT.replace('func greeting', () => 'func make_greeting');
-
-const reader = (name: string): string =>
-    `import Foundation\n\n/// Reads one variable.\nfunc ${name}() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`;
-
 const CASES: FindingCase[] = [
     {
         check: 'swift/swiftlint',
@@ -59,12 +55,17 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'swift/env-access-owner',
-        files: { 'Sources/App/Home.swift': reader('homeFolder'), 'Sources/App/User.swift': reader('userFolder') },
+        files: {
+            'Sources/App/Home.swift': `import Foundation\n\n/// Reads one variable.\nfunc homeFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`,
+            'Sources/App/User.swift': `import Foundation\n\n/// Reads one variable.\nfunc userFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`,
+        },
         expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
     },
     {
         check: 'swift/env-access-owner',
-        files: { 'Sources/App/Home.swift': reader('homeFolder') },
+        files: {
+            'Sources/App/Home.swift': `import Foundation\n\n/// Reads one variable.\nfunc homeFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`,
+        },
         policy: '[architecture]\nroles = { env = "Sources/App/Environment.swift" }\n',
         expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
     },

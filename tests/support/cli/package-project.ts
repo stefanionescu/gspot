@@ -1,13 +1,21 @@
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import type { RegistryPackage } from '#tests/types/registry.ts';
 import type { PackageClient } from '#tests/types/integration/tools.ts';
 import { LOCKS } from '#tests/constants/integration/tools/packages.ts';
-import { mkdirSync, writeFileSync, readFileSync, statSync } from 'node:fs';
+import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createPackageRegistry } from '#tests/support/registry/packages.ts';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
+import type { ReadPackageInputsResult, CreatePackageProjectResult } from '#tests/types/results.ts';
+
+// The authored files every package project starts from.
+const AUTHORED_FILES = {
+    'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
+    'source.js': 'export const greeting="hello";',
+    'node_modules/authored.txt': 'keep project dependencies',
+};
 
 const PRETTIER: RegistryPackage = {
     name: 'prettier',
@@ -31,7 +39,7 @@ const PACKAGES: Record<'mise' | 'none', RegistryPackage[]> = {
 const RUNNER_POLICY = { mise: '[runner]\ntool = "mise"\n', none: '' };
 
 /** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
-export function readPackageInputs(root: string, client: PackageClient) {
+export function readPackageInputs(root: string, client: PackageClient): ReadPackageInputsResult {
     const lockPath = join(root, '.gspot', LOCKS[client]);
     const ownershipPath = join(root, '.gspot/state/ownership.json');
     return {
@@ -45,7 +53,11 @@ export function readPackageInputs(root: string, client: PackageClient) {
 }
 
 /** Creates an authenticated registry and an authored project for a native package manager. */
-export async function createPackageProject(client: PackageClient, projectPath: string, runner: 'mise' | 'none') {
+export async function createPackageProject(
+    client: PackageClient,
+    projectPath: string,
+    runner: 'mise' | 'none',
+): Promise<CreatePackageProjectResult> {
     const resources = new AsyncDisposableStack();
     try {
         const directory = resources.use(await testdir());
@@ -72,12 +84,10 @@ export async function createPackageProject(client: PackageClient, projectPath: s
         });
         await createFileTree(root, {
             [projectPath]: rootPackage,
-            'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
             ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
             '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
             'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["formatting"]\n${RUNNER_POLICY[runner]}[rules]\ninstall = false\n`,
-            'source.js': 'export const greeting="hello";',
-            'node_modules/authored.txt': 'keep project dependencies',
+            ...AUTHORED_FILES,
         });
         const yarnConfiguration =
             client === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2

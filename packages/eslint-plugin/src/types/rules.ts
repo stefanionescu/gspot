@@ -64,6 +64,7 @@ export type ImportVerdict = { messageId: ImportDirectionMessages; data: Record<s
 export type ImportDirectionOptions = [
     { roles?: ImportDirectionRoles; aliases?: Record<string, string>; contracts?: string[]; scope?: string },
 ];
+export type LayoutMessages = 'layout' | 'names';
 export type MaxBarrelReexportsOptions = [{ max?: number }];
 export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];
 export type RegistryInstanceOnlyOptions = [{ registryFiles?: string[] }];
@@ -74,5 +75,3 @@ export type NoPrefixCollisionsOptions = [
 export type NoIndexImportsOptions = [{ allow?: string[]; patterns?: string[] }];
 export type CrossFolderImportsOptions = [{ scope?: string[]; aliases?: Record<string, string> }];
 export type NoReexportsOptions = [{ allowIndex?: boolean }];
-
-export type FunctionUsage = { required: boolean; calls: number };

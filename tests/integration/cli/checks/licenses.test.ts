@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import * as tools from '#cli/execution/tool/runner.ts';
@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import { chmodSync, existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

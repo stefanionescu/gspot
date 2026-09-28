@@ -9,9 +9,9 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { sarifLog, placeOf } from '#cli/checks/security/sarif.ts';
+import { placeOf, sarifLog } from '#cli/checks/security/sarif.ts';
 import type { AcceptedResult } from '#cli/types/checks/security.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { CODEQL_TOOL, DEFAULT_SUITE } from '#cli/constants/checks/security.ts';
 
 async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {

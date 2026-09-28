@@ -4,8 +4,8 @@ import { mergeValue } from '#cli/policy/settings.ts';
 import type { ExposedSettings } from '#cli/types/policy/policy.ts';
 import { OVERRIDING_KINDS } from '#cli/constants/policy/policy.ts';
 import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/constants/configurations.ts';
-import { integrationSettingSchemas, rootSettingSchemas } from '#cli/policy/schema.ts';
+import { TOOL_DEADLINE, COVERAGE_STRICT } from '#cli/constants/configurations.ts';
+import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(

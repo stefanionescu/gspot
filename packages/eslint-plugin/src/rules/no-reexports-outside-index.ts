@@ -1,5 +1,5 @@
 import { createRule } from '#plugin/definition.ts';
-import { isIndexFile, lintedFile } from '#plugin/files.ts';
+import { lintedFile, isIndexFile } from '#plugin/files.ts';
 
 export const noReexportsOutsideIndex = createRule<[], 'outsideIndex'>({
     name: 'no-reexports-outside-index',

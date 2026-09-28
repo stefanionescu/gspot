@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';

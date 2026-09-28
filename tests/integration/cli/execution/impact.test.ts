@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -8,9 +8,9 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
@@ -48,6 +48,7 @@ test('repository checks retain nested inputs and report their defects once at th
     expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });
     expect(result.code, result.stderr).toBe(0);

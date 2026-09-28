@@ -1,11 +1,13 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import type { Detect } from '#cli/types/commands/init.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
 const manifests = configurationManifests();
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const selected = (...names: string[]) => names.map((name) => manifests.get(name)!);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const file = (path: string): TrackedFile => ({
     path,
     prefix: Buffer.alloc(0),
@@ -14,6 +16,7 @@ const file = (path: string): TrackedFile => ({
     executable: false,
     size: 1,
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const facts = (dependencies: Record<string, string>): ManifestFacts => ({
     path: 'package.json',
     kind: 'package.json',

@@ -1,7 +1,7 @@
+// NestJS fixtures cover valid injection and modules. Defects cover circular imports, unmatched route parameters, and disabled decorators.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-// NestJS fixtures cover valid injection and modules. Defects cover circular imports, unmatched route parameters, and disabled decorators.
+import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
@@ -11,12 +11,12 @@ import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 
 import {
-    CONTROLLER,
     GREETER,
-    NESTJS_DEPENDENCIES,
+    CONTROLLER,
+    REPOSITORY,
     NESTJS_MODULE,
     NESTJS_TSCONFIG,
-    REPOSITORY,
+    NESTJS_DEPENDENCIES,
 } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 const REACHES_ROWS = CONTROLLER.replace(
@@ -66,6 +66,7 @@ const CASES: FindingCase[] = [
     },
 ];
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const installNest = (root: string): Promise<Record<string, string>> =>
     installSandbox(root, {
         configurations: ['typescript', 'nestjs'],

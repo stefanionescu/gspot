@@ -1,7 +1,7 @@
-import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 // Table settings accept TOML input. Unparsable values and quoted policy tables are rejected.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
@@ -46,7 +46,10 @@ describe('gspot set', () => {
                     check: 'integrity/policy',
                     status: 'fail',
                     findings: [
-                        { file: 'gspot.toml', message: expect.stringContaining('holds a table written inside quotes') },
+                        {
+                            file: 'gspot.toml',
+                            message: expect.stringContaining('holds a table written inside quotes') as unknown,
+                        },
                     ],
                 },
             ]);

@@ -7,6 +7,7 @@ import { QUIET_INIT } from '#tests/constants/cli.ts';
  * @param without the recommended configurations left out
  * @returns the argument list
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init arguments that select the named configurations and leave the named recommendations out. 19 files make 23 calls; one owner keeps that behavior in one place.
 export function initArgs(configurations: string[], without: string[] = []): string[] {
     return [
         'init',

@@ -1,6 +1,7 @@
 import { tester } from '#tests/support/plugin/tester.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 const lines = (count: number) =>
     Array.from({ length: count }, (_, index) => `export { a${String(index)} } from './a${String(index)}';`).join('\n');
 

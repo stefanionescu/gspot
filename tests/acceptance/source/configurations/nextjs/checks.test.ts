@@ -1,11 +1,11 @@
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { installedNextProject, nextManifest } from '#tests/support/cli/nextjs.ts';
+import { installedNextProject } from '#tests/support/cli/nextjs.ts';
 import { NEXT_PAGE, NEXT_TRANSLATIONS, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 const CASES: FindingCase[] = [
@@ -27,7 +27,9 @@ const CASES: FindingCase[] = [
     },
     {
         check: 'integrity/dependency-alignment',
-        files: { 'package.json': nextManifest('18.3.1') },
+        files: {
+            'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "18.3.1"\n    }\n}\n`,
+        },
         expected: { file: 'package.json', rule: 'version-pair', line: 1 },
     },
     {

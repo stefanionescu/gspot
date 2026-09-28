@@ -5,17 +5,17 @@ import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
-import { LIMITS_PREFIX } from '#cli/constants/policy/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import { asRecord, policyTables, policyValue, specFor } from '#cli/policy/settings.ts';
+import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/constants/policy/policy.ts';
+import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 
 import type {
-    ExposedSettings,
-    PathSegment,
     Policy,
-    PolicyProblem,
     SpecMatch,
+    PathSegment,
     WrittenValue,
+    PolicyProblem,
+    ExposedSettings,
 } from '#cli/types/policy/policy.ts';
 
 function unknownKeyProblem(surface: ExposedSettings, key: string): string {
@@ -27,7 +27,7 @@ function unknownKeyProblem(surface: ExposedSettings, key: string): string {
             limits.map((candidate) => candidate.slice(LIMITS_PREFIX.length)),
         );
     }
-    const depth = key.startsWith('tools.') ? 2 : 1;
+    const depth = key.startsWith('tools.') ? TOOL_KEY_DEPTH : 1;
     const prefix = key.split('.').slice(0, depth).join('.');
     const known = all
         .filter((candidate) => candidate.startsWith(`${prefix}.`))

@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs';
 // Child processes of the tests: waiting for one to leave, and the source paths a child imports beside its mocks.
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /** Observe a child PID disappearing, with bounded cleanup if supervision fails. */
@@ -24,6 +24,7 @@ export async function waitForExit(pid: number): Promise<void> {
  * @param path the module path below packages/cli/src
  * @returns the absolute path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five test files locate a CLI source file through it; one owner keeps the path.
 export function cliSource(path: string): string {
     return fileURLToPath(new URL(`../../../packages/cli/src/${path}`, import.meta.url));
 }
@@ -41,7 +42,7 @@ export function captureChild(
         Bun.Subprocess<Bun.Spawn.Writable, 'pipe', 'pipe'>,
         'stdout' | 'stderr' | 'exitCode' | 'kill' | 'exited'
     >,
-) {
+): { output: Promise<string>; errors: Promise<string>; [Symbol.asyncDispose](): Promise<void> } {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
     return {

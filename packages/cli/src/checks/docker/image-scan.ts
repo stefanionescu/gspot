@@ -7,11 +7,14 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { scopeFile } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/constants/checks/docker.ts';
 
+// The Trivy JSON report version this reader understands.
+const TRIVY_SCHEMA_VERSION = 2;
+
 const imageReportSchema = z.object({
-    SchemaVersion: z.literal(2),
+    SchemaVersion: z.literal(TRIVY_SCHEMA_VERSION),
     ArtifactName: z.string().min(1),
     Results: z
         .array(

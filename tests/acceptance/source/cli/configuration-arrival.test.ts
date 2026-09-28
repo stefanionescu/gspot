@@ -1,19 +1,19 @@
-import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { readdirSync, symlinkSync } from 'node:fs';
 // Adding a configuration changes the next explicit check through its ESLint fragment.
+import { join, delimiter } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { readdirSync, symlinkSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 
 import {
+    LOOSE,
     CONFIGURATION_ARRIVAL_INIT,
     CONFIGURATION_ARRIVAL_PACKAGE,
-    LOOSE,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

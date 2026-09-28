@@ -1,12 +1,12 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import { KEY_GROUP } from '#cli/constants/checks/security.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
     ENV_KEY_LINE,
-    ENV_READ_EXTENSIONS,
     ENV_READ_PATTERNS,
     ENV_TEMPLATE_NAMES,
+    ENV_READ_EXTENSIONS,
 } from '#cli/constants/repository/repository.ts';
 
 function readPatterns(input: EngineInput): RegExp[] {

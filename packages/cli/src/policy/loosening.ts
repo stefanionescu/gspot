@@ -1,5 +1,5 @@
 import type { SettingSpec } from '#cli/types/configurations.ts';
-import { MINIMUM_REASON_WORDS, REFUSED_REASONS } from '#cli/constants/policy/policy.ts';
+import { REFUSED_REASONS, MINIMUM_REASON_WORDS } from '#cli/constants/policy/policy.ts';
 
 function isNumberLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

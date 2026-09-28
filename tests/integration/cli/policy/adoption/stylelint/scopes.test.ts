@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import stylelint from 'stylelint';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { readFileSync, symlinkSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { symlinkSync, readFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { STYLELINT_TOOLING } from '#tests/constants/cli.ts';

@@ -72,3 +72,5 @@ export const SWIFT_GRAMMAR = {
     url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
     checksum: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
 } as const;
+/** Where the arguments of the command begin: after the runtime and the script. */
+export const ARGUMENT_START = 2;

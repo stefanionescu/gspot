@@ -5,10 +5,10 @@ import type { SqlFile } from '#cli/types/parsers/sql.ts';
 import type { ToolContext } from '#cli/types/tools/tools.ts';
 import type { configurationSchema } from '#cli/checks/licenses.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
-import type { checkResultSchema, findingSchema } from '#cli/checks/result.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import type { findingSchema, checkResultSchema } from '#cli/checks/result.ts';
 import type { Defined, MergedView, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Repository, ScopeEntry, SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { Repository, ScopeEntry, TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
 
 export type SqlSource = { path: string; text: string };
 export type FunctionOption = {

@@ -1,10 +1,13 @@
 import { z } from 'zod';
 import { policySchema } from '#cli/policy/schema.ts';
 
+// A comparison reads one configuration, or a before and an after.
+const MAX_SOURCES = 2;
+
 export const eslintPreviewRequest = z.strictObject({
     root: z.string().min(1),
     path: z.string().min(1),
-    sources: z.array(z.string()).min(1).max(2),
+    sources: z.array(z.string()).min(1).max(MAX_SOURCES),
 });
 export const eslintPreviewResponse = z.array(z.record(z.string(), z.json()));
 
