@@ -18,7 +18,7 @@ test('the Vitest harness folder places test support and closes it to runtime cod
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["vitest"]\n[rules]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
+            'version = 1\nlevel = "all"\nkits = ["vitest"]\n[guides]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
     });
     const eslint = await generatedEslint(sandbox.path);
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toMatchObject([
@@ -34,7 +34,7 @@ test('without a test runner no folder is the harness, so support files are place
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n[guides]\ninstall = false\n',
     });
     const eslint = await generatedEslint(sandbox.path);
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toStrictEqual([]);

@@ -82,7 +82,7 @@ test('a manifest can declare its help command status without accepting other fai
 test('tool observations distinguish pins and refresh private libraries in the next session', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
     const session = await openSession(sandbox.path);
@@ -100,7 +100,7 @@ test('tool observations distinguish pins and refresh private libraries in the ne
 test('a command shares version observations and the next session inspections again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });

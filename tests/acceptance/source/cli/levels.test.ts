@@ -50,7 +50,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash", "naming"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n',
             'entry.sh': 'shell_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--no-cache', '--json'];
@@ -97,7 +97,7 @@ test.each([
 ])('invalid %s value %s preserves the policy', async (key, value) => {
     await using sandbox = await testdir();
     const policyPath = join(sandbox.path, 'gspot.toml');
-    const policy = 'version = 1\nconfigurations = ["bash", "naming"]\nextra_checks = ["naming/identifiers"]\n';
+    const policy = 'version = 1\nkits = ["bash", "naming"]\nextra_checks = ["naming/identifiers"]\n';
     await Bun.write(policyPath, policy);
     const refused = await run(sandbox.path, ['set', key, value]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

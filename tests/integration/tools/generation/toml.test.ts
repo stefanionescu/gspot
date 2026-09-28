@@ -6,7 +6,7 @@ import { setKey, proposePolicy } from '#cli/policy/write.ts';
 
 test('policy edits preserve trailing array commas without emitting unsupported inline-table commas', async () => {
     await using sandbox = await testdir();
-    const original = '# Authored selection.\nversion = 1\nconfigurations = ["security",]\n';
+    const original = '# Authored selection.\nversion = 1\nkits = ["security",]\n';
     const entry = {
         rule: 'js/file-system-race',
         paths: ['fixture.js'],

@@ -87,7 +87,7 @@ test.each(LICENSE_SCOPES)(
             packages_allowed: EXPECTED_PACKAGES,
         });
         expect(carried.tools.size).toBe(scope === 'nested' ? 0 : 1);
-        expect(carried.scopes.get('project')?.configurations).toStrictEqual(
+        expect(carried.scopes.get('project')?.kits).toStrictEqual(
             scope === 'nested' ? ['licenses'] : undefined,
         );
     },
@@ -114,8 +114,8 @@ test.each(LICENSE_SCOPES)(
         await Bun.write(
             join(root, 'gspot.toml'),
             proposeText({
-                configurations: scope === 'root' ? ['licenses'] : [],
-                scopes: [{ path: 'sibling', configurations: ['licenses'] }],
+                kits: scope === 'root' ? ['licenses'] : [],
+                scopes: [{ path: 'sibling', kits: ['licenses'] }],
                 carried,
                 hooks: 'none',
                 ci: 'none',

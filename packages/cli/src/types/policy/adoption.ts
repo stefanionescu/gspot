@@ -23,7 +23,7 @@ export type AdoptedFormatting = {
     nativeDefaults?: boolean;
     editorconfig?: NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted'];
 };
-export type AdoptedScope = { configurations: string[]; tools: Record<string, TomlTable> };
+export type AdoptedScope = { kits: string[]; tools: Record<string, TomlTable> };
 export type AdoptionResult = {
     tools: Map<string, { settings: TomlTable; ignores: AdoptedIgnore[] }>;
     scopes: Map<string, AdoptedScope>;

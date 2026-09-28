@@ -23,14 +23,14 @@ describe('uninstall', () => {
             await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--configurations',
+                '--kits',
                 'bash',
                 '--runner',
                 'bun',
                 '--hooks',
                 'lefthook',
                 '--no-ci',
-                '--no-rules',
+                '--no-guides',
                 '--no-install',
             ]);
             const installed = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {

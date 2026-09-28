@@ -27,7 +27,7 @@ test(
             }));
             const { initCommand } = await import(${JSON.stringify(command)});
             try {
-                await initCommand({ cwd: process.cwd(), configurations: ['formatting'], yes: false, json: false, isDryRun: false, install: false, allowDirty: true, hooks: 'none', ci: 'none', runner: 'none', rules: 'no', format: 'keep' });
+                await initCommand({ cwd: process.cwd(), kits: ['formatting'], yes: false, json: false, isDryRun: false, install: false, allowDirty: true, hooks: 'none', ci: 'none', runner: 'none', rules: 'no', format: 'keep' });
             } catch (error) { console.error(error.message); process.exitCode = 2; }
         `;
         const result = await runProcess([process.execPath, '--eval', child], { cwd: sandbox.path });

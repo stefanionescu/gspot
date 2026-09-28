@@ -40,7 +40,7 @@ if (process.platform !== 'win32')
 test('structural rule caching confines writes and preserves later rule edits', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n[runner]\ntool = "mise"\n',
+        'project/gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n[runner]\ntool = "mise"\n',
         'project/example.sh': 'if true; then echo yes; fi\n',
         'project/.gspot/.keep': '',
         'outside/ast-grep/branches.yml': 'external rule\n',

@@ -28,5 +28,5 @@ export type IgnoreOptions = {
     remove: boolean;
 };
 export type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
-export type AddOptions = { cwd: string; isDryRun: boolean; configurations: string[]; scope?: string };
-export type RemoveOptions = { cwd: string; isDryRun: boolean; configuration: string; scope?: string };
+export type AddOptions = { cwd: string; isDryRun: boolean; kits: string[]; scope?: string };
+export type RemoveOptions = { cwd: string; isDryRun: boolean; kit: string; scope?: string };

@@ -55,7 +55,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["commits"]\nlevel = "all"\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["commits"]\nlevel = "all"\n[guides]\ninstall = false\n',
         });
         for (const command of ['apply', 'install']) {
             const prepared = await run(sandbox.path, [command]);
@@ -117,7 +117,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["commits"]\nlevel = "all"\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["commits"]\nlevel = "all"\n[guides]\ninstall = false\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const applied = await run(sandbox.path, ['apply']);
@@ -161,8 +161,7 @@ test(
         await using sandbox = await testdir();
         const source = join(sandbox.path, 'source');
         await createFileTree(source, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["bash", "commits"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash", "commits"]\n[guides]\ninstall = false\n',
             'source.sh': 'echo base\n',
         });
         expect(git(source, ['init', '-q']).code).toBe(0);

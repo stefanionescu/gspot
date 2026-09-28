@@ -24,10 +24,10 @@ test.each([
         'app/deep/sample.css': 'a {}\n',
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['css'],
+            kits: ['css'],
             scope: [
-                { path: 'app', configurations: [] },
-                { path: 'app/deep', configurations: [] },
+                { path: 'app', kits: [] },
+                { path: 'app/deep', kits: [] },
             ],
             ignore: [
                 {
@@ -88,8 +88,8 @@ test.each([
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
-            configurations: ['css'],
-            scopes: [{ path: 'theme[1]/deep', configurations: ['css'] }],
+            kits: ['css'],
+            scopes: [{ path: 'theme[1]/deep', kits: ['css'] }],
             carried,
             hooks: 'none',
             ci: 'none',

@@ -3,7 +3,7 @@
 /** One framework of component files in the planted components test: its check, its configurations, its files, and its planted cases. */
 export type ComponentShape = {
     check: string;
-    configurations: string[];
+    kits: string[];
     dependencies: Record<string, string>;
     files: Record<string, string>;
     planted: string;

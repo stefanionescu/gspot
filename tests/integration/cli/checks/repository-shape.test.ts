@@ -10,7 +10,7 @@ import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 import { suppressions, suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
 const policy = {
-    configurations: ['typescript', 'docs'],
+    kits: ['typescript', 'docs'],
     ignore: [{ check: 'x/y', paths: ['gone/**'], reason: 'A test reason.' }],
     generated: [{ paths: ['data/**'], reason: 'The fixture owns generated output.' }],
     structure: { single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }] },
@@ -24,7 +24,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
         'docs/guide.md': 'The runner writes `.reports/output.json`.\n',
     });
     const selected = await checkInput(sandbox.path, 'integrity/allowlists-match', ['docs/guide.md'], {
-        configurations: ['docs'],
+        kits: ['docs'],
         tools: {
             docs: {
                 paths_allowed: [
@@ -45,7 +45,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
 test('suppression validation ignores source text and valid reasons but reports missing required reasons', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nrequire_reasons = true\nconfigurations = ["typescript", "bash", "security"]\n',
+        'gspot.toml': 'version = 1\nrequire_reasons = true\nkits = ["typescript", "bash", "security"]\n',
         'a.ts': 'const marker = /eslint-disable/u; // eslint-disable-next-line no-x -- Required generated protocol binding.\nlet y; // eslint-disable-line\n',
         'b.sh': '# shellcheck disable=SC2086 # reason: the split is wanted\necho x # nosemgrep\n',
     });

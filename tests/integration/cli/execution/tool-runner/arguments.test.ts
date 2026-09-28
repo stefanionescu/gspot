@@ -34,7 +34,7 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
 
 test('per-file execution preserves expanded flags and arguments after the file', async () => {
     const policy = `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/arguments"
 command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
@@ -70,7 +70,7 @@ test('a repository command receives a declared empty argument without changing i
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/arguments',
@@ -104,7 +104,7 @@ test('per-file failures name the selected file when expanded arguments follow it
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/file-result',
@@ -144,7 +144,7 @@ test('a signaled per-file process is an execution error rather than a source fin
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/termination',

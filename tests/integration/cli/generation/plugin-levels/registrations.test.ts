@@ -8,7 +8,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[[tools.eslint.adopted]]\nplugins.gspot = { module = "./plugin.mjs", export = "default" }\nrules."gspot/project" = "error"\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[tools.eslint.adopted]]\nplugins.gspot = { module = "./plugin.mjs", export = "default" }\nrules."gspot/project" = "error"\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': '',
             'plugin.mjs': [
@@ -39,7 +39,7 @@ test.each(['scoped', 'version'])('plugin registration preserves the %s conflict'
     const selector = conflict === 'scoped' ? 'files = ["source.js"]\n' : '';
     const metadata = conflict === 'version' ? ', meta: { ...plugin.meta, version: "0.0.0" }' : '';
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["javascript"]\n[[tools.eslint.adopted]]\n${selector}plugins.gspot = { module = "./plugin.mjs", export = "default" }\n`,
+        'gspot.toml': `version = 1\nkits = ["javascript"]\n[[tools.eslint.adopted]]\n${selector}plugins.gspot = { module = "./plugin.mjs", export = "default" }\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': '',
         'plugin.mjs': `import plugin from "@gspot/eslint-plugin"; export default { ...plugin${metadata} };`,

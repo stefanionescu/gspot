@@ -45,7 +45,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["python", "pytest"]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["python", "pytest"]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n`,
             'app/main.py': 'value = 1\n',
         });
         const session = await openSession(sandbox.path);
@@ -60,7 +60,7 @@ test.each(['recommended', 'all'] as const)(
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
     const text = await generatedFile(
-        `version = 1\nlevel = "${level}"\nconfigurations = ["python", "fastapi", "pytest"]\n`,
+        `version = 1\nlevel = "${level}"\nkits = ["python", "fastapi", "pytest"]\n`,
         '.gspot/config/ruff.toml',
     );
     const config = parseToml(text) as { lint: { select: string[]; preview: boolean }; format: { preview: boolean } };
@@ -76,7 +76,7 @@ test.each(['recommended', 'all'] as const)('%s rejects experimental activation b
         '[tools.ruff.extra]\npreview = true\nreason = "Project preference"',
         `[tools.ruff]\nselect = ["${String([...RUFF_PREVIEW_RULES][0])}"]`,
     ]) {
-        const text = `version = 1\nlevel = "${level}"\nconfigurations = ["python"]\n${settings}`;
+        const text = `version = 1\nlevel = "${level}"\nkits = ["python"]\n${settings}`;
         expect(() => {
             assertPolicyComplete({ policy: parsePolicyText(text, 'gspot.toml'), text, path: 'gspot.toml' });
         }).toThrow('preview');
@@ -88,7 +88,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["react", "drizzle"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[scope]]\npath = "app"\nkits = ["react", "drizzle"]\n`,
             'package.json': '{"private":true,"type":"module"}',
             'root.jsx': '',
             'app/client.jsx': '',
@@ -116,7 +116,7 @@ test('all retains the effective recommended rules for the same applicable React 
     for (const level of ['recommended', 'all']) {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["react"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["react"]\n`,
             'package.json': '{"private":true,"type":"module"}',
             'client.jsx': '',
         });
@@ -132,7 +132,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
     await using sandbox = await testdir();
     const outputs: string[] = [];
     for (const level of ['recommended', 'all', 'recommended']) {
-        const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n`;
+        const policy = `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n`;
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

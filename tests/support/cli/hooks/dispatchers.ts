@@ -13,7 +13,7 @@ export async function prepareDispatcher(
     launcher: string,
     kind: string,
 ): Promise<PrepareDispatcherResult> {
-    const policy = 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n';
     await createFileTree(sandbox, { 'gspot.toml': policy });
     for (const args of [
         ['init', '-q'],

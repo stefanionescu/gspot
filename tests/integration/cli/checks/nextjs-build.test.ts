@@ -58,7 +58,7 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
     async (diagnostic) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["nextjs"]\n',
+            'gspot.toml': 'version = 1\nkits = ["nextjs"]\n',
             'package.json': '{"private":true}\n',
             'tsconfig.json': '{}\n',
         });

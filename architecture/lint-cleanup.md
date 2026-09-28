@@ -236,7 +236,7 @@ against both generated levels; explanatory text and diffs are not executed. TOML
 Each native language has a neighboring real violation and its correction.
 
 The push-stage
-`rules/lint` check invokes the existing native test owners through `mise run rules:lint`.
+`guides/lint` check invokes the existing native test owners through `mise run guides:lint`.
 The current gate passes 33 tests and 181 assertions. Later guide edits require a rerun.
 
 Python examples also pass the generated basedpyright configuration, pydoclint command,

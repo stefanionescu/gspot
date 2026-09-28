@@ -25,7 +25,7 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     const source = 'func welcome(for name: String) -> String { return greeting(for: name) }\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["swift"]\n',
         'Sources/Welcome.swift': source,
         '.gitignore': '.gspot/\n',
     });
@@ -89,7 +89,7 @@ test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comme
         const source = `first_action() { printf '%s\\n' ready; }\nsecond_action() { printf '%s\\n' ready; }\n${calls}`;
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
             'actions.sh': source,
             '.gitignore': '.gspot/\n',
         });
@@ -149,8 +149,7 @@ test.each(['-->', '--!>'])(
     async (ending) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["html", "structure"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["html", "structure"]\n',
             'page.html': `<!-- html-validate-disable attr -- External validator owns this attribute. ${ending}\n<!-- html-validate-disable attr ${ending}\n`,
         });
         const session = await openSession(sandbox.path);

@@ -33,7 +33,7 @@ test.each(SHAPES)(
     async ({ framework, check, dependencies, path, planted }) => {
         await using sandbox = await testdir();
         const environment = await installSandbox(sandbox.path, {
-            configurations: ['typescript', framework],
+            kits: ['typescript', framework],
             dependencies,
             files: {
                 'tsconfig.json': COMPONENT_TSCONFIG,
@@ -67,7 +67,7 @@ test(
         await using sandbox = await testdir();
         const dependencies = { vue: vueManifest.version, svelte: '5.57.0' };
         const environment = await installSandbox(sandbox.path, {
-            configurations: ['javascript', 'vue', 'svelte'],
+            kits: ['javascript', 'vue', 'svelte'],
             dependencies,
             files: {
                 'src/Greeting.vue':

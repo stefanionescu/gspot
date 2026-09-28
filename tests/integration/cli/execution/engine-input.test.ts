@@ -42,7 +42,7 @@ test.each([
     async ({ language, path, structural, defect, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}", "naming"]\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}", "naming"]\n`,
             [path]: defect,
         });
         const session = await openSession(sandbox.path);
@@ -74,7 +74,7 @@ test.each([
 test('engine inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["jest", "docs"]\n[[scope]]\npath = "apps/web"\n',
+        'gspot.toml': 'version = 1\nkits = ["jest", "docs"]\n[[scope]]\npath = "apps/web"\n',
         'README.md': '# Repository\n',
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
         'apps/web/fixture.bin': new Uint8Array([0, 255, 0]),
@@ -125,7 +125,7 @@ test('shell observations distinguish filename lists containing newlines', async 
     await using sandbox = await testdir();
     const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         ...Object.fromEntries(
             names.map((name, index) => [name, `function name${String(index)}() { echo ${String(index)}; }\n`]),
         ),
@@ -156,7 +156,7 @@ test.each([
     async (configuration, check, path, source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': `version = 1\nkits = ["${configuration}"]\n`,
             [path]: source,
         });
         const session = await openSession(sandbox.path);
@@ -174,7 +174,7 @@ test('engines share source bytes within a run and refresh reused sessions after 
     await using sandbox = await testdir();
     const path = 'app/café\nquery.sql';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["sql"]\n[[scope]]\npath = "app"\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n[[scope]]\npath = "app"\n',
         [path]: 'select 1;\n',
     });
     const session = await openSession(sandbox.path);
@@ -235,7 +235,7 @@ test('source observations never cache isolated output or turn failed reads into 
 test('fix verification replaces observed source bytes and preserves unrelated authored files', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
-configurations = ["sql"]
+kits = ["sql"]
 [[check]]
 name = "project/correct-sql"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]

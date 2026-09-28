@@ -41,8 +41,8 @@ test.each([
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
     const tools = { licenses: { licenses_allowed: ['MIT'], packages_allowed: [exception] } };
     for (const input of [
-        { version: 1, configurations: ['xcode', 'docs'], tools },
-        { version: 1, configurations: ['xcode', 'docs'], scope: [{ path: 'app', tools }] },
+        { version: 1, kits: ['xcode', 'docs'], tools },
+        { version: 1, kits: ['xcode', 'docs'], scope: [{ path: 'app', tools }] },
     ]) {
         expect(policySchema.safeParse(input).success).toBe(valid);
         expect(validate(input)).toBe(valid);

@@ -25,7 +25,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["css"]\n[runner]\ntool = "mise"\n[rules]\ninstall = false\n[tools.stylelint.rules]\ncolor-named = "never"\nselector-max-id = 0\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = "always-where-possible"\n',
+                'version = 1\nlevel = "all"\nkits = ["css"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.stylelint.rules]\ncolor-named = "never"\nselector-max-id = 0\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.stylelint.rules]\ncolor-named = "always-where-possible"\n',
             'package.json': '{"private":true}\n',
             'site.css': 'a {\n    color: red;\n}\n',
             'app/site.css': '#example {\n    color: #f00;\n}\n',

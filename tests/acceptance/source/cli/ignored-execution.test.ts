@@ -21,7 +21,7 @@ test('a global ignore stops a repository check and its correction command until 
     await using directory = await testdir();
     const command = ['bash', '-c', 'printf executed > observed.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
-    const policy = `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
+    const policy = `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--no-cache', '--json'];
     const before = await run(directory.path, args);
@@ -49,7 +49,7 @@ test('a global ignore stops a repository check and its correction command until 
 test('generated ESLint applies explicit ignores after enabled rule settings', async () => {
     await using directory = await testdir();
     const policy =
-        'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
+        'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'package.json': '{"private":true,"type":"module"}\n',
@@ -157,7 +157,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         '--',
         '{files}',
     ];
-    const policy = `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`;
+    const policy = `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`;
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'inputs/regular.txt': 'defect\n',

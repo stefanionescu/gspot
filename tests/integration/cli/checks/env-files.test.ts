@@ -17,7 +17,7 @@ test('staged refusal and tracked-file checks agree on environment files and temp
     );
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-f', '.']).code).toBe(0);
-    const input = await checkInput(directory.path, 'integrity/env-files', [], { configurations: ['secrets'] });
+    const input = await checkInput(directory.path, 'integrity/env-files', [], { kits: ['secrets'] });
     expect(envFiles(input).map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
         privateFiles.map((file) => ({ file, rule: 'tracked-environment-file' })),
     );
@@ -49,7 +49,7 @@ test('environment templates preserve first missing reads per file and escaped cu
     };
     await createFileTree(sandbox.path, source);
     const input = await checkInput(sandbox.path, 'configs/env-example', Object.keys(source), {
-        configurations: ['configs'],
+        kits: ['configs'],
         tools: { dotenv: { templates: ['example.env'], accessor: 'config.$env' } },
     });
     expect(envExample(input).map(({ file, line, message: diagnostic }) => ({ file, line, diagnostic }))).toStrictEqual([
@@ -62,7 +62,7 @@ test('environment templates preserve first missing reads per file and escaped cu
     expect(
         envExample(
             await checkInput(sandbox.path, 'configs/env-example', Object.keys(source), {
-                configurations: ['configs'],
+                kits: ['configs'],
                 tools: { dotenv: { templates: ['example.env'], accessor: 'config.$env' } },
             }),
         ),
@@ -76,7 +76,7 @@ test('environment reads without a template in their scope remain unchecked', asy
         'app/source.ts': 'process.env.MISSING;\n',
     });
     const input = await checkInput(sandbox.path, 'configs/env-example', ['.env.example', 'app/source.ts'], {
-        configurations: ['configs'],
+        kits: ['configs'],
     });
     input.scope = 'app';
     expect(envExample(input)).toStrictEqual([]);

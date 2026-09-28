@@ -8,10 +8,10 @@ import { managedBlock } from '#cli/agents/instructions.ts';
 describe('the managed block', () => {
     test('with no check selected it says nothing about gspot check', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
+        await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
         const session = await openSession(sandbox.path);
         const block = managedBlock(
-            session.policyFiles.policy.rules,
+            session.policyFiles.policy.guides,
             everyManifest(session.scopes),
             session.policyFiles.policy.level,
             session.repository,
@@ -25,12 +25,11 @@ describe('the managed block', () => {
     test('with a check selected it names the command, and an excluded file leaves the index', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nconfigurations = ["spelling"]\n\n[rules]\nexclude = ["general/code/ACCESSIBILITY.md"]\n',
+            'gspot.toml': 'version = 1\nkits = ["spelling"]\n\n[guides]\nexclude = ["general/code/ACCESSIBILITY.md"]\n',
         });
         const session = await openSession(sandbox.path);
         const block = managedBlock(
-            session.policyFiles.policy.rules,
+            session.policyFiles.policy.guides,
             everyManifest(session.scopes),
             session.policyFiles.policy.level,
             session.repository,

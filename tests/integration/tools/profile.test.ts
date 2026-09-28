@@ -14,7 +14,7 @@ test('profile tool settings survive adoption of another setting for the same too
     const profile = exportedProfile(
         stringify({
             version: 1,
-            configurations: ['spelling'],
+            kits: ['spelling'],
             tools: { typos: { words: [{ word: 'teh', reason: 'A domain term used by the team.' }] } },
         }),
         'team.profile.toml',

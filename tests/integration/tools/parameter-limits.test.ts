@@ -56,7 +56,7 @@ for (const scenario of cases.filter((entry) => entry.language !== 'swift' || pro
         const { language, configName } = scenario;
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}"]\n${limits}`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}"]\n${limits}`,
             [scenario.file]: scenario.source,
         });
         const session = await openSession(directory.path);

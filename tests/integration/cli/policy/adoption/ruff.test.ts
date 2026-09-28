@@ -131,7 +131,7 @@ test.each([
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), ['backend/example.py']);
     expect(carried.unread).toStrictEqual([]);
     expect(carried.scopes.get('backend')).toStrictEqual({
-        configurations: ['python'],
+        kits: ['python'],
         tools: { ruff: { docstring_convention: convention } },
     });
     expect(carried.tools.get('ruff')?.settings).toBeUndefined();

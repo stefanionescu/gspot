@@ -11,7 +11,7 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     await using directory = await testdir();
     const local = 'skip = ["bash/shellcheck"]\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         'gspot.local.toml': local,
         'entry.sh': '#!/usr/bin/env bash\necho $1\n',
     });

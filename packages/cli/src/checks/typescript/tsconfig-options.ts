@@ -20,7 +20,7 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
                 return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
             }),
     ]);
-    const required = input.view.configurations.includes('nestjs')
+    const required = input.view.kits.includes('nestjs')
         ? { ...ALL_COMPILER_OPTIONS, ...DECORATOR_OPTIONS }
         : ALL_COMPILER_OPTIONS;
     return [...candidates].flatMap((path) => {

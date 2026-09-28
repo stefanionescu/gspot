@@ -19,7 +19,7 @@ test('an array past the width goes one item per line, each item as written, and 
 
 test('a short array, an array already on several lines, and a nested array keep their layout', () => {
     const text =
-        'version = 1\nconfigurations = ["bash", "typescript"]\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = [\n  "a.sh",\n]\n[tools.eslint]\nrestricted_imports = [{ name = "lodash", message = "Import one function at a time.", paths = ["src/**", "tests/**"] }]\n';
+        'version = 1\nkits = ["bash", "typescript"]\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = [\n  "a.sh",\n]\n[tools.eslint]\nrestricted_imports = [{ name = "lodash", message = "Import one function at a time.", paths = ["src/**", "tests/**"] }]\n';
     expect(wrapLongArrays(text)).toBe(text);
     expect(wrapLongArrays(text, '  ', 40)).toContain(
         '[[tools.eslint.restricted_imports]]\nname = "lodash"\nmessage = "Import one function at a time."',
@@ -28,9 +28,9 @@ test('a short array, an array already on several lines, and a nested array keep 
 
 test('an array under a scope entry keeps the indentation of its key', () => {
     const names = Array.from({ length: 12 }, (_, index) => `"configuration-${String(index)}"`).join(', ');
-    const text = `version = 1\n[[scope]]\npath = "api"\n  configurations = [${names}]\n`;
+    const text = `version = 1\n[[scope]]\npath = "api"\n  kits = [${names}]\n`;
     const wrapped = wrapLongArrays(text, '\t');
-    expect(wrapped).toContain('  configurations = [\n  \t"configuration-0",\n');
+    expect(wrapped).toContain('  kits = [\n  \t"configuration-0",\n');
     expect(wrapped).toContain('\n  ]\n');
 });
 
@@ -59,7 +59,7 @@ values = [{name = "Gamma", reason = "${reason}"}]
 [[scope]]
 path = "web"
 tools = {typos = {words = [{word = "Delta", reason = "${reason}"}], enabled = true}, empty = {}}
-configurations = ["typescript"]
+kits = ["typescript"]
 `;
     const output = wrapLongArrays(text);
     expect(parse(output)).toStrictEqual(parse(text));
@@ -88,7 +88,7 @@ flag = true
 test('policy edits preserve expanded lists on a repeated write', () => {
     const reason = 'The generated client uses the exact product spelling in the protocol and every exported operation.';
     const original = `version = 1
-configurations = ["spelling"]
+kits = ["spelling"]
 [tools.typos]
 words = [{word = "Example", reason = "${reason}"}]
 `;

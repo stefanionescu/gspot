@@ -58,7 +58,7 @@ function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }
 
-// The settings that change the check, and the rule files and crash pattern it carries.
+// The settings that change the check, and the guides and crash pattern it carries.
 function checkFacts(check: CheckSpec, configuration: Found['kit']): Facts {
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
     const settings = (configuration?.settings ?? [])
@@ -124,7 +124,7 @@ function checkText(
             ? ['Runs with selected files and declared configuration in an isolated directory.']
             : []),
         ...(settings.length === 0 ? [] : [`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`]),
-        ...(rules.length === 0 ? [] : [`Rule files that state it: ${rules.join(', ')}`]),
+        ...(rules.length === 0 ? [] : [`Guides that state it: ${rules.join(', ')}`]),
         ...repositoryLines(session, own, configuration),
     ];
     return `${lines.join('\n')}\n`;

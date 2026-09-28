@@ -16,7 +16,7 @@ test.each([
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
@@ -50,7 +50,7 @@ test.each([
 test('spelling distinguishes native findings from fatal exits for configuration and declared checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n',
+        'gspot.toml': 'version = 1\nkits = ["spelling"]\n',
         'sample.txt': 'teh\n',
     });
     const session = await openSession(sandbox.path);
@@ -95,7 +95,7 @@ test.each(
         const extension = configuration === 'javascript' ? 'js' : 'ts';
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["${configuration}"]\n`,
             [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
         });
         const session = await openSession(sandbox.path);

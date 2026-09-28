@@ -13,7 +13,7 @@ test.each(['before', 'after'] as const)(
     async (point) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
         });
         const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
         expect(ran.code).toBe(0);
@@ -58,7 +58,7 @@ test.each(['before', 'after'] as const)(
 test('uninstall recovers after restoring an original hook and before removing its retained sibling', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
     });
     const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(ran.code).toBe(0);

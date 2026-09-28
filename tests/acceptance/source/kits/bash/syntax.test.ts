@@ -23,7 +23,7 @@ test.each([
     async (entry) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
             'script.sh': 'echo example\n',
             launcher: '#!/usr/bin/env -S bash -e\necho example\n',
             'script.zsh': 'repeat 2 do print example; done\n',

@@ -24,7 +24,7 @@ test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
     async ({ flags }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/commit"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
+            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/commit"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
             'source.txt': 'source',
             '.gitignore': '.gspot/reports/report.*\n.gspot/state/ownership.json\n.gspot/state/recovery/\n',
         });
@@ -57,7 +57,7 @@ if (process.platform !== 'win32')
             'source.txt': 'original',
             '.gspot/sentinel': 'keep',
             'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/storage"
 command = ${JSON.stringify(command)}
@@ -93,7 +93,7 @@ test.each([
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\ninputs = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\n[check.output]\nformat = "lines"\n`,
+            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\ninputs = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\n[check.output]\nformat = "lines"\n`,
             'source.txt': 'input\n',
         });
         writeFileSync(join(outside.path, 'sentinel'), 'authored outside\n');
@@ -122,7 +122,7 @@ test.each([
 test('runtime ownership preserves authored reports and edited cache results through apply and uninstall', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\ninputs = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
+        'gspot.toml': `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\ninputs = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
         'source.txt': 'input\n',
         '.gspot/reports/report.json': 'authored report\n',
     });
@@ -159,7 +159,7 @@ test.each(['before', 'after'])('an interrupted report %s publication recovers on
     await using sandbox = await testdir();
     const correction = String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', correction])}\n`,
+        'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', correction])}\n`,
         'source.txt': 'defect\n',
     });
     const first = await run(sandbox.path, ['check', '--json']);
@@ -216,7 +216,7 @@ test('GitLab reports retain located findings, stable fingerprints, and correctio
     const source = "script's file.sh";
     const inspect = `if((await Bun.file(${JSON.stringify(source)}).text()).includes('if then')) { console.log('Repository finding without a location.'); process.exitCode=1; }`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n[[check]]\nname = "project/global"\npaths = ["*.sh"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', inspect])}\n[check.output]\nformat = "lines"\n`,
+        'gspot.toml': `version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n[[check]]\nname = "project/global"\npaths = ["*.sh"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', inspect])}\n[check.output]\nformat = "lines"\n`,
         [source]: 'if then\n',
     });
     const command = ['check', '--only', 'bash/syntax', 'project/global', '--json', '--no-cache'];
@@ -265,7 +265,7 @@ test('SARIF identifies missing execution separately from a completed scan with n
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = []\n[[check]]\nname = "project/missing"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ["gspot-test-unavailable-executable"]\n',
+            'version = 1\nkits = []\n[[check]]\nname = "project/missing"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ["gspot-test-unavailable-executable"]\n',
         'source.txt': 'input\n',
     });
     const checked = await run(sandbox.path, ['check', '--json', '--no-cache']);

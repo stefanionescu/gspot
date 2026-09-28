@@ -39,7 +39,7 @@ describe('component accessibility', () => {
         async ({ framework, check, rule, dependencies, path, planted, line }) => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
-                configurations: ['typescript', framework],
+                kits: ['typescript', framework],
                 dependencies,
                 files: {
                     'tsconfig.json': COMPONENT_TSCONFIG,

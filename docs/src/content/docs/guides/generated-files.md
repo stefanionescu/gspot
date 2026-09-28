@@ -18,7 +18,7 @@ gspot install
 ```
 
 `apply` writes tool configuration under `.gspot/config/` and copies agent guides to
-`.gspot/rules/`. Scoped configuration mirrors the scope path under `.gspot/config/`.
+`.gspot/guides/`. Scoped configuration mirrors the scope path under `.gspot/config/`.
 Some tools require a root file for discovery. gspot writes a pointer where the tool
 supports one, or writes the native configuration file directly.
 

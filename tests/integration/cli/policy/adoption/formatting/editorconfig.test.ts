@@ -12,7 +12,7 @@ test('shared EditorConfig selectors govern files created after generation', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**/*.js"]\nindent_width = 6\n',
+            'version = 1\nkits = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**/*.js"]\nindent_width = 6\n',
         'source.js': 'const value=1;',
     });
     const session = await openSession(directory.path);
@@ -26,7 +26,7 @@ test('shared EditorConfig selectors govern files created after generation', asyn
     ).toMatchObject({ tabWidth: 6 });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**", "!tests/vendor/**"]\nindent_width = 6\n',
+        'version = 1\nkits = ["formatting"]\n[[format.overrides]]\npaths = ["tests/**", "!tests/vendor/**"]\nindent_width = 6\n',
     );
     const unsupported = await openSession(directory.path);
     expect(() =>
@@ -73,7 +73,7 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             tools: { editorconfig: { adopted: carried.formatter?.editorconfig }, prettier: { native_defaults: true } },
         }),
     );
@@ -153,7 +153,7 @@ test.each(PRECEDENCE_CASES)(
             join(directory.path, 'gspot.toml'),
             stringify({
                 version: 1,
-                configurations: ['formatting'],
+                kits: ['formatting'],
                 format: carried.formatter?.format,
                 tools: {
                     prettier: { native_defaults: carried.formatter?.nativeDefaults, extra: carried.formatter?.extra },

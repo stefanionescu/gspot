@@ -1,8 +1,8 @@
 // The literal values integration/cli/checks reads: names, patterns, limits, and tables.
 
-export const DEPENDENCIES_POLICY = 'version = 1\nconfigurations = ["dependencies"]\n';
+export const DEPENDENCIES_POLICY = 'version = 1\nkits = ["dependencies"]\n';
 export const XCTEST_EXECUTION_POLICY = `version = 1
-configurations = ["xctest", "xcode"]
+kits = ["xctest", "xcode"]
 [tools.xcode]
 project = "Example.xcodeproj"
 scheme = "Example"
@@ -11,20 +11,19 @@ coverage = [{ target = "Example", percent = 80 }]
 `;
 export const ROUTES_POLICY = `version = 1
 level = "all"
-configurations = ["express"]
+kits = ["express"]
 [tools.express]
 route_files = ["routes/*.ts"]
 [[scope]]
 path = "api"
-configurations = ["express"]
+kits = ["express"]
 `;
-export const POSTGRES_HISTORY_POLICY =
-    'version = 1\nconfigurations = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
+export const POSTGRES_HISTORY_POLICY = 'version = 1\nkits = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
 export const TOOL_FAILURES_POLICY =
-    'version = 1\nlevel = "all"\nconfigurations = ["configs"]\n[runner]\ntool = "mise"\n[rules]\ninstall = false\n';
+    'version = 1\nlevel = "all"\nkits = ["configs"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n';
 export const OPENAPI_FRESH_POLICY =
-    'version = 1\nconfigurations = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n';
-export const TSCONFIG_OPTIONS_POLICY = 'version = 1\nconfigurations = ["typescript"]\n';
+    'version = 1\nkits = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n';
+export const TSCONFIG_OPTIONS_POLICY = 'version = 1\nkits = ["typescript"]\n';
 export const XCTEST_EXECUTION_OPTIONS = {
     stage: 'push' as const,
     skips: [],

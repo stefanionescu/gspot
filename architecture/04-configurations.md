@@ -270,7 +270,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   checked. `doctor` reports files that fall short. Kinds: `format`, `syntax`, `schema`, `style`,
   `types`, `structure`, `naming`, `prose`, `spelling`, `security`, `dependencies`,
   `duplication`, `links`, `freshness`.
-- `[rules]` names the Markdown files by layer.
+- `[guides]` names the Markdown files by layer.
 
 ### Built-in checks
 

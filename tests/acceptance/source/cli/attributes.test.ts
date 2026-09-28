@@ -9,13 +9,13 @@ test('generated attributes preserve LF through autocrlf checkout and restore aut
     await using sandbox = await testdir();
     const original = '*.txt text\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         '.gitattributes': original,
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/rules/general/agent/WORKING.md';
+    const path = '.gspot/guides/general/agent/WORKING.md';
     const bytes = readFileSync(join(sandbox.path, path));
     expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
     const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);

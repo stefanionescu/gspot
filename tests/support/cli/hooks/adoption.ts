@@ -30,7 +30,7 @@ export async function prepareHookAdoption(
     hookTool: keyof typeof VERSIONS,
 ): Promise<PrepareHookAdoptionResult> {
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "${hookTool}"\n`,
+        'gspot.toml': `version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "${hookTool}"\n`,
         'package.json': JSON.stringify({
             private: true,
             devDependencies: hookTool === 'pre-commit' ? {} : { [hookTool]: VERSIONS[hookTool] },

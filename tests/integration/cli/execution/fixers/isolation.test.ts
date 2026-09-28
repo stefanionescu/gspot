@@ -194,7 +194,7 @@ test('preview copies workspace dependencies and preserves executable links witho
     await using repository = await testdir();
     await using external = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'package.json': '{"private":true,"workspaces":["packages/*"]}',
         'packages/core/package.json': '{"name":"core"}',
         'packages/core/value.js': 'export default "original";',

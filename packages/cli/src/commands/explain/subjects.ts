@@ -63,7 +63,7 @@ function configurationExplanation(configurationName: string): Explanation | { er
             ),
         ),
         ...listLine('Settings', row.settings),
-        ...listLine('Rule files', row.rules),
+        ...listLine('Guides', row.rules),
     ];
     return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
 }

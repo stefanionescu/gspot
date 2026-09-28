@@ -25,8 +25,8 @@ export async function prepareCiProject(root: string, provider: 'gitlab' | 'githu
             ? 'stages: [test]\napplication:\n  script: echo authored-job\n'
             : 'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo authored-job\n';
     const policy = `version = 1
-configurations = []
-[rules]
+kits = []
+[guides]
 install = false
 [ci]
 provider = "${provider}"

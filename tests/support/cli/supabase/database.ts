@@ -46,7 +46,7 @@ export async function prepareSupabaseDatabase(root: string): Promise<PrepareSupa
     );
     await Bun.write(configPath, stringify(config));
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nconfigurations = ["supabase"]\n[tools.supabase]\ntypes_file = "database.ts"\n',
+        'gspot.toml': 'version = 1\nkits = ["supabase"]\n[tools.supabase]\ntypes_file = "database.ts"\n',
         'database.ts': 'export type Database = {};\n',
     });
     const authored = readFileSync(configPath);

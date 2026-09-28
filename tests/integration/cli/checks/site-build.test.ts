@@ -68,8 +68,7 @@ const SITE_REPORTS: SiteReportCase[] = [
 test('push builds preserve tracked dist bytes and Git status', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
         '.gitignore': '.gspot/\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'committed output\n',
@@ -147,8 +146,7 @@ test('a failed reproducibility build retains the first isolated output', async (
 test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'authored output',
     });
@@ -242,7 +240,7 @@ test('site builds receive quoted script names and empty arguments', async () => 
         'gspot.toml': stringify({
             version: 1,
             level: 'all',
-            configurations: ['static-site'],
+            kits: ['static-site'],
             tools: { site: { build: 'bun "build site.js" "" "two words"' } },
         }),
         'build site.js': `if (process.argv[2] !== '' || process.argv[3] !== 'two words') throw new Error('Lost arguments');\n${SITE_BUILD}`,

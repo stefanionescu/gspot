@@ -22,7 +22,7 @@ function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'
     return {
         name: trimmed.slice(trimmed.lastIndexOf('/') + 1),
         path: trimmed,
-        configurations: [],
+        kits: [],
         source,
     };
 }
@@ -257,7 +257,7 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
     const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? {
         name: 'root',
         path: '',
-        configurations: [],
+        kits: [],
         source: 'root',
     };
     return (
@@ -274,9 +274,9 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
  * @returns the scopes on the way down to the path, the path itself last
  */
 export function scopeAncestors(
-    entries: Pick<ScopeEntry, 'path' | 'configurations'>[],
+    entries: Pick<ScopeEntry, 'path' | 'kits'>[],
     path: string,
-): Pick<ScopeEntry, 'path' | 'configurations'>[] {
+): Pick<ScopeEntry, 'path' | 'kits'>[] {
     return entries
         .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
         .toSorted((left, right) => left.path.length - right.path.length);

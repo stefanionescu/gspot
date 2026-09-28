@@ -38,15 +38,7 @@ export async function installSandbox(root: string, sandbox: Sandbox): Promise<Re
     commitAll(root);
     const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
     const without = ['naming', 'spelling', ...(sandbox.without ?? [])];
-    const argv = [
-        'init',
-        '--yes',
-        '--configurations',
-        ...sandbox.configurations,
-        '--without',
-        ...without,
-        ...QUIET_INIT,
-    ];
+    const argv = ['init', '--yes', '--kits', ...sandbox.kits, '--without', ...without, ...QUIET_INIT];
     await install(root, argv, environment);
     const level = sandbox.level ?? 'all';
     const selected = await run(root, ['set', 'level', level], environment);

@@ -12,7 +12,7 @@ test.each([false, true])(
         expect(carried.tools.has('typos')).toBe(false);
         expect(carried.removed.map(({ path }) => path)).toStrictEqual(['nested/typos.toml']);
         expect(session.policyFiles.policy.scopes).toStrictEqual([
-            { path: 'nested', configurations: existing ? ['markdown', 'spelling'] : ['spelling'] },
+            { path: 'nested', kits: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
         const run = (config: string, path: string) =>

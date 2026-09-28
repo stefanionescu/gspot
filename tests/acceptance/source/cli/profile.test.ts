@@ -21,7 +21,7 @@ async function expectProfileExport(root: string): Promise<void> {
         [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--without',
             'naming',
@@ -69,7 +69,7 @@ test('profiles > init validates a profile in a dry run without changing the repo
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'scripts/a.sh': script,
-        'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\nconfigurations = ["bash"]\n',
+        'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\nkits = ["bash"]\n',
     });
     commitAll(sandbox.path);
     const before = treeContents(sandbox.path);
@@ -133,7 +133,7 @@ test(
         await createFileTree(sandbox.path, {
             'scripts/a.sh': script,
             'bad.profile.toml':
-                'version = 1\nprofile = "bad"\nselection = "sometimes"\nconfigurations = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
+                'version = 1\nprofile = "bad"\nselection = "sometimes"\nkits = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
         });
         commitAll(sandbox.path);
         const init = await run(sandbox.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
@@ -147,7 +147,7 @@ test(
         expect(preview.stderr).toContain('a profile carries no path');
         await Bun.write(
             join(sandbox.path, 'bad.profile.toml'),
-            'version = 1\nprofile = "corrected"\nselection = "exact"\nconfigurations = ["bash"]\n',
+            'version = 1\nprofile = "corrected"\nselection = "exact"\nkits = ["bash"]\n',
         );
         commitAll(sandbox.path);
         const corrected = await run(
@@ -173,7 +173,7 @@ test(
             [
                 'init',
                 '--yes',
-                '--configurations',
+                '--kits',
                 'bash',
                 '--without',
                 'naming',

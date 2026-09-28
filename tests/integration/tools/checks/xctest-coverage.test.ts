@@ -18,7 +18,7 @@ if (process.platform === 'darwin')
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["xctest", "xcode"]\n[tools.xcode]\nproject = "Inspection.xcodeproj"\nscheme = "Inspection"\ndestination = "platform=macOS"\n[[tools.xctest.coverage]]\ntarget = "Inspection.xctest"\npercent = 100\n',
+                'version = 1\nlevel = "all"\nkits = ["xctest", "xcode"]\n[tools.xcode]\nproject = "Inspection.xcodeproj"\nscheme = "Inspection"\ndestination = "platform=macOS"\n[[tools.xctest.coverage]]\ntarget = "Inspection.xctest"\npercent = 100\n',
             'Inspection.xcodeproj/project.pbxproj': XCTEST_COVERAGE_PROJECT,
             'Inspection.xcodeproj/xcshareddata/xcschemes/Inspection.xcscheme':
                 '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Inspection.xctest" BlueprintName="Inspection" ReferencedContainer="container:Inspection.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug" codeCoverageEnabled="YES"><Testables><TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Inspection.xctest" BlueprintName="Inspection" ReferencedContainer="container:Inspection.xcodeproj"/></TestableReference></Testables></TestAction></Scheme>\n',

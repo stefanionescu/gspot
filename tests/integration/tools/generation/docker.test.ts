@@ -13,7 +13,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
         'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nUSER root\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const policy =
-        'version = 1\nconfigurations = ["docker"]\n[[scope]]\npath = "app"\n[scope.tools.trivy]\nignore = [{ id = "DS-0002", reason = "This test exercises inherited advisory exceptions." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+        'version = 1\nkits = ["docker"]\n[[scope]]\npath = "app"\n[scope.tools.trivy]\nignore = [{ id = "DS-0002", reason = "This test exercises inherited advisory exceptions." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         '.gitignore': 'untracked/\n',
@@ -65,7 +65,7 @@ test.each(['recommended', 'all'] as const)(
         const examples = allRuleExamples().filter((example) => example.language === 'dockerfile');
         expect(examples.length).toBeGreaterThan(0);
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["docker"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["docker"]\n`,
             ...Object.fromEntries(examples.map((example, index) => [`Dockerfile.${String(index)}`, example.body])),
             'Dockerfile.rejected': 'FROM node:latest\nUSER node\nCMD ["node", "--version"]\n',
         });

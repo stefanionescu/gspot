@@ -30,7 +30,7 @@ test.each(['recommended', 'all'] as const)(
             ...Object.fromEntries(examples.map((example, index) => [paths[index]!, example.body])),
             'rejected.py': 'count: int = "one"\n',
             '.gspot/config/basedpyrightconfig.json': await generatedFile(
-                `version = 1\nlevel = "${level}"\nconfigurations = ["python", "fastapi"]\n`,
+                `version = 1\nlevel = "${level}"\nkits = ["python", "fastapi"]\n`,
                 '.gspot/config/basedpyrightconfig.json',
             ),
         });
@@ -68,7 +68,7 @@ test('Python guide examples retain required signatures and reject an unnecessary
     await using sandbox = await testdir();
     const first = examples[0]!;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["python"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
         ...Object.fromEntries(examples.map((example, index) => [`example_${String(index)}.py`, example.body])),
     });
     const session = await openSession(sandbox.path);
@@ -96,7 +96,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const defect = 'import pytest\n\n@pytest.fixture()\ndef example():\n    return 1\n';
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["python"]\n[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+            'version = 1\nkits = ["python"]\n[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nkits = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
         'tests/test_example.py': defect,
         'app/tests/test_example.py': defect,
     });
@@ -154,7 +154,7 @@ test.each(
         ...Object.fromEntries(selected.map((example) => [`examples/example_${String(example.line)}.py`, example.body])),
         'examples/rejected.py': '"""A reference to undeclared input."""\nresult = missing_input\n',
         'ruff.toml': await generatedFile(
-            `version = 1\nlevel = "${level}"\nconfigurations = ["python"${path.startsWith('framework/fastapi/') ? ', "fastapi"' : ''}]\n`,
+            `version = 1\nlevel = "${level}"\nkits = ["python"${path.startsWith('framework/fastapi/') ? ', "fastapi"' : ''}]\n`,
             '.gspot/config/ruff.toml',
         ),
     });

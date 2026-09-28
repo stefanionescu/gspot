@@ -184,10 +184,10 @@ export function normalize(raw: RawPolicy): Policy {
         requireReasons: raw.require_reasons,
         extraChecks: raw.extra_checks,
         exclude: raw.exclude,
-        configurations: raw.configurations ?? [],
+        kits: raw.kits ?? [],
         scopes: scopes.map((scope) => ({
             path: trimTrailingSlashes(scope.path),
-            configurations: scope.configurations ?? [],
+            kits: scope.kits ?? [],
         })),
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
@@ -204,7 +204,7 @@ export function normalize(raw: RawPolicy): Policy {
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
         ...compact({ hooks: raw.hooks, ci: raw.ci }),
-        rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
+        guides: defaulted<Policy['guides']>(raw.guides, { install: true, directory: '.gspot/guides', exclude: [] }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
         ...(raw.runner === undefined
             ? {}

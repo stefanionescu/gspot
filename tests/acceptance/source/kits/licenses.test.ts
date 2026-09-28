@@ -153,7 +153,7 @@ test.each(['recommended', 'all'])(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = []\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
             'app/pyproject.toml':
                 '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
             'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',
@@ -179,7 +179,7 @@ test.each(['recommended', 'all'])(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = []\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
             'app/pyproject.toml':
                 '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
             'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',

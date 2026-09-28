@@ -48,7 +48,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     expect(carried.unread).toStrictEqual([]);
     const policy = {
         version: 1,
-        configurations: ['python'],
+        kits: ['python'],
         ignore: [...carried.tools.values()].flatMap((tool) => tool.ignores),
     };
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify(policy));
@@ -116,7 +116,7 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
     expect(carried.unread).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
+        stringify({ version: 1, kits: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -183,7 +183,7 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     );
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
+        stringify({ version: 1, kits: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

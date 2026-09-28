@@ -227,7 +227,7 @@ The policy schema feeds the documentation endpoint at `/schema/gspot.schema.json
 The documentation build validates its emitted JSON against the runtime schema. Native filenames remain stable.
 
 Generated tool configuration and bundled tool rules live under `.gspot/config/`, with scope paths
-mirrored below it. Agent guides remain under `.gspot/rules/`. Ownership journals, writer locks,
+mirrored below it. Agent guides remain under `.gspot/guides/`. Ownership journals, writer locks,
 and recovery backups live under `.gspot/state/`. Reports use `.gspot/reports/`; disposable caches
 use `.gspot/cache/`.
 

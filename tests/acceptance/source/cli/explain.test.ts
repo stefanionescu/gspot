@@ -12,15 +12,15 @@ test('explain > setting explanations include nested-only settings and each inher
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[scope]]
 path = "api"
-configurations = ["jest"]
+kits = ["jest"]
 [scope.tools.jest]
 coverage_lines = 90
 [[scope]]
 path = "api/worker"
-configurations = []
+kits = []
 [scope.tools.jest]
 coverage_lines = 95
 `,
@@ -53,10 +53,10 @@ coverage_lines = 95
 test('explain > path explanations include enabled repository commands and global exceptions', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
-configurations = []
+kits = []
 [[scope]]
 path = "api"
-configurations = []
+kits = []
 [[check]]
 name = "project/syntax"
 command = ["bash", "-n", "{files}"]

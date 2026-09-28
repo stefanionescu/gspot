@@ -49,7 +49,7 @@ test('cascading legacy ESLint preserves root resets and directory-relative overr
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['javascript'],
+            kits: ['javascript'],
             tools: { eslint: { adopted: carried.tools.get('eslint')?.settings['adopted'] } },
         }),
     );

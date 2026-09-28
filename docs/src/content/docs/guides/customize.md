@@ -24,7 +24,7 @@ A complete policy starts with a schema version and selected configurations:
 
 ```toml
 version = 1
-configurations = ["bash"]
+kits = ["bash"]
 level = "recommended"
 require_reasons = true
 ```

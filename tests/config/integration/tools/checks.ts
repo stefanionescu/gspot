@@ -2,7 +2,7 @@
 
 export const XCTEST_COVERAGE_SOURCE =
     'func first() -> Int {\n    return 1\n}\nfunc second() -> Int {\n    return 2\n}\n';
-export const SECRETS_FILES_POLICY = 'version = 1\nconfigurations = ["secrets"]\n[rules]\ninstall = false\n';
+export const SECRETS_FILES_POLICY = 'version = 1\nkits = ["secrets"]\n[guides]\ninstall = false\n';
 export const XCTEST_COVERAGE_TESTS =
     'import XCTest\nfinal class ValueTests: XCTestCase {\n    func testValues() {\n        XCTAssertEqual(first(), 1)\n    }\n}\n';
 export const XCTEST_COVERAGE_PROJECT = `// !$*UTF8*$!

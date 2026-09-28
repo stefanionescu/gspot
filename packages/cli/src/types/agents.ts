@@ -2,7 +2,7 @@
 
 /** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */
 export type RuleFinding = { file: string; line: number; message: string };
-/** A rule file by its path relative to rules/. */
+/** A guide by its path relative to rules/. */
 export type RuleText = { path: string; text: string };
 /** A marked good example and the minimum level of its containing section. */
 export type RuleExample = {
@@ -15,5 +15,5 @@ export type RuleExample = {
 /** The rule lint's result. */
 export type RulesLintReport = { findings: RuleFinding[]; files: number };
 export type RuleFile = { source: string; target: string; layer: string; kit: string; title: string };
-/** The front matter of a rule file. */
+/** The front matter of a guide. */
 export type FrontMatter = { layer: string; kit: string; title: string; fields: Record<string, string> };

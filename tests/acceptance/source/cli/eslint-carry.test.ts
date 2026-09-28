@@ -108,12 +108,12 @@ test.each(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'javascript',
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -135,12 +135,12 @@ test(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'javascript',
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -171,13 +171,13 @@ test(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'javascript',
             'formatting',
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -200,12 +200,12 @@ test(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'javascript',
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ];
         const invalid = await run(repository.path, args);
@@ -242,12 +242,12 @@ test(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'javascript',
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);

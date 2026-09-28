@@ -17,7 +17,7 @@ test.each(['{file}', '{files}'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                configurations: [],
+                kits: [],
                 check: [
                     {
                         name: 'project/exit-contract',
@@ -63,7 +63,7 @@ test.each([0, 1, 3] as const)(
         const executable = join(sandbox.path, 'actionlint');
         const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+            'gspot.toml': 'version = 1\nkits = ["configs"]\n',
             '.github/workflows/caller.yml': workflow,
             actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });

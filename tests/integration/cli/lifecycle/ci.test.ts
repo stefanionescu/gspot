@@ -14,7 +14,7 @@ test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
             yes: true,
             isDryRun: true,
             json: true,
-            configurations: ['none'],
+            kits: ['none'],
             hooks: 'none',
             runner: 'none',
             ci: 'none',

@@ -82,10 +82,10 @@ test.each([true, false])(
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
             expect(
-                await askMany('Which configurations?', '--configurations <ids>', [], ['bash', 'markdown'], useDefaults),
+                await askMany('Which configurations?', '--kits <ids>', [], ['bash', 'markdown'], useDefaults),
             ).toStrictEqual(['bash', 'markdown']);
             expect(selection).not.toHaveBeenCalled();
-            expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --configurations <ids>.');
+            expect(printed).toHaveBeenCalledWith('Selected: bash, markdown. Change with --kits <ids>.');
         } finally {
             printed.mockRestore();
             selection.mockRestore();
@@ -104,14 +104,14 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
             expect(
                 await askMany(
                     'Which configurations?',
-                    '--configurations <ids>',
+                    '--kits <ids>',
                     [{ value: 'markdown', label: 'Markdown' }],
                     ['bash'],
                     false,
                 ),
             ).toStrictEqual([...answer]);
             expect(printed).toHaveBeenCalledWith(
-                `Selected: ${answer.length === 0 ? 'none' : 'markdown'}. Change with --configurations <ids>.`,
+                `Selected: ${answer.length === 0 ? 'none' : 'markdown'}. Change with --kits <ids>.`,
             );
         } finally {
             printed.mockRestore();

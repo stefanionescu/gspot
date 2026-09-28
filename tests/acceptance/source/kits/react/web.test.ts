@@ -86,7 +86,7 @@ const LINT: LintCase[] = [
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const installReact = (root: string, level: 'recommended' | 'all'): Promise<Record<string, string>> =>
     installSandbox(root, {
-        configurations: ['typescript', 'react'],
+        kits: ['typescript', 'react'],
         dependencies: WEB_DEPENDENCIES,
         files: { 'tsconfig.json': WEB_TSCONFIG, 'src/Greeting.tsx': CLEAN },
         level,

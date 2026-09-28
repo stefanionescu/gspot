@@ -6,7 +6,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift", "xctest"]\n[[scope]]\npath = "apps/second"\n',
+        'gspot.toml': 'version = 1\nkits = ["swift", "xctest"]\n[[scope]]\npath = "apps/second"\n',
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });
@@ -79,7 +79,7 @@ test.each([
                 ? corrected.replace('nested-capability', 'root-capability')
                 : corrected;
         const policy =
-            'version = 1\nlevel = "all"\nconfigurations = ["xcode"]\n[tools.xcode]\nentitlements_allowed = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.tools.xcode]\nentitlements_allowed = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+            'version = 1\nlevel = "all"\nkits = ["xcode"]\n[tools.xcode]\nentitlements_allowed = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.tools.xcode]\nentitlements_allowed = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,
             'Source.swift': 'let logo = Image("Logo")\n',
@@ -124,7 +124,7 @@ test.each([
 test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked scoped exceptions', async (level) => {
     await using sandbox = await testdir();
     const assetManifest = 'app/Assets.xcassets/Logo.imageset/Contents.json';
-    const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["xcode"]\n[[scope]]\npath = "app"\n`;
+    const policy = `version = 1\nlevel = "${level}"\nkits = ["xcode"]\n[[scope]]\npath = "app"\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         [assetManifest]: '{"images":[{"filename":"logo.png"}]}\n',

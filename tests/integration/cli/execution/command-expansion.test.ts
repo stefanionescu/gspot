@@ -9,7 +9,7 @@ import { substitute, commandConfigurations } from '#cli/execution/command-expans
 test('nested configuration inputs stop at the declared scope and reject linked ancestors', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n[[scope]]\npath = "app"\n',
+        'gspot.toml': 'version = 1\nkits = ["swift"]\n[[scope]]\npath = "app"\n',
         '.swiftlint.yml': 'disabled_rules: []\n',
         'app/.swiftlint.yml': 'disabled_rules: []\n',
         'app/Sources/.swiftlint.yml': 'disabled_rules: []\n',
@@ -38,7 +38,7 @@ test.each([
 ])('workspace expansion retains arguments only for a package scope: $scope', async ({ scope, expected }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
         'Example.swift': 'let example = 1\n',
         'package.json': '{}',
         'package/package.json': '{}',

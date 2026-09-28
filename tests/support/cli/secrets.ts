@@ -29,7 +29,7 @@ export async function prepareSecretHistory(
     files: Record<string, string>,
 ): Promise<{ base: string; tree: string; good: string; leaked: string; removed: string }> {
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nconfigurations = ["secrets"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["secrets"]\n[guides]\ninstall = false\n',
     });
     gitOutput(root, ['init', '-q']);
     const applied = await run(root, ['apply']);

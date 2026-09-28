@@ -20,7 +20,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['spelling'],
+            kits: ['spelling'],
             tools: { typos: { exclude: [{ paths: patterns, reason: 'Generated input is checked by its owner.' }] } },
             scope: [{ path: 'nested' }, { path: 'nested/child' }],
         }),

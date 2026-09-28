@@ -30,7 +30,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
         '{files}',
     ];
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
+        'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'mise.toml': stringify({ tasks: { 'ci:affected': tasks['ci:affected']! } }),
         'changed.txt': 'valid\n',

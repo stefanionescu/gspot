@@ -7,7 +7,7 @@ sidebar:
 
 Run commands from the configured repository root with the [CLI available](/guides/install/).
 
-gspot installs its rule files under `.gspot/rules/` and links them from a managed block in
+gspot installs its rule files under `.gspot/guides/` and links them from a managed block in
 `AGENTS.md`. Existing `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md`
 receive the same block. When `.cursor/` exists, gspot creates `.cursor/rules/gspot.mdc`
 with `alwaysApply: true`. An authored file at that path is preserved.
@@ -19,7 +19,7 @@ Run `gspot apply` after policy changes to update the instructions.
 To include another instruction file, run:
 
 ```shell
-gspot set rules.agents TEAM.md
+gspot set guides.agents TEAM.md
 ```
 
 Destinations are relative to the repository root. gspot preserves content outside its managed
@@ -44,6 +44,6 @@ have not been edited.
 
 ## What the rule files say
 
-Each rule file states guidance for one topic and names the applicable tools and checks. `.gspot/rules/general/agent/WORKING.md` says how
-to work in the repository; `.gspot/rules/general/prose/WRITING.md` says how to write; the language, framework,
+Each rule file states guidance for one topic and names the applicable tools and checks. `.gspot/guides/general/agent/WORKING.md` says how
+to work in the repository; `.gspot/guides/general/prose/WRITING.md` says how to write; the language, framework,
 and tool files say what code looks like here.

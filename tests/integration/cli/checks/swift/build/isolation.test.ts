@@ -14,7 +14,7 @@ afterEach(() => {
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
         'Sources/Value.swift': 'let value = 1\n',
     });
     const original = join(sandbox.path, 'Sources/Value.swift');
@@ -53,7 +53,7 @@ describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
         'Main.swift': 'let unused = 1\n',
     });
     const input = await swiftInput(sandbox.path, 'swift/periphery');
@@ -83,7 +83,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const compile = await swiftInput(sandbox.path, 'swift/build');
     const periphery = await swiftInput(sandbox.path, 'swift/periphery');
     const started = Promise.withResolvers<undefined>();
@@ -111,12 +111,12 @@ test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj
     async (project) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = ["swift", "xcode"]\n[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
+            'gspot.toml': `version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
         });
         const input = await swiftInput(sandbox.path, 'swift/build');
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\nconfigurations = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
+            'version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
         );
         const corrected = await swiftInput(sandbox.path, 'swift/build');
         const run = spyOn(spawn, 'run').mockResolvedValue({

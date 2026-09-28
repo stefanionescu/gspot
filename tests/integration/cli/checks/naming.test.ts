@@ -7,7 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const SCOPE_POLICY = `version = 1
-configurations = ["naming", "bash"]
+kits = ["naming", "bash"]
 [naming]
 allowed = [{name = "remoteRecord", reason = "The external JavaScript interface fixes this name."}]
 [[naming.rules]]
@@ -17,12 +17,12 @@ exclude = true
 reason = "The external JavaScript interface fixes this name."
 [[scope]]
 path = "web"
-configurations = ["javascript"]
+kits = ["javascript"]
 [scope.naming]
 allowed = [{name = "remoteRecord", reason = "The external JavaScript interface fixes this name."}]
 [[scope]]
 path = "worker"
-configurations = ["python"]
+kits = ["python"]
 [scope.naming]
 allowed = [{name = "remote_record", reason = "The external Python interface fixes this name."}]
 `;
@@ -33,7 +33,7 @@ test('external property allowances retain adjacent local signature findings thro
         'export type Profile = {\n    external_key: string;\n    user_name: string;\n    USER_COUNT: number;\n};\n';
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncategories = ["properties"]\nnames = ["external_key"]\ncase = ["snake"]\nreason = "The remote API fixes this exact property key."\n',
+            'version = 1\nlevel = "all"\nkits = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncategories = ["properties"]\nnames = ["external_key"]\ncase = ["snake"]\nreason = "The remote API fixes this exact property key."\n',
         'source.ts': source,
     });
     const command = ['check', '--json', '--no-cache', '--only', 'naming/identifiers'];
@@ -62,7 +62,7 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
     const invalid = 'migrations/20260101120000_CreateUsers.sql';
     const valid = 'migrations/20260101120000_create_users.sql';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["sql", "naming"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql", "naming"]\n',
         [invalid]: 'CREATE TABLE users (id integer);\n',
         'queries/select_users.sql': 'SELECT id FROM users;\n',
     });
@@ -142,7 +142,7 @@ test.each(['constructor', 'toString', '__proto__'])(
     async (caseName) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["${caseName}"]\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["${caseName}"]\n`,
             'source.ts': 'export const bad_name = 1;\n',
         });
         const command = ['check', '--no-cache', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
@@ -153,7 +153,7 @@ test.each(['constructor', 'toString', '__proto__'])(
         expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
-            `version = 1\nlevel = "all"\nconfigurations = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["camel"]\n`,
+            `version = 1\nlevel = "all"\nkits = ["typescript", "naming"]\n[[naming.rules]]\npaths = ["source.ts"]\ncase = ["camel"]\n`,
         );
         const neighbor = await run(sandbox.path, command);
         expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);

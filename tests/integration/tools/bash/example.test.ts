@@ -13,7 +13,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 test('the published syntax example produces the captured finding and accepts its correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'greet.sh': example.broken,
     });

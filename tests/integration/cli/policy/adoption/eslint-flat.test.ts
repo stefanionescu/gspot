@@ -41,7 +41,7 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
     expect(carried.adopted[1]?.plugins).toStrictEqual({ custom: { module: './rules.mjs', export: 'default' } });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -156,7 +156,7 @@ test.each(['object', 'named'])(
         );
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -214,7 +214,7 @@ test.each([
         });
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -264,7 +264,7 @@ test.each(['namespace', 'named export with dots'])(
         });
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

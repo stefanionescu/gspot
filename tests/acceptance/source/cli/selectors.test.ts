@@ -33,7 +33,7 @@ async function expectIndexReport(
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
@@ -77,7 +77,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n';
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -114,7 +114,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
@@ -149,7 +149,7 @@ test('index snapshots preserve binary bytes and executable modes without applyin
         'payload.dat': Buffer.from([255, 10, 0]),
         'task.sh': '#!/bin/sh\nexit 0\n',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/index-bytes"
 command = ${JSON.stringify(command)}
@@ -197,7 +197,7 @@ test('index checks copy matching locked dependencies and refuse a different work
         'node_modules/dependency/stamp.txt': 'authored dependency data',
         'source.txt': 'authored input',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/dependencies"
 command = ${JSON.stringify(command)}

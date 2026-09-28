@@ -29,7 +29,7 @@ test.each(['recommended', 'all'] as const)('%s reports and fixes ordinary shell 
     await using sandbox = await testdir();
     const source = "if true;then\nprintf '%s\\n' one\nfi\n";
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["bash"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["bash"]\n`,
         'example.sh': source,
     });
     const session = await openSession(sandbox.path);

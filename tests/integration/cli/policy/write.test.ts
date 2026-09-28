@@ -16,7 +16,7 @@ import {
 } from '#cli/policy/write.ts';
 
 const text =
-    '#:schema x\n\n# Comment on version.\nversion = 1\nconfigurations = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
+    '#:schema x\n\n# Comment on version.\nversion = 1\nkits = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
 
 test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode change after observation', async () => {
     await using sandbox = await testdir();
@@ -233,7 +233,7 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh proposal', 
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    writeFileSync(path, 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n');
+    writeFileSync(path, 'version = 1\nkits = []\n[guides]\ninstall = false\n');
     let evaluations = 0;
     const result = await commitPolicy(
         sandbox.path,

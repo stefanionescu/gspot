@@ -19,11 +19,11 @@ test(
         const init = await run(sandbox.path, [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
             '--hooks',
             'gspot',
@@ -65,11 +65,11 @@ test(
         await run(sandbox.path, [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         await Bun.write(join(sandbox.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
@@ -119,7 +119,7 @@ test(
         };
         const initialized = await run(
             sandbox.path,
-            ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
             environment,
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -162,11 +162,11 @@ test(
         await run(sandbox.path, [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--no-runner',
             '--no-ci',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         const originalVersion = readFileSync(join(sandbox.path, '.gspot', 'version'));

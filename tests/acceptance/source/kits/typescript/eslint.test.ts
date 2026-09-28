@@ -16,7 +16,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript"]\n',
             'package.json': '{"name":"interface-check","private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
             'src/order.ts': 'export interface Order { total: number }\n',
@@ -67,8 +67,7 @@ test.each([
     async (_scenario, barrel) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n[structure]\nreexports = "index-only"\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript"]\n[structure]\nreexports = "index-only"\n',
             'package.json': '{"name":"barrel-check","private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
             'src/first.ts': 'export const shared = 1;\n',

@@ -16,7 +16,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'tsconfig.json':
                 '{"compilerOptions":{"strict":true,"noUncheckedIndexedAccess":true,"exactOptionalPropertyTypes":true,"noImplicitOverride":true,"forceConsistentCasingInFileNames":true,"target":"ESNext","module":"ESNext","moduleResolution":"Bundler","noEmit":true},"include":["*.ts"]}',
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n`,
             ...Object.fromEntries(examples.map((example, index) => [`example-${String(index)}.ts`, example.body])),
         });
         const session = await openSession(sandbox.path);

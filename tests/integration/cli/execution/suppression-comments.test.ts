@@ -36,7 +36,7 @@ test.each([
     await using sandbox = await testdir();
     const source = `${comment}\nconsole.log(1);\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n',
         'source.js': source,
     });
     const session = await openSession(sandbox.path);
@@ -109,8 +109,7 @@ test.each([
     async (path, source, lines) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["typescript", "bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["typescript", "bash"]\n',
             [path]: source,
         });
         const result = await executeRun(await openSession(sandbox.path), {

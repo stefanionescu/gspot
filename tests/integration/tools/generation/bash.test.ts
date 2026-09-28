@@ -14,7 +14,7 @@ test.each(['recommended', 'all'])(
     'Bash security rules expose their language identity at %s',
     async (level) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["bash", "security"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "${level}"\nkits = ["bash", "security"]\n[guides]\ninstall = false\n`;
         const source = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'script.sh': source });
         await installSemgrep(sandbox.path);
@@ -50,7 +50,7 @@ test.each(
         ...Object.fromEntries(selected.map((example, index) => [paths[index]!, example.body])),
         'rejected.sh': "printf '%s\\n' $1\n",
         shellcheckrc: await generatedFile(
-            `version = 1\nlevel = "${level}"\nconfigurations = ["bash"]\n`,
+            `version = 1\nlevel = "${level}"\nkits = ["bash"]\n`,
             '.gspot/config/shellcheckrc',
         ),
     });

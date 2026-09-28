@@ -12,7 +12,7 @@ export function initArgs(configurations: string[], without: string[] = []): stri
     return [
         'init',
         '--yes',
-        '--configurations',
+        '--kits',
         ...configurations,
         ...(without.length === 0 ? [] : ['--without', ...without]),
         ...QUIET_INIT,

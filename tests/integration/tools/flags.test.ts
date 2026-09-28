@@ -88,7 +88,7 @@ beforeAll(async () => {
         ...manifest,
         tools: manifest.tools.filter((tool) => names.has(tool.name)),
     }));
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n[runner]\ntool = "mise"\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "mise"\n' });
     privateContext.policyFiles = readPolicy(sandbox.path);
     const files = [
         ...toolEnvironment(selected),

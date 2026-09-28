@@ -32,7 +32,7 @@ export const RULES_ALONE =
 // A guide names one configuration or none.
 export const CONFIGURATION_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
 export const FENCE = '---';
-/** The layers a rule file can declare. */
+/** The layers a guide can declare. */
 export const RULE_LAYERS = [
     'agent',
     'code',
@@ -127,9 +127,9 @@ export const FENCE_LANGUAGES = [
     'makefile',
     'console',
 ];
-/** No rule file exceeds this many lines. */
+/** No guide exceeds this many lines. */
 export const RULE_FILE_LINE_CEILING = 800;
-/** What ties a rule file to gspot or claims enforcement; a rule file stands without either (D-81). */
+/** What ties a guide to gspot or claims enforcement; a guide stands without either (D-81). */
 export const INDEPENDENCE_TERMS = [
     /\bgspot\b/iu,
     /\bthe gate\b/iu,

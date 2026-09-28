@@ -37,7 +37,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
         ];
         writeFileSync(
             join(cancellation, 'gspot.toml'),
-            `version = 1\nconfigurations = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
+            `version = 1\nkits = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
         );
         const child = Bun.spawn([...fixture.command, 'check', '--json', '--no-cache'], {
             cwd: cancellation,

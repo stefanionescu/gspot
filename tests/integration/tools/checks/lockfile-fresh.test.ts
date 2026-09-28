@@ -23,7 +23,7 @@ test.each([
     const yarnBerry = client === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["dependencies"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["dependencies"]\n`,
         'package.json': manifest,
         'library/package.json': '{"name":"library","version":"1.0.0"}\n',
         'other/package.json': '{"name":"other","version":"1.0.0"}\n',

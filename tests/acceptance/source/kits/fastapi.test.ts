@@ -38,7 +38,7 @@ test(
             [
                 'init',
                 '--yes',
-                '--configurations',
+                '--kits',
                 'python',
                 'pytest',
                 'naming',
@@ -100,7 +100,7 @@ describe('the fastapi configuration', () => {
                 [
                     'init',
                     '--yes',
-                    '--configurations',
+                    '--kits',
                     'python',
                     'fastapi',
                     '--without',

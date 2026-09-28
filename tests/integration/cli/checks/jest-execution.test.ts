@@ -37,7 +37,7 @@ test.each([
 ])('Jest adapter refuses $failure, cleans isolated artifacts, and accepts a corrected report', async ({ changes }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["jest"]\n',
+        'gspot.toml': 'version = 1\nkits = ["jest"]\n',
         'sample.js': 'const authored = true;\n',
         'node_modules/.bin/jest': '#!/usr/bin/env node\n',
     });

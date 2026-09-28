@@ -20,7 +20,7 @@ async function loneFiles(root: string): Promise<string[]> {
 test('SvelteKit route folders hold one page each without a finding, and other lone files still report', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript", "svelte"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript", "svelte"]\n',
         'package.json': '{"name":"planted","private":true,"type":"module"}\n',
         'src/routes/about/+page.svelte': PAGE,
         'src/routes/blog/[slug]/+page.svelte': PAGE,
@@ -33,7 +33,7 @@ test('the repository allowance joins the framework allowance instead of replacin
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["javascript", "svelte"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
+            'version = 1\nlevel = "all"\nkits = ["javascript", "svelte"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
         'package.json': '{"name":"planted","private":true,"type":"module"}\n',
         'src/routes/about/+page.svelte': PAGE,
         'src/lib/lone/util.js': 'export const answer = 42;\n',

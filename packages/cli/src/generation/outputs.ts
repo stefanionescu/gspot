@@ -92,9 +92,9 @@ function blockOutputs(repository: Repository, policy: Policy, manifests: Manifes
         block: '.gspot/** linguist-generated\n.gspot/** text eol=lf',
         style: 'hash',
     });
-    if (!policy.rules.install) return;
-    const block = managedBlock(policy.rules, manifests, policy.level, repository);
-    for (const path of agentFiles(root, policy.rules.agents)) {
+    if (!policy.guides.install) return;
+    const block = managedBlock(policy.guides, manifests, policy.level, repository);
+    for (const path of agentFiles(root, policy.guides.agents)) {
         if (path === '.cursor/rules/gspot.mdc') {
             out.files.push({
                 path,
@@ -163,7 +163,7 @@ export function emitAll(
     out.files.push(...toolPackages(manifests, packageClient, policy.runner?.tool), ...toolEnvironment(manifests));
     runnerOutputs(root, policy, manifests, version, packageClient !== undefined, out);
     workflowOutput(policy, scopes, version, out);
-    out.files.push(...assembleRules(policy.rules, manifests, policy.level, repository));
+    out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));
     if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))
         out.files.push(...styleFiles(policy, rootView(scopes)));
     blockOutputs(repository, policy, manifests, out);

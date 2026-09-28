@@ -12,7 +12,7 @@ import { mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n',
         'package.json': '{"private":true,"type":"module"}\n',
         'a.js': 'export const first = 1;\n',
         'z.js': 'export const last = 2;\n',

@@ -4,7 +4,7 @@ import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 /** A policy with one check whose correction exits 3 until a test gives it a script. */
 export const CORRECTION_POLICY = `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}

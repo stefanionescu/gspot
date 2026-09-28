@@ -18,7 +18,7 @@ test.each([
             const tools = { [tool]: { [key]: bad } };
             const input = {
                 version: 1,
-                configurations: [configuration],
+                kits: [configuration],
                 ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }),
             };
             const text = stringify(input);
@@ -31,7 +31,7 @@ test.each([
             const correctedTools = { [tool]: { [key]: good } };
             const corrected = {
                 version: 1,
-                configurations: [configuration],
+                kits: [configuration],
                 ...(scoped ? { scope: [{ path: 'app', tools: correctedTools }] } : { tools: correctedTools }),
             };
             const correctedText = stringify(corrected);
@@ -45,7 +45,7 @@ test.each([
 );
 
 test('nested manifest settings preserve typed leaf values and reject unknown siblings', () => {
-    const source = 'version = 1\nconfigurations = ["bash"]\n[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n';
+    const source = 'version = 1\nkits = ["bash"]\n[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n';
     const path = 'gspot.toml';
     const policy = parsePolicyText(source, path);
     expect(() => {
@@ -60,19 +60,17 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
     expect(
         validate({
             version: 1,
-            configurations: ['bash'],
+            kits: ['bash'],
             tools: { bash: { safety: { owners: ['scripts/cleanup.sh'] } } },
         }),
     ).toBe(true);
-    expect(validate({ version: 1, configurations: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(
-        false,
-    );
+    expect(validate({ version: 1, kits: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(false);
 });
 
 test.each([{ safety: [] }, { safety: 'owners' }, { safety: 1 }, { safety: { owners: false } }])(
     'nested setting containers reject %j without changing their declared leaf shape',
     ({ safety }) => {
-        const input = { version: 1, configurations: ['bash'], tools: { bash: { safety } } };
+        const input = { version: 1, kits: ['bash'], tools: { bash: { safety } } };
         const text = stringify(input);
         const path = 'gspot.toml';
         const policy = parsePolicyText(text, path);

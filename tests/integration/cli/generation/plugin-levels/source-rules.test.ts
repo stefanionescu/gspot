@@ -10,7 +10,7 @@ test.each([
 ] as const)('generated %s ESLint retains client defects and makes aliases opt-in for %s', async (level, filePath) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = []\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = []\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'client.js': '',
         'other.js': '',
@@ -53,7 +53,7 @@ test.each(['recommended', 'all'])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,

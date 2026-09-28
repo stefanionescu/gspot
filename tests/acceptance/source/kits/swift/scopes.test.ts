@@ -34,7 +34,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);

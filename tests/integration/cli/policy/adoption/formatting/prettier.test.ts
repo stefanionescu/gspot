@@ -28,7 +28,7 @@ test('Prettier adoption preserves override selectors for new files', async () =>
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             format: carried.format,
             tools: { prettier: { extra: carried.extra } },
         }),
@@ -76,7 +76,7 @@ test('nested Prettier configurations reset parent options and preserve ordered f
     expect(carried.removed.map(({ path }) => path)).toStrictEqual(Object.keys(configs));
     const policy = {
         version: 1,
-        configurations: ['formatting'],
+        kits: ['formatting'],
         format: carried.formatter?.format,
         tools: { prettier: { extra: carried.formatter?.extra } },
     };
@@ -139,7 +139,7 @@ test.each([
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             format: carried.format,
             tools: { prettier: { extra: carried.extra } },
         }),
@@ -188,7 +188,7 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             format: carried.formatter!.format,
             tools: { prettier: { ignore_patterns: carried.formatter!.ignorePatterns } },
         }),

@@ -17,7 +17,7 @@ const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import
 
 test('task mappings validate before mutation, round-trip profiles, and explain the effective names', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = []\n[runner]\ntool = "npm"\n';
+    const policy = 'version = 1\nkits = []\n[runner]\ntool = "npm"\n';
     await createFileTree(directory.path, { 'gspot.toml': policy, 'package.json': '{"private":true}\n' });
     for (const tasks of [{ check: 'prepare' }, { check: 'gspot:fix' }, { check: 'lint', fix: 'lint' }]) {
         const rejected = await run([process.execPath, CLI, 'set', 'runner.tasks', JSON.stringify(tasks), '--json'], {

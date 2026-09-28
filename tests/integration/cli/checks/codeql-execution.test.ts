@@ -18,7 +18,7 @@ const JAVASCRIPT_LANGUAGES = JSON.stringify({
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const policy = (value: string) =>
-    `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
+    `version = 1\nlevel = "all"\nkits = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
 
 // Aliases resolve to one native language and its exact query-pack version.
 function expectNativeCodeqlOptions(commands: string[][], packVersion: string): void {
@@ -93,7 +93,7 @@ async function mapsIsolatedLocations(): Promise<Finding[]> {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
+            'version = 1\nlevel = "all"\nkits = ["security"]\n[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
         'source file.ts': 'export const source = true;\n',
     });
     const session = await openSession(directory.path);

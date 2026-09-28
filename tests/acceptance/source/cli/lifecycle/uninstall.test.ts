@@ -15,7 +15,7 @@ const INIT = initArgs(['bash']);
 
 test('uninstall preview does not create ownership or recovery state', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nkits = []\n[guides]\ninstall = false\n';
     await createFileTree(directory.path, { 'gspot.toml': policy });
     const preview = await run(directory.path, ['uninstall', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -92,7 +92,7 @@ test.each([false, true])(
     async (applyFirst) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+            'gspot.toml': 'version = 1\nkits = ["bash"]\n',
             'entry.sh': 'echo example\n',
         });
         const session = await openSession(directory.path);

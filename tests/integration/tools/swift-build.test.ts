@@ -26,7 +26,7 @@ if (process.platform === 'darwin') {
     test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
+            'gspot.toml': 'version = 1\nkits = ["swift"]\n',
             'Package.swift':
                 '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
             'Sources/Example/Value.swift': 'public let value: Int = 1\n',
@@ -80,7 +80,7 @@ if (process.platform === 'darwin') {
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nconfigurations = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\ndestination = "platform=macOS"\n',
+                'version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\ndestination = "platform=macOS"\n',
             'Example.xcodeproj/project.pbxproj': project,
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme':
                 '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Example" BlueprintName="Example" ReferencedContainer="container:Example.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug"/></Scheme>\n',

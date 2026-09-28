@@ -23,7 +23,7 @@ test('Supabase configurations and function discovery stay within nested project 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["supabase"]\n[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n[scope.tools.supabase]\nfunctions_directory = "edge"\n',
+            'version = 1\nkits = ["supabase"]\n[[scope]]\npath = "apps/api"\nkits = ["supabase"]\n[scope.tools.supabase]\nfunctions_directory = "edge"\n',
         'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
         'apps/api/supabase/config.toml': '[functions.hello]\nverify_jwt = true\n',

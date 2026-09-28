@@ -17,7 +17,7 @@ import { explain } from '#cli/commands/explain/subjects.ts';
 test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript", "configs", "formatting"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "configs", "formatting"]\n`,
         'source.ts': 'export const value = 1;\n',
         'settings.json': '{"value":1}\n',
     });
@@ -36,7 +36,7 @@ test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s',
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[[scope]]\npath = "app"\nkits = []\n',
         'source.sh': 'echo root\n',
         'app/source.sh': 'echo nested\n',
     });
@@ -60,7 +60,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     await using sandbox = await testdir();
     const policy = {
         version: 1,
-        configurations: [],
+        kits: [],
         coverage: { strict: true },
         check: [
             {
@@ -115,7 +115,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             coverage: { strict: true },
             check: [
                 {
@@ -140,7 +140,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
 test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -163,7 +163,7 @@ test('engine coverage rejects an unobserved path and accepts confirmed repositor
 test('a per-scope check runs only where that scope owns a claimed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[[scope]]\npath = "app"\nkits = []\n',
         'app/source.sh': 'echo example\n',
         'notes.md': 'No shell source belongs to the root.\n',
     });
@@ -196,7 +196,7 @@ test('a per-scope check runs only where that scope owns a claimed source', async
 test('a project-wide check covers its claimed sources without claiming unrelated project inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         'source.sh': 'echo example\n',
         'notes.md': 'An unrelated source document.\n',
     });
@@ -233,7 +233,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             ...(scenario === 'ignore' ? { ignore: [{ check }] } : {}),
             check: [
                 {

@@ -115,7 +115,7 @@ test.each(['custom', 'native'])(
 test('Lefthook versions without the supported installation controls retain existing hooks', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
         'package.json': '{"private":true,"devDependencies":{"lefthook":"1.11.13"}}\n',
     });
     for (const command of [

@@ -122,7 +122,7 @@ export async function preparePreCommit(
 export async function prepareHusky(root: string, top: string, kind: string): Promise<PrepareHuskyResult> {
     const authored = 'cat > authored-input\nprintf "%s\\n" "$@" > authored-args\nexit 0\n';
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "husky"\n',
+        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "husky"\n',
         'package.json': '{"private":true,"devDependencies":{"husky":"9.1.7"}}\n',
         '.husky/pre-commit': 'printf retained > authored-commit\nexit 0\n',
         '.husky/pre-push': authored,

@@ -36,19 +36,19 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const manifests = configurationManifests();
-    for (const id of o.configurations)
+    for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
             throw new PolicyError([messages.unknownConfiguration(id, nearMatches(id, known))]);
         }
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);
-        const list = (holder['configurations'] as string[] | undefined) ?? [];
-        for (const id of o.configurations) if (!list.includes(id)) list.push(id);
-        holder['configurations'] = list;
+        const list = (holder['kits'] as string[] | undefined) ?? [];
+        for (const id of o.kits) if (!list.includes(id)) list.push(id);
+        holder['kits'] = list;
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
-    const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.configurations.join(', ')}${where}`);
+    const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.kits.join(', ')}${where}`);
     return installChangedSelection(root, result);
 }
 
@@ -63,19 +63,16 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     const manifests = configurationManifests();
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);
-        const list = (holder['configurations'] as string[] | undefined) ?? [];
-        const rootList = (raw['configurations'] as string[] | undefined) ?? [];
-        const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.configuration);
-        const chain = kept
-            .map((id) => requireChain(o.configuration, id, manifests))
-            .find((found) => found !== undefined);
-        if (chain) throw new PolicyError([messages.withoutRequired(o.configuration, chain)]);
-        if (!list.includes(o.configuration))
-            throw new PolicyError([messages.configurationNotListed(o.configuration, o.scope)]);
-        holder['configurations'] = list.filter((id) => id !== o.configuration);
+        const list = (holder['kits'] as string[] | undefined) ?? [];
+        const rootList = (raw['kits'] as string[] | undefined) ?? [];
+        const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.kit);
+        const chain = kept.map((id) => requireChain(o.kit, id, manifests)).find((found) => found !== undefined);
+        if (chain) throw new PolicyError([messages.withoutRequired(o.kit, chain)]);
+        if (!list.includes(o.kit)) throw new PolicyError([messages.configurationNotListed(o.kit, o.scope)]);
+        holder['kits'] = list.filter((id) => id !== o.kit);
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;
-    const result = await commitPolicy(root, mutation, o.isDryRun, `removed ${o.configuration}${where}`);
+    const result = await commitPolicy(root, mutation, o.isDryRun, `removed ${o.kit}${where}`);
     return installChangedSelection(root, result);
 }
 
@@ -100,7 +97,7 @@ export function registerAdd(program: Command): void {
                 () =>
                     addCommand({
                         cwd: directoryOf(global),
-                        configurations,
+                        kits: configurations,
                         isDryRun: flags['dryRun'] === true,
                         ...textEntry(flags, 'scope', 'scope'),
                     }),
@@ -130,7 +127,7 @@ export function registerRemove(program: Command): void {
                 () =>
                     removeCommand({
                         cwd: directoryOf(global),
-                        configuration,
+                        kit: configuration,
                         isDryRun: flags['dryRun'] === true,
                         ...textEntry(flags, 'scope', 'scope'),
                     }),

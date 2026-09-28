@@ -52,7 +52,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });

@@ -131,7 +131,7 @@ test('fences and paths > a directory at a task configuration path is an error, n
 test('Bash examples report syntax errors, accept corrections, and stop on cancellation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'a.md': '```bash\nif then\n```\n',
     });
     const session = await openSession(sandbox.path);

@@ -23,7 +23,7 @@ test.each([
 ])('apply preserves active authored %s despite source exclusions and keeps future formatting', async (path, text) => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': FORMAT_PRESERVATION_POLICY.replace('[rules]', `exclude = ${JSON.stringify([path])}\n[rules]`),
+        'gspot.toml': FORMAT_PRESERVATION_POLICY.replace('[guides]', `exclude = ${JSON.stringify([path])}\n[guides]`),
         [path]: text,
         'source.js': PRETTIER_CARRY_SOURCE,
     });

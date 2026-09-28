@@ -11,7 +11,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
     await createFileTree(repository.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["dependencies"]\n[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n[rules]\ninstall = false\n',
+            'version = 1\nkits = ["dependencies"]\n[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n[guides]\ninstall = false\n',
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,
     });
@@ -56,7 +56,7 @@ test('initialization carries root and scoped Bun safeguards into editable policy
         yes: true,
         isDryRun: false,
         json: true,
-        configurations: ['dependencies'],
+        kits: ['dependencies'],
         scopes: ['app=dependencies'],
         isListExact: true,
         hooks: 'none',

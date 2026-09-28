@@ -47,7 +47,7 @@ test.each([
 ])('the compiled binary distinguishes literal and active suppressions in %s', async (path, literal) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure"]\n',
         [path]: `${literal}\n# gspot-ignore structure/folder-names\nactual = 1\n`,
     });
     const checked = await binary(sandbox.path, ['check', '--only', 'integrity/suppressions', '--json']);
@@ -72,7 +72,7 @@ describe('the compiled binary', () => {
             const init = await binary(sandbox.path, [
                 'init',
                 '--yes',
-                '--configurations',
+                '--kits',
                 'bash',
                 '--no-runner',
                 '--no-ci',
@@ -125,7 +125,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     await createFileTree(consumer, {
         ...EMBEDDED_PARSER_SOURCES,
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
+            'version = 1\nlevel = "all"\nkits = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
     });
     const checked = await runProcess([executable, 'check', '--only', 'naming/identifiers', '--json'], consumerOptions);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);

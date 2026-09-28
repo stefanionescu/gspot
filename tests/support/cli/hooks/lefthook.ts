@@ -13,7 +13,7 @@ import { LEFTHOOK_PUSH_ARGS } from '#tests/config/integration/tools/hooks.ts';
 export async function prepareLefthook(root: string, existing: string): Promise<PrepareLefthookResult> {
     await createFileTree(root, {
         'scratch/.keep': '',
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
         'package.json': '{"private":true,"devDependencies":{"lefthook":"2.0.13"}}\n',
         'hook-settings.yml': 'rc: ./hook-init.sh\n',
         'hook-init.sh': 'export GSPOT_FIXTURE_RC=retained\nprintf "%s" "$GSPOT_FIXTURE_RC" > rc-ran\n',

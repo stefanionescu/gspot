@@ -40,7 +40,7 @@ async function chosenSelection(
     const kept = await askConfigurations(options, detected, inputs.manifests);
     if (kept === undefined) return detected;
     const configurations = kept.length === 0 ? ['none'] : kept;
-    return selectForInit({ ...inputs, options: { ...options, configurations, isListExact: true } });
+    return selectForInit({ ...inputs, options: { ...options, kits: configurations, isListExact: true } });
 }
 
 // Prints what init found, unless the caller reads JSON.

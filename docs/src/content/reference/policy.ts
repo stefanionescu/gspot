@@ -22,7 +22,7 @@ This complete policy sets a repository limit and tightens it for the app scope:
 
 \`\`\`toml
 version = 1
-configurations = ["javascript"]
+kits = ["javascript"]
 [limits]
 file_lines = 200
 [[scope]]

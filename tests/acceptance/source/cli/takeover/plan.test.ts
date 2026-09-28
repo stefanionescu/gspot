@@ -128,7 +128,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             'init',
             '--yes',
             '--json',
-            '--configurations',
+            '--kits',
             'sql',
             '--without',
             'naming',
@@ -136,7 +136,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

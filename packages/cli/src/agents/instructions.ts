@@ -16,7 +16,7 @@ function guideGroups(files: RuleFile[]): [string, string[]][] {
     return [...rows];
 }
 
-function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
+function indexLines(rules: Policy['guides'], files: RuleFile[]): string[] {
     const { directory, project } = rules;
     const projectRow: [string, string[]][] =
         project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
@@ -41,7 +41,7 @@ function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
 export function managedBlock(
-    rules: Policy['rules'],
+    rules: Policy['guides'],
     manifests: Manifest[],
     level: Policy['level'],
     repository: Repository,

@@ -170,11 +170,11 @@ test.each([
             '--dry-run',
             '--json',
             '--yes',
-            '--configurations',
+            '--kits',
             'none',
             '--no-runner',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);

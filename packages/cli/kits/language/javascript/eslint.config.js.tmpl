@@ -357,7 +357,7 @@ const runtimeOverrides = [
 <% } %>];
 
 const boundaryConfigs = [
-<% for (const scope of [{ path: '', configurations }, ...scopes]) { const scoped = scope.path === '' ? policy.architecture : (policy.scopeTables[scope.path]?.architecture ?? policy.architecture); if (!scoped.elements || scoped.elements.length === 0) continue; const prefix = scope.path === '' ? '' : `${scope.path}/`; %>    {
+<% for (const scope of [{ path: '', kits }, ...scopes]) { const scoped = scope.path === '' ? policy.architecture : (policy.scopeTables[scope.path]?.architecture ?? policy.architecture); if (!scoped.elements || scoped.elements.length === 0) continue; const prefix = scope.path === '' ? '' : `${scope.path}/`; %>    {
         files: [<%= json(`${prefix}**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`) %>],
         settings: {
             'boundaries/elements': <%= json(scoped.elements.map((element) => ({ type: element.name, pattern: element.paths.map((path) => `${prefix}${path}`), mode: 'full' }))) %>,

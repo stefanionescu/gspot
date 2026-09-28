@@ -31,7 +31,7 @@ export type TemplateInputs = {
     prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[]; formats: [string, string][] };
     version: string;
     scope: string;
-    scopes: { path: string; configurations: string[] }[];
+    scopes: { path: string; kits: string[] }[];
     configurationScopes: (
         configuration: string,
     ) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
@@ -39,7 +39,7 @@ export type TemplateInputs = {
     roleFolders: (role: string) => string[];
     /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
     roleScopes: (role: string) => { path: string; folders: string[] }[];
-    configurations: string[];
+    kits: string[];
     policy: Policy;
     view: MergedView;
     format: MergedView['format'];

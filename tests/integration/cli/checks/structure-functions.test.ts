@@ -12,7 +12,7 @@ for (const threshold of [1, 2, 3]) {
     test(`SQL and PL/pgSQL use statement threshold ${String(threshold)} and seven input parameters`, async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["sql"]\n[limits]\ntrivial_statements = ${String(threshold)}\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["sql"]\n[limits]\ntrivial_statements = ${String(threshold)}\n`,
             'functions.sql': [
                 String.raw`\set account '前言'`,
                 'SELECT :account::int;',
@@ -49,7 +49,7 @@ for (const threshold of [1, 2, 3]) {
         ]);
         await Bun.write(
             `${sandbox.path}/gspot.toml`,
-            `version = 1\nlevel = "all"\nconfigurations = ["sql"]\n[limits.sql]\nfunction_parameters = 8\n`,
+            `version = 1\nlevel = "all"\nkits = ["sql"]\n[limits.sql]\nfunction_parameters = 8\n`,
         );
         const overridden = await executeRun(await openSession(sandbox.path), {
             stage: 'all',
@@ -71,7 +71,7 @@ for (const threshold of [1, 2, 3]) {
 test('SQL atomic bodies count each statement and reject files containing only trivial functions', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["sql"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n',
         'owner.sql':
             'CREATE FUNCTION substantial() RETURNS int LANGUAGE SQL BEGIN ATOMIC SELECT 1; SELECT 2; SELECT 3; END;',
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
@@ -99,7 +99,7 @@ test.each([
 ] as const)('%s releases earlier trees when a later parse returns no tree', async (language, extension, read) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}"]\n`,
+        'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}"]\n`,
         [`first.${extension}`]: language === 'swift' ? 'let first = 1' : 'first = 1',
         [`second.${extension}`]: language === 'swift' ? 'let second = 2' : 'second = 2',
     });
@@ -130,7 +130,7 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
     await using sandbox = await testdir();
     const source = "\\set label '前言'\nCREATE FUNCTION value() RETURNS int LANGUAGE sql AS $$ SELECT :value $$;\n";
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["sql"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n',
         'functions.sql': source,
     });
     const options = { stage: 'all' as const, skips: [], only: ['sql/functions'], fix: false, isDryRun: false };

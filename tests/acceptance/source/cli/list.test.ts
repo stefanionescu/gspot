@@ -8,7 +8,7 @@ import type { CoverageReport } from '#cli/types/execution/execution.ts';
 
 test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n';
+    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
     await createFileTree(directory.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["excluded.sh"]\nreason = "The fixture exercises differing coverage within one ending."\n`,
         'entry.sh': 'echo example\n',
@@ -40,7 +40,7 @@ test('doctor and list name unsupported endings and retain different coverage wit
 test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
     await using directory = await testdir();
     const policy =
-        'version = 1\nconfigurations = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';
+        'version = 1\nkits = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'entry.sh': 'echo example\n',

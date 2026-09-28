@@ -44,7 +44,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
             'sample.txt': 'teh wether\n',
         });
         const environment = { PATH: toolsPath(['typos']) };
@@ -78,7 +78,7 @@ test(
             ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt', 'tab\tname.txt']),
         ];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
             'the.txt': 'protected\n',
             ...Object.fromEntries(paths.map((path) => [path, 'café teh\n'])),
         });

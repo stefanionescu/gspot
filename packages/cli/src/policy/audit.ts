@@ -149,11 +149,11 @@ function unwrittenSurfaceProblems(
 ): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
     const surfaces = [
-        { settings: surface, scope: undefined, path: ['configurations'] as PathSegment[] },
+        { settings: surface, scope: undefined, path: ['kits'] as PathSegment[] },
         ...policy.scopes.map((scope, index) => ({
             settings: scopeSurfaces.get(scope.path) ?? surface,
             scope: scope.path,
-            path: ['scope', index, 'configurations'] as PathSegment[],
+            path: ['scope', index, 'kits'] as PathSegment[],
         })),
     ];
     for (const { settings, scope, path } of surfaces) {

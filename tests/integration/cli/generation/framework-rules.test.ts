@@ -13,7 +13,7 @@ const modules = join(import.meta.dir, '../../../../node_modules');
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\n${policy}\n[rules]\ninstall = false\n`,
+        'gspot.toml': `version = 1\nlevel = "all"\n${policy}\n[guides]\ninstall = false\n`,
         'package.json': '{"name":"planted","private":true,"type":"module","dependencies":{"react":"19.1.1"}}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
@@ -39,7 +39,7 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
 
 test('native DOM exclusions remain confined to their scope', async () => {
     const rules = await configuredRules(
-        'configurations = ["react", "typescript"]\n[[scope]]\npath = "native"\nconfigurations = ["react-native"]',
+        'kits = ["react", "typescript"]\n[[scope]]\npath = "native"\nkits = ["react-native"]',
         ['native/App.tsx', 'web/App.tsx'],
     );
     expect(rules['native/App.tsx']!['jsx-a11y/alt-text']![0]).toBe(0);
@@ -50,7 +50,7 @@ test.each(['none', 'index-only'])(
     'Next.js entry exclusions respect reexports = %s and nested scope ownership',
     async (reexports) => {
         const rules = await configuredRules(
-            `configurations = ["typescript"]\n[structure]\nreexports = "${reexports}"\n[[scope]]\npath = "app"\nconfigurations = ["nextjs"]`,
+            `kits = ["typescript"]\n[structure]\nreexports = "${reexports}"\n[[scope]]\npath = "app"\nkits = ["nextjs"]`,
             ['app/page.tsx', 'app/component.tsx', 'library/page.tsx'],
         );
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
@@ -67,13 +67,13 @@ test('package rule exceptions retain neighboring violations and corrected succes
     await createFileTree(sandbox.path, {
         'gspot.toml': `version = 1
 level = "all"
-configurations = ["typescript"]
+kits = ["typescript"]
 [[ignore]]
 check = "typescript/eslint"
 rule = "package-json/require-exports"
 paths = ["cli/package.json"]
 reason = "The command package exposes no module API."
-[rules]
+[guides]
 install = false
 `,
         'package.json': JSON.stringify({ ...manifest, private: true }),

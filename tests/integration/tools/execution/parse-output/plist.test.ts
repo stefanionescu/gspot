@@ -15,7 +15,7 @@ describe.if(process.platform === 'darwin')('native property lists', () => {
         async (check) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'gspot.toml': 'version = 1\nconfigurations = ["configs", "xcode"]\n',
+                'gspot.toml': 'version = 1\nkits = ["configs", "xcode"]\n',
                 'bad.plist': '<plist><dict>',
                 'private.plist': '<plist><dict/></plist>\n',
             });

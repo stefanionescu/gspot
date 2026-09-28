@@ -39,7 +39,7 @@ test.each(['recommended', 'all'])(
         );
         const selectedIds = expected.map(({ rule }) => rule).toSorted((left, right) => left.localeCompare(right));
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["swift", "javascript", "security"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["swift", "javascript", "security"]\n[guides]\ninstall = false\n`,
             'Value.swift': SWIFT,
             'scripts/build.js': SCRIPTS,
             'Info.plist': PLIST,

@@ -19,7 +19,7 @@ function commit(root: string): void {
 }
 
 const policy = `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/paths"
 command = ${JSON.stringify([process.execPath, '-e', 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;', '{files}'])}

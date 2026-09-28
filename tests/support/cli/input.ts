@@ -11,10 +11,7 @@ export async function checkInput(
     paths: string[],
     policy: Record<string, unknown> = {},
 ): Promise<EngineInput> {
-    await Bun.write(
-        join(root, 'gspot.toml'),
-        stringify({ version: 1, level: 'all', configurations: ['docs'], ...policy }),
-    );
+    await Bun.write(join(root, 'gspot.toml'), stringify({ version: 1, level: 'all', kits: ['docs'], ...policy }));
     const session = await openSession(root);
     const scope = session.scopes[0]!;
     const spec = [...session.manifests.values()]

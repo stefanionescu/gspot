@@ -43,8 +43,8 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
-            configurations: ['markdown'],
-            scopes: [{ path: 'guide/deep', configurations: ['markdown'] }],
+            kits: ['markdown'],
+            scopes: [{ path: 'guide/deep', kits: ['markdown'] }],
             carried,
             hooks: 'none',
             ci: 'none',

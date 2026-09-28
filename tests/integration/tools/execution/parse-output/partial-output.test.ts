@@ -16,7 +16,7 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
     await using sandbox = await testdir();
     const source = '#!/usr/bin/env bash\necho $unquoted\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
@@ -80,7 +80,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
         await using sandbox = await testdir();
         const source = 'import os\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["python"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
             'sample.py': source,
             'broken.py': brokenSource,
         });

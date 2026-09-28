@@ -3,13 +3,13 @@
 export const PLAN_INIT = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'bash',
     'javascript',
     'spelling',
     'markdown',
     '--no-runner',
     '--no-ci',
-    '--no-rules',
+    '--no-guides',
     '--no-install',
 ];

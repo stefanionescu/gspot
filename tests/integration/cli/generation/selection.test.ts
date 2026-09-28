@@ -18,7 +18,7 @@ test.each([
 ])('%s security output follows the selected security configuration', async (configuration, name) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+        'gspot.toml': `version = 1\nkits = ["${configuration}"]\n`,
     });
     const target = `.gspot/config/semgrep/${name}.yml`;
     const plainSession = await openSession(sandbox.path);
@@ -27,7 +27,7 @@ test.each([
         packageClient: plainSession.packageClient,
     });
     expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), `version = 1\nconfigurations = ["${configuration}", "security"]\n`);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), `version = 1\nkits = ["${configuration}", "security"]\n`);
     const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(
         securitySession.policyFiles.policy,
@@ -42,7 +42,7 @@ test.each([
 test.each(['recommended', 'all'])('generated %s ESLint configuration makes layout opt-in', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n`,
         'package.json': '{"name":"layout-consumer","private":true,"type":"module"}',
         'src/order.ts': 'export const value = 1;\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
@@ -80,7 +80,7 @@ test('license configuration retains scoped exceptions and inherited license allo
         'app/child/source.py': 'selected = True\n',
         'sibling/source.py': 'selected = True\n',
         'gspot.toml':
-            'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+            'version = 1\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
     });
     const session = await openSession(sandbox.path);
     const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

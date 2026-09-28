@@ -14,7 +14,7 @@ import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n';
+    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["source.sh"]\nreason = "The fixture exercises a path exception."\n`,
         'source.sh': 'echo example\n',
@@ -30,7 +30,7 @@ test('doctor coverage honors path exceptions and does not borrow syntax from ano
 
 test('doctor coverage excludes binary files and counts routine formatting at both levels', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "recommended"\nconfigurations = ["bash"]\n';
+    const policy = 'version = 1\nlevel = "recommended"\nkits = ["bash"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'source.sh': 'echo example\n',
@@ -46,16 +46,16 @@ test('doctor coverage excludes binary files and counts routine formatting at bot
 
 test('doctor coverage applies nested exceptions only to their owning scope', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n';
+    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': `${policy}\n[[scope]]\npath = "app"\nconfigurations = []\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["app"]\nreason = "The nested fixture exercises a check exception."\n`,
+        'gspot.toml': `${policy}\n[[scope]]\npath = "app"\nkits = []\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["app"]\nreason = "The nested fixture exercises a check exception."\n`,
         'source.sh': 'echo root\n',
         'app/source.sh': 'echo nested\n',
     });
     const ignored = coverageReport(await openSession(sandbox.path));
     expect(ignored.partial.find((entry) => entry.path === 'app/source.sh')?.missing).toContain('syntax');
     expect(ignored.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('syntax');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), `${policy}\n[[scope]]\npath = "app"\nconfigurations = []\n`);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), `${policy}\n[[scope]]\npath = "app"\nkits = []\n`);
     const corrected = coverageReport(await openSession(sandbox.path));
     expect(corrected.partial.find((entry) => entry.path === 'app/source.sh')?.missing ?? []).not.toContain('syntax');
 });
@@ -63,10 +63,10 @@ test('doctor coverage applies nested exceptions only to their owning scope', asy
 test('doctor recognizes enabled repository checks across nested scopes', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
-configurations = []
+kits = []
 [[scope]]
 path = "app"
-configurations = []
+kits = []
 [[check]]
 name = "project/syntax"
 command = ["bash", "-n", "{files}"]
@@ -88,7 +88,7 @@ stage = "commit"
 test('doctor reports local configuration and version', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'README.md': '# Example\n',
     });
     const result = await doctorCommand({ cwd: sandbox.path });
@@ -100,7 +100,7 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
         '.gspot/authored.json': original,
     });
     await applyAll(await openSession(sandbox.path));
@@ -117,7 +117,7 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
 test('doctor fails missing and edited hook integration and accepts installed hooks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n',
+        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n',
     });
     expect(runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
     const missing = await doctorCommand({ cwd: sandbox.path });
@@ -141,7 +141,7 @@ test('doctor excludes private tool manifests from language detection and detects
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
         '.gspot/pyproject.toml': python,
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });

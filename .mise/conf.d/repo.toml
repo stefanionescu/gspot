@@ -69,7 +69,7 @@ description = "Run native compatibility tests with the selected tools installed.
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/tools"
 
-[tasks."rules:lint"]
+[tasks."guides:lint"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Validate guide structure and native Good examples at both levels."
 dir = "{{config_root}}/tests"

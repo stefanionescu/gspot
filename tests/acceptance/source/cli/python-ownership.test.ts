@@ -12,7 +12,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["python"]\n[[scope]]\npath = "locked"\nconfigurations = ["python"]\n[[scope]]\npath = "other"\nconfigurations = ["python"]\n',
+            'version = 1\nlevel = "all"\nkits = ["python"]\n[[scope]]\npath = "locked"\nkits = ["python"]\n[[scope]]\npath = "other"\nkits = ["python"]\n',
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'requirements.txt': 'root-dependency\n',
         'locked/uv.lock': 'version = 1\n',
@@ -42,7 +42,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
 test('absent Python import contracts are explicit skips and malformed project files are errors', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["python"]\n',
+        'gspot.toml': 'version = 1\nkits = ["python"]\n',
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'main.py': 'value = 1\n',
         'pyproject.toml': '# [tool.importlinter] is only a comment\n',

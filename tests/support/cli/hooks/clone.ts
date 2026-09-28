@@ -33,8 +33,8 @@ const CLONE_HOOK_FILES = {
     },
 };
 const CLONE_POLICY = `version = 1
-configurations = []
-[rules]
+kits = []
+[guides]
 install = false
 [hooks]
 tool = "%HOOK_TOOL%"

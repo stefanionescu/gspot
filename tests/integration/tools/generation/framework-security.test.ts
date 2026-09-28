@@ -9,7 +9,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 test('framework security packs stay within inherited scopes and preserve sibling input', async () => {
     await using sandbox = await testdir();
     const policy =
-        'version = 1\nconfigurations = ["javascript", "security"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+        'version = 1\nkits = ["javascript", "security"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
     const source = 'res.send(req.body);\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -71,7 +71,7 @@ test('a module-loading exception preserves other security rules and neighboring 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["javascript", "security"]\n[[ignore]]\ncheck = "security/semgrep"\nrule = "node-no-configured-require"\npaths = ["configuration.js"]\nreason = "The configuration evaluator loads repository-selected modules."\n',
+            'version = 1\nkits = ["javascript", "security"]\n[[ignore]]\ncheck = "security/semgrep"\nrule = "node-no-configured-require"\npaths = ["configuration.js"]\nreason = "The configuration evaluator loads repository-selected modules."\n',
         'configuration.js': 'await import(modulePath);\neval(input);\n',
         'neighbor.js': 'await import(modulePath);\n',
     });

@@ -4,7 +4,7 @@ import type { InitAnswers } from '#cli/types/commands/init.ts';
 export const DETECTION_LABEL_WIDTH = 13;
 export const NO_CONFIGURATIONS = 'none';
 export const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
-export const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'configurations']);
+export const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'kits']);
 export const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
     { value: 'lefthook', label: 'a block in lefthook.yml' },

@@ -16,7 +16,7 @@ import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/l
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith('.gspot/state/')) return false;
-    if (path.startsWith('.gspot/rules/') && !policy.rules.install) return false;
+    if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
     return !(path.startsWith(`${CACHE_DIRECTORY}/`) || NEVER_STRAY.has(path));
 }

@@ -46,8 +46,8 @@ export function adoptedTool(adoption: AdoptionResult, tool: string): { settings:
  * @returns the scope and its tool settings
  */
 export function adoptedScope(adoption: AdoptionResult, path: string, configuration: string): AdoptedScope {
-    const scope = adoption.scopes.get(path) ?? { configurations: [], tools: {} };
-    scope.configurations = [...new Set([...scope.configurations, configuration])];
+    const scope = adoption.scopes.get(path) ?? { kits: [], tools: {} };
+    scope.kits = [...new Set([...scope.kits, configuration])];
     adoption.scopes.set(path, scope);
     return scope;
 }

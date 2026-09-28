@@ -177,7 +177,7 @@ export function readPolicyText(
 
     if (found.length === 0) return { policy: complete, problems: [] };
     // A configurations list is settled by a root value, never by dropping the list.
-    if (found.some((problem) => ownerOf(problem.path).at(-1) === 'configurations'))
+    if (found.some((problem) => ownerOf(problem.path).at(-1) === 'kits'))
         throw new PolicyError(problemLines(text, path, found));
     const locations = sourceLocations(text);
     const problems = found.map((problem) => ({ ...problem, ...policyPosition(locations, problem.path) }));

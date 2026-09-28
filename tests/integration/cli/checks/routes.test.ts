@@ -43,7 +43,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["express"]\n[tools.express]\nroute_files = ["routes/*.ts"]\n',
+            'version = 1\nlevel = "all"\nkits = ["express"]\n[tools.express]\nroute_files = ["routes/*.ts"]\n',
         'package.json': '{"imports":{"#routes/*":"./routes/*.ts"}}',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@routes/*":["./routes/*"]}}}',
         'routes/users.ts': ROUTE,

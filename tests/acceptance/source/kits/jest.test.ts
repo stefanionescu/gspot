@@ -22,7 +22,7 @@ test.each(['recommended', 'all'])(
         const focused =
             "import { test, expect } from 'bun:test';\n\ntest.only('parses a URL', () => {\n    const parsed = new URL('https://example.com/docs');\n    expect(parsed.hostname, 'The URL keeps its host.').toBe('example.com');\n    expect(parsed.pathname).toBe('/docs');\n});\n";
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[runner]\ntool = "mise"\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n`,
             'package.json': '{"name":"jest-private-lint","private":true,"type":"module"}\n',
             'sample.test.js': focused,
         });
@@ -50,7 +50,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["jest"]\n[scope.tools.jest]\ncoverage_functions = 100\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ncoverage_functions = 100\n`,
             'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
             'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',
             'app/package.json': '{"name":"jest-nested","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
@@ -86,7 +86,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n`,
             'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
             'math.cjs': source,
             'math.test.cjs': planted,

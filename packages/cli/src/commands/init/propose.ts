@@ -44,21 +44,21 @@ function headTables(proposal: InitProposal): TomlTable {
     const document: TomlTable = {
         version: 1,
         level: policySchema.shape.level.parse(undefined),
-        configurations: proposal.configurations,
+        kits: proposal.kits,
     };
-    const scopes = new Map<string, { path: string; configurations: string[]; tools: TomlTable }>(
+    const scopes = new Map<string, { path: string; kits: string[]; tools: TomlTable }>(
         proposal.scopes.map((scope) => [
             scope.path,
             {
                 path: scope.path,
-                configurations: scope.configurations,
+                kits: scope.kits,
                 tools: proposal.xcode?.scope === scope.path ? { xcode: xcodeTable(proposal.xcode) } : {},
             },
         ]),
     );
     for (const [path, adopted] of proposal.carried.scopes) {
-        const scope = scopes.get(path) ?? { path, configurations: [], tools: {} };
-        scope.configurations = [...new Set([...scope.configurations, ...adopted.configurations])];
+        const scope = scopes.get(path) ?? { path, kits: [], tools: {} };
+        scope.kits = [...new Set([...scope.kits, ...adopted.kits])];
         scope.tools = { ...scope.tools, ...adopted.tools };
         scopes.set(path, scope);
     }
@@ -124,7 +124,7 @@ function applyIntegrations(document: TomlTable, proposal: InitProposal): void {
     else document['hooks'] = { ...asRaw(document['hooks']), tool: proposal.hooks };
     if (proposal.ci === 'none') delete document['ci'];
     else document['ci'] = { ...asRaw(document['ci']), provider: proposal.ci };
-    document['rules'] = { directory: '.gspot/rules', ...asRaw(document['rules']), install: proposal.rules };
+    document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: proposal.rules };
     document['coverage'] = { strict: false, ...asRaw(document['coverage']) };
     if (proposal.runner === 'none') delete document['runner'];
     else {

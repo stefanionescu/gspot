@@ -46,8 +46,8 @@ test.each([false, true])(
         const policy = {
             version: 1,
             level: 'all',
-            configurations: ['css'],
-            rules: { install: false },
+            kits: ['css'],
+            guides: { install: false },
             tools: { stylelint: carried.tools.get('stylelint')!.settings },
             ignore: carried.tools.get('stylelint')!.ignores,
         };

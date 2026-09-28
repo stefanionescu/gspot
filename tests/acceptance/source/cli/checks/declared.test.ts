@@ -16,7 +16,7 @@ test('a [[check]] entry > reruns a repository check when an input outside its se
     await createFileTree(sandbox.path, {
         '.gitignore': '.gspot/\n',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 
 [[check]]
 name = "notes/state"
@@ -60,7 +60,7 @@ test(
         const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
         await run(
             sandbox.path,
-            ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-guides', '--no-install'],
             environment,
         );
         const policy = join(sandbox.path, 'gspot.toml');
@@ -103,7 +103,7 @@ test('a declared check maps nested JSON output into findings', async () => {
     await createFileTree(sandbox.path, {
         'source.txt': 'defect',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/json"
 command = ${JSON.stringify(command)}

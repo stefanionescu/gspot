@@ -6,7 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 test('shell visibility uses outside callers and keeps entrypoints public', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
         'owner.sh':
             '_private() {\n echo first\n}\nhelper() {\n echo second\n}\nshared() {\n echo third\n}\nmain() {\n shared\n}\n',
         'caller.sh': '_private\nshared\n',
@@ -40,7 +40,7 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
 test('shell declaration order resets between files and requires main last', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
         'first.sh':
             '_top() {\n echo first\n}\npublic() {\n echo second\n}\n_late() {\n echo third\n}\nmain() {\n public\n}\nafter() {\n echo last\n}\n',
         'second.sh': '_local() {\n echo local\n}\nmain() {\n _local\n}\n',
@@ -78,7 +78,7 @@ test('Swift declaration order identifies private types and extensions and accept
     const shared = 'struct Shared {}\n';
     const hidden = 'private struct Hidden {}\nprivate extension Shared {}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["swift"]\n',
         'Declarations.swift': shared + hidden,
     });
     const options = {

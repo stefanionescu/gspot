@@ -24,7 +24,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                configurations: [],
+                kits: [],
                 check: [
                     {
                         name: 'project/native',
@@ -105,7 +105,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/native',
@@ -175,7 +175,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/native',
@@ -241,7 +241,7 @@ test.each([
     async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n`,
             '.gitignore': '.gspot/\n',
             [path]: defect,
         });

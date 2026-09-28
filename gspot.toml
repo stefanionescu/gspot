@@ -4,7 +4,7 @@
 
 version = 1
 level = "all"
-configurations = [
+kits = [
     "jest",
     "bash",
     "spelling",
@@ -25,22 +25,22 @@ configurations = [
 
 [[scope]]
 path = "packages/cli"
-configurations = []
+kits = []
 
 [[scope]]
 path = "packages/eslint-plugin"
-configurations = []
+kits = []
 
 [[scope]]
 path = "docs"
-configurations = ["typescript", "css"]
+kits = ["typescript", "css"]
 
 [hooks]
 tool = "gspot"
 
-[rules]
+[guides]
 install = true
-directory = ".gspot/rules"
+directory = ".gspot/guides"
 
 [coverage]
 strict = true
@@ -72,9 +72,9 @@ patterns = [
     ".gspot/config/trivy.yaml",
     ".gspot/node_modules",
     ".gspot/node_modules/.bin",
-    ".gspot/rules/framework/nextjs/NEXTJS.md",
-    ".gspot/rules/framework/react/REACT.md",
-    ".gspot/rules/library/zod/ZOD.md",
+    ".gspot/guides/framework/nextjs/NEXTJS.md",
+    ".gspot/guides/framework/react/REACT.md",
+    ".gspot/guides/library/zod/ZOD.md",
     "docs/dist",
     "packages/cli/.build",
     "packages/cli/scripts/configuration-process.js",
@@ -112,7 +112,7 @@ patterns = [
 reason = "Architecture examples, documentation walkthroughs, and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
 
 [[tools.docs.paths_allowed]]
-patterns = ["acceptance/source/configurations/css.test.ts"]
+patterns = ["acceptance/source/kits/css.test.ts"]
 reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/kits/css.test.ts."
 
 [[tools.docs.paths_allowed]]
@@ -155,7 +155,7 @@ patterns = [
 reason = "The guides explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
 
 [[tools.docs.paths_allowed]]
-patterns = ["acceptance/source/configurations/vite.test.ts"]
+patterns = ["acceptance/source/kits/vite.test.ts"]
 reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/kits/vite.test.ts."
 [tools.lychee]
 
@@ -783,8 +783,8 @@ reason = "ESLint rule ids are the file names, and the ids share their first word
 paths = ["docs/src"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
 [[check]]
-name = "rules/lint"
-command = ["mise", "run", "rules:lint"]
+name = "guides/lint"
+command = ["mise", "run", "guides:lint"]
 paths = ["packages/cli/guides/**", "packages/cli/src/agents/**", "packages/cli/kits/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", ".mise/conf.d/repo.toml"]
 stage = "push"
 summary = "Validates guide structure and runs Good examples through their native linters."

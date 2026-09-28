@@ -38,7 +38,7 @@ const CALLBACK_SOURCE = [
 test.each(['recommended', 'all'])('generated %s lint accepts JavaScript method node shapes', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'counter.js': '',
     });
@@ -66,7 +66,7 @@ test.each(['recommended', 'all'])('generated %s lint accepts JavaScript method n
 test.each(['recommended', 'all'])('generated %s lint preserves required class method contracts', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'methods.ts': [
@@ -92,7 +92,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
             'callbacks.ts': CALLBACK_SOURCE,
@@ -131,7 +131,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
             'area.ts': 'export function area(width: number, height: number) { return width * height; }\n',
@@ -172,7 +172,7 @@ test.each(['recommended', 'all'])(
 test.each(['recommended', 'all'])('generated %s lint keeps callbacks written as object properties', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'options.ts': [

@@ -9,7 +9,7 @@ export async function writeAdoptedMarkdown(root: string, adoption: AdoptionResul
     await Bun.write(
         join(root, 'gspot.toml'),
         proposeText({
-            configurations: ['markdown'],
+            kits: ['markdown'],
             scopes: [],
             carried: adoption,
             hooks: 'none',

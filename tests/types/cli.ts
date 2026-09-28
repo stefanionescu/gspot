@@ -27,8 +27,8 @@ export type FindingCase = PlantedInput & {
 };
 /** What a planted repository holds and selects. */
 export type Sandbox = {
-    /** The configurations init selects by name. */
-    configurations: string[];
+    /** The kits init selects by name. */
+    kits: string[];
     /** The packages the planted manifest depends on; no manifest is written without them. */
     dependencies?: Record<string, string>;
     /** The source files of the repository. */

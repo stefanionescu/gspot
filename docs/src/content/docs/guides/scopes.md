@@ -12,18 +12,18 @@ A complete example policy:
 
 ```toml
 version = 1
-configurations = []
+kits = []
 
 [[scope]]
 path = "api"
-configurations = ["typescript", "express", "vitest"]
+kits = ["typescript", "express", "vitest"]
 
 [scope.limits]
 function_lines = 80
 
 [[scope]]
 path = "ios"
-configurations = ["swift", "xcode"]
+kits = ["swift", "xcode"]
 ```
 
 Use the singular `[[scope]]` array table. The `[scope.limits]` table belongs to the preceding

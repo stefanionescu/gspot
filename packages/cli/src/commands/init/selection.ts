@@ -24,7 +24,7 @@ function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
 
 function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<string, string[]>): ScopeEntry[] {
     const scopes: ScopeEntry[] = [
-        { name: 'root', path: '', configurations: [], source: 'root' },
+        { name: 'root', path: '', kits: [], source: 'root' },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
     const files = openConfinedRoot(root);
@@ -34,7 +34,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
             if (files.stat(path)?.isDirectory() !== true)
                 throw new SelectionError([`Scope directory does not exist: ${path}`]);
             if (scopes.every((scope) => scope.path !== path))
-                scopes.push({ name: path.split('/').pop() ?? path, path, configurations: [], source: 'gspot.toml' });
+                scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
         }
     } finally {
         files.close();
@@ -52,7 +52,7 @@ function getCandidate(context: InitContext, configuration: string, without: Set<
 
 function rootSelection(context: InitContext, rootProposals: { configuration: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
-    const named = context.options.configurations?.filter((id) => id !== NO_CONFIGURATIONS && !without.has(id));
+    const named = context.options.kits?.filter((id) => id !== NO_CONFIGURATIONS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
     const detected = rootProposals
         .filter((proposal) => {
@@ -112,7 +112,7 @@ function assertKnown(
     scopeFlags: Map<string, string[]>,
     manifests: Map<string, Manifest>,
 ): void {
-    const configurations = (options.configurations ?? []).filter((id) => id !== NO_CONFIGURATIONS);
+    const configurations = (options.kits ?? []).filter((id) => id !== NO_CONFIGURATIONS);
     const without = options.without ?? [];
     const known = manifests.keys().toArray();
     const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
@@ -208,7 +208,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
     const sets = {
-        named: new Set(options.configurations ?? scopeFlags.values().toArray().flat()),
+        named: new Set(options.kits ?? scopeFlags.values().toArray().flat()),
         chosen: new Set([...keptRoot, ...inScopes]),
         listed: new Set([...rootIds, ...inScopes]),
     };

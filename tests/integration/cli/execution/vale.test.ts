@@ -19,8 +19,7 @@ for (const extension of ['md', 'sh']) {
             const path = `sample.${extension}`;
             const source = '# Example text\n';
             await createFileTree(directory.path, {
-                'gspot.toml':
-                    'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
+                'gspot.toml': 'version = 1\nkits = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
                 '.gspot/config/vale.ini': 'Packages =\n',
                 [path]: source,
             });

@@ -28,7 +28,7 @@ for (const scope of ['', 'api/']) {
                 'gspot.toml':
                     scope === ''
                         ? PROJECTS_POLICY
-                        : PROJECTS_POLICY + '\n[[scope]]\npath = "api"\nconfigurations = ["typescript"]\n',
+                        : PROJECTS_POLICY + '\n[[scope]]\npath = "api"\nkits = ["typescript"]\n',
                 '.gitignore': 'node_modules/\n.gspot/\n',
                 'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
                 'root.ts': 'export const root = 1;',

@@ -29,8 +29,8 @@ export async function prepareSpelling(
     const discovered = existingTooling(root, repository.files, []);
     const carried = await collectCarried(root, discovered, new Set(['spelling']), []);
     const policy = proposeText({
-        configurations: ['spelling'],
-        scopes: existing ? [{ path: 'nested', configurations: ['markdown'] }] : [],
+        kits: ['spelling'],
+        scopes: existing ? [{ path: 'nested', kits: ['markdown'] }] : [],
         carried,
         hooks: 'none',
         ci: 'none',

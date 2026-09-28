@@ -10,7 +10,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
         await using sandbox = await testdir();
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["typescript", "structure"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript", "structure"]\n',
             [path]: [
                 String.raw`const apostrophe = "I am Sid\'s example"; // eslint-disable-line no-console`,
                 'const template = `',
@@ -50,7 +50,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
 test('JSX text and quoted attributes do not become directives, but an empty expression comment does', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["typescript", "structure"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript", "structure"]\n',
         'source.tsx': [
             'const element = <div title="// eslint-disable no-alert">',
             '// eslint-disable no-console',

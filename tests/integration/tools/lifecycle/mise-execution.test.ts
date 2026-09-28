@@ -18,7 +18,7 @@ const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import
 
 test('runner selection preserves policy after rejection and accepts a supported correction', async () => {
     await using repository = await testdir();
-    const policy = 'version = 1\nlevel = "recommended"\nconfigurations = []\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nlevel = "recommended"\nkits = []\n[guides]\ninstall = false\n';
     await createFileTree(repository.path, { 'gspot.toml': policy });
     const rejected = await run([process.execPath, CLI, 'set', 'runner.tool', 'unsupported', '--json'], {
         cwd: repository.path,
@@ -37,7 +37,7 @@ test('mise executes generated tasks with their arguments, and install rejects an
     await using repository = await testdir();
     await using state = await testdir();
     const policy =
-        'version = 1\nlevel = "recommended"\nconfigurations = []\n[rules]\ninstall = false\n[runner]\ntool = "mise"\n';
+        'version = 1\nlevel = "recommended"\nkits = []\n[guides]\ninstall = false\n[runner]\ntool = "mise"\n';
     await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
     await createFileTree(state.path, {
         'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',

@@ -8,7 +8,7 @@ import { selectRuleFiles } from '#cli/agents/assemble.ts';
 async function generatedGuides(level: string, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript", "css", "vitest", "swift", "html", "python", "bash", "express", "nestjs", "svelte"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "css", "vitest", "swift", "html", "python", "bash", "express", "nestjs", "svelte"]\n`,
         ...files,
     });
     const session = await openSession(sandbox.path);
@@ -22,15 +22,15 @@ async function generatedGuides(level: string, files: Record<string, string>): Pr
 test('recommended guides omit marked sections and retain the next heading', async () => {
     const recommended = await generatedGuides('recommended', {});
     const all = await generatedGuides('all', {});
-    const path = '.gspot/rules/language/TYPESCRIPT.md';
+    const path = '.gspot/guides/language/TYPESCRIPT.md';
     expect(recommended.get(path)).not.toContain('## Declaration order');
     expect(all.get(path)).toContain('## Declaration order');
     expect(recommended.get(path)).toContain('## Rules not adopted');
-    const writing = '.gspot/rules/general/prose/WRITING.md';
+    const writing = '.gspot/guides/general/prose/WRITING.md';
     expect(recommended.get(writing)).not.toContain('### Avoid marketing language');
     expect(all.get(writing)).toContain('### Avoid marketing language');
     expect(recommended.get(writing)).toContain('### Write dates and times unambiguously');
-    const css = '.gspot/rules/language/CSS.md';
+    const css = '.gspot/guides/language/CSS.md';
     expect(recommended.get(css)).not.toContain('## Selectors and layout');
     expect(all.get(css)).toContain('## Selectors and layout');
     expect(recommended.get(css)).toContain('prefers-reduced-motion');
@@ -47,9 +47,9 @@ test('recommended guides omit marked sections and retain the next heading', asyn
         ['framework/express/API.md', '## Organization and naming', '## Security'],
         ['framework/nestjs/NESTJS.md', '## Feature organization', '## Configuration and security'],
     ] as const) {
-        expect(recommended.get(`.gspot/rules/${guide}`)).not.toContain(convention);
-        expect(all.get(`.gspot/rules/${guide}`)).toContain(convention);
-        expect(recommended.get(`.gspot/rules/${guide}`)).toContain(safety);
+        expect(recommended.get(`.gspot/guides/${guide}`)).not.toContain(convention);
+        expect(all.get(`.gspot/guides/${guide}`)).toContain(convention);
+        expect(recommended.get(`.gspot/guides/${guide}`)).toContain(safety);
     }
 });
 
@@ -60,20 +60,20 @@ test('conditional guides follow lockfile and dependency evidence', async () => {
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
     for (const path of ['runtime/bun/BUN.md', 'tool/tailwind/TAILWIND.md', 'tool/playwright/PLAYWRIGHT.md']) {
-        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
-        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
+        expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
+        expect(present.has(`.gspot/guides/${path}`)).toBe(true);
     }
 });
 
 test('a selected manifest cannot silently omit a missing guide asset', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
     const session = await openSession(sandbox.path);
     const manifest = parseManifest(
         '[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "Example guide selection for this test."\n[guides]\ncode = [{path = "missing.md"}]\n',
         'configurations/example',
     );
-    expect(() => selectRuleFiles(session.policyFiles.policy.rules, [manifest], session.repository)).toThrow(
+    expect(() => selectRuleFiles(session.policyFiles.policy.guides, [manifest], session.repository)).toThrow(
         'does not exist: missing.md',
     );
 });
@@ -82,7 +82,7 @@ test('Swift guides require parsed imports and ignore comments and strings', asyn
     const absent = await generatedGuides('all', { 'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n' });
     const present = await generatedGuides('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
     for (const path of ['framework/swiftui/SWIFTUI.md', 'framework/uikit/UIKIT.md']) {
-        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
-        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
+        expect(absent.has(`.gspot/guides/${path}`)).toBe(false);
+        expect(present.has(`.gspot/guides/${path}`)).toBe(true);
     }
 });

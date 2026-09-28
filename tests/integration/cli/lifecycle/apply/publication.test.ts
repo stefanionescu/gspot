@@ -12,7 +12,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 
 test('apply previews changed pins, preserves policy, and writes the pin only after successful generation', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nconfigurations = []\n[rules]\ninstall = true\n';
+    const policy = 'version = 1\nkits = []\n[guides]\ninstall = true\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.json).toMatchObject({ isDryRun: true, pin: { from: '0.0.1', to: GSPOT_VERSION } });
@@ -36,7 +36,7 @@ test('apply previews changed pins, preserves policy, and writes the pin only aft
 test('a failed pin publication leaves the old version and succeeds after the write failure is repaired', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         '.gspot/version': '0.0.1\n',
     });
     const rename = fs.renameSync;
@@ -58,7 +58,7 @@ test('a failed pin publication leaves the old version and succeeds after the wri
 test('apply preview rejects a generated destination linked outside the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n',
+        'project/gspot.toml': 'version = 1\nkits = ["spelling"]\n',
         'project/.gspot/config/.keep': '',
         outside: 'authored external configuration\n',
     });
@@ -74,7 +74,7 @@ test.each(['gspot.toml', '.gspot/version'])(
     'apply preview rejects an external %s before producing configuration',
     async (path) => {
         await using sandbox = await testdir();
-        const policy = 'version = 1\nconfigurations = []\n';
+        const policy = 'version = 1\nkits = []\n';
         const original = path === 'gspot.toml' ? policy : '0.0.1\n';
         await createFileTree(sandbox.path, {
             'project/gspot.toml': policy,
@@ -93,7 +93,7 @@ test.each(['gspot.toml', '.gspot/version'])(
 test('apply validates obsolete output parents before publishing new configuration', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+        'project/gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
         'outside/old.txt': 'outside bytes\n',
     });
     const root = join(directory.path, 'project');

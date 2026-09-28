@@ -88,7 +88,7 @@ export function withoutRequired(name: string, chain: string[]): string {
  * @returns the message
  */
 export function configurationNotListed(name: string, scope: string | undefined): string {
-    const where = scope === undefined ? 'the root configurations' : `the configurations of scope ${scope}`;
+    const where = scope === undefined ? 'the root kits' : `the kits of scope ${scope}`;
     return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot list settings to see the selection.`;
 }
 
@@ -107,7 +107,7 @@ export function dirtyTree(count: number): string {
  * @returns the message
  */
 export function circularRequires(chain: string[]): string {
-    return `The configurations require each other in a circle: ${chain.join(' -> ')}. This is a bug in a configuration manifest.`;
+    return `The kits require each other in a circle: ${chain.join(' -> ')}. This is a bug in a kit manifest.`;
 }
 
 /**
@@ -163,14 +163,14 @@ export function extraNeedsReason(tool: string): string {
 }
 
 /**
- * Two configurations shipping different defaults for one scalar.
+ * Two kits shipping different defaults for one scalar.
  * @param key the setting key
  * @param a the first configuration id
  * @param b the second configuration id
  * @returns the message
  */
 export function conflictingScalars(key: string, a: string, b: string): string {
-    return `The configurations \`${a}\` and \`${b}\` set \`${key}\` to different values. Set it yourself in gspot.toml to decide.`;
+    return `The kits \`${a}\` and \`${b}\` set \`${key}\` to different values. Set it yourself in gspot.toml to decide.`;
 }
 
 /**

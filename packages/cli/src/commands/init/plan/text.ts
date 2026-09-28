@@ -9,13 +9,13 @@ function section(title: string, rows: { path: string; note: string }[]): string[
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
-function configurationSection(rows: TakeoverPlan['configurations']): string[] {
-    if (rows.length === 0) return ['configurations', '  none: the rule files install alone', ''];
+function configurationSection(rows: TakeoverPlan['kits']): string[] {
+    if (rows.length === 0) return ['kits', '  none: the guides install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
-        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+        return `  ${row.kit.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
     });
-    return ['configurations', ...lines, ''];
+    return ['kits', ...lines, ''];
 }
 
 function profileSection(profile: TakeoverPlan['profile']): string[] {
@@ -45,7 +45,7 @@ export function initPlanText(plan: TakeoverPlan): string {
     const { dim } = colors;
     const lines = [
         ...profileSection(plan.profile),
-        ...configurationSection(plan.configurations),
+        ...configurationSection(plan.kits),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('kept active', plan.retained),

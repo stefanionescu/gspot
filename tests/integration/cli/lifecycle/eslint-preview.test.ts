@@ -15,7 +15,7 @@ test('apply preview retains its text diff when ESLint dependencies are unavailab
     await using directory = await testdir();
     const original = 'export default [];\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n',
         '.gspot/config/eslint.config.mjs': original,
     });
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
@@ -27,7 +27,7 @@ test('apply preview retains its text diff when ESLint dependencies are unavailab
 
 test('apply preview names a generated ESLint rule change using installed dependencies', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nlevel = "all"\nkits = ["javascript"]\n[guides]\ninstall = false\n';
     const ignored =
         '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "The fixture checks a changed rule in the rendered configuration."\n';
     await createFileTree(directory.path, {

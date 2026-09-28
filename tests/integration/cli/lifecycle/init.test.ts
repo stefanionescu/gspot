@@ -72,7 +72,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
         yes: true,
         isDryRun: true,
         json: true,
-        configurations: ['spelling'],
+        kits: ['spelling'],
         isListExact: true,
         hooks: 'none',
         runner: 'none',
@@ -81,7 +81,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
         install: false,
         allowDirty: false,
     } as const;
-    const preview = await initCommand({ ...options, configurations: [...options.configurations] });
+    const preview = await initCommand({ ...options, kits: [...options.kits] });
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
@@ -92,7 +92,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
     });
     expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
-    const installed = await initCommand({ ...options, configurations: [...options.configurations], isDryRun: false });
+    const installed = await initCommand({ ...options, kits: [...options.kits], isDryRun: false });
     expect(installed.exitCode).toBe(0);
     expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toContain('en-gb');
@@ -122,7 +122,7 @@ test('init reports each submodule once without reading its contents', async () =
         yes: true,
         isDryRun: true,
         json: true,
-        configurations: ['none'],
+        kits: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -154,7 +154,7 @@ test('failed initialization retains the previous pin until generated publication
                     yes: true,
                     isDryRun: false,
                     json: true,
-                    configurations: ['none'],
+                    kits: ['none'],
                     hooks: 'none',
                     runner: 'none',
                     ci: 'none',
@@ -181,7 +181,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
         yes: true,
         isDryRun: false,
         json: true,
-        configurations: ['none'],
+        kits: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -196,7 +196,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
             : execute(command, settings),
     );
     try {
-        await rejects(initCommand({ ...options, configurations: [...options.configurations] }), {
+        await rejects(initCommand({ ...options, kits: [...options.kits] }), {
             message: /Cannot read the Git index/u,
         });
         expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
@@ -204,7 +204,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
     } finally {
         failed.mockRestore();
     }
-    const corrected = await initCommand({ ...options, configurations: [...options.configurations] });
+    const corrected = await initCommand({ ...options, kits: [...options.kits] });
     expect(corrected.exitCode).toBe(0);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(true);
 });
@@ -224,7 +224,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             yes: true,
             isDryRun: false,
             json: true,
-            configurations: ['none'],
+            kits: ['none'],
             scopes: [`${scope}=`],
             hooks: 'none',
             runner: 'none',
@@ -233,12 +233,9 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             install: false,
             allowDirty: false,
         } as const;
-        await rejects(
-            initCommand({ ...options, configurations: [...options.configurations], scopes: [...options.scopes] }),
-            {
-                message: /Unsafe lifecycle|Scope directory does not exist/u,
-            },
-        );
+        await rejects(initCommand({ ...options, kits: [...options.kits], scopes: [...options.scopes] }), {
+            message: /Unsafe lifecycle|Scope directory does not exist/u,
+        });
         expect(existsSync(join(root, 'gspot.toml'))).toBe(false);
         expect(existsSync(join(root, '.gspot'))).toBe(false);
         expect(readFileSync(join(directory.path, 'outside/nested/keep.txt'), 'utf8')).toBe('original\n');
@@ -246,7 +243,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
         await createFileTree(root, { 'src/keep.txt': 'inside\n' });
         const corrected = await initCommand({
             ...options,
-            configurations: [...options.configurations],
+            kits: [...options.kits],
             scopes: ['src='],
         });
         expect(corrected.exitCode).toBe(0);
@@ -267,13 +264,13 @@ test('uv is an installer rather than a task runner, and Python initialization pr
         'init',
         '--yes',
         '--dry-run',
-        '--configurations',
+        '--kits',
         'python',
         '--no-runner',
         '--no-install',
         '--no-ci',
         '--no-hooks',
-        '--no-rules',
+        '--no-guides',
     ]);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);

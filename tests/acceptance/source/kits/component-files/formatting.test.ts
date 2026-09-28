@@ -16,7 +16,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await installSandbox(sandbox.path, {
-            configurations: ['typescript', 'svelte', 'formatting'],
+            kits: ['typescript', 'svelte', 'formatting'],
             dependencies: { svelte: '5.57.0' },
             files: {
                 'tsconfig.json': COMPONENT_TSCONFIG,

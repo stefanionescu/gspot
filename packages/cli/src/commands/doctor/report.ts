@@ -131,8 +131,8 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
         hooks: hooks.text,
         ci,
         rules: {
-            files: policy.rules.install
-                ? selectRuleFiles(session.policyFiles.policy.rules, everyManifest(session.scopes), session.repository)
+            files: policy.guides.install
+                ? selectRuleFiles(session.policyFiles.policy.guides, everyManifest(session.scopes), session.repository)
                       .length
                 : 0,
         },

@@ -35,7 +35,7 @@ preserve unsupported authored input with an explicit limitation rather than gues
 | `.gspot/pyproject.toml`, `uv.lock`                        | gspot                         | yes     | the Python lint tools gspot pins                                                                                          |
 | `.gspot/node_modules/`, `.gspot/.venv/`                   | gspot                         | no      | where those tools install                                                                                                 |
 | `.gspot/version`                                          | gspot                         | yes     | the gspot version this repository runs, one line                                                                          |
-| `.gspot/rules/**`                                         | gspot                         | yes     | the installed rule files                                                                                                  |
+| `.gspot/guides/**`                                        | gspot                         | yes     | the installed rule files                                                                                                  |
 | `.gspot/state/recovery/**`, `.gspot/state/ownership.json` | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                   |
 | `.gspot/cache/**`                                         | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                                     |
 | `.gspot/reports/report.json`, `report.sarif`              | gspot                         | no      | the last run                                                                                                              |
@@ -75,19 +75,19 @@ extra_checks = ["structure/single-file-folder"]   # checks of the level all, tur
 exclude = ["legacy", "third_party"]
 
 # The selection. Configurations are bare names.
-configurations = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
+kits = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
 
 # A scope is a folder with a project file and its own selection. Root configurations apply everywhere.
 [[scope]]
 path    = "api"
-configurations = ["typescript", "express", "docker", "nginx", "vitest"]
+kits = ["typescript", "express", "docker", "nginx", "vitest"]
 
 [scope.limits]
 function_lines = { value = 80, reason = "Route tables are one ordered list each." }
 
 [[scope]]
 path    = "ios"
-configurations = ["swift", "xcode", "xctest"]
+kits = ["swift", "xcode", "xctest"]
 
 # Limits. Only settings a check reads exist. A value may carry a reason.
 [limits]
@@ -189,10 +189,10 @@ sarif    = true                   # upload findings to code scanning, where the 
 tool  = "mise"                    # mise | npm | pnpm | yarn | bun
 tasks = { check = "lint", fix = "lint:fix" }     # the task names that call gspot
 
-[rules]
+[guides]
 install   = true
 agents    = ["TEAM.md"]                # additional files; supported existing files are detected
-directory = ".gspot/rules"
+directory = ".gspot/guides"
 exclude   = []
 
 [coverage]

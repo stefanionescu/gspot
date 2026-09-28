@@ -17,7 +17,7 @@ const INIT_OPTIONS = {
     yes: true,
     isDryRun: false,
     json: true,
-    configurations: ['javascript'],
+    kits: ['javascript'],
     hooks: 'none',
     runner: 'none',
     ci: 'none',
@@ -131,7 +131,7 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
-            configurations: ['javascript'],
+            kits: ['javascript'],
             tools: { eslint: carried.tools.get('eslint')!.settings },
         }),
     );

@@ -26,7 +26,7 @@ const LOCKS: [string, string][] = [
 ];
 
 const policy = (version: string): string =>
-    `version = 1\nconfigurations = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
+    `version = 1\nkits = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
 
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
     await using repository = await testdir();
@@ -68,7 +68,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     const lock = 'version = 1\n[[package]]\nname = "Example_Package"\nversion = "1.2.3"\n';
     await createFileTree(root, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["structure", "licenses"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
+            'version = 1\nkits = ["structure", "licenses"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
         'app/source.py': 'selected = True\n',
         'sibling/uv.lock': lock,
         '.gspot/uv.lock': lock,
@@ -140,8 +140,8 @@ test.each(['root', 'nested', 'combined'])(
         const configurations = selection === 'combined' ? '"licenses", "structure"' : '"licenses"';
         const selected =
             selection === 'nested'
-                ? 'configurations = []\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n'
-                : `configurations = [${configurations}]\n`;
+                ? 'kits = []\n[[scope]]\npath = "app"\nkits = ["licenses"]\n'
+                : `kits = [${configurations}]\n`;
         await createFileTree(root, {
             'gspot.toml':
                 'version = 1\n' +

@@ -14,7 +14,7 @@ test('Swift documentation adapter rejects malformed native output and removes it
     const root = sandbox.path;
     const text = 'public let value = 1 /** Inline documentation. */\n';
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["swift"]\n',
         'nested/Value.swift': text,
     });
     const configurationSession = await openSession(root);

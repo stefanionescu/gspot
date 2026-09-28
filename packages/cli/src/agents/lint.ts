@@ -56,7 +56,7 @@ function independenceFindings(file: string, line: string, number: number, layer:
     return INDEPENDENCE_TERMS.filter((term) => term.test(prose)).map((term) => ({
         file,
         line: number,
-        message: `names gspot or claims enforcement: '${term.source}'; a rule file states the rule and nothing else`,
+        message: `names gspot or claims enforcement: '${term.source}'; a guide states the rule and nothing else`,
     }));
 }
 
@@ -66,7 +66,7 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
         line: number,
         message: `corruption residue: ${term.source}`,
     }));
-    const link = RULE_LINK.test(line) ? [{ file, line: number, message: 'link to another rule file' }] : [];
+    const link = RULE_LINK.test(line) ? [{ file, line: number, message: 'link to another guide' }] : [];
     const dash = line.includes(EM_DASH) ? [{ file, line: number, message: 'em dash' }] : [];
     return [
         ...residue,
@@ -175,19 +175,19 @@ if (import.meta.main) {
 }
 
 /**
- * True when a path under rules/ is a rule file: Markdown in a known layer folder.
+ * True when a path under rules/ is a guide: Markdown in a known layer folder.
  * @param path the path relative to rules/
  * @returns whether the lint reads it
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a path under rules/ is a rule file: Markdown in a known layer folder. 1 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a path under rules/ is a guide: Markdown in a known layer folder. 1 files make 3 calls; one owner keeps that behavior in one place.
 export function isRulePath(path: string): boolean {
     const top = path.split('/', 1)[0] ?? '';
     return path.endsWith('.md') && (top === 'general' || top === 'templates' || layerNames.has(top));
 }
 
 /**
- * Lints the structure and content of the rule files.
- * @param files the rule files
+ * Lints the structure and content of the guides.
+ * @param files the guides
  * @returns the findings and file count
  */
 export function lintRules(files: RuleText[]): RulesLintReport {

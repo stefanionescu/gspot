@@ -19,7 +19,7 @@ test.each(['recommended', 'all'])(
             '        time.sleep(2)',
         ].join('\n');
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["fastapi"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["fastapi"]\n`,
             'routes.py': source,
         });
         const options = {

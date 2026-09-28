@@ -117,7 +117,7 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     await createFileTree(sandbox.path, {
         'source.txt': 'input',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/inventory"
 stage = "commit"

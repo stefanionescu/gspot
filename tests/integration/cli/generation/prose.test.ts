@@ -10,8 +10,7 @@ import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
+        'gspot.toml': 'version = 1\nkits = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
     });
     const session = await openSession(sandbox.path);
     const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

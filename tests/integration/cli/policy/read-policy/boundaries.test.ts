@@ -20,7 +20,7 @@ describe('configuration directory boundaries', () => {
         'api\u{2028}/../../outside',
         '',
     ])('refuses escaping directory %j before filesystem discovery', (path) => {
-        for (const settings of [{ scope: [{ path }] }, { rules: { directory: path } }]) {
+        for (const settings of [{ scope: [{ path }] }, { guides: { directory: path } }]) {
             expect(() => parsePolicyText(stringify({ version: 1, ...settings }), 'gspot.toml')).toThrow(PolicyError);
         }
     });
@@ -30,12 +30,12 @@ describe('configuration directory boundaries', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
         const policy = parsePolicyText(
-            stringify({ version: 1, scope: [{ path }], rules: { directory: 'agent rules/café 100%' } }),
+            stringify({ version: 1, scope: [{ path }], guides: { directory: 'agent rules/café 100%' } }),
             'gspot.toml',
             sandbox.path,
         );
         expect(policy.scopes[0]?.path).toBe(path);
-        expect(policy.rules.directory).toBe('agent rules/café 100%');
+        expect(policy.guides.directory).toBe('agent rules/café 100%');
     });
 });
 
@@ -46,7 +46,7 @@ for (const scoped of [false, true]) {
             const prefix = scoped ? '[[scope]]\npath = "src"\n[scope.tools.eslint.rules]' : '[tools.eslint.rules]';
             expect(() =>
                 parsePolicyText(
-                    `version = 1\nconfigurations = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
+                    `version = 1\nkits = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
                     'gspot.toml',
                 ),
             ).toThrow('gspot ignore');
@@ -56,7 +56,7 @@ for (const scoped of [false, true]) {
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const configured = (adopted: unknown[]) =>
-    stringify({ version: 1, configurations: ['javascript'], tools: { eslint: { adopted } } });
+    stringify({ version: 1, kits: ['javascript'], tools: { eslint: { adopted } } });
 
 test.each([
     'paths = []\nrules = {eqeqeq = "error"}',
@@ -66,10 +66,7 @@ test.each([
     'paths = ["src"]\nrulez = {eqeqeq = "error"}',
 ])('invalid ESLint override refuses configuration: %s', (entry) => {
     expect(() =>
-        parsePolicyText(
-            `version = 1\nconfigurations = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`,
-            'gspot.toml',
-        ),
+        parsePolicyText(`version = 1\nkits = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
     ).toThrow();
 });
 

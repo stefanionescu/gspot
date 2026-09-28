@@ -40,7 +40,7 @@ test('apply and uninstall preserve later edits and unowned content while restori
 test('a generated proposal cannot overwrite lifecycle recovery data', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ndirectory = ".gspot/state/recovery"\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ndirectory = ".gspot/state/recovery"\n',
         '.gspot/state/recovery/authored.txt': 'preserve recovery\n',
     });
     const refused = await run(directory.path, ['apply']);
@@ -54,7 +54,7 @@ test('a generated proposal cannot overwrite lifecycle recovery data', async () =
 
 test('apply previews missing outputs without writing and rejects obsolete mutation flags', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n';
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const preview = await run(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -69,7 +69,7 @@ test('malformed authored blocks refuse apply before generated files change', asy
     await using directory = await testdir();
     const authored = '# Preserve this file\n<!-- >>> gspot managed >>> -->\nUnclosed instructions.\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
         'AGENTS.md': authored,
         'entry.sh': 'echo example\n',
     });
@@ -88,7 +88,7 @@ test('malformed shared YAML refuses apply before any generated configuration is 
     await using directory = await testdir();
     const authored = 'pre-commit: [unfinished\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[hooks]\ntool = "lefthook"\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[hooks]\ntool = "lefthook"\n[guides]\ninstall = false\n',
         'lefthook.yml': authored,
         'entry.sh': 'echo example\n',
     });

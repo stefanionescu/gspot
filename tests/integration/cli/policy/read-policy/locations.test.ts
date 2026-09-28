@@ -48,7 +48,7 @@ test.each([
 test.each([
     {
         name: 'a multiline array value',
-        text: 'version = 1\nconfigurations = [\n"bash",\n12\n]\n',
+        text: 'version = 1\nkits = [\n"bash",\n12\n]\n',
         line: 4,
         correction: ['12', '"toml"'],
     },
@@ -72,9 +72,9 @@ test.each([
     },
     {
         name: 'an unknown nested key',
-        text: 'version = 1\n[[scope]]\npath = "api"\nconfigurationz = []\n',
+        text: 'version = 1\n[[scope]]\npath = "api"\nkitz = []\n',
         line: 4,
-        correction: ['configurationz', 'configurations'],
+        correction: ['kitz', 'kits'],
     },
     {
         name: 'a nested array of tables under a second scope',
@@ -99,7 +99,7 @@ test.each(['\n', '\r\n'])(
         expect(found[0]).toMatch(/^gspot\.toml:3:\d+ is not valid TOML:/u);
         expect(found[0]).not.toContain('private fixture marker');
         expect(found[0]).not.toContain('\n');
-        expect(policyProblems(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
+        expect(policyProblems(invalid.replace('configurations = ?', 'kits = []'))).toStrictEqual([]);
     },
 );
 test.each(['linked', 'linked/nested'])(

@@ -181,13 +181,13 @@ const checkSchema = z
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
 
-const rulesSchema = z.strictObject({
-    install: flag.default(true).describe('Install rule files and agent instructions.'),
+const guidesSchema = z.strictObject({
+    install: flag.default(true).describe('Install guide files and agent instructions.'),
     directory: relativeDirectory
-        .default('.gspot/rules')
-        .describe('Repository-relative destination for installed rules.'),
+        .default('.gspot/guides')
+        .describe('Repository-relative destination for installed guides.'),
     project: text.optional().describe('Repository-relative project rule layer linked from agent instructions.'),
-    exclude: textList.default([]).describe('Rule file patterns excluded from the installed selection.'),
+    exclude: textList.default([]).describe('Guide patterns excluded from the installed selection.'),
     agents: z
         .array(relativeDirectory)
         .default([])
@@ -230,7 +230,7 @@ export const ciSchema = z.strictObject({
 
 /** Integration settings use the same fields, defaults, and descriptions as policy validation. */
 export const integrationSettingSchemas = Object.fromEntries(
-    Object.entries({ hooks: hooksSchema, ci: ciSchema, runner: runnerSchema, rules: rulesSchema }).flatMap(
+    Object.entries({ hooks: hooksSchema, ci: ciSchema, runner: runnerSchema, guides: guidesSchema }).flatMap(
         ([section, schema]) =>
             Object.entries(schema.shape as Record<string, z.ZodType>).map(
                 ([key, field]) =>
@@ -245,7 +245,7 @@ export const integrationSettingSchemas = Object.fromEntries(
 /** One [[scope]] entry: its path, configurations, and the per-scope tables. */
 export const scopeSchema = z.strictObject({
     path: relativeDirectory,
-    configurations: textList.optional(),
+    kits: textList.optional(),
     ...scopeBody,
 });
 
@@ -268,7 +268,7 @@ export const rootSettingSchemas = {
 export const policySchema = z.strictObject({
     version: z.number().int(),
     ...rootSettingSchemas,
-    configurations: textList.optional(),
+    kits: textList.optional(),
     scope: z.array(scopeSchema).optional(),
     ...scopeBody,
     prose: proseSchema.optional(),
@@ -276,7 +276,7 @@ export const policySchema = z.strictObject({
     check: z.array(checkSchema).optional(),
     hooks: hooksSchema.optional(),
     ci: ciSchema.optional(),
-    rules: rulesSchema.optional(),
+    guides: guidesSchema.optional(),
     coverage: coverageSchema.optional(),
     runner: runnerSchema.optional(),
 });

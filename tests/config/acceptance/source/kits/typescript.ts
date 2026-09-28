@@ -12,8 +12,8 @@ export const receipt = formatter.format(total.amount);
 `;
 export const PROJECTS_POLICY = `version = 1
 level = "all"
-configurations = ["typescript"]
-[rules]
+kits = ["typescript"]
+[guides]
 install = false
 `;
 export const TSCONFIG_PROJECT =

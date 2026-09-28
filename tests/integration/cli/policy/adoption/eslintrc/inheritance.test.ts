@@ -35,7 +35,7 @@ test('legacy ESLint adoption preserves inherited overrides and ignores for futur
     ).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -92,7 +92,7 @@ test('legacy ESLint adoption preserves inherited plugin environments and extensi
     ).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

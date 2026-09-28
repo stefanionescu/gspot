@@ -1,4 +1,4 @@
-// Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
+// Select the guides for the selection and render them under [guides] directory, keeping the layer folders.
 import { nearMatches } from '#cli/policy/near.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
@@ -34,13 +34,13 @@ function declaredGuides(manifests: Manifest[], repository: Repository): Pick<Rul
 }
 
 /**
- * The rule files the selection installs, in layer order, deduplicated.
+ * The guides the selection installs, in layer order, deduplicated.
  * @param rules the rule policy
  * @param manifests the selected configurations
  * @param repository the source inventory for conditional guide selection.
- * @returns the rule files with their targets and titles
+ * @returns the guides with their targets and titles
  */
-export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], repository: Repository): RuleFile[] {
+export function selectRuleFiles(rules: Policy['guides'], manifests: Manifest[], repository: Repository): RuleFile[] {
     const available = new Set(listAssets(RULES_PREFIX));
     const { exclude } = rules;
     const files = new Map<string, RuleFile>();
@@ -73,7 +73,7 @@ export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], r
 }
 
 /**
- * The selected rule files with sections filtered to the enforcement level.
+ * The selected guides with sections filtered to the enforcement level.
  * @param rules the rule policy
  * @param manifests the selected configurations
  * @param level the selected enforcement level.
@@ -81,7 +81,7 @@ export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], r
  * @returns the files to write under the rules directory
  */
 export function assembleRules(
-    rules: Policy['rules'],
+    rules: Policy['guides'],
     manifests: Manifest[],
     level: Policy['level'],
     repository: Repository,
@@ -97,7 +97,7 @@ export function assembleRules(
 }
 
 /**
- * The problems of [rules] exclude: an entry that matches no rule file, and an entry that hides a file the reader opens first.
+ * The problems of [guides] exclude: an entry that matches no guide, and an entry that hides a file the reader opens first.
  * @param exclude the entries as written
  * @returns the problems in plain English
  */
@@ -110,7 +110,7 @@ export function excludeProblems(exclude: string[]): string[] {
             )
         )
             return [
-                `[rules] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
+                `[guides] exclude names \`${entry}\`, which holds a file every agent opens first (${FIRST_READ.join(', ')}). Remove the entry.`,
             ];
         if (
             sources.some((source) =>
@@ -121,6 +121,6 @@ export function excludeProblems(exclude: string[]): string[] {
         const near = nearMatches(entry, sources);
         const names = near.map((name) => `\`${name}\``).join(', ');
         const hint = near.length > 0 ? ` Did you mean ${names}?` : '';
-        return [`[rules] exclude names \`${entry}\`, which matches no rule file.${hint}`];
+        return [`[guides] exclude names \`${entry}\`, which matches no guide.${hint}`];
     });
 }

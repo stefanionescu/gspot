@@ -82,7 +82,7 @@ dependencies use the configured npm registry. Output streams while the suite run
 The runner removes its registry after failure, timeout, or interruption. Select acceptance cases through that runner:
 
 ```shell
-mise run test:acceptance -- ./acceptance/source/configurations/vite.test.ts
+mise run test:acceptance -- ./acceptance/source/kits/vite.test.ts
 ```
 
 Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.

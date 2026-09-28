@@ -83,7 +83,7 @@ test(
         const project = '[project]\nname = "dependency-example"\nversion = "1.0.0"\ndependencies = []\n';
         const exclusions = '\n[tool.deptry]\nexclude = ["^generated/"]\nextend_exclude = ["^vendor/"]\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["python"]\n',
+            'gspot.toml': 'version = 1\nkits = ["python"]\n',
             'pyproject.toml': project + exclusions,
             'src/main.py': 'import undeclared_example\n',
             'generated/client.py': 'import generated_dependency\n',

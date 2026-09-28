@@ -16,7 +16,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     );
     const received: string[] = [];
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -60,7 +60,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
             'source.sh': 'echo example\n',
         });
         const session = await openSession(sandbox.path);

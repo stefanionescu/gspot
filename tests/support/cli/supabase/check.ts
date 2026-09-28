@@ -15,11 +15,9 @@ export async function prepareSupabaseCheck(
 ): Promise<PrepareSupabaseCheckResult> {
     const prefix = scope === '' ? '' : `${scope}/`;
     const policy =
-        scope === ''
-            ? '[tools.supabase]'
-            : `[[scope]]\npath = "${scope}"\nconfigurations = ["supabase"]\n[scope.tools.supabase]`;
+        scope === '' ? '[tools.supabase]' : `[[scope]]\npath = "${scope}"\nkits = ["supabase"]\n[scope.tools.supabase]`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nconfigurations = ["supabase"]\n${policy}\ntypes_file = "database.ts"\n`,
+        'gspot.toml': `version = 1\nkits = ["supabase"]\n${policy}\ntypes_file = "database.ts"\n`,
         [`${prefix}supabase/config.toml`]: 'project_id = "types-fixture"\n',
     });
     const execute = async () => {

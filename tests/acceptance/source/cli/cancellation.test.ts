@@ -27,7 +27,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
+            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
             'source.txt': 'input\n',
         });
         const child = Bun.spawn([process.execPath, CLI, 'check', '--json', '--no-cache'], {
@@ -60,7 +60,7 @@ test.each(['diff', 'clone', 'cat-file'])(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -107,7 +107,7 @@ test.each(['diff', 'clone', 'cat-file'])(
 test('push cancellation retains completed reports and names references not checked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         'source.sh': 'echo first\n',
     });
     for (const args of [
@@ -167,7 +167,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -208,7 +208,7 @@ await import(${JSON.stringify(CLI)});
 test('staged cancellation during dependency copying removes partial output and preserves the installed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         '.gitignore': 'node_modules/\n',
         'package.json': '{"name":"snapshot-consumer","private":true}\n',
         'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',

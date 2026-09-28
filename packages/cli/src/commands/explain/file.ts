@@ -49,7 +49,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         scope: scope.path === '' ? 'root' : scope.path,
         nature: file.nature,
         tags: file.tags,
-        configurations: owners.map((manifest) => manifest.kit.name),
+        kits: owners.map((manifest) => manifest.kit.name),
         checks: configuredChecks(session)
             .filter((check) => claimedInputs(session, check).some((entry) => entry.path === file.path))
             .map((check) => ({
@@ -84,7 +84,7 @@ function pathText(report: PathExplanation): string {
         `${report.path}  (scope ${report.scope}, ${report.nature}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.configurations.length === 0 ? [] : [`claimed by: ${report.configurations.join(', ')}`]),
+        ...(report.kits.length === 0 ? [] : [`claimed by: ${report.kits.join(', ')}`]),
         ...(checks.length === 0 ? [] : ['checks:', ...checks]),
         ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
         ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),

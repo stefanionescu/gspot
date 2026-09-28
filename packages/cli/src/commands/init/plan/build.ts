@@ -118,7 +118,7 @@ function carryInstallSettings(carried: AdoptionResult, path: string, settings: I
         });
         return;
     }
-    const scope = carried.scopes.get(path) ?? { configurations: [], tools: {} };
+    const scope = carried.scopes.get(path) ?? { kits: [], tools: {} };
     scope.tools['install'] = { ...scope.tools['install'], ...settings };
     carried.scopes.set(path, scope);
 }
@@ -160,7 +160,7 @@ function agentRows(agents: string[]): TakeoverPlan['write'] {
         path,
         note: path === CURSOR_RULE ? 'owned Cursor rule; authored files preserved' : 'managed instruction block',
     }));
-    return [...files, { path: '.gspot/rules/', note: 'agent rule files' }];
+    return [...files, { path: '.gspot/guides/', note: 'agent guides' }];
 }
 
 // The CI workflow init writes for the chosen host.
@@ -204,10 +204,10 @@ export function buildProposal(
     const commitScopes = commitScopeNames(scopes, selection);
     const xcode = xcodeRow(root, selection);
     return {
-        configurations: selection.rootIds,
+        kits: selection.rootIds,
         scopes: scopes.map((scope) => ({
             path: scope.path,
-            configurations: selection.scopeProposals.get(scope.path) ?? [],
+            kits: selection.scopeProposals.get(scope.path) ?? [],
         })),
         carried,
         hooks: answers.hooks,
@@ -241,14 +241,14 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                       .map((proposal) => proposal.configuration)
                       .filter((id) => !selection.selectedIds.has(id)),
               };
-    const agents = policy.rules.install ? agentFiles(root, policy.rules.agents) : [];
+    const agents = policy.guides.install ? agentFiles(root, policy.guides.agents) : [];
     const policyLines = policyText.split('\n').length;
     const lintJobs = ciLintJobs(root, tooling.ci);
     return {
         ...(profile ? { profile } : {}),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
-        configurations: everySelected.map((manifest) => ({
-            configuration: manifest.kit.name,
+        kits: everySelected.map((manifest) => ({
+            kit: manifest.kit.name,
             how: selection.how.get(manifest.kit.name) ?? 'required',
             checks: manifest.checks.length,
         })),

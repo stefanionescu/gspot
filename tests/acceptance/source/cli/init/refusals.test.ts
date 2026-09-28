@@ -21,9 +21,7 @@ test(
         const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...INIT_REFUSALS_QUIET];
         const result = await run(sandbox.path, flags);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stdout + result.stderr).toMatch(
-            /Selected: [^\n]*bash[^\n]*Change with --configurations <ids>\./u,
-        );
+        expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --kits <ids>\./u);
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         const json = await run(sandbox.path, [...flags, '--json']);
         expect(json.code, json.stdout + json.stderr).toBe(0);
@@ -55,13 +53,13 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
-        const unknown = await run(sandbox.path, ['init', '--yes', '--configurations', 'bassh', ...INIT_REFUSALS_QUIET]);
+        const unknown = await run(sandbox.path, ['init', '--yes', '--kits', 'bassh', ...INIT_REFUSALS_QUIET]);
         expect(unknown.code).toBe(2);
         expect(unknown.stderr).toContain('Did you mean `bash`');
         const required = await run(sandbox.path, [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--without',
             'structure',
@@ -81,13 +79,13 @@ test(
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
         await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-        const refused = await run(sandbox.path, ['init', '--yes', '--configurations', 'bash', ...INIT_REFUSALS_QUIET]);
+        const refused = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET]);
         expect(refused.code).toBe(2);
         expect(refused.stderr).toContain('--allow-dirty');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         const allowed = await run(
             sandbox.path,
-            ['init', '--yes', '--configurations', 'bash', '--allow-dirty', ...INIT_REFUSALS_QUIET],
+            ['init', '--yes', '--kits', 'bash', '--allow-dirty', ...INIT_REFUSALS_QUIET],
             {
                 PATH: `${join(import.meta.dir, '../../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
             },
@@ -106,7 +104,7 @@ test(
         const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
         await run(
             sandbox.path,
-            ['init', '--yes', '--configurations', 'bash', '--without', 'naming', ...INIT_REFUSALS_QUIET],
+            ['init', '--yes', '--kits', 'bash', '--without', 'naming', ...INIT_REFUSALS_QUIET],
             environment,
         );
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
@@ -130,8 +128,8 @@ test(
         expect(init.code, init.stdout + init.stderr).toBe(0);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         const parsed = parsePolicyText(policy, 'gspot.toml');
-        expect(parsed.scopes.find((scope) => scope.path === 'tools')?.configurations).toContain('bash');
-        expect(parsed.scopes.find((scope) => scope.path === 'jobs')?.configurations).toContain('bash');
+        expect(parsed.scopes.find((scope) => scope.path === 'tools')?.kits).toContain('bash');
+        expect(parsed.scopes.find((scope) => scope.path === 'jobs')?.kits).toContain('bash');
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -145,12 +143,12 @@ test('initialization flags control integrations and formatter carryover in the p
     const command = [
         'init',
         '--yes',
-        '--configurations',
+        '--kits',
         'javascript',
         '--no-hooks',
         '--no-ci',
         '--no-runner',
-        '--no-rules',
+        '--no-guides',
         '--no-install',
         '--dry-run',
         '--json',

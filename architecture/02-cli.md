@@ -8,10 +8,10 @@ command exists when nothing else answers its question.
 ## Commands
 
 ```text
-gspot init       [--yes] [--dry-run] [--from <profile>] [--configurations <names...>] [--without <names...>] [--scope <path=names...>]
+gspot init       [--yes] [--dry-run] [--from <profile>] [--kits <names...>] [--without <names...>] [--scope <path=names...>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
-                 [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
+                 [--no-guides] [--no-checks] [--no-install] [--allow-dirty]
 gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
                  [--only <checks...>] [--skip <checks...>] [--stage commit|push|manual] [--no-cache]
 gspot install    [--dry-run]
@@ -59,9 +59,9 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
 - One word names a thing: its name. A check, a configuration, a rule, and a setting each have a name.
   Domain identity uses `name`. Structural map keys and third-party identifiers retain their
   actual terms.
-- A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`,
+- A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-guides`,
   `--no-checks`, and `--no-install`. `--no-checks` installs the rule files and no check, and
-  `--no-rules` installs the checks and no rule file. No flag takes the value `none`.
+  `--no-guides` installs the checks and no rule file. No flag takes the value `none`.
 - A command that deletes prints its plan and asks, and `--yes` answers.
 - Every finding ends with a `help:` line, taken from the `help` text of its check.
 - A flag means one thing everywhere: `--scope`, `--reason`, `--json`, `--yes`, `--remove`.
@@ -112,17 +112,17 @@ found, not proposed
 
 Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every proposal.
 
-| Question                               | Proposal                                                    | Flag                            |
-| -------------------------------------- | ----------------------------------------------------------- | ------------------------------- |
-| Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`          |
-| Languages and frameworks found         | all found                                                   | `--configurations`, `--without` |
-| Tools found                            | all found                                                   | `--configurations`, `--without` |
-| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--configurations`, `--without` |
-| Where the gspot line of the hooks goes | the task the hook calls, then the hook file, then new hooks | `--hooks`, `--no-hooks`         |
-| Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`               |
-| Install rule files for agents?         | yes                                                         | `--no-rules`                    |
-| Which task names call gspot            | a new body for `lint` and `format` where they exist         | `--runner`, `--no-runner`       |
-| Keep your formatting?                  | keep, asked only where it differs from the shipped format   | `--format keep`                 |
+| Question                               | Proposal                                                    | Flag                      |
+| -------------------------------------- | ----------------------------------------------------------- | ------------------------- |
+| Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`    |
+| Languages and frameworks found         | all found                                                   | `--kits`, `--without`     |
+| Tools found                            | all found                                                   | `--kits`, `--without`     |
+| Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--kits`, `--without`     |
+| Where the gspot line of the hooks goes | the task the hook calls, then the hook file, then new hooks | `--hooks`, `--no-hooks`   |
+| Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`         |
+| Install rule files for agents?         | yes                                                         | `--no-guides`             |
+| Which task names call gspot            | a new body for `lint` and `format` where they exist         | `--runner`, `--no-runner` |
+| Keep your formatting?                  | keep, asked only where it differs from the shipped format   | `--format keep`           |
 
 The level is not asked. `init` writes `level = "recommended"`.
 
@@ -137,7 +137,7 @@ write
   .mise/conf.d/gspot-tools.toml    9 tool pins, gspot 0.5.0
   .editorconfig                    written by gspot, with its mark
   AGENTS.md  detected agent files  .gitignore  .gitattributes    one managed block each
-  .gspot/rules/                    14 rule files
+  .gspot/guides/                    14 rule files
 
 change, after your yes
   mise.toml task lint              new body: gspot check
@@ -198,7 +198,7 @@ Hooks a repository has keep running, tracked or local to one clone, and gspot ne
 exit 2 and nothing written, in these cases:
 
 - A choice flag holds a value outside its list. The message names the flag and the values.
-- `--configurations` or `--without` names a configuration that does not exist, and the message names near
+- `--kits` or `--without` names a configuration that does not exist, and the message names near
   matches.
 - `--without` names a configuration that a selected configuration requires, and the message prints the chain.
 - The working tree has uncommitted changes and `--allow-dirty` is absent.
@@ -654,7 +654,7 @@ Unit tests for each message, and an apply test repository where SwiftLint gains 
 ### Acceptance K-95
 
 The table of [02-cli.md](02-cli.md): `--dry-run` on `init`, `apply`,
-`uninstall`, and `check --fix`; `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`, and
+`uninstall`, and `check --fix`; `--no-ci`, `--no-hooks`, `--no-runner`, `--no-guides`, and
 `--no-install`; `check --changed[=<ref>]`, with the upstream branch as the default ref;
 `[hooks] push = "changed"` or `"all"`.
 

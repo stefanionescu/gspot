@@ -13,7 +13,7 @@ test('completion callbacks publish filtered results before the remaining check f
         'source.sh': 'echo example\n',
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
             check: [
                 {

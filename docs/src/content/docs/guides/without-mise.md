@@ -33,7 +33,7 @@ Uninstall restores accepted task bodies when they remain unchanged and preserves
 
 ## With uv
 
-Select the Python configuration with `gspot init --configurations python --no-runner`.
+Select the Python configuration with `gspot init --kits python --no-runner`.
 `gspot install` uses uv to install the private Python environment without adding tasks to
 `pyproject.toml`. Run `gspot check` through the installed binary.
 

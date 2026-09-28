@@ -76,7 +76,7 @@ A complete policy can select one language:
 
 ```toml
 version = 1
-configurations = ["javascript"]
+kits = ["javascript"]
 level = "recommended"
 ```
 

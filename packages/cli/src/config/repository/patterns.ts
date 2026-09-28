@@ -151,7 +151,7 @@ export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/
 export const LICENSE_FILE = /^(?:LICENSE|LICENCE|COPYING|NOTICE)(?:$|[.-])/iu;
 /** Files gspot or a tool it drives writes; nobody edits them, so they are generated. */
 export const INSTALLED_PREFIXES = [
-    '.gspot/rules/',
+    '.gspot/guides/',
     '.gspot/config/vale/styles/gspot/',
     '.gspot/config/vale/styles/config/vocabularies/gspot/',
 ];

@@ -16,7 +16,7 @@ test('typos output preserves quoted keys and paths without creating settings', a
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['spelling'],
+            kits: ['spelling'],
             tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
         }),
     });
@@ -53,7 +53,7 @@ test('profile spelling values use the same TOML emission path', async () => {
             version: 1,
             profile: 'house',
             selection: 'exact',
-            configurations: ['spelling'],
+            kits: ['spelling'],
             tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
         }),
     });
@@ -93,7 +93,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
+            kits: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },
@@ -136,7 +136,7 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['dependencies'],
+            kits: ['dependencies'],
             tools: {
                 osv: {
                     ignore: [

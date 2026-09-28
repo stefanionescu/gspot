@@ -63,7 +63,7 @@ async function askCi(root: string, options: InitOptions, tooling: ExistingToolin
 
 async function askRuleFiles(options: InitOptions): Promise<boolean> {
     if (options.rules !== undefined) return options.rules === 'yes';
-    return askConfirmation('Install agent rule files?', '--no-rules', true, options.yes);
+    return askConfirmation('Install agent guides?', '--no-guides', true, options.yes);
 }
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
@@ -110,7 +110,7 @@ export async function askConfigurations(
     selection: InitSelection,
     manifests: Map<string, Manifest>,
 ): Promise<string[] | undefined> {
-    if (options.yes || options.configurations !== undefined || options.profile !== undefined) return undefined;
+    if (options.yes || options.kits !== undefined || options.profile !== undefined) return undefined;
     const choices = manifests
         .values()
         .map((manifest) => {
@@ -121,13 +121,13 @@ export async function askConfigurations(
         })
         .toArray();
     const initial = [...selection.selectedIds];
-    const kept = await askMany('Which configurations?', '--configurations <ids>', choices, initial, options.yes);
+    const kept = await askMany('Which kits?', '--kits <ids>', choices, initial, options.yes);
     const isUnchanged = kept.length === initial.length && kept.every((id) => selection.selectedIds.has(id));
     return isUnchanged ? undefined : kept;
 }
 
 /**
- * Asks the init questions that flags left open: hooks, CI, rule files, task runner, and formatter settings.
+ * Asks the init questions that flags left open: hooks, CI, guides, task runner, and formatter settings.
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found

@@ -19,7 +19,7 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n',
+            'gspot.toml': 'version = 1\nkits = []\n',
             'source.ts': 'export {};\n',
         });
         const session = await storageSession(sandbox.path, 1);
@@ -49,7 +49,7 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
 test('a denied owned cache read reports its path and cause', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'source.ts': 'export {};\n',
     });
     const session = await storageSession(sandbox.path, 0);
@@ -71,7 +71,7 @@ test('a denied owned cache read reports its path and cause', async () => {
 test('checks share generated-file hashes within a run and observe edits in the next run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         '.gspot/shared.toml': 'value = 1\n',
         'source.ts': 'export {};\n',
     });
@@ -104,7 +104,7 @@ test('checks share generated-file hashes within a run and observe edits in the n
 test('staged caches persist while index content, declared input additions, and corrections invalidate results', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/content"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = (await Bun.file("source.txt").text()).startsWith("clean") ? 0 : 1'])}
@@ -150,7 +150,7 @@ format = "none"
 test('an executable replacement cannot combine old permissions with new cached bytes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'source.ts': 'export {};\n',
         checker: 'original executable',
         replacement: 'replacement executable',

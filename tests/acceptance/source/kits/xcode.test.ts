@@ -219,7 +219,7 @@ describe('init in a repository with an Xcode project', () => {
                 '--no-runner',
                 '--no-ci',
                 '--no-hooks',
-                '--no-rules',
+                '--no-guides',
                 '--no-install',
             ];
             await install(sandbox.path, argv, {

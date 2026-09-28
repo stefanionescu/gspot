@@ -83,7 +83,7 @@ export function parseProfile(text: string, source: string): Profile {
               const where = issue.path.map(String).join('.');
               return `${where === '' ? source : where}: ${issue.message}`;
           });
-    const named = (raw as { configurations?: unknown }).configurations;
+    const named = (raw as { kits?: unknown }).kits;
     const known = configurationManifests().keys().toArray();
     const configurations = (Array.isArray(named) ? named.map(String) : [])
         .filter((id) => !known.includes(id))

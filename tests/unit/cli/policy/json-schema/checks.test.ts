@@ -8,7 +8,7 @@ describe('the JSON schema of gspot.toml', () => {
         expect(
             policySchema.safeParse({
                 version: 1,
-                configurations: ['bash'],
+                kits: ['bash'],
                 limits: { file_lines: 300, python: { file_lines: { value: 400, reason: 'why' } } },
             }).success,
         ).toBe(true);

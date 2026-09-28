@@ -50,13 +50,13 @@ test(
         await run(sandbox.path, [
             'init',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             '--without',
             'formatting',
             '--no-runner',
             '--no-ci',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         const installed = await run(sandbox.path, ['install']);
@@ -91,8 +91,8 @@ test('a hook selects configuration below the Git root and checks its exact index
     chmodSync(join(launcher.path, 'gspot'), 0o755);
     await createFileTree(sandbox.path, {
         'nested config/gspot.toml': `version = 1
-configurations = []
-[rules]
+kits = []
+[guides]
 install = false
 [hooks]
 tool = "gspot"

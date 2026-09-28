@@ -15,7 +15,7 @@ test.each([
 ])('Svelte selects only its scoped generated TypeScript target: %j', async ({ scope, typescript }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["svelte"${typescript ? ', "typescript"' : ''}]\n[[scope]]\npath = "app"\n`,
+        'gspot.toml': `version = 1\nkits = ["svelte"${typescript ? ', "typescript"' : ''}]\n[[scope]]\npath = "app"\n`,
         'Component.svelte': '<p>Root</p>\n',
         'app/Component.svelte': '<p>Nested</p>\n',
     });

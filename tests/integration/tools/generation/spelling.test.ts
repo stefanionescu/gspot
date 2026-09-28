@@ -9,7 +9,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["spelling"]\n[tools.typos.extra]\nreason = "The fixture filename owns an external spelling; other words remain checked."\n[tools.typos.extra.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.extra.type.fixture.extend-words]\ncolour = "colour"\n[tools.typos.extra.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[tools.typos.extra]\nreason = "The fixture filename owns an external spelling; other words remain checked."\n[tools.typos.extra.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.extra.type.fixture.extend-words]\ncolour = "colour"\n[tools.typos.extra.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
             'fixture.txt': 'colour teh\nIIFEs\n',
             'neighbor.txt': 'colour teh\n',
         });
@@ -70,7 +70,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["spelling"]\n[[scope]]\npath = "british"\n[scope.tools.typos]\nlocale = "en-gb"\nwords = [{ word = "teh", reason = "An imported name requires this exact spelling." }]\n[scope.tools.typos.extra]\nreason = "A upstream fixture retains an external label."\n[scope.tools.typos.extra.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.tools.typos.extra.type.upstream.extend-words]\nrecieve = "recieve"\n[[scope]]\npath = "british/child"\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[[scope]]\npath = "british"\n[scope.tools.typos]\nlocale = "en-gb"\nwords = [{ word = "teh", reason = "An imported name requires this exact spelling." }]\n[scope.tools.typos.extra]\nreason = "A upstream fixture retains an external label."\n[scope.tools.typos.extra.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.tools.typos.extra.type.upstream.extend-words]\nrecieve = "recieve"\n[[scope]]\npath = "british/child"\n`,
             'sample.txt': 'colour teh\n',
             'british/child/sample.txt': 'colour teh\n',
             'british/child/upstream.txt': 'recieve\n',

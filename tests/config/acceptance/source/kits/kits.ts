@@ -14,14 +14,14 @@ export const EXPRESS_POLICY =
     '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n\n[tools.express]\nroute_files = ["src/routes/*.js"]\n';
 export const VITE_POLICY = `version = 1
 level = "all"
-configurations = ["javascript"]
-[rules]
+kits = ["javascript"]
+[guides]
 install = false
 [tools.knip]
 entry = []
 [[scope]]
 path = "api"
-configurations = ["javascript"]
+kits = ["javascript"]
 [scope.tools.knip]
 entry = []
 `;

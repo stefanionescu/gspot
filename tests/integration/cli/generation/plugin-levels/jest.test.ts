@@ -11,7 +11,7 @@ test.each([
 ] as const)('generated %s lint validates the native expect arguments of %s', async (level, runtime, maximum) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[tools.jest]\nglobal_package = "${runtime}"\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[tools.jest]\nglobal_package = "${runtime}"\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
@@ -84,7 +84,7 @@ test.each(
     async ({ level, globalPackage, rule, planted, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[rules]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'sample.test.js': '',
         });
@@ -107,7 +107,7 @@ test.each(['js', 'jsx'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+                'version = 1\nlevel = "all"\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
             'package.json': '{"private":true,"type":"module"}\n',
             'root.test.js': '',
             'app/sample.test.js': '',

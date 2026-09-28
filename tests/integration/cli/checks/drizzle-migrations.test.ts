@@ -19,8 +19,7 @@ async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Plan
     const directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["drizzle"]\n' +
-            (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nconfigurations = []\n`),
+            'version = 1\nkits = ["drizzle"]\n' + (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nkits = []\n`),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'drizzle.config.ts')]: 'export default {};\n',
         [join(scope, 'schema.txt')]: schema,
@@ -159,7 +158,7 @@ test.each(['cancellation', 'deadline'])(
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["drizzle"]\n[limits]\ntool_seconds = 1\n',
+            'gspot.toml': 'version = 1\nkits = ["drizzle"]\n[limits]\ntool_seconds = 1\n',
             'drizzle.config.ts': 'export default {};\n',
             generate: 'setInterval(() => {}, 1000);\n',
         });

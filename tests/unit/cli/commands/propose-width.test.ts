@@ -6,8 +6,8 @@ import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/config/unit/cli/commands
 
 test('a proposed policy holds no line over 120 characters and reads back as written', () => {
     const text = proposeText({
-        configurations: CONFIGURATIONS,
-        scopes: [{ path: 'apps/site', configurations: CONFIGURATIONS.slice(0, 12) }],
+        kits: CONFIGURATIONS,
+        scopes: [{ path: 'apps/site', kits: CONFIGURATIONS.slice(0, 12) }],
         carried: NOTHING_CARRIED,
         hooks: 'gspot',
         ci: 'none',
@@ -16,15 +16,15 @@ test('a proposed policy holds no line over 120 characters and reads back as writ
     });
     const long = text.split('\n').filter((line) => line.length > 120);
     expect(long).toStrictEqual([]);
-    expect(text).toContain('configurations = [\n    "typescript",\n');
+    expect(text).toContain('kits = [\n    "typescript",\n');
     const policy = parsePolicyText(text, 'gspot.toml');
-    expect(policy.configurations).toStrictEqual(CONFIGURATIONS);
-    expect(policy.scopes[0]?.configurations).toStrictEqual(CONFIGURATIONS.slice(0, 12));
+    expect(policy.kits).toStrictEqual(CONFIGURATIONS);
+    expect(policy.scopes[0]?.kits).toStrictEqual(CONFIGURATIONS.slice(0, 12));
 });
 
 test('detected settings override carried and profile values while unrelated profile settings survive', () => {
     const text = proposeText({
-        configurations: ['python'],
+        kits: ['python'],
         scopes: [],
         carried: { ...NOTHING_CARRIED, tools: new Map([['ruff', { settings: { select: ['F'] }, ignores: [] }]]) },
         profileTables: {
@@ -51,7 +51,7 @@ test('detected settings override carried and profile values while unrelated prof
 
 test('initialization preserves formatter overrides and profile runner tasks while honoring disabled integrations', () => {
     const text = proposeText({
-        configurations: ['formatting'],
+        kits: ['formatting'],
         scopes: [],
         carried: NOTHING_CARRIED,
         formatter: { format: { print_width: 90 }, extra: { bracketSpacing: false }, nativeDefaults: true },
@@ -73,7 +73,7 @@ test('initialization preserves formatter overrides and profile runner tasks whil
         tools: { prettier: { extra: { bracketSpacing: false }, native_defaults: true } },
         runner: { tool: 'mise', tasks: { check: 'profile-check', apply: 'profile-apply', fix: 'detected-fix' } },
         coverage: { strict: true },
-        rules: { directory: '.gspot/rules', install: false },
+        guides: { directory: '.gspot/guides', install: false },
     });
     expect(document).not.toHaveProperty('hooks');
     expect(document).not.toHaveProperty('ci');
@@ -87,14 +87,14 @@ test('initialization writes scoped reasoned allowances as table arrays', () => {
         },
     ];
     const text = proposeText({
-        configurations: ['spelling'],
+        kits: ['spelling'],
         scopes: [
-            { path: 'api', configurations: ['spelling'] },
-            { path: 'web', configurations: ['spelling'] },
+            { path: 'api', kits: ['spelling'] },
+            { path: 'web', kits: ['spelling'] },
         ],
         carried: {
             ...NOTHING_CARRIED,
-            scopes: new Map([['api', { configurations: ['spelling'], tools: { typos: { words } } }]]),
+            scopes: new Map([['api', { kits: ['spelling'], tools: { typos: { words } } }]]),
         },
         hooks: 'none',
         ci: 'none',

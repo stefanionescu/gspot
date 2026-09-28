@@ -49,7 +49,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);
@@ -100,7 +100,7 @@ test(
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);
@@ -120,7 +120,7 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
     });
-    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-rules', '--no-install'];
+    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
     const proposed = await run(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const proposal = JSON.parse(proposed.stdout) as { policy: string };

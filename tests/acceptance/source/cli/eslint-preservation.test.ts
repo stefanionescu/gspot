@@ -20,7 +20,10 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
         const text = `module.exports = ${JSON.stringify(ESLINT_PRESERVATION_CONFIG)};\n`;
         const original = path.endsWith('.mjs') ? text.replace('module.exports =', 'export default') : text;
         await createFileTree(repository.path, {
-            'gspot.toml': ESLINT_PRESERVATION_POLICY.replace('[rules]', `exclude = [${JSON.stringify(path)}]\n[rules]`),
+            'gspot.toml': ESLINT_PRESERVATION_POLICY.replace(
+                '[guides]',
+                `exclude = [${JSON.stringify(path)}]\n[guides]`,
+            ),
             [path]: original,
             'source.js': ESLINT_PRESERVATION_SOURCE,
             'tests/source.js': ESLINT_PRESERVATION_SOURCE,

@@ -16,7 +16,7 @@ test.each(['none', 'index-only'])(
     async (mode) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["nextjs"]\n[structure]\nreexports = "${mode}"\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["nextjs"]\n[structure]\nreexports = "${mode}"\n`,
             'package.json':
                 '{"name":"next-reexports","private":true,"type":"module","dependencies":{"react":"19.1.1","next":"16.3.5"}}',
             'tsconfig.json':
@@ -61,7 +61,7 @@ test.each(['only', 'ignore', 'flag'])(
     'the TypeScript check still finds defects when its replacement is absent through %s',
     async (selection) => {
         await using sandbox = await testdir();
-        const policy = 'version = 1\nconfigurations = ["nextjs"]\n[rules]\ninstall = false\n';
+        const policy = 'version = 1\nkits = ["nextjs"]\n[guides]\ninstall = false\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': policy + (selection === 'ignore' ? '\n[[ignore]]\ncheck = "nextjs/typecheck"\n' : ''),
             'package.json':
@@ -122,7 +122,7 @@ test.each([
             '--yes',
             '--dry-run',
             '--json',
-            '--configurations',
+            '--kits',
             'nextjs',
             ...(named ? ['i18n'] : []),
             '--without',
@@ -132,11 +132,11 @@ test.each([
             '--no-runner',
             '--no-ci',
             '--no-hooks',
-            '--no-rules',
+            '--no-guides',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan } = JSON.parse(result.stdout) as { plan: TakeoverPlan };
-        expect(plan.configurations.some(({ configuration }) => configuration === 'i18n')).toBe(selected);
+        expect(plan.kits.some(({ kit }) => kit === 'i18n')).toBe(selected);
     },
 );

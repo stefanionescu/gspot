@@ -59,7 +59,7 @@ describe('rule lint', () => {
         const report = lintRules([file('general/code/A.md', body)]);
         const messages = report.findings.map((finding) => finding.message);
         expect(messages).toContain('fenced block without a language tag');
-        expect(messages).toContain('link to another rule file');
+        expect(messages).toContain('link to another guide');
         expect(messages).toContain('em dash');
         expect(messages.some((text) => text.startsWith('layer boundary'))).toBe(true);
         expect(messages.some((text) => text.startsWith('corruption residue'))).toBe(true);

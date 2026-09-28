@@ -38,7 +38,7 @@ const SVELTE_CASES: [string, string][] = [
 const SHAPES: ComponentShape[] = [
     {
         check: 'vue/eslint',
-        configurations: ['typescript', 'vue'],
+        kits: ['typescript', 'vue'],
         dependencies: { vue: vueManifest.version },
         files: { 'src/UserGreeting.vue': VUE_CLEAN, 'src/env.d.ts': "import 'vue';\n" },
         planted: 'src/PlantedExample.vue',
@@ -46,7 +46,7 @@ const SHAPES: ComponentShape[] = [
     },
     {
         check: 'svelte/eslint',
-        configurations: ['typescript', 'svelte'],
+        kits: ['typescript', 'svelte'],
         dependencies: { svelte: '5.57.0' },
         files: { 'src/Greeting.svelte': SVELTE_CLEAN },
         planted: 'src/Planted.svelte',
@@ -60,7 +60,7 @@ for (const shape of SHAPES)
         async (rule, text) => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
-                configurations: shape.configurations,
+                kits: shape.kits,
                 dependencies: shape.dependencies,
                 files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, ...shape.files },
             });
@@ -130,7 +130,7 @@ test.each([
                 : '<script>\nfunction forward(value) { return build(value); }\n</script>\n';
         await using sandbox = await testdir();
         const environment = await installSandbox(sandbox.path, {
-            configurations: [framework, language],
+            kits: [framework, language],
             dependencies: framework === 'vue' ? { vue: vueManifest.version } : { svelte: '5.57.0' },
             files: {
                 // A module in the language under test; a TypeScript file selects the typescript configuration.

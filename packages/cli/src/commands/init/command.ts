@@ -25,11 +25,11 @@ function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
     return install ? 'yes' : 'no';
 }
 
-// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner, and rule files.
+// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner, and guides.
 function profileAnswers(profile: Profile): Partial<InitOptions> {
     const { tables } = profile;
-    const configurations = tables.configurations ?? [];
-    const install = tables.rules?.install;
+    const configurations = tables.kits ?? [];
+    const install = tables.guides?.install;
     return compact({
         configurations: configurations.length === 0 ? ['none'] : configurations,
         hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
@@ -41,7 +41,7 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
 
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
     const lists = {
-        configurations: listFlag(flags, 'configurations'),
+        kits: listFlag(flags, 'kits'),
         without: listFlag(flags, 'without'),
         scopes: listFlag(flags, 'scope'),
     };
@@ -50,7 +50,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
         runner:
             flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
-        rules: flags['rules'] === false ? ('no' as const) : undefined,
+        rules: flags['guides'] === false ? ('no' as const) : undefined,
         format: textFlag(flags, 'format') as InitOptions['format'],
     };
     const given: Partial<InitOptions> = Object.fromEntries(
@@ -130,7 +130,7 @@ export function registerInit(program: Command): void {
         )
         .option('--yes', 'Take every proposal without asking')
         .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
-        .option('--configurations <configurations...>', 'The root configurations instead of the detected ones')
+        .option('--kits <kits...>', 'The root configurations instead of the detected ones')
         .option('--without <configurations...>', 'Configurations to leave out of the proposal')
         .option('--scope <path=configurations...>', 'Scopes and their comma-separated configurations')
         .option('--no-install', 'Skip the install step and print the command instead')
@@ -139,7 +139,7 @@ export function registerInit(program: Command): void {
         .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(ciSchema.shape.provider.options))
         .option('--no-hooks', 'Do not install hooks')
         .option('--no-ci', 'Write no CI workflow')
-        .option('--no-rules', 'Leave the agent rule files out')
+        .option('--no-guides', 'Leave the agent guides out')
         .addOption(
             new Option('--format <choice>', 'Keep existing or use shipped formatter settings').choices([
                 'keep',

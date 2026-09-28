@@ -32,7 +32,7 @@ test.each([
 ])('duplication rejects $failure, removes temporary reports, and accepts a corrected report', async ({ changes }) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash", "duplication"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash", "duplication"]\n',
         'sample.sh': 'echo example\n',
         '.gspot/config/jscpd.json': '{}\n',
     });

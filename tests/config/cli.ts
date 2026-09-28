@@ -19,7 +19,7 @@ export const CLEAN_SWIFT =
 export const CAST_SWIFT =
     'import Foundation\n\n/// Reads a value as text.\nfunc text(from value: Any) -> NSString {\n    value as! NSString\n}\n';
 /** The flags that keep init from touching the runner, hooks, CI, agent rules, and tool installation. */
-export const QUIET_INIT = ['--no-runner', '--no-hooks', '--no-ci', '--no-rules', '--no-install'];
+export const QUIET_INIT = ['--no-runner', '--no-hooks', '--no-ci', '--no-guides', '--no-install'];
 export const SITE_BUILD = `import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const hadOutput = existsSync('dist/index.html');
 rmSync('dist', { recursive: true, force: true });
@@ -44,7 +44,7 @@ export const COMPONENT_TSCONFIG =
 export const COMPONENT_SOURCE =
     '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 /** The first line every planted policy starts from. */
-export const MINIMAL_POLICY = 'version = 1\nconfigurations = ["bash"]\n';
+export const MINIMAL_POLICY = 'version = 1\nkits = ["bash"]\n';
 /** The mode of an executable fixture. */
 export const RUNS = 0o755;
 export const NESTED =

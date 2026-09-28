@@ -21,7 +21,7 @@ test('file and folder arguments intersect check lists and respect -C', async () 
     }));
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({ version: 1, configurations: [], check: entries }),
+        'gspot.toml': stringify({ version: 1, kits: [], check: entries }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
@@ -77,7 +77,7 @@ stage = "${name}"
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n${definitions.join('\n')}`,
+        'gspot.toml': `version = 1\nkits = []\n${definitions.join('\n')}`,
         'source.txt': 'input',
     });
     const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);
@@ -91,13 +91,13 @@ test('a scope path selects its checks and its reproduction command repeats the s
     await createFileTree(sandbox.path, {
         'gspot.toml': `version = 1
 level = "all"
-configurations = []
+kits = []
 [[scope]]
 path = "api"
-configurations = ["javascript", "naming"]
+kits = ["javascript", "naming"]
 [[scope]]
 path = "web"
-configurations = ["javascript", "naming"]
+kits = ["javascript", "naming"]
 `,
         'api/port.js': 'export const shellCommand = 1;\n',
         'web/port.js': 'export const shellCommand = 2;\n',

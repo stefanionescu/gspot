@@ -44,7 +44,7 @@ test.each([
                 yes: true,
                 isDryRun: false,
                 json: true,
-                configurations: ['none'],
+                kits: ['none'],
                 hooks: 'none',
                 ci: 'none',
                 runner: 'mise',
@@ -56,7 +56,7 @@ test.each([
             expect(result.text).toContain('tool installation is incomplete');
             expect(result.text).toContain('Run: gspot install');
             const session = await openSession(sandbox.path);
-            expect(session.policyFiles.policy.configurations).toStrictEqual([]);
+            expect(session.policyFiles.policy.kits).toStrictEqual([]);
             expect(readFileSync(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
             const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
             expect(retry.exitCode).toBe(2);
@@ -95,7 +95,7 @@ test('init does not report success when required Python lock resolution cannot r
                     yes: true,
                     isDryRun: false,
                     json: true,
-                    configurations: ['python'],
+                    kits: ['python'],
                     isListExact: true,
                     hooks: 'none',
                     ci: 'none',
@@ -118,7 +118,7 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[runner]\ntool = "mise"\n[rules]\ninstall = false\n',
+            'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n',
     });
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
     const location = hookLocation(sandbox.path);
@@ -158,7 +158,7 @@ test.each(['missing', 'not executable'])(
     async (condition) => {
         await using repository = await testdir();
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
             'bin/gspot': '#!/bin/sh\nexit 0\n',
         });
         const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
@@ -190,7 +190,7 @@ test.each(['missing', 'not executable'])(
 test('installation attributes a non-Error rejection to its phase', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[runner]\ntool = "mise"\n',
+        'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "mise"\n',
     });
     const session = await openSession(sandbox.path);
     using installer = spyOn(processes, 'run').mockRejectedValue('untyped installer failure');

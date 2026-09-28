@@ -61,7 +61,7 @@ export function policyJsonSchema(): Record<string, unknown> {
         $id: 'https://gspot.dev/schema/gspot.schema.json',
         title: 'gspot.toml',
         description:
-            'The policy of one repository under gspot: configurations, scopes, limits, naming, tools, ignores, declarations and hooks.',
+            'The policy of one repository under gspot: kits, scopes, limits, naming, tools, ignores, declarations and hooks.',
         ...schema,
     };
 }

@@ -33,7 +33,7 @@ add only the `[[check]]` entry and its `[check.output]` table:
 
 ```toml
 version = 1
-configurations = []
+kits = []
 
 [[check]]
 name = "project/notes"

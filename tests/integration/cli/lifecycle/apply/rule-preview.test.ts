@@ -12,7 +12,7 @@ test('apply rejects injected SQLFluff dialect directives with exit 2 before chan
     await using sandbox = await testdir();
     const original = '[sqlfluff]\ndialect = postgres\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite\nexclude_rules = ALL')}\n`,
+        'gspot.toml': `version = 1\nkits = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite\nexclude_rules = ALL')}\n`,
         '.gspot/config/sqlfluff.cfg': original,
     });
     const refused = await run(sandbox.path, ['apply']);
@@ -21,7 +21,7 @@ test('apply rejects injected SQLFluff dialect directives with exit 2 before chan
     expect(await Bun.file(join(sandbox.path, '.gspot/config/sqlfluff.cfg')).text()).toBe(original);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        `version = 1\nconfigurations = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite')}\n`,
+        `version = 1\nkits = ["sql"]\n[tools.sqlfluff]\ndialect = ${JSON.stringify('sqlite')}\n`,
     );
     const corrected = await run(sandbox.path, ['apply', '--dry-run']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -30,7 +30,7 @@ test('apply rejects injected SQLFluff dialect directives with exit 2 before chan
 
 test('apply preview names a SwiftLint rule addition and leaves existing configuration unchanged', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["swift"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nlevel = "all"\nkits = ["swift"]\n[guides]\ninstall = false\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The fixture verifies enabling a previously ignored rule."\n`,
         'Example.swift': 'let example = 1\n',
@@ -99,7 +99,7 @@ test.each([
     'apply preview names a removed $tool suppression without changing installed rules',
     async ({ configuration, tool, rule, target, collection }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n[guides]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
         });
@@ -136,7 +136,7 @@ test.each([
 
 test('apply preview names added Vale styles when prose moves from recommended to all', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nconfigurations = ["prose"]\n[rules]\ninstall = false\n';
+    const policy = 'version = 1\nkits = ["prose"]\n[guides]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
     const originalSession = await openSession(sandbox.path);
     const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
@@ -183,7 +183,7 @@ test.each([
     'apply preview names an enabled $check rule and preserves installed configuration',
     async ({ configuration, check, rule, target }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n[guides]\ninstall = false\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
         });
@@ -221,7 +221,7 @@ test.each([
 test('apply preview names a missing Semgrep rule by ID and clears it after correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["security"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["security"]\n[guides]\ninstall = false\n',
     });
     const session = await openSession(sandbox.path);
     const original = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

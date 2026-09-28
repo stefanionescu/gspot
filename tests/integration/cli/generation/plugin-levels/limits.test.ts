@@ -7,7 +7,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'tests/build/check.js': 'missing();',
             'src/dist/check.js': 'missing();',
@@ -35,7 +35,7 @@ test.each(['recommended', 'all'])(
 test.each(['recommended', 'all'])('generated %s lint preserves JavaScript class comments', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'counter.js': '',
     });
@@ -63,7 +63,7 @@ test.each(['recommended', 'all'])('generated %s lint preserves JavaScript class 
 test.each(['recommended', 'all'])('generated %s lint enforces size limits in test files', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
@@ -92,7 +92,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.knip]\nentry = ["main.js"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.knip]\nentry = ["main.js"]\n`,
             'package.json': '{"private":true,"type":"module"}\n',
             'main.js': '',
             'app/main.js': '',
@@ -155,7 +155,7 @@ test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit type
     await using sandbox = await testdir();
     const source = 'export type Value = string;\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[architecture]\ntypes_directory = "contracts"\n[rules]\ninstall = false\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[architecture]\ntypes_directory = "contracts"\n[guides]\ninstall = false\n`,
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'value.ts': source,

@@ -26,7 +26,7 @@ Save this complete policy as `gspot.toml`:
 
 ```toml
 version = 1
-configurations = ["python", "bash"]
+kits = ["python", "bash"]
 level = "recommended"
 ```
 

@@ -12,7 +12,7 @@ import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks
 test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
         'App.xcodeproj/project.pbxproj': '{}\n',
         'target.swift': 'let value = 1\n',
     });
@@ -66,8 +66,7 @@ test('Xcode reports exact staged symlink targets before the first commit and cle
 test('Xcode source membership does not mix independent nested projects', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["xcode"]\n[[scope]]\npath = "nested"\nconfigurations = ["xcode"]\n',
+        'gspot.toml': 'version = 1\nkits = ["xcode"]\n[[scope]]\npath = "nested"\nkits = ["xcode"]\n',
         'Root.xcodeproj/project.pbxproj': `{
     rootObject = P;
     objects = {

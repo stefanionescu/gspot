@@ -12,7 +12,7 @@ const RULE_SKIPS: RuleSkip[] = [
         note: (spec) => `its findings come from ${spec.reported_by ?? ''}`,
     },
     {
-        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.configurations.includes(spec.needs),
+        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.kits.includes(spec.needs),
         note: (spec) => `needs the ${spec.needs ?? ''} configuration, which this scope does not select`,
     },
     {

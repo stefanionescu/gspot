@@ -59,7 +59,7 @@ export const YAML =
 export const CONFIGURATION_ARRIVAL_INIT = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'typescript',
     '--without',
     'naming',
@@ -67,45 +67,45 @@ export const CONFIGURATION_ARRIVAL_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-rules',
+    '--no-guides',
     '--no-install',
 ];
 export const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json', '--without', 'naming', 'spelling'];
 export const COMMITS_INIT = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'commits',
     '--no-runner',
     '--no-ci',
-    '--no-rules',
+    '--no-guides',
     '--no-install',
 ];
 export const TYPED_TABLES_INIT = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'markdown',
     'docs',
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-rules',
+    '--no-guides',
     '--no-install',
 ];
 export const CONFIGURATION_ARRIVAL_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n';
 export const LOOSE =
     "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
-export const INIT_SELECTION_QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
-export const INIT_REFUSALS_QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
+export const INIT_SELECTION_QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-guides', '--no-install'];
+export const INIT_REFUSALS_QUIET = ['--no-runner', '--no-ci', '--no-guides', '--no-install'];
 export const COMPONENT = '<script setup>\nconst name = 1;\n</script>\n<template><p>{{ name }}</p></template>\n';
 export const EXPLAIN_POLICY = `version = 1
-configurations = []
+kits = []
 
 [[scope]]
 path = "api"
-configurations = ["bash"]
+kits = ["bash"]
 
 [[ignore]]
 check = "bash/shellcheck"
@@ -115,8 +115,8 @@ reason = "The script deliberately splits a list of arguments."
 `;
 export const FORMAT_OVERRIDES_POLICY = `version = 1
 level = "all"
-configurations = ["formatting"]
-[rules]
+kits = ["formatting"]
+[guides]
 install = false
 [format]
 indent_width = 2
@@ -143,26 +143,26 @@ quotes = "double"
 semicolons = true
 line_ending = "crlf"
 `;
-export const FORMAT_PRESERVATION_POLICY = 'version = 1\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n';
-export const ESLINT_PRESERVATION_POLICY = 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
+export const FORMAT_PRESERVATION_POLICY = 'version = 1\nkits = ["formatting"]\n[guides]\ninstall = false\n';
+export const ESLINT_PRESERVATION_POLICY = 'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n';
 export const NESTED_SCOPES_POLICY = `version = 1
-configurations = ["formatting"]
+kits = ["formatting"]
 [limits]
 file_lines = 250
 [format]
 indent_width = 4
-[rules]
+[guides]
 install = false
 [[scope]]
 path = "api"
-configurations = ["bash"]
+kits = ["bash"]
 [scope.limits]
 file_lines = 200
 [scope.format]
 indent_width = 2
 [[scope]]
 path = "api/worker"
-configurations = ["sql"]
+kits = ["sql"]
 [scope.limits]
 function_lines = 30
 `;
@@ -178,8 +178,8 @@ export const REASON = 'The report names the folders the move deleted, which is w
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 
 export const ESLINT_OVERRIDE_POLICY = `version = 1
-configurations = ["javascript"]
-[rules]
+kits = ["javascript"]
+[guides]
 install = false
 [tools.eslint.rules]
 eqeqeq = ["error", "smart"]

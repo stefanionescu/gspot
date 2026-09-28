@@ -93,12 +93,12 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The root selection and each ancestor scope selection, deduplicated in order. 3 files make 5 calls; one owner keeps that behavior in one place.
 export function selectForScope(
-    policy: Pick<Policy, 'configurations' | 'scopes'>,
+    policy: Pick<Policy, 'kits' | 'scopes'>,
     scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {
     return selectConfigurations(
-        [...policy.configurations, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.configurations)],
+        [...policy.kits, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.kits)],
         manifests,
     );
 }

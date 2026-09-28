@@ -79,7 +79,7 @@ test.each(
             const tools = { [tool]: { [key]: value } };
             const input = {
                 version: 1,
-                configurations: [configuration],
+                kits: [configuration],
                 ...(hasScope ? { scope: [{ path: 'app', tools }] } : { tools }),
             };
             const text = stringify(input);
@@ -101,8 +101,8 @@ test.each([{ xcode: { orphan_assets: false } }, { docs: { readme_shape: false } 
     (tools) => {
         const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
         for (const input of [
-            { version: 1, configurations: ['xcode', 'docs'], tools },
-            { version: 1, configurations: ['xcode', 'docs'], scope: [{ path: 'app', tools }] },
+            { version: 1, kits: ['xcode', 'docs'], tools },
+            { version: 1, kits: ['xcode', 'docs'], scope: [{ path: 'app', tools }] },
         ]) {
             const text = stringify(input);
             const path = 'gspot.toml';

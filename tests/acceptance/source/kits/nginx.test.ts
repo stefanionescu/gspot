@@ -22,7 +22,7 @@ test(
             'server {\n    listen 443 ssl;\n    include /etc/nginx/tls#local.conf;\n    location / { proxy_pass "http://api:3000"; }\n}\n';
         await createFileTree(sandbox.path, {
             'gspot.toml':
-                'version = 1\nconfigurations = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nconfigurations = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+                'version = 1\nkits = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nkits = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
             'proxy/nginx.conf': 'events {}\nhttp { include "conf.d/*.conf"; }\n',
             'proxy/conf.d/server.conf': server.replace('listen 443 ssl;', 'invalid_directive on;'),
             'proxy/tls#local.conf':
@@ -58,7 +58,7 @@ test.each(['recommended', 'all'])(
     'native nginx at %s distinguishes invalid configuration from an unavailable container and accepts corrections',
     async (level) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine"\n`;
+        const policy = `version = 1\nlevel = "${level}"\nkits = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine"\n`;
         const configuration = `events {}\nhttp {\n    upstream backend {\n        server api:3000;\n    }\n    server {\n        listen 443 ssl;\n        ssl_certificate "/etc/nginx/ssl/certificate.pem";\n        ssl_certificate_key '/etc/nginx/ssl/key.pem';\n        location / {\n            proxy_pass "http://backend";\n        }\n    }\n}\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,

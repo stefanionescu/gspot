@@ -157,7 +157,7 @@ test(
         const { broken, command } = await preparePushRepository(sandbox.path);
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\nconfigurations = ["bash"]\n[hooks]\ntool = "gspot"\n[rules]\ninstall = false\n',
+            'version = 1\nkits = ["bash"]\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
         );
         const configured = await run(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);

@@ -13,7 +13,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["dependencies"]\n',
+            'gspot.toml': 'version = 1\nkits = ["dependencies"]\n',
             'package.json': '{"name":"example","private":true}\n',
             'bun.lock': 'original lock\n',
             'node_modules/protected.txt': 'installed dependency\n',

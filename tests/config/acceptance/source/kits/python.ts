@@ -3,7 +3,7 @@
 export const STRUCTURE_INIT = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'python',
     '--without',
     'naming',
@@ -12,7 +12,7 @@ export const STRUCTURE_INIT = [
     '--no-runner',
     '--no-ci',
     '--no-hooks',
-    '--no-rules',
+    '--no-guides',
     '--no-install',
 ];
 export const STRUCTURE_CLEAN =

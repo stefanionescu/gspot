@@ -3,7 +3,7 @@ import { parsePolicyText } from '#cli/policy/read.ts';
 import { prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 
 const policy = parsePolicyText(
-    'version = 1\nconfigurations = ["formatting"]\n[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n',
+    'version = 1\nkits = ["formatting"]\n[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n',
     'gspot.toml',
 );
 const svelte = {

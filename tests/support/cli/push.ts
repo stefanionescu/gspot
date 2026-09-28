@@ -10,7 +10,7 @@ export async function preparePushRepository(
     root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; command: string[]; zero: string }> {
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         'changed.sh': 'echo base\n',
         'legacy.sh': 'if then\n',
     });

@@ -18,8 +18,7 @@ test.each(['outdated', 'timeout', 'canceled'] as const)(
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
         const version = failure === 'outdated' ? '23.0.0' : '26.8.0';
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nconfigurations = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
             'deploy/ansible.cfg': '[defaults]\n',
             'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
             '.gspot/.venv/bin/ansible-lint': versionScript(version, failure !== 'outdated'),
@@ -72,7 +71,7 @@ const versionCommand = (version: string): string =>
 test('an adapter observes a changed executable version on the next command instead of reusing its old success', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["ansible"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible"]\n',
         '.gitignore': '.gspot/\n.venv/\n',
         'ansible.cfg': '[defaults]\n',
         'site.yml': '---\n- hosts: all\n  tasks: []\n',
@@ -100,7 +99,7 @@ test('cached results observe executable replacement and permissions in a reused 
     await using sandbox = await testdir();
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+        'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         'source.txt': 'input\n',
         checker: exitScript(false),
     });

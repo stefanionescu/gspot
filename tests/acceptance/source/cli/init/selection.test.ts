@@ -11,8 +11,8 @@ import { COMPONENT, SELECTION_INIT, INIT_SELECTION_QUIET } from '#tests/config/a
 async function selected(root: string): Promise<string[]> {
     const result = await run(root, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const plan = JSON.parse(result.stdout) as { plan: { configurations: { configuration: string }[] } };
-    return plan.plan.configurations.map((entry) => entry.configuration);
+    const plan = JSON.parse(result.stdout) as { plan: { kits: { kit: string }[] } };
+    return plan.plan.kits.map((entry) => entry.kit);
 }
 
 test(
@@ -61,9 +61,9 @@ test(
         const result = await run(sandbox.path, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as { policy: string; plan: { noLongerRuns: { path: string }[] } };
-        const proposed = parse(output.policy) as { scope?: { path: string; configurations: string[] }[] };
+        const proposed = parse(output.policy) as { scope?: { path: string; kits: string[] }[] };
         expect(proposed.scope?.map((scope) => scope.path)).toStrictEqual(['api', 'ios']);
-        expect(proposed.scope?.find((scope) => scope.path === 'ios')?.configurations).toContain('swift');
+        expect(proposed.scope?.find((scope) => scope.path === 'ios')?.kits).toContain('swift');
         expect(output.plan.noLongerRuns.map((entry) => entry.path)).toStrictEqual(['tools/lint/package.json']);
     },
     PLANTED_TIMEOUT_MS,

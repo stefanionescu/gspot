@@ -16,7 +16,7 @@ test(
         await using repository = await testdir();
         const projectTool = '#!/bin/sh\necho "project formatter must remain separate" >&2\nexit 2\n';
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["formatting"]\n[rules]\ninstall = false\n',
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["formatting"]\n[guides]\ninstall = false\n',
             'source.js': 'export const greeting="hello";',
             'node_modules/prettier/package.json': '{"name":"prettier","version":"3.8.1"}\n',
             'node_modules/prettier/cli': projectTool,

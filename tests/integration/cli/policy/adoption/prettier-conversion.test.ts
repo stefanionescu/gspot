@@ -29,7 +29,7 @@ test('nested Prettier ignore files convert with Git precedence for files created
     const tools = { prettier: { ignore_patterns: carried.formatter!.ignorePatterns } };
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['formatting'], format: carried.formatter!.format, tools }),
+        stringify({ version: 1, kits: ['formatting'], format: carried.formatter!.format, tools }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -74,7 +74,7 @@ test('negated override selectors of the root configuration keep their meaning in
     const tools = { prettier: { extra: carried.extra } };
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['formatting'], format: carried.format, tools }),
+        stringify({ version: 1, kits: ['formatting'], format: carried.format, tools }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -115,7 +115,7 @@ test('negated override selectors of a nested configuration stay inside its folde
     const tools = { prettier: { extra: carried.formatter?.extra } };
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, configurations: ['formatting'], format: carried.formatter?.format, tools }),
+        stringify({ version: 1, kits: ['formatting'], format: carried.formatter?.format, tools }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

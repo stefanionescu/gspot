@@ -23,7 +23,7 @@ test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
             join(sandbox.path, 'gspot.toml'),
             stringify({
                 version: 1,
-                configurations: ['dependencies'],
+                kits: ['dependencies'],
                 tools: Object.fromEntries([...carried.tools].map(([tool, entry]) => [tool, entry.settings])),
             }),
         );

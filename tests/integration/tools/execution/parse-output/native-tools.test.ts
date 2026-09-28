@@ -36,7 +36,7 @@ describe.if(Bun.which('docker') !== null)('with docker', () => {
             format: 'pem',
         });
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["docker"]\n',
+            'gspot.toml': 'version = 1\nkits = ["docker"]\n',
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
             '.gspot/config/trivy.yaml': 'severity: [HIGH, CRITICAL]\n',
@@ -74,7 +74,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["markdown"]\n[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
+            'version = 1\nlevel = "all"\nkits = ["markdown"]\n[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
         ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
     });
     const session = await openSession(sandbox.path);

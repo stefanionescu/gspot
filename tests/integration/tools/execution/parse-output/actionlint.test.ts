@@ -20,7 +20,7 @@ test.each([
         const reference = `${prefix}.github/workflows/${filename}${suffix}`;
         const workflow = `name: Caller\non: workflow_dispatch\npermissions: {}\njobs:\n    caller:\n        uses: ${reference}\n        with:\n            greeting: \${{ unknown.value }}\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+            'gspot.toml': 'version = 1\nkits = ["configs"]\n',
             '.github/workflows/caller.yml': workflow,
             [`.github/workflows/${filename}`]:
                 'name: Called\non:\n    workflow_call:\n        inputs:\n            greeting:\n                type: string\n                required: true\npermissions: {}\njobs:\n    greet:\n        runs-on: ubuntu-latest\n        steps:\n            - run: echo "$GREETING"\n              env:\n                  GREETING: ${{ inputs.greeting }}\n',
@@ -69,7 +69,7 @@ test.each([
     const called =
         'on:\n  workflow_call:\n    inputs:\n      greeting:\n        type: string\n        required: true\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': called,
     });
@@ -105,7 +105,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const workflow =
         'on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/.github/workflows/called.yml\njobs:\n  caller:\n    uses: *workflow\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
         '.github/workflows/caller.yml': workflow,
     });
     const session = await openSession(sandbox.path);

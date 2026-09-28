@@ -6,8 +6,7 @@ import type { EngineInput } from '#cli/types/checks/checks.ts';
 /** Select source files for an isolated site build owned by the test resource stack. */
 export async function siteInput(root: string, paths: string[], resources: DisposableStack): Promise<EngineInput> {
     await createFileTree(root, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
     });
     const session = await openSession(root);
     session.resources = resources;

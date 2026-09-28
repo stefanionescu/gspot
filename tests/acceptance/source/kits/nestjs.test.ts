@@ -69,7 +69,7 @@ const CASES: FindingCase[] = [
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const installNest = (root: string): Promise<Record<string, string>> =>
     installSandbox(root, {
-        configurations: ['typescript', 'nestjs'],
+        kits: ['typescript', 'nestjs'],
         dependencies: NESTJS_DEPENDENCIES,
         files: {
             'tsconfig.json': NESTJS_TSCONFIG,

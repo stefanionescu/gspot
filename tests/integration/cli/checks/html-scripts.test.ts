@@ -15,7 +15,7 @@ test.each([
 ])('HTML scripts report the executable URL in %s', async (markup, column) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["html"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["html"]\n',
         'page.html': markup,
     });
     const options = {
@@ -48,7 +48,7 @@ test.each([
 ])('HTML scripts preserve inert markup %s', async (markup) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["html"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["html"]\n',
         'page.html': markup,
     });
     const result = await executeRun(await openSession(sandbox.path), {

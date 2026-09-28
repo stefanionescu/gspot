@@ -89,7 +89,7 @@ test.each([
 ])('Compose image scanning $scenario', async ({ verify }) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["docker"]\n',
+        'gspot.toml': 'version = 1\nkits = ["docker"]\n',
         'compose.yaml': sources.at(-1)!,
     });
     const session = await openSession(directory.path);

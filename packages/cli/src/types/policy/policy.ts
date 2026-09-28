@@ -160,14 +160,14 @@ export type FileDeclaration =
     | (RawPolicy['generated'][number] & { nature: 'generated' })
     | (RawPolicy['vendored'][number] & { nature: 'vendored' });
 export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
-export type PolicyScope = { path: string; configurations: string[] };
+export type PolicyScope = { path: string; kits: string[] };
 export type Policy = {
     version: number;
     level: RawPolicy['level'];
     requireReasons: RawPolicy['require_reasons'];
     extraChecks: string[];
     exclude: RawPolicy['exclude'];
-    configurations: string[];
+    kits: string[];
     scopes: PolicyScope[];
     limits: Limits;
     naming: NamingSettings;
@@ -181,7 +181,7 @@ export type Policy = {
     checks: RepositoryCheck[];
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
-    rules: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
+    guides: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
     coverage: { strict: boolean };
     runner?: Defined<NonNullable<RawPolicy['runner']>>;
     scopeTables: Record<string, Partial<Policy>>;
@@ -202,7 +202,7 @@ export type RunnerTaskNames = z.infer<typeof runnerTasksSchema>;
 export type RunnerTask = { name: string; description: string; run: string };
 export type MergedView = {
     scope: string;
-    configurations: string[];
+    kits: string[];
     settings: Record<string, unknown>;
     reasons: Record<string, string>;
     format: FormatSettings;

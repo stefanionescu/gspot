@@ -14,7 +14,7 @@ afterEach(() => {
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -28,7 +28,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
 
 test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -47,7 +47,7 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
 
 test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async (step) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run');
     if (step === 'analyzer')
@@ -62,7 +62,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
 
 test('manual analysis clears its own compiler state without consuming the incremental build result', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
     const compile = swiftBuildPlan(input);
     const analyzer = swiftBuildPlan(input, 'analyze');

@@ -42,7 +42,7 @@ export type InitOptions = {
     yes: boolean;
     isDryRun: boolean;
     json: boolean;
-    configurations?: string[];
+    kits?: string[];
     without?: string[];
     scopes?: string[];
     hooks?: NonNullable<Policy['hooks']>['tool'] | 'none';
@@ -112,8 +112,8 @@ export type InitInputs = {
 };
 export type InitProposal = {
     profileTables?: TomlTable;
-    configurations: string[];
-    scopes: { path: string; configurations: string[] }[];
+    kits: string[];
+    scopes: { path: string; kits: string[] }[];
     carried: AdoptionResult;
     hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
@@ -133,7 +133,7 @@ export type InstallSettings = { min_release_age_days?: number; security_scanner?
 export type TakeoverPlan = {
     ci?: { commands: string[]; reports: string };
     profile?: { name: string; digest: string; selection: string; detected: string[] };
-    configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
+    kits: { kit: string; how: ConfigurationReason; checks: number }[];
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];

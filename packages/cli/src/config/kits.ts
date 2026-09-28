@@ -62,7 +62,7 @@ export const VALE_STDIN = 'stdin';
 /** The style directory under .gspot and the style Vale reads from it. */
 export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
 export const GSPOT_STYLE = 'gspot';
-/** Maps the three documentation length-rule filenames to their limit keys. */
+/** Maps the three documentation length-guidenames to their limit keys. */
 export const LENGTH_RULES: Record<string, string> = {
     'sentence-length': 'docs.sentence_words',
     'step-length': 'docs.list_item_words',

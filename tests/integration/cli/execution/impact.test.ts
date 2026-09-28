@@ -14,13 +14,13 @@ import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.t
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
-configurations = []
+kits = []
 [[scope]]
 path = "api"
-configurations = []
+kits = []
 [[scope]]
 path = "web"
-configurations = []
+kits = []
 `;
 
 test('repository checks retain nested inputs and report their defects once at the root', async () => {
@@ -157,7 +157,7 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
     async (engine) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+            'gspot.toml': 'version = 1\nkits = ["typescript"]\n',
             'source.ts': 'export const count = 1;\n',
         });
         const session = await openSession(sandbox.path);

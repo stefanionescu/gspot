@@ -102,30 +102,30 @@ not measured.
 
 ## Assembly
 
-`gspot apply`, when `[rules] install = true`:
+`gspot apply`, when `[guides] install = true`:
 
 1. Selects the files for the selected configurations, root, and every scope.
-2. Writes them under `[rules] directory` (default `.gspot/rules/`), keeping the layer folders.
+2. Writes them under `[guides] directory` (default `.gspot/guides/`), keeping the layer folders.
 3. Removes files under that directory that no selected configuration installs.
 4. Writes the shared managed block into `AGENTS.md`, supported detected agent files, and
-   additional files configured in `[rules] agents`:
+   additional files configured in `[guides] agents`:
 
 ```markdown
 <!-- >>> gspot managed >>> -->
 # Engineering guidelines
 
-Read `.gspot/rules/general/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read
+Read `.gspot/guides/general/agent/WORKING.md` and `.gspot/guides/general/prose/WRITING.md` first. Then read
 only the guides relevant to the task and files you change. A more specific layer wins over a general one.
 
-- Naming: `.gspot/rules/general/code/NAMING.md`
-- Comments: `.gspot/rules/general/code/COMMENTS.md`
-- Documentation: `.gspot/rules/general/prose/DOCS.md`
-- TypeScript: `.gspot/rules/language/TYPESCRIPT.md`
-- TypeScript naming: `.gspot/rules/language/naming/TYPESCRIPT.md`
-- Bash: `.gspot/rules/language/BASH.md`
-- Next.js: `.gspot/rules/framework/nextjs/NEXTJS.md`
-- React: `.gspot/rules/framework/react/REACT.md`
-- Zod: `.gspot/rules/library/zod/ZOD.md`
+- Naming: `.gspot/guides/general/code/NAMING.md`
+- Comments: `.gspot/guides/general/code/COMMENTS.md`
+- Documentation: `.gspot/guides/general/prose/DOCS.md`
+- TypeScript: `.gspot/guides/language/TYPESCRIPT.md`
+- TypeScript naming: `.gspot/guides/language/naming/TYPESCRIPT.md`
+- Bash: `.gspot/guides/language/BASH.md`
+- Next.js: `.gspot/guides/framework/nextjs/NEXTJS.md`
+- React: `.gspot/guides/framework/react/REACT.md`
+- Zod: `.gspot/guides/library/zod/ZOD.md`
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or
 `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
@@ -133,11 +133,11 @@ Run `gspot check --staged` before committing. Change policy with `gspot set` or
 ```
 
 The closing paragraph depends on what is installed. With at least one check selected it
-reads as above. With rule files alone (`configurations = []`) it keeps only the sentence about
-subagents, and adds: "These files are installed copies. Change `[rules]` in `gspot.toml` and run
+reads as above. With rule files alone (`kits = []`) it keeps only the sentence about
+subagents, and adds: "These files are installed copies. Change `[guides]` in `gspot.toml` and run
 `gspot apply`, and never edit files under the rules directory."
 
-`[rules] exclude` leaves files out. An entry is a file path under the corpus
+`[guides] exclude` leaves files out. An entry is a file path under the corpus
 (`packages/cli/guides/general/code/ACCESSIBILITY.md`) or a layer folder (`library`). An entry that matches no corpus
 file fails the load with the near matches. `packages/cli/guides/general/agent/WORKING.md` and
 `packages/cli/guides/general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
@@ -148,7 +148,7 @@ The block is a compact task index with one guide per entry, grouped where that h
 ## The rules lint
 
 The rules lint belongs to this repository, not to the commands of the binary. It runs as
-the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the push stage,
+the `[[check]]` entry `guides/lint` in the `gspot.toml` of this repository, at the push stage,
 over `packages/cli/guides/**` and its implementation and test owners. Its code sits in `packages/cli/src/agents/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
@@ -195,10 +195,10 @@ A unit test assembles `TYPESCRIPT.md` at both levels and compares the headings.
 The rules lint reads front matter, links, size, layer, and fences. Prose is one
 check, `prose/vale`, for every text of the repository.
 
-The `[[check]]` entry `rules/lint` of `gspot.toml` points at the new path and drops
+The `[[check]]` entry `guides/lint` of `gspot.toml` points at the new path and drops
 the words about prose from its summary.
 
-A rule file with a broken link fails `rules/lint`, and one with a long sentence fails
+A rule file with a broken link fails `guides/lint`, and one with a long sentence fails
 `prose/vale` only.
 
 ### Acceptance K-179
@@ -211,12 +211,12 @@ A language, framework, library, or tool file says what holds for every project o
 that kind. A general file holds what holds for every repository.
 
 A passage about one product moves into the repository it came from, during its
-migration, as a rule file of that repository under `[rules] extra`. A habit of the owner moves
+migration, as a rule file of that repository under `[guides] extra`. A habit of the owner moves
 into the profile of the owner. A sentence that is wrong for most projects, such as the Drizzle
 cutover rule, is deleted. The rules lint refuses the word `quality/` and the names of the
 reference repositories.
 
-`rules/lint` with the word list of K-38, which is built from the manifests.
+`guides/lint` with the word list of K-38, which is built from the manifests.
 
 ### Acceptance K-65
 
@@ -233,7 +233,7 @@ metadata and corrected input; no field-removal migration or compatibility parser
 
 ### Acceptance K-279
 
-`[rules] agents` lists the agent files gspot writes into, detected from what exists.
+`[guides] agents` lists the agent files gspot writes into, detected from what exists.
 
 `AGENTS.md` is always written, because most agents read it. `CLAUDE.md`,
 `GEMINI.md`, and `.github/copilot-instructions.md` get a managed block where the file exists or
@@ -270,6 +270,6 @@ An example marked good passes the linter of its configuration.
 to the cache, and runs the tool the manifest names for that language. The two zod rules move to
 the level `all`.
 
-`rules/lint` runs the examples at the push stage.
+`guides/lint` runs the examples at the push stage.
 
 Structural prose follows the executable-statement contract in [07-slop-drift.md](07-slop-drift.md). Do not encourage tiny wrappers, arbitrary declaration splitting, or padding to satisfy a threshold. Required API functions use narrow, reasoned suppressions.

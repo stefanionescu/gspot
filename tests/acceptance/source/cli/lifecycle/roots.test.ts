@@ -29,8 +29,8 @@ test('init refuses a symlinked managed directory without writing outside the con
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {
     await using directory = await testdir();
-    const outerPolicy = 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n';
-    const innerPolicy = 'version = 1\nconfigurations = ["sql"]\n[rules]\ninstall = false\n';
+    const outerPolicy = 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n';
+    const innerPolicy = 'version = 1\nkits = ["sql"]\n[guides]\ninstall = false\n';
     await createFileTree(directory.path, {
         'gspot.toml': outerPolicy,
         '.gspot/authored.txt': 'Preserve outside the configuration root.\n',

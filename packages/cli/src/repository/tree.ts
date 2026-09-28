@@ -41,7 +41,7 @@ function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: N
 export async function readRepository(
     root: string,
     declarations: FileDeclaration[],
-    scopeEntries: { path: string; configurations: string[] }[],
+    scopeEntries: { path: string; kits: string[] }[],
     exclude: string[],
     runtimeFiles: ReadonlySet<string> = new Set(),
 ): Promise<Repository> {
@@ -69,12 +69,12 @@ export async function readRepository(
         hasGit: isGitRepository(root),
         files,
         scopes: [
-            { name: 'root', path: '', configurations: [], source: 'root' },
+            { name: 'root', path: '', kits: [], source: 'root' },
             ...scopeEntries.map(
                 (entry): ScopeEntry => ({
                     name: entry.path.slice(entry.path.lastIndexOf('/') + 1),
                     path: entry.path,
-                    configurations: entry.configurations,
+                    kits: entry.kits,
                     source: 'gspot.toml',
                 }),
             ),

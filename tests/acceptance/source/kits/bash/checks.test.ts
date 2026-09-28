@@ -72,7 +72,7 @@ test.each([
     const inherited = 'shopt -s inherit_errexit\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
+        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
         'greet.sh': base + (isInherited ? inherited : '') + MAIN,
     });
     const path = join(sandbox.path, 'greet.sh');

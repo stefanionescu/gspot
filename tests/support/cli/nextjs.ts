@@ -68,7 +68,7 @@ export async function installedNextProject(): Promise<{
 export async function prepareNextjsBuild(root: string, scope: string, check: string): Promise<EngineInput> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nconfigurations = ["nextjs"]\n${scopeTable}`,
+        'gspot.toml': `version = 1\nkits = ["nextjs"]\n${scopeTable}`,
         [join(scope, 'package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
         [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
         [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',

@@ -36,7 +36,7 @@ The full source acceptance suite has a 90-minute overall deadline. Individual te
 and performance limits remain separate. To run a focused subset, pass files or folders:
 
 ```sh
-mise run test:acceptance -- acceptance/source/configurations/css.test.ts acceptance/source/cli/hooks
+mise run test:acceptance -- acceptance/source/kits/css.test.ts acceptance/source/cli/hooks
 ```
 
 Some tool installers fetch a binary from GitHub during a cold install. Set `GITHUB_TOKEN` to a

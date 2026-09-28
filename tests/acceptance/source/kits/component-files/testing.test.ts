@@ -21,7 +21,7 @@ describe('the Testing Library rules of component frameworks', () => {
         async ({ framework, library, dependencies }) => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
-                configurations: ['javascript', framework],
+                kits: ['javascript', framework],
                 dependencies,
                 files: {},
             });

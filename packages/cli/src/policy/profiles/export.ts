@@ -62,8 +62,8 @@ export function exportedProfile(policyText: string, file: string): ExportedProfi
             for (const index of entries.keys()) leftOut.push(`${table}[${String(index)}]: belongs to this repository`);
         Reflect.deleteProperty(raw, table);
     }
-    const { version, configurations, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
+    const { version, kits, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
     const name = basename(file).replace(PROFILE_EXTENSION, '');
-    const document = { version, profile: name, selection: 'exact', configurations: configurations ?? [], ...rest };
+    const document = { version, profile: name, selection: 'exact', kits: kits ?? [], ...rest };
     return { text: stringify(document).trimEnd().concat('\n'), leftOut };
 }

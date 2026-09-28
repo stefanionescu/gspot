@@ -8,7 +8,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\nconfigurations = ["postgres"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "warehouse"\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[[scope]]\npath = "warehouse/child"\n',
+            'version = 1\nkits = ["postgres"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "warehouse"\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[[scope]]\npath = "warehouse/child"\n',
         'query.sql': 'PRAGMA table_info (users);\n',
         'warehouse/child/query.sql': 'SELECT 1;\n',
     });

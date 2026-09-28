@@ -78,10 +78,10 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
                 path: entry.scope.path,
-                configurations: entry.selected.map((manifest) => manifest.kit.name),
+                kits: entry.selected.map((manifest) => manifest.kit.name),
             })),
         configurationScopes: (configuration: string) =>
-            byDepth(scopes.filter((entry) => entry.view.configurations.includes(configuration))).map((entry) => ({
+            byDepth(scopes.filter((entry) => entry.view.kits.includes(configuration))).map((entry) => ({
                 path: entry.scope.path,
                 settings: entry.view.settings,
                 extra: entry.view.extra,
@@ -94,7 +94,7 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                     folders: roleFolders(entry.selected, entry.view.settings, role),
                 }))
                 .filter((entry) => entry.folders.length > 0),
-        configurations: view.configurations,
+        kits: view.kits,
         policy: policy,
         view,
         format: view.format,

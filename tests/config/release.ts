@@ -38,7 +38,7 @@ export const EMBEDDED_PARSER_SOURCES = {
 export const EMBEDDED_INIT_ARGS = [
     'init',
     '--yes',
-    '--configurations',
+    '--kits',
     'formatting',
     '--no-runner',
     '--no-ci',

@@ -16,7 +16,7 @@ export const TAILWIND_AT_RULES = [
     'config',
     'reference',
 ];
-export const PYTHON = 'version = 1\nconfigurations = ["python"]\n';
+export const PYTHON = 'version = 1\nkits = ["python"]\n';
 export const PLANTED = {
     'package.json': '{"name":"planted","private":true,"type":"module"}\n',
     'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',

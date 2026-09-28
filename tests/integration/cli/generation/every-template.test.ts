@@ -44,17 +44,17 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-const configurations = [...configurationManifests().values()]
+const kits = [...configurationManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
     .map((manifest) => manifest.kit.name);
 
-test.each(configurations.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
+test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
     'the %s configuration renders files their readers parse at level %s',
     async (name, level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
         });
         symlinkSync(MODULES, join(sandbox.path, 'node_modules'), 'dir');
         const session = await openSession(sandbox.path);

@@ -77,7 +77,7 @@ export async function initializeConsumer(
             'init',
             '--json',
             '--yes',
-            '--configurations',
+            '--kits',
             'bash',
             'naming',
             'prose',

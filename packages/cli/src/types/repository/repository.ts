@@ -8,7 +8,7 @@ import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 export type ScopeEntry = {
     name: string;
     path: string;
-    configurations: string[];
+    kits: string[];
     source: 'root' | 'gspot.toml' | 'workspace' | 'project';
 };
 export type PathIgnore = { base: string; matcher: Ignore };

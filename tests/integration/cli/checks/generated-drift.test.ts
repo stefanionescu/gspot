@@ -11,7 +11,7 @@ import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/config/integration/cl
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
         '.gitignore': '.gspot/cache/\n',
     });

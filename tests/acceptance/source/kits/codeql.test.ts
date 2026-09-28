@@ -38,7 +38,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
         async ({ level, language, file, unsafe, corrected, rule, line, column }) => {
             await using directory = await testdir();
             await createFileTree(directory.path, {
-                'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = ["${language}"]\n`,
+                'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["security"]\n[tools.codeql]\nlanguages = ["${language}"]\n`,
                 [file]: unsafe,
                 'authored.txt': 'Preserve this file.\n',
             });

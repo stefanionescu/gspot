@@ -10,7 +10,7 @@ test.each(['colon', 'dash'])(
         const summary = `# _show${style === 'colon' ? ': ' : ' - '}prints the supplied name.\n`;
         const body = '_show() {\n    printf "%s\\n" "$1"\n}\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["bash"]\n[tools.bash]\ndoc_style = "${style}"\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["bash"]\n[tools.bash]\ndoc_style = "${style}"\n`,
             'show.sh': summary + '# Returns:\n# Arguments:\n' + body,
         });
         const options = {

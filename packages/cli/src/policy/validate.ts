@@ -55,9 +55,9 @@ function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
 export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
     const manifests = configurationManifests();
     const declarations: { name: string; path: PathSegment[] }[] = [
-        ...policy.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
+        ...policy.kits.map((name, index) => ({ name, path: ['kits', index] })),
         ...policy.scopes.flatMap((scope, scopeIndex) =>
-            scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
+            scope.kits.map((name, index) => ({ name, path: ['scope', scopeIndex, 'kits', index] })),
         ),
     ];
     return declarations
@@ -107,7 +107,7 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
                 message: `extra_checks names an unselected or unknown check: ${name}.`,
             });
     problems.push(
-        ...policy.rules.exclude.flatMap((entry, index) =>
+        ...policy.guides.exclude.flatMap((entry, index) =>
             excludeProblems([entry]).map((text) => ({ path: ['rules', 'exclude', index], message: text })),
         ),
         ...validateAgainstSurface(exposedSettings(rootSelected, policy.level), policy, scopeSurfaces),

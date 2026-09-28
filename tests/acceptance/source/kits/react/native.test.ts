@@ -56,7 +56,7 @@ describe('the react-native configuration', () => {
         async ({ rule, path, text, line }) => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
-                configurations: ['typescript', 'react-native'],
+                kits: ['typescript', 'react-native'],
                 dependencies: NATIVE_DEPENDENCIES,
                 files: { 'tsconfig.json': NATIVE_TSCONFIG, 'src/answer.ts': LIBRARIES_CLEAN },
             });

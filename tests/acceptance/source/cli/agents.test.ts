@@ -11,7 +11,7 @@ test('agent instructions reach detected and configured consumers and uninstall r
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
     const copilot = '# Copilot instructions\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         'GEMINI.md': original,
         '.github/copilot-instructions.md': copilot,
         '.cursor/.keep': '',
@@ -52,7 +52,7 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
     await using sandbox = await testdir();
     const original = '---\nalwaysApply: false\n---\n# Authored Cursor policy\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': 'version = 1\nkits = []\n',
         '.cursor/rules/gspot.mdc': original,
     });
     const applied = await run(sandbox.path, ['apply']);
@@ -73,7 +73,7 @@ test('init previews the same detected agent destinations without writing them', 
         '--yes',
         '--dry-run',
         '--json',
-        '--configurations',
+        '--kits',
         'bash',
         '--without',
         'spelling',

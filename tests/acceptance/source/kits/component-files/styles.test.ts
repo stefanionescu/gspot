@@ -33,7 +33,7 @@ describe('component style blocks', () => {
         async ({ framework, dependencies, path, text, line }) => {
             await using sandbox = await testdir();
             const environment = await installSandbox(sandbox.path, {
-                configurations: ['javascript', framework, 'css'],
+                kits: ['javascript', framework, 'css'],
                 dependencies,
                 files: {},
             });

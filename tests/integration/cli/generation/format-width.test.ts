@@ -16,7 +16,7 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
         'gspot.toml': stringify({
             version: 1,
             level: 'all',
-            configurations: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
+            kits: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
             format: { indent_width: width },
         }),
         'sample.yaml': 'parent:\n child: value\n',
@@ -65,7 +65,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     await createFileTree(directory.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             format: { indent_width: 6, overrides: [{ paths: ['**/*.yaml'], indent_width: 2 }] },
         }),
         'sample.yaml': 'parent:\n child: value\n',

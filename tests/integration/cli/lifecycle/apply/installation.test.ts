@@ -9,7 +9,7 @@ import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a proposal whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();
-    const initial = 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n';
+    const initial = 'version = 1\nkits = []\n[guides]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': initial });
     const session = await openSession(sandbox.path);
     const edited = initial.replace('version = 1', 'version = 1\nlevel = "all"');
@@ -22,7 +22,7 @@ test('apply refuses a proposal whose policy changed after the session was read',
 test('an npm runner preserves the authored prepare command while adding explicit check scripts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[runner]\ntool = "bun"\n[rules]\ninstall = false\n',
+        'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "bun"\n[guides]\ninstall = false\n',
         'package.json': '{"private":true,"scripts":{"prepare":"build-app"}}\n',
     });
     await applyAll(await openSession(sandbox.path));
@@ -46,7 +46,7 @@ test('init refuses an unsafe output ancestor before attempting installation', as
             yes: true,
             isDryRun: false,
             json: true,
-            configurations: ['spelling'],
+            kits: ['spelling'],
             isListExact: true,
             hooks: 'none',
             ci: 'none',
@@ -75,7 +75,7 @@ test('init retains old configuration when a conflicting replacement cannot be pu
                 yes: true,
                 isDryRun: false,
                 json: true,
-                configurations: ['spelling'],
+                kits: ['spelling'],
                 isListExact: true,
                 hooks: 'none',
                 ci: 'none',

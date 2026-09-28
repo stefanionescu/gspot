@@ -99,7 +99,7 @@ describe('readPolicy', () => {
             'gspot.toml': MINIMAL_POLICY,
         });
         const files = readPolicy(sandbox.path);
-        expect(files.policy.configurations).toStrictEqual(['bash']);
+        expect(files.policy.kits).toStrictEqual(['bash']);
     });
 
     test('a missing gspot.toml points at init', async () => {
